@@ -1,5 +1,5 @@
 streamlit
 pandas
-matplotlib
+korean_lunar_calendar
+ephem
 google-generativeai
-korean-lunar-calendar
