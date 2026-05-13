@@ -33,19 +33,45 @@ st.markdown("""
     .un-title { font-weight: 900; font-size: 20px; color: #3E2723; border-bottom: 2px solid #3E2723; margin-top: 30px; margin-bottom: 10px; }
     .rtl-scroll { display: flex; flex-direction: row-reverse; width: 100%; border: 2px solid #3E2723; overflow-x: auto; background: white; }
     .dw-age-head { background: #3E2723; color: white; font-weight: 900; padding: 5px; }
+    @media print {
+        .stSidebar, button, iframe { display: none !important; }
+        .report-page { box-shadow: none; margin: 0; padding: 0; }
+        .vip-inset-frame { border: 2px solid #000; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 1. 시스템 변수 초기화 (역산 검색 연동용)
+# 1. 자동 커서 이동(JS) 및 시스템 변수
 # ==============================================================================
 if 's_y' not in st.session_state: st.session_state.s_y = 1963
 if 's_m' not in st.session_state: st.session_state.s_m = 5
 if 's_d' not in st.session_state: st.session_state.s_d = 22
 if 's_t' not in st.session_state: st.session_state.s_t = "03:30 ~ 05:29 (寅)시"
 
+# [핵심] 간지 2글자 입력 시 자동 커서 이동 스크립트
+components.html("""
+<script>
+    const doc = window.parent.document;
+    doc.addEventListener('input', function(e) {
+        if (e.target.tagName !== 'INPUT' || e.target.type !== 'text') return;
+        let label = e.target.getAttribute('aria-label') || "";
+        let val = e.target.value;
+        if (label.includes('년주') || label.includes('월주') || label.includes('일주')) {
+            if (val.length >= 2 || val.includes('년') || val.includes('월') || val.includes('일')) {
+                let inputs = Array.from(doc.querySelectorAll('input[type="text"]'));
+                let idx = inputs.indexOf(e.target);
+                if (idx > -1 && idx < inputs.length - 1) {
+                    setTimeout(() => { inputs[idx + 1].focus(); }, 50);
+                }
+            }
+        }
+    });
+</script>
+""", height=0, width=0)
+
 # ==============================================================================
-# 2. AI 엔진 및 DB 설정 / 명리 연산 엔진
+# 2. AI 엔진 및 명리 연산 엔진
 # ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -196,7 +222,7 @@ with st.sidebar:
     
     # [신기능] 역산 검색 모듈
     with st.expander("🔍 역산 검색 (간지 -> 날짜)", expanded=False):
-        st.caption("생일은 모르고 간지만 알 때 사용합니다.")
+        st.caption("간지 2글자 입력 시 자동으로 다음 칸으로 넘어갑니다.")
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주(예:癸卯)", "")
         with col_g2: rm = st.text_input("월주(예:丁巳)", "")
@@ -205,7 +231,8 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시지(예:寅)", "")
         
         if st.button("🔍 날짜 찾기", use_container_width=True):
-            if len(ry)==2 and len(rm)==2 and len(rd)==2:
+            if len(ry)>=2 and len(rm)>=2 and len(rd)>=2:
+                ry, rm, rd = ry[:2], rm[:2], rd[:2]
                 klc = KoreanLunarCalendar()
                 found = False
                 for y in range(2026, 1899, -1):
@@ -220,32 +247,28 @@ with st.sidebar:
                                 st.session_state.s_m = curr_dt.month
                                 st.session_state.s_d = curr_dt.day
                                 time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
-                                if rt in time_map_rev: st.session_state.s_t = time_map_rev[rt]
+                                if rt and rt[0] in time_map_rev: st.session_state.s_t = time_map_rev[rt[0]]
                                 found = True
                                 st.success(f"✅ {curr_dt.year}년 {curr_dt.month}월 {curr_dt.day}일 자동입력 완료!")
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("년/월/일 간지를 정확히 입력하세요.")
+            else: st.warning("년/월/일 간지를 2글자씩 정확히 입력하세요.")
 
     st.markdown("---")
     u_name = st.text_input("성함", "내담자")
     u_gender = st.selectbox("성별", ["남성", "여성"])
     u_cal = st.selectbox("달력", ["양력", "음력"])
     
-    # Session State 연동 날짜 입력창
     col1, col2, col3 = st.columns(3)
     with col1: u_y = st.number_input("년", 1900, 2030, st.session_state.s_y, key="u_y")
     with col2: u_m = st.number_input("월", 1, 12, st.session_state.s_m, key="u_m")
     with col3: u_d = st.number_input("일", 1, 31, st.session_state.s_d, key="u_d")
     
-    u_t = st.selectbox("태어난 시간", [
-        "시간 모름", "23:30 ~ 01:29 (子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
-        "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", 
-        "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", 
-        "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시"
-    ], index=["시간 모름", "23:30 ~ 01:29 (子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시"].index(st.session_state.s_t))
+    idx_list = ["시간 모름", "23:30 ~ 01:29 (子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시"]
+    sel_idx = idx_list.index(st.session_state.s_t) if st.session_state.s_t in idx_list else 0
+    u_t = st.selectbox("태어난 시간", idx_list, index=sel_idx)
     
     st.markdown("---")
     comp_text = st.text_area("비교할 타 술사 감명서 (선택)", height=150)
@@ -255,7 +278,7 @@ with st.sidebar:
     run_btn = st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=True, type="primary")
 
 # ==============================================================================
-# 4. 분석 가동 및 레이아웃 출력 (프린트 모듈 포함)
+# 4. 분석 가동 및 출력 (인쇄 버튼 모듈 포함)
 # ==============================================================================
 if run_btn:
     klc = KoreanLunarCalendar()
@@ -266,15 +289,29 @@ if run_btn:
     ys, yb = gj[0][0], gj[0][1]; ms, mb = gj[1][0], gj[1][1]; ds, db = gj[2][0], gj[2][1]
     hs, hb = get_time_ganji(ds, u_t)
     
-    # --- 프린트용 JS/버튼 삽입 ---
+    # --- 선택형 프린트 모듈 ---
     components.html("""
         <style>
-            .print-btn { background-color: #2E7D32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; }
-            .print-btn.all { background-color: #D50000; }
+            .print-btn { font-weight: bold; border: none; border-radius: 5px; color: white; cursor: pointer; padding: 10px 15px; margin-left: 10px; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .btn-single { background-color: #2E7D32; }
+            .btn-all { background-color: #D50000; }
         </style>
         <div style="text-align: right; padding: 10px;">
-            <button class="print-btn" onclick="window.parent.print()">🖨️ 현재 화면 인쇄 / PDF 저장</button>
+            <button class="print-btn btn-single" onclick="printSingle()">🖨️ 초연 단독 인쇄</button>
+            <button class="print-btn btn-all" onclick="printAll()">🖨️ 비교 포함 전체 인쇄</button>
         </div>
+        <script>
+            function printSingle() {
+                const doc = window.parent.document;
+                const comp = doc.getElementById('comparison-area');
+                if(comp) comp.style.display = 'none';
+                window.parent.print();
+                if(comp) comp.style.display = 'block';
+            }
+            function printAll() {
+                window.parent.print();
+            }
+        </script>
     """, height=60)
     
     # --- 1. 정밀 원국 표 렌더링 ---
@@ -305,7 +342,6 @@ if run_btn:
         shinsal_tds += f"<td style='vertical-align: top; font-size:12px; line-height:1.4;'>{'<br>'.join(cmb[:6]) if cmb else '-'}</td>"
 
     html_table = f"""
-    <div id="print-area">
     <div class='report-page'><div class='vip-inset-frame'>
     <h1 style='text-align:center; color:#1A237E;'>🔬 [초연 정통 명리 사주풀이]</h1>
     <h3 style='text-align:center;'>🏮 {u_name}님 ({u_gender}) 원국</h3>
@@ -323,7 +359,6 @@ if run_btn:
         <tr><td class='header-cell-main'>일반신살</td>{shinsal_tds}</tr>
     </table>
     """
-    
     st.markdown(html_table, unsafe_allow_html=True)
     
     # --- 2. 마스터 바 ---
@@ -361,7 +396,7 @@ if run_btn:
             <div style='font-size:12px; color:#C62828;'>{get_12_shinsal(yb, j)}</div>
         </div>
         """
-    st.markdown(un_html + "</div></div></div>", unsafe_allow_html=True)
+    st.markdown(un_html + "</div>", unsafe_allow_html=True)
 
     # --- 4. 11단계 정밀 감명 & 비교 리포트 ---
     with st.spinner("초연 509 시스템: 동적 물리엔진 가동 중..."):
@@ -372,7 +407,7 @@ if run_btn:
         
         [지시사항]
         1. 11단계(성격, 부모, 학업, 직업, 결혼, 사업, 재산, 건강, 대운, 세운 등)로 정밀 분석하시오.
-        2. HTML 구조를 활용하여 <b><div class='report-page'><div class='vip-inset-frame'></b> 태그 안에 내용을 작성하십시오.
+        2. HTML을 활용하여 화려하고 깊이 있게 서술하십시오.
         """
         try:
             if "GOOGLE_API_KEY" not in st.secrets:
@@ -380,16 +415,16 @@ if run_btn:
             else:
                 res = model.generate_content(prompt)
                 st.markdown(res.text, unsafe_allow_html=True)
+                st.markdown("</div></div>", unsafe_allow_html=True) # 단독 인쇄용 프레임 닫기
                 
-                # 타 감명서 입력 시 1:1 비교 추가
+                # 타 감명서 입력 시 1:1 비교 추가 (선택적 인쇄를 위한 ID 부여)
                 if comp_text:
-                    st.markdown("<hr>", unsafe_allow_html=True)
+                    st.markdown("<div id='comparison-area'><div class='report-page'><div class='vip-inset-frame'>", unsafe_allow_html=True)
                     with st.spinner("타 술사 감명서 1:1 교차 대조 중..."):
-                        comp_prompt = f"초연 박사로서 다음 타 술사 감명서를 11단계 소제목에 맞춰 1:1 비교하고 12) 종합의견을 작성하시오. <b><div class='report-page'><div class='vip-inset-frame'></b> 안에 작성. 대상 데이터: {comp_text}"
+                        comp_prompt = f"초연 박사로서 다음 타 술사 감명서를 11단계 소제목에 맞춰 1:1 비교하고 12) 종합의견을 작성하시오. 대상 데이터: {comp_text}"
                         comp_res = model.generate_content(comp_prompt)
                         st.markdown(comp_res.text, unsafe_allow_html=True)
+                    st.markdown("</div></div></div>", unsafe_allow_html=True) # 비교 프레임 닫기
                         
         except Exception as e:
             st.error(f"AI 연산 오류: {e}")
-            
-    st.markdown("</div>", unsafe_allow_html=True) # print-area 닫기
