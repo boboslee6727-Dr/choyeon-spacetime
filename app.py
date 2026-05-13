@@ -10,30 +10,51 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 
 # ==============================================================================
-# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (UI 붕괴 방지 타겟팅 적용)
+# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (A4 화면동기화, 명조체, 둥근박스 분할)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 12.5.1", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 12.6", layout="wide")
 
 st.markdown("""
 <style>
+    /* 전체 폰트 명조체 강제 적용 */
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
+    .stApp, .report-page * { font-family: 'Noto Serif KR', serif !important; }
     
-    /* 웹페이지 기본 폰트는 놔두고, 오직 리포트 영역만 명조체 강제 적용 */
-    .report-page, .report-page p, .report-page h1, .report-page h2, .report-page h3, .report-page h4, .report-page h5, .report-page h6, .report-page div, .report-page span, .report-page td { 
-        font-family: 'Noto Serif KR', serif !important; 
+    body, .stApp { background-color: #FFF8E1; }
+    
+    /* 화면 및 인쇄상 A4 규격(210mm) 강제 고정 및 순백색 무색 바탕 */
+    .report-page { 
+        width: 210mm; 
+        max-width: 100%;
+        margin: 30px auto; 
+        background-color: #FFFFFF !important; 
+        padding: 15mm 10mm; 
+        box-shadow: 0 0 20px rgba(0,0,0,0.15); 
+        border-radius: 20px; 
+        box-sizing: border-box; 
     }
     
-    body { background-color: #FFF8E1; }
+    /* 둥근 사각 박스 & 페이지 분할 시 열림/닫힘 복제 효과 */
+    .vip-inset-frame { 
+        border: 2px solid #1A237E; 
+        border-radius: 15px; 
+        padding: 20px; 
+        background: transparent; 
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+    }
     
-    .report-page { max-width: 210mm; margin: 10px auto; background: white; padding: 15mm 10mm; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 20px; box-sizing: border-box; }
-    .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 20px; background: transparent; }
+    /* 대제목 폰트 크기 다이어트 */
+    .report-page h1 { font-size: 24px !important; margin-bottom: 15px !important; }
+    .report-page h2 { font-size: 20px !important; margin-bottom: 15px !important; }
+    .report-page h3 { font-size: 18px !important; margin-top: 20px !important; margin-bottom: 10px !important; border-bottom: 2px solid inherit; padding-bottom: 5px; }
+    .report-page h4 { font-size: 16px !important; margin-top: 15px !important; margin-bottom: 8px !important; }
     
+    /* 사주 박스 다이어트 및 가로줄 제거 */
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444; padding: 1px; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; word-wrap: break-word; }
-    
     .no-border-row td { border-top: none !important; border-bottom: none !important; }
     .no-border-row:last-of-type td { border-bottom: 1px solid #444 !important; }
-    
     .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 22px !important; }
     .top-header-cell { background-color: #1A237E !important; color: white !important; font-size: 13px !important; height: 26px !important; padding: 0 !important; }
     
@@ -43,25 +64,26 @@ st.markdown("""
     .color-금 { background-color: #9E9E9E !important; color: white !important; }
     .color-수 { background-color: #212121 !important; color: white !important; }
     
-    .content-box-loose { line-height: 1.8; font-size: 15px; text-align: justify; text-indent: 15px; margin-bottom: 12px; }
+    .content-box-loose { line-height: 1.8; font-size: 15px; text-align: justify; margin-bottom: 12px; }
+    .content-box-loose p { margin-bottom: 10px; } /* 문단 띄어쓰기 가독성 확보 */
     
-    /* 대운/세운/월운 흐름표 (좌->우 LTR 정렬 복구) */
+    /* 대운/세운/월운 흐름표 (LTR 정렬) */
     .flow-flex { display: flex; flex-direction: row; width: 100%; border: 2px solid #3E2723; background: white; margin-bottom: 5px; }
     .flow-col { flex: 1; border-right: 1px solid #ccc; text-align: center; padding-bottom: 3px; }
     .flow-col:last-child { border-right: none; }
     .dw-age-head { background: #3E2723; color: white; font-weight: 900; padding: 3px; font-size: 12px; }
     
-    /* 버튼 커스텀 복구 */
-    div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
-    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
-    
+    /* 인쇄 전용 제어 */
     @media print {
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
-        .stApp { background-color: white !important; }
-        .report-page { max-width: 100%; width: 100%; box-shadow: none; margin: 0; padding: 0; page-break-after: always; border: none; min-height: auto; }
-        .vip-inset-frame { border: 2px solid #000; border-radius: 20px; padding: 15px; }
-        .no-bg-print { background-color: transparent !important; }
+        body, .stApp { background-color: white !important; }
+        .report-page { 
+            box-shadow: none; margin: 0 auto; padding: 0; 
+            page-break-after: always; 
+            border-radius: 0; width: 100%; max-width: 100%;
+        }
+        .page-break-before { page-break-before: always; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -74,7 +96,6 @@ if 's_m' not in st.session_state: st.session_state.s_m = 1
 if 's_d' not in st.session_state: st.session_state.s_d = 1
 if 's_t' not in st.session_state: st.session_state.s_t = "시간 모름"
 
-# [핵심] 대한민국 표준시 및 써머타임 보정 엔진 탑재
 def get_total_time_adjustment(dt):
     adj = -30
     if dt_mod.datetime(1954, 3, 21) <= dt <= dt_mod.datetime(1961, 8, 9, 23, 59): adj = 0
@@ -212,7 +233,6 @@ def get_general_shinsal_filtered(idx, gans, jjis):
 
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
-    # [핵심] 자오묘유 본기-상단, 여기-하단 밀착 (가운데 빈 점선박스 생성)
     raw = {'子':['壬','-','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','-','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','-','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','-','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
     res = "<div style='display:flex; flex-direction:column; height:100%; min-height:40px; gap:1px; padding:1px 0;'>"
     for j in raw:
@@ -233,13 +253,9 @@ def calculate_gongmang(ilgan, ilji):
 
 def get_time_ganji(day_gan, time_str, dt_obj=None):
     if "시간 모름" in time_str: return "?", "?"
-    
-    # 시간 보정 로직 적용 확인 (dt_obj로 시간 조정)
     if dt_obj:
         adj_mins = get_total_time_adjustment(dt_obj)
         dt_obj += dt_mod.timedelta(minutes=adj_mins)
-        # 역산된 실제 시간으로 지지를 다시 구할 수 있으나, 
-        # 사이드바 입력의 경우 시간 범위 문자열을 우선 활용
     
     target_ji, t_idx = "子", 0
     if "朝子" in time_str or "夜子" in time_str: target_ji, t_idx = "子", 0
@@ -268,7 +284,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 12.5.1 Masterpiece")
+    st.caption("Ver 12.6 Masterpiece (Ultimate)")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -352,7 +368,6 @@ if btn_single or btn_compare:
         gj = klc.getChineseGapJaString().split()
         ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
         
-        # [핵심] 출생시간 엔진 적용 및 보정 (표준시 -30분, 써머타임 -60분 등)
         base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
         hs, hb = get_time_ganji(ds, u_t, base_dt)
         gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
@@ -373,9 +388,10 @@ if btn_single or btn_compare:
         
         info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
+        # [사주 첫 번째 리포트 페이지: A4 화면 고정 및 무색(White) 바탕]
         html_table = f"""
-        <div class='report-page'><div class='vip-inset-frame'>
-        <h1 style='text-align:center; color:#1A237E; font-size:28px; margin:0 0 10px 0;'>🔬 [초연 시공명리 사주풀이]</h1>
+        <div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E;'>
+        <h1 style='text-align:center; color:#1A237E;'>🔬 [초연 시공명리 사주풀이]</h1>
         {info_h}
         <table class='result-table'>
             <tr class='top-header-cell'><td>구분</td><td>시주</td><td>일주</td><td>월주</td><td>년주</td></tr>
@@ -410,7 +426,7 @@ if btn_single or btn_compare:
         
         st.markdown(html_table + f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong}, [일] {i_gong}</div></div>", unsafe_allow_html=True)
         
-        # [핵심] 대운/세운/월운 흐름표 생성 (좌->우 LTR 정렬)
+        # [흐름표 LTR]
         un_html = f"<h4 style='color:#1A237E; margin-top:20px;'>1) 대운의 흐름 (대운수: {calc_d})</h4><div class='flow-flex'>"
         for i in range(10):
             val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
@@ -442,36 +458,35 @@ if btn_single or btn_compare:
             wol_html += f"<div class='flow-col' style='background-color:{bg_col};'><div class='dw-age-head'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828;'>{get_12_shinsal(yb, tj)}</div></div>"
         wol_html += "</div>"
         
-        # [핵심] 박사님 작성 하드코딩 맺음말
+        # [핵심] 하드코딩 맺음말
         closing_html = f"""
         <div style='margin-top: 30px;'>
-            <p style='text-indent: 15px; text-align: justify; word-break: keep-all; line-height: 1.8; margin-bottom: 8px; color: #333;'>'사주팔자(命)'는 태어날 때 부여받은 변하지 않는 '바코드(bar-code)'와 같지만, 우리가 살아가며 마주하는 '스캐너(scanner)'인 '운(運)'은 늘 변화하며 흐릅니다.</p>
-            <p style='text-indent: 15px; text-align: justify; word-break: keep-all; line-height: 1.8; margin-bottom: 8px; color: #333;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-            <p style='text-indent: 15px; text-align: justify; word-break: keep-all; line-height: 1.8; margin-bottom: 15px; color: #333;'>앞으로 미래에 대한 더 깊은 시공간의 지혜와 궁금증이 있으시면 언제든 '초연 시공명리 연구소의 문'을 두드려 주십시오.</p>
-            <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; color: #333; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+            <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자(命)'는 태어날 때 부여받은 변하지 않는 '바코드(bar-code)'와 같지만, 우리가 살아가며 마주하는 '스캐너(scanner)'인 '운(運)'은 늘 변화하며 흐릅니다.</p>
+            <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+            <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 시공간의 지혜와 궁금증이 있으시면 언제든 '초연 시공명리 연구소의 문'을 두드려 주십시오.</p>
+            <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
             <div style='text-align: right; margin-top: 30px;'>
-                <span style='font-weight: 900; font-size: 20px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+                <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
             </div>
         </div>
         """
 
-        # [AI 프롬프트: 12단계 및 운세분석 강제 족쇄]
-        with st.spinner("초연 509 시스템: 체용(體用) 실행분석 및 12.5 마스터피스 가동 중..."):
+        # [AI 프롬프트: 1)분석 문단 띄어쓰기 강제, 표 그리기 금지]
+        with st.spinner("초연 509 시스템: 체용(體用) 실행분석 가동 중..."):
             prompt = f"""
             [절대 규칙: 표(Table)는 파이썬(만세력)이 자동 생성하여 삽입하므로, AI는 절대 표나 그리드를 직접 마크다운으로 그리지 마십시오. 오직 텍스트 분석만 작성하십시오. 1. 2. 3. 넘버링 필수. 모든 내용은 명조체.]
             당신은 최고의 명리학 마스터 '초연 박사'입니다.
             내담자: {disp_name} ({u_gender}, {sol_str}생)
             사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시 / 공망: {i_gong}
             
-            [🚨 제5장 운세분석 비급 (필수 반영 사항)]
-            1. 대운은 체운(시기, 환경), 세운/월운은 용운(실행, 사건격발)으로 접근.
-            2. 사고(四庫) 진술축미의 왕자입고(旺者入庫), 암신개고(暗神開庫) 타이밍 정밀 분석.
-            3. 천라지망 및 원진/귀문, 동착살 흉화 가중 심층 스캔.
-            4. 월운 분석 시 반드시 전반기(5~19일)와 후반기(20일~익월 4일)로 절기를 나누어 작성.
-
-            [출력 템플릿] 아래 1~12단계 목차(HTML)를 무조건 동일하게 출력하십시오.
-            <h3 style='color:#1A237E;'>1) 분석</h3><div class='content-box-loose'><p>1. (격국 및 무대 분석)</p></div>
-            <h3 style='color:#1A237E;'>2) 성격</h3><div class='content-box-loose'><p>1. (지장간 좌법/인종법 분석)</p></div>
+            [🚨 출력 템플릿] 아래 1~12단계 목차(HTML)를 무조건 동일하게 출력하십시오. 특히 <p>태그로 문단을 반드시 분리하십시오.
+            <h3 style='color:#1A237E;'>1) 분석</h3>
+            <div class='content-box-loose'>
+                <p style='margin-bottom:10px;'>1. (격국 및 무대 분석)</p>
+                <p style='margin-bottom:10px;'>2. (조후 및 주체성 분석)</p>
+                <p style='margin-bottom:10px;'>3. (형충파해 및 진술축미 분석)</p>
+            </div>
+            <h3 style='color:#1A237E;'>2) 성격</h3><div class='content-box-loose'><p style='margin-bottom:10px;'>1. (지장간 좌법/인종법 분석)</p></div>
             <h3 style='color:#1A237E;'>3) 부모·형제운</h3><div class='content-box-loose'></div>
             <h3 style='color:#1A237E;'>4) 학업·진학운</h3><div class='content-box-loose'></div>
             <h3 style='color:#1A237E;'>5) 적성·직업운</h3><div class='content-box-loose'></div>
@@ -501,40 +516,41 @@ if btn_single or btn_compare:
 
             <h3 style='color:#1A237E; margin-top:30px;'>12) 삶을 바꾸는 지혜로운 조언</h3>
             <div class='content-box-loose' style='background-color:#fdfdfd; padding:15px; border:1px solid #eee; border-radius:8px;'>
-                <p><b>◈ 나를 돕는 에너지와 색상:</b> (색상 및 기운 팁)</p>
-                <p><b>◈ 신체 밸런스와 에너지 관리:</b> (건강 조언)</p>
-                <p><b>◈ 공간의 흐름과 방위의 지혜:</b> (귀인의 방위)</p>
-                <p><b>◈ 재능 효율을 높이는 직업적 지혜:</b> (적성 팁)</p>
-                <p><b>◈ 더 나은 내일을 위한 절제의 미학:</b> (수성 원칙)</p>
-                <div style='margin-top:20px;'><span style='color:#1A237E; font-weight:900;'>[초연 시공명리 특별 개운 비법]</span></div>
-                <p><b>◈ 수호 천사의 기운:</b> (천을귀인 활용법)</p>
-                <p><b>◈ 백년해로의 기운:</b> (부부 관계 조언)</p>
-                <p><b>◈ 행운에 따른 기운:</b> (도/망/역 등 수성 전략)</p>
+                <p style='margin-bottom:10px;'><b>◈ 나를 돕는 에너지와 색상:</b> (색상 및 기운 팁)</p>
+                <p style='margin-bottom:10px;'><b>◈ 신체 밸런스와 에너지 관리:</b> (건강 조언)</p>
+                <p style='margin-bottom:10px;'><b>◈ 공간의 흐름과 방위의 지혜:</b> (귀인의 방위)</p>
+                <p style='margin-bottom:10px;'><b>◈ 재능 효율을 높이는 직업적 지혜:</b> (적성 팁)</p>
+                <p style='margin-bottom:10px;'><b>◈ 더 나은 내일을 위한 절제의 미학:</b> (수성 원칙)</p>
+                <div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 시공명리 특별 개운 비법]</span></div>
+                <p style='margin-bottom:10px;'><b>◈ 수호 천사의 기운:</b> (천을귀인 활용법)</p>
+                <p style='margin-bottom:10px;'><b>◈ 백년해로의 기운:</b> (부부 관계 조언)</p>
+                <p style='margin-bottom:10px;'><b>◈ 행운에 따른 기운:</b> (도/망/역 등 수성 전략)</p>
             </div>
             """
             try:
                 res = model.generate_content(prompt)
                 
-                # 표 삽입 치환 및 맺음말(closing_html) 직접 결합
                 final_report = res.text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                 final_report += closing_html
                 
                 st.markdown(f"<div style='margin-top:20px;'>{final_report}</div></div></div>", unsafe_allow_html=True)
                 
+                # [타 술사 원본 - 페이지 분할 및 A4 무색 바탕 둥근 박스]
                 if btn_compare:
-                    st.markdown(f"<div class='page-break'></div><div class='report-page no-bg-print'><div class='vip-inset-frame' style='border-color:#3E2723;'><h2 style='text-align:center; color:#3E2723; margin-bottom:20px;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose'>{comp_text.replace('\\n','<br>')}</div></div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#3E2723;'><h2 style='text-align:center; color:#3E2723; margin-bottom:20px;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose'>{comp_text.replace('\\n','<br>')}</div></div></div>", unsafe_allow_html=True)
                     
+                    # [1:1 비교 리포트 - 페이지 분할 및 A4 무색 바탕 둥근 박스]
                     with st.spinner("1:1 교차 대조 중..."):
                         comp_prompt = f"""
 [시스템: 1:1 비교]
-타 술사 감명서를 1~11단계 목차에 맞춰 교차 대조.
+타 술사 감명서를 1~11단계 목차에 맞춰 교차 대조. 문단 분리 철저.
 타 술사의 '정적인 구조' 파악의 한계를 지적하고, 초연의 '동적 시뮬레이션(시기에 따른 실행분석)' 우위를 입증.
 12번은 [12) 종합 의견]으로 총평.
 
 대상 데이터: {comp_text}
 """
                         c_res = model.generate_content(comp_prompt)
-                        st.markdown(f"<div class='page-break'></div><div class='report-page no-bg-print'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000; margin-bottom:20px;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose'>{c_res.text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000; margin-bottom:20px;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose'>{c_res.text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>", unsafe_allow_html=True)
                         
             except Exception as e: 
                 st.error(f"AI 연산 오류: {e}")
