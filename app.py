@@ -7,6 +7,7 @@ import datetime as dt_mod
 from korean_lunar_calendar import KoreanLunarCalendar
 import ephem
 import google.generativeai as genai
+import streamlit.components.v1 as components
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -36,33 +37,30 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 1. AI 엔진 및 DB 설정
+# 1. 시스템 변수 초기화 (역산 검색 연동용)
+# ==============================================================================
+if 's_y' not in st.session_state: st.session_state.s_y = 1963
+if 's_m' not in st.session_state: st.session_state.s_m = 5
+if 's_d' not in st.session_state: st.session_state.s_d = 22
+if 's_t' not in st.session_state: st.session_state.s_t = "03:30 ~ 05:29 (寅)시"
+
+# ==============================================================================
+# 2. AI 엔진 및 DB 설정 / 명리 연산 엔진
 # ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     model = genai.GenerativeModel('gemini-1.5-pro')
-except:
-    pass
+except: pass
 
 @st.cache_data
 def load_db():
-    db_path = "choyeon_db.json"
-    if os.path.exists(db_path):
-        with open(db_path, 'r', encoding='utf-8') as f: return json.load(f)
+    if os.path.exists("choyeon_db.json"):
+        with open("choyeon_db.json", 'r', encoding='utf-8') as f: return json.load(f)
     return {"wolryeong": {}, "ilju": {}}
-
 CHOYEON_DB = load_db()
 
-# ==============================================================================
-# 2. 명리 연산 엔진 (코랩 원본 100% 복구: 신살, 지장간, 합충 등)
-# ==============================================================================
 GAN = "甲乙丙丁戊己庚辛壬癸"
 JI = "子丑寅卯辰巳午未申酉戌亥"
-
-def split_hanja(v):
-    v = v.strip()
-    if len(v) >= 2: return v[0], v[1]
-    return "?", "?"
 
 def get_color(c):
     if c in "甲乙寅卯": return "목"
@@ -190,32 +188,76 @@ def get_daeun_su_accurate(utc_dt, order):
     except: return 1
 
 # ==============================================================================
-# 3. 사이드바 UI
+# 3. 사이드바 UI (역산 검색 & 버튼 통합)
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 8.7 Masterpiece (Full Version)")
+    st.caption("Ver 8.7 Masterpiece (Full)")
+    
+    # [신기능] 역산 검색 모듈
+    with st.expander("🔍 역산 검색 (간지 -> 날짜)", expanded=False):
+        st.caption("생일은 모르고 간지만 알 때 사용합니다.")
+        col_g1, col_g2 = st.columns(2)
+        with col_g1: ry = st.text_input("년주(예:癸卯)", "")
+        with col_g2: rm = st.text_input("월주(예:丁巳)", "")
+        col_g3, col_g4 = st.columns(2)
+        with col_g3: rd = st.text_input("일주(예:乙丑)", "")
+        with col_g4: rt = st.text_input("시지(예:寅)", "")
+        
+        if st.button("🔍 날짜 찾기", use_container_width=True):
+            if len(ry)==2 and len(rm)==2 and len(rd)==2:
+                klc = KoreanLunarCalendar()
+                found = False
+                for y in range(2026, 1899, -1):
+                    klc.setSolarDate(y, 7, 1); gj_y = klc.getChineseGapJaString().split()
+                    if gj_y and gj_y[0][:2] == ry:
+                        curr_dt = dt_mod.date(y+1, 2, 28)
+                        while curr_dt >= dt_mod.date(y, 1, 1):
+                            klc.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                            gj = klc.getChineseGapJaString().split()
+                            if len(gj) >= 3 and gj[0][:2] == ry and gj[1][:2] == rm and gj[2][:2] == rd:
+                                st.session_state.s_y = curr_dt.year
+                                st.session_state.s_m = curr_dt.month
+                                st.session_state.s_d = curr_dt.day
+                                time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
+                                if rt in time_map_rev: st.session_state.s_t = time_map_rev[rt]
+                                found = True
+                                st.success(f"✅ {curr_dt.year}년 {curr_dt.month}월 {curr_dt.day}일 자동입력 완료!")
+                                break
+                            curr_dt -= dt_mod.timedelta(days=1)
+                        if found: break
+                if not found: st.error("일치하는 날짜가 없습니다.")
+            else: st.warning("년/월/일 간지를 정확히 입력하세요.")
+
+    st.markdown("---")
     u_name = st.text_input("성함", "내담자")
     u_gender = st.selectbox("성별", ["남성", "여성"])
     u_cal = st.selectbox("달력", ["양력", "음력"])
+    
+    # Session State 연동 날짜 입력창
     col1, col2, col3 = st.columns(3)
-    with col1: u_y = st.number_input("년", 1900, 2030, 1963)
-    with col2: u_m = st.number_input("월", 1, 12, 5)
-    with col3: u_d = st.number_input("일", 1, 31, 22)
+    with col1: u_y = st.number_input("년", 1900, 2030, st.session_state.s_y, key="u_y")
+    with col2: u_m = st.number_input("월", 1, 12, st.session_state.s_m, key="u_m")
+    with col3: u_d = st.number_input("일", 1, 31, st.session_state.s_d, key="u_d")
+    
     u_t = st.selectbox("태어난 시간", [
         "시간 모름", "23:30 ~ 01:29 (子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
         "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", 
         "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", 
         "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시"
-    ])
+    ], index=["시간 모름", "23:30 ~ 01:29 (子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시"].index(st.session_state.s_t))
+    
     st.markdown("---")
-    st.markdown("### ⚖️ 타 감명지 비교용")
-    comp_text = st.text_area("비교할 타 술사 감명서", height=150)
+    comp_text = st.text_area("비교할 타 술사 감명서 (선택)", height=150)
+    
+    # 사이드바로 이동한 실행 버튼!
+    st.markdown("<br>", unsafe_allow_html=True)
+    run_btn = st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=True, type="primary")
 
 # ==============================================================================
-# 4. 분석 가동 및 레이아웃 (수직 통합형 원상복구 - 코랩 100%)
+# 4. 분석 가동 및 레이아웃 출력 (프린트 모듈 포함)
 # ==============================================================================
-if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=True):
+if run_btn:
     klc = KoreanLunarCalendar()
     if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
     else: klc.setLunarDate(u_y, u_m, u_d, False)
@@ -223,6 +265,17 @@ if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=Tr
     gj = klc.getChineseGapJaString().split()
     ys, yb = gj[0][0], gj[0][1]; ms, mb = gj[1][0], gj[1][1]; ds, db = gj[2][0], gj[2][1]
     hs, hb = get_time_ganji(ds, u_t)
+    
+    # --- 프린트용 JS/버튼 삽입 ---
+    components.html("""
+        <style>
+            .print-btn { background-color: #2E7D32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+            .print-btn.all { background-color: #D50000; }
+        </style>
+        <div style="text-align: right; padding: 10px;">
+            <button class="print-btn" onclick="window.parent.print()">🖨️ 현재 화면 인쇄 / PDF 저장</button>
+        </div>
+    """, height=60)
     
     # --- 1. 정밀 원국 표 렌더링 ---
     gans = [hs, ds, ms, ys]
@@ -232,7 +285,6 @@ if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=Tr
     def td(c, size="22px"): return f"<td class='color-{get_color(c)}' style='font-size:{size};'>{d_str(c)}</td>"
     def ss_td(tc): return f"<td class='sub-header'>{get_ss(ds, tc)}</td>"
     
-    # 합충형해파 행 생성
     ji_rel_rows = ""
     for loop_idx, r_idx in enumerate([1, 2, 0, 3]):
         border_css = "border-bottom: 1px solid #444 !important;" if loop_idx == 3 else "border-top: none !important; border-bottom: none !important;"
@@ -253,10 +305,14 @@ if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=Tr
         shinsal_tds += f"<td style='vertical-align: top; font-size:12px; line-height:1.4;'>{'<br>'.join(cmb[:6]) if cmb else '-'}</td>"
 
     html_table = f"""
+    <div id="print-area">
+    <div class='report-page'><div class='vip-inset-frame'>
+    <h1 style='text-align:center; color:#1A237E;'>🔬 [초연 정통 명리 사주풀이]</h1>
+    <h3 style='text-align:center;'>🏮 {u_name}님 ({u_gender}) 원국</h3>
     <table class='result-table'>
         <tr><td class='top-header-cell'>구분</td><td class='top-header-cell'>시주</td><td class='top-header-cell'>일주</td><td class='top-header-cell'>월주</td><td class='top-header-cell'>년주</td></tr>
         <tr><td class='header-cell-main'>천간합충</td>{hch_tds}</tr>
-        <tr><td class='header-cell-main'>천간십성</td>{ss_td(hs)}<td><span style='color:#D50000'>日元</span></td>{ss_td(ms)}{ss_td(ys)}</tr>
+        <tr><td class='header-cell-main'>천간십성</td>{ss_td(hs)}<td><span style='color:#D50000; font-weight:900;'>日元</span></td>{ss_td(ms)}{ss_td(ys)}</tr>
         <tr><td class='header-cell-main'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
         <tr><td class='header-cell-main'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
         <tr><td class='header-cell-main'>지지십성</td>{ss_td(hb)}{ss_td(db)}{ss_td(mb)}{ss_td(yb)}</tr>
@@ -268,7 +324,6 @@ if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=Tr
     </table>
     """
     
-    st.markdown(f"### 🏮 {u_name}님 정밀 사주 원국")
     st.markdown(html_table, unsafe_allow_html=True)
     
     # --- 2. 마스터 바 ---
@@ -306,11 +361,10 @@ if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=Tr
             <div style='font-size:12px; color:#C62828;'>{get_12_shinsal(yb, j)}</div>
         </div>
         """
-    st.markdown(un_html + "</div>", unsafe_allow_html=True)
+    st.markdown(un_html + "</div></div></div>", unsafe_allow_html=True)
 
     # --- 4. 11단계 정밀 감명 & 비교 리포트 ---
-    st.markdown("---")
-    with st.spinner("초연 509 시스템: 합충형해파 동적 물리엔진 가동 중..."):
+    with st.spinner("초연 509 시스템: 동적 물리엔진 가동 중..."):
         prompt = f"""
         당신은 최고의 명리학 마스터 '초연 박사'입니다.
         내담자: {u_name} ({u_gender}, {u_y}년 {u_m}월 {u_d}일생)
@@ -318,14 +372,24 @@ if st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=Tr
         
         [지시사항]
         1. 11단계(성격, 부모, 학업, 직업, 결혼, 사업, 재산, 건강, 대운, 세운 등)로 정밀 분석하시오.
-        2. {f'3. 아래 타 술사의 감명서와 1:1 비교하여 초연 시스템의 우위를 증명하시오: {comp_text}' if comp_text else ''}
-        3. HTML 구조를 활용하여 VIP 인셋 프레임 형식으로 화려하고 깊이 있게 서술하십시오.
+        2. HTML 구조를 활용하여 <b><div class='report-page'><div class='vip-inset-frame'></b> 태그 안에 내용을 작성하십시오.
         """
         try:
             if "GOOGLE_API_KEY" not in st.secrets:
                 st.error("API 키가 없습니다.")
             else:
                 res = model.generate_content(prompt)
-                st.markdown(f"<div class='report-page'><div class='vip-inset-frame'>{res.text}</div></div>", unsafe_allow_html=True)
+                st.markdown(res.text, unsafe_allow_html=True)
+                
+                # 타 감명서 입력 시 1:1 비교 추가
+                if comp_text:
+                    st.markdown("<hr>", unsafe_allow_html=True)
+                    with st.spinner("타 술사 감명서 1:1 교차 대조 중..."):
+                        comp_prompt = f"초연 박사로서 다음 타 술사 감명서를 11단계 소제목에 맞춰 1:1 비교하고 12) 종합의견을 작성하시오. <b><div class='report-page'><div class='vip-inset-frame'></b> 안에 작성. 대상 데이터: {comp_text}"
+                        comp_res = model.generate_content(comp_prompt)
+                        st.markdown(comp_res.text, unsafe_allow_html=True)
+                        
         except Exception as e:
             st.error(f"AI 연산 오류: {e}")
+            
+    st.markdown("</div>", unsafe_allow_html=True) # print-area 닫기
