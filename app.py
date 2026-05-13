@@ -35,33 +35,34 @@ st.markdown("""
     .dw-age-head { background: #3E2723; color: white; font-weight: 900; padding: 5px; }
     @media print {
         .stSidebar, button, iframe { display: none !important; }
-        .report-page { box-shadow: none; margin: 0; padding: 0; }
+        .report-page { box-shadow: none; margin: 0; padding: 0; page-break-after: always; }
         .vip-inset-frame { border: 2px solid #000; }
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 1. 자동 커서 이동(JS) 및 시스템 변수 세팅 (2000년 6월 15일 홍길동 초기화)
+# 1. 자동 커서 이동(JS) 및 시스템 변수 세팅 (2000년 6월 15일 홍길동)
 # ==============================================================================
 if 's_y' not in st.session_state: st.session_state.s_y = 2000
 if 's_m' not in st.session_state: st.session_state.s_m = 6
 if 's_d' not in st.session_state: st.session_state.s_d = 15
 if 's_t' not in st.session_state: st.session_state.s_t = "시간 모름"
 
+# 한글 씹힘 방지 (스페이스바 또는 년,월,일 입력 시 이동)
 components.html("""
 <script>
     const doc = window.parent.document;
-    doc.addEventListener('input', function(e) {
+    doc.addEventListener('keyup', function(e) {
         if (e.target.tagName !== 'INPUT' || e.target.type !== 'text') return;
         let label = e.target.getAttribute('aria-label') || "";
         let val = e.target.value;
         if (label.includes('년주') || label.includes('월주') || label.includes('일주')) {
-            if (val.length >= 2 || val.includes('년') || val.includes('월') || val.includes('일')) {
+            if (e.key === ' ' || val.includes('년') || val.includes('월') || val.includes('일') || val.includes('시')) {
                 let inputs = Array.from(doc.querySelectorAll('input[type="text"]'));
                 let idx = inputs.indexOf(e.target);
                 if (idx > -1 && idx < inputs.length - 1) {
-                    setTimeout(() => { inputs[idx + 1].focus(); }, 50);
+                    inputs[idx + 1].focus();
                 }
             }
         }
@@ -189,7 +190,6 @@ def calculate_gongmang(ilgan, ilji):
 
 def get_time_ganji(day_gan, time_str):
     if "시간 모름" in time_str: return "?", "?"
-    
     target_ji = "?"
     if "朝子" in time_str: target_ji = "子"; t_idx = 0
     elif "夜子" in time_str: target_ji = "子"; t_idx = 0
@@ -217,23 +217,25 @@ def get_daeun_su_accurate(utc_dt, order):
     except: return 1
 
 # ==============================================================================
-# 3. 사이드바 UI
+# 3. 사이드바 UI (동선 완벽 최적화)
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 8.7 Masterpiece (Full)")
+    st.caption("Ver 8.7 Masterpiece (Ultimate)")
     
-    with st.expander("🔍 역산 검색 (간지 -> 날짜 자동세팅)", expanded=False):
+    with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
-        with col_g1: ry = st.text_input("년주(예:庚辰)", value="")
-        with col_g2: rm = st.text_input("월주(예:戊寅)", value="")
+        with col_g1: ry = st.text_input("년주", value="")
+        with col_g2: rm = st.text_input("월주", value="")
         col_g3, col_g4 = st.columns(2)
-        with col_g3: rd = st.text_input("일주(예:壬子)", value="")
-        with col_g4: rt = st.text_input("시지(예:午)", value="")
+        with col_g3: rd = st.text_input("일주", value="")
+        with col_g4: rt = st.text_input("시주", value="")
         
-        if st.button("🔍 이 간지로 생년월일 자동 입력하기", use_container_width=True):
-            if len(ry)>=2 and len(rm)>=2 and len(rd)>=2:
-                ry, rm, rd = ry[:2], rm[:2], rd[:2]
+        if st.button("🔍 생년월일 자동입력", use_container_width=True):
+            if len(ry.replace("년","").replace(" ",""))>=2 and len(rm.replace("월","").replace(" ",""))>=2 and len(rd.replace("일","").replace(" ",""))>=2:
+                ry = ry.replace("년","").replace(" ","")[:2]
+                rm = rm.replace("월","").replace(" ","")[:2]
+                rd = rd.replace("일","").replace(" ","")[:2]
                 klc = KoreanLunarCalendar()
                 found = False
                 for y in range(2026, 1899, -1):
@@ -248,7 +250,9 @@ with st.sidebar:
                                 st.session_state.s_m = curr_dt.month
                                 st.session_state.s_d = curr_dt.day
                                 time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
-                                if rt and rt[0] in time_map_rev: st.session_state.s_t = time_map_rev[rt[0]]
+                                if rt:
+                                    ji_char = rt.replace("시","").replace(" ","")[-1]
+                                    if ji_char in time_map_rev: st.session_state.s_t = time_map_rev[ji_char]
                                 found = True
                                 st.success(f"✅ {curr_dt.year}년 {curr_dt.month}월 {curr_dt.day}일 자동입력 완료!")
                                 break
@@ -277,156 +281,173 @@ with st.sidebar:
     sel_idx = idx_list.index(st.session_state.s_t) if st.session_state.s_t in idx_list else 0
     u_t = st.selectbox("태어난 시간", idx_list, index=sel_idx)
     
+    # [박사님 하명] 일상적으로 가장 많이 누를 '단독 사주풀이' 버튼을 위로 배치
+    st.markdown("<br>", unsafe_allow_html=True)
+    btn_single = st.button("🚀 초연 시공명리 사주풀이", use_container_width=True, type="primary")
+    
     st.markdown("---")
     comp_text = st.text_area("비교할 타 술사 감명서 (선택)", height=150)
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    run_btn = st.button("🚀 초연 시공명리 풀버전 가동", use_container_width=True, type="primary")
+    # [박사님 하명] 타 감명서가 있을 때 누를 '3단 콤보 비교' 버튼을 아래로 배치
+    btn_compare = st.button("⚖️ 두 감명서의 상세 비교", use_container_width=True, type="primary")
 
 # ==============================================================================
-# 4. 분석 가동 및 출력
+# 4. 분석 가동 및 1단/3단 출력 분기 처리
 # ==============================================================================
-if run_btn:
-    klc = KoreanLunarCalendar()
-    if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
-    else: klc.setLunarDate(u_y, u_m, u_d, False)
-    
-    gj = klc.getChineseGapJaString().split()
-    ys, yb = gj[0][0], gj[0][1]; ms, mb = gj[1][0], gj[1][1]; ds, db = gj[2][0], gj[2][1]
-    hs, hb = get_time_ganji(ds, u_t)
-    
-    components.html("""
-        <style>
-            .print-btn { font-weight: bold; border: none; border-radius: 5px; color: white; cursor: pointer; padding: 10px 15px; margin-left: 10px; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-            .btn-single { background-color: #2E7D32; }
-            .btn-all { background-color: #D50000; }
-        </style>
-        <div style="text-align: right; padding: 10px;">
-            <button class="print-btn btn-single" onclick="printSingle()">🖨️ 초연 단독 인쇄</button>
-            <button class="print-btn btn-all" onclick="printAll()">🖨️ 비교 포함 전체 인쇄</button>
-        </div>
-        <script>
-            function printSingle() {
-                const doc = window.parent.document;
-                const comp = doc.getElementById('comparison-area');
-                if(comp) comp.style.display = 'none';
-                window.parent.print();
-                if(comp) comp.style.display = 'block';
-            }
-            function printAll() {
-                window.parent.print();
-            }
-        </script>
-    """, height=60)
-    
-    gans = [hs, ds, ms, ys]
-    jjis = [hb, db, mb, yb]
-    
-    def d_str(v): return "?" if v in ["?", " ", "-", "모름"] else v
-    def td(c, size="22px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900;'>{d_str(c)}</td>"
-    def ss_td(tc): return f"<td class='sub-header'>{get_ss(ds, tc)}</td>"
-    
-    ji_rel_rows = ""
-    for loop_idx, r_idx in enumerate([1, 2, 0, 3]):
-        border_css = "border-bottom: 1px solid #444 !important;" if loop_idx == 3 else "border-top: none !important; border-bottom: none !important;"
-        if loop_idx == 0: border_css = "border-bottom: none !important;"
-        cells = "".join([f"<td style='color:{('#D50000' if c_idx==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[c_idx])!='-' else '#BBB'))}; font-weight:900; {border_css}'>{('←('+d_str(jjis[r_idx])+')→' if c_idx==r_idx else get_ji_rel_set(jjis[r_idx], jjis[c_idx]))}</td>" for c_idx in range(4)])
-        lbl = f"<td rowspan='4' class='header-cell-main' style='border-bottom: 1px solid #444 !important;'>합충형파해</td>" if r_idx==1 else ""
-        ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
-
-    hch_tds = "".join([f"<td>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-    jg_tds = "".join([f"<td style='padding:0;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
-    un_tds = "".join([f"<td style='color:#0D47A1 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    s12_tds = "".join([f"<td style='color:#C62828 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-    
-    shinsal_tds = ""
-    for i in range(4):
-        noble, ausp, evil = get_general_shinsal(i, gans, jjis)
-        cmb = [f"<span style='color:#0D47A1;'>{x}</span>" for x in noble + ausp] + [f"<span style='color:#C62828;'>{x}</span>" for x in evil]
-        shinsal_tds += f"<td style='vertical-align: top; font-size:12px; line-height:1.4;'>{'<br>'.join(cmb[:6]) if cmb else '-'}</td>"
-
-    disp_name = u_name if u_name else "홍길동"
-    html_table = f"""
-    <div class='report-page'><div class='vip-inset-frame'>
-    <h1 style='text-align:center; color:#1A237E;'>🔬 [초연 정통 명리 사주풀이]</h1>
-    <h3 style='text-align:center;'>🏮 {disp_name}님 ({u_gender}) 원국 {'<span style="color:#D50000;">[3주 6자]</span>' if hs == '?' else ''}</h3>
-    <table class='result-table'>
-        <tr><td class='top-header-cell'>구분</td><td class='top-header-cell'>시주</td><td class='top-header-cell'>일주</td><td class='top-header-cell'>월주</td><td class='top-header-cell'>년주</td></tr>
-        <tr><td class='header-cell-main'>천간합충</td>{hch_tds}</tr>
-        <tr><td class='header-cell-main'>천간십성</td>{ss_td(hs)}<td><span style='color:#D50000; font-weight:900;'>日元</span></td>{ss_td(ms)}{ss_td(ys)}</tr>
-        <tr><td class='header-cell-main'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
-        <tr><td class='header-cell-main'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
-        <tr><td class='header-cell-main'>지지십성</td>{ss_td(hb)}{ss_td(db)}{ss_td(mb)}{ss_td(yb)}</tr>
-        <tr><td class='header-cell-main' style='padding:0;'>지장간</td>{jg_tds}</tr>
-        {ji_rel_rows}
-        <tr><td class='header-cell-main'>십이운성</td>{un_tds}</tr>
-        <tr><td class='header-cell-main'>십이신살</td>{s12_tds}</tr>
-        <tr><td class='header-cell-main'>일반신살</td>{shinsal_tds}</tr>
-    </table>
-    """
-    st.markdown(html_table, unsafe_allow_html=True)
-    
-    counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
-    for char in [hs, ds, ms, ys, hb, db, mb, yb]:
-        if char != "?": counts[get_color(char)] += 1
-    
-    utc_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0) - dt_mod.timedelta(hours=9)
-    order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
-    calc_d = get_daeun_su_accurate(utc_dt, order)
-    
-    st.markdown(f"""
-    <div style='border: 2px solid #3E2723; background-color: #FFF8E1; padding: 10px; display: flex; justify-content: space-around; font-size: 15px; font-weight: 900; border-radius: 8px;'>
-        <div>⏳ 대운수: <b>{calc_d}</b></div>
-        <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
-        <div>🎯 공망: [일] {calculate_gongmang(ds, db)}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div class='un-title'>◈ 대운의 흐름</div>", unsafe_allow_html=True)
-    un_html = "<div class='rtl-scroll'>"
-    for i in range(10):
-        val = i*10 + calc_d
-        c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
-        j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
-        un_html += f"""
-        <div style='flex: 1; min-width: 80px; border-left: 1px solid #ccc; text-align: center; padding-bottom:5px;'>
-            <div class='dw-age-head'>{val}세</div>
-            <div style='padding: 5px;'>{get_ss(ds, c)}</div>
-            <div class='color-{get_color(c)}' style='font-size:18px;'>{c}</div>
-            <div class='color-{get_color(j)}' style='font-size:18px;'>{j}</div>
-            <div style='padding: 5px;'>{get_ss(ds, j)}</div>
-            <div style='font-size:12px;'>{get_unsung(ds, j)}</div>
-            <div style='font-size:12px; color:#C62828;'>{get_12_shinsal(yb, j)}</div>
-        </div>
-        """
-    st.markdown(un_html + "</div></div></div>", unsafe_allow_html=True)
-
-    with st.spinner("초연 509 시스템: 동적 물리엔진 가동 중..."):
-        prompt = f"""
-        당신은 최고의 명리학 마스터 '초연 박사'입니다.
-        내담자: {disp_name} ({u_gender}, {u_y}년 {u_m}월 {u_d}일생)
-        사주: {ys}{yb} {ms}{mb} {ds}{db} {hs}{hb} / 공망: {calculate_gongmang(ds, db)}
-        {'(※ 🚨 주의: 시주를 모르는 3주 6자 사주이므로, 시주와 관련된 내용은 배제하고 원국 6글자의 동태만으로 11단계 통변을 진행할 것!)' if hs == '?' else ''}
+if btn_single or btn_compare:
+    if btn_compare and not comp_text.strip():
+        st.warning("⚠️ 타 술사의 감명서 내용을 입력해 주십시오.")
+    else:
+        # 사주 명리 기본 엔진 가동
+        klc = KoreanLunarCalendar()
+        if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
+        else: klc.setLunarDate(u_y, u_m, u_d, False)
         
-        [지시사항]
-        1. 11단계(성격, 부모, 학업, 직업, 결혼, 사업, 재산, 건강, 대운, 세운 등)로 정밀 분석하시오.
-        2. HTML 구조를 활용하여 <b><div class='report-page'><div class='vip-inset-frame'></b> 태그 안에 내용을 작성하십시오.
+        gj = klc.getChineseGapJaString().split()
+        ys, yb = gj[0][0], gj[0][1]; ms, mb = gj[1][0], gj[1][1]; ds, db = gj[2][0], gj[2][1]
+        hs, hb = get_time_ganji(ds, u_t)
+        
+        # [박사님 하명] 깔끔한 통합 인쇄/PDF 저장 버튼 
+        btn_label = "🖨️ 3대 리포트 통합 인쇄 / PDF 저장" if btn_compare else "🖨️ 초연 사주풀이 인쇄 / PDF 저장"
+        components.html(f"""
+            <style>
+                .print-btn {{ font-weight: bold; border: none; border-radius: 5px; color: white; background-color: #2E7D32; cursor: pointer; padding: 12px 20px; font-size: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; }}
+                .print-btn:hover {{ background-color: #1B5E20; }}
+            </style>
+            <div style="text-align: right; padding: 5px;">
+                <button class="print-btn" onclick="window.parent.print()">{btn_label}</button>
+            </div>
+        """, height=60)
+        
+        # --- 1. 정밀 원국 표 렌더링 ---
+        gans = [hs, ds, ms, ys]
+        jjis = [hb, db, mb, yb]
+        
+        def d_str(v): return "?" if v in ["?", " ", "-", "모름"] else v
+        def td(c, size="22px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900;'>{d_str(c)}</td>"
+        def ss_td(tc): return f"<td class='sub-header'>{get_ss(ds, tc)}</td>"
+        
+        ji_rel_rows = ""
+        for loop_idx, r_idx in enumerate([1, 2, 0, 3]):
+            border_css = "border-bottom: 1px solid #444 !important;" if loop_idx == 3 else "border-top: none !important; border-bottom: none !important;"
+            if loop_idx == 0: border_css = "border-bottom: none !important;"
+            cells = "".join([f"<td style='color:{('#D50000' if c_idx==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[c_idx])!='-' else '#BBB'))}; font-weight:900; {border_css}'>{('←('+d_str(jjis[r_idx])+')→' if c_idx==r_idx else get_ji_rel_set(jjis[r_idx], jjis[c_idx]))}</td>" for c_idx in range(4)])
+            lbl = f"<td rowspan='4' class='header-cell-main' style='border-bottom: 1px solid #444 !important;'>합충형파해</td>" if r_idx==1 else ""
+            ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+
+        hch_tds = "".join([f"<td>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
+        jg_tds = "".join([f"<td style='padding:0;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+        un_tds = "".join([f"<td style='color:#0D47A1 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+        s12_tds = "".join([f"<td style='color:#C62828 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+        
+        shinsal_tds = ""
+        for i in range(4):
+            noble, ausp, evil = get_general_shinsal(i, gans, jjis)
+            cmb = [f"<span style='color:#0D47A1;'>{x}</span>" for x in noble + ausp] + [f"<span style='color:#C62828;'>{x}</span>" for x in evil]
+            shinsal_tds += f"<td style='vertical-align: top; font-size:12px; line-height:1.4;'>{'<br>'.join(cmb[:6]) if cmb else '-'}</td>"
+
+        disp_name = u_name if u_name else "홍길동"
+        html_table = f"""
+        <div class='report-page'><div class='vip-inset-frame'>
+        <h1 style='text-align:center; color:#1A237E;'>🔬 [초연 정통 명리 사주풀이]</h1>
+        <h3 style='text-align:center;'>🏮 {disp_name}님 ({u_gender}) 원국 {'<span style="color:#D50000;">[3주 6자]</span>' if hs == '?' else ''}</h3>
+        <table class='result-table'>
+            <tr><td class='top-header-cell'>구분</td><td class='top-header-cell'>시주</td><td class='top-header-cell'>일주</td><td class='top-header-cell'>월주</td><td class='top-header-cell'>년주</td></tr>
+            <tr><td class='header-cell-main'>천간합충</td>{hch_tds}</tr>
+            <tr><td class='header-cell-main'>천간십성</td>{ss_td(hs)}<td><span style='color:#D50000; font-weight:900;'>日元</span></td>{ss_td(ms)}{ss_td(ys)}</tr>
+            <tr><td class='header-cell-main'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
+            <tr><td class='header-cell-main'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
+            <tr><td class='header-cell-main'>지지십성</td>{ss_td(hb)}{ss_td(db)}{ss_td(mb)}{ss_td(yb)}</tr>
+            <tr><td class='header-cell-main' style='padding:0;'>지장간</td>{jg_tds}</tr>
+            {ji_rel_rows}
+            <tr><td class='header-cell-main'>십이운성</td>{un_tds}</tr>
+            <tr><td class='header-cell-main'>십이신살</td>{s12_tds}</tr>
+            <tr><td class='header-cell-main'>일반신살</td>{shinsal_tds}</tr>
+        </table>
         """
-        try:
-            if "GOOGLE_API_KEY" not in st.secrets:
-                st.error("API 키가 없습니다.")
-            else:
-                res = model.generate_content(prompt)
-                st.markdown(res.text, unsafe_allow_html=True)
-                st.markdown("</div></div>", unsafe_allow_html=True)
-                
-                if comp_text:
-                    st.markdown("<div id='comparison-area'><div class='report-page'><div class='vip-inset-frame'>", unsafe_allow_html=True)
-                    with st.spinner("타 술사 감명서 1:1 교차 대조 중..."):
-                        comp_prompt = f"초연 박사로서 다음 타 술사 감명서를 11단계 소제목에 맞춰 1:1 비교하고 12) 종합의견을 작성하시오. 대상 데이터: {comp_text}"
-                        comp_res = model.generate_content(comp_prompt)
-                        st.markdown(comp_res.text, unsafe_allow_html=True)
-                    st.markdown("</div></div></div>", unsafe_allow_html=True)
+        st.markdown(html_table, unsafe_allow_html=True)
+        
+        # --- 2. 마스터 바 ---
+        counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
+        for char in [hs, ds, ms, ys, hb, db, mb, yb]:
+            if char != "?": counts[get_color(char)] += 1
+        
+        utc_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0) - dt_mod.timedelta(hours=9)
+        order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
+        calc_d = get_daeun_su_accurate(utc_dt, order)
+        
+        st.markdown(f"""
+        <div style='border: 2px solid #3E2723; background-color: #FFF8E1; padding: 10px; display: flex; justify-content: space-around; font-size: 15px; font-weight: 900; border-radius: 8px;'>
+            <div>⏳ 대운수: <b>{calc_d}</b></div>
+            <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
+            <div>🎯 공망: [일] {calculate_gongmang(ds, db)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # --- 3. 대운 흐름표 (RTL) ---
+        st.markdown("<div class='un-title'>◈ 대운의 흐름</div>", unsafe_allow_html=True)
+        un_html = "<div class='rtl-scroll'>"
+        for i in range(10):
+            val = i*10 + calc_d
+            c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
+            j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
+            un_html += f"""
+            <div style='flex: 1; min-width: 80px; border-left: 1px solid #ccc; text-align: center; padding-bottom:5px;'>
+                <div class='dw-age-head'>{val}세</div>
+                <div style='padding: 5px;'>{get_ss(ds, c)}</div>
+                <div class='color-{get_color(c)}' style='font-size:18px;'>{c}</div>
+                <div class='color-{get_color(j)}' style='font-size:18px;'>{j}</div>
+                <div style='padding: 5px;'>{get_ss(ds, j)}</div>
+                <div style='font-size:12px;'>{get_unsung(ds, j)}</div>
+                <div style='font-size:12px; color:#C62828;'>{get_12_shinsal(yb, j)}</div>
+            </div>
+            """
+        st.markdown(un_html + "</div>", unsafe_allow_html=True)
+
+        # --- 4. 1단계: 초연 AI 감명 ---
+        with st.spinner("초연 509 시스템: 동적 물리엔진 가동 중..."):
+            prompt = f"""
+            당신은 최고의 명리학 마스터 '초연 박사'입니다.
+            내담자: {disp_name} ({u_gender}, {u_y}년 {u_m}월 {u_d}일생)
+            사주: {ys}{yb} {ms}{mb} {ds}{db} {hs}{hb} / 공망: {calculate_gongmang(ds, db)}
+            {'(※ 🚨 주의: 시주를 모르는 3주 6자 사주이므로, 시주와 관련된 내용은 배제하고 원국 6글자의 동태만으로 11단계 통변을 진행할 것!)' if hs == '?' else ''}
+            
+            [지시사항]
+            1. 11단계(성격, 부모, 학업, 직업, 결혼, 사업, 재산, 건강, 대운, 세운 등)로 정밀 분석하시오.
+            2. HTML 형식으로 작성하며 시작과 끝에 <div> 태그 등 별도의 컨테이너를 생성하지 말고 본문 내용만 작성하십시오.
+            """
+            try:
+                if "GOOGLE_API_KEY" not in st.secrets:
+                    st.error("API 키가 없습니다.")
+                else:
+                    res = model.generate_content(prompt)
+                    st.markdown(f"<div style='margin-top:30px;'>{res.text}</div>", unsafe_allow_html=True)
+                    st.markdown("</div></div>", unsafe_allow_html=True) # 1단 리포트 (초연 사주풀이) 닫기
+                    
+                    # --- 5. [비교 분석 클릭 시] 2단계(타 술사 원본) & 3단계(비교 리포트) 추가 출력 ---
+                    if btn_compare:
+                        # 2단계: 타 술사 원본 출력
+                        formatted_comp = comp_text.replace('\n', '<br>')
+                        st.markdown(f"""
+                        <div class='report-page'><div class='vip-inset-frame' style='border-color: #3E2723;'>
+                            <h1 style='text-align:center; color:#3E2723;'>📜 타 술사 감명서 원본 내역</h1>
+                            <h3 style='text-align:center;'>🏮 {disp_name}님 분석 자료</h3>
+                            <div class='content-box-loose' style='margin-top:30px;'>{formatted_comp}</div>
+                        </div></div>
+                        """, unsafe_allow_html=True)
                         
-        except Exception as e:
-            st.error(f"AI 연산 오류: {e}")
+                        # 3단계: 비교 분석 AI 가동
+                        with st.spinner("타 술사 감명서 1:1 교차 대조 중..."):
+                            comp_prompt = f"초연 박사로서 다음 타 술사 감명서를 11단계 소제목에 맞춰 1:1 비교하고 12) 종합의견을 작성하시오. 시작과 끝에 <div> 태그를 넣지 마시오. 대상 데이터: {comp_text}"
+                            comp_res = model.generate_content(comp_prompt)
+                            st.markdown(f"""
+                            <div class='report-page'><div class='vip-inset-frame' style='border-color: #D50000;'>
+                                <h1 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h1>
+                                <h3 style='text-align:center;'>🏮 {disp_name}님 크로스 체크</h3>
+                                <div style='margin-top:30px;'>{comp_res.text}</div>
+                                <div style='text-align:center; margin-top:60px; color:#111; font-weight:900;'>- 초연 임상 연구소 -</div>
+                            </div></div>
+                            """, unsafe_allow_html=True)
+                            
+            except Exception as e:
+                st.error(f"AI 연산 오류: {e}")
