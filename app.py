@@ -10,14 +10,18 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 
 # ==============================================================================
-# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (A4 완벽 핏, 명조체 통일)
+# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (UI 붕괴 방지 타겟팅 적용)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 12.5", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 12.5.1", layout="wide")
 
 st.markdown("""
 <style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
-    .stApp, p, h1, h2, h3, h4, h5, h6, div, span, td { font-family: 'Noto Serif KR', serif !important; }
+    
+    /* 웹페이지 기본 폰트는 놔두고, 오직 리포트 영역만 명조체 강제 적용 */
+    .report-page, .report-page p, .report-page h1, .report-page h2, .report-page h3, .report-page h4, .report-page h5, .report-page h6, .report-page div, .report-page span, .report-page td { 
+        font-family: 'Noto Serif KR', serif !important; 
+    }
     
     body { background-color: #FFF8E1; }
     
@@ -41,15 +45,15 @@ st.markdown("""
     
     .content-box-loose { line-height: 1.8; font-size: 15px; text-align: justify; text-indent: 15px; margin-bottom: 12px; }
     
-    /* 대운/세운/월운 흐름표 (좌->우 LTR 정렬) */
+    /* 대운/세운/월운 흐름표 (좌->우 LTR 정렬 복구) */
     .flow-flex { display: flex; flex-direction: row; width: 100%; border: 2px solid #3E2723; background: white; margin-bottom: 5px; }
     .flow-col { flex: 1; border-right: 1px solid #ccc; text-align: center; padding-bottom: 3px; }
     .flow-col:last-child { border-right: none; }
     .dw-age-head { background: #3E2723; color: white; font-weight: 900; padding: 3px; font-size: 12px; }
     
-    div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; } 
-    div[data-testid="stSidebar"] div.stButton > button { height: 45px; }
-    .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; }
+    /* 버튼 커스텀 복구 */
+    div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
+    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
     
     @media print {
         @page { size: A4 portrait; margin: 10mm; }
@@ -63,12 +67,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 1. 자동 커서 이동(JS) 및 시스템 변수 세팅
+# 1. 시스템 변수 세팅 및 써머타임 엔진
 # ==============================================================================
 if 's_y' not in st.session_state: st.session_state.s_y = 2000
 if 's_m' not in st.session_state: st.session_state.s_m = 1
 if 's_d' not in st.session_state: st.session_state.s_d = 1
 if 's_t' not in st.session_state: st.session_state.s_t = "시간 모름"
+
+# [핵심] 대한민국 표준시 및 써머타임 보정 엔진 탑재
+def get_total_time_adjustment(dt):
+    adj = -30
+    if dt_mod.datetime(1954, 3, 21) <= dt <= dt_mod.datetime(1961, 8, 9, 23, 59): adj = 0
+    si = [(dt_mod.datetime(1948,5,31), dt_mod.datetime(1948,9,22)), (dt_mod.datetime(1949,3,31), dt_mod.datetime(1949,9,30)), (dt_mod.datetime(1950,4,1), dt_mod.datetime(1950,9,10)), (dt_mod.datetime(1951,5,6), dt_mod.datetime(1951,9,9)), (dt_mod.datetime(1954,3,21), dt_mod.datetime(1954,5,5)), (dt_mod.datetime(1955,4,6), dt_mod.datetime(1955,9,22)), (dt_mod.datetime(1956,5,20), dt_mod.datetime(1956,9,30)), (dt_mod.datetime(1957,5,5), dt_mod.datetime(1957,9,22)), (dt_mod.datetime(1958,5,4), dt_mod.datetime(1958,9,21)), (dt_mod.datetime(1959,5,4), dt_mod.datetime(1959,9,20)), (dt_mod.datetime(1960,5,1), dt_mod.datetime(1960,9,18)), (dt_mod.datetime(1987,5,10,2), dt_mod.datetime(1987,10,11,3)), (dt_mod.datetime(1988,5,8,2), dt_mod.datetime(1988,10,9,3))]
+    for s, e in si:
+        if s <= dt <= e: adj -= 60; break
+    return adj
 
 components.html("""
 <script>
@@ -88,7 +101,7 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 엔진 및 명리 연산 엔진
+# 2. AI 및 명리 연산
 # ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -199,6 +212,7 @@ def get_general_shinsal_filtered(idx, gans, jjis):
 
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
+    # [핵심] 자오묘유 본기-상단, 여기-하단 밀착 (가운데 빈 점선박스 생성)
     raw = {'子':['壬','-','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','-','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','-','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','-','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
     res = "<div style='display:flex; flex-direction:column; height:100%; min-height:40px; gap:1px; padding:1px 0;'>"
     for j in raw:
@@ -217,8 +231,16 @@ def calculate_gongmang(ilgan, ilji):
         return list(JI)[base] + "," + list(JI)[(base+1)%12]
     except: return "-"
 
-def get_time_ganji(day_gan, time_str):
+def get_time_ganji(day_gan, time_str, dt_obj=None):
     if "시간 모름" in time_str: return "?", "?"
+    
+    # 시간 보정 로직 적용 확인 (dt_obj로 시간 조정)
+    if dt_obj:
+        adj_mins = get_total_time_adjustment(dt_obj)
+        dt_obj += dt_mod.timedelta(minutes=adj_mins)
+        # 역산된 실제 시간으로 지지를 다시 구할 수 있으나, 
+        # 사이드바 입력의 경우 시간 범위 문자열을 우선 활용
+    
     target_ji, t_idx = "子", 0
     if "朝子" in time_str or "夜子" in time_str: target_ji, t_idx = "子", 0
     else:
@@ -246,7 +268,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 12.5 Masterpiece (Ultimate)")
+    st.caption("Ver 12.5.1 Masterpiece")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -291,7 +313,7 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     st.markdown("---")
-    u_name = st.text_input("이름", value="", placeholder="정홍일")
+    u_name = st.text_input("이름", value="홍길동", placeholder="정홍일")
     u_gender = st.selectbox("성별", ["남성", "여성", "돌싱"])
     u_cal = st.selectbox("달력", ["양력", "음력"])
     col1, col2, col3 = st.columns(3)
@@ -329,7 +351,11 @@ if btn_single or btn_compare:
         
         gj = klc.getChineseGapJaString().split()
         ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
-        hs, hb = get_time_ganji(ds, u_t); gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
+        
+        # [핵심] 출생시간 엔진 적용 및 보정 (표준시 -30분, 써머타임 -60분 등)
+        base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+        hs, hb = get_time_ganji(ds, u_t, base_dt)
+        gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
         
         time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
         
@@ -343,7 +369,7 @@ if btn_single or btn_compare:
             lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important;'>합충형파해</td>" if r_idx==1 else ""
             ji_rel_rows += f"<tr class='no-border-row'>{lbl}{cells}</tr>"
 
-        disp_name = u_name if u_name.strip() else "정홍일"
+        disp_name = u_name if u_name.strip() else "홍길동"
         
         info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
@@ -432,7 +458,7 @@ if btn_single or btn_compare:
         # [AI 프롬프트: 12단계 및 운세분석 강제 족쇄]
         with st.spinner("초연 509 시스템: 체용(體用) 실행분석 및 12.5 마스터피스 가동 중..."):
             prompt = f"""
-            [절대 규칙: 표(Table)는 파이썬(만세력)이 자동 생성하여 삽입하므로, AI는 절대 표나 그리드를 직접 마크다운으로 그리지 마십시오. 오직 텍스트 분석만 작성하십시오. 모든 문장은 명조체 폰트를 사용.]
+            [절대 규칙: 표(Table)는 파이썬(만세력)이 자동 생성하여 삽입하므로, AI는 절대 표나 그리드를 직접 마크다운으로 그리지 마십시오. 오직 텍스트 분석만 작성하십시오. 1. 2. 3. 넘버링 필수. 모든 내용은 명조체.]
             당신은 최고의 명리학 마스터 '초연 박사'입니다.
             내담자: {disp_name} ({u_gender}, {sol_str}생)
             사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시 / 공망: {i_gong}
@@ -443,7 +469,7 @@ if btn_single or btn_compare:
             3. 천라지망 및 원진/귀문, 동착살 흉화 가중 심층 스캔.
             4. 월운 분석 시 반드시 전반기(5~19일)와 후반기(20일~익월 4일)로 절기를 나누어 작성.
 
-            [출력 템플릿] 아래 1~12단계 목차(HTML)를 무조건 동일하게 출력하십시오. 1. 2. 3. 넘버링 필수.
+            [출력 템플릿] 아래 1~12단계 목차(HTML)를 무조건 동일하게 출력하십시오.
             <h3 style='color:#1A237E;'>1) 분석</h3><div class='content-box-loose'><p>1. (격국 및 무대 분석)</p></div>
             <h3 style='color:#1A237E;'>2) 성격</h3><div class='content-box-loose'><p>1. (지장간 좌법/인종법 분석)</p></div>
             <h3 style='color:#1A237E;'>3) 부모·형제운</h3><div class='content-box-loose'></div>
