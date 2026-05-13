@@ -90,7 +90,6 @@ components.html("""
 # ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    # [수정] 404 에러 방지를 위해 latest 모델 호출
     model = genai.GenerativeModel('gemini-1.5-pro-latest') 
 except: pass
 
@@ -259,7 +258,10 @@ with st.sidebar:
                                     rt_h = K2H_JI.get(ji_char, ji_char)
                                     if rt_h in time_map_rev: st.session_state.s_t = time_map_rev[rt_h]
                                 found = True
-                                st.success(f"✅ [양력] {curr_dt.year}-{curr_dt.month}-{curr_dt.day} / [음력] {klc.lunarYear}-{klc.lunarMonth}-{klc.lunarDay} ({'윤달' if klc.getIsIntercalary() else '평달'}) 입력완료!")
+                                # [핵심] AttributeError 방어막 (getattr 사용)
+                                is_leap = getattr(klc, 'isIntercalary', False)
+                                leap_str = "윤달" if is_leap else "평달"
+                                st.success(f"✅ [양력] {curr_dt.year}-{curr_dt.month}-{curr_dt.day} / [음력] {klc.lunarYear}-{klc.lunarMonth}-{klc.lunarDay} ({leap_str}) 입력완료!")
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
@@ -276,10 +278,8 @@ with st.sidebar:
     u_d = col3.number_input("일", 1, 31, key="s_d")
     idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
     u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
-    
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이", use_container_width=True, type="primary")
-    
     st.markdown("---")
     comp_text = st.text_area("비교할 타 술사 감명서 (선택)", height=150)
     
@@ -288,7 +288,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. 분석 가동 및 출력 (A4 최적화 및 신살, 공망, 귀인 마스터바 반영)
+# 4. 분석 가동 및 출력 (A4 최적화, 마스터 바 복원)
 # ==============================================================================
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
@@ -303,12 +303,11 @@ if btn_single or btn_compare:
         
         components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;' onclick='window.parent.print()'>🖨️ {'3대 리포트 통합' if btn_compare else '초연 사주풀이'} 인쇄/PDF</button></div>", height=50)
         
-        # 폰트 크기 16px로 축소 (두 줄 찢어짐 방지)
         def td(c, size="16px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900;'>{('?' if c in ['?',' ','-'] else c)}</td>"
         
         ji_rel_rows = ""
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900;'>{('←('+d_str(jjis[r_idx])+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])) if 'd_str' in globals() else (('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])))}</td>" for ci in range(4)])
             lbl = f"<td rowspan='4' class='header-cell-main'>합충형파해</td>" if r_idx==1 else ""
             ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
@@ -333,12 +332,10 @@ if btn_single or btn_compare:
         """
         st.markdown(html_table, unsafe_allow_html=True)
         
-        # [수정] 마스터 바: 천을귀인 및 [년]공망 누락 복구
         counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
         for char in gans + jjis:
             if char != "?": counts[get_color(char)] += 1
         
-        # 천을귀인 글자 추출
         guiins = []
         for i in range(4):
             noble, _, _ = get_general_shinsal(i, gans, jjis)
@@ -348,13 +345,11 @@ if btn_single or btn_compare:
         utc_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0) - dt_mod.timedelta(hours=9)
         order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
         calc_d = get_daeun_su_accurate(utc_dt, order)
-        
         n_gong = calculate_gongmang(ys, yb)
         i_gong = calculate_gongmang(ds, db)
         
         st.markdown(f"<div style='border:2px solid #3E2723; padding:10px; display:flex; justify-content:space-around; font-weight:900; font-size:13px; border-radius:8px; flex-wrap:wrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong}, [일] {i_gong}</div></div>", unsafe_allow_html=True)
         
-        # [수정] 대운표 잘림 방지를 위해 Flex -> Grid(10칸 고정) 변경
         un_html = "<div class='un-title'>◈ 대운의 흐름</div><div class='daeun-grid'>"
         for i in range(10):
             val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
