@@ -44,10 +44,10 @@ st.markdown("""
 # ==============================================================================
 # 1. 자동 커서 이동(JS) 및 시스템 변수 세팅 [초기값: 2000년 1월 1일 시간모름]
 # ==============================================================================
-if 'u_y' not in st.session_state: st.session_state.u_y = 2000
-if 'u_m' not in st.session_state: st.session_state.u_m = 1
-if 'u_d' not in st.session_state: st.session_state.u_d = 1
-if 'u_t' not in st.session_state: st.session_state.u_t = "시간 모름"
+if 's_y' not in st.session_state: st.session_state.s_y = 2000
+if 's_m' not in st.session_state: st.session_state.s_m = 1
+if 's_d' not in st.session_state: st.session_state.s_d = 1
+if 's_t' not in st.session_state: st.session_state.s_t = "시간 모름"
 
 # 한글 씹힘 방지 (스페이스바 또는 년,월,일 입력 시 이동)
 components.html("""
@@ -224,7 +224,6 @@ with st.sidebar:
     st.caption("Ver 8.7 Masterpiece (Ultimate)")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
-        # 괄호 예시문구 삭제! 간결한 UI
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="")
         with col_g2: rm = st.text_input("월주", value="")
@@ -232,18 +231,16 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="")
         with col_g4: rt = st.text_input("시주", value="")
         
-        # [한글 -> 한자 변환 매핑 사전 추가] 기계가 한글 간지도 척척 알아먹게 해줍니다!
+        # 한글 -> 한자 매핑 (에러 원천 차단)
         K2H_GAN = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
         K2H_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
         
         if st.button("🔍 생년월일 자동입력", use_container_width=True):
-            # 글자에서 년,월,일 떼어내고 순수 2글자만 추출
             _ry = ry.replace("년","").replace(" ","")[:2]
             _rm = rm.replace("월","").replace(" ","")[:2]
             _rd = rd.replace("일","").replace(" ","")[:2]
             
             if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
-                # 한글(계묘) -> 한자(癸卯) 자동 변환
                 ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
                 rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
                 rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
@@ -258,14 +255,14 @@ with st.sidebar:
                             klc.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                             gj = klc.getChineseGapJaString().split()
                             if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                                st.session_state.u_y = curr_dt.year
-                                st.session_state.u_m = curr_dt.month
-                                st.session_state.u_d = curr_dt.day
+                                st.session_state.s_y = curr_dt.year
+                                st.session_state.s_m = curr_dt.month
+                                st.session_state.s_d = curr_dt.day
                                 time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
                                 if rt:
                                     _rt = rt.replace("시","").replace(" ","")[-1]
                                     rt_h = K2H_JI.get(_rt, _rt)
-                                    if rt_h in time_map_rev: st.session_state.u_t = time_map_rev[rt_h]
+                                    if rt_h in time_map_rev: st.session_state.s_t = time_map_rev[rt_h]
                                 found = True
                                 st.success(f"✅ {curr_dt.year}년 {curr_dt.month}월 {curr_dt.day}일 자동입력 완료!")
                                 break
@@ -275,17 +272,15 @@ with st.sidebar:
             else: st.warning("년/월/일 간지를 정확히 2글자씩 입력하세요.")
 
     st.markdown("---")
-    # 이름 초기값: 홍길동
-    u_name = st.text_input("이름", value="홍길동")
-    # 성별 3단계 추가
+    # 연회색 힌트(placeholder)로 변경
+    u_name = st.text_input("이름", value="", placeholder="홍길동")
     u_gender = st.selectbox("성별", ["남성", "여성", "돌싱"])
     u_cal = st.selectbox("달력", ["양력", "음력"])
     
-    # 2000년 1월 1일 세팅
     col1, col2, col3 = st.columns(3)
-    with col1: u_y = st.number_input("년", 1900, 2030, key="u_y")
-    with col2: u_m = st.number_input("월", 1, 12, key="u_m")
-    with col3: u_d = st.number_input("일", 1, 31, key="u_d")
+    with col1: u_y = st.number_input("년", 1900, 2030, key="s_y")
+    with col2: u_m = st.number_input("월", 1, 12, key="s_m")
+    with col3: u_d = st.number_input("일", 1, 31, key="s_d")
     
     idx_list = [
         "시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
@@ -294,7 +289,7 @@ with st.sidebar:
         "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", 
         "23:30 ~ 00:29 (夜子)시"
     ]
-    u_t = st.selectbox("태어난 시간", idx_list, key="u_t")
+    u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
     
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이", use_container_width=True, type="primary")
@@ -356,10 +351,11 @@ if btn_single or btn_compare:
             cmb = [f"<span style='color:#0D47A1;'>{x}</span>" for x in noble + ausp] + [f"<span style='color:#C62828;'>{x}</span>" for x in evil]
             shinsal_tds += f"<td style='vertical-align: top; font-size:12px; line-height:1.4;'>{'<br>'.join(cmb[:6]) if cmb else '-'}</td>"
 
+        disp_name = u_name if u_name.strip() else "홍길동"
         html_table = f"""
         <div class='report-page'><div class='vip-inset-frame'>
         <h1 style='text-align:center; color:#1A237E;'>🔬 [초연 정통 명리 사주풀이]</h1>
-        <h3 style='text-align:center;'>🏮 {u_name}님 ({u_gender}) 원국 {'<span style="color:#D50000;">[3주 6자]</span>' if hs == '?' else ''}</h3>
+        <h3 style='text-align:center;'>🏮 {disp_name}님 ({u_gender}) 원국 {'<span style="color:#D50000;">[3주 6자]</span>' if hs == '?' else ''}</h3>
         <table class='result-table'>
             <tr><td class='top-header-cell'>구분</td><td class='top-header-cell'>시주</td><td class='top-header-cell'>일주</td><td class='top-header-cell'>월주</td><td class='top-header-cell'>년주</td></tr>
             <tr><td class='header-cell-main'>천간합충</td>{hch_tds}</tr>
@@ -414,7 +410,7 @@ if btn_single or btn_compare:
         with st.spinner("초연 509 시스템: 동적 물리엔진 가동 중..."):
             prompt = f"""
             당신은 최고의 명리학 마스터 '초연 박사'입니다.
-            내담자: {u_name} ({u_gender}, {u_y}년 {u_m}월 {u_d}일생)
+            내담자: {disp_name} ({u_gender}, {u_y}년 {u_m}월 {u_d}일생)
             사주: {ys}{yb} {ms}{mb} {ds}{db} {hs}{hb} / 공망: {calculate_gongmang(ds, db)}
             {'(※ 🚨 주의: 시주를 모르는 3주 6자 사주이므로, 시주와 관련된 내용은 배제하고 원국 6글자의 동태만으로 11단계 통변을 진행할 것!)' if hs == '?' else ''}
             
@@ -435,7 +431,7 @@ if btn_single or btn_compare:
                         st.markdown(f"""
                         <div class='report-page'><div class='vip-inset-frame' style='border-color: #3E2723;'>
                             <h1 style='text-align:center; color:#3E2723;'>📜 타 술사 감명서 원본 내역</h1>
-                            <h3 style='text-align:center;'>🏮 {u_name}님 분석 자료</h3>
+                            <h3 style='text-align:center;'>🏮 {disp_name}님 분석 자료</h3>
                             <div class='content-box-loose' style='margin-top:30px;'>{formatted_comp}</div>
                         </div></div>
                         """, unsafe_allow_html=True)
@@ -446,7 +442,7 @@ if btn_single or btn_compare:
                             st.markdown(f"""
                             <div class='report-page'><div class='vip-inset-frame' style='border-color: #D50000;'>
                                 <h1 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h1>
-                                <h3 style='text-align:center;'>🏮 {u_name}님 크로스 체크</h3>
+                                <h3 style='text-align:center;'>🏮 {disp_name}님 크로스 체크</h3>
                                 <div style='margin-top:30px;'>{comp_res.text}</div>
                                 <div style='text-align:center; margin-top:60px; color:#111; font-weight:900;'>- 초연 임상 연구소 -</div>
                             </div></div>
