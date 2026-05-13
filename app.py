@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 import math
+import re
 import datetime as dt_mod
 from korean_lunar_calendar import KoreanLunarCalendar
 import ephem
@@ -10,22 +11,30 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 
 # ==============================================================================
-# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (A4 완벽 대응)
+# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (A4, 명조체, 가로줄 제거, 높이 압축)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 10.0", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 11.0", layout="wide")
 
 st.markdown("""
 <style>
-    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Malgun+Gothic&display=swap");
-    .stApp { background-color: #FFF8E1; font-family: 'Malgun Gothic', sans-serif; }
+    /* 전체 폰트 명조체 적용 */
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
+    .stApp { background-color: #FFF8E1; font-family: 'Noto Serif KR', serif; }
     
-    .report-page { max-width: 210mm; margin: 10px auto; background: white; padding: 10mm; box-shadow: 0 0 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-    .vip-inset-frame { border: 2px solid #1A237E; border-radius: 12px; padding: 15px; background: white; }
+    /* 둥그런 네모 박스 & A4 용지 핏 */
+    .report-page { max-width: 210mm; margin: 10px auto; background: white; padding: 10mm; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 20px; box-sizing: border-box; }
+    .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 25px; background: white; }
     
+    /* 사주 박스 높이 압축 및 가로줄 제거 */
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; margin-bottom: 10px; table-layout: fixed; }
-    .result-table td { border: 1px solid #444; padding: 4px 2px; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; word-wrap: break-word; }
-    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 13px !important; }
-    .top-header-cell { background-color: #1A237E !important; color: white !important; font-size: 14px !important; padding: 5px 0 !important; }
+    .result-table td { border: 1px solid #444; padding: 2px; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; word-wrap: break-word; line-height: 1.2; }
+    /* 천간, 지지 외 박스 높이 축소 */
+    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 25px !important; }
+    .top-header-cell { background-color: #1A237E !important; color: white !important; font-size: 13px !important; padding: 4px 0 !important; }
+    
+    /* 합충형파해 내부 가로줄눈 제거 클래스 */
+    .no-border-row td { border-top: none !important; border-bottom: none !important; }
+    .no-border-row:last-of-type td { border-bottom: 1px solid #444 !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
@@ -33,9 +42,11 @@ st.markdown("""
     .color-금 { background-color: #9E9E9E !important; color: white !important; }
     .color-수 { background-color: #212121 !important; color: white !important; }
     
-    .content-box-loose { line-height: 1.7; font-size: 15px; font-family: 'Noto Serif KR', serif; text-align: justify; text-indent: 10px; margin-bottom: 10px; }
+    /* 분석 텍스트 서식 */
+    .content-box-loose { line-height: 1.8; font-size: 15px; font-family: 'Noto Serif KR', serif; text-align: justify; text-indent: 15px; margin-bottom: 12px; }
     .un-title { font-weight: 900; font-size: 18px; color: #3E2723; border-bottom: 2px solid #3E2723; margin-top: 25px; margin-bottom: 8px; }
     
+    /* 대운/세운/월운 흐름표 (RTL 정렬) */
     .flow-flex { display: flex; flex-direction: row-reverse; width: 100%; border: 2px solid #3E2723; background: white; margin-bottom: 15px; }
     .flow-col { flex: 1; border-left: 1px solid #ccc; text-align: center; padding-bottom: 3px; }
     .flow-col:first-child { border-left: none; }
@@ -45,18 +56,21 @@ st.markdown("""
     div[data-testid="stSidebar"] div.stButton > button { height: 45px; }
     .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; }
     
+    /* 완벽한 A4 인쇄 제어 (페이지 마다 열리고 닫힘) */
     @media print {
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         .stApp { background-color: white !important; }
-        .report-page { max-width: 100%; width: 100%; box-shadow: none; margin: 0; padding: 0; page-break-after: always; min-height: auto; }
-        .vip-inset-frame { border: 2px solid #000; padding: 15px; }
+        .report-page { max-width: 100%; width: 100%; box-shadow: none; margin: 0; padding: 0; page-break-after: always; min-height: auto; border: none; }
+        .vip-inset-frame { border: 2px solid #000; padding: 15px; border-radius: 20px; }
+        /* 비교 리포트 무색 배경 설정 */
+        .no-bg-print { background-color: transparent !important; }
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 1. 자동 커서 이동(JS) 및 시스템 변수 세팅
+# 1. 시스템 변수 세팅
 # ==============================================================================
 if 's_y' not in st.session_state: st.session_state.s_y = 2000
 if 's_m' not in st.session_state: st.session_state.s_m = 1
@@ -81,19 +95,13 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 엔진 및 명리 연산 엔진 (gemini-2.5-pro 적용)
+# 2. AI 엔진 및 명리 연산 엔진
 # ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-pro') 
+    # 404 에러 원천 차단 (최신 공식 명칭)
+    model = genai.GenerativeModel('gemini-1.5-pro-latest') 
 except: pass
-
-@st.cache_data
-def load_db():
-    if os.path.exists("choyeon_db.json"):
-        with open("choyeon_db.json", 'r', encoding='utf-8') as f: return json.load(f)
-    return {"wolryeong": {}, "ilju": {}}
-CHOYEON_DB = load_db()
 
 GAN, JI = "甲乙丙丁戊己庚辛壬癸", "子丑寅卯辰巳午未申酉戌亥"
 
@@ -161,13 +169,17 @@ def get_ji_rel_set(me, target):
     if s == {'辰','巳'}: r.append("지망")
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
-def get_general_shinsal(idx, gans, jjis):
+# [수정] 일반신살 필터링 (최대 6개, 귀인 > 복신 > 흉신 상단 정렬)
+def get_general_shinsal_filtered(idx, gans, jjis):
     sc, dc, mc, yc = gans; sj, dj, mj, yj = jjis; cur_g, cur_j = gans[idx], jjis[idx]
-    if cur_g in ["?", "-", " "] or cur_j in ["?", "-", " "]: return [], [], []
-    gj, noble, ausp, evil = cur_g + cur_j, [], [], []
+    if cur_g in ["?", "-", " "] or cur_j in ["?", "-", " "]: return []
+    gj = cur_g + cur_j
+    noble, ausp, evil = [], [], []
+    
     if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인")
     if cur_j == mj: noble.append("월덕귀인")
     if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): ausp.append("건록")
+    
     if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호살")
     if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살")
     if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살")
@@ -175,19 +187,26 @@ def get_general_shinsal(idx, gans, jjis):
     if cur_g == cur_j: evil.append("간여지동")
     dohwa_map = {'寅':'卯', '午':'卯', '戌':'卯', '申':'酉', '子':'酉', '辰':'酉', '巳':'午', '酉':'午', '丑':'午', '亥':'子', '卯':'子', '未':'子'}
     if cur_j == dohwa_map.get(yj, "") or cur_j == dohwa_map.get(dj, ""): evil.append("도화살")
-    return list(dict.fromkeys(noble)), list(dict.fromkeys(ausp)), list(dict.fromkeys(evil))
+    
+    # 1. 천을/월덕귀인 (최우선)
+    # 2. 건록 등 복신
+    # 3. 백호, 괴강 등 흉신
+    result = []
+    for n in list(dict.fromkeys(noble)): result.append(f"<span style='color:#0D47A1;'>{n}</span>")
+    for a in list(dict.fromkeys(ausp)): result.append(f"<span style='color:#2E7D32;'>{a}</span>")
+    for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
+    
+    return result[:6] # 최대 6개까지만 커트
 
+# [수정] 자오묘유 지장간 위/아래 2글자만 출력 (빈칸 제거)
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
-    # 자오묘유는 본기와 여기 2개만 배치되도록 로직 변경 (가운데 빈칸 없앰)
     raw = {'子':['壬','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
-    res = "<div style='display:flex; flex-direction:column; height:100%; min-height:50px; gap:2px; padding:2px 0;'>"
+    res = "<div style='display:flex; flex-direction:column; height:100%; min-height:45px; gap:1px; padding:1px 0;'>"
     for j in raw:
-        if j != '-':
-            ss_label = get_ss(dg, j)[:2]; ck = get_color(j)
-            bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
-            res += f"<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:3px;'>{j}({ss_label})</div>"
-        else: res += "<div style='flex-grow:1; background:#f9f9f9; border:1px dashed #ddd; border-radius:3px;'></div>"
+        ss_label = get_ss(dg, j)[:2]; ck = get_color(j)
+        bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
+        res += f"<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:2px;'>{j}({ss_label})</div>"
     return res + "</div>"
 
 def calculate_gongmang(ilgan, ilji):
@@ -226,7 +245,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 10.0 Masterpiece (Ultimate)")
+    st.caption("Ver 11.0 Masterpiece (Ultimate)")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -291,7 +310,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. 분석 가동 및 출력 (흐름표를 11번 항목 하단에 직접 치환 삽입)
+# 4. 분석 가동 및 출력 (명조체 11단계 코랩 원본 이식)
 # ==============================================================================
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
@@ -299,28 +318,39 @@ if btn_single or btn_compare:
         klc = KoreanLunarCalendar()
         if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
         else: klc.setLunarDate(u_y, u_m, u_d, False)
-        sol_str, lun_str = f"{klc.solarYear}.{klc.solarMonth:02d}.{klc.solarDay:02d}", f"{klc.lunarYear}.{klc.lunarMonth:02d}.{klc.lunarDay:02d}"
+        sol_str, lun_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일", f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
+        
+        # 현재 나이 계산
+        curr_y = 2026
+        u_age = curr_y - u_y + 1
+        
         gj = klc.getChineseGapJaString().split()
         ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
         hs, hb = get_time_ganji(ds, u_t); gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
         
+        # [수정] 시간 문자열 정리
+        time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
+        
         components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;' onclick='window.parent.print()'>🖨️ {'3대 리포트 통합' if btn_compare else '초연 사주풀이'} 인쇄/PDF</button></div>", height=50)
         
-        def td(c, size="16px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+        def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900;'>{('?' if c in ['?',' ','-'] else c)}</td>"
         
+        # [수정] 합충형해파 내부 가로줄 제거 로직
         ji_rel_rows = ""
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-            border_css = "border-bottom: none !important; border-top: none !important;"
-            if l_idx == 3: border_css = "border-bottom: 1px solid #444 !important; border-top: none !important;"
-            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; {border_css}'>{('←('+d_str(jjis[r_idx])+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])) if 'd_str' in globals() else (('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])))}</td>" for ci in range(4)])
-            lbl = f"<td rowspan='4' class='header-cell-main' style='border-bottom: 1px solid #444 !important;'>합충형파해</td>" if r_idx==1 else ""
-            ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+            lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important;'>합충형파해</td>" if r_idx==1 else ""
+            ji_rel_rows += f"<tr class='no-border-row'>{lbl}{cells}</tr>"
 
         disp_name = u_name if u_name.strip() else "홍길동"
+        
+        # [수정] 타이틀 수정 및 내담자 정보 명조체/가운데 정렬
+        info_h = f"<div style='text-align:center; font-family:\"Noto Serif KR\", serif; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
+
         html_table = f"""
         <div class='report-page'><div class='vip-inset-frame'>
-        <h2 style='text-align:center; color:#1A237E; margin:0 0 10px 0;'>🔬 [초연 정통 명리 사주풀이]</h2>
-        <h4 style='text-align:center; margin:0 0 20px 0;'>🏮 {disp_name}님 ({u_gender}) 원국 <span style='font-size:14px; color:#555;'>[양력:{sol_str} | 음력:{lun_str}]</span> {'<span style="color:#D50000;">[3주 6자]</span>' if hs == '?' else ''}</h4>
+        <h1 style='text-align:center; color:#1A237E; font-size:28px; margin:0 0 10px 0;'>🔬 [초연 시공명리 사주풀이]</h1>
+        {info_h}
         <table class='result-table'>
             <tr class='top-header-cell'><td>구분</td><td>시주</td><td>일주</td><td>월주</td><td>년주</td></tr>
             <tr><td class='header-cell-main'>천간합충</td>{"".join([f"<td>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
@@ -332,9 +362,10 @@ if btn_single or btn_compare:
             {ji_rel_rows}
             <tr><td class='header-cell-main'>십이운성</td>{"".join([f"<td style='color:#0D47A1;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
             <tr><td class='header-cell-main'>십이신살</td>{"".join([f"<td style='color:#C62828;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
-            <tr><td class='header-cell-main'>일반신살</td>{"".join([f"<td style='vertical-align:top; font-size:11px; padding:2px;'>{'<br>'.join(([f'<span style=\"color:#0D47A1;\">{x}</span>' for x in get_general_shinsal(i, gans, jjis)[0]+get_general_shinsal(i, gans, jjis)[1]]+[f'<span style=\"color:#C62828;\">{x}</span>' for x in get_general_shinsal(i, gans, jjis)[2]])[:6]) if any(get_general_shinsal(i, gans, jjis)) else '-'}</td>" for i in range(4)])}</tr>
+            <tr><td class='header-cell-main'>일반신살</td>{"".join([f"<td style='vertical-align:top; font-size:11px; padding:2px;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis)) if get_general_shinsal_filtered(i, gans, jjis) else '-'}</td>" for i in range(4)])}</tr>
         </table>
         """
+        st.markdown(html_table, unsafe_allow_html=True)
         
         counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
         for char in gans + jjis:
@@ -352,27 +383,24 @@ if btn_single or btn_compare:
         n_gong = calculate_gongmang(ys, yb)
         i_gong = calculate_gongmang(ds, db)
         
-        # 사주표 및 마스터바 출력
-        st.markdown(html_table + f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong}, [일] {i_gong}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong}, [일] {i_gong}</div></div>", unsafe_allow_html=True)
         
-        # [변화] AI 텍스트 중간에 치환할 대운, 세운, 월운 HTML 문자열을 먼저 생성해둡니다.
-        # 1. 대운의 흐름 (RTL) - 해당 나이 활성화 로직 추가
-        age_now = 2026 - u_y + 1
-        un_html = f"<div class='flow-flex'>"
+        # [수정] 대운표 우측에서 좌측으로(RTL) Flex 적용
+        un_html = f"<div class='un-title'>◈ 대운의 흐름 (대운수 {calc_d})</div><div class='flow-flex'>"
         for i in range(10):
             val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
-            is_active = val <= age_now < val+10
-            bg_col = "#FFF9C4" if is_active else "transparent" # 현재 대운 활성화
+            is_active = val <= u_age < val+10
+            bg_col = "#FFF9C4" if is_active else "transparent"
             un_html += f"<div class='flow-col' style='background-color:{bg_col};'><div class='dw-age-head'>{val}세</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div><div class='color-{get_color(c)}' style='font-size:16px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:16px; font-weight:900;'>{j}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div><div style='font-size:11px;'>{get_unsung(ds,j)}</div><div style='font-size:11px; color:#C62828;'>{get_12_shinsal(yb, j)}</div></div>"
         un_html += "</div>"
 
-        # 2. 세운의 흐름 (2026 기준, RTL)
-        cur_dw_idx = max(0, (age_now - calc_d) // 10)
+        # [수정] 세운의 흐름 (2026 기준, RTL)
+        cur_dw_idx = max(0, (u_age - calc_d) // 10)
         dw_g_cur = GAN[(GAN.index(ms) + (cur_dw_idx+1)*order)%10] if ms in GAN else "-"
         dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
-        se_html = f"<h4 style='color:#1A237E;'>◈ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준)</h4><div class='flow-flex'>"
+        se_html = f"<h4 style='color:#1A237E; margin-top:20px;'>◈ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준)</h4><div class='flow-flex'>"
         for i in range(10):
-            ty, tage = 2026 + i, age_now + i
+            ty, tage = 2026 + i, u_age + i
             base = (ty - 1984) % 60
             tc, tj = GAN[base % 10], JI[base % 12]
             is_cur_yr = (ty == 2026)
@@ -380,11 +408,11 @@ if btn_single or btn_compare:
             se_html += f"<div class='flow-col' style='background-color:{bg_col};'><div class='dw-age-head'>{ty}년({tage}세)</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828;'>{get_12_shinsal(yb, tj)}</div></div>"
         se_html += "</div>"
 
-        # 3. 월운의 흐름 (2026년 양력기준 기축월부터, RTL)
+        # [수정] 월운의 흐름 (2026년 양력기준 기축월부터, RTL)
         wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
         wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
         curr_m = dt_mod.datetime.now().month
-        wol_html = f"<h4 style='color:#1A237E;'>◈ 월운의 흐름 (2026년도 양력기준)</h4><div class='flow-flex'>"
+        wol_html = f"<h4 style='color:#1A237E; margin-top:20px;'>◈ 월운의 흐름 (2026년도 양력기준)</h4><div class='flow-flex'>"
         for i in range(12):
             tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
             is_cur_m = (tm == curr_m)
@@ -392,58 +420,80 @@ if btn_single or btn_compare:
             wol_html += f"<div class='flow-col' style='background-color:{bg_col};'><div class='dw-age-head'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828;'>{get_12_shinsal(yb, tj)}</div></div>"
         wol_html += "</div>"
 
-        # [AI 프롬프트: 10.0 비급 강제 이식]
-        with st.spinner("초연 509 시스템: 초정밀 11단계 통변 가동 중..."):
+        # [AI 프롬프트: 코랩 원본 지시문 하드코딩]
+        with st.spinner("초연 509 시스템: 7궁위 3D & 지장간 포태법 정밀 타격 중..."):
             prompt = f"""
-            [시스템 절대 규칙: "안녕하십니까" 등의 인사말, 도입부, 서론을 절대 쓰지 말고, 즉시 '1) 분석'부터 출력할 것.]
-            당신은 대한민국 최고의 정통 명리학 마스터 '초연 박사'입니다.
-            내담자: {disp_name} ({u_gender}, {sol_str}생)
-            사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시 / 공망: {i_gong}
-            {'(※ 🚨 시주 미상이므로 3주 6자를 기준으로 풀이하되 유연성을 발휘할 것)' if hs == '?' else ''}
-            
-            [🚨 초연 박사 통변 철학 (비급 탑재)]
-            1. 월주를 최우선으로 '무대의 온도와 습도(실제 기후)'를 파악하고 일주와 결합해 강렬한 타이틀 도출.
-            2. 일간 기준 7궁위 십성에 12운성 생장쇠멸 가감.
-            3. 드러난 지장간은 좌법(겉모습), 드러나지 않은 지장간은 인종법(숨겨진 속마음/방어기제)으로 해부.
-            4. 지지 형충파해(형>충>합), 진술축미 개고/입고, 삼형살 양면성 분석 필수.
-            5. 천간 합충/병존 심리 압박 분석.
-            6. 12신살 및 일반신살 양념 적용 (한자 표기).
-            7. 일반인이 이해하기 쉬운 '활인의 언어'로 작성.
+[시스템 강제 지시: "안녕하십니까" 등의 인사말, 서론을 절대 쓰지 말고, 즉시 '1) 분석'부터 출력할 것.]
+당신은 대한민국 최고의 정통 명리학 마스터 '초연 박사'입니다. 타 술사들이 범접할 수 없는 '7궁위 입체 공간론'과 '지장간 포태법'을 적용하여 사주 원국을 해부하십시오.
 
-            [출력 템플릿] 반드시 아래 11단계 목차(HTML)를 토씨 하나 틀리지 말고 그대로 출력하십시오. 시작/끝 div 임의 생성 금지.
-            <h3 style='color:#1A237E;'>1) 분석</h3>
-            <p>1. (격국 및 7궁위 분석)</p>
-            <h3 style='color:#1A237E;'>2) 성격</h3>
-            <p>1. (성격 풀이)</p>
-            <h3 style='color:#1A237E;'>3) 부모·형제운</h3>
-            <h3 style='color:#1A237E;'>4) 학업·진학운</h3>
-            <h3 style='color:#1A237E;'>5) 적성·직업운</h3>
-            <h3 style='color:#1A237E;'>6) 결혼·자녀운</h3>
-            <h3 style='color:#1A237E;'>7) 사업운</h3>
-            <h3 style='color:#1A237E;'>8) 관직·명예운</h3>
-            <h3 style='color:#1A237E;'>9) 재성운</h3>
-            <h3 style='color:#1A237E;'>10) 건강운</h3>
-            <h3 style='color:#1A237E;'>11. 운의 흐름</h3>
-            <h4 style='color:#1A237E;'>1) 대운의 흐름</h4>
-            [DAEWUN_TABLE_HERE]
-            <p>1. (지나온 대운의 풀이와 현재 대운 전반/후반 5년 상세 풀이)</p>
-            [SEWUN_TABLE_HERE]
-            <p>1. (세운의 흐름 분석)</p>
-            [WOLWUN_TABLE_HERE]
-            <p>1. (월운의 흐름 분석)</p>
-            """
+[🚨 통변 절대 원칙]
+1. 사주 팩트 준수: 사주 원국의 일간, 월지 및 격국을 정확히 판별하십시오.
+2. 7궁위 3D 입체 분석: 육체적 / 심리적 / 사회적 3D 관점으로 해석하십시오.
+3. 지장간 포태법(12운성): 지장간에 숨은 글자의 좌법으로 겉성격을, 인종법으로 무의식적 속마음을 짚어내십시오.
+4. 성별 치환: 내담자({u_gender})의 성별을 철저히 반영하여 해석하십시오.
+5. 진술축미 및 삼형살: 사주에 辰戌丑未가 있다면 개고/입고 작용을, 형살이 있다면 흉뿐만 아니라 직업적 장점(권력/합격)도 함께 분석하십시오.
+6. 공망의 재해석: 공망({i_gong})을 단순한 '결핍'이 아닌 무의식적 '집착'으로 해석하십시오.
+7. 자율 넘버링: 1., 2., 3., 4., 5... 무제한 넘버링을 적용하여 상세히 서술하십시오.
+
+내담자: {disp_name} ({u_gender}, {u_age}세)
+사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시 / 공망: {i_gong}
+{'(※ 시주 미상이므로 3주 6자를 기준으로 풀이할 것)' if hs == '?' else ''}
+
+[출력 템플릿] 반드시 아래 11단계 목차(HTML)를 토씨 하나 틀리지 말고 사용하십시오.
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>1) 분석</h3>
+<div class='content-box-loose'>
+    <p>1. (격국 및 7궁위 분석)</p>
+</div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>2) 성격</h3>
+<div class='content-box-loose'>
+    <p>1. (성격 풀이)</p>
+</div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>3) 부모·형제운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>4) 학업·진학운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>5) 적성·직업운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>6) 결혼·자녀운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>7) 사업운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>8) 관직·명예운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>9) 재성운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>10) 건강운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top:30px;'>11) 운의 흐름</h3>
+[DAEWUN_TABLE_HERE]
+<div class='content-box-loose'>
+    <p>1. (지나온 대운의 풀이와 현재 대운 전반/후반 5년 상세 풀이)</p>
+</div>
+[SEWUN_TABLE_HERE]
+<div class='content-box-loose'>
+    <p>1. (세운의 흐름 분석)</p>
+</div>
+[WOLWUN_TABLE_HERE]
+<div class='content-box-loose'>
+    <p>1. (월운의 흐름 분석)</p>
+</div>
+"""
             try:
                 res = model.generate_content(prompt)
                 
-                # [핵심] AI 텍스트 내의 치환자 위치에 파이썬이 생성한 흐름표 HTML을 정확하게 꽂아 넣습니다.
+                # AI 출력본 중간에 대운, 세운, 월운 표 치환 결합
                 final_report = res.text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                 
                 st.markdown(f"<div style='margin-top:20px;'>{final_report}</div></div></div>", unsafe_allow_html=True)
                 
+                # [복원] 1:1 상세비교 3단 콤보 (무색 배경)
                 if btn_compare:
-                    st.markdown(f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#3E2723;'><h2 style='text-align:center; color:#3E2723; margin-bottom:20px;'>📜 타 술사 감명서 원본</h2><div class='content-box-loose'>{comp_text.replace('\\n','<br>')}</div></div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='page-break'></div><div class='report-page no-bg-print'><div class='vip-inset-frame' style='border-color:#3E2723;'><h2 style='text-align:center; color:#3E2723; margin-bottom:20px;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose'>{comp_text.replace('\\n','<br>')}</div></div></div>", unsafe_allow_html=True)
+                    
                     with st.spinner("1:1 교차 대조 중..."):
-                        c_res = model.generate_content(f"초연 박사로서 타 술사 감명서를 11단계 소제목에 맞춰 1:1 비교하고 12) 종합의견을 작성하시오. 대상: {comp_text}")
-                        st.markdown(f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000; margin-bottom:20px;'>⚖️ 1:1 상세비교</h2>{c_res.text}<div style='text-align:center; margin-top:50px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>", unsafe_allow_html=True)
+                        comp_prompt = f"""
+[시스템: '초연 박사'의 1:1 정밀 비교 가이드]
+- 타 술사의 감명서를 초연의 '11개 소제목' 순서에 맞추어 1:1로 교차 대조하여 평가하시오.
+- 타 술사가 '정적인 구조(체)' 파악에 머물렀음을 지적하고, 초연 시스템이 '합충형해파의 동적 시뮬레이션(선입선출, 충발/충거, 개고/입고)'과 '7궁위 3D 지장간 포태법'을 통해 어떻게 운명의 톱니바퀴가 돌아가는지 입체적으로 증명했는지를 품격 있게 강조할 것.
+- 마지막 12번은 [12) 종합 의견]으로 전체적인 총평을 내릴 것.
+- 대제목은 "1) 분석 비교", "2) 성격 비교"... 형식으로 통일.
+
+대상 데이터: {comp_text}
+"""
+                        c_res = model.generate_content(comp_prompt)
+                        st.markdown(f"<div class='page-break'></div><div class='report-page no-bg-print'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000; margin-bottom:20px;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose'>{c_res.text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>", unsafe_allow_html=True)
+                        
             except Exception as e: 
                 st.error(f"AI 연산 오류: {e}")
