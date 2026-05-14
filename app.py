@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS 
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 12.9", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 13.0", layout="wide")
 
 st.markdown("""
 <style>
@@ -57,6 +57,7 @@ st.markdown("""
     .no-border-row:last-of-type td { border-bottom: 1px solid #444 !important; }
     
     .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 22px !important; }
+    .top-header-cell { background-color: #1A237E !important; height: 26px !important; padding: 0 !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
@@ -192,7 +193,6 @@ def get_ji_rel_set(me, target):
     if s == {'辰','巳'}: r.append("지망")
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
-# [핵심] 일반신살 50종 우선순위 완벽 필터링
 def get_general_shinsal_filtered(idx, gans, jjis):
     dc, mc, yc = gans[1], gans[2], gans[3]
     dj, mj, yj = jjis[1], jjis[2], jjis[3]
@@ -200,9 +200,8 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     
     if cur_g in ["?", "-", " "] or cur_j in ["?", "-", " "]: return []
     gj = cur_g + cur_j
-    noble, ausp, evil = [], [], []
+    noble, ausp, evil = [], []
     
-    # 1. 귀인 (11종)
     if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인")
     if cur_j in {'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("문창귀인")
     if cur_j in {'甲':'亥','乙':'子','丙':'寅','戊':'寅','丁':'卯','己':'卯','庚':'巳','辛':'午','壬':'申','癸':'酉'}.get(dc,""): noble.append("문곡귀인")
@@ -213,13 +212,11 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     if cur_j in {'甲':'亥','乙':'午','丙':'寅','戊':'寅','丁':'酉','己':'酉','庚':'巳','辛':'子','壬':'申','癸':'卯'}.get(dc,""): noble.append("학당귀인")
     if cur_j in {'甲':'亥','乙':'戌','丙':'申','戊':'申','丁':'未','己':'未','庚':'巳','辛':'辰','壬':'寅','癸':'丑'}.get(dc,""): noble.append("암록")
     
-    # 2. 복신 (6종)
     if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): ausp.append("건록")
     if cur_j in {'甲':'辰','乙':'巳','丙':'未','戊':'未','丁':'申','己':'申','庚':'戌','辛':'亥','壬':'丑','癸':'寅'}.get(dc,""): ausp.append("금여록")
     if gj in ["甲寅", "丙辰", "戊辰", "庚辰", "壬戌"]: ausp.append("일덕")
     if gj in ["乙丑", "己巳", "癸酉"]: ausp.append("금신")
     
-    # 3. 흉신 (20여종 + 필수 추가분)
     if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호대살")
     if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살")
     if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살")
@@ -247,19 +244,24 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
     return result[:6]
 
-# [핵심] 자오묘유 3단 높이 100% 동일화 (중기 빈칸 완벽 교정)
+# [핵심] 박사님의 위대한 비급: 무토(戊) 삭제를 통한 완벽한 3단 핏 교정
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
-    raw = {'子':['壬','-','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','-','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','-','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','-','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
+    # 자오묘유에 戊(무토)를 끼워넣어 3단계를 강제합니다.
+    raw = {'子':['壬','戊','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','戊','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','戊','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','戊','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
     res = "<div style='display:flex; flex-direction:column; height:100%; min-height:48px; gap:2px; padding:1px 0;'>"
-    for j in raw:
-        if j != '-':
-            ss_label = get_ss(dg, j)[:2]; ck = get_color(j)
-            bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
-            res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:2px;'>{j}({ss_label})</div>"
+    for idx, j in enumerate(raw):
+        # 가운데에 억지로 끼워넣은 무토인지 확인
+        is_fake = (ji in ['子','卯','午','酉'] and idx == 1)
+        ss_label = get_ss(dg, j)[:2] if not is_fake else "정관"
+        ck = get_color(j) if not is_fake else "토"
+        bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
+        
+        if is_fake:
+            # 투명망토 비급: 박사님 하명대로 블록은 존재하나 화면에서 완전히 투명하게(visibility:hidden) 숨김!
+            res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:black; font-size:11px; font-weight:900; border-radius:2px; visibility:hidden;'>戊(정관)</div>"
         else:
-            # 중기 빈칸을 여기/본기와 100% 똑같은 비율(flex:1)로 강제 고정
-            res += "<div style='flex:1; background:transparent; border:1px dashed #ccc; border-radius:2px;'></div>"
+            res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:2px;'>{j}({ss_label})</div>"
     return res + "</div>"
 
 def calculate_gongmang(ilgan, ilji):
@@ -302,7 +304,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 12.9 Masterpiece")
+    st.caption("Ver 13.0 Masterpiece")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -347,7 +349,8 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     st.markdown("---")
-    u_name = st.text_input("이름", value="홍길동", placeholder="정홍일")
+    # [수정] 연회색 플레이스홀더 적용 (value는 비우고 placeholder 활용)
+    u_name = st.text_input("이름", value="", placeholder="홍길동")
     u_gender = st.selectbox("성별", ["남성", "여성", "돌싱"])
     u_cal = st.selectbox("달력", ["양력", "음력"])
     col1, col2, col3 = st.columns(3)
@@ -367,7 +370,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. 분석 가동 및 출력 (HTML 공백 0%)
+# 4. 분석 가동 및 출력
 # ==============================================================================
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
@@ -382,7 +385,6 @@ if btn_single or btn_compare:
             sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
             lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
             
-            # [시스템 강제 시간] 2026년 5월 고정
             curr_y = 2026
             curr_m = 5
             u_age = curr_y - u_y + 1
@@ -410,9 +412,15 @@ if btn_single or btn_compare:
             disp_name = u_name if u_name.strip() else "홍길동"
             info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
-# [핵심] 상단 헤더 글자색 강제 White 적용 (인라인 스타일)
+# [핵심] 상단 헤더 글자색 순백색(#FFFFFF) 강제 폭격
             table_html = f"""<table class='result-table'>
-<tr style='background-color:#1A237E;'><td style='color:#FFFFFF !important; font-weight:bold; border:1px solid #444;'>구분</td><td style='color:#FFFFFF !important; font-weight:bold; border:1px solid #444;'>시주</td><td style='color:#FFFFFF !important; font-weight:bold; border:1px solid #444;'>일주</td><td style='color:#FFFFFF !important; font-weight:bold; border:1px solid #444;'>월주</td><td style='color:#FFFFFF !important; font-weight:bold; border:1px solid #444;'>년주</td></tr>
+<tr class='top-header-cell'>
+<td style='background-color:#1A237E; border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>구분</span></td>
+<td style='background-color:#1A237E; border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>시주</span></td>
+<td style='background-color:#1A237E; border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>일주</span></td>
+<td style='background-color:#1A237E; border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>월주</span></td>
+<td style='background-color:#1A237E; border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>년주</span></td>
+</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
@@ -429,7 +437,6 @@ if btn_single or btn_compare:
             for char in gans + jjis:
                 if char != "?": counts[get_color(char)] += 1
             
-            # [핵심] 마스터바 천을귀인 지지(글자) 정확히 출력
             guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(ds, '없음')
                 
@@ -441,16 +448,15 @@ if btn_single or btn_compare:
             
             master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong}, [일] {i_gong}</div></div>"
             
-            # [핵심] 흐름표 좌측->우측(LTR) 정렬 & 바탕색/가로줄 눈 복구 (정답지 데이터 수집 병행)
             daewun_info = []
-            un_html = f"<h4 style='color:#1A237E; margin-top:20px;'>1) 대운의 흐름 (대운수: {calc_d})</h4><div style='display:flex; flex-direction:row; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+            un_html = f"<h4 style='color:#1A237E; margin-top:20px;'>1) 대운의 흐름 (대운수: {calc_d})</h4><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(10):
                 val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                 daewun_info.append(f"{val}세:{c}{j}")
                 is_active = val <= u_age < val+10
                 bg_col = "#FFF9C4" if is_active else "transparent"
-                b_right = "1px solid #ccc" if i != 9 else "none"
-                un_html += f"<div style='flex:1; border-right:{b_right}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div><div class='color-{get_color(c)}' style='font-size:16px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:16px; font-weight:900;'>{j}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,j)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, j)}</div></div>"
+                b_left = "1px solid #ccc" if i != 9 else "none"
+                un_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div><div class='color-{get_color(c)}' style='font-size:16px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:16px; font-weight:900;'>{j}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,j)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, j)}</div></div>"
             un_html += "</div>"
             daewun_info_str = ", ".join(daewun_info)
 
@@ -459,7 +465,7 @@ if btn_single or btn_compare:
             dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
             
             sewun_info = []
-            se_html = f"<h4 style='color:#1A237E; margin-top:20px;'>2) 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준)</h4><div style='display:flex; flex-direction:row; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+            se_html = f"<h4 style='color:#1A237E; margin-top:20px;'>2) 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준)</h4><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(10):
                 ty, tage = 2026 + i, u_age + i
                 base = (ty - 1984) % 60
@@ -467,20 +473,20 @@ if btn_single or btn_compare:
                 sewun_info.append(f"{ty}년({tc}{tj})")
                 is_cur_yr = (ty == 2026)
                 bg_col = "#E1F5FE" if is_cur_yr else "transparent"
-                b_right = "1px solid #ccc" if i != 9 else "none"
-                se_html += f"<div style='flex:1; border-right:{b_right}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
+                b_left = "1px solid #ccc" if i != 9 else "none"
+                se_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
             se_html += "</div>"
             sewun_info_str = ", ".join(sewun_info)
 
             wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
             wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
-            wol_html = f"<h4 style='color:#1A237E; margin-top:20px;'>3) 월운의 흐름 (2026년도 양력기준)</h4><div style='display:flex; flex-direction:row; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+            wol_html = f"<h4 style='color:#1A237E; margin-top:20px;'>3) 월운의 흐름 (2026년도 양력기준)</h4><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(12):
                 tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
                 is_cur_m = (tm == curr_m)
                 bg_col = "#E8F5E9" if is_cur_m else "transparent"
-                b_right = "1px solid #ccc" if i != 11 else "none"
-                wol_html += f"<div style='flex:1; border-right:{b_right}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
+                b_left = "1px solid #ccc" if i != 11 else "none"
+                wol_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
             wol_html += "</div>"
             
             closing_html = f"""<div style='margin-top: 30px;'>
@@ -493,13 +499,12 @@ if btn_single or btn_compare:
 </div>
 </div>"""
 
-            # [핵심] 만세력 정답지 강제 주입 프롬프트
             prompt = f"""
 [절대 규칙]
 1. 현재 시스템의 시간은 2026년(丙午년) 5월(己巳월)입니다.
 2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1) 분석</h3> 으로 시작하십시오. 인사말 절대 금지.
 3. 절대 들여쓰기(Tab, 스페이스바 연속)를 하지 마십시오.
-4. 표(Table)는 절대 직접 그리지 마십시오. 오직 텍스트 분석만 작성하십시오.
+4. 표(Table)는 절대 직접 그리지 마십시오.
 
 [🚨 핵심 팩트 강제 지시: AI는 아래의 실제 대운/세운 값을 절대 변경하거나 지어내지 말고, 이 값을 바탕으로만 통변하십시오.]
 - 내담자의 실제 대운 흐름: {daewun_info_str}
@@ -562,9 +567,7 @@ if btn_single or btn_compare:
             
             try:
                 res = model.generate_content(prompt)
-                
                 ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
-                
                 ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                 
                 report_1_full_html = f"""<div class='report-page'>
@@ -586,7 +589,7 @@ if btn_single or btn_compare:
                     
                     comp_prompt = f"""
 [시스템 절대 규칙: 첫 글자는 무조건 대제목 <h3>로 시작. 들여쓰기 절대 금지. 마크다운 사용 금지.]
-타 술사 감명서를 1~11단계 목차에 맞춰 교차 대조. 문단 분리 철저.
+타 술사 감명서를 1~11단계 목차에 맞춰 교차 대조.
 타 술사의 '정적인 구조' 파악의 한계를 지적하고, 초연의 '동적 시뮬레이션(시기에 따른 실행분석)' 우위를 입증.
 12번은 [12) 종합 의견]으로 총평.
 
@@ -594,7 +597,6 @@ if btn_single or btn_compare:
 """
                     c_res = model.generate_content(comp_prompt)
                     c_ai_text = "\n".join([line.lstrip() for line in c_res.text.split("\n")])
-                    
                     st.markdown(f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose' style='margin-top:20px;'>{c_ai_text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>", unsafe_allow_html=True)
                         
             except Exception as e: 
