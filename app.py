@@ -10,9 +10,9 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 
 # ==============================================================================
-# 0. VIP 인셋 프레임 및 초강력 프린트 CSS 
+# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 8.7 정석 복원)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 13.3", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 13.4", layout="wide")
 
 st.markdown("""
 <style>
@@ -58,9 +58,8 @@ st.markdown("""
     
     .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 22px !important; }
     
-    /* 최상단 헤더 완벽한 흰색 강제 (박사님 지시사항) */
-    .top-header-cell { background-color: #1A237E !important; height: 26px !important; padding: 0 !important; }
-    .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: bold !important; }
+    /* [수술부위] 박사님 지시 Ver 8.7 정석 복원 (순백색 강제 및 높이) */
+    .top-header-cell { background-color: #1A237E !important; color: white !important; font-size: 16px !important; padding: 8px 0 !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
@@ -245,20 +244,19 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
     return result[:6]
 
+# [수술부위] 박사님 지시 Ver 8.7 정석 지장간 코드 복원
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
-    raw = {'子':['壬','戊','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','戊','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','戊','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','戊','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
-    res = "<div style='display:flex; flex-direction:column; height:100%; min-height:48px; gap:2px; padding:1px 0;'>"
-    for idx, j in enumerate(raw):
-        is_fake = (ji in ['子','卯','午','酉'] and idx == 1)
-        ss_label = get_ss(dg, j)[:2] if not is_fake else ""
-        ck = get_color(j) if not is_fake else "토"
-        bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
-        
-        if is_fake:
-            res += f"<div style='flex:1; background:transparent; border:none; visibility:hidden;'></div>"
-        else:
-            res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:2px;'>{j}({ss_label})</div>"
+    raw = {'子':['壬','-','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','-','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','己','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','-','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
+    res = "<div style='display:flex; flex-direction:column; height:100%; min-height:65px; gap:2px; padding:2px 0; margin:0;'>"
+    for j in raw:
+        if j != '-':
+            ss_label = get_ss(dg, j)[:2]; color_key = get_color(j)
+            bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(color_key, '#888')
+            tc = 'white' if color_key != '토' else 'black'
+            res += f"<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{tc}; width:95%; margin:0 auto; font-size:12px; font-weight:900; border-radius:3px;'>{j} ({ss_label})</div>"
+        else: 
+            res += "<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:#f9f9f9; width:95%; margin:0 auto; color:#bbb; border-radius:3px; border:1px dashed #ddd;'>-</div>"
     return res + "</div>"
 
 def calculate_gongmang(ilgan, ilji):
@@ -301,7 +299,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 13.3 Masterpiece")
+    st.caption("Ver 13.4 Masterpiece")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -366,7 +364,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. 분석 가동 및 출력 (HTML 공백 0%, 동적 간지 프롬프트 적용)
+# 4. 분석 가동 및 출력 
 # ==============================================================================
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
@@ -408,13 +406,14 @@ if btn_single or btn_compare:
             disp_name = u_name if u_name.strip() else "홍길동"
             info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
+# [수술부위] HTML 태그에서 억지 <span> 제거 및 깔끔한 조립 (들여쓰기 0%)
             table_html = f"""<table class='result-table'>
 <tr class='top-header-cell'>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>구분</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>시주</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>일주</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>월주</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>년주</span></td>
+<td style='border:1px solid #444;'>구분</td>
+<td style='border:1px solid #444;'>시주</td>
+<td style='border:1px solid #444;'>일주</td>
+<td style='border:1px solid #444;'>월주</td>
+<td style='border:1px solid #444;'>년주</td>
 </tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
@@ -476,7 +475,6 @@ if btn_single or btn_compare:
             se_html += "</div>"
             sewun_info_str = ", ".join(sewun_info)
 
-            # [수술부위] 월운 간지 동적 할당
             wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
             wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
             cur_wol_g = wol_gans[curr_m - 1]
@@ -501,7 +499,6 @@ if btn_single or btn_compare:
 </div>
 </div>"""
 
-            # [수술부위] 프롬프트 12번 문항 보따리 해제 및 동적 월운 간지 삽입
             prompt = f"""
 [절대 규칙]
 1. 현재 시스템의 시간은 2026년(丙午년) {curr_m}월({cur_wol_g}{cur_wol_j}월)입니다.
