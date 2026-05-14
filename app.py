@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS 
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 13.0", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 13.1", layout="wide")
 
 st.markdown("""
 <style>
@@ -193,6 +193,7 @@ def get_ji_rel_set(me, target):
     if s == {'辰','巳'}: r.append("지망")
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
+# [핵심] 일반신살 50종 우선순위 (원진, 귀문, 천라지망 제거 완료)
 def get_general_shinsal_filtered(idx, gans, jjis):
     dc, mc, yc = gans[1], gans[2], gans[3]
     dj, mj, yj = jjis[1], jjis[2], jjis[3]
@@ -200,7 +201,7 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     
     if cur_g in ["?", "-", " "] or cur_j in ["?", "-", " "]: return []
     gj = cur_g + cur_j
-    noble, ausp, evil = [], []
+    noble, ausp, evil = [], [], []
     
     if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인")
     if cur_j in {'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("문창귀인")
@@ -235,8 +236,8 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     if cur_j in ['辰','戌']: evil.append("평두")
     if cur_j in ['寅','申','巳','亥']: evil.append("효신살")
     if gj in ["甲辰","乙巳","丙申","丁亥","戊戌","己丑","庚辰","辛巳","壬申","癸亥"]: evil.append("퇴신")
-    if cur_j in ['辰','戌','丑','未'] and cur_j != dj: evil.append("천라지망")
-    if get_ji_rel_set(cur_j, dj) in ["원진", "귀문", "원진, 귀문"]: evil.append("원진/귀문")
+    
+    # 박사님 지시: 합충형파해에 나오는 원진, 귀문, 천라, 지망은 일반신살에서 영구 제외
 
     result = []
     for n in list(dict.fromkeys(noble)): result.append(f"<span style='color:#0D47A1;'>{n}</span>")
@@ -244,22 +245,20 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
     return result[:6]
 
-# [핵심] 박사님의 위대한 비급: 무토(戊) 삭제를 통한 완벽한 3단 핏 교정
+# [핵심] 박사님의 위대한 비급: 무토(戊) 삭제를 통한 완벽한 3단 핏 교정 (투명 마법)
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
-    # 자오묘유에 戊(무토)를 끼워넣어 3단계를 강제합니다.
     raw = {'子':['壬','戊','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','戊','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','戊','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','戊','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
     res = "<div style='display:flex; flex-direction:column; height:100%; min-height:48px; gap:2px; padding:1px 0;'>"
     for idx, j in enumerate(raw):
-        # 가운데에 억지로 끼워넣은 무토인지 확인
         is_fake = (ji in ['子','卯','午','酉'] and idx == 1)
-        ss_label = get_ss(dg, j)[:2] if not is_fake else "정관"
+        ss_label = get_ss(dg, j)[:2] if not is_fake else ""
         ck = get_color(j) if not is_fake else "토"
         bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
         
         if is_fake:
-            # 투명망토 비급: 박사님 하명대로 블록은 존재하나 화면에서 완전히 투명하게(visibility:hidden) 숨김!
-            res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:black; font-size:11px; font-weight:900; border-radius:2px; visibility:hidden;'>戊(정관)</div>"
+            # 완벽한 투명화 비급: 공간은 차지하되, 선도 글자도 보이지 않음
+            res += f"<div style='flex:1; background:transparent; border:none; visibility:hidden;'></div>"
         else:
             res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:2px;'>{j}({ss_label})</div>"
     return res + "</div>"
@@ -304,7 +303,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 13.0 Masterpiece")
+    st.caption("Ver 13.1 Masterpiece")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -349,7 +348,6 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     st.markdown("---")
-    # [수정] 연회색 플레이스홀더 적용 (value는 비우고 placeholder 활용)
     u_name = st.text_input("이름", value="", placeholder="홍길동")
     u_gender = st.selectbox("성별", ["남성", "여성", "돌싱"])
     u_cal = st.selectbox("달력", ["양력", "음력"])
@@ -370,7 +368,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. 분석 가동 및 출력
+# 4. 분석 가동 및 출력 (HTML 공백 0%)
 # ==============================================================================
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
@@ -504,7 +502,7 @@ if btn_single or btn_compare:
 1. 현재 시스템의 시간은 2026년(丙午년) 5월(己巳월)입니다.
 2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1) 분석</h3> 으로 시작하십시오. 인사말 절대 금지.
 3. 절대 들여쓰기(Tab, 스페이스바 연속)를 하지 마십시오.
-4. 표(Table)는 절대 직접 그리지 마십시오.
+4. 표(Table)는 절대 직접 그리지 마십시오. 오직 텍스트 분석만 작성하십시오.
 
 [🚨 핵심 팩트 강제 지시: AI는 아래의 실제 대운/세운 값을 절대 변경하거나 지어내지 말고, 이 값을 바탕으로만 통변하십시오.]
 - 내담자의 실제 대운 흐름: {daewun_info_str}
