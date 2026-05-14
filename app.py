@@ -58,6 +58,7 @@ st.markdown("""
     
     .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 22px !important; }
     .top-header-cell { background-color: #1A237E !important; height: 26px !important; padding: 0 !important; }
+    .report-page .top-header-cell td, .report-page .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
