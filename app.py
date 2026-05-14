@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS 
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 Ver 13.2", layout="wide")
+st.set_page_config(page_title="초연 시공명리 Ver 13.3", layout="wide")
 
 st.markdown("""
 <style>
@@ -245,7 +245,6 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
     return result[:6]
 
-# [핵심] 묘목(자오묘유) 지장간 무토(戊) 투명화로 3단 완벽 핏
 def get_jijanggan_full(dg, ji):
     if ji in ["?", "-", " "]: return "-"
     raw = {'子':['壬','戊','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','戊','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','戊','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','戊','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(ji, ['-','-','-'])
@@ -257,7 +256,6 @@ def get_jijanggan_full(dg, ji):
         bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(ck, '#888')
         
         if is_fake:
-            # 100% 투명화
             res += f"<div style='flex:1; background:transparent; border:none; visibility:hidden;'></div>"
         else:
             res += f"<div style='flex:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{('black' if ck=='토' else 'white')}; font-size:11px; font-weight:900; border-radius:2px;'>{j}({ss_label})</div>"
@@ -303,7 +301,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 13.2 Masterpiece")
+    st.caption("Ver 13.3 Masterpiece")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -368,7 +366,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. 분석 가동 및 출력 (HTML 공백 0%, 마커 절대 보호)
+# 4. 분석 가동 및 출력 (HTML 공백 0%, 동적 간지 프롬프트 적용)
 # ==============================================================================
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
@@ -410,7 +408,6 @@ if btn_single or btn_compare:
             disp_name = u_name if u_name.strip() else "홍길동"
             info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
-# [핵심] 상단 헤더 글자색 강제 White
             table_html = f"""<table class='result-table'>
 <tr class='top-header-cell'>
 <td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>구분</span></td>
@@ -440,7 +437,6 @@ if btn_single or btn_compare:
                 
             utc_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0) - dt_mod.timedelta(hours=9)
             
-            # [핵심] 순행/역행 로직
             order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
             direction_str = "순행" if order == 1 else "역행"
             
@@ -450,7 +446,6 @@ if btn_single or btn_compare:
             
             master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong}, [일] {i_gong}</div></div>"
             
-            # [핵심] 흐름표 우측->좌측(RTL) 강제 인라인 고정
             daewun_info = []
             un_html = f"<h4 style='color:#1A237E; margin-top:20px;'>1) 대운의 흐름 (대운수: {calc_d}, {direction_str})</h4><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(10):
@@ -481,8 +476,12 @@ if btn_single or btn_compare:
             se_html += "</div>"
             sewun_info_str = ", ".join(sewun_info)
 
+            # [수술부위] 월운 간지 동적 할당
             wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
             wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
+            cur_wol_g = wol_gans[curr_m - 1]
+            cur_wol_j = wol_jis[curr_m - 1]
+            
             wol_html = f"<h4 style='color:#1A237E; margin-top:20px;'>3) 월운의 흐름 (2026년도 양력기준)</h4><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(12):
                 tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
@@ -502,15 +501,15 @@ if btn_single or btn_compare:
 </div>
 </div>"""
 
-            # [핵심] 괄호 지시문 제거 (사용자에게 노출 금지) & 표 마커 절대 보호
+            # [수술부위] 프롬프트 12번 문항 보따리 해제 및 동적 월운 간지 삽입
             prompt = f"""
 [절대 규칙]
-1. 현재 시스템의 시간은 2026년(丙午년) 5월(己巳월)입니다.
-2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1) 분석</h3> 으로 시작하십시오.
+1. 현재 시스템의 시간은 2026년(丙午년) {curr_m}월({cur_wol_g}{cur_wol_j}월)입니다.
+2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1) 분석</h3> 으로 시작하십시오. 인사말 절대 금지.
 3. 절대 들여쓰기(Tab, 스페이스바 연속)를 하지 마십시오.
-4. [DAEWUN_TABLE_HERE] 같은 마커는 파이썬이 표를 끼워넣는 위치입니다. 절대로 지우거나 누락하지 말고, 반드시 템플릿 그대로 복사해서 출력하십시오!
-5. 템플릿에 있는 <p>▶ 지나온 각 과거 대운 요약</p> 처럼 제목은 그대로 쓰되, 그 아래에 5줄 이상 상세히 분석을 쓰십시오. 제목 옆에 괄호로 (5줄 이상) 같은 지시사항은 절대 출력하지 마십시오.
+4. 표(Table)는 절대 직접 그리지 마십시오.
 
+[🚨 핵심 팩트 강제 지시: AI는 아래의 실제 대운/세운 값을 절대 변경하거나 지어내지 말고, 이 값을 바탕으로만 통변하십시오.]
 - 내담자의 실제 대운 흐름: {daewun_info_str}
 - 내담자의 실제 세운 흐름: {sewun_info_str}
 
@@ -551,12 +550,12 @@ if btn_single or btn_compare:
 [WOLWUN_TABLE_HERE]
 <div class='content-box-loose'>
 <p>▶ 지나온 각 과거 월운 요약</p>
-<p>▶ 이번 달({curr_m}월 己巳월) 전반기 (양력 5일~19일) 상세 분석</p>
-<p>▶ 이번 달({curr_m}월 己巳월) 후반기 (양력 20일~익월 4일) 상세 분석</p>
+<p>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</p>
+<p>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</p>
 </div>
 
 <h3 style='color:#1A237E; margin-top:30px;'>12) 삶을 바꾸는 지혜로운 조언</h3>
-<div class='content-box-loose' style='border:1px dashed #ccc; border-radius:8px; padding:15px;'>
+<div class='content-box-loose'>
 <p><b>◈ 나를 돕는 에너지와 색상:</b></p>
 <p><b>◈ 신체 밸런스와 에너지 관리:</b></p>
 <p><b>◈ 공간의 흐름과 방위의 지혜:</b></p>
@@ -573,10 +572,8 @@ if btn_single or btn_compare:
                 res = model.generate_content(prompt)
                 ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                 
-                # 강제 치환 (표 마커)
                 ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                 
-                # 혹시 AI가 대괄호를 빼먹었을 때를 대비한 2차 보험 삽입
                 if un_html not in ai_text:
                     ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ AI가 템플릿 마커를 누락하여 표가 최상단에 출력되었습니다.</div>" + ai_text
 
