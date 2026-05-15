@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS 
 # ==============================================================================
-st.set_page_config(page_title="초연 전통명리 사주풀이 Ver 13.6", layout="wide")
+st.set_page_config(page_title="초연 전통명리 사주풀이 Ver 13.7", layout="wide")
 
 st.markdown("""
 <style>
@@ -58,7 +58,9 @@ st.markdown("""
     
     .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 22px !important; }
     
-    .top-header-cell { background-color: #1A237E !important; color: white !important; font-size: 16px !important; padding: 8px 0 !important; }
+    /* 최상단 헤더 순백색 영구 복원 (정석 CSS) */
+    .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
+    .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
@@ -257,19 +259,13 @@ def get_jijanggan_full(dg, ji):
             res += "<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:#f9f9f9; width:95%; margin:0 auto; color:#bbb; border-radius:3px; border:1px dashed #ddd;'>-</div>"
     return res + "</div>"
 
-# [수술부위 4] 전통 격국(格局) 파이썬 자동 산출 엔진
 def get_gyukgook(ds, ys, ms, hs, mb):
     if mb in ["?", "-", " "]: return "알 수 없음"
-    # 월지 지장간 [여기, 중기, 본기] 데이터
     raw = {'子':['壬','-','癸'],'丑':['癸','辛','己'],'寅':['戊','丙','甲'],'卯':['甲','-','乙'],'辰':['乙','癸','戊'],'巳':['戊','庚','丙'],'午':['丙','己','丁'],'未':['丁','乙','己'],'申':['戊','壬','庚'],'酉':['庚','-','辛'],'戌':['辛','丁','戊'],'亥':['戊','甲','壬']}.get(mb, ['-','-','-'])
-    
-    # 1. 본기(2) -> 중기(1) -> 여기(0) 순서로 천간(년,월,시) 투출 검사
     for idx in [2, 1, 0]:
         stem = raw[idx]
         if stem != '-' and stem in [ys, ms, hs]:
             return get_ss(ds, stem) + "격"
-            
-    # 2. 미투출 시 월지 자체의 십성으로 격국 지정
     return get_ss(ds, mb) + "격"
 
 def calculate_gongmang(ilgan, ilji):
@@ -312,7 +308,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 with st.sidebar:
     st.title("🧪 초연 임상 연구소")
-    st.caption("Ver 13.6 Masterpiece")
+    st.caption("Ver 13.7 Masterpiece")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -421,14 +417,14 @@ if btn_single or btn_compare:
             disp_name = u_name if u_name.strip() else "홍길동"
             info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
-            # [수술부위 1] <td> 안에 <span>을 직접 씌워 순백색 강제 고정
+            # [수술부위 1] 이중 용접하여 완벽한 흰색 글씨 고정
             table_html = f"""<table class='result-table'>
 <tr class='top-header-cell'>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>구분</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>시주</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>일주</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>월주</span></td>
-<td style='border:1px solid #444;'><span style='color:#FFFFFF !important; font-weight:bold;'>년주</span></td>
+<td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>구분</span></td>
+<td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>시주</span></td>
+<td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>일주</span></td>
+<td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>월주</span></td>
+<td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>년주</span></td>
 </tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
@@ -442,8 +438,30 @@ if btn_single or btn_compare:
 <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis)) if get_general_shinsal_filtered(i, gans, jjis) else '-'}</td>" for i in range(4)])}</tr>
 </table>"""
             
-            # 파이썬 격국 산출 로직 가동
             calc_gyukgook = get_gyukgook(ds, ys, ms, hs, mb)
+
+            # [수술부위 - 신살 데이터 추출 및 가형(삼형살 대기) 판독기]
+            gen_shinsal_list = []
+            for i in range(4):
+                raw_tags = get_general_shinsal_filtered(i, gans, jjis)
+                for tag in raw_tags:
+                    if ">" in tag and "<" in tag: gen_shinsal_list.append(tag.split('>')[1].split('<')[0])
+            shinsal_str = ", ".join(list(dict.fromkeys(gen_shinsal_list))) if gen_shinsal_list else "특이 신살 없음"
+            
+            s12_list = [get_12_shinsal(yb, j) for j in jjis if get_12_shinsal(yb, j) != "-"]
+            s12_str = ", ".join(list(dict.fromkeys(s12_list))) if s12_list else "특이 12신살 없음"
+            
+            # 가형(삼형살 대기) 폭탄 판독기
+            samhyung_warn = ""
+            has_in, has_sa, has_shin = '寅' in jjis, '巳' in jjis, '申' in jjis
+            if sum([has_in, has_sa, has_shin]) == 2:
+                missing = [x for x, has in zip(['寅','巳','申'], [has_in, has_sa, has_shin]) if not has][0]
+                samhyung_warn += f"원국에 인사신(寅巳申) 중 2글자가 있어 가형(假刑) 상태입니다. 운에서 '{missing}'이/가 들어올 때 삼형살이 완성되니 관재구설/수술수/배신에 강력히 주의 요망. "
+            has_chuk, has_sul, has_mi = '丑' in jjis, '戌' in jjis, '未' in jjis
+            if sum([has_chuk, has_sul, has_mi]) == 2:
+                missing = [x for x, has in zip(['丑','戌','未'], [has_chuk, has_sul, has_mi]) if not has][0]
+                samhyung_warn += f"원국에 축술미(丑戌未) 중 2글자가 있어 가형(假刑) 상태입니다. 운에서 '{missing}'이/가 들어올 때 삼형살이 완성되니 관재구설/수술수/배신에 강력히 주의 요망. "
+            if not samhyung_warn: samhyung_warn = "해당 없음"
 
             counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
             for char in gans + jjis:
@@ -517,35 +535,47 @@ if btn_single or btn_compare:
 </div>
 </div>"""
 
-            # [수술부위 2, 3, 4] 호칭 교정, 격국 팩트 주입, 대/소제목 넘버링 양식 변경
+            # [수술부위 - 궁극의 14개조 강제 지시 프롬프트 뇌수 교체]
             prompt = f"""
 [절대 규칙]
-1. 현재 시스템의 시간은 2026년(丙午년) {curr_m}월({cur_wol_g}{cur_wol_j}월)입니다.
-2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1. 분석</h3> 으로 시작하십시오. 인사말 절대 금지.
-3. 절대 들여쓰기(Tab, 스페이스바 연속)를 하지 마십시오.
-4. 표(Table)는 절대 직접 그리지 마십시오.
-5. 템플릿의 [DAEWUN_TABLE_HERE] 등 마커는 파이썬 치환용이므로 절대 지우지 마십시오.
-6. [강제] 응답의 모든 문장에서 '내담자'라는 단어는 절대 금지합니다. 반드시 [{disp_name}님]을 사용하여, '{disp_name}님의 사주는...' 형태로 친근하게 서술하십시오.
+1. 현재 시스템 시간: 2026년(丙午년) {curr_m}월({cur_wol_g}{cur_wol_j}월)
+2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1. 분석</h3> 으로 시작하십시오. (인사말 절대 금지)
+3. 절대 들여쓰기를 하지 마십시오. 표(Table)는 절대 직접 그리지 마십시오.
+4. [DAEWUN_TABLE_HERE] 등 마커는 파이썬 치환용이므로 절대 지우지 마십시오.
+5. [강제] 응답의 모든 문장에서 '내담자'라는 단어 사용 절대 금지. 반드시 [{disp_name}님]을 사용하여 서술하십시오.
 
-[🚨 핵심 팩트 강제 지시 (절대 이 팩트를 바탕으로 풀이할 것)]
-- {disp_name}님의 격국(格局): {calc_gyukgook} 
-- 현재 혼인 상태: '{u_marital}' (미혼/돌싱은 시댁,처가 언급 금지 및 독립성/연애 강조. 기혼은 가정/배우자 관계 위주 해석)
+[🚨 3D 입체 통변 및 육친 강제 지시]
+1번~11번 모든 항목은 평면적 해석을 금지하며, 반드시 [육친적(관계), 심리적(내면), 사회적(직업/재물)] 3차원 관점을 융합하여 풀이하십시오.
+현재 혼인 상태: '{u_marital}' -> (미혼: 이성/연인/독립성 강조, 시댁/처가 언급 금지. 기혼: 배우자/가정/시댁/처가 현실적 갈등 및 조화. 돌싱: 과거 상처 극복, 새로운 인연, 독립적 삶 위주).
+
+[🚨 핵심 팩트 강제 지시 (이 팩트를 바탕으로 십성/12운성을 가감 풀이할 것)]
+- {disp_name}님의 격국(格局): {calc_gyukgook}
+- 공망(空亡): {i_gong} (성격 분석 시 이 실체적 결핍을 인종법과 함께 분석)
+- 일반신살: [{shinsal_str}] / 12신살: [{s12_str}]
+- [특명] 위 제공된 일반신살과 12신살을 십성 해석에 반드시 융합하십시오.
+- [경계령 1-저승사자] 12신살 중 '육해살, 천살, 겁살'이 원국이나 운에 있다면 불가항력적 위기/건강악화 등 예측불허의 작용을 엄중히 경고하십시오.
+- [경계령 2-삼형살 지뢰] {samhyung_warn}
+- [경계령 3-합충의 실체] 합(방합,삼합,육합)의 묶임/생산을 구체화하고, 진술축미는 단순 창고 타령을 금지하며, 충(沖)으로 개고(開庫)될 때 어떤 육친/재물이 튀어나와 변화를 일으키는지 정밀 분석하십시오.
+- [경계령 4-운의 동적 시뮬레이션] 대/세/월운에서 도화살(연살), 망신살, 역마살, 고신/과숙살이 들어올 때 현실에서 일어나는 사건(구설, 비밀노출, 이동, 이별수 등)을 생생하게 풀이하십시오.
 - 실제 대운 흐름: {daewun_info_str}
 - 실제 세운 흐름: {sewun_info_str}
 
-당신은 최고의 명리학 마스터 '초연 박사'입니다.
-사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시 / 공망: {i_gong}
+사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시
 
 [출력 템플릿]
 <h3 style='color:#1A237E;'>1. 분석</h3>
 <div class='content-box-loose'>
 <p>1) 격국 및 무대 분석</p>
-<p>2) 조후 및 주체성 분석</p>
-<p>3) 형충파해 및 진술축미 분석</p>
+<p>2) 조후 및 억부에 따른 주체성(용신) 분석</p>
+<p>3) 합형충해파 및 진술축미 분석</p>
 </div>
-<h3 style='color:#1A237E;'>2. 성격</h3><div class='content-box-loose'><p>1) 지장간 좌법/인종법 분석</p></div>
+<h3 style='color:#1A237E;'>2. 성격</h3>
+<div class='content-box-loose'>
+<p>1) 겉으로 드러난 성격 (좌법/포태법 적용)</p>
+<p>2) 감추어진 진짜 속마음 (인종법 및 공망의 실체적 결핍 적용)</p>
+</div>
 <h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'></div>
+<h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'>(원국 및 10~20대 대운 연계 분석)</div>
 <h3 style='color:#1A237E;'>5. 적성·직업운</h3><div class='content-box-loose'></div>
 <h3 style='color:#1A237E;'>6. 결혼·자녀운</h3><div class='content-box-loose'></div>
 <h3 style='color:#1A237E;'>7. 사업운</h3><div class='content-box-loose'></div>
@@ -555,19 +585,19 @@ if btn_single or btn_compare:
 
 [DAEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<p>▶ 지나온 각 과거 대운 요약</p>
+<p>▶ 지나온 각 과거 대운 요약 (각 대운별 2~3줄 요약)</p>
 <p>▶ 현재 대운 전반기 상세 분석</p>
 <p>▶ 현재 대운 후반기 상세 분석</p>
 </div>
 [SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<p>▶ 지나온 각 과거 세운 요약</p>
+<p>▶ 지나온 각 과거 세운 요약 (각 세운별 2~3줄 요약, 새 대운 첫해 시 최소 과거 2년 치 분석)</p>
 <p>▶ 올해({curr_y}년 丙午년) 세운 전반기(양력 2월~7월 말) 상세 분석</p>
 <p>▶ 올해({curr_y}년 丙午년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</p>
 </div>
 [WOLWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<p>▶ 지나온 각 과거 월운 요약</p>
+<p>▶ 지나온 각 과거 월운 요약 (각 월운별 2~3줄 요약. 1월은 반드시 전년도 축(丑)월의 기운으로 풀이)</p>
 <p>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</p>
 <p>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</p>
 </div>
