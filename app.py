@@ -366,7 +366,7 @@ with st.sidebar:
     u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
     
     st.markdown("<br>", unsafe_allow_html=True)
-    btn_single = st.button("🚀 초연 시공명리 사주풀이", use_container_width=True, type="primary")
+    btn_single = st.button("🚀 초연 전통명리 사주풀이", use_container_width=True, type="primary")
     
     st.markdown("---")
     comp_text = st.text_area("비교할 타 술사 감명서 (선택)", height=150)
@@ -627,7 +627,7 @@ if btn_single or btn_compare:
 
                 report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
-<h1 style='text-align:center;'>🔬 [초연 시공명리 사주풀이]</h1>
+<h1 style='text-align:center;'>🔬 [초연 전통명리 사주풀이]</h1>
 {info_h}
 {table_html}
 {master_bar_html}
