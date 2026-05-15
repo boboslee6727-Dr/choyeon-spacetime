@@ -380,7 +380,7 @@ with st.sidebar:
 if btn_single or btn_compare:
     if btn_compare and not comp_text.strip(): st.warning("⚠️ 타 술사 감명서를 입력하세요.")
     else:
-        spinner_msg = "두 감명서를 1:1 상세 비교 분석 중...." if btn_compare else "초연 시공명리 사주풀이 분석 중..."
+        spinner_msg = "두 감명서를 1:1 상세 비교 분석 중...." if btn_compare else "초연 전통명리 사주풀이 분석 중..."
         
         with st.spinner(spinner_msg):
             klc = KoreanLunarCalendar()
