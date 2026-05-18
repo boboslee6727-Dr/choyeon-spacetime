@@ -975,6 +975,18 @@ class UniversalPrintableGunghap:
             {"label": "대운 조화", "pct": p5, "color": "#8e44ad"},
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}]
 
+        # 시각화 자료 폰트 명조체 고정 스타일
+        myeongjo_style = """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+        .report-page, .report-page * {
+            font-family: 'Nanum Myeongjo', serif !important;
+            line-height: 1.8 !important;
+        }
+        </style>
+        """
+st.markdown(myeongjo_style, unsafe_allow_html=True)
+
     def get_graphic_html(self, ai_text):
         c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
         
