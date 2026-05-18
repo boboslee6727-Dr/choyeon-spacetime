@@ -939,13 +939,13 @@ class UniversalPrintableGunghap:
         if il_rel == "충": risk += 0.10 
         elif il_rel in ["형", "원진"]: risk += 0.05 
         
-        def count_ss_groups(dc, chars):
-            res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
-            for c in chars:
-                if c and c not in ["?", " ", "-"]:
-                    ss = get_group_ss(get_ss(dc, c))
-                    if ss in res: res[ss] += 1
-            return res
+    def count_ss_groups(dc, chars):
+        res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
+        for c in chars:
+            if c and c not in ["?", " ", "-"]:
+                ss = get_group_ss(get_ss(dc, c))
+                if ss in res: res[ss] += 1
+        return res
         
         m_ss, f_ss = count_ss_groups(m_g[1], m_g + m_j), count_ss_groups(f_g[1], f_g + f_j)
         if m_ss['비겁'] >= 4: risk += 0.05 
@@ -985,7 +985,7 @@ class UniversalPrintableGunghap:
         }
         </style>
         """
-st.markdown(myeongjo_style, unsafe_allow_html=True)
+        st.markdown(myeongjo_style, unsafe_allow_html=True)
 
     def get_graphic_html(self, ai_text):
         c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
