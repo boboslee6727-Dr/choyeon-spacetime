@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 최적화 껍데기 계승)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 사주풀이 ver 509.0", layout="wide")
+st.set_page_config(page_title="초연 시공명리 사주풀이 ver 510.0", layout="wide")
 
 st.markdown("""
 <style>
@@ -212,7 +212,7 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 설정 및 초연 명리 연산 엔진 (Ver 15.0 + 509.0 융합)
+# 2. AI 설정 및 초연 명리 연산 엔진 (Ver 15.0 + 510.0 융합)
 # ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -245,7 +245,7 @@ def get_ss(dg, tc):
     }
     return rels.get(dg, {}).get(tc, "-")
 
-# [Ver 509.0 융합] 십성을 체용 5대 그룹으로 묶는 함수
+# [Ver 510.0 융합] 십성을 체용 5대 그룹으로 묶는 함수
 def get_group_ss(ss_str):
     return {'비견':'비겁', '겁재':'비겁', '식신':'식상', '상관':'식상', '편재':'재성', '정재':'재성', '편관':'관성', '정관':'관성', '편인':'인성', '정인':'인성'}.get(ss_str, '비겁')
 
@@ -375,7 +375,7 @@ def calculate_gongmang(ilgan, ilji):
         return list(JI)[base] + "," + list(JI)[(base+1)%12]
     except: return "-"
 
-# [Ver 509.0 융합] 묘고(입고/개고) 스캔 함수
+# [Ver 510.0 융합] 묘고(입고/개고) 스캔 함수
 def check_vault_status(base_gans, base_jjis, attacker_ji):
     vaults = ['辰', '戌', '丑', '未']
     clash_map = {'辰':'戌', '戌':'辰', '丑':'未', '未':'丑'}
@@ -454,12 +454,12 @@ def get_daeun_su_accurate(utc_dt, order):
 # [안내] 다음 파트(3단계: UI 사이드바 및 입력 수집부) 이식 수술 대기 중.
 
 # ==============================================================================
-# 3. 사이드바 UI 및 입력 폼 통제실 (Ver 15.0 UI 껍데기 + Ver 509.0 궁합 확장)
+# 3. 사이드바 UI 및 입력 폼 통제실 (Ver 15.0 UI 껍데기 + Ver 510.0 궁합 확장)
 # ==============================================================================
 with st.sidebar:
     # 🧪를 🏮로 바꾸고, 모바일 화면에서도 절대 줄바꿈이 일어나지 않도록 자간과 정렬을 고정합니다.
     st.markdown("<h2 style='margin:0; padding:0; white-space:nowrap; font-size:24px; letter-spacing:-1px;'>🏮 초연 시공명리 연구소</h2>", unsafe_allow_html=True)
-    st.caption("Ver 509.0 Spacetime Masterpiece")
+    st.caption("Ver 510.0 Spacetime Masterpiece")
     
     # [Ver 15.0 계승] 사주팔자 역산 검색기
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
@@ -512,7 +512,7 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # [Ver 509.0 이식] 상품 선택 콤보박스 (개인사주 vs 궁합)
+    # [Ver 510.0 이식] 상품 선택 콤보박스 (개인사주 vs 궁합)
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합"])
     
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
@@ -529,7 +529,7 @@ with st.sidebar:
     idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
     u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
     
-    # [Ver 509.0 이식] 궁합 선택 시 동적으로 열리는 상대방 입력창 인터페이스
+    # [Ver 510.0 이식] 궁합 선택 시 동적으로 열리는 상대방 입력창 인터페이스
     p_name, p_gender, p_marital, p_cal, p_y, p_m, p_d, p_t = "", "여성", "미혼", "양력", 1967, 9, 24, "시간 모름"
     if u_product == "궁합":
         st.markdown("---")
@@ -562,7 +562,7 @@ if btn_single:
         st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
         # 🎯 [수정 보완] 선택한 상품(u_product)에 따라 🔮 수정구슬 로딩 문구 자동 분기
-        spinner_msg = "🔮 초연 시공명리 개인 풀이 (ver 509.0) 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 (ver 509.0) 가동 중..."
+        spinner_msg = "🔮 초연 시공명리 개인 풀이 (ver 510.0) 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 (ver 510.0) 가동 중..."
         
         with st.spinner(spinner_msg):
             # (이 아래부터는 기존 AI 연산 및 generate_content 코드가 들여쓰기를 유지한 채 그대로 이어집니다)
@@ -608,7 +608,7 @@ if btn_single:
             vault_scan = check_vault_status(gans, jjis, cur_month_ji)
             vault_summary = " / ".join(vault_scan) if vault_scan else "현재 시공간에서 특이 묘고(무덤) 동태 없음"
 
-            # [4.4] 프리미엄 표지(Cover Page) 렌더링 - Ver 509.0 감성 완벽 살리기
+            # [4.4] 프리미엄 표지(Cover Page) 렌더링 - Ver 510.0 감성 완벽 살리기
             today_str = curr_dt_sys.strftime("%Y년 %m월 %d일")
             sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
             is_leap = getattr(klc, 'isIntercalary', False)
@@ -647,7 +647,7 @@ if btn_single:
             
             # [안내] 다음 파트(5단계: AI 대형 프롬프트 빌더 및 출력 조립) 수술 대기 중.
             # ==============================================================================
-            # 5. [최종 엔진] 시공명리 프롬프트 빌드 및 화면 출력 (Ver 15.0 + 509.0 융합)
+            # 5. [최종 엔진] 시공명리 프롬프트 빌드 및 화면 출력 (Ver 15.0 + 510.0 융합)
             # ==============================================================================
             n_gong = calculate_gongmang(ys, yb)
             i_gong = calculate_gongmang(ds, db)
@@ -1042,14 +1042,20 @@ if btn_single and u_product == "궁합":
         gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
         gh_engine.run_universal_logic()
         
-        # 궁합 전용 AI 프롬프트 (점수에 따른 분석)
         gh_prompt = f"""
-        당신은 명리심리상담사 '초연 박사'입니다.
-        신청인 {u_name}님과 상대방 {p_name}님의 궁합을 분석하십시오.
-        시스템 산출 최종 궁합 점수: {gh_engine.final_score}점 ({gh_engine.grade})
-        
-        이 점수를 기반으로 두 사람의 '내면의 유대감', '환경 조화', '기운 상호보완'을 3문단으로 품격 있게 서술하십시오.
-        점수 자체는 본문에 노출하지 마십시오.
+        당신은 명리심리상담사 '초연 박사'입니다. 
+        신청인 {u_name}({u_gender})님과 상대방 {p_name}({p_gender})님의 궁합을 11개 섹션으로 나누어 '나눔명조'풍의 품격 있는 문체로 분석하십시오.
+
+        [분석 가이드라인]
+        1. [남성 요약]과 [여성 요약]은 각 사주의 핵심 기운만 2문장 내외로 간결하게 기술할 것.
+        2. 메인 분석은 11개의 제목을 반드시 포함하여 작성할 것:
+           ① [성격과 기질의 조화] ② [내면의 유대감과 정신적 교감] ③ [환경적 조건과 사회적 배경의 어울림]
+           ④ [오행의 상호보완과 기운의 흐름] ⑤ [일지와 월지의 합충 관계 분석] ⑥ [대운의 흐름과 장기적 동행 가능성]
+           ⑦ [자녀운과 가정의 번영] ⑧ [재물운과 사회적 성취의 시너리] ⑨ [갈등 관리와 리스크 방어 전략]
+           ⑩ [종합 운명적 인연의 등급] ⑪ [초연 박사의 최종 조언 및 처방]
+
+        3. ⑩번 섹션인 '💞 초연 시공명리 종합 궁합풀이'에 가장 높은 비중을 두어 심도 있게 서술할 것.
+        4. 전체 서술은 고딕이 아닌 명조체 느낌의 우아하고 깊이 있는 언어를 사용할 것.
         """
         try:
             gh_res = model.generate_content(gh_prompt)
