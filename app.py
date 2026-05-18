@@ -1053,10 +1053,15 @@ if btn_single and u_product == "궁합":
         """
         try:
             gh_res = model.generate_content(gh_prompt)
-            # 🎯 [수술 완료] 스트림릿 검열을 우회하는 독립 도화지(iframe) 강제 출력!
+            
+            # 🎯 [수술 완료] 괄호 안에 gh_res.text를 정확히 장전하고, 무적 도화지(components)로 출력!
             import streamlit.components.v1 as components
-            components.html(gh_engine.get_graphic_html(), height=550, scrolling=True)
+            
+            # 높이를 800으로 넉넉하게 주어 AI 글과 막대그래프가 쾌적하게 한 번에 다 나오게 합니다.
+            components.html(gh_engine.get_graphic_html(gh_res.text), height=800, scrolling=True)
+            
             components.html("<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border: none; border-radius: 5px; cursor: pointer;'>궁합 감명서 인쇄 / PDF 저장</button></div>", height=100)
+            
         except Exception as e:
             st.error(f"궁합 AI 분석 중 오류가 발생했습니다: {e}")
 
