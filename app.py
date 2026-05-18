@@ -664,6 +664,8 @@ if btn_single:
             </table>"""
 
             # 대운 세운 월운 테이블 통합 렌더링
+            # 🎯 [수술 완료] 순행/역행 변수를 위로 전진 배치하여 NameError 원천 차단
+            direction_str = "순행" if order == 1 else "역행"
             un_html = f"<h4 style='color:#1A237E; margin-top:20px; page-break-after: avoid;'>11. 운의 흐름</h4><div style='margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div class='rtl-scroll-container'>"
             for i in range(10):
                 val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
