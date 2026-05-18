@@ -533,9 +533,21 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 가동", use_container_width=True, type="primary")
 
+
 # ==============================================================================
 # 🚀 최종 가동 스위치 및 기찻길 분리 (개인사주 vs 궁합)
 # ==============================================================================
+class UniversalPrintableGunghap:
+    def __init__(self, applicant, partner_name, male, female, daeun_score=10):
+        self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
+        male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
+        female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
+        self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
+        self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
+        self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
+        self.f_j = [female[3][1], female[2][1], female[1][1], female[0][1]]
+        self.logic_flags, self.details = {}, []
+
 if btn_single:
     if not u_name.strip():
         st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
@@ -928,7 +940,7 @@ if btn_single:
 <p>◈ 행운에 따른 기운:</p>
 </div>
 """
-            
+       
             try:
                 # AI 통신 가동
                 res = model.generate_content(prompt)
@@ -976,16 +988,7 @@ if btn_single:
 # ==============================================================================
 # [사전 탑재] 궁합 전용 분석 엔진 클래스 (기존 섹션 6 완전 보존 및 들여쓰기 교정)
 # ==============================================================================
-class UniversalPrintableGunghap:
-    def __init__(self, applicant, partner_name, male, female, daeun_score=10):
-        self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
-        male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
-        female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
-        self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
-        self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
-        self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
-        self.f_j = [female[3][1], female[2][1], female[1][1], female[0][1]]
-        self.logic_flags, self.details = {}, []
+
 
     def get_ji_rel(self, j1, j2):
         if not j1 or not j2 or j1=="?" or j2=="?": return "무"
