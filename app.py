@@ -73,8 +73,8 @@ st.markdown("""
     /* 🎯 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
     .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
     
-    /* 본문 통변 에세이 무조건 20px 들여쓰기 및 줄간격 확보 */
-    .content-box-loose p { text-indent: 20px !important; margin-bottom: 15px !important; line-height: 1.8 !important; }
+    /* 소목차(▶, •, ◈, 1), 2) 등)는 들여쓰기 0, 마진 칼각, 그리고 '무조건 강력한 굵은 글씨' 강제 */
+    .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
     
     /* 소목차(▶, •, ◈)는 들여쓰기 0, 상단 25px 하단 10px 칼각 마진, 볼드체 강제 */    
     div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
@@ -915,10 +915,12 @@ if btn_single:
 [🚨 가독성 혁명 및 문단 통제 엄명]
 1. 모든 통변 에세이 문장은 반드시 <p>내용</p> 태그로 감싸십시오. (CSS에서 20px 들여쓰기가 자동 적용됩니다.)
 2. 문장이 길어지거나 문맥이 전환되는 적절한 지점(예: 긍정적 측면 설명 후 주의점으로 넘어갈 때)에서는 절대로 글을 한 덩어리로 뭉치지 말고 반드시 </p><p>를 사용하여 줄바꿈(단락 나누기)을 집행하십시오.
-3. [특수기호 소제목 강제 룰] 아래의 기호(▶, •, ◈)가 들어간 문장은 절대 들여쓰기를 해선 안 됩니다. 반드시 아래의 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
-   <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 (68세~72세)</span>
-   <span class='sub-title'>• 53세~62세 (己未 대운):</span> (과거 요약 3줄은 여기서부터 <p> 태그로 이어 적음)
+3. [특수기호 소제목 강제 룰] 아래의 기호(1), 2), ▶, •, ◈)가 들어간 문장은 절대 들여쓰기를 해선 안 됩니다. 반드시 아래의 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
+   <span class='sub-title'>1) 겉으로 드러난 성격</span>
+   <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+   <span class='sub-title'>• {dw_start_age}세~{dw_mid_age}세 ({dw_g_cur}{dw_j_cur} 대운):</span> (과거 요약 3줄은 여기서부터 <p> 태그로 이어 적음)
    <span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
+4. 🚫 절대 금지: 마크다운 문법인 별표 2개(**)를 사용하여 글씨를 굵게 만드는 행위를 전면 금지합니다. 모든 소제목은 <span class='sub-title'> 태그에 의해 자동으로 굵게 처리되므로, 당신이 임의로 **를 넣지 마십시오.
 
 [🚨 3D 입체 통변 및 육친 강제 지시]
 1번~11번 모든 항목은 평면적 해석을 금지하며, 반드시 [관계, 심리적 내면, 사회적 영역(직업/재물)] 3차원 관점을 융합하여 풀이하십시오.
