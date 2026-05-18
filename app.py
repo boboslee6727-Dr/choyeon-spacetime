@@ -457,7 +457,8 @@ def get_daeun_su_accurate(utc_dt, order):
 # 3. 사이드바 UI 및 입력 폼 통제실 (Ver 15.0 UI 껍데기 + Ver 509.0 궁합 확장)
 # ==============================================================================
 with st.sidebar:
-    st.title("🧪 초연 시공명리 연구소")
+    # 🧪를 🏮로 바꾸고, 모바일 화면에서도 절대 줄바꿈이 일어나지 않도록 자간과 정렬을 고정합니다.
+    st.markdown("<h2 style='margin:0; padding:0; white-space:nowrap; font-size:24px; letter-spacing:-1px;'>🏮 초연 시공명리 연구소</h2>", unsafe_allow_html=True)
     st.caption("Ver 509.0 Spacetime Masterpiece")
     
     # [Ver 15.0 계승] 사주팔자 역산 검색기
@@ -498,7 +499,11 @@ with st.sidebar:
                                 found = True
                                 is_leap = getattr(klc_find, 'isIntercalary', False)
                                 leap_str = "윤달" if is_leap else "평달"
-                                st.success(f"✅ [양력] {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 입력완료!")
+                                lunar_calc = KoreanLunarCalendar()
+                                lunar_calc.setSolarDate(py_year, py_month, py_day)
+                                lunar_date_str = f"[음력] {lunar_calc.getIsoLunarDate().replace('-', '년 ')}일"
+                                lunar_leap_str = "윤달" if lunar_calc.getIsLunarIntercalary() else "평달"
+                                st.sidebar.success(f"✅[양력] {py_year}년 {py_month:02d}월 {py_day:02d}일 / {lunar_date_str} ({lunar_leap_str}) 입력완료!")
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
@@ -556,7 +561,7 @@ if btn_single:
     elif u_product == "궁합" and not p_name.strip():
         st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        with st.spinner("🔮 초연 시공명리 알고리즘 가동 중..."):
+        with st.spinner("🔮 초연 시공명리 ver 509.0 가동 중..."):
             # [4.1] 기본 날짜 및 천문 연산 (신청인)
             klc = KoreanLunarCalendar()
             if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
@@ -607,16 +612,19 @@ if btn_single:
             u_age = curr_dt_sys.year - u_y + 1
             
             # 인쇄용 표지 HTML (메인 도화지에 출력)
+            # 인쇄용 표지 HTML (메인 도화지에 출력)
             if u_product == "개인사주":
+                # 💡 수정 1: 변수명을 u_gender로 통일
+                gender_icon = "♂️" if u_gender == "남성" else "♀️"  
                 cover_html = f"""
                 <div class='report-page'>
                     <div style='height: 240mm; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 4px solid #1A237E; border-radius: 20px; padding: 40px; background: white;'>
                         <div style='border-bottom: 4px double #1A237E; padding-bottom: 20px; margin-bottom: 50px; text-align: center; width: 80%;'>
-                            <h1 style='font-size: 38px; color: #1A237E; font-weight: 900; margin: 0;'>🏮 초연 AI 시공명리 사주감명</h1>
+                            <h1 style='font-size: 38px; color: #1A237E; font-weight: 900; margin: 0;'>🏮 초연 시공명리 사주풀이</h1>
                             <p style='font-size: 18px; color: #333; margin-top: 10px; font-weight: 600;'>[ Spacetime Myeongri Premium Report ]</p>
                         </div>
                         <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 40px 30px; border-radius: 15px; width: 70%; text-align: center;'>
-                            <h2 style='font-size: 28px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>신청인 : {u_name} 님</h2>
+                            <h2 style='font-size: 28px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{gender_icon} 신청인 : {u_name} 님</h2>
                             <div style='font-size: 17px; font-weight: 600; color: #333; line-height: 2.0;'>
                                 <p style='margin: 0;'>[성별/나이] {u_gender} / {u_age}세 ({u_marital})</p>
                                 <p style='margin: 0;'>[양력] {sol_str}</p>
@@ -634,7 +642,7 @@ if btn_single:
                 st.markdown(cover_html, unsafe_allow_html=True)
             
             # [안내] 다음 파트(5단계: AI 대형 프롬프트 빌더 및 출력 조립) 수술 대기 중.
-# ==============================================================================
+            # ==============================================================================
             # 5. [최종 엔진] 시공명리 프롬프트 빌드 및 화면 출력 (Ver 15.0 + 509.0 융합)
             # ==============================================================================
             n_gong = calculate_gongmang(ys, yb)
@@ -845,6 +853,12 @@ if btn_single:
 class UniversalPrintableGunghap:
     def __init__(self, applicant, partner_name, male, female, daeun_score=10):
         self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
+        
+        # 🎯 [무적 방어막 이식] 시주(시간)가 비어있거나 모를 경우 강제로 빈칸("  ") 채워넣기
+        male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
+        female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
+
+        # (박사님의 원본 할당 로직 완벽 사수)
         self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
         self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
         self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
