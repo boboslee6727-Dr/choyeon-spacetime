@@ -17,35 +17,17 @@ st.set_page_config(page_title="초연 시공명리 사주풀이 ver 510.0", layo
 
 st.markdown("""
 <style>
-    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap");
+    /* 🎯 좌측 사이드바 포함 스트림릿 전체 폰트 '나눔명조' 강제 적용 */
+    @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap");
+    html, body, [class*="css"], .stSidebar, .stSidebar *, .stMarkdown, p, span, div, button, input { font-family: 'Nanum Myeongjo', serif !important; }
     
+    /* 🎯 배경 및 기본 프레임 세팅 (클래스당 한 줄 정렬) */
     body, .stApp { background-color: #FFF8E1; }
+    .report-page { width: 210mm; max-width: 100%; margin: 30px auto; background-color: #FFFFFF !important; padding: 15mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; }
+    .report-page, .report-page * { font-family: 'Nanum Myeongjo', serif !important; color: #000000; }
+    .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 20px; background: transparent; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
     
-    .report-page { 
-        width: 210mm; 
-        max-width: 100%;
-        margin: 30px auto; 
-        background-color: #FFFFFF !important; 
-        padding: 15mm 10mm; 
-        box-shadow: 0 0 20px rgba(0,0,0,0.15); 
-        border-radius: 20px; 
-        box-sizing: border-box; 
-    }
-    
-    .report-page, .report-page * { 
-        font-family: 'Noto Serif KR', serif !important; 
-        color: #000000;
-    }
-    
-    .vip-inset-frame { 
-        border: 2px solid #1A237E; 
-        border-radius: 15px; 
-        padding: 20px; 
-        background: transparent; 
-        -webkit-box-decoration-break: clone;
-        box-decoration-break: clone;
-    }
-    
+    /* (박사님! 이 아래부터는 박사님이 기존에 짜두신 .report-page h1 등등의 코드가 그대로 이어지면 됩니다!) */  
     .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
     .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 900 !important; }
     .report-page h3 { font-size: 19px !important; margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E; padding-bottom: 5px; color: #1A237E !important; font-weight: 900 !important; }
