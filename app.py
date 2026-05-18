@@ -561,7 +561,11 @@ if btn_single:
     elif u_product == "궁합" and not p_name.strip():
         st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        with st.spinner("🔮 초연 시공명리 ver 509.0 가동 중..."):
+        # 🎯 [수정 보완] 선택한 상품(u_product)에 따라 🔮 수정구슬 로딩 문구 자동 분기
+        spinner_msg = "🔮 초연 시공명리 개인 풀이 (ver 509.0) 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 (ver 509.0) 가동 중..."
+        
+        with st.spinner(spinner_msg):
+            # (이 아래부터는 기존 AI 연산 및 generate_content 코드가 들여쓰기를 유지한 채 그대로 이어집니다)
             # [4.1] 기본 날짜 및 천문 연산 (신청인)
             klc = KoreanLunarCalendar()
             if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
@@ -973,41 +977,46 @@ class UniversalPrintableGunghap:
 
     def get_graphic_html(self, ai_text):
         c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
-        bars_html = ""
+        
+        # 🎯 [수술 완료] 막대그래프 HTML을 안전하게 리스트로 모아서 나중에 한 번에 묶는 방식 (스트림릿 렌더링 꼬임 방지)
+        bars_list = []
         for item in self.details:
-            bars_html += f"""
-            <div style='display:flex; align-items:center; margin-bottom:12px;'>
-                <div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{item['label']}</div>
-                <div style='flex:1; height:12px; margin:0 10px;'>
-                    <svg width='100%' height='12' style='display:block;'>
-                        <rect width='100%' height='12' rx='6' ry='6' fill='#eeeeee' />
-                        <rect width='{item['pct']}%' height='12' rx='6' ry='6' fill='{item['color']}' />
+            bar = f"""
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:130px; font-size:13px; font-weight:bold; color:#555;">{item['label']}</div>
+                <div style="flex:1; height:12px; margin:0 10px;">
+                    <svg width="100%" height="12" style="display:block;">
+                        <rect width="100%" height="12" rx="6" ry="6" fill="#eeeeee" />
+                        <rect width="{item['pct']}%" height="12" rx="6" ry="6" fill="{item['color']}" />
                     </svg>
                 </div>
-                <div style='width:35px; font-size:12px; font-weight:bold;'>{item['pct']}%</div>
+                <div style="width:35px; font-size:12px; font-weight:bold;">{item['pct']}%</div>
             </div>"""
+            bars_list.append(bar)
+            
+        bars_html = "".join(bars_list)
         
         return f"""
-        <div class='report-page' style='padding:40px; background:#fff;'>
-            <div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'>
-                <h1 style='margin:0; color:#3E2723; font-family: "Malgun Gothic", sans-serif; font-weight: 900;'>💞 초연 시공명리 종합 궁합풀이</h1>
+        <div class="report-page" style="padding:40px; background:#fff;">
+            <div style="text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;">
+                <h1 style="margin:0; color:#3E2723; font-family: 'Malgun Gothic', sans-serif; font-weight: 900;">💞 초연 시공명리 종합 궁합풀이</h1>
             </div>
-            <div style='background-color: #FAFAFA; padding: 40px; border: 2px solid #1A237E; border-radius: 15px; margin-bottom: 40px;'>
-                <div class='content-box-loose' style='margin-bottom: 50px;'>
+            <div style="background-color: #FAFAFA; padding: 40px; border: 2px solid #1A237E; border-radius: 15px; margin-bottom: 40px;">
+                <div class="content-box-loose" style="margin-bottom: 50px;">
                     {ai_text}
                 </div>
-                <h2 style='text-align:center; margin-top:0; color:#333; font-family: "Malgun Gothic", sans-serif; font-weight: 900; font-size: 22px; margin-bottom: 25px;'>📊 최종 궁합 점수</h2>
-                <div style='display:flex; justify-content:center; align-items:center; margin-bottom:20px;'>
-                    <div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({c} {self.final_score}%, #f0f0f0 0); display:flex; justify-content:center; align-items:center;'>
-                        <div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>
-                            <span style='font-size:32px; font-weight:900; color:{c};'>{self.final_score}</span>
+                <h2 style="text-align:center; margin-top:0; color:#333; font-family: 'Malgun Gothic', sans-serif; font-weight: 900; font-size: 22px; margin-bottom: 25px;">📊 최종 궁합 점수</h2>
+                <div style="display:flex; justify-content:center; align-items:center; margin-bottom:20px;">
+                    <div style="width:130px; height:130px; border-radius:50%; background:conic-gradient({c} {self.final_score}%, #f0f0f0 0); display:flex; justify-content:center; align-items:center;">
+                        <div style="width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                            <span style="font-size:32px; font-weight:900; color:{c};">{self.final_score}</span>
                         </div>
                     </div>
                 </div>
-                <div style='text-align:center; margin-bottom:25px;'>
-                    <span style='font-size:16px; font-weight:bold; color:#fff; background:{c}; padding:8px 32px; border-radius:30px; display: inline-block;'>{self.grade}</span>
+                <div style="text-align:center; margin-bottom:25px;">
+                    <span style="font-size:16px; font-weight:bold; color:#fff; background:{c}; padding:8px 32px; border-radius:30px; display: inline-block;">{self.grade}</span>
                 </div>
-                <div style='max-width:500px; margin:0 auto; margin-bottom: 20px;'>
+                <div style="max-width:500px; margin:0 auto; margin-bottom: 20px;">
                     {bars_html}
                 </div>
             </div>
