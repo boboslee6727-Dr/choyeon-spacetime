@@ -555,16 +555,39 @@ with st.sidebar:
 # ==============================================================================
 # 4. 분석 가동 및 데이터 브릿지 엔진 (DB 추출 + 표지 렌더링)
 # ==============================================================================
+# 4. 분석 가동 및 데이터 브릿지 엔진 (DB 추출 + 표지 렌더링)
+# ==============================================================================
 if btn_single:
     if not u_name.strip():
         st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
     elif u_product == "궁합" and not p_name.strip():
         st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        # 🎯 [수정 보완] 선택한 상품(u_product)에 따라 🔮 수정구슬 로딩 문구 자동 분기
+        # 로딩 문구 분기
         spinner_msg = "🔮 초연 시공명리 개인 풀이 (ver 510.0) 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 (ver 510.0) 가동 중..."
         
         with st.spinner(spinner_msg):
+            
+            # 🎯 [핵심 수술] 여기서부터 기찻길을 완벽하게 두 갈래로 쪼갭니다!
+            
+            if u_product == "개인사주":
+                # ==========================================
+                # 🟢 [1번 방] 개인사주 전용 구역
+                # ==========================================
+                # 여기에 박사님의 기존 개인사주 연산 코드, 
+                # 개인사주 프롬프트, 개인사주 출력(st.write 등)을 모아둡니다.
+                
+                # (예: response = model.generate_content(prompt) 등...)
+                
+            elif u_product == "궁합":
+                # ==========================================
+                # 🔴 [2번 방] 궁합 전용 구역 
+                # ==========================================
+                # 여기에 우리가 아까 완성했던 궁합 스코어링 로직,
+                # 남녀 상하 사주표 출력 로직, 11개 섹션 궁합 프롬프트를 모아둡니다.
+                
+                # (예: gh_engine.run_universal_logic() 부터 맨 밑바닥까지...)
+
             # (이 아래부터는 기존 AI 연산 및 generate_content 코드가 들여쓰기를 유지한 채 그대로 이어집니다)
             # [4.1] 기본 날짜 및 천문 연산 (신청인)
             klc = KoreanLunarCalendar()
@@ -1000,12 +1023,12 @@ class UniversalPrintableGunghap:
         bars_html = "".join(bars_list)
         
         return f"""
-        <div class="report-page" style="padding:40px; background:#fff; font-family: 'Nanum Myeongjo', serif;">
+        <div class="report-page" style="padding:40px; background:#fff; font-family: '바탕', 'Batang', '바탕체', serif;">
             <div style="text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;">
                 <h1 style="margin:0; color:#3E2723; font-weight: 900;">💞 초연 시공명리 종합 궁합풀이</h1>
             </div>
             <div style="background-color: #FAFAFA; padding: 40px; border: 2px solid #1A237E; border-radius: 15px; margin-bottom: 40px;">
-                <div class="content-box-loose" style="margin-bottom: 50px; font-family: 'Nanum Myeongjo', serif; line-height: 1.8;">
+                <div class="content-box-loose" style="margin-bottom: 50px; font-family: '바탕', 'Batang', '바탕체', serif; line-height: 1.8;">
                     {ai_text}
                 </div>
                 <h2 style="text-align:center; margin-top:0; color:#333; font-weight: 900; font-size: 22px; margin-bottom: 25px;">📊 최종 궁합 점수</h2>
@@ -1050,10 +1073,10 @@ if btn_single and u_product == "궁합":
         gh_engine.run_universal_logic()
         
         # 🎯 [신규 추가] UI 전체 명조체(Serif) 강제 적용
+        # 🎯 [수술 완료] 명조체 제거 및 정통 바탕체(Batang) 강제 적용
         st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
-            * { font-family: 'Nanum Myeongjo', serif !important; }
+            * { font-family: '바탕', 'Batang', '바탕체', 'BatangChe', serif !important; line-height: 1.8 !important; }
         </style>
         """, unsafe_allow_html=True)
 
