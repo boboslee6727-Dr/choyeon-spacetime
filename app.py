@@ -551,11 +551,8 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 가동", use_container_width=True, type="primary")
 
-# [안내] 다음 파트(4단계: 핵심 데이터 추출 브릿지 및 연산부) 이식 수술 대기 중.
 # ==============================================================================
-# 4. 분석 가동 및 데이터 브릿지 엔진 (DB 추출 + 표지 렌더링)
-# ==============================================================================
-# 4. 분석 가동 및 데이터 브릿지 엔진 (DB 추출 + 표지 렌더링)
+# 🚀 최종 가동 스위치 및 기찻길 분리 (개인사주 vs 궁합)
 # ==============================================================================
 if btn_single:
     if not u_name.strip():
@@ -563,30 +560,149 @@ if btn_single:
     elif u_product == "궁합" and not p_name.strip():
         st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        # 로딩 문구 분기
-        spinner_msg = "🔮 초연 시공명리 개인 풀이 (ver 510.0) 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 (ver 510.0) 가동 중..."
+        spinner_msg = "🔮 초연 시공명리 개인 풀이 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 가동 중..."
         
         with st.spinner(spinner_msg):
+            # 🎯 [공통 연산] 신청인 날짜 및 천문 연산
+            klc = KoreanLunarCalendar()
+            if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
+            elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
+            else: klc.setLunarDate(u_y, u_m, u_d, True)
             
-            # 🎯 [핵심 수술] 여기서부터 기찻길을 완벽하게 두 갈래로 쪼갭니다!
+            b_hr, b_mn = 12, 30
+            if u_t != "시간 모름":
+                try: b_hr = int(u_t.split(':')[0])
+                except: pass
             
+            in_dt = dt_mod.datetime(klc.solarYear, klc.solarMonth, klc.solarDay, b_hr, b_mn)
+            adj_mins = get_total_time_adjustment(in_dt)
+            utc_dt = in_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+            
+            gj = klc.getChineseGapJaString().split()
+            ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+            try: hs, hb = get_time_ganji(ds, u_t, in_dt)
+            except: hs, hb = "?", "?"
+            
+            curr_dt_sys = dt_mod.datetime.now()
+            today_str = curr_dt_sys.strftime("%Y년 %m월 %d일")
+            sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+            is_leap = getattr(klc, 'isIntercalary', False)
+            lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({'윤달' if is_leap else '평달'})"
+            u_age = curr_dt_sys.year - u_y + 1
+
+            # 🎯 [바탕체 강제 적용]
+            st.markdown("<style> * { font-family: '바탕', 'Batang', '바탕체', serif !important; line-height: 1.8 !important; } </style>", unsafe_allow_html=True)
+            
+            # ==============================================================================
+            # 🟢 [1번 방] 개인사주 전용 구역 
+            # ==============================================================================
             if u_product == "개인사주":
-                # ==========================================
-                # 🟢 [1번 방] 개인사주 전용 구역
-                # ==========================================
-                # 여기에 박사님의 기존 개인사주 연산 코드, 
-                # 개인사주 프롬프트, 개인사주 출력(st.write 등)을 모아둡니다.
+                # 박사님의 섹션 5 로직(DB 스캔 및 프롬프트)을 그대로 호출합니다.
+                wol_key, ilju_key = ms + mb, ds + db
+                wol_db_text = CHOYEON_DB['wolryeong'].get(wol_key, "해당 월령 데이터 없음.")
+                ilju_db_text = CHOYEON_DB['ilju'].get(ilju_key, "해당 일주 데이터 없음.")
+                stru_db_text = CHOYEON_DB['structure'].get(ilju_key, "해당 구조 데이터 없음.")
                 
-                # (예: response = model.generate_content(prompt) 등...)
+                gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
+                wol_jis_map = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
+                cur_month_ji = wol_jis_map[curr_dt_sys.month - 1]
+                vault_scan = check_vault_status(gans, jjis, cur_month_ji)
+                vault_summary = " / ".join(vault_scan) if vault_scan else "특이 묘고 없음"
+
+                gender_icon = "♂️" if u_gender == "남성" else "♀️"  
+                cover_html = f"""
+                <div class='report-page'>
+                    <div style='height: 240mm; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 4px solid #1A237E; border-radius: 20px; padding: 40px; background: white;'>
+                        <div style='border-bottom: 4px double #1A237E; padding-bottom: 20px; margin-bottom: 50px; text-align: center; width: 80%;'>
+                            <h1 style='font-size: 38px; color: #1A237E; font-weight: 900; margin: 0;'>🏮 초연 시공명리 사주풀이</h1>
+                        </div>
+                        <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 40px 30px; border-radius: 15px; width: 70%; text-align: center;'>
+                            <h2 style='font-size: 28px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{gender_icon} 신청인 : {u_name} 님</h2>
+                            <div style='font-size: 17px; font-weight: 600; color: #333; line-height: 2.0;'>
+                                <p style='margin: 0;'>[성별/나이] {u_gender} / {u_age}세</p>
+                                <p style='margin: 0;'>[양력] {sol_str}</p>
+                                <p style='margin: 0;'>[음력] {lun_str}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """
+                st.markdown(cover_html, unsafe_allow_html=True)
                 
+                prompt = f"""
+                당신은 시공명리학에 정통한 '초연 박사'입니다. 신청인 {u_name}({u_gender}, {u_age}세)님의 사주를 분석하십시오.
+                [원국] 년주:{ys}{yb}, 월주:{ms}{mb}, 일주:{ds}{db}, 시주:{hs}{hb}
+                [월령DB] {wol_db_text} / [일주DB] {ilju_db_text} / [구조DB] {stru_db_text} / [묘고] {vault_summary}
+                바탕체 느낌으로 작성하십시오.
+                """
+                try:
+                    response = model.generate_content(prompt)
+                    st.markdown(response.text)
+                except Exception as e:
+                    st.error(f"오류: {e}")
+
+            # ==============================================================================
+            # 🔴 [2번 방] 궁합 전용 구역 가동
+            # ==============================================================================
             elif u_product == "궁합":
-                # ==========================================
-                # 🔴 [2번 방] 궁합 전용 구역 
-                # ==========================================
-                # 여기에 우리가 아까 완성했던 궁합 스코어링 로직,
-                # 남녀 상하 사주표 출력 로직, 11개 섹션 궁합 프롬프트를 모아둡니다.
+                # 상대방 연산
+                p_klc = KoreanLunarCalendar()
+                if p_cal == "양력": p_klc.setSolarDate(p_y, p_m, p_d)
+                else: p_klc.setLunarDate(p_y, p_m, p_d, False)
                 
-                # (예: gh_engine.run_universal_logic() 부터 맨 밑바닥까지...)
+                p_in_dt = dt_mod.datetime(p_klc.solarYear, p_klc.solarMonth, p_klc.solarDay, 12, 30)
+                p_gj = p_klc.getChineseGapJaString().split()
+                p_ys, p_yb, p_ms, p_mb, p_ds, p_db = p_gj[0][0], p_gj[0][1], p_gj[1][0], p_gj[1][1], p_gj[2][0], p_gj[2][1]
+                try: p_hs, p_hb = get_time_ganji(p_ds, p_t, p_in_dt)
+                except: p_hs, p_hb = "?", "?"
+                
+                m_pillars, f_pillars = ([hs, ds, ms, ys], [hb, db, mb, yb]), ([p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb])
+                if u_gender == "여성": m_pillars, f_pillars = f_pillars, m_pillars
+                
+                # 🎯 보존된 섹션 6의 엔진을 호출합니다!
+                gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
+                gh_engine.run_universal_logic()
+                
+                def draw_saju_table(gans, jjis):
+                    return f"| 시주 | 일주 | 월주 | 년주 |\n|:---:|:---:|:---:|:---:|\n| **{gans[0]}** | **{gans[1]}** | **{gans[2]}** | **{gans[3]}** |\n| **{jjis[0]}** | **{jjis[1]}** | **{jjis[2]}** | **{jjis[3]}** |"
+                
+                if u_gender == "남성":
+                    st.markdown(f"### 🏮 [남성 원국] {u_name}님")
+                    st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
+                    st.markdown(draw_saju_table(gh_engine.m_g, gh_engine.m_j))
+                    st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
+                    st.markdown(f"### 🏮 [여성 원국] {p_name}님")
+                    st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
+                    st.markdown(draw_saju_table(gh_engine.f_g, gh_engine.f_j))
+                else:
+                    st.markdown(f"### 🏮 [남성 원국] {p_name}님")
+                    st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
+                    st.markdown(draw_saju_table(gh_engine.m_g, gh_engine.m_j))
+                    st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
+                    st.markdown(f"### 🏮 [여성 원국] {u_name}님")
+                    st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
+                    st.markdown(draw_saju_table(gh_engine.f_g, gh_engine.f_j))
+
+                m_saju_str = f"년주:{gh_engine.m_g[3]}{gh_engine.m_j[3]}, 월주:{gh_engine.m_g[2]}{gh_engine.m_j[2]}, 일주:{gh_engine.m_g[1]}{gh_engine.m_j[1]}, 시주:{gh_engine.m_g[0]}{gh_engine.m_j[0]}"
+                f_saju_str = f"년주:{gh_engine.f_g[3]}{gh_engine.f_j[3]}, 월주:{gh_engine.f_g[2]}{gh_engine.f_j[2]}, 일주:{gh_engine.f_g[1]}{gh_engine.f_j[1]}, 시주:{gh_engine.f_g[0]}{gh_engine.f_j[0]}"
+
+                gh_prompt = f"""
+                당신은 명리심리상담사 '초연 박사'입니다.
+                아래의 데이터를 분석하여 궁합 감명서를 작성하십시오.
+                - 남성 사주: {m_saju_str}
+                - 여성 사주: {f_saju_str}
+
+                [분석 가이드라인]
+                1. [남성 요약]과 [여성 요약]을 2문장 내외로 서술할 것.
+                2. 11개 제목 필수: ① [성격과 기질의 조화] ② [내면의 유대감과 정신적 교감] ③ [환경적 조건과 사회적 배경의 어울림] ④ [오행의 상호보완과 기운의 흐름] ⑤ [일지와 월지의 합충 관계 분석] ⑥ [대운의 흐름과 장기적 동행 가능성] ⑦ [자녀운과 가정의 번영] ⑧ [재물운과 사회적 성취의 시너지] ⑨ [갈등 관리와 리스크 방어 전략] ⑩ [종합 운명적 인연의 등급] ⑪ [초연 박사의 최종 조언 및 처방]
+                3. 바탕체 느낌의 묵직한 문어체를 사용할 것.
+                """
+                try:
+                    gh_res = model.generate_content(gh_prompt)
+                    import streamlit.components.v1 as components
+                    components.html(gh_engine.get_graphic_html(gh_res.text), height=1200, scrolling=True)
+                except Exception as e:
+                    st.error(f"궁합 오류: {e}")
 
             # (이 아래부터는 기존 AI 연산 및 generate_content 코드가 들여쓰기를 유지한 채 그대로 이어집니다)
             # [4.1] 기본 날짜 및 천문 연산 (신청인)
@@ -639,7 +755,6 @@ if btn_single:
             u_age = curr_dt_sys.year - u_y + 1
             
             # 인쇄용 표지 HTML (메인 도화지에 출력)
-            # 인쇄용 표지 HTML (메인 도화지에 출력)
             if u_product == "개인사주":
                 # 💡 수정 1: 변수명을 u_gender로 통일
                 gender_icon = "♂️" if u_gender == "남성" else "♀️"  
@@ -668,7 +783,6 @@ if btn_single:
                 """
                 st.markdown(cover_html, unsafe_allow_html=True)
             
-            # [안내] 다음 파트(5단계: AI 대형 프롬프트 빌더 및 출력 조립) 수술 대기 중.
             # ==============================================================================
             # 5. [최종 엔진] 시공명리 프롬프트 빌드 및 화면 출력 (Ver 15.0 + 510.0 융합)
             # ==============================================================================
@@ -877,15 +991,14 @@ if btn_single:
 # ==============================================================================
 # 6. 프리미엄 궁합 전용 엔진 (UniversalPrintableGunghap) 및 가동 로직
 # ==============================================================================
+# ==============================================================================
+# [사전 탑재] 궁합 전용 분석 엔진 클래스 (기존 섹션 6 완전 보존 및 들여쓰기 교정)
+# ==============================================================================
 class UniversalPrintableGunghap:
     def __init__(self, applicant, partner_name, male, female, daeun_score=10):
         self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
-        
-        # 🎯 [무적 방어막 이식] 시주(시간)가 비어있거나 모를 경우 강제로 빈칸 채워넣기
         male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
         female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
-
-        # (박사님의 원본 할당 로직 완벽 사수)
         self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
         self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
         self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
@@ -918,7 +1031,6 @@ class UniversalPrintableGunghap:
     def run_universal_logic(self):
         m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
         il_rel = self.get_ji_rel(m_j[1], f_j[1])
-        
         if il_rel == "육합": s1 = 25
         elif il_rel in ["방합", "반합"]: s1 = 21
         elif il_rel == "무": s1 = 17
@@ -962,12 +1074,10 @@ class UniversalPrintableGunghap:
         if il_rel == "충": risk += 0.10 
         elif il_rel in ["형", "원진"]: risk += 0.05 
         
-        # 🎯 들여쓰기(Indentation) 오류 완벽 교정 구역
         def count_ss_groups(dc, chars):
             res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
             for c in chars:
                 if c and c not in ["?", " ", "-"]:
-                    # 박사님 코드에 get_group_ss, get_ss가 외부 함수로 존재해야 함
                     try:
                         ss = get_group_ss(get_ss(dc, c))
                         if ss in res: res[ss] += 1
@@ -1004,7 +1114,6 @@ class UniversalPrintableGunghap:
 
     def get_graphic_html(self, ai_text):
         c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
-        
         bars_list = []
         for item in self.details:
             bar = f"""
@@ -1028,7 +1137,7 @@ class UniversalPrintableGunghap:
                 <h1 style="margin:0; color:#3E2723; font-weight: 900;">💞 초연 시공명리 종합 궁합풀이</h1>
             </div>
             <div style="background-color: #FAFAFA; padding: 40px; border: 2px solid #1A237E; border-radius: 15px; margin-bottom: 40px;">
-                <div class="content-box-loose" style="margin-bottom: 50px; font-family: '바탕', 'Batang', '바탕체', serif; line-height: 1.8;">
+                <div class="content-box-loose" style="margin-bottom: 50px; line-height: 1.8;">
                     {ai_text}
                 </div>
                 <h2 style="text-align:center; margin-top:0; color:#333; font-weight: 900; font-size: 22px; margin-bottom: 25px;">📊 최종 궁합 점수</h2>
@@ -1048,106 +1157,167 @@ class UniversalPrintableGunghap:
             </div>
         </div>"""
 
-# --- 궁합 버튼 가동 로직 ---
-if btn_single and u_product == "궁합":
-    # 🔮 스피너 로직 분기 적용 완료
-    with st.spinner("🔮 초연 시공명리 궁합 풀이 (ver 509.0) 가동 중..."):
-        # 상대방 데이터 기본 연산
-        p_klc = KoreanLunarCalendar()
-        if p_cal == "양력": p_klc.setSolarDate(p_y, p_m, p_d)
-        else: p_klc.setLunarDate(p_y, p_m, p_d, False)
+# ==============================================================================
+# 4. 분석 가동 및 데이터 브릿지 엔진 (메인 스위치)
+# ==============================================================================
+if btn_single:
+    if not u_name.strip():
+        st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
+    elif u_product == "궁합" and not p_name.strip():
+        st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
+    else:
+        spinner_msg = "🔮 초연 시공명리 개인 풀이 가동 중..." if u_product == "개인사주" else "🔮 초연 시공명리 궁합 풀이 가동 중..."
         
-        p_in_dt = dt_mod.datetime(p_klc.solarYear, p_klc.solarMonth, p_klc.solarDay, 12, 30)
-        p_gj = p_klc.getChineseGapJaString().split()
-        p_ys, p_yb, p_ms, p_mb, p_ds, p_db = p_gj[0][0], p_gj[0][1], p_gj[1][0], p_gj[1][1], p_gj[2][0], p_gj[2][1]
-        
-        # 박사님 코드 상 get_time_ganji 함수가 있다고 가정
-        try: p_hs, p_hb = get_time_ganji(p_ds, p_t, p_in_dt)
-        except: p_hs, p_hb = "?", "?"
-        
-        # 궁합 스코어링 모듈 가동
-        m_pillars, f_pillars = ([hs, ds, ms, ys], [hb, db, mb, yb]), ([p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb])
-        if u_gender == "여성": m_pillars, f_pillars = f_pillars, m_pillars
-        
-        gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
-        gh_engine.run_universal_logic()
-        
-        # 🎯 [신규 추가] UI 전체 명조체(Serif) 강제 적용
-        # 🎯 [수술 완료] 명조체 제거 및 정통 바탕체(Batang) 강제 적용
-        st.markdown("""
-        <style>
-            * { font-family: '바탕', 'Batang', '바탕체', 'BatangChe', serif !important; line-height: 1.8 !important; }
-        </style>
-        """, unsafe_allow_html=True)
+        with st.spinner(spinner_msg):
+            
+            # [4.1] 기본 날짜 및 천문 연산 (신청인 공통)
+            klc = KoreanLunarCalendar()
+            if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
+            elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
+            else: klc.setLunarDate(u_y, u_m, u_d, True)
+            
+            b_hr, b_mn = 12, 30
+            if u_t != "시간 모름":
+                try: b_hr = int(u_t.split(':')[0])
+                except: pass
+            
+            in_dt = dt_mod.datetime(klc.solarYear, klc.solarMonth, klc.solarDay, b_hr, b_mn)
+            adj_mins = get_total_time_adjustment(in_dt)
+            utc_dt = in_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+            
+            gj = klc.getChineseGapJaString().split()
+            ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+            try: hs, hb = get_time_ganji(ds, u_t, in_dt)
+            except: hs, hb = "?", "?"
+            
+            curr_dt_sys = dt_mod.datetime.now()
+            today_str = curr_dt_sys.strftime("%Y년 %m월 %d일")
+            sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+            is_leap = getattr(klc, 'isIntercalary', False)
+            lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({'윤달' if is_leap else '평달'})"
+            u_age = curr_dt_sys.year - u_y + 1
 
-        # 🎯 [신규 추가] 남녀 사주표 UI 마크다운 생성 헬퍼 함수
-        def draw_saju_table(gans, jjis):
-            return f"""
-| 시주 | 일주 | 월주 | 년주 |
-|:---:|:---:|:---:|:---:|
-| **{gans[0]}** | **{gans[1]}** | **{gans[2]}** | **{gans[3]}** |
-| **{jjis[0]}** | **{jjis[1]}** | **{jjis[2]}** | **{jjis[3]}** |
-"""
-        # 🎯 [신규 추가] 성별에 따른 상하(위/아래) 표 출력 로직
-        if u_gender == "남성":
-            st.markdown(f"### 🏮 [남성 원국] {u_name}님")
-            st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
-            st.markdown(draw_saju_table(gh_engine.m_g, gh_engine.m_j))
+            # 🎯 전체 UI 바탕체(Batang) 강제 적용
+            st.markdown("<style> * { font-family: '바탕', 'Batang', '바탕체', serif !important; line-height: 1.8 !important; } </style>", unsafe_allow_html=True)
             
-            st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
-            
-            st.markdown(f"### 🏮 [여성 원국] {p_name}님")
-            st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
-            st.markdown(draw_saju_table(gh_engine.f_g, gh_engine.f_j))
-        else:
-            st.markdown(f"### 🏮 [남성 원국] {p_name}님")
-            st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
-            st.markdown(draw_saju_table(gh_engine.m_g, gh_engine.m_j))
-            
-            st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
-            
-            st.markdown(f"### 🏮 [여성 원국] {u_name}님")
-            st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
-            st.markdown(draw_saju_table(gh_engine.f_g, gh_engine.f_j))
+            # ==============================================================================
+            # 🟢 [1번 방] 개인사주 전용 구역 (기존 섹션 4, 5 로직 완벽 포함)
+            # ==============================================================================
+            if u_product == "개인사주":
+                # 5대 DB 스캔
+                wol_key, ilju_key = ms + mb, ds + db
+                wol_db_text = CHOYEON_DB['wolryeong'].get(wol_key, "해당 월령 데이터를 찾을 수 없습니다.")
+                ilju_db_text = CHOYEON_DB['ilju'].get(ilju_key, "해당 일주 데이터를 찾을 수 없습니다.")
+                stru_db_text = CHOYEON_DB['structure'].get(ilju_key, "해당 구조 데이터를 찾을 수 없습니다.")
+                
+                gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
+                wol_jis_map = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
+                cur_month_ji = wol_jis_map[curr_dt_sys.month - 1]
+                vault_scan = check_vault_status(gans, jjis, cur_month_ji)
+                vault_summary = " / ".join(vault_scan) if vault_scan else "특이 묘고 동태 없음"
 
-        # 🎯 [수술 완료] AI에게 남녀의 '실제 사주 8글자'를 모두 쥐여주고, 11개 섹션으로 강제 지시!
-        m_saju_str = f"년주:{gh_engine.m_g[3]}{gh_engine.m_j[3]}, 월주:{gh_engine.m_g[2]}{gh_engine.m_j[2]}, 일주:{gh_engine.m_g[1]}{gh_engine.m_j[1]}, 시주:{gh_engine.m_g[0]}{gh_engine.m_j[0]}"
-        f_saju_str = f"년주:{gh_engine.f_g[3]}{gh_engine.f_j[3]}, 월주:{gh_engine.f_g[2]}{gh_engine.f_j[2]}, 일주:{gh_engine.f_g[1]}{gh_engine.f_j[1]}, 시주:{gh_engine.f_g[0]}{gh_engine.f_j[0]}"
+                gender_icon = "♂️" if u_gender == "남성" else "♀️"  
+                cover_html = f"""
+                <div class='report-page' style="font-family: '바탕', 'Batang', serif;">
+                    <div style='height: 240mm; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 4px solid #1A237E; border-radius: 20px; padding: 40px; background: white;'>
+                        <div style='border-bottom: 4px double #1A237E; padding-bottom: 20px; margin-bottom: 50px; text-align: center; width: 80%;'>
+                            <h1 style='font-size: 38px; color: #1A237E; font-weight: 900; margin: 0;'>🏮 초연 시공명리 사주풀이</h1>
+                            <p style='font-size: 18px; color: #333; margin-top: 10px; font-weight: 600;'>[ Spacetime Myeongri Premium Report ]</p>
+                        </div>
+                        <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 40px 30px; border-radius: 15px; width: 70%; text-align: center;'>
+                            <h2 style='font-size: 28px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{gender_icon} 신청인 : {u_name} 님</h2>
+                            <div style='font-size: 17px; font-weight: 600; color: #333; line-height: 2.0;'>
+                                <p style='margin: 0;'>[성별/나이] {u_gender} / {u_age}세</p>
+                                <p style='margin: 0;'>[양력] {sol_str}</p>
+                                <p style='margin: 0;'>[음력] {lun_str}</p>
+                                <p style='margin: 10px 0 0 0; color: #D50000; font-size: 14px;'>| [시차보정] {adj_mins}분 적용 완료 |</p>
+                            </div>
+                        </div>
+                        <div style='margin-top: 70px; text-align: center;'>
+                            <p style='font-size: 18px; font-weight: bold; color: #555;'>{today_str}</p>
+                            <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 10px;'>초연 시공명리 연구소</h2>
+                        </div>
+                    </div>
+                </div>
+                """
+                st.markdown(cover_html, unsafe_allow_html=True)
+                
+                # 개인사주 AI 프롬프트 (바탕체 강제)
+                prompt = f"""
+                당신은 시공명리학에 정통한 '초연 박사'입니다. 신청인 {u_name}({u_gender}, {u_age}세)님의 사주를 분석하십시오.
+                [원국] 년주:{ys}{yb}, 월주:{ms}{mb}, 일주:{ds}{db}, 시주:{hs}{hb}
+                [월령DB] {wol_db_text} / [일주DB] {ilju_db_text} / [구조DB] {stru_db_text} / [묘고] {vault_summary}
+                
+                이 데이터를 바탕으로 개인 사주풀이 감명서를 우아한 '바탕체' 문어체로 작성하십시오.
+                """
+                try:
+                    response = model.generate_content(prompt)
+                    st.markdown(response.text)
+                except Exception as e:
+                    st.error(f"개인사주 오류: {e}")
 
-        gh_prompt = f"""
-        당신은 명리심리상담사 '초연 박사'입니다.
-        아래의 두 사람 사주 데이터를 분석하여 궁합 감명서를 작성하십시오.
+            # ==============================================================================
+            # 🔴 [2번 방] 궁합 전용 구역 가동 (남녀 사주표 및 11개 섹션 완벽 통합)
+            # ==============================================================================
+            elif u_product == "궁합":
+                # 상대방 날짜 연산
+                p_klc = KoreanLunarCalendar()
+                if p_cal == "양력": p_klc.setSolarDate(p_y, p_m, p_d)
+                else: p_klc.setLunarDate(p_y, p_m, p_d, False)
+                
+                p_in_dt = dt_mod.datetime(p_klc.solarYear, p_klc.solarMonth, p_klc.solarDay, 12, 30)
+                p_gj = p_klc.getChineseGapJaString().split()
+                p_ys, p_yb, p_ms, p_mb, p_ds, p_db = p_gj[0][0], p_gj[0][1], p_gj[1][0], p_gj[1][1], p_gj[2][0], p_gj[2][1]
+                try: p_hs, p_hb = get_time_ganji(p_ds, p_t, p_in_dt)
+                except: p_hs, p_hb = "?", "?"
+                
+                m_pillars, f_pillars = ([hs, ds, ms, ys], [hb, db, mb, yb]), ([p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb])
+                if u_gender == "여성": m_pillars, f_pillars = f_pillars, m_pillars
+                
+                # 엔진 가동
+                gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
+                gh_engine.run_universal_logic()
+                
+                # 남녀 사주표 출력 헬퍼
+                def draw_saju_table(gans, jjis):
+                    return f"| 시주 | 일주 | 월주 | 년주 |\n|:---:|:---:|:---:|:---:|\n| **{gans[0]}** | **{gans[1]}** | **{gans[2]}** | **{gans[3]}** |\n| **{jjis[0]}** | **{jjis[1]}** | **{jjis[2]}** | **{jjis[3]}** |"
+                
+                # 남성 위, 여성 아래 정렬
+                if u_gender == "남성":
+                    st.markdown(f"### 🏮 [남성 원국] {u_name}님")
+                    st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
+                    st.markdown(draw_saju_table(gh_engine.m_g, gh_engine.m_j))
+                    st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
+                    st.markdown(f"### 🏮 [여성 원국] {p_name}님")
+                    st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
+                    st.markdown(draw_saju_table(gh_engine.f_g, gh_engine.f_j))
+                else:
+                    st.markdown(f"### 🏮 [남성 원국] {p_name}님")
+                    st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
+                    st.markdown(draw_saju_table(gh_engine.m_g, gh_engine.m_j))
+                    st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
+                    st.markdown(f"### 🏮 [여성 원국] {u_name}님")
+                    st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
+                    st.markdown(draw_saju_table(gh_engine.f_g, gh_engine.f_j))
 
-        [데이터]
-        - 남성 사주: {m_saju_str}
-        - 여성 사주: {f_saju_str}
+                # 궁합 11개 섹션 프롬프트 (사주 8글자 완벽 주입)
+                m_saju_str = f"년주:{gh_engine.m_g[3]}{gh_engine.m_j[3]}, 월주:{gh_engine.m_g[2]}{gh_engine.m_j[2]}, 일주:{gh_engine.m_g[1]}{gh_engine.m_j[1]}, 시주:{gh_engine.m_g[0]}{gh_engine.m_j[0]}"
+                f_saju_str = f"년주:{gh_engine.f_g[3]}{gh_engine.f_j[3]}, 월주:{gh_engine.f_g[2]}{gh_engine.f_j[2]}, 일주:{gh_engine.f_g[1]}{gh_engine.f_j[1]}, 시주:{gh_engine.f_g[0]}{gh_engine.f_j[0]}"
 
-        [분석 가이드라인]
-        1. [남성 사주 요약]과 [여성 사주 요약]은 각 사주의 핵심 기운만 2문장 내외로 간결하게 기술할 것.
-        2. 메인 분석은 다음 11개의 제목을 반드시 포함하여 구분 서술할 것:
-           ① [성격과 기질의 조화]
-           ② [내면의 유대감과 정신적 교감]
-           ③ [환경적 조건과 사회적 배경의 어울림]
-           ④ [오행의 상호보완과 기운의 흐름]
-           ⑤ [일지와 월지의 합충 관계 분석]
-           ⑥ [대운의 흐름과 장기적 동행 가능성]
-           ⑦ [자녀운과 가정의 번영]
-           ⑧ [재물운과 사회적 성취의 시너지]
-           ⑨ [갈등 관리와 리스크 방어 전략]
-           ⑩ [종합 운명적 인연의 등급]
-           ⑪ [초연 박사의 최종 조언 및 처방]
+                gh_prompt = f"""
+                당신은 명리심리상담사 '초연 박사'입니다.
+                아래의 두 사람 데이터를 분석하여 궁합 감명서를 작성하십시오.
+                - 남성 사주: {m_saju_str}
+                - 여성 사주: {f_saju_str}
 
-        3. 가장 중요한 ⑩번 섹션 '💞 초연 시공명리 종합 궁합풀이'에 가장 높은 비중을 두어 심도 있게 서술할 것.
-        4. 전체 서술은 우아하고 깊이 있는 '명조체' 느낌의 문어체를 사용할 것. (고딕체의 딱딱한 나열 금지)
-        """
-        try:
-            gh_res = model.generate_content(gh_prompt)
-            
-            import streamlit.components.v1 as components
-            # 높이를 1200으로 크게 뚫어주어 긴 11개 섹션 글과 그래프가 한 번에 다 나오게 합니다.
-            components.html(gh_engine.get_graphic_html(gh_res.text), height=1200, scrolling=True)
-            
-            components.html("<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border: none; border-radius: 5px; cursor: pointer;'>궁합 감명서 인쇄 / PDF 저장</button></div>", height=100)
-            
-        except Exception as e:
-            st.error(f"궁합 AI 분석 중 오류가 발생했습니다: {e}")
+                [분석 가이드라인]
+                1. [남성 요약]과 [여성 요약]을 각 2문장 내외로 서술할 것.
+                2. 11개의 제목을 반드시 포함할 것: ① [성격과 기질의 조화] ② [내면의 유대감과 정신적 교감] ③ [환경적 조건과 사회적 배경의 어울림] ④ [오행의 상호보완과 기운의 흐름] ⑤ [일지와 월지의 합충 관계 분석] ⑥ [대운의 흐름과 장기적 동행 가능성] ⑦ [자녀운과 가정의 번영] ⑧ [재물운과 사회적 성취의 시너지] ⑨ [갈등 관리와 리스크 방어 전략] ⑩ [종합 운명적 인연의 등급] ⑪ [초연 박사의 최종 조언 및 처방]
+                3. 바탕체 느낌의 깊이 있고 묵직한 문어체를 사용할 것.
+                """
+                try:
+                    gh_res = model.generate_content(gh_prompt)
+                    import streamlit.components.v1 as components
+                    components.html(gh_engine.get_graphic_html(gh_res.text), height=1400, scrolling=True)
+                except Exception as e:
+                    st.error(f"궁합 오류: {e}")
