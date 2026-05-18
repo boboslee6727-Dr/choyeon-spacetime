@@ -67,9 +67,16 @@ st.markdown("""
     .color-금 { background-color: #9E9E9E !important; color: white !important; }
     .color-수 { background-color: #212121 !important; color: white !important; }
     
-    .content-box-loose { line-height: 1.8; font-size: 15px; text-align: justify; margin-bottom: 12px; }
-    .content-box-loose p { margin-bottom: 12px; text-indent: 10px; } 
+    /* 🎯 1~12번 대제목 크기/밑줄/마진 완벽 통일 */
+    .report-page h3 { font-size: 22px !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E; padding-bottom: 8px; color: #1A237E !important; font-weight: 900 !important; width: 100%; display: block; }
     
+    /* 🎯 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
+    .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
+    
+    /* 본문 통변 에세이 무조건 20px 들여쓰기 및 줄간격 확보 */
+    .content-box-loose p { text-indent: 20px !important; margin-bottom: 15px !important; line-height: 1.8 !important; }
+    
+    /* 소목차(▶, •, ◈)는 들여쓰기 0, 상단 25px 하단 10px 칼각 마진, 볼드체 강제 */    
     div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
     div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
     
@@ -806,7 +813,8 @@ if btn_single:
                 master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; [일] {i_gong}</div></div>"
                 
                 daewun_info = []
-                un_html = f"<h4 style='color:#1A237E; margin-top:20px;'>11. 운의 흐름</h4><div style='margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                # 🎯 11번 운의 흐름을 <h3>로 격상하여 1~10번과 통일
+                un_html = f"<h3 style='color:#1A237E; margin-top:40px;'>11. 운의 흐름</h3><div style='margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
                     val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                     daewun_info.append(f"{val}세:{c}{j}")
@@ -884,16 +892,17 @@ if btn_single:
                 dw_mid2_age = current_daewun_age + 5
                 dw_end_age = current_daewun_age + 9
                 
-                past_months_html = "<p>▶ 지나온 각 과거 월운 요약</p>\n"
+                # 🎯 월운 과거 리스트 '-' 하이픈을 '•' 돗트로 통일
+                past_months_html = "<span class='sub-title'>▶ 지나온 각 과거 월운 요약</span>\n"
                 for m in range(1, curr_m):
                     g = wol_gans[m-1]
                     j = wol_jis[m-1]
                     if m == 1:
-                        past_months_html += f"<p><b>- {curr_y}년 1월 ({g}{j}월: 작년도 하반기 연장선):</b> </p>\n"
+                        past_months_html += f"<span class='sub-title'>• {curr_y}년 1월 ({g}{j}월: 작년도 하반기 연장선):</span>\n"
                     elif m == 2:
-                        past_months_html += f"<p><b>- {curr_y}년 2월 ({g}{j}월: 새로운 시작):</b> </p>\n"
+                        past_months_html += f"<span class='sub-title'>• {curr_y}년 2월 ({g}{j}월: 새로운 시작):</span>\n"
                     else:
-                        past_months_html += f"<p><b>- {curr_y}년 {m}월 ({g}{j}월):</b> </p>\n"
+                        past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
                 prompt = f"""
 [절대 규칙]
@@ -902,6 +911,14 @@ if btn_single:
 3. 절대 들여쓰기를 하지 마십시오. 표(Table)는 절대 직접 그리지 마십시오.
 4. [DAEWUN_TABLE_HERE] 등 마커는 파이썬 치환용이므로 절대 지우지 마십시오.
 5. [강제] 응답의 모든 문장에서 '내담자'라는 단어 사용 절대 금지. 반드시 [{disp_name}님]을 사용하여 서술하십시오.
+
+[🚨 가독성 혁명 및 문단 통제 엄명]
+1. 모든 통변 에세이 문장은 반드시 <p>내용</p> 태그로 감싸십시오. (CSS에서 20px 들여쓰기가 자동 적용됩니다.)
+2. 문장이 길어지거나 문맥이 전환되는 적절한 지점(예: 긍정적 측면 설명 후 주의점으로 넘어갈 때)에서는 절대로 글을 한 덩어리로 뭉치지 말고 반드시 </p><p>를 사용하여 줄바꿈(단락 나누기)을 집행하십시오.
+3. [특수기호 소제목 강제 룰] 아래의 기호(▶, •, ◈)가 들어간 문장은 절대 들여쓰기를 해선 안 됩니다. 반드시 아래의 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
+   <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 (68세~72세)</span>
+   <span class='sub-title'>• 53세~62세 (己未 대운):</span> (과거 요약 3줄은 여기서부터 <p> 태그로 이어 적음)
+   <span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
 
 [🚨 3D 입체 통변 및 육친 강제 지시]
 1번~11번 모든 항목은 평면적 해석을 금지하며, 반드시 [관계, 심리적 내면, 사회적 영역(직업/재물)] 3차원 관점을 융합하여 풀이하십시오.
@@ -929,7 +946,8 @@ if btn_single:
   -> [환각 절대 금지] 오직 위 목록에 명시된 신살만 100% 팩트로 인정하여 통변에 활용하십시오. 사주 표에 없는 신살은 절대 언급하거나 지어내지 마시고, 신살의 '위치' 또한 임의로 꾸며내지 마십시오.
 - [경계령] 분석 순서는 [합 ➡️ 형 ➡️ 충 ➡️ 파 ➡️ 해] 순서를 엄수.
 - [과거 대운/세운/월운 전수 분석 및 3줄 요약 규칙] 과거 운을 분석할 때는 첫 번째 대운(1대운)부터 현재 직전 대운까지 단 하나의 시기도 임의로 건너뛰거나 누락하지 말고 반드시 모든 시기를 순서대로 전부 출력하십시오. 단, 출력 용량 초과로 인한 글 끊김 및 누락을 방지하기 위해, 각 시기별 풀이는 핵심 명리 작용(십성, 합형충파해)과 현실적 영향(직업, 건강, 심리 등)을 압축하여 '반드시 정확히 3줄(3문장)'로 명쾌하게 요약하여 서술하십시오.
-★ [도트(•) 양식 및 문단 여백 엄수]: 웹 화면 깨짐 방지를 위해 아스테리스크(*, **) 기호를 절대 사용하지 마십시오. 줄 맨 첫 칸에 특수문자 도트(•)를 사용하고 한 칸 띄워 출력하되, **글자가 다닥다닥 붙어 출력되는 것을 막기 위해 반드시 하나의 대운 분석이 끝날 때마다 '엔터 두 번(빈 줄 한 칸)'을 입력하여 다음 대운과의 문단 간격을 여유 있게 띄워 출력하십시오.**
+- [조언 및 개운비법 논리성 강제] '12. 삶을 바꾸는 지혜로운 조언'과 '개운 비법' 파트는 행운의 색상, 방위, 에너지(수호천사, 기운)를 추천할 때 반드시 '2) 조후/억부 용신'에서 분석된 나를 돕는 오행(용신)을 논리적 근거로 삼아 서술하십시오. 없는 기운을 임의로 지어내지 마십시오.
+- 통변 시 가장 강조할 명리적 단어나 문구는 반드시 ' ' (작은따옴표)로 묶어 시각적으로 강조하십시오.
 
 실제 대운 흐름: {daewun_info_str}
 실제 세운 흐름: {sewun_info_str}
@@ -938,14 +956,14 @@ if btn_single:
 [출력 템플릿 - 이 목차명과 구조를 100% 동일하게 복사하여 출력할 것]
 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
-<p>1) 타고난 삶의 무대와 기본 성향 (격국)</p>
-<p>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</p>
-<p>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</p>
+<span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
+<span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
+<span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 </div>
 <h3 style='color:#1A237E;'>2. 성격</h3>
 <div class='content-box-loose'>
-<p>1) 겉으로 드러난 성격</p>
-<p>2) 감추어진 진짜 속마음</p>
+<span class='sub-title'>1) 겉으로 드러난 성격</span>
+<span class='sub-title'>2) 감추어진 진짜 속마음</span>
 </div>
 <h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'></div>
 <h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'></div>
@@ -958,34 +976,34 @@ if btn_single:
 
 [DAEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<p>▶ 지나온 각 과거 대운 분석</p>
-<p>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</p>
-<p>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</p>
+<span class='sub-title'>▶ 지나온 각 과거 대운 분석</span>
+<span class='sub-title'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
+<span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 </div>
 [SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<p>▶ 지나온 각 과거 세운 분석</p>
-<p>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기(양력 2월~7월 말) 상세 분석</p>
-<p>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</p>
+<span class='sub-title'>▶ 지나온 각 과거 세운 분석</span>
+<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기(양력 2월~7월 말) 상세 분석</span>
+<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</span>
 </div>
 [WOLWUN_TABLE_HERE]
 <div class='content-box-loose'>
 {past_months_html}
-<p>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</p>
-<p>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</p>
+<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</span>
+<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</span>
 </div>
 
 <h3 style='color:#1A237E; margin-top:30px;'>12. 삶을 바꾸는 지혜로운 조언</h3>
 <div class='content-box-loose'>
-<p><b>◈ 나를 돕는 에너지와 색상:</b></p>
-<p><b>◈ 신체 밸런스와 에너지 관리:</b></p>
-<p><b>◈ 공간의 흐름과 방위의 지혜:</b></p>
-<p><b>◈ 재능 효율을 높이는 직업적 지혜:</b></p>
-<p><b>◈ 더 나은 내일을 위한 절제의 미학:</b></p>
+<span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
+<span class='sub-title'>◈ 신체 밸런스와 에너지 관리:</span>
+<span class='sub-title'>◈ 공간의 흐름과 방위의 지혜:</span>
+<span class='sub-title'>◈ 재능 효율을 높이는 직업적 지혜:</span>
+<span class='sub-title'>◈ 더 나은 내일을 위한 절제의 미학:</span>
 <div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 전통명리 특별 개운 비법]</span></div>
-<p><b>◈ 수호 천사의 기운:</b></p>
-<p><b>◈ 백년해로의 기운:</b></p>
-<p><b>◈ 행운에 따른 기운:</b></p>
+<span class='sub-title'>◈ 수호 천사의 기운:</span>
+<span class='sub-title'>◈ 백년해로의 기운:</span>
+<span class='sub-title'>◈ 행운에 따른 기운:</span>
 </div>
 """
                 try:
