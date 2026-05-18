@@ -1042,10 +1042,47 @@ if btn_single and u_product == "궁합":
         gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
         gh_engine.run_universal_logic()
         
-        gh_prompt = f"""
-        당신은 명리심리상담사 '초연 박사'입니다. 
-        신청인 {u_name}({u_gender})님과 상대방 {p_name}({p_gender})님의 궁합을 11개 섹션으로 나누어 '나눔명조'풍의 품격 있는 문체로 분석하십시오.
+        # ==============================================================================
+        # 🎯 [새로 삽입할 구역] 남녀 사주표 명조체 상하 배치 및 신상 정보 출력
+        # ==============================================================================
+        # 1. 이 구역 전체를 명조체(serif)로 강제 고정하는 CSS 주입
+        st.markdown("""
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+            .report-page, .report-page * {
+                font-family: 'Nanum Myeongjo', serif !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
+        # 2. 성별 기준에 관계없이 무조건 [남성]을 위로, [여성]을 아래로 상하 정렬하여 출력
+        if u_gender == "남성":
+            # 남성이 신청인(u_name)인 경우
+            st.markdown(f"### 🏮 [남성 원국] {u_name}님")
+            st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
+            # (★이 자리에 박사님이 기존에 개인사주에서 쓰시던 남성 사주표 출력 코드를 적어주시면 됩니다)
+            
+            st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
+            
+            st.markdown(f"### 🏮 [여성 원국] {p_name}님")
+            st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
+            # (★이 자리에 여성 사주표 출력 코드를 배치하여 누락을 원천 차단합니다)
+        else:
+            # 여성이 신청인(u_name)인 경우 (상대방 p_name이 남성)
+            st.markdown(f"### 🏮 [남성 원국] {p_name}님")
+            st.caption(f"[{p_cal}] {p_y}년 {p_m}월 {p_d}일")
+            # (★남성 사주표 출력 코드)
+            
+            st.markdown("<hr style='border: 1px dashed #ddd; margin: 25px 0;'>", unsafe_allow_html=True)
+            
+            st.markdown(f"### 🏮 [여성 원국] {u_name}님")
+            st.caption(f"[양력] {sol_str} | [음력] {lun_str}")
+            # (★여성 사주표 출력 코드)
+        # ==============================================================================
+        
+        # (이 아래부터는 박사님의 기존 AI 프롬프트 코드가 그대로 이어집니다)
+        gh_prompt = f"""
+        당신은 명리심리상담사 '초연 박사'입니다...
         [분석 가이드라인]
         1. [남성 요약]과 [여성 요약]은 각 사주의 핵심 기운만 2문장 내외로 간결하게 기술할 것.
         2. 메인 분석은 11개의 제목을 반드시 포함하여 작성할 것:
