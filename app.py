@@ -16,10 +16,10 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="초연 시공명리 사주풀이 ver 511.0", layout="wide")
 
 st.markdown("""
+
 <style>
     @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap");
-    
-    /* 🎯 아이콘(material-symbols)은 예외처리하여 깨짐 방지 */
+   
     html, body, .stSidebar, .stMarkdown, p, span:not(.material-symbols-rounded):not(.icon), div, button, input, table, th, td, h1, h2, h3, h4, h5, h6 { font-family: 'Nanum Myeongjo', serif !important; }
     
     body, .stApp { background-color: #FFF8E1; }
@@ -37,7 +37,6 @@ st.markdown("""
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; }
     
-    /* 🎯 합충형파해 내부 가로줄 완벽 삭제용 클래스 */
     .no-h-border { border-top: none !important; border-bottom: none !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
@@ -48,7 +47,7 @@ st.markdown("""
     
     .content-box-loose { line-height: 1.8; font-size: 15px; text-align: justify; margin-bottom: 12px; }
     .content-box-loose p { margin-bottom: 12px; text-indent: 10px; } 
-    /* 🎯 12신살 하단 쓸데없는 빈 공간(여백) 완전 압축 */
+
     .rtl-scroll-container { display: flex; flex-direction: row-reverse; flex-wrap: nowrap !important; justify-content: flex-start; width: 100%; overflow: hidden; border: 2px solid #3E2723; margin-bottom: 5px; background: white; padding-bottom: 0px !important; }
     .dw-sn-col, .mn-col { min-width: 0; border-left: 1px solid #444; margin-bottom: 0px !important; padding-bottom: 0px !important; }
     .dw-sn-col { flex: 1 1 10%; } .mn-col { flex: 1 1 8.33%; }
@@ -59,7 +58,6 @@ st.markdown("""
     .month-head { background: #004D40; color: white; height: 16px; font-size: 12px !important; }
     .standalone-master-box { border: 2px solid #3E2723; background-color: #FFF8E1; padding: 8px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 900 !important; margin-bottom: 15px; border-radius: 8px; white-space: nowrap;}
     
-    /* 🎯 아코디언 남색 복구 */
     [data-testid="stExpander"] details summary { background-color: #1A237E !important; border-radius: 5px; }
     [data-testid="stExpander"] details summary p, [data-testid="stExpander"] details summary span.material-symbols-rounded { color: white !important; font-weight: 900 !important; }
     div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
@@ -74,6 +72,7 @@ st.markdown("""
         h1, h2, h3 { page-break-after: avoid; }
         table, .standalone-master-box { page-break-inside: avoid; }
     }
+    .material-symbols-rounded, span[class*="material"] { font-family: "Material Symbols Rounded", "Material Icons" !important; }
 </style>
 """, unsafe_allow_html=True)
 
