@@ -19,8 +19,8 @@ st.markdown("""
 <style>
     @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap");
     
-    /* 사이드바를 포함한 스트림릿 전체 영역 나눔명조체 강제 고정 */
-    html, body, [class*="css"], .stSidebar, .stSidebar *, .stMarkdown, p, span, div, button, input, table, th, td, h1, h2, h3, h4, h5, h6 { font-family: 'Nanum Myeongjo', serif !important; }
+    /* 🎯 아이콘(material-symbols)은 예외처리하여 깨짐 방지 */
+    html, body, .stSidebar, .stMarkdown, p, span:not(.material-symbols-rounded):not(.icon), div, button, input, table, th, td, h1, h2, h3, h4, h5, h6 { font-family: 'Nanum Myeongjo', serif !important; }
     
     body, .stApp { background-color: #FFF8E1; }
     .report-page { width: 210mm; max-width: 100%; margin: 30px auto; background-color: #FFFFFF !important; padding: 15mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; color: #000000; }
@@ -37,6 +37,9 @@ st.markdown("""
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; }
     
+    /* 🎯 합충형파해 내부 가로줄 완벽 삭제용 클래스 */
+    .no-h-border { border-top: none !important; border-bottom: none !important; }
+    
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
     .color-토 { background-color: #F9A825 !important; color: black !important; }
@@ -45,16 +48,20 @@ st.markdown("""
     
     .content-box-loose { line-height: 1.8; font-size: 15px; text-align: justify; margin-bottom: 12px; }
     .content-box-loose p { margin-bottom: 12px; text-indent: 10px; } 
-    .rtl-scroll-container { display: flex; flex-direction: row-reverse; flex-wrap: nowrap !important; justify-content: flex-start; width: 100%; overflow: hidden; border: 2px solid #3E2723; margin-bottom: 5px; background: white; }
-    .dw-sn-col { flex: 1 1 10%; min-width: 0; border-left: 1px solid #444; }
-    .mn-col { flex: 1 1 8.33%; min-width: 0; border-left: 1px solid #444; }
-    .inner-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    /* 🎯 12신살 하단 쓸데없는 빈 공간(여백) 완전 압축 */
+    .rtl-scroll-container { display: flex; flex-direction: row-reverse; flex-wrap: nowrap !important; justify-content: flex-start; width: 100%; overflow: hidden; border: 2px solid #3E2723; margin-bottom: 5px; background: white; padding-bottom: 0px !important; }
+    .dw-sn-col, .mn-col { min-width: 0; border-left: 1px solid #444; margin-bottom: 0px !important; padding-bottom: 0px !important; }
+    .dw-sn-col { flex: 1 1 10%; } .mn-col { flex: 1 1 8.33%; }
+    .inner-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 0px !important; }
     .inner-table td { border: 1px solid #eee; padding: 0px !important; text-align: center; font-weight: 900 !important; font-size: 12px !important; line-height: 1.1 !important; }
     .dw-age-head { background: #3E2723; color: white; height: 16px; font-size: 12px !important; }
     .seun-year-head { background: #1A237E; color: white; height: 16px; font-size: 12px !important; }
     .month-head { background: #004D40; color: white; height: 16px; font-size: 12px !important; }
     .standalone-master-box { border: 2px solid #3E2723; background-color: #FFF8E1; padding: 8px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 900 !important; margin-bottom: 15px; border-radius: 8px; white-space: nowrap;}
     
+    /* 🎯 아코디언 남색 복구 */
+    [data-testid="stExpander"] details summary { background-color: #1A237E !important; border-radius: 5px; }
+    [data-testid="stExpander"] details summary p, [data-testid="stExpander"] details summary span.material-symbols-rounded { color: white !important; font-weight: 900 !important; }
     div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
     
     @media print {
@@ -551,17 +558,17 @@ with st.sidebar:
     if u_product == "궁합":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
-        p_name = st.text_input("상대방 이름", value="", placeholder="이영희")
+        p_name = st.text_input("이름", value="", placeholder="이영희", key="p_n")
         p_gender_default = "여성" if u_gender == "남성" else "남성"
-        p_gender = st.selectbox("상대방 성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default))
-        p_marital = st.selectbox("상대방 혼인여부", ["미혼", "기혼", "돌싱"])
-        p_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"])
+        p_gender = st.selectbox("성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default), key="p_g")
+        p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="p_m_stat")
+        p_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="p_c")
         
         p_col1, p_col2, p_col3 = st.columns(3)
-        p_y = p_col1.number_input("상대방 년", 1900, 2030, value=1967)
-        p_m = p_col2.number_input("상대방 월", 1, 12, value=9)
-        p_d = p_col3.number_input("상대방 일", 1, 31, value=24)
-        p_t = st.selectbox("상대방 태어난 시간", idx_list, key="p_t_key")
+        p_y = p_col1.number_input("년", 1900, 2030, value=1967, key="p_y_in")
+        p_m = p_col2.number_input("월", 1, 12, value=9, key="p_m_in")
+        p_d = p_col3.number_input("일", 1, 31, value=24, key="p_d_in")
+        p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
         
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 가동", use_container_width=True, type="primary")
@@ -658,17 +665,29 @@ if btn_single:
                     if char != "?": counts[get_color(char)] += 1
                 guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                 guiin_str = guiin_map.get(ds, '없음')
-                master_bar_html = f"<div class='standalone-master-box'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} &nbsp;|&nbsp; [일] {i_gong}</div></div>"
+                # 🎯 마스터 바 파이프(|) 기호 삭제
+                master_bar_html = f"<div class='standalone-master-box'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} &nbsp;&nbsp; [일] {i_gong}</div></div>"
+                
+                # 🎯 사주표 상단 중앙 정렬 헤더 신규 생성
+                saju_header_html = f"""
+                <div style='text-align: center; margin-bottom: 15px; font-family: "Nanum Myeongjo", serif;'>
+                    <div style='font-size: 20px; font-weight: 900; color: #1A237E;'>{gender_icon} {u_name}님 ({u_gender} / {u_age}세 ({u_marital}))</div>
+                    <div style='font-size: 15px; font-weight: 700; color: #333; margin-top: 5px;'>[양력] {sol_str} &nbsp;&nbsp; [음력] {lun_str}</div>
+                </div>
+                """
                 
                 def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444" if l_idx == 3 else "none"
-                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot} !important; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                    # 🎯 'no-h-border' 클래스 적용으로 내부 가로줄 완벽 멸종
+                    cells = "".join([f"<td class='no-h-border' style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-left:1px solid #444 !important; border-right:1px solid #444 !important; border-bottom:{b_bot} !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
                     lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
                     ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
-                table_html = f"""<table class='result-table' style='page-break-inside: avoid;'>
+                table_html = f"""
+                {saju_header_html}
+                <table class='result-table' style='page-break-inside: avoid;'>
                 <tr class='top-header-cell'><td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>구분</span></td><td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>시주</span></td><td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>일주</span></td><td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>월주</span></td><td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>년주</span></td></tr>
                 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
                 <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
@@ -721,20 +740,25 @@ if btn_single:
 [절대 규칙]
 1. 현재 시스템 시간: {curr_y}년 {curr_m}월
 2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E; page-break-after: avoid;'>1. 사주팔자 구조 분석</h3> 으로 시작.
-4. [DAEWUN_TABLE_HERE] 등 마커 절대 지우지 말 것.
+3. [DAEWUN_TABLE_HERE] 등 템플릿 마커는 절대 지우지 말 것.
 
-[🚨 강제 통변 지시]
-- 📖 [월령 DB]: {wol_db_text}
-- 📖 [일주 DB]: {ilju_db_text}
+[🔥 하이브리드 전통명리 통변 지시 (매우 중요)]
+1. '1) 타고난 삶의 무대와 기본 성향 (격국)'의 **첫 번째 문장**은 아래 [시공간 자의형상 팩트]의 문구를 결합하여 반드시 다음 형식의 '팩트 문장'으로 가장 먼저 강제 출력하십시오.
+   - 🎯 출력 공식: "{u_name}님은 '[월령 DB 자의형상]'의 시공간에서, '[일주 DB 자의형상]'의 성품을 가지고 태어나셨습니다."
+2. 위 첫 문장을 출력한 직후(두 번째 문장부터)와 나머지 2~10번 섹션은, 제공된 파이썬 연산 팩트(원국, 합형충파해, 입개고)를 벗어나지 않는 선에서 **당신의 훌륭한 전통명리학적 지식(Ver 15.0 수준)을 총동원하여 수려하고 자유롭게 통변**하십시오. (사주에 없는 원진살 등을 임의로 창조 금지)
+3. '11. 운의 흐름' 파트 분석은 철저하게 '체(體: 하늘이 부여한 환경)'와 '용(用: 명주의 현실 대처)'의 논리로만 분석하십시오.
+
+[🚨 파이썬 산출 팩트 자료 (이 팩트 내에서만 자유롭게 풀이할 것)]
+- 📖 [시공간 자의형상 팩트 (첫 줄 조립용)]: 월령({wol_db_text}), 일주({ilju_db_text})
 - 📖 [구조 분석 DB]: {stru_db_text}
-- 🚨 [묘고 스캔 팩트]: {vault_summary}
+- 🚨 [진술축미 묘고 스캔 팩트]: {vault_summary}
 
-[출력 템플릿]
+[출력 템플릿 - 제목의 괄호 등은 임의로 수정 금지]
 <h3 style='color:#1A237E; page-break-after: avoid;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
-<p>1) 타고난 삶의 무대와 기본 성향 (월령 DB 활용)</p>
-<p>2) 내 삶의 온도와 에너지 균형 (조후/억부)</p>
-<p>3) 사주팔자의 역동적 관계 분석 (합형충파해 팩트 기반)</p>
+<p>1) 타고난 삶의 무대와 기본 성향 (격국)</p>
+<p>2) 내 삶의 온도와 에너지 균형 (조후 및 억부 용신)</p>
+<p>3) 사주팔자의 역동적 관계 분석 (합형충파해 / 진술축미의 입/개고)</p>
 </div>
 <h3 style='color:#1A237E; page-break-after: avoid;'>2. 성격</h3>
 <div class='content-box-loose'><p>1) 겉으로 드러난 성격</p><p>2) 감추어진 진짜 속마음</p></div>
@@ -747,12 +771,12 @@ if btn_single:
 <h3 style='color:#1A237E; page-break-after: avoid;'>9. 재성운</h3><div class='content-box-loose'></div>
 <h3 style='color:#1A237E; page-break-after: avoid;'>10. 건강운</h3><div class='content-box-loose'></div>
 [DAEWUN_TABLE_HERE]
-<div class='content-box-loose'><p>▶ 지나온 대운 요약</p><p>▶ 현재 대운 상세 분석</p></div>
+<div class='content-box-loose'><p>▶ 지나온 대운 요약</p><p>▶ 현재 대운 상세 분석 (체와 용 분석)</p></div>
 [SEWUN_TABLE_HERE]
-<div class='content-box-loose'><p>▶ 지나온 세운 요약</p><p>▶ 올해 세운 분석</p></div>
+<div class='content-box-loose'><p>▶ 지나온 세운 요약</p><p>▶ 올해({curr_y}년) 세운 분석 (체와 용 분석)</p></div>
 [WOLWUN_TABLE_HERE]
-<div class='content-box-loose'><p>▶ 과거 월운 요약</p><p>▶ 이번 달 분석</p></div>
-<h3 style='color:#1A237E; margin-top:30px; page-break-after: avoid;'>12. 조언</h3>
+<div class='content-box-loose'><p>▶ 과거 월운 요약</p><p>▶ 이번 달({curr_m}월) 분석</p></div>
+<h3 style='color:#1A237E; margin-top:30px; page-break-after: avoid;'>12. 삶을 바꾸는 지혜로운 조언</h3>
 <div class='content-box-loose'><p>◈ 나를 돕는 기운 등 서술</p></div>
 """
                 try:
