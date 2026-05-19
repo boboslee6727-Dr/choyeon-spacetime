@@ -99,10 +99,10 @@ st.markdown("""
 # ==============================================================================
 # 1. 시스템 변수 세팅 및 써머타임 엔진
 # ==============================================================================
-if 's_y' not in st.session_state: st.session_state.s_y = 2000
+if 's_y' not in st.session_state: st.session_state.s_y = 1964
 if 's_m' not in st.session_state: st.session_state.s_m = 1
-if 's_d' not in st.session_state: st.session_state.s_d = 1
-if 's_t' not in st.session_state: st.session_state.s_t = "시간 모름"
+if 's_d' not in st.session_state: st.session_state.s_d = 15
+if 's_t' not in st.session_state: st.session_state.s_t = "07:30 ~ 09:29 (辰)시"
 
 def get_total_time_adjustment(dt):
     adj = -30
@@ -666,7 +666,7 @@ with st.sidebar:
     u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
     
     col1, col2, col3 = st.columns(3)
-    u_y = col1.number_input("년", 1900, 2030, key="s_y")
+    u_y = col1.number_input("년", 1900, 2050, key="s_y")
     u_m = col2.number_input("월", 1, 12, key="s_m")
     u_d = col3.number_input("일", 1, 31, key="s_d")
     
@@ -685,7 +685,7 @@ with st.sidebar:
         p_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="p_c")
         
         p_col1, p_col2, p_col3 = st.columns(3)
-        p_y = p_col1.number_input("년", 1900, 2030, value=1967, key="p_y_in")
+        p_y = p_col1.number_input("년", 1900, 2050, value=1967, key="p_y_in")
         p_m = p_col2.number_input("월", 1, 12, value=9, key="p_m_in")
         p_d = p_col3.number_input("일", 1, 31, value=24, key="p_d_in")
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
