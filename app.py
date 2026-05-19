@@ -1059,8 +1059,8 @@ if btn_single:
 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
 <span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-{choyeon_golden_text}
-(※ AI 특별 지시: 위 제시된 자의형상과 격국의 시적인 의미를 바탕으로, 일반 내담자가 현실에서 어떤 강점과 성향으로 나타나는지 비유를 들어 상세한 해설을 덧붙여 주십시오.)
+🎨CH_MARKER🎨
+(※ AI 특별 지시: 상단 [기본 분석 데이터]에 제공된 '월령/일주 자의형상'과 '격국'의 팩트를 바탕으로, 일반 내담자가 이해하기 쉽게 상세한 해설을 덧붙여 주십시오.)
 <span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
 <span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 </div>
@@ -1114,6 +1114,10 @@ if btn_single:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
+                    # 🎯 [꼴통 김집사의 최후의 철퇴] 기계가 뱉어낸 텍스트에서 마커 자리를 찾아, 박사님의 문장을 물리적으로 쑤셔 넣습니다! (오차 0%)
+                    ai_text = ai_text.replace("🎨CH_MARKER🎨", choyeon_golden_text)
+                    
+                    # (아래는 기존 표 치환 코드들...)
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
                     if un_html not in ai_text:
