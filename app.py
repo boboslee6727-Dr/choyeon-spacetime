@@ -1182,5 +1182,3 @@ if btn_single:
                     components.html(print_btn_html, height=100)
                 except Exception as e:
                     st.error(f"궁합 AI 구동 실패 오류: {e}")
-        except Exception as file_err:
-            st.error(f"시스템 구동 오류: {file_err}")
