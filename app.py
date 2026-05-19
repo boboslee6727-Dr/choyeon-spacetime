@@ -783,7 +783,6 @@ if btn_single:
     else:
         spinner_msg = "초연 시공명리 사주풀이 분석 중..." if u_product == "개인사주" else "💕 두 분의 시공간을 교차하여 궁합을 분석 중입니다..."
         
-        # 🎯 [제1원칙] 깔끔하게 마스터 JSON DB 로드
         try:
             with open("/content/drive/MyDrive/choyeon-spacetime/choyeon_db.json", 'r', encoding='utf-8') as f:
                 choyeon_db = json.load(f)
@@ -824,7 +823,7 @@ if btn_single:
             def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
             
             # ------------------------------------------------------------------
-            # 🟢 [모드 1] 개인사주 분석
+            # [모드 1] 개인사주 분석
             # ------------------------------------------------------------------
             if u_product == "개인사주":
                 components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
@@ -875,11 +874,11 @@ if btn_single:
                 has_in, has_sa, has_shin = '寅' in jjis, '巳' in jjis, '申' in jjis
                 if sum([has_in, has_sa, has_shin]) == 2:
                     missing = [x for x, has in zip(['寅','巳','申'], [has_in, has_sa, has_shin]) if not has][0]
-                    samhyung_warn += f"원국에 인사신(寅巳申) 중 2글자가 있어 가형(假刑) 상태입니다. 운에서 '{missing}'이/가 들어올 때 삼형살이 완성되니 관재구설/수술수/배신에 강력히 주의 요망. "
+                    samhyung_warn += f"원국에 인사신 중 2글자가 있어 가형 상태입니다. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 주의 요망. "
                 has_chuk, has_sul, has_mi = '丑' in jjis, '戌' in jjis, '未' in jjis
                 if sum([has_chuk, has_sul, has_mi]) == 2:
                     missing = [x for x, has in zip(['丑','戌','未'], [has_chuk, has_sul, has_mi]) if not has][0]
-                    samhyung_warn += f"원국에 축술미(丑戌未) 중 2글자가 있어 가형(假刑) 상태입니다. 운에서 '{missing}'이/가 들어올 때 삼형살이 완성되니 관재구설/수술수/배신에 강력히 주의 요망. "
+                    samhyung_warn += f"원국에 축술미 중 2글자가 있어 가형 상태입니다. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 주의 요망. "
                 if not samhyung_warn: samhyung_warn = "해당 없음"
 
                 counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
@@ -949,9 +948,9 @@ if btn_single:
                 wol_html += "</div>"
                 
                 closing_html = f"""<div style='margin-top: 30px;'>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자(命)'는 태어날 때 부여받은 변하지 않는 '바코드(bar-code)'와 같지만, 우리가 살아가며 마주하는 '스캐너(scanner)'인 '운(運)'은 늘 변화하며 흐릅니다.</p>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 전통명리와의 인연'이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 전통명리의 지혜와 궁금증이 있으시면 언제든 '초연 전통명리 연구소의 문'을 두드려 주십시오.</p>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드와 같지만, 우리가 살아가며 마주하는 스캐너인 운은 늘 변화하며 흐릅니다.</p>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 초연 전통명리와의 인연이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 나침반이 되기를 진심으로 기원합니다.</p>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 전통명리의 지혜와 궁금증이 있으시면 언제든 초연 전통명리 연구소의 문을 두드려 주십시오.</p>
 <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
 <div style='text-align: right; margin-top: 30px;'>
 <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
@@ -960,19 +959,19 @@ if btn_single:
 
                 age_prompt = ""
                 if u_age < 20:
-                    age_prompt = "내담자는 [청소년기(10대)]입니다. '4. 학업·진학운'과 '3. 부모·형제운'을 최우선으로 가장 상세히 분석하고, 재성운(재물)/사업운은 간략히 축소하십시오."
+                    age_prompt = "내담자는 청소년기(10대)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
                 elif 20 <= u_age < 40:
-                    age_prompt = "내담자는 [청년기(20~30대)]입니다. '5. 적성·직업운'과 '6. 결혼·자녀운' 등 사회적 자립과 연애/혼인 과정을 상세히 통변하십시오."
+                    age_prompt = "내담자는 청년기(20~30대)입니다. 적성 직업운과 결혼 자녀운 등 사회적 자립과 혼인 과정을 상세히 통변하십시오."
                 elif 40 <= u_age < 60:
-                    age_prompt = "내담자는 [중장년기(40~50대)]입니다. 인생의 황금기이므로 '9. 재성운(재물)'과 '8. 관직·명예운(사업/승진)'에 통변의 화력을 집중하여 가장 길고 상세하게 서술하십시오."
+                    age_prompt = "내담자는 중장년기(40~50대)입니다. 재성운과 관직 명예운에 집중하여 상세하게 서술하십시오."
                 else:
-                    age_prompt = "내담자는 [노년기(60대 이상 시니어)]입니다. '10. 건강운' 및 대운/세운 통변 시 노인성 질환, 관절, 혈관 예방 등 건강 관리를 최우선으로 깊이 다루고, 재산의 안정적 유지에 대해 상세히 통변하십시오."
+                    age_prompt = "내담자는 노년기(60대 이상)입니다. 건강운 및 대운 세운 통변 시 건강 관리를 최우선으로 깊이 다루십시오."
 
                 gender_prompt = ""
                 if u_gender == "남성":
-                    gender_prompt = "내담자는 [남성]입니다. 육친 해석 시 재성(아내/재물)과 관성(자녀/사회적 명예)의 동태를 남성의 생애 주기와 가장의 역할에 맞춰 현실적으로 통변하십시오."
+                    gender_prompt = "내담자는 남성입니다. 육친 해석 시 재성과 관성의 동태를 남성의 생애 주기에 맞춰 현실적으로 통변하십시오."
                 else:
-                    gender_prompt = "내담자는 [여성]입니다. 육친 해석 시식상(자녀/표현력)과 관성(남편/직장)의 조화를 중심으로 풀되, 현대 사회 여성의 독립적 사회 활동과 성취를 비중 있게 강조하십시오."
+                    gender_prompt = "내담자는 여성입니다. 식상과 관성의 조화를 중심으로 풀되 독립적 사회 활동과 성취를 비중 있게 강조하십시오."
 
                 dw_start_age = current_daewun_age
                 dw_mid_age = current_daewun_age + 4
@@ -984,91 +983,68 @@ if btn_single:
                     g = wol_gans[m-1]
                     j = wol_jis[m-1]
                     if m == 1:
-                        past_months_html += f"<span class='sub-title'>• {curr_y}년 1월 ({g}{j}월: 작년도 하반기 연장선):</span>\n"
+                        past_months_html += f"<span class='sub-title'>• {curr_y}년 1월 ({g}{j}월):</span>\n"
                     elif m == 2:
-                        past_months_html += f"<span class='sub-title'>• {curr_y}년 2월 ({g}{j}월: 새로운 시작):</span>\n"
+                        past_months_html += f"<span class='sub-title'>• {curr_y}년 2월 ({g}{j}월):</span>\n"
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                # 🎯 [핀셋 호출] 간지 데이터 정교하게 추출
                 w_key = f"{ms}{mb}월"
                 i_key = f"{ds}{db}"
                 
                 w_core = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터 준비 중")
                 i_core = choyeon_db.get("ilju", {}).get(i_key, "데이터 준비 중")
                 
-                # 🎯 [박사님 전술 핵심] 완성형 HTML 문장 선제 조립
                 choyeon_golden_text = f"""
 <p style='text-indent: 15px; margin-top: 15px; line-height: 1.8; font-size: 16px; color: #1A237E; font-weight: bold;'>
 <b>{disp_name}</b>님은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
 </p>
 <p style='text-indent: 15px; line-height: 1.8;'>
-사주 구조의 핵심을 나타내는 격국(格局)은 <b>{gyukgook_detail}</b>
+사주 구조의 핵심을 나타내는 격국은 <b>{gyukgook_detail}</b>
 </p>
 """
 
                 db_header = (
-                    f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다. 절대 과거나 미래를 현재로 착각하지 마십시오.]\n\n"
-                    "당신은 명리심리상담사 1급 자격을 갖춘 **'초연 박사'**입니다. \n\n"
-                    "[🚨 전체 통변 절대 원칙 - 반드시 숙지할 것]\n"
-                    f"1. 타겟 맞춤형 통변: 모든 해설과 조언은 내담자의 연령과 성별({u_age}세 {u_gender})이 겪을 수 있는 현실적 상황(직장, 가정, 재물, 육아, 노후 등)에 철저히 맞추어 현대적인 구어체로 작성하십시오.\n"
-                    "2. 명리 용어 사용 금지: 내담자가 이해하기 어려운 한자어나 전문 명리 용어(예: 비견, 겁재, 입고, 개고, 지장간, 인종법, 묘고 등)를 본문 에세이에 직접 노출하지 마십시오. 반드시 일상적이고 심리적인 언어로 치환하여 풀어내십시오.\n\n"
-                    "[기본 분석 데이터 - 박사님 정밀 DB 추출본]\n"
+                    f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
+                    "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
+                    "1. 모든 해설과 조언은 내담자의 연령과 성별에 맞추어 현대적인 구어체로 작성하십시오.\n"
+                    "2. 내담자가 이해하기 어려운 한자어나 전문 명리 용어를 본문 에세이에 직접 노출하지 마십시오.\n"
                     f"- 내담자 성함: {disp_name}\n"
                     f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
                     f"- 혼인 여부: {u_marital}\n"
-                    f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n\n"
+                    f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                 )
 
                 prompt = f"""
 {db_header}
 
-[🚨 가독성 혁명 및 문단 통제 엄명]
-1. 모든 통변 에세이 문장은 반드시 <p>내용</p> 태그로 감싸십시오. (CSS에서 20px 들여쓰기가 자동 적용됩니다.)
-2. 문장이 길어지거나 문맥이 전환되는 적절한 지점에서는 절대로 글을 한 덩어리로 뭉치지 말고 반드시 </p><p>를 사용하여 줄바꿈(단락 나누기)을 집행하십시오.
-3. [특수기호 소제목 강제 룰] 아래의 기호(1), 2), ▶, •, ◈)가 들어간 문장은 절대 들여쓰기를 해선 안 됩니다. 반드시 아래의 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
+[문단 통제 명령]
+1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
+2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
+3. 아래의 기호가 들어간 문장은 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
    <span class='sub-title'>1) 겉으로 드러난 성격</span>
    <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-   <span class='sub-title'>• {dw_start_age}세~{dw_mid_age}세 ({dw_g_cur}{dw_j_cur} 대운):</span>
+   <span class='sub-title'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
    <span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
-4. 🚫 절대 금지: 마크다운 문법인 별표 2개(**)를 사용하여 글씨를 굵게 만드는 행위를 전면 금지합니다. 모든 소제목은 <span class='sub-title'> 태그에 의해 자동으로 굵게 처리되므로, 당신이 임의로 **를 넣지 마십시오.
+4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
 
-[🚨 3D 입체 통변 및 육친 강제 지시]
-1번~11번 모든 항목은 평면적 해석을 금지하며, 반드시 [관계, 심리적 내면, 사회적 영역(직업/재물)] 3차원 관점을 융합하여 풀이하십시오.
-현재 혼인 상태: '{u_marital}'. 절대 '육친적'이라는 단어를 쓰지 말고 "인간관계 측면에서 살펴보면" 등으로 순화하십시오.
-
-[🔥 내담자 맞춤형 정밀 타겟팅 룰 (반드시 엄수)]
+[내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
 - {gender_prompt}
 
-[🌟 대중 친화적 하이브리드 통변 강제 지시]
-- [천간 합/충 짓기 오류(환각) 절대 금지] 천간의 합(合)은 '甲己, 乙庚, 丙辛, 丁壬, 戊癸' 이고, 천간의 충(沖)은 '甲庚, 乙辛, 丙壬, 丁癸' 뿐입니다. 절대 '갑경합', '을기충' 등 글자 짝을 잘못 지어 명리학에 없는 거짓 용어를 지어내지 마십시오.
-- 모든 명리 용어(십성, 신살, 묘유충 등)는 절대로 단독으로 쓰지 마십시오.
-- 반드시 [대중이 이해하기 쉬운 현대적 구어체 표현] + (명리용어) 형태로 병기하십시오.
-- [한자 100% 표기 규칙] 반드시 '甲木', '己土', '亥水', '甲庚충' 등 100% 한자(漢字)로 표기하십시오.
-- [궁성 스토리텔링 강제] 합형충파해 설명 시 각 지지(자리)가 상징하는 육친과 의미를 엮어 풀이하십시오.
-- [십이운성 3D 결합 강제] 십성(육친) 통변 시, 반드시 해당 기둥의 십이운성(十二運星)이 부여하는 에너지의 강약과 상태를 결합하여 입체적으로 통변하십시오.
+[통변 지시]
+- 모든 명리 용어는 대중이 이해하기 쉬운 현대적 구어체 표현 뒤에 괄호 형태로 병기하십시오.
+- 간지 표기 시 반드시 한자로 표기하십시오.
+- 격국 팩트: {gyukgook_detail}
+- 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
+- 일반신살: {shinsal_str} / 12신살: {s12_str}
 
-[🚨 핵심 팩트 강제 지시]
-- 공망(空亡) 팩트: [년주: {n_gong}, 일주: {i_gong}] -> 년공망은 사회적/초년 결핍, 일공망은 개인적/배우자 결핍으로 나누어 설명하십시오.
-- 부모운 특수 지시: 사주 원국에서 부모를 상징하는 기운이 약하거나 극을 받는다면, 이를 '초년 시절의 뼈아픈 상실이나 짊어져야 했던 삶의 무게' 등으로 통변에 깊이 녹여내십시오.
-- 건강운 시작 전 지시: '10. 건강운'을 시작하기 전, 일반인이 이해하기 쉽게 오행의 생극제화 원리를 1~2줄로 비유적으로 먼저 설명하십시오.
-- 일반신살: [{shinsal_str}] / 12신살: [{s12_str}]
-- [경계령] 분석 순서는 [합 ➡️ 형 ➡️ 충 ➡️ 파 ➡️ 해] 순서를 엄수.
-- [과거 대운/세운/월운 전수 분석 및 3줄 요약 규칙] 과거 운을 분석할 때는 첫 번째 대운부터 현재 직전 대운까지 압축하여 '반드시 정확히 3줄(3문장)'로 명쾌하게 요약하여 서술하십시오.
-- [조언 및 개운비법 논리성 강제] '12. 삶을 바꾸는 지혜로운 조언'과 '개운 비법' 파트는 용신 오행을 논리적 근거로 삼아 서술하십시오.
-- 통변 시 가장 강조할 명리적 단어나 문구는 반드시 ' ' (작은따옴표)로 묶어 시각적으로 강조하십시오.
-
-실제 대운 흐름: {daewun_info_str}
-실제 세운 흐름: {sewun_info_str}
-사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시
-
-[🚨 출력 템플릿 절대 명령 - 토씨 하나 틀리지 말고 100% 동일하게 복사하여 출력할 것]
+[출력 템플릿 - 이 구조를 100% 동일하게 복사하여 출력할 것]
 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
 <span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 {choyeon_golden_text}
-(※ AI 특별 경고: 당신은 위 {choyeon_golden_text} 영역의 문장을 단 1글자도 변경, 축소, 누락, 가공하지 말고 있는 그대로 복사해서 출력하십시오. 당신은 오직 이 문장 바로 아랫줄부터 시적 자의형상과 격국의 현실적 의미에 대한 상세한 해설과 통변을 덧붙이는 역할만 집행하십시오.)
+(AI 특별 지고엄명: 당신은 위 {choyeon_golden_text} 영역의 문장을 단 1글자도 변경, 축소, 누락, 가공하지 말고 있는 그대로 복사해서 출력하십시오. 당신은 오직 이 문장 바로 아랫줄부터 상세한 해설과 통변을 덧붙이는 역할만 집행하십시오.)
 <span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
 <span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 </div>
@@ -1095,14 +1071,14 @@ if btn_single:
 [SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
 <span class='sub-title'>▶ 지나온 과거 세운 분석</span>
-<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기(양력 2월~7월 말) 상세 분석</span>
-<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</span>
+<span class='sub-title'>▶ 올해 세운 전반기 상세 분석</span>
+<span class='sub-title'>▶ 올해 세운 후반기 상세 분석</span>
 </div>
 [WOLWUN_TABLE_HERE]
 <div class='content-box-loose'>
 {past_months_html}
-<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</span>
-<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</span>
+<span class='sub-title'>▶ 이번 달 전반기 상세 분석</span>
+<span class='sub-title'>▶ 이번 달 후반기 상세 분석</span>
 </div>
 
 <h3 style='color:#1A237E; margin-top:30px;'>12. 삶을 바꾸는 지혜로운 조언</h3>
@@ -1122,11 +1098,10 @@ if btn_single:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
-                    # 🎯 표 마커들 즉각 매핑 치환
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
                     if un_html not in ai_text:
-                        ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ AI가 템플릿 마커를 누락하여 표가 최상단에 출력되었습니다.</div>" + ai_text
+                        ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ 표 마커가 누락되었습니다.</div>" + ai_text
 
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
@@ -1146,7 +1121,7 @@ if btn_single:
                     st.error(f"AI 연산 오류: {e}")
 
             # ------------------------------------------------------------------
-            # 🔴 [모드 2] 궁합 분석 (Ver 509.0 궁합 엔진 단독 이식)
+            # [모드 2] 궁합 분석
             # ------------------------------------------------------------------
             elif u_product == "궁합":
                 p_klc = KoreanLunarCalendar()
@@ -1207,192 +1182,5 @@ if btn_single:
                     components.html(print_btn_html, height=100)
                 except Exception as e:
                     st.error(f"궁합 AI 구동 실패 오류: {e}")
-
-[🚨 가독성 혁명 및 문단 통제 엄명]
-1. 모든 통변 에세이 문장은 반드시 <p>내용</p> 태그로 감싸십시오. (CSS에서 20px 들여쓰기가 자동 적용됩니다.)
-2. 문장이 길어지거나 문맥이 전환되는 적절한 지점에서는 절대로 글을 한 덩어리로 뭉치지 말고 반드시 </p><p>를 사용하여 줄바꿈(단락 나누기)을 집행하십시오.
-3. [특수기호 소제목 강제 룰] 아래의 기호(1), 2), ▶, •, ◈)가 들어간 문장은 절대 들여쓰기를 해선 안 됩니다. 반드시 아래의 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
-   <span class='sub-title'>1) 겉으로 드러난 성격</span>
-   <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-   <span class='sub-title'>• {dw_start_age}세~{dw_mid_age}세 ({dw_g_cur}{dw_j_cur} 대운):</span>
-   <span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
-4. 🚫 절대 금지: 마크다운 문법인 별표 2개(**)를 사용하여 글씨를 굵게 만드는 행위를 전면 금지합니다. 모든 소제목은 <span class='sub-title'> 태그에 의해 자동으로 굵게 처리되므로, 당신이 임의로 **를 넣지 마십시오.
-
-[🚨 3D 입체 통변 및 육친 강제 지시]
-1번~11번 모든 항목은 평면적 해석을 금지하며, 반드시 [관계, 심리적 내면, 사회적 영역(직업/재물)] 3차원 관점을 융합하여 풀이하십시오.
-현재 혼인 상태: '{u_marital}'. 절대 '육친적'이라는 단어를 쓰지 말고 "인간관계 측면에서 살펴보면" 등으로 순화하십시오.
-
-[🔥 내담자 맞춤형 정밀 타겟팅 룰 (반드시 엄수)]
-- {age_prompt}
-- {gender_prompt}
-
-[🌟 대중 친화적 하이브리드 통변 강제 지시]
-- [천간 합/충 짝짓기 오류(환각) 절대 금지] 천간의 합(合)은 '甲己, 乙庚, 丙辛, 丁壬, 戊癸' 이고, 천간의 충(沖)은 '甲庚, 乙辛, 丙壬, 丁癸' 뿐입니다. 절대 '갑경합', '을기충' 등 글자 짝을 잘못 지어 명리학에 없는 거짓 용어를 지어내지 마십시오.
-- 모든 명리 용어(십성, 신살, 묘유충 등)는 절대로 단독으로 쓰지 마십시오.
-- 반드시 [대중이 이해하기 쉬운 현대적 구어체 표현] + (명리용어) 형태로 병기하십시오.
-- [한자 100% 표기 규칙] 반드시 '甲木', '己土', '亥水', '甲庚충' 등 100% 한자(漢字)로 표기하십시오.
-- [궁성 스토리텔링 강제] 합형충파해 설명 시 각 지지(자리)가 상징하는 육친과 의미를 엮어 풀이하십시오.
-- [십이운성 3D 결합 강제] 십성(육친) 통변 시, 반드시 해당 기둥의 십이운성(十二運星)이 부여하는 에너지의 강약과 상태를 결합하여 입체적으로 통변하십시오.
-
-[🚨 핵심 팩트 강제 지시]
-- 공망(空亡) 팩트: [년주: {n_gong}, 일주: {i_gong}] -> 년공망은 사회적/초년 결핍, 일공망은 개인적/배우자 결핍으로 나누어 설명하십시오.
-- 부모운 특수 지시: 사주 원국에서 부모를 상징하는 기운이 약하거나 극을 받는다면, 이를 '초년 시절의 뼈아픈 상실이나 짊어져야 했던 삶의 무게' 등으로 통변에 깊이 녹여내십시오.
-- 건강운 시작 전 지시: '10. 건강운'을 시작하기 전, 일반인이 이해하기 쉽게 오행의 생극제화 원리를 1~2줄로 비유적으로 먼저 설명하십시오.
-- 일반신살: [{shinsal_str}] / 12신살: [{s12_str}]
-- [경계령] 분석 순서는 [합 ➡️ 형 ➡️ 충 ➡️ 파 ➡️ 해] 순서를 엄수.
-- [과거 대운/세운/월운 전수 분석 및 3줄 요약 규칙] 과거 운을 분석할 때는 첫 번째 대운부터 현재 직전 대운까지 압축하여 '반드시 정확히 3줄(3문장)'로 명쾌하게 요약하여 서술하십시오.
-- [조언 및 개운비법 논리성 강제] '12. 삶을 바꾸는 지혜로운 조언'과 '개운 비법' 파트는 용신 오행을 논리적 근거로 삼아 서술하십시오.
-- 통변 시 가장 강조할 명리적 단어나 문구는 반드시 ' ' (작은따옴표)로 묶어 시각적으로 강조하십시오.
-
-실제 대운 흐름: {daewun_info_str}
-실제 세운 흐름: {sewun_info_str}
-사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시
-
-[출력 템플릿 - 이 목차명과 구조를 100% 동일하게 복사하여 출력할 것. 절대 내용 임의 추가 금지!]
-<h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
-<div class='content-box-loose'>
-<span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-🎨CH_MARKER🎨
-(※ AI 특별 지시: 위 마커 바로 아랫줄부터 시작하여, 내담자의 나이와 성별에 맞춰 이 사주가 현실 세계에서 어떤 행동 양식과 강점으로 발현되는지 현대적 구어체로 상세히 해설을 이어가십시오.)
-<span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
-<span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
-</div>
-<h3 style='color:#1A237E;'>2. 성격</h3>
-<div class='content-box-loose'>
-<span class='sub-title'>1) 겉으로 드러난 성격</span>
-<span class='sub-title'>2) 감추어진 진짜 속마음</span>
-</div>
-<h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>5. 적성·직업운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>6. 결혼·자녀운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>7. 사업운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>8. 관직·명예운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>9. 재성운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>10. 건강운</h3><div class='content-box-loose'></div>
-
-[DAEWUN_TABLE_HERE]
-<div class='content-box-loose'>
-<span class='sub-title'>▶ 지나온 과거 대운 분석</span>
-<span class='sub-title'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-<span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-</div>
-[SEWUN_TABLE_HERE]
-<div class='content-box-loose'>
-<span class='sub-title'>▶ 지나온 과거 세운 분석</span>
-<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기(양력 2월~7월 말) 상세 분석</span>
-<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</span>
-</div>
-[WOLWUN_TABLE_HERE]
-<div class='content-box-loose'>
-{past_months_html}
-<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</span>
-<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</span>
-</div>
-
-<h3 style='color:#1A237E; margin-top:30px;'>12. 삶을 바꾸는 지혜로운 조언</h3>
-<div class='content-box-loose'>
-<span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
-<span class='sub-title'>◈ 신체 밸런스와 에너지 관리:</span>
-<span class='sub-title'>◈ 공간의 흐름과 방위의 지혜:</span>
-<span class='sub-title'>◈ 재능 효율을 높이는 직업적 지혜:</span>
-<span class='sub-title'>◈ 더 나은 내일을 위한 절제의 미학:</span>
-<div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 시공명리 특별 개운 비법]</span></div>
-<span class='sub-title'>◈ 수호 천사의 기운:</span>
-<span class='sub-title'>◈ 백년해로의 기운:</span>
-<span class='sub-title'>◈ 행운에 따른 기운:</span>
-</div>
-"""
-                try:
-                    res = model.generate_content(prompt)
-                    ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
-                    
-                    # 🎯 [홍 비서의 절대 방어막] AI가 작문을 끝내고 가져온 텍스트에서 
-                    # 마커 글자만 핀셋으로 찾아내어 박사님의 100% 순도 JSON 황금 문장으로 강제 치환합니다.
-                    ai_text = ai_text.replace("🎨CH_MARKER🎨", choyeon_golden_text)
-                    
-                    # 기존 테이블 마커 치환 코드
-                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
-                    
-                    if un_html not in ai_text:
-                        ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ AI가 템플릿 마커를 누락하여 표가 최상단에 출력되었습니다.</div>" + ai_text
-
-                    report_1_full_html = f"""<div class='report-page'>
-<div class='vip-inset-frame' style='border-color:#1A237E;'>
-<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
-{info_h}
-{table_html}
-{master_bar_html}
-<div style='margin-top:20px;'>
-{ai_text}
-{closing_html}
-</div>
-</div>
-</div>"""
-                    st.markdown(report_1_full_html, unsafe_allow_html=True)
-                    
-                except Exception as e: 
-                    st.error(f"AI 연산 오류: {e}")
-
-            # ------------------------------------------------------------------
-            # 🔴 [모드 2] 궁합 분석
-            # ------------------------------------------------------------------
-            elif u_product == "궁합":
-                p_klc = KoreanLunarCalendar()
-                if p_cal == "양력": p_klc.setSolarDate(p_y, p_m, p_d)
-                elif p_cal == "음력(평달)": p_klc.setLunarDate(p_y, p_m, p_d, False)
-                else: p_klc.setLunarDate(p_y, p_m, p_d, True)
-                
-                p_in_dt = dt_mod.datetime(p_klc.solarYear, p_klc.solarMonth, p_klc.solarDay, 12, 30)
-                p_gj = p_klc.getChineseGapJaString().split()
-                p_ys, p_yb, p_ms, p_mb, p_ds, p_db = p_gj[0][0], p_gj[0][1], p_gj[1][0], p_gj[1][1], p_gj[2][0], p_gj[2][1]
-                try: p_hs, p_hb = get_time_ganji(p_ds, p_t, p_in_dt)
-                except: p_hs, p_hb = "?", "?"
-                
-                m_pillars, f_pillars = ([hs, ds, ms, ys], [hb, db, mb, yb]), ([p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb])
-                
-                m_ctx = {'u_name': u_name, 'dc': ds}
-                f_ctx = {'u_name': p_name, 'dc': p_ds}
-                
-                if u_gender == "여성":
-                    m_pillars, f_pillars = f_pillars, m_pillars
-                    m_ctx, f_ctx = f_ctx, m_ctx
-                
-                gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
-                gh_engine.run_universal_logic()
-                
-                def draw_saju_table(gans, jjis, name_str, title_str):
-                    c_gans = "".join([f"<td class='color-{get_color(g)}' style='font-size:20px; font-weight:900;'>{g}</td>" for g in gans])
-                    c_jjis = "".join([f"<td class='color-{get_color(j)}' style='font-size:20px; font-weight:900;'>{j}</td>" for j in jjis])
-                    return f"""
-                    <div style='margin-bottom: 20px;'>
-                        <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 5px;'>🏮 {title_str} : {name_str}님</div>
-                        <table class='result-table' style='width: 100%;'>
-                            <tr class='top-header-cell'><td>시주</td><td>일주</td><td>월주</td><td>년주</td></tr>
-                            <tr>{c_gans}</tr>
-                            <tr>{c_jjis}</tr>
-                        </table>
-                    </div>
-                    """
-                
-                tables_html = "<div class='report-page'><div class='vip-inset-frame'>"
-                tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:20px;'><h1 style='margin:0; color:#3E2723; font-weight: 900;'>🗝️ 두 사람의 사주 명조</h1></div>"
-                if u_gender == '남성':
-                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, "남명 원국")
-                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, "여명 원국")
-                else:
-                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, "남명 원국")
-                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, "여명 원국")
-                tables_html += "</div></div>"
-                
-                try:
-                    ai_text = gh_engine.generate_ai_report(m_ctx, f_ctx)
-                    gunghap_html = gh_engine.get_graphic_html(ai_text)
-                    
-                    st.markdown(tables_html, unsafe_allow_html=True)
-                    st.markdown(gunghap_html, unsafe_allow_html=True)
-                    
-                    print_btn_html = "<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border-radius: 5px; cursor: pointer;'>궁합 감명서 인쇄 / PDF 저장</button></div>"
-                    components.html(print_btn_html, height=100)
-                except Exception as e:
-                    st.error(f"궁합 AI 구동 실패 오류: {e}")
+        except Exception as file_err:
+            st.error(f"시스템 구동 오류: {file_err}")
