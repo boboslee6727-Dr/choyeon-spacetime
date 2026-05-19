@@ -1006,12 +1006,14 @@ if btn_single:
                         break
                         
                 choyeon_golden_text = f"""
-<p style='text-indent: 15px; margin-top: 15px; line-height: 1.8; font-size: 16px; color: #1A237E; font-weight: bold;'>
-<b>{disp_name}</b>님은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
-</p>
-<p style='text-indent: 15px; line-height: 1.8;'>
-사주 구조의 핵심을 나타내는 격국은 <b>{gyukgook_detail}</b>
-</p>
+<div style='font-family: "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000;'>
+    <p style='text-indent: 0; margin-bottom: 10px;'>
+        <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
+    </p>
+    <p style='text-indent: 0; margin-bottom: 10px;'>
+        사주 구조의 핵심을 나타내는 격국은 {gyukgook_detail}입니다.
+    </p>
+</div>
 """
 
                 db_header = (
@@ -1049,13 +1051,15 @@ if btn_single:
 - 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
 - 일반신살: {shinsal_str} / 12신살: {s12_str}
 
-[출력 템플릿 - 이 구조를 100% 동일하게 복사하여 출력할 것]
+[출력 템플릿 - 절대 명령]
 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
 <span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 {choyeon_golden_text}
-(AI 특별 지고엄명: 당신은 위 {choyeon_golden_text} 영역의 문장을 단 1글자도 변경, 축소, 누락, 가공하지 말고 있는 그대로 복사해서 출력하십시오. 당신은 오직 이 문장 바로 아랫줄부터 상세한 해설과 통변을 덧붙이는 역할만 집행하십시오.)
+(※ AI 특별 경고: 위 문장은 박사님께서 직접 작성하신 완벽한 문장입니다. 단 1글자도 수정, 가공, 리라이팅(Rewriting)하지 말고 있는 그대로 출력하십시오.)
 <span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
+{choyeon_golden_text}
+(※ 이 문장은 초연 박사의 완벽한 자의형상 데이터입니다. 단 한 글자도 바꾸지 말고 그대로 출력한 후, 다음 목차부터 분석을 시작하십시오.)<span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
 <span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 </div>
 <h3 style='color:#1A237E;'>2. 성격</h3>
