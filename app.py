@@ -867,7 +867,7 @@ if btn_single:
 <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 전통명리의 지혜와 궁금증이 있으시면 언제든 '초연 전통명리 연구소의 문'을 두드려 주십시오.</p>
 <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
 <div style='text-align: right; margin-top: 30px;'>
-<span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 전통명리 연구소 드림 -</span>
+<span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
 </div>
 </div>"""
 
@@ -978,13 +978,13 @@ if btn_single:
 
 [DAEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title'>▶ 지나온 각 과거 대운 분석</span>
+<span class='sub-title'>▶ 지나온 과거 대운 분석</span>
 <span class='sub-title'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 </div>
 [SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title'>▶ 지나온 각 과거 세운 분석</span>
+<span class='sub-title'>▶ 지나온 과거 세운 분석</span>
 <span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기(양력 2월~7월 말) 상세 분석</span>
 <span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</span>
 </div>
@@ -1002,7 +1002,7 @@ if btn_single:
 <span class='sub-title'>◈ 공간의 흐름과 방위의 지혜:</span>
 <span class='sub-title'>◈ 재능 효율을 높이는 직업적 지혜:</span>
 <span class='sub-title'>◈ 더 나은 내일을 위한 절제의 미학:</span>
-<div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 전통명리 특별 개운 비법]</span></div>
+<div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 시공명리 특별 개운 비법]</span></div>
 <span class='sub-title'>◈ 수호 천사의 기운:</span>
 <span class='sub-title'>◈ 백년해로의 기운:</span>
 <span class='sub-title'>◈ 행운에 따른 기운:</span>
@@ -1019,7 +1019,7 @@ if btn_single:
 
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
-<h1 style='text-align:center;'>🔬 [초연 시공명리 사주풀이]</h1>
+<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
 {info_h}
 {table_html}
 {master_bar_html}
