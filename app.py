@@ -989,12 +989,22 @@ if btn_single:
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                w_key = f"{ms}{mb}월"
-                i_key = f"{ds}{db}"
+                # 🎯 [스마트 추출] 한글/괄호 무시하고 핵심 한자만으로 100% 매칭
+                w_key_hanja = f"{ms}{mb}"
+                i_key_hanja = f"{ds}{db}"
                 
-                w_core = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터 준비 중")
-                i_core = choyeon_db.get("ilju", {}).get(i_key, "데이터 준비 중")
-                
+                w_core = "시공간 데이터 준비 중"
+                for k, v in choyeon_db.get("wolryeong", {}).items():
+                    if w_key_hanja in k:
+                        w_core = v
+                        break
+                        
+                i_core = "데이터 준비 중"
+                for k, v in choyeon_db.get("ilju", {}).items():
+                    if i_key_hanja in k:
+                        i_core = v
+                        break
+                        
                 choyeon_golden_text = f"""
 <p style='text-indent: 15px; margin-top: 15px; line-height: 1.8; font-size: 16px; color: #1A237E; font-weight: bold;'>
 <b>{disp_name}</b>님은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
