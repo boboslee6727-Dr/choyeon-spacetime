@@ -1060,7 +1060,7 @@ if btn_single:
 <div class='content-box-loose'>
 <span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 🎨CH_MARKER🎨
-(※ AI 특별 지시: 상단 [기본 분석 데이터]에 제공된 '월령/일주 자의형상'과 '격국'의 팩트를 바탕으로, 일반 내담자가 이해하기 쉽게 상세한 해설을 덧붙여 주십시오.)
+(※ AI 특별 지시: 위 마커 바로 아랫줄부터 시작하여, 내담자의 나이와 성별에 맞춰 이 사주가 현실 세계에서 어떤 행동 양식과 강점으로 발현되는지 현대적 구어체로 상세히 해설을 이어가십시오.)
 <span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
 <span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 </div>
@@ -1114,10 +1114,11 @@ if btn_single:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
-                    # 🎯 [꼴통 김집사의 최후의 철퇴] 기계가 뱉어낸 텍스트에서 마커 자리를 찾아, 박사님의 문장을 물리적으로 쑤셔 넣습니다! (오차 0%)
+                    # 🎯 [홍 비서의 절대 방어막] AI가 작문을 끝내고 가져온 텍스트에서 
+                    # 마커 글자만 핀셋으로 찾아내어 박사님의 100% 순도 JSON 황금 문장으로 강제 치환합니다.
                     ai_text = ai_text.replace("🎨CH_MARKER🎨", choyeon_golden_text)
                     
-                    # (아래는 기존 표 치환 코드들...)
+                    # 기존 테이블 마커 치환 코드
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
                     if un_html not in ai_text:
