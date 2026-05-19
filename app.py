@@ -612,7 +612,7 @@ class UniversalPrintableGunghap:
 # ==============================================================================
 with st.sidebar:
     st.title("🏮초연 시공명리 연구소")
-    st.caption("Ver 16.0 Masterpiece (15.0 Base + 509 Gunghap)")
+    st.caption("Ver 16.0 Master (15.0 Base + 509 Gunghap)")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
