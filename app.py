@@ -611,7 +611,7 @@ class UniversalPrintableGunghap:
 # 4. 사이드바 UI
 # ==============================================================================
 with st.sidebar:
-    st.title("🧪 초연 임상 연구소")
+    st.title("🏮초연 시공명리 연구소")
     st.caption("Ver 16.0 Masterpiece (15.0 Base + 509 Gunghap)")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
@@ -691,7 +691,7 @@ with st.sidebar:
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
     
     st.markdown("<br>", unsafe_allow_html=True)
-    btn_single = st.button("🚀 초연 전통명리 사주풀이 가동", use_container_width=True, type="primary")
+    btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
 # ==============================================================================
 # 5. 분석 가동 및 출력 (스위치 분기)
@@ -700,7 +700,7 @@ if btn_single:
     if not u_name.strip(): st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
     elif u_product == "궁합" and not p_name.strip(): st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        spinner_msg = "초연 전통명리 사주풀이 분석 중..." if u_product == "개인사주" else "💕 두 분의 시공간을 교차하여 궁합을 분석 중입니다..."
+        spinner_msg = "초연 시공명리 사주풀이 분석 중..." if u_product == "개인사주" else "💕 두 분의 시공간을 교차하여 궁합을 분석 중입니다..."
         
         with st.spinner(spinner_msg):
             # ------------------------------------------------------------------
@@ -1019,7 +1019,7 @@ if btn_single:
 
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
-<h1 style='text-align:center;'>🔬 [초연 전통명리 사주풀이]</h1>
+<h1 style='text-align:center;'>🔬 [초연 시공명리 사주풀이]</h1>
 {info_h}
 {table_html}
 {master_bar_html}
