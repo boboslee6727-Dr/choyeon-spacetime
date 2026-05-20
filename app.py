@@ -1100,133 +1100,126 @@ if btn_single:
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                 )
 
-                # 🚨 [김집사 긴급 방패] 대운 나이 변수가 없어서 발생하는 치명적 에러 원천 차단
-                dw_start_age = locals().get('dw_start_age', 'OO')
-                dw_mid_age   = locals().get('dw_mid_age', 'OO')
-                dw_mid2_age  = locals().get('dw_mid2_age', 'OO')
-                dw_end_age   = locals().get('dw_end_age', 'OO')
-
-                curr_y_ganji = locals().get('curr_y_ganji', 'OO')
-                past_months_html = locals().get('past_months_html', '')
-                cur_wol_g = locals().get('cur_wol_g', 'O')
-                cur_wol_j = locals().get('cur_wol_j', 'O')
-
                 prompt = f"""
 {db_header}
 
-[🚨 최우선 절대 통제 명령: 출력 템플릿 강제 복사]
-당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다.
-아래 제공된 [출력 템플릿]의 HTML 태그, 목차명, CSS 스타일, 기호 등은 **단 한 글자도 훼손하거나 수정하지 말고 100% 동일하게 복사하여 출력**하십시오. 
-오직 괄호로 표시된 (※ 여기에 통변 작성...) 부분만 지우고, 그 자리에 당신의 정통 명리학적 분석 내용(반드시 <p> 태그 사용)을 상세히 채워 넣으십시오.
-이미 내용이 채워져 있는 부분(예: 1번 목차의 첫 번째 항목, 표 마커 등)은 절대 건드리지 말고 그대로 출력하십시오.
+[문단 통제 명령]
+1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
+2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
+3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(22px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
+   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
+   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
+4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
+5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
+6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
+7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유(예: 넓은 들판 등)를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상(예: 언 땅 위의 새싹 등) 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
 
-[출력 템플릿 - 이 목차명과 구조를 100% 동일하게 복사하여 출력할 것. 절대 내용 임의 추가 금지!]
-<h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
+[내담자 맞춤형 정밀 타겟팅]
+- {age_prompt}
+- {gender_prompt}
+
+[통변 지시]
+- 모든 명리 용어는 대중이 이해하기 쉬운 현대적 구어체 표현 뒤에 괄호 형태로 병기하십시오.
+- 간지 표기 시 반드시 한자로 표기하십시오.
+- 격국 팩트: {gyukgook_detail}
+- 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
+- 일반신살: {shinsal_str} / 12신살: {s12_str}
+
+[출력 템플릿 - 절대 명령]
+(※ 주의: [CHOYEON_GOLDEN_TEXT_HERE] 치환자는 절대 수정/삭제하지 말고 그대로 출력하십시오. 파이썬이 데이터를 강제 주입합니다.)
+(※ 주의: 괄호로 묶인 '(※ AI 지시: ...)' 부분은 당신이 실제 분석 에세이로 교체하여 출력해야 하는 영역입니다.)
+
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
-<span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-{choyeon_golden_text}
-(※ 여기에 통변 작성: 반드시 바로 위 문장에 제시된 '자의형상(월령과 일주)'의 의미를 가장 먼저 인용하고 시작점으로 삼아, 내담자의 타고난 기본 성향과 삶의 무대를 깊이 있게 풀이할 것. 매우 중요!)
-<span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
-(※ 여기에 통변 작성)
-<span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
-(※ 여기에 통변 작성)
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
+[CHOYEON_GOLDEN_TEXT_HERE]
+(※ AI 지시: 위 마커 자리에 내담자의 고유한 '자의형상(월령과 일주)' 문장이 자동 삽입됩니다. 당신은 반드시 이 '자의형상'의 의미를 자연스럽게 이어받아 첫 문장을 전개해야 합니다. 이를 시작점으로 삼아 격국({gyukgook_detail})과 연결하여 삶의 무대와 기본 성향을 분석하십시오.)
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
+(※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
+(※ AI 지시: 원국 내의 합, 형, 충, 파, 해 및 진술축미의 작용을 분석하여 삶의 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하십시오.)
 </div>
-<h3 style='color:#1A237E;'>2. 성격</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
-<span class='sub-title'>1) 겉으로 드러난 성격</span>
-(※ 여기에 통변 작성)
-<span class='sub-title'>2) 감추어진 진짜 속마음</span>
-(※ 여기에 통변 작성)
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+(※ AI 지시: 일주와 격국을 중심으로 사회적, 표면적으로 드러나는 성격과 기질을 구체적이고 현대적인 구어체로 작성하십시오.)
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음(내면의 심리와 무의식)</span>
+(※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제 등을 상세히 분석하십시오.)
 </div>
-<h3 style='color:#1A237E;'>3. 부모·형제운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>4. 학업·진학운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>5. 적성·직업운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>6. 결혼·자녀운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>7. 사업운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>8. 관직·명예운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>9. 재성운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
-<h3 style='color:#1A237E;'>10. 건강운</h3>
-<div class='content-box-loose'>
-(※ 여기에 통변 작성)
-</div>
+<h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>5. 적성·직업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>6. 결혼·자녀운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>7. 사업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>8. 관직·명예운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>9. 재성운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E;'>10. 건강운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
 
 [DAEWUN_TABLE_HERE]
 <div class='content-box-loose'>
 <span class='sub-title'>▶ 지나온 과거 대운 분석</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 </div>
 [SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
 <span class='sub-title'>▶ 지나온 과거 세운 분석</span>
-(※ 여기에 통변 작성)
-<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기(양력 2월~7월 말) 상세 분석</span>
-(※ 여기에 통변 작성)
-<span class='sub-title'>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기(양력 8월~내년 1월 말) 상세 분석</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
+<span class='sub-title'>▶ 올해 세운 전반기 상세 분석</span>
+(※ AI 지시: 에세이 작성)
+<span class='sub-title'>▶ 올해 세운 후반기 상세 분석</span>
+(※ AI 지시: 에세이 작성)
 </div>
 [WOLWUN_TABLE_HERE]
 <div class='content-box-loose'>
 {past_months_html}
-<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 전반기 (양력 5일~19일) 상세 분석</span>
-(※ 여기에 통변 작성)
-<span class='sub-title'>▶ 이번 달({curr_m}월 {cur_wol_g}{cur_wol_j}월) 후반기 (양력 20일~익월 4일) 상세 분석</span>
-(※ 여기에 통변 작성)
+<span class='sub-title'>▶ 이번 달 전반기 상세 분석</span>
+(※ AI 지시: 에세이 작성)
+<span class='sub-title'>▶ 이번 달 후반기 상세 분석</span>
+(※ AI 지시: 에세이 작성)
 </div>
 
 <h3 style='color:#1A237E; margin-top:30px;'>12. 삶을 바꾸는 지혜로운 조언</h3>
 <div class='content-box-loose'>
 <span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>◈ 신체 밸런스와 에너지 관리:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>◈ 공간의 흐름과 방위의 지혜:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>◈ 재능 효율을 높이는 직업적 지혜:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>◈ 더 나은 내일을 위한 절제의 미학:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 시공명리 특별 개운 비법]</span></div>
 <span class='sub-title'>◈ 수호 천사의 기운:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>◈ 백년해로의 기운:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 <span class='sub-title'>◈ 행운에 따른 기운:</span>
-(※ 여기에 통변 작성)
+(※ AI 지시: 에세이 작성)
 </div>
 """
                 try:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
-                    # 🎯 표 마커 치환 (AI가 그대로 복사해 온 마커를 파이썬이 HTML 표로 덮어씌움)
+                    # 🎯 [핵심] 여기서 박사님의 원본 문장을 AI가 출력한 마커 위치에 강제 주입합니다!
+                    ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
+                    
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
+                    
+                    if un_html not in ai_text:
+                        ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ 표 마커가 누락되었습니다.</div>" + ai_text
 
-                    # 🎯 순정 레이아웃 100% 완전 복원 (사주팔자표 정상 출력)
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
