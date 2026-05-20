@@ -9,15 +9,19 @@ import ephem
 import google.generativeai as genai
 import streamlit.components.v1 as components
 
-# 🎯 [수정] 박사님의 구글 드라이브 절대 경로로 DB 위치를 재설정합니다.
-db_path = "/content/drive/MyDrive/choyeon-spacetime/choyeon_db.json"
+# 🎯 [프로모델 고정] Streamlit 환경에 맞춘 정확한 경로 설정
+# app.py가 있는 현재 폴더의 절대 경로를 스스로 찾습니다.
+current_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(current_dir, "choyeon_db.json")
 
 try:
+    # app.py와 같은 방에 있는 choyeon_db.json을 읽어옵니다.
     with open(db_path, 'r', encoding='utf-8') as f:
         choyeon_db = json.load(f)
+        
 except Exception as e:
-    # 만약 구글 드라이브 연결 상태에 문제가 있다면 에러 내용을 화면에 띄웁니다.
-    st.error(f"구글 드라이브 DB 파일 로드 실패: {e}")
+    # 만약 같은 방에 파일이 없다면, 정확히 어느 주소에서 찾으려다 실패했는지 화면에 띄웁니다.
+    st.error(f"❌ DB 파일 로드 실패: {e}\n\n[김집사 안내] 현재 프로그램이 파일을 찾고 있는 컴퓨터 내부 위치는 다음과 같습니다:\n👉 {db_path}\n\n박사님, 구글 드라이브가 아니라 정확히 위 위치에 choyeon_db.json 파일을 놓아주셔야 합니다.")
     choyeon_db = {"wolryeong": {}, "ilju": {}}
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
