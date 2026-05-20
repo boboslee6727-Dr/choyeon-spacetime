@@ -19,7 +19,7 @@ except Exception as e:
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
 # ==============================================================================
-st.set_page_config(page_title="초연 전통명리 사주풀이 Ver 19.0", layout="wide")
+st.set_page_config(page_title="초연 전통명리 사주풀이 Ver 16.0", layout="wide")
 
 st.markdown("""
 <style>
@@ -83,7 +83,7 @@ st.markdown("""
     /* 소목차(▶, •, ◈, 1), 2) 등)는 들여쓰기 0, 마진 칼각, 그리고 '무조건 강력한 굵은 글씨' 강제 */
     .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
     
-    /* 소목차(▶, •, ◈)는 들여쓰기 0, 상단 25px 하단 10px 칼각 마진, 볼드체 강제 */    
+    /* 사이드바 버튼 색상 */    
     div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
     div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
     
@@ -139,9 +139,6 @@ components.html("""
 # ==============================================================================
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
-# ==============================================================================
-# 2. AI 및 명리 연산 엔진
-# ==============================================================================
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-pro') 
@@ -149,7 +146,6 @@ except: pass
 
 GAN, JI = "甲乙丙丁戊己庚辛壬癸", "子丑寅卯辰巳午未申酉戌亥"
 
-# 🎯 [이 부분을 박사님 원래 규격대로 완벽하게 채웠습니다]
 JIJANGGAN = {
     '子': ['壬', '-', '癸'], 
     '丑': ['癸', '辛', '己'], 
@@ -238,7 +234,6 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     gj = cur_g + cur_j
     noble, ausp, evil = [], [], []
     
-    # 🌟 귀인류 (Noble)
     if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인")
     if cur_j in {'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("문창귀인")
     if cur_j in {'甲':'亥','乙':'子','丙':'寅','戊':'寅','丁':'卯','己':'卯','庚':'巳','辛':'午','壬':'申','癸':'酉'}.get(dc,""): noble.append("문곡귀인")
@@ -249,39 +244,26 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     if cur_j in {'甲':'亥','乙':'午','丙':'寅','戊':'寅','丁':'酉','己':'酉','庚':'巳','辛':'子','壬':'申','癸':'卯'}.get(dc,""): noble.append("학당귀인")
     if cur_j in {'甲':'亥','乙':'戌','丙':'申','戊':'申','丁':'未','己':'未','庚':'巳','辛':'辰','壬':'寅','癸':'丑'}.get(dc,""): noble.append("암록")
     
-    # [박사님 특명 추가] 복성귀인
     if gj in ["甲寅", "乙丑", "丙子", "丁酉", "戊申", "己未", "庚午", "辛巳", "壬辰", "癸卯"]: noble.append("복성귀인")
     
-    # 🌟 길성류 (Auspicious)
     if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): ausp.append("건록")
-    
-    # [박사님 특명 추가] 금여록 (일간 기준 및 기둥 기준 통합)
     if cur_j in {'甲':'辰','乙':'巳','丙':'未','戊':'未','丁':'申','己':'申','庚':'戌','辛':'亥','壬':'丑','癸':'寅'}.get(dc,""): ausp.append("금여록")
     if gj in ["甲辰", "乙巳", "庚戌", "辛亥"]: ausp.append("금여록")
-    
     if gj in ["甲寅", "丙辰", "戊辰", "庚辰", "壬戌"]: ausp.append("일덕")
-    
-    # [박사님 특명 추가] 금신 (일주/시주 한정 발동)
     if gj in ["乙丑", "己巳", "癸酉"] and idx in [0, 1]: ausp.append("금신")
     
-    # 🌟 흉살 및 특성 (Evil)
     if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호대살")
     if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살")
     if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살")
     
-    # [박사님 특명 추가] 비인살 (양인살 충 지지 및 명시된 기둥)
     if cur_j in {'甲':'酉','丙':'子','戊':'子','庚':'卯','壬':'午'}.get(dc,""): evil.append("비인살")
     if gj in ["丙子", "丁丑", "戊子", "己丑", "壬午", "癸未"]: evil.append("비인살")
     
-    # [박사님 특명 추가] 탕화살 (원국 일지 기준 동착 시)
     if dj == '寅' and cur_j in ['寅', '巳', '申']: evil.append("탕화살")
     if dj == '午' and cur_j in ['辰', '午', '丑']: evil.append("탕화살")
     if dj == '丑' and cur_j in ['午', '未', '戌']: evil.append("탕화살")
     
-    # [박사님 특명 추가] 현침살
     if cur_g in ['甲', '辛'] or cur_j in ['卯', '午', '申', '未']: evil.append("현침살")
-    
-    # [박사님 특명 추가] 철쇄개금 (일지 포함 묘/유/술 2개 이상)
     if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: 
         evil.append("철쇄개금")
         
@@ -291,32 +273,24 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     if cur_j == dohwa_map.get(yj, "") or cur_j == dohwa_map.get(dj, ""): evil.append("도화살")
     if gj in ["甲午","丙寅","丁未","戊辰","庚戌","辛酉","壬子"]: evil.append("홍염살")
     if gj in ["甲寅","乙巳","丁巳","戊申","辛亥"]: evil.append("고란살")
-    
-    # [박사님 특명 추가] 곡각살
     if cur_g in ['乙', '己'] or cur_j in ['巳', '丑']: evil.append("곡각살")
-    
     if gj in ["丙子","丁丑","戊寅","辛卯","壬辰","癸巳","丙午","丁未","戊申","辛酉","壬戌","癸亥"]: evil.append("음양차착")
     if cur_j in ['子','午','卯','酉']: evil.append("교신성")
     if cur_j in ['辰','戌']: evil.append("평두")
     if cur_j in ['寅','申','巳','亥']: evil.append("효신살")
     if gj in ["甲辰","乙巳","丙申","丁亥","戊戌","己丑","庚辰","辛巳","壬申","癸亥"]: evil.append("퇴신")
     
-    # [박사님 특명 추가] 연애 및 심리, 기타 사고수 신살
     if idx == 1 and gj in ["丙子", "戊戌", "庚寅", "癸亥"]: evil.append("타뇌관살")
     if idx == 1 and gj in ["丙午", "丁未", "戊午", "戊子", "己未", "己丑"]: evil.append("육수살")
-    
     if gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
     if gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
     if gj in ["甲寅", "乙卯", "丁未", "戊戌", "己未", "庚申", "辛酉", "癸丑"]: evil.append("음욕살")
     if gj in ["甲午", "丙戌", "戊辰", "庚辰", "壬戌", "乙巳", "丁亥", "己亥", "辛巳", "癸亥"]: evil.append("의처의부")
 
-    # 출력 포맷팅 및 중복 제거
     result = []
     for n in list(dict.fromkeys(noble)): result.append(f"<span style='color:#0D47A1;'>{n}</span>")
     for a in list(dict.fromkeys(ausp)): result.append(f"<span style='color:#2E7D32;'>{a}</span>")
     for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
-    
-    # 🚨 기존 result[:6] 제한을 해제하여 박사님의 모든 명리적 분석이 누락 없이 표출되도록 반환
     return result
 
 def get_jijanggan_full(dg, ji):
@@ -338,29 +312,18 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
         core_ss = get_ss(ds, mb)
         return core_ss + "격", f"월지 {mb}의 순수한 기운인 {core_ss}을 그대로 격으로 삼습니다."
     
-    # 지장간 데이터 불러오기
     jg = JIJANGGAN.get(mb, [])
     if not jg: return "알수없음격", "지장간 정보가 없습니다."
 
-    # 🚨 [핵심] 투간 검사 대상에서 '일간(ds)'을 완벽히 삭제함!
     target_gans = [ys, ms, hs] 
-
-    # 투간 확인 (우선순위: 정기 -> 중기 -> 여기 순서로 확인)
-    main_qi = jg[-1] # 정기 (본기)
+    main_qi = jg[-1]
     
-    # 1. 정기 투간 확인
     if main_qi in target_gans:
         return get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {get_ss(ds, main_qi)}격이 되었습니다."
-        
-    # 2. 중기 투간 확인 (지장간이 3개일 경우 가운데 글자)
     if len(jg) == 3 and jg[1] in target_gans:
         return get_ss(ds, jg[1]) + "격", f"월지 {mb}의 중기인 {jg[1]}이 천간에 투출하여 {get_ss(ds, jg[1])}격이 되었습니다."
-        
-    # 3. 여기 투간 확인 (지장간의 첫 번째 글자)
     if jg[0] in target_gans:
         return get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {get_ss(ds, jg[0])}격이 되었습니다."
-
-    # 4. 투간된 것이 하나도 없으면, 원칙대로 월지의 정기(본기)를 격으로 삼음
     return get_ss(ds, main_qi) + "격", f"월지 {mb}의 지장간이 천간에 투출하지 않아, 정기(본기)인 {main_qi}를 기준으로 {get_ss(ds, main_qi)}격으로 정합니다."
 
 def calculate_gongmang(ilgan, ilji):
@@ -758,7 +721,6 @@ with st.sidebar:
     if u_product == "궁합":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
-        # 🚨 '상대방' 단어 전면 제거
         p_name = st.text_input("이름", value="", placeholder="이영희", key="p_n")
         p_gender_default = "여성" if u_gender == "남성" else "남성"
         p_gender = st.selectbox("성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default), key="p_g")
@@ -810,7 +772,7 @@ if btn_single:
             u_age = curr_y - u_y + 1
             
             base_y_idx = (curr_y - 1984) % 60
-            curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]           
+            curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
             gj = klc.getChineseGapJaString().split()
             ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
             
@@ -1005,13 +967,14 @@ if btn_single:
                         i_core = v
                         break
                         
+                # 🎯 [문제 해결의 핵심] AI 프롬프트에 넣지 않고, 파이썬이 통제하는 HTML 블록으로 만듭니다.
                 choyeon_golden_text = f"""
-<div style='font-family: "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000;'>
+<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000;'>
     <p style='text-indent: 0; margin-bottom: 10px;'>
         <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
     </p>
     <p style='text-indent: 0; margin-bottom: 10px;'>
-        사주 구조의 핵심을 나타내는 격국은 {gyukgook_detail}입니다.
+        사주 구조의 핵심을 나타내는 격국은 <b>{gyukgook_detail}</b>입니다.
     </p>
 </div>
 """
@@ -1027,6 +990,7 @@ if btn_single:
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                 )
 
+                # 🎯 [프롬프트 수정] 요약문을 AI가 쓰는 것이 아니라 마커(Marker)로 남기게 합니다.
                 prompt = f"""
 {db_header}
 
@@ -1052,14 +1016,13 @@ if btn_single:
 - 일반신살: {shinsal_str} / 12신살: {s12_str}
 
 [출력 템플릿 - 절대 명령]
+(※ 주의: 아래 템플릿의 [CHOYEON_GOLDEN_TEXT_HERE] 등 괄호로 된 치환자는 절대 수정하거나 지우지 말고 그대로 출력하십시오. 파이썬이 그 위치에 데이터를 강제로 주입합니다.)
+
 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
 <span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-{choyeon_golden_text}
-(※ AI 특별 경고: 위 문장은 박사님께서 직접 작성하신 완벽한 문장입니다. 단 1글자도 수정, 가공, 리라이팅(Rewriting)하지 말고 있는 그대로 출력하십시오.)
+[CHOYEON_GOLDEN_TEXT_HERE]
 <span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
-{choyeon_golden_text}
-(※ 이 문장은 초연 박사의 완벽한 자의형상 데이터입니다. 단 한 글자도 바꾸지 말고 그대로 출력한 후, 다음 목차부터 분석을 시작하십시오.)<span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
 <span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 </div>
 <h3 style='color:#1A237E;'>2. 성격</h3>
@@ -1111,6 +1074,9 @@ if btn_single:
                 try:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
+                    
+                    # 🎯 [핵심] 여기서 박사님의 원본 문장을 AI가 출력한 마커 위치에 강제 주입합니다!
+                    ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                     
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
