@@ -19,7 +19,7 @@ except Exception as e:
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
 # ==============================================================================
-st.set_page_config(page_title="초연 전통명리 사주풀이 Ver 16.0", layout="wide")
+st.set_page_config(page_title="초연 시공명리 사주풀이 Ver 20.1", layout="wide")
 
 st.markdown("""
 <style>
