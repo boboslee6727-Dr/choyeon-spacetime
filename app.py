@@ -965,7 +965,8 @@ if btn_single:
                 master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} &nbsp;|&nbsp; [일] {i_gong}</div><div>🌪️ 올해 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
                
                 daewun_info = []
-                un_html = f"<h3 style='color:#1A237E; margin-top:40px;'>11. 운의 흐름</h3><div style='margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                # 🎯 [김집사 수정] 프롬프트로 <h3>를 넘겼으므로, 여기서는 <h3>를 삭제합니다.
+                un_html = f"<div style='margin-top:20px; margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
                     val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                     daewun_info.append(f"{val}세:{c}{j}")
@@ -1276,6 +1277,7 @@ if btn_single:
 5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
 6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
 7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유(예: 넓은 들판 등)를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상(예: 언 땅 위의 새싹 등) 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
+8. 🚨 표(Table) 생성 절대 금지: AI가 임의로 마크다운 표(|---|)나 HTML <table>을 생성하는 것을 엄격히 금지합니다. 대운/세운/월운의 연도별 분석은 반드시 도트 기호(•)를 사용한 텍스트로만 작성하십시오.
 
 [내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
@@ -1294,75 +1296,86 @@ if btn_single:
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 [CHOYEON_GOLDEN_TEXT_HERE]
 (※ AI 지시: 위 마커 자리에 내담자의 고유한 '자의형상(월령과 일주)' 문장이 자동 삽입됩니다. 당신은 반드시 이 '자의형상'의 의미를 자연스럽게 이어받아 첫 문장을 전개해야 합니다. 이를 시작점으로 삼아 격국({gyukgook_detail})과 연결하여 삶의 무대와 기본 성향을 분석하십시오.)
-<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
 (※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
-<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미의 입/개고)</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미의 입/개고)</span>
 (※ AI 지시: 원국 내의 합, 형, 충, 파, 해 및 진술축미의 작용을 분석하여 삶의 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
-<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
 (※ AI 지시: 일주와 격국을 중심으로 사회적, 표면적으로 드러나는 성격과 기질을 구체적이고 현대적인 구어체로 작성하십시오.)
 
-<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
 (※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제 등을 상세히 분석하십시오.)
 </div>
-<h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>5. 적성·직업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>6. 결혼·자녀운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>7. 사업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>8. 관직·명예운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>9. 재성운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E;'>10. 건강운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>5. 적성·직업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>6. 결혼·자녀운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 사업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 관직·명예운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>9. 재성운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>10. 건강운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+<div class='content-box-loose'>
+(※ AI 지시: 운의 흐름이 내담자의 삶에 미치는 전반적인 영향에 대해 총평 에세이를 작성하십시오.)
+</div>
 
 [DAEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title'>▶ 지나온 과거 대운 분석</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
+(※ AI 지시: 내담자가 지나온 각 과거 대운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 표 생성 절대 금지. 예: • 3세(甲子대운): 내용...)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(※ AI 지시: 에세이 작성)
-<span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(※ AI 지시: 에세이 작성)
-</div>
-[SEWUN_TABLE_HERE]
-<div class='content-box-loose'>
-<span class='sub-title'>▶ 지나온 과거 세운 분석</span>
-(※ AI 지시: 에세이 작성)
-<span class='sub-title'>▶ 올해 세운 전반기 상세 분석</span>
-(※ AI 지시: 에세이 작성)
-<span class='sub-title'>▶ 올해 세운 후반기 상세 분석</span>
-(※ AI 지시: 에세이 작성)
-</div>
-[WOLWUN_TABLE_HERE]
-<div class='content-box-loose'>
-{past_months_html}
-<span class='sub-title'>▶ 이번 달 전반기 상세 분석</span>
-(※ AI 지시: 에세이 작성)
-<span class='sub-title'>▶ 이번 달 후반기 상세 분석</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 (※ AI 지시: 에세이 작성)
 </div>
 
-<h3 style='color:#1A237E; margin-top:30px;'>12. 삶을 바꾸는 지혜로운 조언</h3>
+[SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
+<span class='sub-title' style='font-size: 18x; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
+(※ AI 지시: 최근 지나온 각 과거 세운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 단, 올해가 새로운 대운으로 바뀌는 첫 해일 경우, 이전 대운의 마지막 2~3년간의 세운을 분석하여 대운 교체기의 흐름을 명확히 서술하십시오. 표 생성 절대 금지. 예: • 2024년(甲辰년): 내용...)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>◈ 신체 밸런스와 에너지 관리:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>◈ 공간의 흐름과 방위의 지혜:</span>
+</div>
+
+[WOLWUN_TABLE_HERE]
+<div class='content-box-loose'>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
+{past_months_html}
+(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 도트(•) 형태로 나열하여 1~2줄씩 요약하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지. 예: 2026년의 경우 • 1월(기축월): 내용 • 2월(丙寅월): 내용...)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>◈ 재능 효율을 높이는 직업적 지혜:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>◈ 더 나은 내일을 위한 절제의 미학:</span>
+</div>
+
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
+<div class='content-box-loose'>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
 (※ AI 지시: 에세이 작성)
-<div style='margin-top:20px; margin-bottom:10px;'><span style='color:#1A237E; font-weight:900;'>[초연 시공명리 특별 개운 비법]</span></div>
-<span class='sub-title'>◈ 수호 천사의 기운:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 신체 밸런스와 에너지 관리:</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>◈ 백년해로의 기운:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 공간의 흐름과 방위의 지혜:</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title'>◈ 행운에 따른 기운:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 재능 효율을 높이는 직업적 지혜:</span>
 (※ AI 지시: 에세이 작성)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 더 나은 내일을 위한 절제의 미학:</span>
+(※ AI 지시: 에세이 작성)
+</div>
+
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>13. 초연 시공명리 특별 개운 비법</h3>
+<div class='content-box-loose'>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 수호 천사의 기운:</span>
+(※ AI 지시: 에세이 작성)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 백년해로의 기운:</span>
+(※ AI 지시: 에세이 작성)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 기운:</span>
+(※ AI 지시: 운에서 들어오는 고신/과숙과 도화(연살)/망신/역마살 작용에 따른 변동과 변화의 상황을 짚어주고, 이에 대한 현명한 대응 방법을 조언할 것)
 </div>
 """
                 try:
