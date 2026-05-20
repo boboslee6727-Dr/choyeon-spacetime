@@ -1210,19 +1210,20 @@ prompt = f"""
 <span class='sub-title'>◈ 행운에 따른 기운:</span>
 </div>
 """
-                try:
-                    res = model.generate_content(prompt)
-                    ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
+            try:
+                res = model.generate_content(prompt)
+                ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
-                    # 🎯 [핵심] 여기서 박사님의 원본 문장을 AI가 출력한 마커 위치에 강제 주입합니다!
-                    ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
+                # 🎯 [핵심] 여기서 박사님의 원본 문장을 AI가 출력한 마커 위치에 강제 주입합니다!
+                ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                     
-                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
+                ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
-                    if un_html not in ai_text:
-                        ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ 표 마커가 누락되었습니다.</div>" + ai_text
+                if un_html not in ai_text:
+                    ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ 표 마커가 누락되었습니다.</div>" + ai_text
 
-                    report_1_full_html = f"""<div class='report-page'>
+                report_1_full_html = f"""<div class='report-page'>
+
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
 {info_h}
