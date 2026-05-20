@@ -951,19 +951,29 @@ if btn_single:
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                # 🎯 1. 천간/지지 한글 매핑 딕셔너리 (정확한 JSON Key 조립용)
-                GAN_HAN = {'甲':'갑', '乙':'을', '丙':'병', '丁':'정', '戊':'무', '己':'기', '庚':'경', '辛':'신', '壬':'임', '癸':'계'}
-                JI_HAN = {'子':'자', '丑':'축', '寅':'인', '卯':'묘', '辰':'진', '巳':'사', '午':'오', '未':'미', '申':'신', '酉':'유', '戌':'술', '亥':'해'}
+                # 🎯 1. 한글 변환용 & 한자 변환용 딕셔너리 (완벽 분리)
+                H_GAN = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계','갑':'갑','을':'을','병':'병','정':'정','무':'무','기':'기','경':'경','신':'신','임':'임','계':'계'}
+                H_JI = {'子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해','자':'자','축':'축','인':'인','묘':'묘','진':'진','사':'사','오':'오','미':'미','신':'신','유':'유','술':'술','해':'해'}
                 
-                # 🎯 2. 토씨 하나 틀리지 않는 정확한 키(Key) 문자열 조립
-                w_key = f"{GAN_HAN.get(ms, ms)}{JI_HAN.get(mb, mb)}({ms}{mb})월" # 예: 을축(乙丑)월
-                i_key = f"{GAN_HAN.get(ds, ds)}{JI_HAN.get(db, db)}({ds}{db})"   # 예: 계해(癸亥)
+                C_GAN = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸','甲':'甲','乙':'乙','丙':'丙','丁':'丁','戊':'戊','己':'己','庚':'庚','辛':'辛','壬':'壬','癸':'癸'}
+                C_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥','子':'子','丑':'丑','寅':'寅','卯':'卯','辰':'辰','巳':'巳','午':'午','未':'未','申':'申','酉':'酉','戌':'戌','亥':'亥'}
+
+                # 🎯 2. 한글과 한자를 각각 추출
+                w_hangul = f"{H_GAN.get(ms, ms)}{H_JI.get(mb, mb)}" # 예: 을축
+                w_hanja  = f"{C_GAN.get(ms, ms)}{C_JI.get(mb, mb)}" # 예: 乙丑
                 
-                # 🎯 3. 반복문 없이 단번에 데이터 추출
+                i_hangul = f"{H_GAN.get(ds, ds)}{H_JI.get(db, db)}" # 예: 계해
+                i_hanja  = f"{C_GAN.get(ds, ds)}{C_JI.get(db, db)}" # 예: 癸亥
+
+                # 🎯 3. 박사님 JSON 속살과 100% 동일한 형태의 Key 조립
+                w_key = f"{w_hangul}({w_hanja})월" # 결과: "을축(乙丑)월"
+                i_key = f"{i_hangul}({i_hanja})"   # 결과: "계해(癸亥)"
+
+                # 🎯 4. 다이렉트 매칭 인출
                 w_core = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터를 찾지 못했습니다")
                 i_core = choyeon_db.get("ilju", {}).get(i_key, "데이터를 찾지 못했습니다")
                 
-                # 🎯 4. 박사님의 핵심 데이터 문장 (격국 제거, 순수 시공간/성품만 유지)
+                # 🎯 5. 고유 데이터 문장 생성
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 0;'>
@@ -988,11 +998,11 @@ if btn_single:
 [문단 통제 명령]
 1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
 2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
-3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(19px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
-   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
-   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
+3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(22px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
+   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
+   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
 4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
 5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
 6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
@@ -1015,20 +1025,23 @@ if btn_single:
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
-<span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 [CHOYEON_GOLDEN_TEXT_HERE]
 (※ AI 지시: 위 마커 기호 바로 아래부터, 제공된 격국({gyukgook_detail})을 바탕으로 내담자의 삶의 무대와 기본 성향을 '전통명리 물상론'에 입각해 알기 쉬운 구어체로 분석하는 에세이를 작성하십시오.)
 
-<span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
 (※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
 
-<span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
 (※ AI 지시: 원국 내의 합, 형, 충, 파, 해 및 진술축미의 작용을 분석하여 삶의 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하십시오.)
 </div>
-<h3 style='color:#1A237E;'>2. 성격</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
-<span class='sub-title'>1) 겉으로 드러난 성격</span>
-<span class='sub-title'>2) 감추어진 진짜 속마음</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+(※ AI 지시: 일주와 격국을 중심으로 사회적, 표면적으로 드러나는 성격과 기질을 구체적이고 현대적인 구어체로 작성하십시오.)
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음(내면의 심리와 무의식)</span>
+(※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제 등을 상세히 분석하십시오.)
 </div>
 <h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'></div>
 <h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'></div>
