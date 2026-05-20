@@ -1106,6 +1106,11 @@ if btn_single:
                 dw_mid2_age  = locals().get('dw_mid2_age', 'OO')
                 dw_end_age   = locals().get('dw_end_age', 'OO')
 
+                curr_y_ganji = locals().get('curr_y_ganji', 'OO')
+                past_months_html = locals().get('past_months_html', '')
+                cur_wol_g = locals().get('cur_wol_g', 'O')
+                cur_wol_j = locals().get('cur_wol_j', 'O')
+
                 prompt = f"""
 {db_header}
 
