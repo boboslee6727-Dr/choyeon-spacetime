@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 사주풀이 Ver 22.0", layout="wide")
+st.set_page_config(page_title="초연 시공명리 사주풀이 Ver 23.0", layout="wide")
 
 st.markdown("""
 <style>
