@@ -9,12 +9,15 @@ import ephem
 import google.generativeai as genai
 import streamlit.components.v1 as components
 
-# 🎯 [여기에 추가] 프로그램 시작할 때 박사님의 새 JSON DB를 딱 한 번 메모리에 올립니다.
+# 🎯 [수정] 구글 드라이브 경로를 삭제하고, 로컬 상대 경로로 변경합니다.
 try:
-    with open("/content/drive/MyDrive/choyeon-spacetime/choyeon_db.json", 'r', encoding='utf-8') as f:
+    # app.py와 같은 위치에 choyeon_db.json이 있어야 합니다.
+    with open("choyeon_db.json", 'r', encoding='utf-8') as f:
         choyeon_db = json.load(f)
 except Exception as e:
-    choyeon_db = {"wolryeong": {}, "ilju": {}} # 파일이 없을 때를 대비한 안전장치
+    # 오류가 나면 왜 안 되는지 화면에 표시하도록 st.error를 추가했습니다.
+    st.error(f"DB 파일 로드 실패: {e}")
+    choyeon_db = {"wolryeong": {}, "ilju": {}}
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
