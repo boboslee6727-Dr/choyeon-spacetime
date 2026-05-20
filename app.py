@@ -1293,13 +1293,15 @@ if btn_single:
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
+<p style='font-size: 18px; line-height: 1.8; margin-bottom: 20px;'>
+    [CHOYEON_GOLDEN_TEXT_HERE]
+</p>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-[CHOYEON_GOLDEN_TEXT_HERE]
-(※ AI 지시: 위 마커 자리에 내담자의 고유한 '자의형상(월령과 일주)' 문장이 자동 삽입됩니다. 당신은 반드시 이 '자의형상'의 의미를 자연스럽게 이어받아 첫 문장을 전개해야 합니다. 이를 시작점으로 삼아 격국({gyukgook_detail})과 연결하여 삶의 무대와 기본 성향을 분석하십시오.)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
-(※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미의 입/개고)</span>
-(※ AI 지시: 원국 내의 합, 형, 충, 파, 해 및 진술축미의 작용을 분석하여 삶의 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하십시오.)
+(※ AI 지시: 위 마커 자리에 삽입된 자의형상 문장의 의미를 이어받아 첫 문장을 전개하고, 이를 격국({gyukgook_detail})과 연결하여 분석하십시오.)
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
+(※ AI 지시: 에세이 작성)
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미의 입/개고)</span>
+(※ AI 지시: 에세이 작성)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
@@ -1318,39 +1320,40 @@ if btn_single:
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 관직·명예운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>9. 재성운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>10. 건강운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+
+<h3 style='color:#1A237E; margin-top:40px;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
 (※ AI 지시: 운의 흐름이 내담자의 삶에 미치는 전반적인 영향에 대해 총평 에세이를 작성하십시오.)
 </div>
 
 [DAEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
-(※ AI 지시: 내담자가 지나온 각 과거 대운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 표 생성 절대 금지. 예: • 3세(甲子대운): 내용...)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
+(※ AI 지시: 내담자가 지나온 과거 대운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 표 생성 절대 금지.)
+<span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+<span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 (※ AI 지시: 에세이 작성)
 </div>
 
 [SEWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title' style='font-size: 18x; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
-(※ AI 지시: 최근 지나온 각 과거 세운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 단, 올해가 새로운 대운으로 바뀌는 첫 해일 경우, 이전 대운의 마지막 2~3년간의 세운을 분석하여 대운 교체기의 흐름을 명확히 서술하십시오. 표 생성 절대 금지. 예: • 2024년(甲辰년): 내용...)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
+(※ AI 지시: 최근 지나온 2~3년의 과거 세운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 단, 올해가 새로운 대운으로 바뀌는 첫 해일 경우, 이전 대운의 마지막 2~3년간의 세운을 분석하여 대운 교체기의 흐름을 명확히 서술하십시오. 표 생성 절대 금지.)
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
 (※ AI 지시: 에세이 작성)
 </div>
 
 [WOLWUN_TABLE_HERE]
 <div class='content-box-loose'>
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 도트(•) 형태로 나열하여 1~2줄씩 요약하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지. 예: 2026년의 경우 • 1월(기축월): 내용 • 2월(丙寅월): 내용...)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
+(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 도트(•) 형태로 나열하여 1~2줄씩 요약하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지. 예: 2026년의 경우 • 1월(기축월): 내용...)
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
 (※ AI 지시: 에세이 작성)
 </div>
 
