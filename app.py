@@ -1100,6 +1100,12 @@ if btn_single:
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                 )
 
+                # 🚨 [방어막 원상복구] 대운 나이 변수 누락 에러 원천 차단
+                dw_start_age = locals().get('dw_start_age', 'OO')
+                dw_mid_age   = locals().get('dw_mid_age', 'OO')
+                dw_mid2_age  = locals().get('dw_mid2_age', 'OO')
+                dw_end_age   = locals().get('dw_end_age', 'OO')                               
+
                 prompt = f"""
 {db_header}
 
