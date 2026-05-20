@@ -1118,8 +1118,8 @@ db_header = (
     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
 )
 
-    prompt = f"""
-    {db_header}
+prompt = f"""
+{db_header}
 
 [문단 통제 명령]
 1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
