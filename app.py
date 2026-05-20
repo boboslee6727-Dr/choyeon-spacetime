@@ -954,24 +954,24 @@ if btn_single:
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                # 1. 10천간/12지지 한자 매핑 (박사님 JSON의 한자 괄호 안 형태를 만들기 위함)
-                H2C_GAN = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
-                H2C_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
-                
-                # 2. 박사님 코드에서 넘어온 한글 변수값 (예: ms='을', mb='축')
-                # 괄호 안을 위한 한자 변환
-                w_hanja = f"{H2C_GAN.get(ms, '')}{H2C_JI.get(mb, '')}"
-                i_hanja = f"{H2C_GAN.get(ds, '')}{H2C_JI.get(db, '')}"
-                
-                # 3. 박사님 JSON의 키와 100% 일치하는 문자열 조립
-                # 월령: "을축(乙丑)월", 일주: "계해(癸亥)"
-                w_key = f"{ms}{mb}({w_hanja})월"
-                i_key = f"{ds}{db}({i_hanja})"
-                
-                # 4. 데이터 인출 (이제 무조건 찾아옵니다)
-                w_core = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터를 찾지 못했습니다")
-                i_core = choyeon_db.get("ilju", {}).get(i_key, "데이터를 찾지 못했습니다")
-                
+                # 1. 박사님의 JSON 데이터를 가져옵니다.
+                w_db = choyeon_db.get("wolryeong", {})
+                i_db = choyeon_db.get("ilju", {})
+
+                # 2. 강제 매칭 로직: DB의 모든 키를 뒤져서 현재 박사님의 ms, mb가 포함된 키를 찾습니다.
+                w_core = "시공간 데이터를 찾지 못했습니다"
+                for key, val in w_db.items():
+                    if ms in key and mb in key:
+                        w_core = val
+                        break
+
+                i_core = "데이터를 찾지 못했습니다"
+                for key, val in i_db.items():
+                    if ds in key and db in key:
+                        i_core = val
+                        break
+
+                # 3. 결과 출력
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 0;'>
