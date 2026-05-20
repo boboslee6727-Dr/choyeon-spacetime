@@ -968,7 +968,7 @@ if btn_single:
                         break
                         
                 # 🎯 [Ver 509 핵심] 격국 문장을 제거하고 시공간 데이터만 남김
-choyeon_golden_text = f"""
+                choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 0;'>
         <b>{u_name}</b>님은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
