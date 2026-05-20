@@ -1104,7 +1104,13 @@ if btn_single:
                 dw_start_age = locals().get('dw_start_age', 'OO')
                 dw_mid_age   = locals().get('dw_mid_age', 'OO')
                 dw_mid2_age  = locals().get('dw_mid2_age', 'OO')
-                dw_end_age   = locals().get('dw_end_age', 'OO')                               
+                dw_end_age   = locals().get('dw_end_age', 'OO')  
+
+                # 🚨 [추가 방어막] 세운/월운 변수 누락 에러 원천 차단 (이 4줄을 추가하십시오)
+                past_months_html = locals().get('past_months_html', '')
+                curr_y_ganji     = locals().get('curr_y_ganji', 'OO')
+                cur_wol_g        = locals().get('cur_wol_g', 'O')
+                cur_wol_j        = locals().get('cur_wol_j', 'O')                             
 
                 prompt = f"""
 {db_header}
