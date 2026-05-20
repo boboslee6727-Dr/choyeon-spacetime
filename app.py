@@ -9,14 +9,18 @@ import ephem
 import google.generativeai as genai
 import streamlit.components.v1 as components
 
-# 🎯 [수정] 구글 드라이브 경로를 삭제하고, 로컬 상대 경로로 변경합니다.
+# 🎯 [수정] 실행 환경에 구애받지 않도록 파일의 절대 경로를 자동 조립합니다.
 try:
-    # app.py와 같은 위치에 choyeon_db.json이 있어야 합니다.
-    with open("choyeon_db.json", 'r', encoding='utf-8') as f:
+    # app.py가 있는 폴더 위치를 자동으로 찾아내어 경로를 고정합니다.
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(current_dir, "choyeon_db.json")
+
+    with open(db_path, 'r', encoding='utf-8') as f:
         choyeon_db = json.load(f)
+
 except Exception as e:
-    # 오류가 나면 왜 안 되는지 화면에 표시하도록 st.error를 추가했습니다.
-    st.error(f"DB 파일 로드 실패: {e}")
+    # 오류 발생 시 시도했던 구체적인 경로와 원인을 화면에 표시합니다.
+    st.error(f"DB 파일 로드 실패: {e}\n(시도한 경로: {db_path})")
     choyeon_db = {"wolryeong": {}, "ilju": {}}
 
 # ==============================================================================
@@ -954,20 +958,38 @@ if btn_single:
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                # 1. 박사님 DB가 정상 로드되었는지 확인하는 디버그 정보
-                db_keys = list(choyeon_db.keys()) if choyeon_db else []
-                w_sample = list(choyeon_db.get("wolryeong", {}).keys())[:2] if choyeon_db else "없음"
+                # ==============================================================================
+                # 🎯 [데이터 매칭 및 추출 로직] 
+                # ==============================================================================
                 
-                # 2. 박사님이 넘겨주신 ms, mb 변수 확인
-                debug_val = f"변수확인: ms={ms}, mb={mb}"
+                # 1. 10천간/12지지 상호 매핑 (한글<->한자 완벽 대응)
+                H2C_GAN = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
+                H2C_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
+                C2H_GAN = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계'}
+                C2H_JI = {'子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
+
+                # 2. 박사님 변수(ms, mb 등)가 한자든 한글이든 분리하여 완벽한 세트 생성
+                # 예: ms가 '乙'로 들어오면 w_hangul은 '을', w_hanja는 '乙'이 됩니다.
+                w_hangul = f"{C2H_GAN.get(ms, ms)}{C2H_JI.get(mb, mb)}"
+                w_hanja  = f"{H2C_GAN.get(ms, ms)}{H2C_JI.get(mb, mb)}"
                 
-                # 3. 강제 출력
+                i_hangul = f"{C2H_GAN.get(ds, ds)}{C2H_JI.get(db, db)}"
+                i_hanja  = f"{H2C_GAN.get(ds, ds)}{H2C_JI.get(db, db)}"
+
+                # 3. 박사님 JSON의 키와 100% 일치하는 문자열 조립
+                w_key = f"{w_hangul}({w_hanja})월"
+                i_key = f"{i_hangul}({i_hanja})"
+
+                # 4. 데이터 인출
+                w_core = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터를 찾지 못했습니다")
+                i_core = choyeon_db.get("ilju", {}).get(i_key, "데이터를 찾지 못했습니다")
+
+                # 5. 결과 출력
                 choyeon_golden_text = f"""
-<div style='background-color: #f8d7da; padding: 15px; border: 1px solid #f5c6cb;'>
-    <p><b>[디버그 정보]</b></p>
-    <p>DB구조: {db_keys}</p>
-    <p>DB월령샘플: {w_sample}</p>
-    <p>{debug_val}</p>
+<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+    <p style='text-indent: 15px; margin-bottom: 0;'>
+        <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
+    </p>
 </div>
 """
 
