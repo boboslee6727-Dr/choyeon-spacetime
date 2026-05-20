@@ -1109,14 +1109,14 @@ choyeon_golden_text = f"""
 """
 
 # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅
-    db_header = (
-        f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
-        "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
-        f"- 내담자 성함: {disp_name}\n"
-        f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
-        f"- 혼인 여부: {u_marital}\n"
-        f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
-    )
+db_header = (
+    f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
+    "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
+    f"- 내담자 성함: {disp_name}\n"
+    f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
+    f"- 혼인 여부: {u_marital}\n"
+    f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
+)
 
     prompt = f"""
     {db_header}
