@@ -951,54 +951,52 @@ if btn_single:
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                # 🎯 [스마트 추출] 한글/괄호 무시하고 핵심 한자만으로 100% 매칭
-                w_key_hanja = f"{ms}{mb}"
-                i_key_hanja = f"{ds}{db}"
+                # 🎯 1. 천간/지지 한글 매핑 딕셔너리 (정확한 JSON Key 조립용)
+                GAN_HAN = {'甲':'갑', '乙':'을', '丙':'병', '丁':'정', '戊':'무', '己':'기', '庚':'경', '辛':'신', '壬':'임', '癸':'계'}
+                JI_HAN = {'子':'자', '丑':'축', '寅':'인', '卯':'묘', '辰':'진', '巳':'사', '午':'오', '未':'미', '申':'신', '酉':'유', '戌':'술', '亥':'해'}
                 
-                w_core = "시공간 데이터 준비 중"
-                for k, v in choyeon_db.get("wolryeong", {}).items():
-                    if w_key_hanja in k:
-                        w_core = v
-                        break
-                        
-                i_core = "데이터 준비 중"
-                for k, v in choyeon_db.get("ilju", {}).items():
-                    if i_key_hanja in k:
-                        i_core = v
-                        break
-                        
-                # 🎯 [Ver 509 핵심] 격국 문장을 제거하고 시공간 데이터만 남김
+                # 🎯 2. 토씨 하나 틀리지 않는 정확한 키(Key) 문자열 조립
+                w_key = f"{GAN_HAN.get(ms, ms)}{JI_HAN.get(mb, mb)}({ms}{mb})월" # 예: 을축(乙丑)월
+                i_key = f"{GAN_HAN.get(ds, ds)}{JI_HAN.get(db, db)}({ds}{db})"   # 예: 계해(癸亥)
+                
+                # 🎯 3. 반복문 없이 단번에 데이터 추출
+                w_core = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터를 찾지 못했습니다")
+                i_core = choyeon_db.get("ilju", {}).get(i_key, "데이터를 찾지 못했습니다")
+                
+                # 🎯 4. 박사님의 핵심 데이터 문장 (격국 제거, 순수 시공간/성품만 유지)
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 0;'>
-        <b>{u_name}</b>님은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
+        <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
     </p>
 </div>
 """
+
+                # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅
                 db_header = (
                     f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
                     "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
-                    "1. 모든 해설과 조언은 내담자의 연령과 성별에 맞추어 현대적인 구어체로 작성하십시오.\n"
-                    "2. 내담자가 이해하기 어려운 한자어나 전문 명리 용어를 본문 에세이에 직접 노출하지 마십시오.\n"
                     f"- 내담자 성함: {disp_name}\n"
                     f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
                     f"- 혼인 여부: {u_marital}\n"
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                 )
 
-                # 🎯 [프롬프트 수정] 마커는 그대로 두고, 그 밑에 AI가 격국 에세이를 쓰도록 지시합니다.
                 prompt = f"""
 {db_header}
 
 [문단 통제 명령]
 1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
 2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
-3. 아래의 기호가 들어간 문장은 지정된 태그 템플릿을 토씨 하나 틀리지 말고 복사해서 쓰십시오!
-   <span class='sub-title'>1) 겉으로 드러난 성격</span>
-   <span class='sub-title'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-   <span class='sub-title'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
-   <span class='sub-title'>◈ 나를 돕는 에너지와 색상:</span>
+3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(19px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
+   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
+   <span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
 4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
+5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
+6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
+7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유(예: 넓은 들판 등)를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상(예: 언 땅 위의 새싹 등) 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
 
 [내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
@@ -1007,20 +1005,25 @@ if btn_single:
 [통변 지시]
 - 모든 명리 용어는 대중이 이해하기 쉬운 현대적 구어체 표현 뒤에 괄호 형태로 병기하십시오.
 - 간지 표기 시 반드시 한자로 표기하십시오.
-- 격국 팩트: {gyukgook_detail} 
+- 격국 팩트: {gyukgook_detail}
 - 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
 - 일반신살: {shinsal_str} / 12신살: {s12_str}
 
 [출력 템플릿 - 절대 명령]
-(※ 주의: 아래 템플릿의 [CHOYEON_GOLDEN_TEXT_HERE] 등 괄호로 된 치환자는 절대 수정하거나 지우지 말고 그대로 출력하십시오. 파이썬이 그 위치에 데이터를 강제로 주입합니다.)
+(※ 주의: [CHOYEON_GOLDEN_TEXT_HERE] 치환자는 절대 수정/삭제하지 말고 그대로 출력하십시오. 파이썬이 데이터를 강제 주입합니다.)
+(※ 주의: 괄호로 묶인 '(※ AI 지시: ...)' 부분은 당신이 실제 분석 에세이로 교체하여 출력해야 하는 영역입니다.)
 
-<h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
-<span class='sub-title'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
+<span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 [CHOYEON_GOLDEN_TEXT_HERE]
-(※ AI 지시: 위 마커 기호 바로 아래부터, 당신이 제공받은 격국({gyukgook_detail})을 바탕으로 내담자의 삶의 무대와 기본 성향을 분석하는 에세이를 작성하십시오.)
-<span class='sub-title'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
-<span class='sub-title'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
+(※ AI 지시: 위 마커 기호 바로 아래부터, 제공된 격국({gyukgook_detail})을 바탕으로 내담자의 삶의 무대와 기본 성향을 '전통명리 물상론'에 입각해 알기 쉬운 구어체로 분석하는 에세이를 작성하십시오.)
+
+<span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</span>
+(※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
+
+<span class='sub-title' style='font-size: 19px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</span>
+(※ AI 지시: 원국 내의 합, 형, 충, 파, 해 및 진술축미의 작용을 분석하여 삶의 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하십시오.)
 </div>
 <h3 style='color:#1A237E;'>2. 성격</h3>
 <div class='content-box-loose'>
