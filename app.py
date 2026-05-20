@@ -221,6 +221,22 @@ def get_12_shinsal(year_ji, target_ji):
     s_idx = (list(JI).index(target_ji) - list(JI).index(s_map.get(year_ji, "巳")) + 12) % 12
     return ["겁살","재살","천살","지살","년살","월살","망신살","장성살","반안살","역마살","육해살","화개살"][s_idx]
 
+def get_samjae(year_ji, target_ji):
+    if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
+    # 삼재 공식: 띠(년지)를 기준으로 삼합의 충(沖) 방합 연도부터 3년간
+    s_map = {
+        '申': ['寅','卯','辰'], '子': ['寅','卯','辰'], '辰': ['寅','卯','辰'],
+        '亥': ['巳','午','未'], '卯': ['巳','午','未'], '未': ['巳','午','未'],
+        '寅': ['申','酉','戌'], '午': ['申','酉','戌'], '戌': ['申','酉','戌'],
+        '巳': ['亥','子','丑'], '酉': ['亥','子','丑'], '丑': ['亥','子','丑']
+    }
+    sj_list = s_map.get(year_ji, [])
+    if not sj_list: return "해당 없음"
+    if target_ji == sj_list[0]: return "들삼재"
+    elif target_ji == sj_list[1]: return "눌삼재"
+    elif target_ji == sj_list[2]: return "날삼재"
+    return "해당 없음"
+
 def get_gan_rel_all(idx, gans):
     me = gans[idx]; res = []
     if me in ["-", "?", " "]: return "-"
@@ -249,7 +265,7 @@ def get_ji_rel_set(me, target):
     if s == {'辰','巳'}: r.append("지망")
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
-def get_general_shinsal_filtered(idx, gans, jjis):
+def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     dc, mc, yc = gans[1], gans[2], gans[3]
     dj, mj, yj = jjis[1], jjis[2], jjis[3]
     cur_g, cur_j = gans[idx], jjis[idx]
@@ -286,6 +302,9 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     if gj in ["甲寅", "丙辰", "戊辰", "庚辰", "壬戌"]: ausp.append("일덕")
     # 5. 강인한 결단력과 무관의 기운 (불굴의 의지로 쟁취하는 성공)
     if gj in ["乙丑", "己巳", "癸酉"] and idx in [0, 1]: ausp.append("금신")
+    # 6. 건록을 양옆에서 호위하며 보이지 않는 도움을 주는 재물/귀인성
+    hyeop_map = {'甲':['丑','卯'], '乙':['寅','辰'], '丙':['辰','午'], '戊':['辰','午'], '丁':['巳','未'], '己':['巳','未'], '庚':['未','酉'], '辛':['申','戌'], '壬':['戌','子'], '癸':['亥','丑']}
+    if cur_j in hyeop_map.get(dc, []): ausp.append("협록")  
     
     ## 흉살
     # 1. [최악성 - 생사여탈/혈광사/극단적 기운] (생명과 가장 직결됨)
@@ -314,8 +333,8 @@ def get_general_shinsal_filtered(idx, gans, jjis):
     if gj in ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"]: evil.append("나체도화")
     if gj in ["甲午","丙寅","丁未","戊辰","庚戌","辛酉","壬子"]: evil.append("홍염살")
     if gj in ["甲寅", "乙卯", "丁未", "戊戌", "己未", "庚申", "辛酉", "癸丑"]: evil.append("음욕살")
-    if gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
-    if gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
+    if gender == "여성" and gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
+    if gender == "남성" and gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
 
     # 5. [심리 및 지연성 - 성격적 특이점/지체/구속]
     if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금") # 해결사 역할, 선견지명
@@ -808,7 +827,8 @@ if btn_single:
     if not u_name.strip(): st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
     elif u_product == "궁합" and not p_name.strip(): st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        spinner_msg = "초연 시공명리 사주풀이 분석 중..." if u_product == "개인사주" else "💕 두 분의 시공간을 교차하여 궁합을 분석 중입니다..."
+        ver_str = "ver 23.0"
+        spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({ver_str}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({ver_str}) 중....]"
         
         try:
             with open("/content/drive/MyDrive/choyeon-spacetime/choyeon_db.json", 'r', encoding='utf-8') as f:
@@ -863,11 +883,14 @@ if btn_single:
             if u_product == "개인사주":
                 components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
                 
+                # 🎯 [김집사 수정] 합충형파해 가로 줄눈 완전 소거 (0px solid transparent 강제)
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                    b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
-                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                    lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top:none !important;'>합충형파해</td>" if l_idx==0 else ""
+                    b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                    b_top = "0px solid transparent !important"
+                    
+                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                    lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important;'>합충형파해</td>" if l_idx==0 else ""
                     ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
                 disp_name = u_name if u_name.strip() else "홍길동"
@@ -890,14 +913,14 @@ if btn_single:
                 {ji_rel_rows}
                 <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
                 <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis)) if get_general_shinsal_filtered(i, gans, jjis) else '-'}</td>" for i in range(4)])}</tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, u_gender)) if get_general_shinsal_filtered(i, gans, jjis, u_gender) else '-'}</td>" for i in range(4)])}</tr>
                 </table>"""
                 
                 calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
 
                 gen_shinsal_list = []
                 for i in range(4):
-                    raw_tags = get_general_shinsal_filtered(i, gans, jjis)
+                    raw_tags = get_general_shinsal_filtered(i, gans, jjis, u_gender)
                     for tag in raw_tags:
                         if ">" in tag and "<" in tag: gen_shinsal_list.append(tag.split('>')[1].split('<')[0])
                 shinsal_str = ", ".join(list(dict.fromkeys(gen_shinsal_list))) if gen_shinsal_list else "특이 신살 없음"
@@ -932,8 +955,13 @@ if btn_single:
                 n_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; [일] {i_gong}</div></div>"
+                # 🎯 [김집사 추가] 올해 삼재 여부 계산 (태어난 해 yb 와 올해 지지 curr_y_ganji[1] 비교)
+                cur_samjae = get_samjae(yb, curr_y_ganji[1])
+                samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
+                # 🎯 [김집사 수정] 마스터 바에 삼재 항목 추가
+                master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} &nbsp;|&nbsp; [일] {i_gong}</div><div>🌪️ 올해 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
+               
                 daewun_info = []
                 un_html = f"<h3 style='color:#1A237E; margin-top:40px;'>11. 운의 흐름</h3><div style='margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
@@ -1224,8 +1252,9 @@ if btn_single:
                     f"- 내담자 성함: {disp_name}\n"
                     f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
                     f"- 혼인 여부: {u_marital}\n"
-                    f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"  # 👈 AI가 참고할 수 있게 헤더에도 꽂아줍니다!
+                    f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
+                    f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  # 👈 AI에게 올해 삼재 정보 전달
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
                 )
