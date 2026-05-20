@@ -1109,11 +1109,18 @@ if btn_single:
                 prompt = f"""
 {db_header}
 
+[AI 행동 강령: '형식은 철저히 억제하고, 통변은 자유롭게 해방한다']
+1. 🚨 [형식 절대 억제]: 아래 제공된 [완성형 출력 템플릿]의 대목차, 소목차 기호(1), 2), ▶, •, ◈), 그리고 HTML 폰트 태그는 단 한 글자도 훼손하지 말고 100% 똑같이 복사하여 출력하십시오.
+2. 🚨 [운의 흐름 억제]: 대운 통변 시 절대 여러 대운을 하나로 뭉뚱그리지 마십시오! 템플릿에 나열된 각 나이 구간마다 철저하게 분리하여 각각 독립적으로 분석을 기재하십시오.
+3. 🕊️ [통변의 해방]: 목차의 뼈대가 유지되는 한, 괄호 안의 (※ AI 통변 작성 구역)에서는 당신의 뛰어난 명리 분석력을 마음껏 발휘하십시오. 글자 수 제한 없이, 음양오행과 십성에 기반하여 깊이 있고 유려한 해설을 자유롭게 쏟아내십시오.
+4. 🚨 [금지 사항]: 쓸데없는 인사말, AI 특유의 요약("결론적으로"), 소설식 비유("넓은 들판의 한 마리 양")를 철저히 금지합니다. 내담자 호칭은 무조건 '{disp_name}님'만 사용하십시오.
+
 [문단 통제 명령]
 1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
 2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
 3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(22px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
    <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 감추어진 진짜 속마음</span>
    <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
    <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
    <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
@@ -1133,9 +1140,24 @@ if btn_single:
 - 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
 - 일반신살: {shinsal_str} / 12신살: {s12_str}
 
-[출력 템플릿 - 절대 명령]
-(※ 주의: [CHOYEON_GOLDEN_TEXT_HERE] 치환자는 절대 수정/삭제하지 말고 그대로 출력하십시오. 파이썬이 데이터를 강제 주입합니다.)
-(※ 주의: 괄호로 묶인 '(※ AI 지시: ...)' 부분은 당신이 실제 분석 에세이로 교체하여 출력해야 하는 영역입니다.)
+=======================================================
+[완성형 출력 템플릿 - 이 양식을 그대로 복사하여 괄호 내용만 채울 것!]
+
+[CHOYEON_GOLDEN_TEXT_HERE]
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+<p>(※ AI 통변 작성 구역: {disp_name}님의 겉으로 드러나는 사회적 성격을 일주와 월령을 바탕으로 심도 있게 분석할 것)</p>
+
+<span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 상세 분석 ({dw_start_age}세~{dw_end_age}세)</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운 통변:</span>
+<p>(※ AI 통변 작성 구역: 전반기 대운의 흐름을 분석할 것. 절대 뒷부분과 뭉뚱그리지 말 것)</p>
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_mid2_age}세~{dw_end_age}세 대운 통변:</span>
+<p>(※ AI 통변 작성 구역: 후반기 대운의 흐름을 별도로 심도 있게 분석할 것)</p>
+
+<span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
+<p>(※ AI 통변 작성 구역: 용희신을 바탕으로 행운의 색상, 방향 등을 자유롭고 풍부하게 조언할 것)</p>
+=======================================================
 """
                 try:
                     res = model.generate_content(prompt)
@@ -1151,15 +1173,17 @@ if btn_single:
 
                     report_1_full_html = f"""<div class='report-page'>
 
-<div class='vip-inset-frame' style='border-color:#1A237E;'>
-<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
-{info_h}
-{table_html}
-{master_bar_html}
-<div style='margin-top:20px;'>
+<div id='table-zone' style='margin-top: 15px; margin-bottom: 30px;'>
+{un_html}
+{se_html}
+{wol_html}
+</div>
+
+<div id='ai-zone'>
 {ai_text}
 {closing_html}
 </div>
+
 </div>
 </div>"""
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
