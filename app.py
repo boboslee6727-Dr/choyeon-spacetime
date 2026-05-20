@@ -829,11 +829,8 @@ if btn_single:
     if not u_name.strip(): st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
     elif u_product == "궁합" and not p_name.strip(): st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        # 🎯 [김집사 수정] 상단의 APP_VERSION을 자동으로 가져와 텍스트를 구성합니다.
+        # 🎯 [김집사 수정] APP_VERSION을 자동으로 가져와 텍스트 구성 (try 구문 '위'에 위치)
         spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({APP_VERSION}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({APP_VERSION}) 중....]"
-        
-        try:
-        spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({ver_str}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({ver_str}) 중....]"
         
         try:
             with open("/content/drive/MyDrive/choyeon-spacetime/choyeon_db.json", 'r', encoding='utf-8') as f:
