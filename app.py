@@ -1076,78 +1076,78 @@ choyeon_db = {
   }
 }
 
-# 2. 박사님의 변수(한자든 한글이든)를 오직 '한글'로만 통일하여 절대 실패하지 않게 만듭니다.
-C2H_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
-           '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
+    # 2. 박사님의 변수(한자든 한글이든)를 오직 '한글'로만 통일하여 절대 실패하지 않게 만듭니다.
+    C2H_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
+               '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
 
-# ms, mb, ds, db 변수 안전하게 한글로 통일
-w_gan_han = C2H_MAP.get(ms, ms)
-w_ji_han  = C2H_MAP.get(mb, mb)
-i_gan_han = C2H_MAP.get(ds, ds)
-i_ji_han  = C2H_MAP.get(db, db)
+    # ms, mb, ds, db 변수 안전하게 한글로 통일
+    w_gan_han = C2H_MAP.get(ms, ms)
+    w_ji_han  = C2H_MAP.get(mb, mb)
+    i_gan_han = C2H_MAP.get(ds, ds)
+    i_ji_han  = C2H_MAP.get(db, db)
 
-# 3. 데이터 강제 추출 (글자 두 개가 키워드 안에 들어있기만 하면 무조건 잡아옵니다)
-w_core = "시공간 데이터를 찾지 못했습니다"
-for key, val in choyeon_db["wolryeong"].items():
-    if w_gan_han in key and w_ji_han in key:
-        w_core = val
-        break
+    # 3. 데이터 강제 추출 (글자 두 개가 키워드 안에 들어있기만 하면 무조건 잡아옵니다)
+    w_core = "시공간 데이터를 찾지 못했습니다"
+    for key, val in choyeon_db["wolryeong"].items():
+        if w_gan_han in key and w_ji_han in key:
+            w_core = val
+            break
 
-i_core = "데이터를 찾지 못했습니다"
-for key, val in choyeon_db["ilju"].items():
-    if i_gan_han in key and i_ji_han in key:
-        i_core = val
-        break
+    i_core = "데이터를 찾지 못했습니다"
+    for key, val in choyeon_db["ilju"].items():
+        if i_gan_han in key and i_ji_han in key:
+            i_core = val
+            break
 
-# 4. 결과 출력
-choyeon_golden_text = f"""
-<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
-    <p style='text-indent: 15px; margin-bottom: 0;'>
-        <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
-    </p>
-</div>
-"""
+    # 4. 결과 출력
+    choyeon_golden_text = f"""
+    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+        <p style='text-indent: 15px; margin-bottom: 0;'>
+            <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
+        </p>
+    </div>
+    """
 
-                # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅
-                db_header = (
-                    f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
-                    "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
-                    f"- 내담자 성함: {disp_name}\n"
-                    f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
-                    f"- 혼인 여부: {u_marital}\n"
-                    f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
-                )
+    # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅
+    db_header = (
+        f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
+        "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
+        f"- 내담자 성함: {disp_name}\n"
+        f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
+        f"- 혼인 여부: {u_marital}\n"
+        f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
+    )
 
-                prompt = f"""
-{db_header}
+    prompt = f"""
+    {db_header}
 
-[문단 통제 명령]
-1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
-2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
-3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(22px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
-   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
-   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
-4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
-5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
-6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
-7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유(예: 넓은 들판 등)를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상(예: 언 땅 위의 새싹 등) 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
+    [문단 통제 명령]
+    1. 모든 통변 에세이 문장은 반드시 p 태그로 감싸십시오.
+    2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
+    3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(22px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
+       <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+       <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+       <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
+       <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
+    4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
+    5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
+    6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
+    7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유(예: 넓은 들판 등)를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상(예: 언 땅 위의 새싹 등) 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
 
-[내담자 맞춤형 정밀 타겟팅]
-- {age_prompt}
-- {gender_prompt}
+    [내담자 맞춤형 정밀 타겟팅]
+    - {age_prompt}
+    - {gender_prompt}
 
-[통변 지시]
-- 모든 명리 용어는 대중이 이해하기 쉬운 현대적 구어체 표현 뒤에 괄호 형태로 병기하십시오.
-- 간지 표기 시 반드시 한자로 표기하십시오.
-- 격국 팩트: {gyukgook_detail}
-- 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
-- 일반신살: {shinsal_str} / 12신살: {s12_str}
+    [통변 지시]
+    - 모든 명리 용어는 대중이 이해하기 쉬운 현대적 구어체 표현 뒤에 괄호 형태로 병기하십시오.
+    - 간지 표기 시 반드시 한자로 표기하십시오.
+    - 격국 팩트: {gyukgook_detail}
+    - 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
+    - 일반신살: {shinsal_str} / 12신살: {s12_str}
 
-[출력 템플릿 - 절대 명령]
-(※ 주의: [CHOYEON_GOLDEN_TEXT_HERE] 치환자는 절대 수정/삭제하지 말고 그대로 출력하십시오. 파이썬이 데이터를 강제 주입합니다.)
-(※ 주의: 괄호로 묶인 '(※ AI 지시: ...)' 부분은 당신이 실제 분석 에세이로 교체하여 출력해야 하는 영역입니다.)
+    [출력 템플릿 - 절대 명령]
+    (※ 주의: [CHOYEON_GOLDEN_TEXT_HERE] 치환자는 절대 수정/삭제하지 말고 그대로 출력하십시오. 파이썬이 데이터를 강제 주입합니다.)
+    (※ 주의: 괄호로 묶인 '(※ AI 지시: ...)' 부분은 당신이 실제 분석 에세이로 교체하여 출력해야 하는 영역입니다.)
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
