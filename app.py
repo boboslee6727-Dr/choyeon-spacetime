@@ -9,10 +9,12 @@ import ephem
 import google.generativeai as genai
 import streamlit.components.v1 as components
 
+# 🎯 [버전 컨트롤 타워] 여기서 한 번만 수정하면 전체가 자동 변경됩니다!
+APP_VERSION = "Ver 25.0"
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
 # ==============================================================================
-st.set_page_config(page_title="초연 시공명리 사주풀이 Ver 25.0", layout="wide")
+st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
 
 st.markdown("""
 <style>
@@ -740,7 +742,7 @@ class UniversalPrintableGunghap:
 # ==============================================================================
 with st.sidebar:
     st.title("🏮초연 시공명리 연구소")
-    st.caption("Ver 16.0 Master (15.0 Base + 509 Gunghap)")
+    st.caption(f"{APP_VERSION} Master (Base + Gunghap)")
     
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -827,7 +829,10 @@ if btn_single:
     if not u_name.strip(): st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
     elif u_product == "궁합" and not p_name.strip(): st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        ver_str = "ver 23.0"
+        # 🎯 [김집사 수정] 상단의 APP_VERSION을 자동으로 가져와 텍스트를 구성합니다.
+        spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({APP_VERSION}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({APP_VERSION}) 중....]"
+        
+        try:
         spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({ver_str}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({ver_str}) 중....]"
         
         try:
