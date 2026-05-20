@@ -954,29 +954,20 @@ if btn_single:
                     else:
                         past_months_html += f"<span class='sub-title'>• {curr_y}년 {m}월 ({g}{j}월):</span>\n"
 
-                # 1. 박사님의 JSON 데이터를 가져옵니다.
-                w_db = choyeon_db.get("wolryeong", {})
-                i_db = choyeon_db.get("ilju", {})
-
-                # 2. 강제 매칭 로직: DB의 모든 키를 뒤져서 현재 박사님의 ms, mb가 포함된 키를 찾습니다.
-                w_core = "시공간 데이터를 찾지 못했습니다"
-                for key, val in w_db.items():
-                    if ms in key and mb in key:
-                        w_core = val
-                        break
-
-                i_core = "데이터를 찾지 못했습니다"
-                for key, val in i_db.items():
-                    if ds in key and db in key:
-                        i_core = val
-                        break
-
-                # 3. 결과 출력
+                # 1. 박사님 DB가 정상 로드되었는지 확인하는 디버그 정보
+                db_keys = list(choyeon_db.keys()) if choyeon_db else []
+                w_sample = list(choyeon_db.get("wolryeong", {}).keys())[:2] if choyeon_db else "없음"
+                
+                # 2. 박사님이 넘겨주신 ms, mb 변수 확인
+                debug_val = f"변수확인: ms={ms}, mb={mb}"
+                
+                # 3. 강제 출력
                 choyeon_golden_text = f"""
-<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
-    <p style='text-indent: 15px; margin-bottom: 0;'>
-        <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
-    </p>
+<div style='background-color: #f8d7da; padding: 15px; border: 1px solid #f5c6cb;'>
+    <p><b>[디버그 정보]</b></p>
+    <p>DB구조: {db_keys}</p>
+    <p>DB월령샘플: {w_sample}</p>
+    <p>{debug_val}</p>
 </div>
 """
 
