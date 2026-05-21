@@ -1260,10 +1260,17 @@ if btn_single:
 
                     # 🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
-                    f"1. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성(예: 무인성일 경우)을 마치 있는 것처럼 지어내어 통변하지 마십시오.\n"
-                    f"2. 괄호 병기 금지: 에세이 작성 시 '(일주 공망)', '(년주 공망)', '(인성)' 등의 명리 용어나 한자를 괄호 안에 병기하는 행위를 엄격히 금지합니다.\n"
-                    f"3. 간지 추측 금지: 과거 월운 분석 시 '1월(丁丑월)'처럼 한자 간지를 임의로 추측해 적지 말고 오직 '1월:', '2월:' 로만 표기하십시오.\n"
-                    f"4. HTML 훼손 금지: 에세이 도중 </div> 태그를 임의로 닫거나 마크다운 기호를 남발하여 전체 레이아웃을 부수지 마십시오.\n"
+                    f"1. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성을 지어내지 마십시오.\n"
+                    f"2. 일반 용어 괄호 병기 금지: 명리 전문 용어(예: '(일주 공망)', '(인성)')는 괄호 병기를 금지합니다. 단, 아래 '3번 간지 표기 규칙'은 예외로 반드시 준수하십시오.\n"
+                    f"3. 운의 흐름 간지 표기 규칙 (★필수 지시):\n"
+                    f"   - 과거 대운 표기 시: 반드시 '• 3세~12세 (대운간지)대운:' 형태로 표기하십시오. (예: • 3세~12세 (갑자)대운:)\n"
+                    f"   - 현재 대운 표기 시: 반드시 '▶ 현재(대운간지) 대운 전반기 상세 분석 (나이)' 형태로 표기하십시오. (예: ▶ 현재(무오) 대운 전반기 상세 분석 (63세~67세))\n"
+                    f"   - 과거 세운 표기 시: 반드시 '• 연도(세운간지)년:' 형태로 표기하십시오. (예: • 2024(갑진)년:, • 2025(을사)년:)\n"
+                    f"   - 올해 세운 표기 시: 반드시 '▶ 올해(세운간지) 세운 전반기 상세 분석' 형태로 표기하십시오. (예: ▶ 올해(병오) 세운 전반기 상세 분석)\n"
+                    f"   - 과거 월운 표기 시: 반드시 '• 월(월운간지)월:' 형태로 표기하십시오. (예: • 1(기축)월:, • 2(경인)월:)\n"
+                    f"   - 현재 월운 표기 시: 반드시 '▶ 이번 달(월운간지) 전반기(날짜) 상세 분석' 형태로 표기하십시오. (예: ▶ 이번 달(계사월) 전반기(5일~19일) 상세 분석)\n"
+                    f"4. 마크다운 사용 전면 금지: 에세이 본문에 절대 마크다운 헤더 기호(#, ##, ###)나 글자 강조 기호(**)를 사용하지 마십시오. 레이아웃 박스가 파괴되므로 오직 일반 평문 텍스트로만 제목과 본문을 작성하십시오.\n"
+                    f"5. HTML 훼손 금지: 에세이 도중 </div> 태그를 임의로 닫지 마십시오.\n"
                 )
 
                 # 🎯 [초연 시공명리 육친관계 통제 로직]
@@ -1509,43 +1516,45 @@ if btn_single:
                     if un_html not in ai_text:
                         ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
                     
-                    # 🎯 [김집사·홍비서 목숨 건 실전 최종 절대 사수 버전]
-                    # 마커 오염 완벽 세척 및 표 내부 줄바꿈 박멸로 가로 정배열 소생
+                    # 🎯 [김집사·홍비서 실전 최종 완결판] 디테일 교정 및 박스 밀봉 작전
                     import re
 
-                    # [교정 1] ★핵심: 표 HTML 내부의 모든 줄바꿈(\n)을 공백으로 지워버립니다.
-                    # 이 조치로 마크다운 파서가 표 내부 구역을 쪼개어 세로로 찢어발기는 버그를 전면 차단합니다.
+                    # [교정 1] 표 HTML 내부의 모든 줄바꿈(\n)을 공백으로 지워버립니다. (세로 찢어짐 원천 차단)
                     un_html_clean = un_html.replace("\n", " ").replace("\r", "")
                     se_html_clean = se_html.replace("\n", " ").replace("\r", "")
                     wol_html_clean = wol_html.replace("\n", " ").replace("\r", "")
 
                     # [교정 2] AI 본문 내 프레임을 깨뜨리는 환각 태그 선제 정돈
                     clean_ai_text = ai_text
+                    clean_ai_text = re.sub(r'</div>', '', clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text = re.sub(r'<div[^>]*>', '', clean_ai_text, flags=re.IGNORECASE)
+                    
+                    # AI가 지시를 어기고 출력한 마크다운 기호(**, ###)가 둥근 박스를 터뜨리지 못하도록 완전 박멸 및 안전 HTML 변환
+                    clean_ai_text = clean_ai_text.replace("**", "")
+                    clean_ai_text = re.sub(r'\#+\s*(.*)', r'<span style="font-size: 16px; font-weight: bold; color: #1A237E; display: block; margin-top: 15px; margin-bottom: 5px;">\1</span>', clean_ai_text)
 
-                    # [교정 3] ★정밀 타격: 마커 주변에 AI가 붙인 마크다운 오염물(**, ###, _ 등)과 유령 공백을 통째로 청소
-                    # 표가 사각박스 안에서 웅장하게 가로로 안착하도록 가둠 디브(div)와 함께 안전하게 주입합니다.
+                    # [교정 3] 정규식 기반 마커 제자리 가로 표 치환
                     daeoun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{un_html_clean}</div>"
                     sewun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{se_html_clean}</div>"
                     wolwun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{wol_html_clean}</div>"
 
-                    # 마커 앞뒤에 붙은 마크다운 특수문자([\#\*\_\s]*)를 통째로 포함하여 대소문자 무시(IGNORECASE) 치환
-                    clean_ai_text, count_d = re.subn(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text, count_s = re.subn(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text, count_w = re.subn(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
 
-                    # 혹시 모를 구형/변형 마커([CHAM_...]) 포맷 기호까지 상호 이중 방어 치환 처리
                     clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_DAEOUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
                     clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_SEEUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
                     clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_WOLEUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
 
-                    # 🚨 [최종 보루 비상장치] 정말 본문에 마커가 단 하나도 매칭되지 않았을 때만 하단에 안전 출력
-                    if count_d == 0 and "table" not in clean_ai_text.lower():
-                        clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
+                    # 🚨 [박사님 하명 사항] 클로징 앞에 대/세/월운 표가 또다시 노출되던 기존의 비상 출력 코드를 완전히 삭제하여 중복을 차단했습니다.
 
-                    # [교정 4] 전체 알맹이(오염이 씻겨나간 본문 + 클로징 멘트)를 하나의 단일 나눔명조체 박스로 완전 밀봉
+                    # [교정 4] 스트림릿 파서의 박스 파괴 버그 방지용 개행 치환
+                    clean_ai_text = clean_ai_text.replace("\n", "<br>")
+
+                    # [교정 5] 전체 알맹이(오염이 완전히 제거된 본문 + 클로징 멘트)를 하나의 단일 나눔명조체로 완전 밀봉
                     full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
-                    # [교정 5] 완벽한 실전형 A4 둥근 사각박스 프레임(vip-inset-frame) 최종 조립
+                    # [교정 6] 완벽한 실전형 A4 둥근 사각박스 프레임 최종 조립
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
