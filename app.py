@@ -1296,11 +1296,11 @@ if btn_single:
 <p style='font-size: 18px; line-height: 1.8; margin-bottom: 20px;'>
     [CHOYEON_GOLDEN_TEXT_HERE]
 </p>
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-(※ AI 지시: 위 마커 자리에 삽입된 자의형상 문장의 의미를 이어받아 첫 문장을 전개하고, 이를 격국({gyukgook_detail})과 연결하여 분석하십시오.)
-<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
+(※ AI 지시: 위 자의형상 문장에 대해, 내담자의 사주 원국 글자(천간: {gan_info}, 지지: {ji_info})와 대조하여 **"왜 그러한 형상으로 해석되는지"** 그 명리학적 근거를 논리적으로 먼저 풀이하십시오. 그 후, 이를 격국({gyukgook_detail})과 연결하여 분석하십시오.)
+
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
 (※ AI 지시: 에세이 작성)
-<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미의 입/개고)</span>
+<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미의 입/개고)</span>
 (※ AI 지시: 에세이 작성)
 </div>
 
@@ -1385,13 +1385,14 @@ if btn_single:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
-                    # 🎯 [핵심] 여기서 박사님의 원본 문장을 AI가 출력한 마커 위치에 강제 주입합니다!
-                    ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", f"<p style='text-indent: 1em;'>{choyeon_golden_text}</p>")
+                    # 🎯 [김집사 수정 1] 프롬프트에 이미 <p> 태그 디자인이 있으므로, 여기서는 순수 텍스트만 깔끔하게 주입합니다!
+                    ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                     
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
+                    # 🎯 [김집사 수정 2] 만약 AI가 마커를 누락하여 비상 가동될 경우, 표가 최상단이 아닌 '문서 맨 아래'에 출력되도록 순서를 뒤집었습니다!
                     if un_html not in ai_text:
-                        ai_text = un_html + se_html + wol_html + "<div style='color:red;'>⚠️ 표 마커가 누락되었습니다.</div>" + ai_text
+                        ai_text = ai_text + "<div style='color:red; margin-top:30px;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
 
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
