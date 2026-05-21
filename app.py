@@ -1258,8 +1258,8 @@ if btn_single:
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
                 )
 
-                # 🎯 [초연 시공명리 특수부대급 정밀 육친 통제 로직]
-                if gender == "남" or gender == "남성":
+                # 🎯 [초연 시공명리 육친관계 통제 로직]
+                iif u_gender == '남성':
                     yukchin_rule = f"""
 🚨 [육친 통변 특수부대 절대 규칙 (남성용)]: 
 - 본 내담자는 남성(현재 상태: {marital_status})입니다. 아래의 명리학적 육친 생극제화 및 대체 규칙을 100% 엄수하십시오.
@@ -1542,11 +1542,11 @@ if btn_single:
                 tables_html = "<div class='report-page'><div class='vip-inset-frame'>"
                 tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:20px;'><h1 style='margin:0; color:#3E2723; font-weight: 900;'>🗝️ 두 사람의 사주 명조</h1></div>"
                 if u_gender == '남성':
-                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, "남명 원국")
-                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, "여명 원국")
+                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, "남성 원국")
+                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, "여성 원국")
                 else:
-                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, "남명 원국")
-                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, "여명 원국")
+                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, "남성 원국")
+                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, "여성 원국")
                 tables_html += "</div></div>"
                 
                 try:
