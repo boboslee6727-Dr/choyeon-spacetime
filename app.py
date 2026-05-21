@@ -10,7 +10,7 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 
 # 🎯 [버전 컨트롤 타워] 여기서 한 번만 수정하면 전체가 자동 변경됩니다!
-APP_VERSION = "Ver 26.0"
+APP_VERSION = "Ver 27.0"
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
 # ==============================================================================
@@ -1465,13 +1465,9 @@ if btn_single:
                     # 🎯 [어제 새벽의 완벽 복구 코드] AI의 환각을 100% 박살 내는 강제 주입 로직!
                     if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
                         # 1. AI가 말을 잘 듣고 마커를 남겨두었을 경우 (정상 치환)
-                        ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", f"<p style='font-siz
-
-
-e: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_golden_text}</p>")
+                        ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                     else:
-                        # 2. 🚨비상사태: AI가 마커를 지우고 제멋대로 서론(이병호님의 인생은...)을 지어냈을 경우!
-                        # '1) 타고난 삶의 무대' 앞부분을 찾아 AI의 헛소리를 통째로 도려냅니다.
+                        # 2. 🚨비상사태: AI가 마커를 지우고 제멋대로 서론을 지어냈을 경우!
                         target_marker = "1) 타고난 삶의 무대와 기본 성향"
                         if target_marker in ai_text:
                             parts = ai_text.split(target_marker)
@@ -1479,8 +1475,8 @@ e: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_gol
                             # 상단에서 <div class='content-box-loose'> 까지만 남기고 AI의 망발은 삭제!
                             if div_marker in parts[0]:
                                 top_clean = parts[0][:parts[0].find(div_marker) + len(div_marker)]
-                                # 깨끗해진 상단 + 박사님의 옥음(자의형상) + 다시 1) 항목 연결
-                                ai_text = top_clean + f"\n<p style='font-size: 18px; line-height: 1.8; margin-bottom: 18px; font-weight: bold;'>{choyeon_golden_text}</p>\n<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
+                                # 깨끗해진 상단 + 박사님의 옥음(순정 HTML) + 다시 1) 항목 연결
+                                ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
 
                     # 운의 흐름표 주입 로직
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
