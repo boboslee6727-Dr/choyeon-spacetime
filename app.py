@@ -1300,10 +1300,13 @@ if btn_single:
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
 (※ AI 지시: 위 자의형상 문장이 품고 있는 자연의 물상과 계절적 분위기를 부드럽게 이어받아 서론 에세이를 작성하십시오. 
 (※ AI 지시: 내담자의 격국({gyukgook_detail})을 바탕으로 사회적 무대와 기본 성향을 에세이로 작성하십시오.)
+🚨특히, 내담자의 핵심 재능(월지 지장간)이 어느 위치(연간, 월간, 시간)로 투출(뻗어 나갔는지)하였는지를 분석하여, 
+"나의 재능이 어느 시기에(조기/즉각/대기만성), 어느 정도 규모의 무대(전국구/직장/개인)에서 어떻게 발현되는지"를 일반인이 이해하기 쉬운 현대적 구어체로 아주 구체적으로 풀어서 조언하십시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
-(※ AI 지시: 에세이 작성)
+(※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미 입고와 개고)</span>
 (※ AI 지시: 천간의 합충과 지지의 합충형파해 및 지지가 진술축미인 경우 지장간을 포태법으로 상세히 분석하시오)
+(※ AI 지시: 대표적인 일반신살의 정의를 알기쉽게 설명하고 7궁위를 고려하여 설명하시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
@@ -1312,7 +1315,7 @@ if btn_single:
 (※ AI 지시: 일주와 격국을 중심으로 사회적, 표면적으로 드러나는 성격과 기질을 구체적이고 현대적인 구어체로 작성하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
-(※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제 등을 상세히 분석하십시오.)
+(※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제, 공망 등을 상세히 분석하십시오.)
 </div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
@@ -1373,14 +1376,14 @@ if btn_single:
 (※ AI 지시: 에세이 작성)
 </div>
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>13. 초연 시공명리 특별 개운 비법</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'> 🎯 초연 시공명리 특별 개운 비법</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 수호 천사의 기운:</span>
-(※ AI 지시: 에세이 작성)
+(※ AI 지시: 사주원국 및 운(시간)의 흐름에 따른 천을귀인과 길신 등의 작용에 대한 상세한 에세이를 작성하시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 백년해로의 기운:</span>
-(※ AI 지시: 에세이 작성)
+(※ AI 지시: 오행과 사주원국 및 운(시간)에 따른 합충형파해, 진술축미의 입고와 개고, 원진, 고란살, 일반신살 등 주의할 점에 대해 상세한 에세이를 작성하시오.) 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 기운:</span>
-(※ AI 지시: 운에서 들어오는 고신/과숙과 도화(연살)/망신/역마살 작용에 따른 변동과 변화의 상황을 짚어주고, 이에 대한 현명한 대응 방법을 조언할 것)
+(※ AI 지시: 운에 따른 고신(남명)/과숙(여명)과 도화(연살)/망신/역마살 작용에 따른 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하시오.)
 </div>
 """
                 try:
@@ -1390,7 +1393,10 @@ if btn_single:
                     # 🎯 [어제 새벽의 완벽 복구 코드] AI의 환각을 100% 박살 내는 강제 주입 로직!
                     if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
                         # 1. AI가 말을 잘 듣고 마커를 남겨두었을 경우 (정상 치환)
-                        ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", f"<p style='font-size: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_golden_text}</p>")
+                        ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", f"<p style='font-siz
+
+
+e: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_golden_text}</p>")
                     else:
                         # 2. 🚨비상사태: AI가 마커를 지우고 제멋대로 서론(이병호님의 인생은...)을 지어냈을 경우!
                         # '1) 타고난 삶의 무대' 앞부분을 찾아 AI의 헛소리를 통째로 도려냅니다.
