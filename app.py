@@ -1242,6 +1242,19 @@ if btn_single:
                 curr_y_ganji     = locals().get('curr_y_ganji', 'OO')
                 cur_wol_g        = locals().get('cur_wol_g', 'O')
                 cur_wol_j        = locals().get('cur_wol_j', 'O')                             
+                
+                # 🎯 [김집사 작정] AI에게 넘겨줄 현재 내담자의 오행병리 및 심리유형 매핑
+                curr_patho = m_patho if u_gender == "남성" else f_patho
+                curr_psy = m_psy if u_gender == "남성" else f_psy
+
+                # 이 아랫줄에 기존 db_header 코드가 이어집니다.
+                db_header = (
+                    f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
+                       "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
+                    f"- 내담자 성함: {disp_name}\n"
+                    f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
+                    f"- marital_status: {u_marital}\n"
+                
 
                 # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅
                 db_header = (
@@ -1255,6 +1268,9 @@ if btn_single:
                     f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  # 👈 AI에게 올해 삼재 정보 전달
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
+                    f"- 오행 과다에 따른 고유 병리(태과) 팩트: {curr_patho}\n"
+                    f"- 일간 기준 타고난 정신적 심리 유형 팩트: {curr_psy}성향\n"
+
                     # 👇 여기서부터 김집사의 환각 척살 지시문 추가!
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
                     f"1. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성(예: 무인성일 경우)을 마치 있는 것처럼 지어내어 통변하지 마십시오.\n"
@@ -1506,9 +1522,19 @@ if btn_single:
                     if un_html not in ai_text:
                         ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
                     
-                    # 👇 [김집사 작전 투입] 출력 함수가 무엇이든 상관없이, 여기서 ai_text 자체를 나눔명조체 장갑차로 영구 밀봉해 버립니다! 👇
-                    ai_text = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif;'>\n{ai_text}\n</div>"
+                    # 🛠️ [김집사 특공대 작전] AI가 제멋대로 닫아버린 깨진 태그를 청소합니다.
+                    ai_text = ai_text.replace("</div>", "")
                     
+                    # 🛠️ [김집사 특공대 작전 2] 클로징 멘트까지 싹 다 나눔명조체 장갑차 안으로 포획합니다.
+                    full_content_clean = f"""
+                    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>
+                        {ai_text}
+                        <br><br>
+                        {closing_html}
+                    </div>
+                    """
+                    
+                    # 🏗️ [A4 용지틀 재건축] 장갑차로 밀봉된 알맹이를 둥근 사각박스 정중앙에 안착시킵니다!
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
@@ -1517,15 +1543,12 @@ if btn_single:
 {master_bar_html}
 <div style='margin-top:20px;'>
 {intro_html}
-{ai_text}
-{closing_html}
+{full_content_clean}
 </div>
 </div>
 </div>"""
+
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
-                    
-                except Exception as e: 
-                    st.error(f"AI 연산 오류: {e}")
             # ------------------------------------------------------------------
             # [모드 2] 궁합 분석
             # ------------------------------------------------------------------
