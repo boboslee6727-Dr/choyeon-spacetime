@@ -1255,6 +1255,12 @@ if btn_single:
                     f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  # 👈 AI에게 올해 삼재 정보 전달
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
+                    # 👇 여기서부터 김집사의 환각 척살 지시문 추가!
+                    f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
+                    f"1. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성(예: 무인성일 경우)을 마치 있는 것처럼 지어내어 통변하지 마십시오.\n"
+                    f"2. 괄호 병기 금지: 에세이 작성 시 '(일주 공망)', '(년주 공망)', '(인성)' 등의 명리 용어나 한자를 괄호 안에 병기하는 행위를 엄격히 금지합니다.\n"
+                    f"3. 간지 추측 금지: 과거 월운 분석 시 '1월(丁丑월)'처럼 한자 간지를 임의로 추측해 적지 말고 오직 '1월:', '2월:' 로만 표기하십시오.\n"
+                    f"4. HTML 훼손 금지: 에세이 도중 </div> 태그를 임의로 닫거나 마크다운 기호를 남발하여 전체 레이아웃을 부수지 마십시오.\n"
                 )
 
                 # 🎯 [초연 시공명리 육친관계 통제 로직]
@@ -1491,15 +1497,18 @@ if btn_single:
                                 # 깨끗해진 상단 + 박사님의 옥음(순정 HTML) + 다시 1) 항목 연결
                                 ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
 
-                    # 🎯 [김집사의 운의 흐름 표 제자리 찾아주기 작전 - 최신 마커 반영]
-                    ai_text = ai_text.replace("[CHAM_DAEOUN_TABLE_HERE]", un_html)
-                    ai_text = ai_text.replace("[CHAM_SEEUN_TABLE_HERE]", se_html)
-                    ai_text = ai_text.replace("[CHAM_WOLEUN_TABLE_HERE]", wol_html)
+                    # 🎯 [운의 흐름표 정밀 타격 치환 - AI 실제 마커 반영]
+                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html)
+                    ai_text = ai_text.replace("[SEWUN_TABLE_HERE]", se_html)
+                    ai_text = ai_text.replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
-                    # 🚨 표 누락 비상장치 (AI가 또 마커를 지웠을 최악의 경우, 표가 맨 밑으로 깔리도록)
+                    # 🚨 표 누락 비상장치 (표가 맨 밑으로 깔리도록)
                     if un_html not in ai_text:
                         ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
-
+                    
+                    # 👇 [김집사 작전 투입] 출력 함수가 무엇이든 상관없이, 여기서 ai_text 자체를 나눔명조체 장갑차로 영구 밀봉해 버립니다! 👇
+                    ai_text = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif;'>\n{ai_text}\n</div>"
+                    
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
