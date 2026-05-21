@@ -1509,26 +1509,45 @@ if btn_single:
                     if un_html not in ai_text:
                         ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
                     
-                    # 🎯 [김집사 목숨 걸고 전면 수정] 운의 흐름표 소생 및 코드 노출 원천 차단
-                    
-                    # [교정 1] ★반드시 표를 꽂기 '전'에 AI 본문의 stray </div>만 골라 깨끗이 청소합니다. (표 파괴 방지)
-                    ai_text = ai_text.replace("</div>", "")
-                    
-                    # [교정 2] 이제 깨끗해진 본문에 대운, 세운, 월운 표를 안전하게 이식합니다. (정상 가로 배열 복구)
-                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html)
-                    ai_text = ai_text.replace("[SEWUN_TABLE_HERE]", se_html)
-                    ai_text = ai_text.replace("[WOLWUN_TABLE_HERE]", wol_html)
-                    
-                    # 🚨 표 누락 비상장치 (마커 누락 시 맨 밑으로 방어)
-                    if un_html not in ai_text:
-                        ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
+                    # 🎯 [김집사·홍비서 목숨 건 실전 최종 절대 사수 버전]
+                    # 마커 오염 완벽 세척 및 표 내부 줄바꿈 박멸로 가로 정배열 소생
+                    import re
 
-                    # [교정 3] 코드 속살 노출을 막기 위해 탭 간격을 완전히 없애고 한 줄로 완벽 밀봉합니다.
-                    full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{ai_text}<br><br>{closing_html}</div>"
-                    
-                    # [교정 4] 스트림릿 마크다운 문법 오작동을 막기 위해 모든 HTML 기호를 좌측 벽에 완전히 밀착시킵니다.
+                    # [교정 1] ★핵심: 표 HTML 내부의 모든 줄바꿈(\n)을 공백으로 지워버립니다.
+                    # 이 조치로 마크다운 파서가 표 내부 구역을 쪼개어 세로로 찢어발기는 버그를 전면 차단합니다.
+                    un_html_clean = un_html.replace("\n", " ").replace("\r", "")
+                    se_html_clean = se_html.replace("\n", " ").replace("\r", "")
+                    wol_html_clean = wol_html.replace("\n", " ").replace("\r", "")
+
+                    # [교정 2] AI 본문 내 프레임을 깨뜨리는 환각 태그 선제 정돈
+                    clean_ai_text = ai_text
+
+                    # [교정 3] ★정밀 타격: 마커 주변에 AI가 붙인 마크다운 오염물(**, ###, _ 등)과 유령 공백을 통째로 청소
+                    # 표가 사각박스 안에서 웅장하게 가로로 안착하도록 가둠 디브(div)와 함께 안전하게 주입합니다.
+                    daeoun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{un_html_clean}</div>"
+                    sewun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{se_html_clean}</div>"
+                    wolwun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{wol_html_clean}</div>"
+
+                    # 마커 앞뒤에 붙은 마크다운 특수문자([\#\*\_\s]*)를 통째로 포함하여 대소문자 무시(IGNORECASE) 치환
+                    clean_ai_text, count_d = re.subn(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text, count_s = re.subn(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text, count_w = re.subn(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+
+                    # 혹시 모를 구형/변형 마커([CHAM_...]) 포맷 기호까지 상호 이중 방어 치환 처리
+                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_DAEOUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_SEEUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
+                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_WOLEUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+
+                    # 🚨 [최종 보루 비상장치] 정말 본문에 마커가 단 하나도 매칭되지 않았을 때만 하단에 안전 출력
+                    if count_d == 0 and "table" not in clean_ai_text.lower():
+                        clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
+
+                    # [교정 4] 전체 알맹이(오염이 씻겨나간 본문 + 클로징 멘트)를 하나의 단일 나눔명조체 박스로 완전 밀봉
+                    full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
+
+                    # [교정 5] 완벽한 실전형 A4 둥근 사각박스 프레임(vip-inset-frame) 최종 조립
                     report_1_full_html = f"""<div class='report-page'>
-<div class='vip-inset-frame' style='border-color:#1A237E;'>
+<div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
 {info_h}
 {table_html}
