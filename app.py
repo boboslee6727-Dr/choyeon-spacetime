@@ -1225,13 +1225,13 @@ if btn_single:
 
                 # 4. 결과 출력용 황금 텍스트 조립 (지장간 구조 분석 문장 추가)
                 choyeon_golden_text = f"""
-<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
         <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
     </p>
     <p style='text-indent: 15px; margin-bottom: 0;'>
-        또한 일지 지장간을 바탕으로 한 타고난 명조의 구조는 <b>[{s_name}]</b>이며, 이는 사회적으로 <b>'{s_type}'</b>으로 발현됩니다. 
-        본질적으로 <b>'{s_desc}'</b>하는 강력한 심리적 동인과 행동 패턴을 지니고 있습니다.
+        또한 타고난 내면의 심리적 기질은 사회적으로 '{social_type}'(으)로 발현됩니다. 
+        이는 본질적으로 '{core_pattern}'하는 강력한 행동 패턴을 지니고 있음을 의미합니다.
     </p>
 </div>
 """
@@ -1262,17 +1262,67 @@ if btn_single:
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
                 )
 
+                # 🎯 [초연 시공명리 특수부대급 정밀 육친 통제 로직]
+                if gender == "남" or gender == "남성":
+                    yukchin_rule = f"""
+🚨 [육친 통변 특수부대 절대 규칙 (남성용)]: 
+- 본 내담자는 남성(현재 상태: {marital_status})입니다. 아래의 명리학적 육친 생극제화 및 대체 규칙을 100% 엄수하십시오.
+1. 👨‍👩‍👦 [핵심 가족]: 
+   - 아내(부인) = 정재 (정재가 없으면 편재로 대체)
+   - 애인(여친) = 편재 (편재가 없으면 정재로 대체)
+   - 자녀 = 관성(정관/편관) 🚨(경고: 남명에서 '식상'을 자녀로 풀이하는 즉시 치명적 오류로 간주함!)
+2. 👵👴 [부모 및 조부모]: 
+   - 아버지 = 편재 (없으면 정재) / 어머니 = 정인 (없으면 편인)
+   - 조부(할아버지) = 편인 / 조모(할머니) = 상관
+3. 🏠 [처가 및 형제]: 
+   - 장모(처가) = 식상 (아내를 생하는 기운)
+   - 동성 형제(형/남동생) = 비견 / 이성 형제(누나/여동생) = 겁재
+4. 🚨 [상태별 호칭 맞춤형 타겟팅]: 내담자의 현재 혼인 상태({marital_status})를 반드시 반영하십시오. 
+   - 기혼: '현재 아내/배우자'로 칭할 것.
+   - 미혼: '미래의 아내/인연'으로 칭할 것.
+   - 🚨돌싱(이혼/사별): 절대 '현재 아내'라고 부르지 말고, '과거의 인연(전처)'에 대한 성찰이나 '새로운 인연(재혼운/애인)'을 맞이하는 조언으로 센스 있게 변환하여 카운슬링할 것.
+"""
+                else:
+                    yukchin_rule = f"""
+🚨 [육친 통변 특수부대 절대 규칙 (여성용)]: 
+- 본 내담자는 여성(현재 상태: {marital_status})입니다. 아래의 명리학적 육친 생극제화 및 대체 규칙을 100% 엄수하십시오.
+1. 👩‍❤️‍👨 [핵심 가족]: 
+   - 남편 = 정관 (정관이 없으면 편관으로 대체)
+   - 애인(남친) = 편관 (편관이 없으면 정관으로 대체)
+   - 자녀 = 식상(식신/상관) 🚨(경고: 여명에서 '관성'을 자녀로 풀이하는 즉시 치명적 오류로 간주함!)
+2. 👵👴 [부모 및 조부모]: 
+   - 아버지 = 편재 (없으면 정재) / 어머니 = 정인 (없으면 편인)
+   - 조부(외할아버지) = 편인 / 조모(외할머니) = 상관
+3. 🏠 [시댁 및 자매]: 
+   - 시어머니(시댁) = 재성 (남편을 생하는 기운)
+   - 동성 형제(언니/여동생) = 비견 / 이성 형제(오빠/남동생) = 겁재
+4. 🚨 [상태별 호칭 맞춤형 타겟팅]: 내담자의 현재 혼인 상태({marital_status})를 반드시 반영하십시오. 
+   - 기혼: '현재 남편/배우자'로 칭할 것.
+   - 미혼: '미래의 남편/인연'으로 칭할 것.
+   - 🚨돌싱(이혼/사별): 절대 '현재 남편'이라고 부르지 말고, '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운/애인)'을 맞이하는 조언으로 센스 있게 변환하여 카운슬링할 것.
+"""
+
                 prompt = f"""
 {db_header}
+
+[ 🚨종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
+(※ AI 지시: AI는 전체 에세이 작성 시 아래 원칙을 반드시 뼛속 깊이 새기고 준수하십시오.)
+1. 🚨명리 용어 순화: 격국, 비견, 식상, 관성, 조후, 용신, 희신 등의 딱딱한 한자어 전문 용어 남발을 엄격히 금지합니다.
+2. 직관적인 쉬운 해설: 부득이하게 명리 용어를 언급해야 할 경우, 반드시 일반인이 단번에 이해할 수 있는 일상적인 비유와 현대적 구어체로 부드럽게 풀어서 설명하십시오. 
+   - (잘못된 예: "비식관 구조로 관성이 용신입니다.") 
+   - (올바른 예: "자신의 재능을 발휘하여 스스로 명예를 쟁취하려는 심리적 기질을 가지고 있습니다.")
+3. 따뜻한 상담가 마인드: 명리학 강의를 하듯 가르치려 들지 말고, 내담자의 삶을 깊이 이해하고 어루만져 주는 친절하고 세련된 카운슬러의 어조(현대적 구어체)로 모든 글을 전개하십시오.
+4. 🚨[절대 성역]: 단, 문서 상단에 주입되는 '[CHOYEON_GOLDEN_TEXT_HERE]' (자의형상) 문장은 초연 박사의 고유한 선언문이므로 절대 이 지시의 영향을 받지 않으며, 부연 설명 없이 원문 그대로 100% 출력해야 합니다.
+5. 🚨 초연 시공명리 3대 관점의 입체적 풀이: 사주를 단편적으로 해석하지 마십시오. 모든 통변을 전개할 때는 반드시 1) 육친적 관점(주변 인간관계와 환경의 영향), 2) 심리적 관점(내담자 내면의 욕구, 동기, 스트레스), 3) 사회적 관점(직업적 성취, 재물, 현실적 결과)이라는 세 가지 차원을 유기적으로 융합하여 매우 심도 있고 입체적인 에세이를 작성하십시오.
 
 [문단 통제 명령]
 1. 모든 통변 에세이 문장은 반드시 <p style='text-indent: 1em;'> 태그로 감싸십시오.
 2. 적절한 지점에서는 반드시 단락 나누기를 집행하십시오.
-3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(22px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
-   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-   <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
-   <span class='sub-title' style='font-size: 22px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
+3. 🚨 모든 소목차(1), 2), ▶, •, ◈)에는 가독성을 위해 아래와 같이 폰트 크기(18px)를 강제하는 태그를 토씨 하나 틀리지 말고 적용하십시오!
+   <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+   <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
+   <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>• {dw_start_age}세~{dw_mid_age}세 대운:</span>
+   <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
 4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
 5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
 6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
@@ -1282,6 +1332,7 @@ if btn_single:
 [내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
 - {gender_prompt}
+{yukchin_rule}
 
 [통변 지시]
 - 모든 명리 용어는 대중이 이해하기 쉬운 현대적 구어체 표현 뒤에 괄호 형태로 병기하십시오.
@@ -1295,36 +1346,55 @@ if btn_single:
 <div class='content-box-loose'>
 [CHOYEON_GOLDEN_TEXT_HERE]
 (※ AI 지시: 위 마커 자리에 들어갈 문장은 초연 박사가 직접 작성한 절대적인 원문이므로 절대 건드리지 마십시오. 
-어떠한 부연 설명이나 사족도 덧붙이지 말고, 즉시 아래 '1) 타고난 삶의 무대와 기본 성향 (격국)' 분석으로 넘어가십시오.)
+어떠한 부연 설명이나 사족도 덧붙이지 말고, 즉시 아래 '1) 타고난 삶의 무대와 나의 주력 무기' 분석으로 넘어가십시오.)
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
-(※ AI 지시: 위 자의형상 문장이 품고 있는 자연의 물상과 계절적 분위기를 부드럽게 이어받아 서론 에세이를 작성하십시오. 
-(※ AI 지시: 내담자의 격국({gyukgook_detail})을 바탕으로 사회적 무대와 기본 성향을 에세이로 작성하십시오.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향</span>
+(※ AI 지시: 내담자의 사주구조({gyukgook_detail})를 바탕으로 사회적 무대와 기본 성향을 에세이로 작성하십시오.
 🚨특히, 내담자의 핵심 재능(월지 지장간)이 어느 위치(연간, 월간, 시간)로 투출(뻗어 나갔는지)하였는지를 분석하여, 
 "나의 재능이 어느 시기에(조기/즉각/대기만성), 어느 정도 규모의 무대(전국구/직장/개인)에서 어떻게 발현되는지"를 일반인이 이해하기 쉬운 현대적 구어체로 아주 구체적으로 풀어서 조언하십시오.)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
-(※ AI 지시: 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석 (합충형파해 및 진술축미 입고와 개고)</span>
-(※ AI 지시: 천간의 합충과 지지의 합충형파해 및 지지가 진술축미인 경우 지장간을 포태법으로 상세히 분석하시오)
-(※ AI 지시: 대표적인 일반신살의 정의를 알기쉽게 설명하고 7궁위를 고려하여 설명하시오.)
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
+(※ AI 지시: 사주팔자 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석</span>
+(※ AI 지시: 사주 원국의 합충형파해, 진술축미 입/개고, 일반신살 및 포태법의 명리적 원리를 철저히 분석하되, 표면적으로는 절대 전문 용어를 노출하지 마십시오. 
+오직 이 원리들을 바탕으로 내담자의 '전체적인 삶의 굴곡, 대인관계의 역동성, 직업적 변동성'에 초점을 맞추어 일반인이 이해하기 쉬운 구어체 에세이로 작성하십시오. 
+이성운/부부운에 대한 언급은 이곳에서 제외하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-(※ AI 지시: 일주와 격국을 중심으로 사회적, 표면적으로 드러나는 성격과 기질을 구체적이고 현대적인 구어체로 작성하십시오.)
+(※ AI 지시: 일주의 십성 및 십이운성과 십이신살을 중심으로 육친적, 심리적, 사회적, 표면적으로 드러나는 성격과 기질을 구체적이고 현대적인 구어체로 작성하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
 (※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제, 공망 등을 상세히 분석하십시오.)
 </div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>5. 적성·직업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>6. 결혼·자녀운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 사업운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 관직·명예운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>9. 재성운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>10. 건강운</h3><div class='content-box-loose'>(※ AI 지시: 에세이 작성)</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
+(※ AI 지시: 사주 원국의 연주·월주 및 인성과 비겁의 상태를 분석하여 에세이를 작성하십시오. 
+이때 1) 육친적으로 부모·형제와의 정서적 유대감과 덕의 유무를 살피고, 2) 심리적으로 이들이 내담자 내면의 자양분 혹은 결핍에 미친 영향을 진단하며, 3) 사회적으로 유년기 환경이 삶의 기반에 어떤 작용을 했는지 현대적 구어체로 친절하게 풀어내십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>
+(※ AI 지시: 인성과 식상의 관계, 관성의 통제력을 바탕으로 에세이를 작성하십시오. 1) 심리적으로 지적 호기심과 집중력의 방향성을 파악하고, 2) 육친적으로 학업 과정에서 주변 환경의 지지나 방해 요소를 보며, 3) 사회적으로 최종 학위나 전공이 현실적인 커리어와 어떻게 연결되는지 그 성패를 이해하기 쉽게 조언하십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>5. 적성·직업운</h3><div class='content-box-loose'>
+(※ AI 지시: 원국의 구조와 주력 에너지를 바탕으로 에세이를 작성하십시오. 1) 심리적으로 어떤 직무나 환경에서 가장 큰 성취감과 동기를 얻는지, 2) 사회적으로 탄탄한 조직(직장)형 기질인지 개인 독립(전문직/사업)형 기질인지를 짚어 구체적인 직업적 방향성을 제안하고, 3) 육친적인 대인관계 협업 스타일까지 종합하여 세련된 구어체로 작성하십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>6. 결혼·자녀운</h3><div class='content-box-loose'>
+(※ AI 지시: 일지와 시주, 재성/관성 및 식상의 동태를 분석하여 에세이를 작성하십시오. 1) 육친적으로 배우자 및 자녀 인연의 깊이와 형태를 살피고, 2) 심리적으로 내담자가 내면에서 바라는 이상적인 가정상과 정서적 정착 과정을 진단하며, 3) 사회적으로 가정을 꾸리는 것이 현실적 삶의 안정도에 미치는 변화를 카운슬러의 어조로 따뜻하게 서술하십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 재성운</h3><div class='content-box-loose'>
+(※ AI 지시: 재성의 유무와 상태, 식상의 생조 여부를 파악하여 에세이를 작성하십시오. 1) 심리적으로 돈과 물질을 대하는 가치관과 집착도를 진단하여 내담자 성향에 맞는 '재물 관리 스타일(투자형 vs 저축형)'을 정립해 주고, 2) 사회적으로 평생의 자산 규모와 경제적 성패의 흐름을 예측하며, 3) 육친적으로 재물로 인해 주변 사람들과 상생하거나 갈등하는 역동성을 조언하십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 사업운</h3><div class='content-box-loose'>
+(※ AI 지시: 식상생재의 흐름과 편재, 비겁의 조력 여부를 분석하여 에세이를 작성하십시오. 1) 심리적으로 위험을 감수하는 도전 정신과 시장을 읽는 직관력을 진단하고, 2) 사회적으로 독자적인 창업이나 사업체 운영의 적합성 및 규모 확장성을 예측하며, 3) 육친적으로 동업자, 직원, 고객을 끌어당기는 대인관계 리더십의 강점과 약점을 조언하십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>9. 관직·명예운</h3><div class='content-box-loose'>
+(※ AI 지시: 관인상생 및 정관/편관의 상태를 바탕으로 에세이를 작성하십시오. 1) 사회적으로 조직 내에서의 승진, 명예, 라이선스(자격증) 취득 및 감투운을 평가하고, 2) 심리적으로 권력이나 자존심을 추구하는 욕구와 책임감의 크기를 분석하며, 3) 육친적으로 윗사람이나 대중, 사회적 시스템으로부터 인정받는 흐름을 매끄러운 구어체로 서술하십시오.)
+</div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>10. 건강운</h3><div class='content-box-loose'>
+(※ AI 지시: 오행의 분포와 과다/과소, 그리고 계절적 조후의 균형 상태를 분석하여 에세이를 작성하십시오. 1) 심리적 스트레스나 과로가 취약한 신체 기관(질환)으로 발현되는 원리를 명리적 물상과 연결하여 경고하고, 2) 사회 활동을 건강하게 지속하기 위한 현실적인 에너지 관리법을 제시하며, 3) 육친적 환경이 내담자의 정서적 안정과 건강에 미치는 영향까지 고려하여 친절하게 서술하십시오.)
+</div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
@@ -1355,7 +1425,7 @@ if btn_single:
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 도트(•) 형태로 나열하여 1~2줄씩 요약하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지. 예: 2026년의 경우 • 1월(기축월): 내용...)
+(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지. 예: 2026년의 경우 • 1월(기축월): 내용...)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
 (※ AI 지시: 에세이 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
@@ -1381,9 +1451,11 @@ if btn_single:
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 수호 천사의 기운:</span>
 (※ AI 지시: 사주원국 및 운(시간)의 흐름에 따른 천을귀인과 길신 등의 작용에 대한 상세한 에세이를 작성하시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 백년해로의 기운:</span>
-(※ AI 지시: 오행과 사주원국 및 운(시간)에 따른 합충형파해, 진술축미의 입고와 개고, 원진, 고란살, 일반신살 등 주의할 점에 대해 상세한 에세이를 작성하시오.) 
+(※ AI 지시: 오행의 치우침, 원진, 고란살, 고신(남명), 과숙(여명) 등 이성 관계에 영향을 미치는 사주원국 및 운의 흐름을 분석하되, 전문 용어는 철저히 숨기십시오. 
+이곳에서는 오직 '부부 및 연인 관계에서 발생할 수 있는 성격적/상황적 갈등 요소'와 이를 슬기롭게 극복하고 백년해로하기 위한 
+'실질적이고 따뜻한 개운 비법(마음가짐, 소통 방식, 행동 요령 등)'에만 100% 초점을 맞추어 카운슬러의 어조로 작성하십시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 기운:</span>
-(※ AI 지시: 운에 따른 고신(남명)/과숙(여명)과 도화(연살)/망신/역마살 작용에 따른 역동성과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하시오.)
+(※ AI 지시: 운의 흐름에 따른 합형충파해와 진술축미의 입고와 개고, 도화(연살)/망신/역마살 작용에 따른 역동성과 재물과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하시오.)
 </div>
 """
                 try:
@@ -1400,7 +1472,7 @@ e: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_gol
                     else:
                         # 2. 🚨비상사태: AI가 마커를 지우고 제멋대로 서론(이병호님의 인생은...)을 지어냈을 경우!
                         # '1) 타고난 삶의 무대' 앞부분을 찾아 AI의 헛소리를 통째로 도려냅니다.
-                        target_marker = "1) 타고난 삶의 무대"
+                        target_marker = "1) 타고난 삶의 무대와 기본 성향"
                         if target_marker in ai_text:
                             parts = ai_text.split(target_marker)
                             div_marker = "<div class='content-box-loose'>"
@@ -1408,7 +1480,7 @@ e: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_gol
                             if div_marker in parts[0]:
                                 top_clean = parts[0][:parts[0].find(div_marker) + len(div_marker)]
                                 # 깨끗해진 상단 + 박사님의 옥음(자의형상) + 다시 1) 항목 연결
-                                ai_text = top_clean + f"\n<p style='font-size: 18px; line-height: 1.8; margin-bottom: 20px; font-weight: bold;'>{choyeon_golden_text}</p>\n<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
+                                ai_text = top_clean + f"\n<p style='font-size: 18px; line-height: 1.8; margin-bottom: 18px; font-weight: bold;'>{choyeon_golden_text}</p>\n<span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
 
                     # 운의 흐름표 주입 로직
                     ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
