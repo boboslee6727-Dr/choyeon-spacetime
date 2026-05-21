@@ -1516,45 +1516,59 @@ if btn_single:
                     if un_html not in ai_text:
                         ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
                     
-                    # 🎯 [김집사·홍비서 실전 최종 완결판] 디테일 교정 및 박스 밀봉 작전
+                    # 🎯 [프로모델 제1원칙] 논리적 인과관계에 기반한 마커 치환 및 레이아웃 밀봉 시스템 (줄/문단 간격 전면 개정판)
                     import re
 
-                    # [교정 1] 표 HTML 내부의 모든 줄바꿈(\n)을 공백으로 지워버립니다. (세로 찢어짐 원천 차단)
-                    un_html_clean = un_html.replace("\n", " ").replace("\r", "")
-                    se_html_clean = se_html.replace("\n", " ").replace("\r", "")
-                    wol_html_clean = wol_html.replace("\n", " ").replace("\r", "")
+                    # [단계 1] 표 데이터의 순정 HTML 구조 보존 (공백 및 줄바꿈을 건드리지 않고 원형 그대로 사용)
+                    raw_daeoun = un_html
+                    raw_sewun = se_html
+                    raw_wolwun = wol_html
 
-                    # [교정 2] AI 본문 내 프레임을 깨뜨리는 환각 태그 선제 정돈
-                    clean_ai_text = ai_text
-                    clean_ai_text = re.sub(r'</div>', '', clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text = re.sub(r'<div[^>]*>', '', clean_ai_text, flags=re.IGNORECASE)
-                    
-                    # AI가 지시를 어기고 출력한 마크다운 기호(**, ###)가 둥근 박스를 터뜨리지 못하도록 완전 박멸 및 안전 HTML 변환
-                    clean_ai_text = clean_ai_text.replace("**", "")
-                    clean_ai_text = re.sub(r'\#+\s*(.*)', r'<span style="font-size: 16px; font-weight: bold; color: #1A237E; display: block; margin-top: 15px; margin-bottom: 5px;">\1</span>', clean_ai_text)
+                    # [단계 2] 스트림릿 마크다운 엔진이 HTML 표를 일반 텍스트로 오인하는 것을 막기 위해,
+                    # 표 전후로 완벽히 독립된 트리플 행간(\n\n\n)과 중앙 정렬 컨테이너를 사슬처럼 엮어 줍니다.
+                    daeoun_block = f"\n\n\n<div class='table-wrapper' style='width:100%; overflow-x:auto; margin:25px 0;'>{raw_daeoun}</div>\n\n\n"
+                    sewun_block = f"\n\n\n<div class='table-wrapper' style='width:100%; overflow-x:auto; margin:25px 0;'>{raw_sewun}</div>\n\n\n"
+                    wolwun_block = f"\n\n\n<div class='table-wrapper' style='width:100%; overflow-x:auto; margin:25px 0;'>{raw_wolwun}</div>\n\n\n"
 
-                    # [교정 3] 정규식 기반 마커 제자리 가로 표 치환
-                    daeoun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{un_html_clean}</div>"
-                    sewun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{se_html_clean}</div>"
-                    wolwun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{wol_html_clean}</div>"
+                    # [단계 3] AI가 뱉어낸 본문(ai_text) 복사 및 대소문자/공백 무시 정규식 정밀 치환
+                    processed_text = ai_text
+                    processed_text = re.sub(r'\[\s*DAEWUN_TABLE_HERE\s*\]', daeoun_block, processed_text, flags=re.IGNORECASE)
+                    processed_text = re.sub(r'\[\s*SEWUN_TABLE_HERE\s*\]', sewun_block, processed_text, flags=re.IGNORECASE)
+                    processed_text = re.sub(r'\[\s*WOLWUN_TABLE_HERE\s*\]', wolwun_block, processed_text, flags=re.IGNORECASE)
 
-                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+                    # 구형/변형 마커([CHAM_...]) 포맷까지 2중 안전 장치 치환
+                    processed_text = re.sub(r'\[\s*CHAM_DAEOUN_TABLE_HERE\s*\]', daeoun_block, processed_text, flags=re.IGNORECASE)
+                    processed_text = re.sub(r'\[\s*CHAM_SEEUN_TABLE_HERE\s*\]', sewun_block, processed_text, flags=re.IGNORECASE)
+                    processed_text = re.sub(r'\[\s*CHAM_WOLEUN_TABLE_HERE\s*\]', wolwun_block, processed_text, flags=re.IGNORECASE)
 
-                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_DAEOUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_SEEUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
-                    clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_WOLEUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+                    # [단계 4] ★줄 간격 1.8 및 문단 하단 간격 14px 정밀 강제 설정
+                    # 사각 박스 내부의 모든 텍스트 요정들이 일정한 여백을 가지도록 전용 내부 스타일 캡슐을 장착합니다.
+                    integrated_content = f"""
+                    <style>
+                        .choyeon-text-container {{
+                            font-family: "Nanum Myeongjo", "바탕체", Batang, serif;
+                            font-size: 15px;
+                            line-height: 1.8 !important; /* 줄 간격 1.8 절대 고정 */
+                            color: #000000;
+                        }}
+                        .choyeon-text-container p, .choyeon-text-container div {{
+                            margin-bottom: 14px !important; /* 문단 간격 14px 균일 고정 */
+                            line-height: 1.8 !important;
+                        }}
+                        .choyeon-text-container br {{
+                            content: "";
+                            margin-top: 10px;
+                            display: block;
+                        }}
+                    </style>
+                    <div class='choyeon-text-container'>
+                        {processed_text}
+                        <br><br>
+                        {closing_html}
+                    </div>
+                    """
 
-                    # 🚨 [박사님 하명 사항] 클로징 앞에 대/세/월운 표가 또다시 노출되던 기존의 비상 출력 코드를 완전히 삭제하여 중복을 차단했습니다.
-
-                    # [교정 4] 스트림릿 파서의 박스 파괴 버그 방지용 개행 치환
-                    clean_ai_text = clean_ai_text.replace("\n", "<br>")
-
-                    # [교정 5] 전체 알맹이(오염이 완전히 제거된 본문 + 클로징 멘트)를 하나의 단일 나눔명조체로 완전 밀봉
-                    full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
-
-                    # [교정 6] 완벽한 실전형 A4 둥근 사각박스 프레임 최종 조립
+                    # [단계 5] 웅장한 오리지널 VIP 둥근 사각박스 프레임(vip-inset-frame) 완벽 재조립
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
@@ -1563,13 +1577,12 @@ if btn_single:
 {master_bar_html}
 <div style='margin-top:20px;'>
 {intro_html}
-{full_content_clean}
+{integrated_content}
 </div>
 </div>
 </div>"""
 
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
-                    
                 # 👇 [김집사 긴급 진압] 개인 사주의 try 울타리를 안전하게 닫아내어 에러를 원천 차단합니다!
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}") 
