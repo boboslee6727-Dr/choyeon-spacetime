@@ -1293,12 +1293,12 @@ if btn_single:
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
-<p style='font-size: 18px; line-height: 1.8; margin-bottom: 20px;'>
-    [CHOYEON_GOLDEN_TEXT_HERE]
-</p>
-(※ AI 지시: 위 자의형상 문장이 품고 있는 자연의 물상과 계절적 분위기를 부드럽게 이어받아 서론 에세이를 작성하십시오. 🚨주의: 사주 글자를 논리적으로 해체하여 설명하지 말 것. 또한 '격국'에 대한 언급은 절대 금지합니다.)
+[CHOYEON_GOLDEN_TEXT_HERE]
+(※ AI 지시: 위 마커 자리에 들어갈 문장은 초연 박사가 직접 작성한 절대적인 원문이므로 절대 건드리지 마십시오. 
+어떠한 부연 설명이나 사족도 덧붙이지 말고, 즉시 아래 '1) 타고난 삶의 무대와 기본 성향 (격국)' 분석으로 넘어가십시오.)
 
 <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향 (격국)</span>
+(※ AI 지시: 위 자의형상 문장이 품고 있는 자연의 물상과 계절적 분위기를 부드럽게 이어받아 서론 에세이를 작성하십시오. 🚨주의: 사주 글자를 논리적으로 해체하여 설명하지 말 것. 또한 '격국'에 대한 언급은 절대 금지합니다.)
 (※ AI 지시: 내담자의 격국({gyukgook_detail})을 바탕으로 사회적 무대와 기본 성향을 에세이로 작성하십시오.)
 <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형 (조후 및 억부 용신)</span>
 (※ AI 지시: 에세이 작성)
