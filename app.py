@@ -1509,19 +1509,24 @@ if btn_single:
                     if un_html not in ai_text:
                         ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
                     
-                    # 🛠️ [김집사 특공대 작전] AI가 제멋대로 닫아버린 깨진 태그를 청소합니다.
+                    # 🎯 [김집사 목숨 걸고 전면 수정] 운의 흐름표 소생 및 코드 노출 원천 차단
+                    
+                    # [교정 1] ★반드시 표를 꽂기 '전'에 AI 본문의 stray </div>만 골라 깨끗이 청소합니다. (표 파괴 방지)
                     ai_text = ai_text.replace("</div>", "")
                     
-                    # 🛠️ [김집사 특공대 작전 2] 클로징 멘트까지 싹 다 나눔명조체 장갑차 안으로 포획합니다.
-                    full_content_clean = f"""
-                    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>
-                        {ai_text}
-                        <br><br>
-                        {closing_html}
-                    </div>
-                    """
+                    # [교정 2] 이제 깨끗해진 본문에 대운, 세운, 월운 표를 안전하게 이식합니다. (정상 가로 배열 복구)
+                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html)
+                    ai_text = ai_text.replace("[SEWUN_TABLE_HERE]", se_html)
+                    ai_text = ai_text.replace("[WOLWUN_TABLE_HERE]", wol_html)
                     
-                    # 🏗️ [A4 용지틀 재건축] 장갑차로 밀봉된 알맹이를 둥근 사각박스 정중앙에 안착시킵니다!
+                    # 🚨 표 누락 비상장치 (마커 누락 시 맨 밑으로 방어)
+                    if un_html not in ai_text:
+                        ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
+
+                    # [교정 3] 코드 속살 노출을 막기 위해 탭 간격을 완전히 없애고 한 줄로 완벽 밀봉합니다.
+                    full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{ai_text}<br><br>{closing_html}</div>"
+                    
+                    # [교정 4] 스트림릿 마크다운 문법 오작동을 막기 위해 모든 HTML 기호를 좌측 벽에 완전히 밀착시킵니다.
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
