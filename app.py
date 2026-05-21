@@ -1243,11 +1243,15 @@ if btn_single:
                 cur_wol_g        = locals().get('cur_wol_g', 'O')
                 cur_wol_j        = locals().get('cur_wol_j', 'O')                             
                 
-# 🎯 [김집사 작정] AI에게 넘겨줄 현재 내담자의 오행병리 및 심리유형 매핑
+                # 🎯 [안전지대 배치] 이미 오행 병리 계산이 완전히 끝난 지점이므로 에러가 나지 않습니다.
                 curr_patho = m_patho if u_gender == "남성" else f_patho
                 curr_psy = m_psy if u_gender == "남성" else f_psy
 
-                # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅 (중복 제거 및 완벽 결합)
+                # 기존 db_header 텍스트 밑바닥에 오행병리와 심리 유형 팩트를 안전하게 연장 체결합니다.
+                db_header += f"- 오행 과다에 따른 고유 병리(태과) 팩트: {curr_patho}\n"
+                db_header += f"- 일간 기준 타고난 정신적 심리 유형 팩트: {curr_psy}성향\n"
+
+                # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅 (에러 유발 변수 제거하여 원상복구)
                 db_header = (
                     f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
                     "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
@@ -1256,11 +1260,9 @@ if btn_single:
                     f"- marital_status: {u_marital}\n"
                     f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
-                    f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  # 👈 AI에게 올해 삼재 정보 전달
+                    f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
-                    f"- 오행 과다에 따른 고유 병리(태과) 팩트: {curr_patho}\n"
-                    f"- 일간 기준 타고난 정신적 심리 유형 팩트: {curr_psy}성향\n"
 
                     # 👇 여기서부터 김집사의 환각 척살 지시문 추가!
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
