@@ -1491,12 +1491,14 @@ if btn_single:
                                 # 깨끗해진 상단 + 박사님의 옥음(순정 HTML) + 다시 1) 항목 연결
                                 ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
 
-                    # 운의 흐름표 주입 로직
-                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
+                    # 🎯 [김집사의 운의 흐름 표 제자리 찾아주기 작전 - 최신 마커 반영]
+                    ai_text = ai_text.replace("[CHAM_DAEOUN_TABLE_HERE]", un_html)
+                    ai_text = ai_text.replace("[CHAM_SEEUN_TABLE_HERE]", se_html)
+                    ai_text = ai_text.replace("[CHAM_WOLEUN_TABLE_HERE]", wol_html)
                     
-                    # 표 누락 비상장치 (표가 맨 밑으로 깔리도록)
+                    # 🚨 표 누락 비상장치 (AI가 또 마커를 지웠을 최악의 경우, 표가 맨 밑으로 깔리도록)
                     if un_html not in ai_text:
-                        ai_text = ai_text + "<div style='color:red; margin-top:30px;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
+                        ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
 
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E;'>
