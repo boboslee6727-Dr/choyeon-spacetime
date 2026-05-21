@@ -1229,10 +1229,6 @@ if btn_single:
     <p style='text-indent: 15px; margin-bottom: 5px;'>
         <b>{disp_name}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.
     </p>
-    <p style='text-indent: 15px; margin-bottom: 0;'>
-        또한 타고난 내면의 심리적 기질은 사회적으로 '{social_type}'(으)로 발현됩니다. 
-        이는 본질적으로 '{core_pattern}'하는 강력한 행동 패턴을 지니고 있음을 의미합니다.
-    </p>
 </div>
 """
 
