@@ -1500,15 +1500,10 @@ if btn_single:
                                 # 깨끗해진 상단 + 박사님의 옥음(순정 HTML) + 다시 1) 항목 연결
                                 ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
 
-                    # 🎯 [운의 흐름표 정밀 타격 치환 - AI 실제 마커 반영]
-                    ai_text = ai_text.replace("[DAEWUN_TABLE_HERE]", un_html)
-                    ai_text = ai_text.replace("[SEWUN_TABLE_HERE]", se_html)
-                    ai_text = ai_text.replace("[WOLWUN_TABLE_HERE]", wol_html)
-                    
-                    # 🚨 표 누락 비상장치 (표가 맨 밑으로 깔리도록)
-                    if un_html not in ai_text:
-                        ai_text = ai_text + "<div style='color:red; margin-top:30px; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</div>" + un_html + se_html + wol_html
-                    
+                    # ==============================================================================
+                    # 🚨 [김집사 수정] 중복 출력을 유발하던 구형 .replace() 코드는 과감히 삭제했습니다.
+                    # ==============================================================================
+
                     # 🎯 [김집사·홍비서 목숨 건 실전 최종 절대 사수 버전]
                     # 마커 오염 완벽 세척 및 표 내부 줄바꿈 박멸로 가로 정배열 소생
                     import re
