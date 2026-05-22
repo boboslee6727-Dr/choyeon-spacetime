@@ -938,7 +938,7 @@ if btn_single:
                 sewun_vaults = check_vault_status(base_gans_list, base_jjis_list, curr_y_ganji[1])
                 wolwun_vaults = check_vault_status(base_gans_list, base_jjis_list, cur_wol_j)
 
-                hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
+hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
                 hang_un_vaults_str = ", ".join(hang_un_vaults) if hang_un_vaults else "해당 없음"
 
                 age_prompt = ""
@@ -957,31 +957,29 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-# 🎯 [강제 DB 파일 생성/덮어쓰기 관리자 코드]
-if st.sidebar.button("🛠️ DB 파일 강제 생성/초기화"):
-    db_data = {
-        "wolryeong": {
-            # 여기에 박사님의 전체 JSON 데이터를 넣으십시오.
-            # (여백 없이 한 줄로 넣어도 되고, 가독성 있게 넣으셔도 됩니다.)
-            "甲子": "천둥번개 우뢰(甲)가 꽁꽁 얼어붙은 검은 연못(子)의 정적을 거세게 깨우는 완연한 한겨울",
-            # ... (전체 데이터를 여기에 복사해서 넣으십시오) ...
-        },
-        "ilju": {
-            "甲子": "검은 연못(子) 위에 울려 퍼지는 우레(甲)의 형상",
-            # ... (전체 데이터를 여기에 복사해서 넣으십시오) ...
-        },
-        "ilju_structure": {
-            "甲子": ["인성구조", "자기몰입형", "자의식 발달하여 발상의 전환이 빠르고 임사즉결"],
-            # ... (전체 데이터를 여기에 복사해서 넣으십시오) ...
-        }
-    }
-    with open('choyeon_db.json', 'w', encoding='utf-8-sig') as f:
-        json.dump(db_data, f, ensure_ascii=False, indent=4)
-    st.sidebar.success("✅ choyeon_db.json 파일이 성공적으로 생성되었습니다!")
-    st.rerun()
+                # 🎯 [강제 DB 파일 생성/덮어쓰기 관리자 코드] - 들여쓰기 완벽 수정 완료
+                if st.sidebar.button("🛠️ DB 파일 강제 생성/초기화"):
+                    db_data = {
+                        "wolryeong": {
+                            # 여기에 박사님의 전체 JSON 데이터를 넣으십시오.
+                            "甲子": "천둥번개 우뢰(甲)가 꽁꽁 얼어붙은 검은 연못(子)의 정적을 거세게 깨우는 완연한 한겨울",
+                            # ... (전체 데이터를 여기에 복사해서 넣으십시오) ...
+                        },
+                        "ilju": {
+                            "甲子": "검은 연못(子) 위에 울려 퍼지는 우레(甲)의 형상",
+                            # ... (전체 데이터를 여기에 복사해서 넣으십시오) ...
+                        },
+                        "ilju_structure": {
+                            "甲子": ["인성구조", "자기몰입형", "자의식 발달하여 발상의 전환이 빠르고 임사즉결"],
+                            # ... (전체 데이터를 여기에 복사해서 넣으십시오) ...
+                        }
+                    }
+                    with open('choyeon_db.json', 'w', encoding='utf-8-sig') as f:
+                        json.dump(db_data, f, ensure_ascii=False, indent=4)
+                    st.sidebar.success("✅ choyeon_db.json 파일이 성공적으로 생성되었습니다!")
+                    st.rerun()
 
                 # 🎯 [Ver 30.2: 박사님 지시사항(mb/db 키 검색) 반영]
-                
                 # 1. 키값 정제 (공백 제거 - 가장 흔한 원인입니다)
                 w_key = f"{ms}{mb}".strip()
                 i_key = f"{ds}{db}".strip()
@@ -996,11 +994,11 @@ if st.sidebar.button("🛠️ DB 파일 강제 생성/초기화"):
                 if "데이터 없음" in w_val:
                     st.sidebar.error("--- 월령 키 매칭 실패 정밀 분석 ---")
                     st.sidebar.write(f"1. 검색하려던 w_key의 정체: {repr(w_key)}")
-    
+                    
                     # DB에 있는 키 중 딱 하나만 뽑아서 정체를 확인
                     sample_db_key = list(choyeon_db.get("wolryeong", {}).keys())[0] if choyeon_db.get("wolryeong") else "DB텅빔"
                     st.sidebar.write(f"2. DB 안에 있는 키의 정체: {repr(sample_db_key)}")
-    
+                    
                     if len(w_key) != len(sample_db_key):
                         st.sidebar.warning("⚠️ 글자 수(길이)가 다릅니다!")
 
@@ -1014,9 +1012,7 @@ if st.sidebar.button("🛠️ DB 파일 강제 생성/초기화"):
                 dw_start_age = current_daewun_age
                 dw_mid_age   = current_daewun_age + 4
                 dw_mid2_age  = current_daewun_age + 5
-                dw_end_age   = current_daewun_age + 9  
-
-                past_months_html = locals().get('past_months_html', '')
+                dw_end_age   = current_daewun_age + 9                past_months_html = locals().get('past_months_html', '')
                 curr_y_ganji     = locals().get('curr_y_ganji', 'OO')
                 cur_wol_g        = locals().get('cur_wol_g', 'O')
                 cur_wol_j        = locals().get('cur_wol_j', 'O')                             
