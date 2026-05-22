@@ -963,19 +963,22 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
- # 🎯 [Ver 30.1 정밀 디버깅 및 데이터 추출]
+                # 🎯 [시스템의 실체를 확인하는 마지막 코드]
+                st.write(f"--- 시스템 내부 데이터 상태 ---")
+                st.write(f"1. choyeon_db의 타입: {type(choyeon_db)}")
+                if isinstance(choyeon_db, dict):
+                    st.write(f"2. choyeon_db의 최상위 키들: {list(choyeon_db.keys())}")
+                    if "wolryeong" in choyeon_db:
+                        st.write(f"3. wolryeong의 첫 3개 키: {list(choyeon_db['wolryeong'].keys())[:3]}")
+                else:
+                    st.write(f"2. 데이터가 딕셔너리가 아닙니다. 로드된 내용: {choyeon_db}")
+
+                # 🎯 [Ver 30.1 정밀 디버깅 및 데이터 추출]
                 w_key = f"{ms}{mb}".strip()
                 i_key = f"{ds}{db}".strip()
 
-# 강제 매칭 함수 (공백 및 불필요 문자 무시)
-                def force_match(db_dict, target_key):
-                    target = target_key.strip()
-                    for k, v in db_dict.items():
-                        if k.strip() == target:
-                            return v
-                    return None
                 
-# 데이터 추출
+                # 데이터 추출
                 w_val = force_match(choyeon_db.get("wolryeong", {}), w_key) or f"{w_key} (DB미등록)"
                 i_val = force_match(choyeon_db.get("ilju", {}), i_key) or f"{i_key} (DB미등록)"
                 
