@@ -963,14 +963,16 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-                # 🎯 [외부 JSON 데이터 직통 참조]
+# 🎯 [외부 JSON 데이터 직통 참조]
+                w_key = f"{ms}{mb}".strip()
+                i_key = f"{ds}{db}".strip()
 
-                # 1. 자의형상 데이터 추출.
-                w_key = f"{ms}{mb}"
-                i_key = f"{ds}{db}"
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, "")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, "")
 
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, "성품 데이터 없음")
+                # 데이터가 없을 경우 표시할 메시지
+                if not w_val: w_val = f"{w_key} (DB미등록)"
+                if not i_val: i_val = f"{i_key} (DB미등록)"
 
                 # 2. 일주 구조 데이터 추출
                 struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
