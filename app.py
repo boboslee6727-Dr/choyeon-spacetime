@@ -963,27 +963,20 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-
-
                 # 🎯 [외부 JSON 데이터 직통 참조]
 
                 # 1. 자의형상 데이터 추출.
-                # 🎯 [실제 데이터 로드 확인용]
-                st.write(f"시스템이 읽은 월령 데이터 키 리스트(일부): {list(choyeon_db['wolryeong'].keys())[:5]}")
-                st.write(f"현재 검색하려는 월령키: {w_key}")
-                st.write(f"현재 검색하려는 일주키: {i_key}")
+                w_key = f"{ms}{mb}"
+                i_key = f"{ds}{db}"
 
-                w_key = f"{ms}{mb}" # 예: 丙寅
-                i_key = f"{ds}{db}" # 예: 甲子
-               
                 w_val = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터 없음")
                 i_val = choyeon_db.get("ilju", {}).get(i_key, "성품 데이터 없음")
 
-                # 2. 일주 구조 데이터 추출 (리스트 형태로 즉시 분해)
+                # 2. 일주 구조 데이터 추출
                 struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
-                choyeon_golden_text = f"""
+                    choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
         <b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
