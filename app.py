@@ -972,7 +972,7 @@ if btn_single:
                 
                 # 일주 구조(ilju_structure) 데이터 추출 (3개 항목)
                 struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2
+                    s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2
 
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
