@@ -967,17 +967,22 @@ if btn_single:
                 w_key = f"{ms}{mb}".strip()
                 i_key = f"{ds}{db}".strip()
 
-                # 디버깅: 키와 DB의 실제 상태 확인
-                st.write(f"DEBUG: 생성된 월령키=[{w_key}], 일주키=[{i_key}]")
-                st.write(f"DEBUG: DB내 월령 키 리스트 일부: {list(choyeon_db.get('wolryeong', {}).keys())[:5]}")
+# 강제 매칭 함수 (공백 및 불필요 문자 무시)
+                def force_match(db_dict, target_key):
+                    target = target_key.strip()
+                    for k, v in db_dict.items():
+                        if k.strip() == target:
+                            return v
+                    return None
                 
-                # 데이터 추출
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, "성품 데이터 없음")
+# 데이터 추출
+                w_val = force_match(choyeon_db.get("wolryeong", {}), w_key) or f"{w_key} (DB미등록)"
+                i_val = force_match(choyeon_db.get("ilju", {}), i_key) or f"{i_key} (DB미등록)"
                 
-                # 일주 구조 데이터 추출
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                # 구조 데이터 추출
+                struct_data = force_match(choyeon_db.get("ilju_structure", {}), i_key) or ["구조 미상", "유형 미상", "성향 미상"]
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
