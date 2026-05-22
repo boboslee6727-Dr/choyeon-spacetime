@@ -973,17 +973,23 @@ if btn_single:
                 else:
                     st.write(f"2. 데이터가 딕셔너리가 아닙니다. 로드된 내용: {choyeon_db}")
 
-                # 🎯 [Ver 30.1 정밀 디버깅 및 데이터 추출]
-                w_key = f"{ms}{mb}".strip()
-                i_key = f"{ds}{db}".strip()
+                # 🎯 [김집사가 최종 정리한 데이터 조회 엔진]
+                import unicodedata
 
+                # 1. 키값 생성 및 정규화 (변수 ms, mb, ds, db가 정의된 직후 사용)
+                w_key = unicodedata.normalize('NFC', f"{ms}{mb}".strip())
+                i_key = unicodedata.normalize('NFC', f"{ds}{db}".strip())
+
+                # 2. 데이터 조회 (안전한 매칭)
+                wolryeong_data = {unicodedata.normalize('NFC', k.strip()): v for k, v in choyeon_db.get("wolryeong", {}).items()}
+                ilju_data = {unicodedata.normalize('NFC', k.strip()): v for k, v in choyeon_db.get("ilju", {}).items()}
+                struct_data_map = {unicodedata.normalize('NFC', k.strip()): v for k, v in choyeon_db.get("ilju_structure", {}).items()}
+
+                w_val = wolryeong_data.get(w_key, "시공간 데이터 없음")
+                i_val = ilju_data.get(i_key, "성품 데이터 없음")
                 
-                # 데이터 추출
-                w_val = force_match(choyeon_db.get("wolryeong", {}), w_key) or f"{w_key} (DB미등록)"
-                i_val = force_match(choyeon_db.get("ilju", {}), i_key) or f"{i_key} (DB미등록)"
-                
-                # 구조 데이터 추출
-                struct_data = force_match(choyeon_db.get("ilju_structure", {}), i_key) or ["구조 미상", "유형 미상", "성향 미상"]
+                # 3. 구조 데이터 조회
+                struct_data = struct_data_map.get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
                 choyeon_golden_text = f"""
