@@ -904,7 +904,7 @@ with st.sidebar:
     if u_product == "궁합":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
-        p_name = st.text_input("이름", value="", placeholder="최경원", key="p_n")
+        p_name = st.text_input("이름", value="", placeholder="이영희", key="p_n")
         p_gender_default = "여성" if u_gender == "남성" else "남성"
         p_gender = st.selectbox("성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default), key="p_g")
         p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], index=1, key="p_m_stat")
@@ -1551,17 +1551,12 @@ if btn_single:
                     # 마스터 바 HTML
                     master_bar = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap; margin-bottom: 20px;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
                     
-                    # 4. 자의형상 추출
-                    C2H_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계','子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
-                    w_gan_han, w_ji_han = C2H_MAP.get(ms, ms), C2H_MAP.get(mb, mb)
-                    i_gan_han, i_ji_han = C2H_MAP.get(ds, ds), C2H_MAP.get(db, db)
+                    # 4. 자의형상 추출 (개인 사주풀이와 100% 동일한 직결 매칭 로직)
+                    w_key = f"{ms}{mb}".strip()
+                    i_key = f"{ds}{db}".strip()
                     
-                    w_core = "시공간 데이터를 찾지 못했습니다"
-                    for key, val in choyeon_db.get("wolryeong", {}).items():
-                        if w_gan_han in key and w_ji_han in key: w_core = val; break
-                    i_core = "데이터를 찾지 못했습니다"
-                    for key, val in choyeon_db.get("ilju", {}).items():
-                        if i_gan_han in key and i_ji_han in key: i_core = val; break
+                    w_core = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터를 찾지 못했습니다")
+                    i_core = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 데이터를 찾지 못했습니다")
                             
                     # 사주팔자의 요약 HTML
                     summary_html = f"""
