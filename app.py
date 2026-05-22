@@ -966,7 +966,13 @@ if btn_single:
 
 
                 # 🎯 [외부 JSON 데이터 직통 참조]
+
                 # 1. 자의형상 데이터 추출.
+                # 🎯 [실제 데이터 로드 확인용]
+                st.write(f"시스템이 읽은 월령 데이터 키 리스트(일부): {list(choyeon_db['wolryeong'].keys())[:5]}")
+                st.write(f"현재 검색하려는 월령키: {w_key}")
+                st.write(f"현재 검색하려는 일주키: {i_key}")
+
                 w_key = f"{ms}{mb}" # 예: 丙寅
                 i_key = f"{ds}{db}" # 예: 甲子
                
