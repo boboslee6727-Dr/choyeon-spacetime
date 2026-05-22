@@ -963,19 +963,21 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-# 🎯 [외부 JSON 데이터 직통 참조]
+                # 🎯 [Ver 30.1 데이터 추출 로직: 유연 매칭 방식으로 변경]
                 w_key = f"{ms}{mb}".strip()
                 i_key = f"{ds}{db}".strip()
 
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, "")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, "")
+                # 1. 월령 추출 (정확한 매칭 대신 루프를 통해 유연하게 찾음)
+                wolryeong_db = choyeon_db.get("wolryeong", {})
+                w_val = next((val for key, val in wolryeong_db.items() if key.strip() == w_key), f"{w_key} (DB미등록)")
 
-                # 데이터가 없을 경우 표시할 메시지
-                if not w_val: w_val = f"{w_key} (DB미등록)"
-                if not i_val: i_val = f"{i_key} (DB미등록)"
+                # 2. 일주 추출
+                ilju_db = choyeon_db.get("ilju", {})
+                i_val = next((val for key, val in ilju_db.items() if key.strip() == i_key), f"{i_key} (DB미등록)")
 
-                # 2. 일주 구조 데이터 추출
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                # 3. 일주 구조 데이터 추출 (구조는 리스트이므로 똑같이 유연하게 처리)
+                struct_db = choyeon_db.get("ilju_structure", {})
+                struct_data = next((val for key, val in struct_db.items() if key.strip() == i_key), ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
