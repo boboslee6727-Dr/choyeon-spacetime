@@ -16,6 +16,17 @@ APP_VERSION = "Ver 30.1 (External DB Ref)"
 # 2. 페이지 설정
 st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
 
+# 🎯 [경로 및 파일 실체 확인용 정밀 디버그]
+st.write("--- [서버 파일 시스템 상태 점검] ---")
+st.write(f"1. 현재 작업 경로(CWD): {os.getcwd()}")
+st.write(f"2. 파일 찾기 시도 경로: {os.path.abspath('choyeon_db.json')}")
+st.write(f"3. 현재 폴더에 있는 모든 파일 목록: {os.listdir('.')}")
+
+if os.path.exists('choyeon_db.json'):
+    st.success("✅ choyeon_db.json 파일이 존재합니다.")
+else:
+    st.error("❌ choyeon_db.json 파일이 해당 경로에 없습니다.")
+
 # 3. 데이터 로드 (외부 파일 유지, 절대 경로 강제 적용)
 file_path = os.path.join(os.path.dirname(__file__), 'choyeon_db.json')
 choyeon_db = {"wolryeong": {}, "ilju": {}, "ilju_structure": {}}
