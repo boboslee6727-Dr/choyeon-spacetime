@@ -10,8 +10,11 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 import re
 
-import os
+# 1. 여기서 변수를 먼저 정의하십시오.
+APP_VERSION = "Ver 30.1 (External DB Ref)"
 
+# 2. 그 다음에 이 코드가 오면 정상 작동합니다.
+st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
 file_path = 'choyeon_db.json'
 if os.path.exists(file_path):
     file_size = os.path.getsize(file_path)
