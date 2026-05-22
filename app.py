@@ -1012,7 +1012,8 @@ if btn_single:
                 dw_start_age = current_daewun_age
                 dw_mid_age   = current_daewun_age + 4
                 dw_mid2_age  = current_daewun_age + 5
-                dw_end_age   = current_daewun_age + 9                past_months_html = locals().get('past_months_html', '')
+                dw_end_age   = current_daewun_age + 9
+                past_months_html = locals().get('past_months_html', '')
                 curr_y_ganji     = locals().get('curr_y_ganji', 'OO')
                 cur_wol_g        = locals().get('cur_wol_g', 'O')
                 cur_wol_j        = locals().get('cur_wol_j', 'O')                             
