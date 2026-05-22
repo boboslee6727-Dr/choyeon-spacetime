@@ -959,17 +959,22 @@ if btn_single:
 
                 # 🎯 [Ver 30.2: 박사님 지시사항(mb/db 키 검색) 반영]
                 
-                # 1. 키 정의 
-                w_key = f"{ms}{mb}"  # 예: "甲子"
-                i_key = f"{ds}{db}"  # 예: "甲子"
+                # 1. 키값 정제 (공백 제거 - 가장 흔한 원인입니다)
+                w_key = f"{ms}{mb}".strip()
+                i_key = f"{ds}{db}".strip()
 
-                # 2. 데이터 직접 조회 (JSON 내 해당 키로 즉시 매칭)
-                # 월령(wolryeong) 데이터 추출
-                w_val = choyeon_db.get("wolryeong", {""}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                
-                # 일주(ilju) 데이터 추출
-                i_val = choyeon_db.get("ilju", {""}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                
+                # 2. 데이터 추출 로직
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+
+                # 3. [디버그] 데이터가 안 나올 때만 실제 키들을 확인 (화면 하단에 작게 표시)
+                if "데이터 없음" in w_val or "데이터 없음" in i_val:
+                    st.sidebar.error("데이터 매칭 실패 확인")
+                    st.sidebar.write(f"찾으려는 월령 키: '{w_key}'")
+                    st.sidebar.write(f"JSON 내 월령 키 예시: {list(choyeon_db.get('wolryeong', {}).keys())[:3]}")
+
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
