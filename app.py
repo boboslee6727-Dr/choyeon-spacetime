@@ -13,22 +13,30 @@ import re
 # 1. 버전 정보 설정
 APP_VERSION = "Ver 30.1 (External DB Ref)"
 
-# 2. 페이지 설정 (반드시 처음에 호출)
+# 2. 페이지 설정
 st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
 
-# 3. 데이터 로드 (오류 방지 로직 적용)
+# 3. 데이터 로드
 file_path = 'choyeon_db.json'
+# 기본값 초기화
 choyeon_db = {"wolryeong": {}, "ilju": {}, "ilju_structure": {}}
 
 try:
     if os.path.exists(file_path):
         with open(file_path, 'r', encoding='utf-8-sig') as f:
-            choyeon_db = json.load(f)
+            data = json.load(f)
+            # 파일이 dict 형태라면 그대로 할당
+            if isinstance(data, dict):
+                choyeon_db = data
         
-        # 로드 성공 확인 (좌측 사이드바에 데이터 로드 개수 표시)
+        # 로드 성공 확인
         wol_count = len(choyeon_db.get("wolryeong", {}))
         ilju_count = len(choyeon_db.get("ilju", {}))
         st.sidebar.success(f"DB 로드 완료 | 월령: {wol_count}개 | 일주: {ilju_count}개")
+        
+        # 만약 로드했는데 개수가 0이라면 경고
+        if wol_count == 0:
+            st.sidebar.error("⚠️ 데이터가 비어있습니다. choyeon_db.json 파일을 확인하세요.")
     else:
         st.error(f"⚠️ 파일이 존재하지 않습니다: {os.path.abspath(file_path)}")
 except Exception as e:
