@@ -1502,25 +1502,44 @@ if btn_single:
                 gh_engine = UniversalPrintableGunghap(u_name, p_name, m_pillars, f_pillars)
                 gh_engine.run_universal_logic()
                 
-                def draw_saju_table(gans, jjis, name_str, title_str):
-                    g_rev = gans[::-1]
-                    j_rev = jjis[::-1]
-                    
-                    c_gans = "".join([f"<td class='color-{get_color(g)}' style='font-size:20px; font-weight:900; width:25%; border:1px solid #ccc;'>{g}</td>" for g in g_rev])
-                    c_jjis = "".join([f"<td class='color-{get_color(j)}' style='font-size:20px; font-weight:900; width:25%; border:1px solid #ccc;'>{j}</td>" for j in j_rev])
-                    
+                def draw_rich_saju_table(engine_gans, engine_jjis, name_str, gender_str, title_str):
+                    # 엔진 내부 데이터는 [년, 월, 일, 시] 순이므로, 개인사주 로직(시,일,월,년)에 맞게 역순 처리
+                    gans = engine_gans[::-1] # [hs, ds, ms, ys]
+                    jjis = engine_jjis[::-1] # [hb, db, mb, yb]
+                    hs, ds, ms, ys = gans
+                    hb, db, mb, yb = jjis
+
+                    ji_rel_rows = ""
+                    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                        b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                        b_top = "0px solid transparent !important"
+                        cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important;'>합충형파해</td>" if l_idx==0 else ""
+                        ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+
+                    def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+
                     return f"""
                     <div style='margin-bottom: 30px; width:100%;'>
-                        <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 5px;'>🏮 {title_str} : {name_str}님</div>
-                        <table class='result-table' style='width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #3E2723;'>
-                            <tr class='top-header-cell' style='background:#f8f8f8;'>
-                                <td style='border:1px solid #ccc; color:#fff;'>시주</td>
-                                <td style='border:1px solid #ccc; color:#fff;'>일주</td>
-                                <td style='border:1px solid #ccc; color:#fff;'>월주</td>
-                                <td style='border:1px solid #ccc; color:#fff;'>년주</td>
-                            </tr>
-                            <tr>{c_gans}</tr>
-                            <tr>{c_jjis}</tr>
+                        <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 5px; text-align: left;'>🏮 {title_str} : {name_str}님 ({gender_str})</div>
+                        <table class='result-table'>
+                        <tr class='top-header-cell'>
+                        <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>구분</span></td>
+                        <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>시주</span></td>
+                        <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>일주</span></td>
+                        <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>월주</span></td>
+                        <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>년주</span></td>
+                        </tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>
+                        <tr><td class='header-cell-main' style='padding:0; border:1px solid #444;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                        {ji_rel_rows}
+                        <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, gender_str)) if get_general_shinsal_filtered(i, gans, jjis, gender_str) else '-'}</td>" for i in range(4)])}</tr>
                         </table>
                     </div>
                     """
@@ -1528,15 +1547,15 @@ if btn_single:
                 tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
                 tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주 명조</h1></div>"
                 
-                tables_html += "<div style='display:flex; flex-wrap:wrap; gap:20px;'>"
+                # 표가 호화로워졌으므로 좌우 배치 시 글씨가 깨질 수 있어 상하(column) 배치로 변경합니다.
+                tables_html += "<div style='display:flex; flex-direction:column; gap:20px;'>"
                 if u_gender == '남성':
-                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, '남성 원국')}</div>"
-                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, '여성 원국')}</div>"
+                    tables_html += draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, '남성', '남성 원국')
+                    tables_html += draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, '여성', '여성 원국')
                 else:
-                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, '남성 원국')}</div>"
-                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, '여성 원국')}</div>"
-                tables_html += "</div></div></div>"
-                
+                    tables_html += draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, '남성', '남성 원국')
+                    tables_html += draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, '여성', '여성 원국')
+                tables_html += "</div></div></div>"                
                 try:
                     ai_text = gh_engine.generate_ai_report(m_ctx, f_ctx)
                     gunghap_html = gh_engine.get_graphic_html(ai_text)
