@@ -969,6 +969,8 @@ if btn_single:
                 # 1. 자의형상 데이터 추출.
                 w_key = f"{ms}{mb}" # 예: 丙寅
                 i_key = f"{ds}{db}" # 예: 甲子
+
+                st.write(f"디버깅 - 월주키: [{w_key}], 일주키: [{i_key}]")           
                 
                 w_val = choyeon_db.get("wolryeong", {}).get(w_key, "시공간 데이터 없음")
                 i_val = choyeon_db.get("ilju", {}).get(i_key, "성품 데이터 없음")
