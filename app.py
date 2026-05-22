@@ -959,19 +959,19 @@ if btn_single:
 
                 # 🎯 [Ver 30.2: 박사님 지시사항(mb/db 키 검색) 반영]
                 
-                # 1. 키 정의 (박사님께서 정의하신 mb와 db를 그대로 사용)
-                w_key = mb  # 월령 검색 키
-                i_key = db  # 일주 검색 키
+                # 1. 키 정의 
+                w_key = f"{ms}{mb}"  # 예: "甲子"
+                i_key = f"{ds}{db}"  # 예: "甲子"
 
                 # 2. 데이터 직접 조회 (JSON 내 해당 키로 즉시 매칭)
                 # 월령(wolryeong) 데이터 추출
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                w_val = choyeon_db.get("wolryeong", {""}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
                 
                 # 일주(ilju) 데이터 추출
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                i_val = choyeon_db.get("ilju", {""}).get(i_key, f"[{i_key}] 성품 데이터 없음")
                 
                 # 일주 구조(ilju_structure) 데이터 추출 (3개 항목)
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                struct_data = choyeon_db.get("ilju_structure", {""}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
                 choyeon_golden_text = f"""
