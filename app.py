@@ -13,9 +13,8 @@ import re
 # 🎯 [버전 컨트롤 타워]
 APP_VERSION = "Ver 30.1 (External DB Ref)"
 
-# 🎯 [외부 DB 로드] 하드코딩된 120개 DB를 삭제하고 외부 파일 직접 참조
 try:
-    with open('choyeon_db.json', 'r', encoding='utf-8') as f:
+    with open('choyeon_db.json', 'r', encoding='utf-8-sig') as f:
         choyeon_db = json.load(f)
 except FileNotFoundError:
     choyeon_db = {"wolryeong": {}, "ilju": {}}
