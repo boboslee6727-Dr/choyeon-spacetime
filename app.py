@@ -990,33 +990,27 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-                # 🎯 [시스템의 실체를 확인하는 마지막 코드]
-                st.write(f"--- 시스템 내부 데이터 상태 ---")
-                st.write(f"1. choyeon_db의 타입: {type(choyeon_db)}")
-                if isinstance(choyeon_db, dict):
-                    st.write(f"2. choyeon_db의 최상위 키들: {list(choyeon_db.keys())}")
-                    if "wolryeong" in choyeon_db:
-                        st.write(f"3. wolryeong의 첫 3개 키: {list(choyeon_db['wolryeong'].keys())[:3]}")
-                else:
-                    st.write(f"2. 데이터가 딕셔너리가 아닙니다. 로드된 내용: {choyeon_db}")
-
-                # 🎯 [김집사가 최종 정리한 데이터 조회 엔진]
-                import unicodedata
-
-                # 1. 키값 생성 및 정규화 (변수 ms, mb, ds, db가 정의된 직후 사용)
-                w_key = unicodedata.normalize('NFC', f"{ms}{mb}".strip())
-                i_key = unicodedata.normalize('NFC', f"{ds}{db}".strip())
-
-                # 2. 데이터 조회 (안전한 매칭)
-                wolryeong_data = {unicodedata.normalize('NFC', k.strip()): v for k, v in choyeon_db.get("wolryeong", {}).items()}
-                ilju_data = {unicodedata.normalize('NFC', k.strip()): v for k, v in choyeon_db.get("ilju", {}).items()}
-                struct_data_map = {unicodedata.normalize('NFC', k.strip()): v for k, v in choyeon_db.get("ilju_structure", {}).items()}
-
-                w_val = wolryeong_data.get(w_key, "시공간 데이터 없음")
-                i_val = ilju_data.get(i_key, "성품 데이터 없음")
+                # 🎯 [Ver 30.1 최종 수정: Ver 29의 로직을 결합한 데이터 검색 엔진]
+                # ms, mb, ds, db는 이미 정의되어 있다고 가정합니다.
                 
-                # 3. 구조 데이터 조회
-                struct_data = struct_data_map.get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                # 1. 월령(Wolryeong) 검색
+                w_val = "시공간 데이터를 찾지 못했습니다"
+                for key, val in choyeon_db.get("wolryeong", {}).items():
+                    if ms in key and mb in key:
+                        w_val = val
+                        break
+
+                # 2. 일주(Ilju) 및 구조(Structure) 검색
+                i_val = "성품 데이터를 찾지 못했습니다"
+                struct_data = ["구조 미상", "유형 미상", "성향 미상"] # 기본값
+                
+                for key, val in choyeon_db.get("ilju", {}).items():
+                    if ds in key and db in key:
+                        i_val = val
+                        # 일주를 찾았으므로 동일한 key를 사용하여 구조 데이터도 가져옴
+                        struct_data = choyeon_db.get("ilju_structure", {}).get(key, ["구조 미상", "유형 미상", "성향 미상"])
+                        break
+                
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
                 choyeon_golden_text = f"""
