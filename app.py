@@ -969,11 +969,17 @@ if btn_single:
                 struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
-                # 3. [디버그] 데이터가 안 나올 때만 실제 키들을 확인 (화면 하단에 작게 표시)
-                if "데이터 없음" in w_val or "데이터 없음" in i_val:
-                    st.sidebar.error("데이터 매칭 실패 확인")
-                    st.sidebar.write(f"찾으려는 월령 키: '{w_key}'")
-                    st.sidebar.write(f"JSON 내 월령 키 예시: {list(choyeon_db.get('wolryeong', {}).keys())[:3]}")
+                # 🎯 [정밀 범인 색출 코드: 사이드바에 출력됨]
+                if "데이터 없음" in w_val:
+                    st.sidebar.error("--- 월령 키 매칭 실패 정밀 분석 ---")
+                    st.sidebar.write(f"1. 검색하려던 w_key의 정체: {repr(w_key)}")
+    
+                    # DB에 있는 키 중 딱 하나만 뽑아서 정체를 확인
+                    sample_db_key = list(choyeon_db.get("wolryeong", {}).keys())[0] if choyeon_db.get("wolryeong") else "DB텅빔"
+                    st.sidebar.write(f"2. DB 안에 있는 키의 정체: {repr(sample_db_key)}")
+    
+    if len(w_key) != len(sample_db_key):
+        st.sidebar.warning("⚠️ 글자 수(길이)가 다릅니다!")
 
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
