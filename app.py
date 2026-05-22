@@ -10,14 +10,18 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 import re
 
-# 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 30.1 (External DB Ref)"
+import os
 
-try:
-    with open('choyeon_db.json', 'r', encoding='utf-8-sig') as f:
-        choyeon_db = json.load(f)
-except FileNotFoundError:
-    choyeon_db = {"wolryeong": {}, "ilju": {}}
+file_path = 'choyeon_db.json'
+if os.path.exists(file_path):
+    file_size = os.path.getsize(file_path)
+    st.write(f"🔍 시스템이 읽고 있는 파일 경로: {os.path.abspath(file_path)}")
+    st.write(f"🔍 실제 파일 크기: {file_size} bytes")
+    if file_size < 100: # 내용이 너무 적으면 내용 전체 출력
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
+            st.text(f"🔍 실제 파일 내용: {f.read()}")
+else:
+    st.error(f"⚠️ 파일이 존재하지 않습니다: {os.path.abspath(file_path)}")
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
