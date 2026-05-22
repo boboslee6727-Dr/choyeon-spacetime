@@ -1603,6 +1603,11 @@ if btn_single:
                     f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
                     gunghap_main = ai_out.split("[GUNGHAP_START]")[1].strip() if "[GUNGHAP_START]" in ai_out else ai_out
 
+                    # 🚨 [속살 코드 노출 원천 차단] AI 답변 끝에 달라붙는 마크다운 코드 블록 기호(```)를 완벽하게 지워 방어합니다.
+                    m_ai_content = re.sub(r'```html|```', '', m_ai_content).strip()
+                    f_ai_content = re.sub(r'```html|```', '', f_ai_content).strip()
+                    gunghap_main = re.sub(r'```html|```', '', gunghap_main).strip()
+
                     # 기존의 둥그런 테두리 박스와 대제목 유지
                     tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
                     tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주팔자</h1></div>"
