@@ -1466,8 +1466,8 @@ if btn_single:
 {full_content_clean}
 </div>
 </div>
-</div>"""
-
+</div>
+"""
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
                     
                 except Exception as e: 
