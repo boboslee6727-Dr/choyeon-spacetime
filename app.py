@@ -978,8 +978,8 @@ if btn_single:
                     sample_db_key = list(choyeon_db.get("wolryeong", {}).keys())[0] if choyeon_db.get("wolryeong") else "DB텅빔"
                     st.sidebar.write(f"2. DB 안에 있는 키의 정체: {repr(sample_db_key)}")
     
-    if len(w_key) != len(sample_db_key):
-        st.sidebar.warning("⚠️ 글자 수(길이)가 다릅니다!")
+                    if len(w_key) != len(sample_db_key):
+                        st.sidebar.warning("⚠️ 글자 수(길이)가 다릅니다!")
 
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
