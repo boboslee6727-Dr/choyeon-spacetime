@@ -10,22 +10,30 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 import re
 
-# 1. 여기서 변수를 먼저 정의하십시오.
+# 1. 버전 정보 설정
 APP_VERSION = "Ver 30.1 (External DB Ref)"
 
-# 2. 그 다음에 이 코드가 오면 정상 작동합니다.
+# 2. 페이지 설정 (반드시 처음에 호출)
 st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
-file_path = 'choyeon_db.json'
-if os.path.exists(file_path):
-    file_size = os.path.getsize(file_path)
-    st.write(f"🔍 시스템이 읽고 있는 파일 경로: {os.path.abspath(file_path)}")
-    st.write(f"🔍 실제 파일 크기: {file_size} bytes")
-    if file_size < 100: # 내용이 너무 적으면 내용 전체 출력
-        with open(file_path, 'r', encoding='utf-8-sig') as f:
-            st.text(f"🔍 실제 파일 내용: {f.read()}")
-else:
-    st.error(f"⚠️ 파일이 존재하지 않습니다: {os.path.abspath(file_path)}")
 
+# 3. 데이터 로드 (오류 방지 로직 적용)
+file_path = 'choyeon_db.json'
+choyeon_db = {"wolryeong": {}, "ilju": {}, "ilju_structure": {}}
+
+try:
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
+            choyeon_db = json.load(f)
+        
+        # 로드 성공 확인 (좌측 사이드바에 데이터 로드 개수 표시)
+        wol_count = len(choyeon_db.get("wolryeong", {}))
+        ilju_count = len(choyeon_db.get("ilju", {}))
+        st.sidebar.success(f"DB 로드 완료 | 월령: {wol_count}개 | 일주: {ilju_count}개")
+    else:
+        st.error(f"⚠️ 파일이 존재하지 않습니다: {os.path.abspath(file_path)}")
+except Exception as e:
+    st.error(f"⚠️ 데이터베이스 로드 중 오류 발생: {e}")
+    choyeon_db = {"wolryeong": {}, "ilju": {}, "ilju_structure": {}}
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
