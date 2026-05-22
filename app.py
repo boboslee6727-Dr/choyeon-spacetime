@@ -938,7 +938,7 @@ if btn_single:
                 sewun_vaults = check_vault_status(base_gans_list, base_jjis_list, curr_y_ganji[1])
                 wolwun_vaults = check_vault_status(base_gans_list, base_jjis_list, cur_wol_j)
 
-hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
+                hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
                 hang_un_vaults_str = ", ".join(hang_un_vaults) if hang_un_vaults else "해당 없음"
 
                 age_prompt = ""
