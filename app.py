@@ -782,9 +782,9 @@ with st.sidebar:
         p_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="p_c")
         
         p_col1, p_col2, p_col3 = st.columns(3)
-        p_y = p_col1.number_input("년", 1900, 2050, value=2010, key="p_y_in")
-        p_m = p_col2.number_input("월", 1, 12, value=1, key="p_m_in")
-        p_d = p_col3.number_input("일", 1, 31, value=1, key="p_d_in")
+        p_y = p_col1.number_input("년", 1900, 2050, value=1967, key="p_y_in")
+        p_m = p_col2.number_input("월", 1, 12, value=9, key="p_m_in")
+        p_d = p_col3.number_input("일", 1, 31, value=24, key="p_d_in")
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
     
     st.markdown("<br>", unsafe_allow_html=True)
