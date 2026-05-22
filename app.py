@@ -10,49 +10,9 @@ import google.generativeai as genai
 import streamlit.components.v1 as components
 import re
 
-# 🎯 [Ver 30.2: 박사님 지시사항(mb/db 키 검색) 반영]
-                
-                # 1. 키 정의 (박사님께서 정의하신 mb와 db를 그대로 사용)
-                w_key = mb  # 월령 검색 키
-                i_key = db  # 일주 검색 키
+# 🎯 [버전 컨트롤 타워] 여기서 한 번만 수정하면 전체가 자동 변경됩니다!
+APP_VERSION = "Ver 30.2"
 
-                # 2. 데이터 직접 조회 (JSON 내 해당 키로 즉시 매칭)
-                # 월령(wolryeong) 데이터 추출
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                
-                # 일주(ilju) 데이터 추출
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                
-                # 일주 구조(ilju_structure) 데이터 추출 (3개 항목)
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-
-try:
-    if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8-sig') as f:
-            data = json.load(f)
-            
-            # [디버깅] 로드된 데이터의 최상위 키를 사이드바에 출력
-            st.sidebar.write(f"🔍 로드된 데이터 키: {list(data.keys())}")
-            
-            if isinstance(data, dict):
-                choyeon_db = data
-        
-        wol_count = len(choyeon_db.get("wolryeong", {}))
-        ilju_count = len(choyeon_db.get("ilju", {}))
-        
-        # 데이터가 제대로 로드되었는지 확인
-        if wol_count > 0 or ilju_count > 0:
-            st.sidebar.success(f"✅ DB 로드 완료 | 월령: {wol_count}개 | 일주: {ilju_count}개")
-        else:
-            st.sidebar.error("⚠️ 파일은 읽었으나 데이터가 비어있습니다. (데이터 키 확인 필요)")
-    else:
-        st.error(f"❌ 파일을 찾을 수 없습니다: {file_path}")
-
-except json.JSONDecodeError:
-    st.error("❌ 파일 내용이 JSON 형식이 아닙니다. 파일 내용을 확인하십시오.")
-except Exception as e:
-    st.error(f"❌ 데이터베이스 로드 오류: {e}")
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
@@ -997,28 +957,22 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-                # 🎯 [Ver 30.1 최종 수정: Ver 29의 로직을 결합한 데이터 검색 엔진]
-                # ms, mb, ds, db는 이미 정의되어 있다고 가정합니다.
+                # 🎯 [Ver 30.2: 박사님 지시사항(mb/db 키 검색) 반영]
                 
-                # 1. 월령(Wolryeong) 검색
-                w_val = "시공간 데이터를 찾지 못했습니다"
-                for key, val in choyeon_db.get("wolryeong", {}).items():
-                    if ms in key and mb in key:
-                        w_val = val
-                        break
+                # 1. 키 정의 (박사님께서 정의하신 mb와 db를 그대로 사용)
+                w_key = mb  # 월령 검색 키
+                i_key = db  # 일주 검색 키
 
-                # 2. 일주(Ilju) 및 구조(Structure) 검색
-                i_val = "성품 데이터를 찾지 못했습니다"
-                struct_data = ["구조 미상", "유형 미상", "성향 미상"] # 기본값
+                # 2. 데이터 직접 조회 (JSON 내 해당 키로 즉시 매칭)
+                # 월령(wolryeong) 데이터 추출
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
                 
-                for key, val in choyeon_db.get("ilju", {}).items():
-                    if ds in key and db in key:
-                        i_val = val
-                        # 일주를 찾았으므로 동일한 key를 사용하여 구조 데이터도 가져옴
-                        struct_data = choyeon_db.get("ilju_structure", {}).get(key, ["구조 미상", "유형 미상", "성향 미상"])
-                        break
+                # 일주(ilju) 데이터 추출
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
                 
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                # 일주 구조(ilju_structure) 데이터 추출 (3개 항목)
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2
 
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
