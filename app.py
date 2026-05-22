@@ -758,7 +758,7 @@ with st.sidebar:
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합"])
     
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
-    u_name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
+    u_name = st.text_input("이름", value="", placeholder="이병호", key="u_n")
     u_gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
     u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat")
     u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
@@ -775,7 +775,7 @@ with st.sidebar:
     if u_product == "궁합":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
-        p_name = st.text_input("이름", value="", placeholder="이영희", key="p_n")
+        p_name = st.text_input("이름", value="", placeholder="최경원", key="p_n")
         p_gender_default = "여성" if u_gender == "남성" else "남성"
         p_gender = st.selectbox("성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default), key="p_g")
         p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="p_m_stat")
@@ -785,7 +785,7 @@ with st.sidebar:
         p_y = p_col1.number_input("년", 1900, 2050, value=1967, key="p_y_in")
         p_m = p_col2.number_input("월", 1, 12, value=9, key="p_m_in")
         p_d = p_col3.number_input("일", 1, 31, value=24, key="p_d_in")
-        p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
+        p_t = st.selectbox("00:30 ~ 01:29 (朝子)시", idx_list, key="p_t_key")
     
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
@@ -1503,9 +1503,8 @@ if btn_single:
                 gh_engine.run_universal_logic()
                 
                 def draw_rich_saju_table(engine_gans, engine_jjis, name_str, gender_str, title_str):
-                    # 엔진 내부 데이터는 [년, 월, 일, 시] 순이므로, 개인사주 로직(시,일,월,년)에 맞게 역순 처리
-                    gans = engine_gans[::-1] # [hs, ds, ms, ys]
-                    jjis = engine_jjis[::-1] # [hb, db, mb, yb]
+                    gans = engine_gans[::-1] 
+                    jjis = engine_jjis[::-1] 
                     hs, ds, ms, ys = gans
                     hb, db, mb, yb = jjis
 
@@ -1520,7 +1519,7 @@ if btn_single:
                     def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
                     return f"""
-                    <div style='margin-bottom: 30px; width:100%;'>
+                    <div style='margin-bottom: 15px; width:100%;'>
                         <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 5px; text-align: left;'>🏮 {title_str} : {name_str}님 ({gender_str})</div>
                         <table class='result-table'>
                         <tr class='top-header-cell'>
@@ -1543,19 +1542,78 @@ if btn_single:
                         </table>
                     </div>
                     """
-                
+
+                # 🎯 [김집사 특수 임무] 마스터 바와 사주 요약을 생성하는 전용 함수
+                def get_master_and_summary(engine_gans, engine_jjis, name_str, gender_str, is_applicant):
+                    gans, jjis = engine_gans[::-1], engine_jjis[::-1]
+                    hs, ds, ms, ys = gans
+                    hb, db, mb, yb = jjis
+                    
+                    # 1. 오행 계산
+                    counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
+                    for char in gans + jjis:
+                        if char != "?": counts[get_color(char)] += 1
+                        
+                    # 2. 천을귀인, 공망, 삼재
+                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                    guiin_str = guiin_map.get(ds, '없음')
+                    n_gong = calculate_gongmang(ys, yb)
+                    i_gong = calculate_gongmang(ds, db)
+                    
+                    cur_samjae = get_samjae(yb, curr_y_ganji[1])
+                    samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
+                    
+                    # 3. 대운수 계산 (신청인/상대방 데이터 분기)
+                    t_y, t_m, t_d = (u_y, u_m, u_d) if is_applicant else (p_y, p_m, p_d)
+                    
+                    b_dt = dt_mod.datetime(t_y, t_m, t_d, 12, 0)
+                    adj_mins = get_total_time_adjustment(b_dt)
+                    utc_dt = b_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+                    
+                    order = 1 if (GAN.index(ys)%2==0) == (gender_str=='남성') else -1
+                    calc_d = get_daeun_su_accurate(utc_dt, order)
+                    
+                    # 마스터 바 HTML
+                    master_bar = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap; margin-bottom: 20px;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
+                    
+                    # 4. 자의형상 추출
+                    C2H_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계','子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
+                    w_gan_han, w_ji_han = C2H_MAP.get(ms, ms), C2H_MAP.get(mb, mb)
+                    i_gan_han, i_ji_han = C2H_MAP.get(ds, ds), C2H_MAP.get(db, db)
+                    
+                    # Scope 문제를 완벽 방어하기 위한 내부 미니 DB 로드
+                    w_core = "시공간 데이터를 찾지 못했습니다"
+                    for key, val in choyeon_db.get("wolryeong", {}).items():
+                        if w_gan_han in key and w_ji_han in key: w_core = val; break
+                    i_core = "데이터를 찾지 못했습니다"
+                    for key, val in choyeon_db.get("ilju", {}).items():
+                        if i_gan_han in key and i_ji_han in key: i_core = val; break
+                            
+                    # 사주팔자의 요약 HTML
+                    summary_html = f"""
+                    <div class='content-box-loose' style='margin-bottom: 30px;'>
+                        <h3 style='font-size:19px !important; margin-top:10px !important; margin-bottom:10px !important; border-bottom:2px solid #1A237E; padding-bottom:5px; color:#1A237E !important; font-weight:900 !important;'>1. 사주팔자의 요약</h3>
+                        <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 10px;'>
+                            <p style='text-indent: 15px; margin-bottom: 5px;'><b>{name_str}님</b>은 '{w_core}'의 시공간에서, '{i_core}'의 성품을 가지고 태어나셨습니다.</p>
+                        </div>
+                    </div>
+                    """
+                    
+                    return master_bar + summary_html
+
+                # 5. 최종 레이아웃 직렬 조립
                 tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
                 tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주 명조</h1></div>"
                 
-                # 표가 호화로워졌으므로 좌우 배치 시 글씨가 깨질 수 있어 상하(column) 배치로 변경합니다.
-                tables_html += "<div style='display:flex; flex-direction:column; gap:20px;'>"
+                tables_html += "<div style='display:flex; flex-direction:column; gap:40px;'>"
                 if u_gender == '남성':
-                    tables_html += draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, '남성', '남성 원국')
-                    tables_html += draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, '여성', '여성 원국')
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, u_name, '남성', True)}</div>"
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, p_name, '여성', False)}</div>"
                 else:
-                    tables_html += draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, '남성', '남성 원국')
-                    tables_html += draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, '여성', '여성 원국')
-                tables_html += "</div></div></div>"                
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, p_name, '남성', False)}</div>"
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, u_name, '여성', True)}</div>"
+                tables_html += "</div></div></div>"
+                
                 try:
                     ai_text = gh_engine.generate_ai_report(m_ctx, f_ctx)
                     gunghap_html = gh_engine.get_graphic_html(ai_text)
