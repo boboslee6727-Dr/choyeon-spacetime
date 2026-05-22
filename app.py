@@ -8,11 +8,12 @@ from korean_lunar_calendar import KoreanLunarCalendar
 import ephem
 import google.generativeai as genai
 import streamlit.components.v1 as components
+import re
 
-# 🎯 [버전 컨트롤 타워] 여기서 한 번만 수정하면 전체가 자동 변경됩니다!
-APP_VERSION = "Ver 27.0"
+# 🎯 [버전 컨트롤 타워]
+APP_VERSION = "Ver 30.0"
 # ==============================================================================
-# 0. VIP 인셋 프레임 및 초강력 프린트 CSS (Ver 15.0 원본 100% 사수)
+# 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
 st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
 
@@ -123,7 +124,6 @@ GAN, JI = "甲乙丙丁戊己庚辛壬癸", "子丑寅卯辰巳午未申酉戌�
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
-# 🎯 [여기에 추가!] 60일주 지장간 기반 구조/유형/성격 DB
 ILJU_STRUCTURE_DB = {
     "甲子": ["인성구조", "자기몰입형", "자의식 발달하여 발상의 전환이 빠르고 임사즉결"],
     "乙丑": ["재관인구조", "출세지향형", "편법적 사고와 신속한 결과를 추구하며 앞서가는 경향"],
@@ -225,7 +225,6 @@ def get_12_shinsal(year_ji, target_ji):
 
 def get_samjae(year_ji, target_ji):
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
-    # 삼재 공식: 띠(년지)를 기준으로 삼합의 충(沖) 방합 연도부터 3년간
     s_map = {
         '申': ['寅','卯','辰'], '子': ['寅','卯','辰'], '辰': ['寅','卯','辰'],
         '亥': ['巳','午','未'], '卯': ['巳','午','未'], '未': ['巳','午','未'],
@@ -276,45 +275,28 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     gj = cur_g + cur_j
     noble, ausp, evil = [], [], []
     
-    ## 귀인
-    # 1. 최상위 귀인 (모든 흉살을 제압하는 최고의 길성)
     if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인") 
-    # 2.구원의 귀인 (재난을 피하고 덕을 쌓음)
     if cur_j == mj: noble.append("월덕귀인") 
-    # 3. 대부대귀의 귀인 (시작과 끝을 주관)
     if cur_j in {'甲':'子午','乙':'子午','丙':'卯酉','丁':'卯酉','戊':'辰戌丑未','己':'辰戌丑未','庚':'寅亥','辛':'寅亥','壬':'巳申','癸':'巳申'}.get(dc,""): noble.append("태극귀인") 
-    # 4. 관록과 안정의 귀인 (정당한 재물과 직위)
     if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): noble.append("천록귀인") 
-    # 5. 학문과 지혜의 귀인 (총명, 학업, 예술)
     if cur_j in {'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("문창귀인")
     if cur_j in {'甲':'亥','乙':'子','丙':'寅','戊':'寅','丁':'卯','己':'卯','庚':'巳','辛':'午','壬':'申','癸':'酉'}.get(dc,""): noble.append("문곡귀인")
     if cur_j in {'甲':'亥','乙':'午','丙':'寅','戊':'寅','丁':'酉','己':'酉','庚':'巳','辛':'子','壬':'申','癸':'卯'}.get(dc,""): noble.append("학당귀인")
-    # 6. 복록과 의식주의 귀인 (풍요, 식복)
     if gj in ["甲寅", "乙丑", "丙子", "丁酉", "戊申", "己未", "庚午", "辛巳", "壬辰", "癸卯"]: noble.append("복성귀인")
     if cur_j in {'甲':'巳','乙':'午','丙':'巳','丁':'午','戊':'申','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("천주귀인")
     
-    ## 길신
-    # 1. 록(祿)의 근간 (자수성가, 관록, 확고한 기반)
     if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): ausp.append("건록")
-    # 2. 보이지 않는 조력 (뜻밖의 귀인과 숨은 재물, 건록(정록)과 합을 이룸)
     if cur_j in {'甲':'亥','乙':'戌','丙':'申','戊':'申','丁':'未','己':'未','庚':'巳','辛':'辰','壬':'寅','癸':'丑'}.get(dc,""): noble.append("암록")
-    # 3. 고귀한 신분과 평안 (금빛 마차, 안락함, 훌륭한 배우자)
     if cur_j in {'甲':'辰','乙':'巳','丙':'未','戊':'未','丁':'申','己':'申','庚':'戌','辛':'亥','壬':'丑','癸':'寅'}.get(dc,""): ausp.append("금여록")
-    # 4. 온화하고 자애로운 덕성 (자비로운 성품과 복록)
     if gj in ["甲寅", "丙辰", "戊辰", "庚辰", "壬戌"]: ausp.append("일덕")
-    # 5. 강인한 결단력과 무관의 기운 (불굴의 의지로 쟁취하는 성공)
     if gj in ["乙丑", "己巳", "癸酉"] and idx in [0, 1]: ausp.append("금신")
-    # 6. 건록을 양옆에서 호위하며 보이지 않는 도움을 주는 재물/귀인성
     hyeop_map = {'甲':['丑','卯'], '乙':['寅','辰'], '丙':['辰','午'], '戊':['辰','午'], '丁':['巳','未'], '己':['巳','未'], '庚':['未','酉'], '辛':['申','戌'], '壬':['戌','子'], '癸':['亥','丑']}
     if cur_j in hyeop_map.get(dc, []): ausp.append("협록")  
     
-    ## 흉살
-    # 1. [최악성 - 생사여탈/혈광사/극단적 기운] (생명과 가장 직결됨)
-    if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호대살") # 형광지사
-    if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살") # 우두머리, 카리스마
-    if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살") #
+    if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호대살")
+    if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살")
+    if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살")
 
-    # 2. [상해성 - 신체 사고/질병/화액] 
     if cur_j in {'甲':'酉','乙':'戌','丙':'子','丁':'丑','戊':'子','己':'丑','庚':'卯','辛':'辰','壬':'午','癸':'未'}.get(dc,""): evil.append("비인살")
     if dj == '寅' and cur_j in ['寅', '巳', '申']: evil.append("탕화살")
     if dj == '午' and cur_j in ['辰', '午', '丑']: evil.append("탕화살")
@@ -322,14 +304,12 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     if cur_g in ['乙', '己'] or cur_j in ['巳', '丑']: evil.append("곡각살")
     if cur_g in ['甲', '辛'] or cur_j in ['卯', '午', '申', '未']: evil.append("현침살")
 
-    # 3. [파탄성 - 부부 이별/고독/가정불화]
     if gj in ["甲寅", "乙卯", "丙午", "丁巳", "戊辰", "戊戌", "己未", "己丑", "庚申", "辛酉", "壬子", "癸亥"]: evil.append("간여지동")
     if gj in ["甲寅","乙巳","丁巳","戊申","辛亥"]: evil.append("고란살")
     if gj in ["丙子","丁丑","戊寅","辛卯","壬辰","癸巳","丙午","丁未","戊申","辛酉","壬戌","癸亥"]: evil.append("음양차착")
     if gj in ["甲午", "丙戌", "戊辰", "庚辰", "壬戌", "乙巳", "丁亥", "己亥", "辛巳", "癸亥"]: evil.append("의처의부")
-    if cur_j in ['寅','申','巳','亥']: evil.append("효신살") # 모친영향력 강함, 고부, 시모 갈등
+    if cur_j in ['寅','申','巳','亥']: evil.append("효신살")
 
-    # 4. [색정성 - 주색잡기/스캔들/비밀연애]
     dohwa_map = {'寅':'卯', '午':'卯', '戌':'卯', '申':'酉', '子':'酉', '辰':'酉', '巳':'午', '酉':'午', '丑':'午', '亥':'子', '卯':'子', '未':'子'}
     if cur_j == dohwa_map.get(yj, "") or cur_j == dohwa_map.get(dj, ""): evil.append("도화살")
     if gj in ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"]: evil.append("나체도화")
@@ -338,20 +318,18 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     if gender == "여성" and gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
     if gender == "남성" and gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
 
-    # 5. [심리 및 지연성 - 성격적 특이점/지체/구속]
-    if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금") # 해결사 역할, 선견지명
-    if cur_j in ['子','午','卯','酉']: evil.append("교신성") # 마이웨이, 사시적, 기회주의적
-    if idx == 1 and gj in ["丙午", "丁未", "戊午", "戊子", "己未", "己丑"]: evil.append("육수살") # 
+    if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금")
+    if cur_j in ['子','午','卯','酉']: evil.append("교신성")
+    if idx == 1 and gj in ["丙午", "丁未", "戊午", "戊子", "己未", "己丑"]: evil.append("육수살")
     if gj in ["甲辰","乙巳","丙申","丁亥","戊戌","己丑","庚辰","辛巳","壬申","癸亥"]: evil.append("십악대패살")
-    if cur_g in ['甲', '丙', '壬'] and cur_j in ['子', '辰']: evil.append("평두살") # 고독, 개성감, 호전적, 자기주장
+    if cur_g in ['甲', '丙', '壬'] and cur_j in ['子', '辰']: evil.append("평두살")
     cheolsa_map = {'甲':'辰', '乙':'寅', '丙':'戌', '丁':'申', '戊':'午', '己':'辰', '庚':'寅', '辛':'戌', '壬':'申', '癸':'午'}
-    if cur_j == cheolsa_map.get(dc, ""): evil.append("철사관") # 근무려증, 희귀병, 자폐, 무기력
+    if cur_j == cheolsa_map.get(dc, ""): evil.append("철사관")
 
-    # 🎯 [60갑자 주기 4신(神) 완벽 복원]
-    if gj in ["甲子", "甲午", "己卯", "己酉"]: ausp.append("진신")  # 전진과 쟁취
-    if gj in ["丙子", "丙午", "辛卯", "辛酉"]: evil.append("교신")  # 지연과 꼬임
-    if gj in ["丁丑", "丁未", "壬辰", "壬戌"]: evil.append("퇴신")  # 은둔과 후퇴 (이것이 진짜 퇴신)
-    if gj in ["戊寅", "戊申", "癸巳", "癸亥"]: evil.append("복신")  # 멈춤과 정체
+    if gj in ["甲子", "甲午", "己卯", "己酉"]: ausp.append("진신") 
+    if gj in ["丙子", "丙午", "辛卯", "辛酉"]: evil.append("교신") 
+    if gj in ["丁丑", "丁未", "壬辰", "壬戌"]: evil.append("퇴신") 
+    if gj in ["戊寅", "戊申", "癸巳", "癸亥"]: evil.append("복신") 
 
     result = []
     for n in list(dict.fromkeys(noble)): result.append(f"<span style='color:#0D47A1;'>{n}</span>")
@@ -411,7 +389,6 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
         return get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {get_ss(ds, jg[0])}격이 되었습니다."
     return get_ss(ds, main_qi) + "격", f"월지 {mb}의 지장간이 천간에 투출하지 않아, 정기(본기)인 {main_qi}를 기준으로 {get_ss(ds, main_qi)}격으로 정합니다."
 
-
 def calculate_gongmang(ilgan, ilji):
     if ilgan in ["?"," ","-"] or ilji in ["?"," ","-"]: return "-"
     try:
@@ -436,7 +413,6 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
 def get_daeun_su_accurate(utc_dt, order):
     try:
         sun = ephem.Sun()
-        # 정밀도를 위해 에포크를 고정합니다 (2000년)
         def get_lon(dt):
             sun.compute(dt)
             return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
@@ -444,35 +420,30 @@ def get_daeun_su_accurate(utc_dt, order):
         lon = get_lon(utc_dt)
         jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
         
-        # 1. 대상 절기점 선정
         if order == 1:
             targets = [l for l in jeol_lons if l > lon] + [l + 360 for l in jeol_lons if l <= lon]
         else:
             targets = [l for l in jeol_lons if l <= lon] + [l - 360 for l in jeol_lons if l > lon]
         t_lon = (max(targets) if order == -1 else min(targets)) % 360
             
-        # 2. 정밀 탐색 (분 단위로 좁혀가며 찾기)
         search_dt = utc_dt
         step = dt_mod.timedelta(minutes=1) if order == 1 else dt_mod.timedelta(minutes=-1)
         
-        for _ in range(20000): # 정밀도 1분 단위로 2만 번 탐색
+        for _ in range(20000):
             search_dt += step
             l = get_lon(search_dt)
-            # 절기점 통과 여부 확인 (근접하면 브레이크)
             if (order == 1 and l >= t_lon) or (order == -1 and l <= t_lon):
                 break
             
-        # 3. 대운수 산출 (보정: 3일 = 1년, 1일 = 4개월)
         total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
-        
-        # [핵심 보정] int() 후 더하기보다 round()가 명리학적 절기 계산에 더 정확합니다.
         d_su = int(round(total_days / 3.0))
             
         return max(1, min(10, d_su))
     except: 
         return 1
+
 # ==============================================================================
-# 3. [Ver 509.0 이식] 프리미엄 궁합 분석 엔진 클래스
+# 3. 프리미엄 궁합 분석 엔진 클래스
 # ==============================================================================
 def get_group_ss(ss_str):
     return {'비견':'비겁', '겁재':'비겁', '식신':'식상', '상관':'식상', '편재':'재성', '정재':'재성', '편관':'관성', '정관':'관성', '편인':'인성', '정인':'인성'}.get(ss_str, '비겁')
@@ -826,7 +797,6 @@ if btn_single:
     if not u_name.strip(): st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
     elif u_product == "궁합" and not p_name.strip(): st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        # 🎯 [김집사 수정] APP_VERSION을 자동으로 가져와 텍스트 구성 (try 구문 '위'에 위치)
         spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({APP_VERSION}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({APP_VERSION}) 중....]"
         
         try:
@@ -868,7 +838,6 @@ if btn_single:
             
             def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
             
-            # 🎯 [김집사 추가] 초연 시공명리 소개 도입부 변수화 (삼중 따옴표 적용)
             intro_html = f"""
 <div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; padding-bottom: 0px; margin-bottom: 25px;'>
     <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 시작합니다만,</p>
@@ -882,7 +851,6 @@ if btn_single:
             if u_product == "개인사주":
                 components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
                 
-                # 🎯 [김집사 수정] 합충형파해 가로 줄눈 완전 소거 (0px solid transparent 강제)
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -954,14 +922,12 @@ if btn_single:
                 n_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
                 
-                # 🎯 [김집사 추가] 올해 삼재 여부 계산 (태어난 해 yb 와 올해 지지 curr_y_ganji[1] 비교)
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                # 🎯 [김집사 수정] 마스터 바에 삼재 항목 추가
                 master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"               
+                
                 daewun_info = []
-                # 🎯 [김집사 수정] 프롬프트로 <h3>를 넘겼으므로, 여기서는 <h3>를 삭제합니다.
                 un_html = f"<div style='margin-top:20px; margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
                     val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
@@ -1019,27 +985,21 @@ if btn_single:
 </div>
 </div>"""
 
-                # ---------------------------------------------------------
-                # 🎯 [김집사 추가] 진술축미 입고/개고 정밀 분석 로직 가동
-                # ---------------------------------------------------------
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
 
-                # 1. 원국 내부 충돌
                 won_guk_vaults = []
                 for attacker in base_jjis_list:
                     won_guk_vaults.extend(check_vault_status(base_gans_list, base_jjis_list, attacker))
-                won_guk_vaults = list(dict.fromkeys(won_guk_vaults)) # 중복 제거
+                won_guk_vaults = list(dict.fromkeys(won_guk_vaults)) 
                 won_guk_vaults_str = ", ".join(won_guk_vaults) if won_guk_vaults else "해당 없음"
 
-                # 2. 행운(운세) 외부 충격
                 daewun_vaults = check_vault_status(base_gans_list, base_jjis_list, dw_j_cur)
                 sewun_vaults = check_vault_status(base_gans_list, base_jjis_list, curr_y_ganji[1])
                 wolwun_vaults = check_vault_status(base_gans_list, base_jjis_list, cur_wol_j)
 
                 hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
                 hang_un_vaults_str = ", ".join(hang_un_vaults) if hang_un_vaults else "해당 없음"
-                # ---------------------------------------------------------
 
                 age_prompt = ""
                 if u_age < 20:
@@ -1057,9 +1017,6 @@ if btn_single:
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-                # ==============================================================================
-                # 🎯 [김집사 긴급 특단 조치] 외부 파일 로드를 폐기하고, 데이터를 코드 내부에 직접 이식
-                # ==============================================================================
                 choyeon_db = {
                   "wolryeong": {
                     "갑자(甲子)월": "천둥번개 우뢰(甲)가 꽁꽁 얼어붙은 검은 연못(子)의 정적을 거세게 깨우는 완연한 한겨울(甲子월)",
@@ -1187,17 +1144,14 @@ if btn_single:
                   }
                 }
 
-                # 2. 박사님의 변수(한자든 한글이든)를 오직 '한글'로만 통일하여 절대 실패하지 않게 만듭니다.
                 C2H_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
                            '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
 
-                # ms, mb, ds, db 변수 안전하게 한글로 통일
                 w_gan_han = C2H_MAP.get(ms, ms)
                 w_ji_han  = C2H_MAP.get(mb, mb)
                 i_gan_han = C2H_MAP.get(ds, ds)
                 i_ji_han  = C2H_MAP.get(db, db)
 
-                # 3. 데이터 강제 추출
                 w_core = "시공간 데이터를 찾지 못했습니다"
                 for key, val in choyeon_db["wolryeong"].items():
                     if w_gan_han in key and w_ji_han in key:
@@ -1210,16 +1164,11 @@ if btn_single:
                         i_core = val
                         break
 
-                # ---------------------------------------------------------
-                # 🎯 [김집사 교체 영역 시작] 지장간 구조 데이터 추출 및 황금 텍스트/헤더 세팅
-                # ---------------------------------------------------------
-                ilju_key = ds + db # 일주 간지 2글자 (예: 甲子)
+                ilju_key = ds + db 
                 
-                # DB에서 구조 데이터 가져오기 (없으면 미상 처리)
                 struct_data = ILJU_STRUCTURE_DB.get(ilju_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
-                # 4. 결과 출력용 황금 텍스트 조립 (지장간 구조 분석 문장 추가)
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
@@ -1228,21 +1177,16 @@ if btn_single:
 </div>
 """
 
-                # 대운 나이 변수 실제 나이로 계산 세팅
                 dw_start_age = current_daewun_age
                 dw_mid_age   = current_daewun_age + 4
                 dw_mid2_age  = current_daewun_age + 5
                 dw_end_age   = current_daewun_age + 9  
 
-                # 세운/월운 변수 누락 에러 원천 차단
                 past_months_html = locals().get('past_months_html', '')
                 curr_y_ganji     = locals().get('curr_y_ganji', 'OO')
                 cur_wol_g        = locals().get('cur_wol_g', 'O')
                 cur_wol_j        = locals().get('cur_wol_j', 'O')                             
                 
-                # 🎯 [안전지대 배치] 이미 오행 병리 계산이 완전히 끝난 지점이므로 에러가 나지 않습니다.
-
-                # 🎯 5. 프롬프트 헤더 및 강력한 통제 명령 세팅
                 db_header = (
                     f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
                     "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
@@ -1251,11 +1195,10 @@ if btn_single:
                     f"- marital_status: {u_marital}\n"
                     f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
                     f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
-                    f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  # 👈 AI에게 올해 삼재 정보 전달
+                    f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
 
-                    # 🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
                     f"1. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성(예: 무인성일 경우)을 마치 있는 것처럼 지어내어 통변하지 마십시오.\n"
                     f"2. 괄호 병기 금지: 에세이 작성 시 '(일주 공망)', '(년주 공망)', '(인성)' 등의 명리 용어나 한자를 괄호 안에 병기하는 행위를 엄격히 금지합니다.\n"
@@ -1263,7 +1206,6 @@ if btn_single:
                     f"4. HTML 훼손 금지: 에세이 도중 </div> 태그를 임의로 닫거나 마크다운 기호를 남발하여 전체 레이아웃을 부수지 마십시오.\n"
                 )
 
-                # 🎯 [초연 시공명리 육친관계 통제 로직]
                 if u_gender == '남성':
                     yukchin_rule = f"""
 🚨 [육친 통변 특수부대 절대 규칙 (남성용)]: 
@@ -1309,11 +1251,9 @@ if btn_single:
 (※ AI 지시: AI는 전체 에세이 작성 시 아래 원칙을 반드시 뼛속 깊이 새기고 준수하십시오.)
 1. 🚨명리 용어 순화: 격국, 비견, 식상, 관성, 조후, 용신, 희신 등의 딱딱한 한자어 전문 용어 남발을 엄격히 금지합니다.
 2. 직관적인 쉬운 해설: 부득이하게 명리 용어를 언급해야 할 경우, 반드시 일반인이 단번에 이해할 수 있는 일상적인 비유와 현대적 구어체로 부드럽게 풀어서 설명하십시오. 
-   - (잘못된 예: "비식관 구조로 관성이 용신입니다.") 
-   - (올바른 예: "자신의 재능을 발휘하여 스스로 명예를 쟁취하려는 심리적 기질을 가지고 있습니다.")
 3. 따뜻한 상담가 마인드: 명리학 강의를 하듯 가르치려 들지 말고, 내담자의 삶을 깊이 이해하고 어루만져 주는 친절하고 세련된 카운슬러의 어조(현대적 구어체)로 모든 글을 전개하십시오.
 4. 🚨[절대 성역]: 단, 문서 상단에 주입되는 '[CHOYEON_GOLDEN_TEXT_HERE]' (자의형상) 문장은 초연 박사의 고유한 선언문이므로 절대 이 지시의 영향을 받지 않으며, 부연 설명 없이 원문 그대로 100% 출력해야 합니다.
-5. 🚨 초연 시공명리 3대 관점의 입체적 풀이: 사주를 단편적으로 해석하지 마십시오. 모든 통변을 전개할 때는 반드시 1) 육친적 관점(주변 인간관계와 환경의 영향), 2) 심리적 관점(내담자 내면의 욕구, 동기, 스트레스), 3) 사회적 관점(직업적 성취, 재물, 현실적 결과)이라는 세 가지 차원을 유기적으로 융합하여 매우 심도 있고 입체적인 에세이를 작성하십시오.
+5. 🚨 초연 시공명리 3대 관점의 입체적 풀이: 사주를 단편적으로 해석하지 마십시오. 모든 통변을 전개할 때는 반드시 1) 육친적 관점, 2) 심리적 관점, 3) 사회적 관점이라는 세 가지 차원을 유기적으로 융합하여 매우 심도 있고 입체적인 에세이를 작성하십시오.
 
 [문단 통제 명령]
 1. 모든 통변 에세이 문장은 반드시 <p style='text-indent: 1em;'> 태그로 감싸십시오.
@@ -1331,7 +1271,7 @@ if btn_single:
 4. 별표 2개를 사용하여 글씨를 굵게 만드는 행위를 금지합니다.
 5. 🚨 호칭 강제: 내담자를 지칭할 때는 오직 '{disp_name}님'만 사용하십시오. ('선생님', '당신' 절대 사용 금지)
 6. 🚨 인사말 철저 금지: "안녕하십니까", "반갑습니다", "초연입니다" 등 쓸데없는 인사말이나 오지랖 멘트를 절대 작성하지 마십시오. 시작부터 바로 본론(사주 분석)으로 진입하십시오.
-7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유(예: 넓은 들판 등)를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상(예: 언 땅 위의 새싹 등) 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
+7. 🚨 전통명리 이론 기반 통변: AI가 임의로 지어내는 문학적 비유를 철저히 금지합니다. 오직 사주 원국 간지의 물상 형상 등 정통 명리학 이론에 입각하여 이해하기 쉬운 구어체로 설명하십시오.
 8. 🚨 표(Table) 생성 절대 금지: AI가 임의로 마크다운 표(|---|)나 HTML <table>을 생성하는 것을 엄격히 금지합니다. 대운/세운/월운의 연도별 분석은 반드시 도트 기호(•)를 사용한 텍스트로만 작성하십시오.
 
 [내담자 맞춤형 정밀 타겟팅]
@@ -1362,9 +1302,6 @@ if btn_single:
 (※ AI 지시: 사주팔자 오행의 분포와 계절적 조후, 억부의 균형 상태를 분석하고 삶에서 어떤 에너지를 추구해야 하는지 상세한 에세이를 작성하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석</span>
-(※ AI 지시: 사주 원국의 합충형파해, 진술축미 입/개고, 일반신살 및 포태법의 명리적 원리를 철저히 분석하되, 표면적으로는 절대 전문 용어를 노출하지 마십시오. 
-오직 이 원리들을 바탕으로 내담자의 '전체적인 삶의 굴곡, 대인관계의 역동성, 직업적 변동성'에 초점을 맞추어 일반인이 이해하기 쉬운 구어체 에세이로 작성하십시오. 
-이성운/부부운에 대한 언급은 이곳에서 제외하십시오.)
 (※ AI 지시: 사주 원국의 합충형파해, 진술축미 입/개고, 일반신살 및 포태법의 명리적 원리를 철저히 분석하십시오. 
 🚨단, 절대 (丑丑), (卯丑)처럼 사주 원국의 한자나 명리 전문 용어를 괄호 안에 병기하거나 표면적으로 노출하지 마십시오. 
 오직 이 원리들을 바탕으로 내담자의 '전체적인 삶의 굴곡, 대인관계의 역동성, 직업적 변동성'에 초점을 맞추어 일반인이 이해하기 쉬운 구어체 에세이로만 작성하십시오. 
@@ -1380,8 +1317,7 @@ if btn_single:
 (※ AI 지시: 오행의 과다/과소 및 조후를 바탕으로 내면의 스트레스, 무의식적 욕구, 심리적 방어기제, 공망 등을 상세히 분석하십시오.)
 </div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
-(※ AI 지시: 사주 원국의 연주·월주 및 인성과 비겁의 상태를 분석하여 에세이를 작성하십시오. 
-이때 1) 육친적으로 부모·형제와의 정서적 유대감과 덕의 유무를 살피고, 2) 심리적으로 이들이 내담자 내면의 자양분 혹은 결핍에 미친 영향을 진단하며, 3) 사회적으로 유년기 환경이 삶의 기반에 어떤 작용을 했는지 현대적 구어체로 친절하게 풀어내십시오.)
+(※ AI 지시: 사주 원국의 연주·월주 및 인성과 비겁의 상태를 분석하여 에세이를 작성하십시오. 1) 육친적으로 부모·형제와의 정서적 유대감과 덕의 유무를 살피고, 2) 심리적으로 이들이 내담자 내면의 자양분 혹은 결핍에 미친 영향을 진단하며, 3) 사회적으로 유년기 환경이 삶의 기반에 어떤 작용을 했는지 현대적 구어체로 친절하게 풀어내십시오.)
 </div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>
 (※ AI 지시: 인성과 식상의 관계, 관성의 통제력을 바탕으로 에세이를 작성하십시오. 1) 심리적으로 지적 호기심과 집중력의 방향성을 파악하고, 2) 육친적으로 학업 과정에서 주변 환경의 지지나 방해 요소를 보며, 3) 사회적으로 최종 학위나 전공이 현실적인 커리어와 어떻게 연결되는지 그 성패를 이해하기 쉽게 조언하십시오.)
@@ -1486,63 +1422,40 @@ if btn_single:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
-                    # 🎯 [어제 새벽의 완벽 복구 코드] AI의 환각을 100% 박살 내는 강제 주입 로직!
                     if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
-                        # 1. AI가 말을 잘 듣고 마커를 남겨두었을 경우 (정상 치환)
                         ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                     else:
-                        # 2. 🚨비상사태: AI가 마커를 지우고 제멋대로 서론을 지어냈을 경우!
                         target_marker = "1) 타고난 삶의 무대와 기본 성향"
                         if target_marker in ai_text:
                             parts = ai_text.split(target_marker)
                             div_marker = "<div class='content-box-loose'>"
-                            # 상단에서 <div class='content-box-loose'> 까지만 남기고 AI의 망발은 삭제!
                             if div_marker in parts[0]:
                                 top_clean = parts[0][:parts[0].find(div_marker) + len(div_marker)]
-                                # 깨끗해진 상단 + 박사님의 옥음(순정 HTML) + 다시 1) 항목 연결
                                 ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
 
-                    # ==============================================================================
-                    # 🚨 [김집사 수정] 중복 출력을 유발하던 구형 .replace() 코드는 과감히 삭제했습니다.
-                    # ==============================================================================
-
-                    # 🎯 [김집사·홍비서 목숨 건 실전 최종 절대 사수 버전]
-                    # 마커 오염 완벽 세척 및 표 내부 줄바꿈 박멸로 가로 정배열 소생
-                    import re
-
-                    # [교정 1] ★핵심: 표 HTML 내부의 모든 줄바꿈(\n)을 공백으로 지워버립니다.
-                    # 이 조치로 마크다운 파서가 표 내부 구역을 쪼개어 세로로 찢어발기는 버그를 전면 차단합니다.
                     un_html_clean = un_html.replace("\n", " ").replace("\r", "")
                     se_html_clean = se_html.replace("\n", " ").replace("\r", "")
                     wol_html_clean = wol_html.replace("\n", " ").replace("\r", "")
 
-                    # [교정 2] AI 본문 내 프레임을 깨뜨리는 환각 태그 선제 정돈
                     clean_ai_text = ai_text
 
-                    # [교정 3] ★정밀 타격: 마커 주변에 AI가 붙인 마크다운 오염물(**, ###, _ 등)과 유령 공백을 통째로 청소
-                    # 표가 사각박스 안에서 웅장하게 가로로 안착하도록 가둠 디브(div)와 함께 안전하게 주입합니다.
                     daeoun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{un_html_clean}</div>"
                     sewun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{se_html_clean}</div>"
                     wolwun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{wol_html_clean}</div>"
 
-                    # 마커 앞뒤에 붙은 마크다운 특수문자([\#\*\_\s]*)를 통째로 포함하여 대소문자 무시(IGNORECASE) 치환
                     clean_ai_text, count_d = re.subn(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
                     clean_ai_text, count_s = re.subn(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
                     clean_ai_text, count_w = re.subn(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
 
-                    # 혹시 모를 구형/변형 마커([CHAM_...]) 포맷 기호까지 상호 이중 방어 치환 처리
                     clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_DAEOUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
                     clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_SEEUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
                     clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_WOLEUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
 
-                    # 🚨 [최종 보루 비상장치] 정말 본문에 마커가 단 하나도 매칭되지 않았을 때만 하단에 안전 출력
                     if count_d == 0 and "table" not in clean_ai_text.lower():
                         clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
 
-                    # [교정 4] 전체 알맹이(오염이 씻겨나간 본문 + 클로징 멘트)를 하나의 단일 나눔명조체 박스로 완전 밀봉
                     full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
-                    # [교정 5] 완벽한 실전형 A4 둥근 사각박스 프레임(vip-inset-frame) 최종 조립
                     report_1_full_html = f"""<div class='report-page'>
 <div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
@@ -1558,7 +1471,6 @@ if btn_single:
 
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
                     
-                # 👇 [김집사 긴급 진압] 개인 사주의 try 울타리를 안전하게 닫아내어 에러를 원천 차단합니다!
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}") 
 
@@ -1577,7 +1489,8 @@ if btn_single:
                 try: p_hs, p_hb = get_time_ganji(p_ds, p_t, p_in_dt)
                 except: p_hs, p_hb = "?", "?"
                 
-                m_pillars, f_pillars = ([hs, ds, ms, ys], [hb, db, mb, yb]), ([p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb])
+                m_pillars = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
+                f_pillars = [f"{p_hs}{p_hb}", f"{p_ds}{p_db}", f"{p_ms}{p_mb}", f"{p_ys}{p_yb}"]
                 
                 m_ctx = {'u_name': u_name, 'dc': ds}
                 f_ctx = {'u_name': p_name, 'dc': p_ds}
@@ -1590,28 +1503,39 @@ if btn_single:
                 gh_engine.run_universal_logic()
                 
                 def draw_saju_table(gans, jjis, name_str, title_str):
-                    c_gans = "".join([f"<td class='color-{get_color(g)}' style='font-size:20px; font-weight:900;'>{g}</td>" for g in gans])
-                    c_jjis = "".join([f"<td class='color-{get_color(j)}' style='font-size:20px; font-weight:900;'>{j}</td>" for j in jjis])
+                    g_rev = gans[::-1]
+                    j_rev = jjis[::-1]
+                    
+                    c_gans = "".join([f"<td class='color-{get_color(g)}' style='font-size:20px; font-weight:900; width:25%; border:1px solid #ccc;'>{g}</td>" for g in g_rev])
+                    c_jjis = "".join([f"<td class='color-{get_color(j)}' style='font-size:20px; font-weight:900; width:25%; border:1px solid #ccc;'>{j}</td>" for j in j_rev])
+                    
                     return f"""
-                    <div style='margin-bottom: 20px;'>
+                    <div style='margin-bottom: 30px; width:100%;'>
                         <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 5px;'>🏮 {title_str} : {name_str}님</div>
-                        <table class='result-table' style='width: 100%;'>
-                            <tr class='top-header-cell'><td>시주</td><td>일주</td><td>월주</td><td>년주</td></tr>
+                        <table class='result-table' style='width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #3E2723;'>
+                            <tr class='top-header-cell' style='background:#f8f8f8;'>
+                                <td style='border:1px solid #ccc; color:#fff;'>시주</td>
+                                <td style='border:1px solid #ccc; color:#fff;'>일주</td>
+                                <td style='border:1px solid #ccc; color:#fff;'>월주</td>
+                                <td style='border:1px solid #ccc; color:#fff;'>년주</td>
+                            </tr>
                             <tr>{c_gans}</tr>
                             <tr>{c_jjis}</tr>
                         </table>
                     </div>
                     """
                 
-                tables_html = "<div class='report-page'><div class='vip-inset-frame'>"
-                tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:20px;'><h1 style='margin:0; color:#3E2723; font-weight: 900;'>🗝️ 두 사람의 사주 명조</h1></div>"
+                tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
+                tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주 명조</h1></div>"
+                
+                tables_html += "<div style='display:flex; flex-wrap:wrap; gap:20px;'>"
                 if u_gender == '남성':
-                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, "남성 원국")
-                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, "여성 원국")
+                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, '남성 원국')}</div>"
+                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, '여성 원국')}</div>"
                 else:
-                    tables_html += draw_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, "남성 원국")
-                    tables_html += draw_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, "여성 원국")
-                tables_html += "</div></div>"
+                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, '남성 원국')}</div>"
+                    tables_html += f"<div style='flex:1; min-width:300px;'>{draw_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, '여성 원국')}</div>"
+                tables_html += "</div></div></div>"
                 
                 try:
                     ai_text = gh_engine.generate_ai_report(m_ctx, f_ctx)
