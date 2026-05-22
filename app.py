@@ -730,6 +730,30 @@ class UniversalPrintableGunghap:
 [남성({m_ctx['u_name']})]: 오행{m_ec}, 병리({m_patho}), 심리({m_psy}인자)
 [여성({f_ctx['u_name']})]: 오행{f_ec}, 병리({f_patho}), 심리({f_psy}인자)
 
+[🚨 궁합풀이 개인 성향 축약 출력 명령]
+파이썬이 텍스트를 분할할 수 있도록 반드시 아래 마커([MALE_START] 등)를 포함하여 출력하십시오. 각 개인별 분석은 1페이지 분량에 맞춰 요약해야 합니다.
+
+[MALE_START]
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 사주구조 및 특징</h3>
+<p style='text-indent: 1em;'>(남성({m_ctx['u_name']})의 격국과 사주 특징, 재능 발현 구조를 3~4문장으로 요약 서술)</p>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 성격</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>1) 겉으로 드러난 성격</span>
+<p style='text-indent: 1em;'>(남성({m_ctx['u_name']})의 표면적 기질 요약 서술)</p>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>2) 감추어진 진짜 속마음</span>
+<p style='text-indent: 1em;'>(남성({m_ctx['u_name']})의 무의식적 성향 및 방어기제 요약 서술)</p>
+[MALE_END]
+
+[FEMALE_START]
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 사주구조 및 특징</h3>
+<p style='text-indent: 1em;'>(여성({f_ctx['u_name']})의 격국과 사주 특징, 재능 발현 구조를 3~4문장으로 요약 서술)</p>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 성격</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>1) 겉으로 드러난 성격</span>
+<p style='text-indent: 1em;'>(여성({f_ctx['u_name']})의 표면적 기질 요약 서술)</p>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>2) 감추어진 진짜 속마음</span>
+<p style='text-indent: 1em;'>(여성({f_ctx['u_name']})의 무의식적 성향 요약 서술)</p>
+[FEMALE_END]
+
+[GUNGHAP_START]
 <div class='choyeon-premium-report' style='line-height:1.9;'>
   <h3 style='font-family: "Malgun Gothic", sans-serif !important; font-size: 24px; font-weight: bold; color: #1B5E20; border-bottom: 3px double #1B5E20; padding-bottom: 10px; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
   <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(총평 서술)</p>
@@ -1571,21 +1595,33 @@ if btn_single:
                     return master_bar + summary_html
 
                 # 5. 최종 레이아웃 직렬 조립
-                tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
-                tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주 명조</h1></div>"
-                
-                tables_html += "<div style='display:flex; flex-direction:column; gap:40px;'>"
-                if u_gender == '남성':
-                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, u_name, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, u_name, '남성', True)}</div>"
-                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, p_name, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, p_name, '여성', False)}</div>"
-                else:
-                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, p_name, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, p_name, '남성', False)}</div>"
-                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, u_name, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, u_name, '여성', True)}</div>"
-                tables_html += "</div></div></div>"
-                
                 try:
-                    ai_text = gh_engine.generate_ai_report(m_ctx, f_ctx)
-                    gunghap_html = gh_engine.get_graphic_html(ai_text)
+                    ai_out = gh_engine.generate_ai_report(m_ctx, f_ctx)
+                    
+                    # 마커로 텍스트 분리
+                    m_ai_content = ai_out.split("[MALE_START]")[1].split("[MALE_END]")[0].strip() if "[MALE_START]" in ai_out else ""
+                    f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
+                    gunghap_main = ai_out.split("[GUNGHAP_START]")[1].strip() if "[GUNGHAP_START]" in ai_out else ai_out
+
+                    # 기존의 둥그런 테두리 박스와 대제목 유지
+                    tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
+                    tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주팔자</h1></div>"
+                    
+                    # [남성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
+                    m_name_target = u_name if u_gender == '남성' else p_name
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', (u_gender == '남성'))}<div class='content-box-loose'>{m_ai_content}</div></div>"
+                    
+                    # 인쇄 시 남성과 여성 사이를 끊어주는 분리선
+                    tables_html += "<div style='page-break-before: always; margin-top: 50px;'></div>"
+                    
+                    # [여성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
+                    f_name_target = p_name if u_gender == '남성' else u_name
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', (u_gender == '여성'))}<div class='content-box-loose'>{f_ai_content}</div></div>"
+                    
+                    tables_html += "</div></div>" # vip-inset-frame, report-page 닫기
+                    
+                    # 후반부 궁합 종합풀이 연결 (기존 로직)
+                    gunghap_html = gh_engine.get_graphic_html(gunghap_main)
                     
                     st.markdown(tables_html, unsafe_allow_html=True)
                     st.markdown(gunghap_html, unsafe_allow_html=True)
