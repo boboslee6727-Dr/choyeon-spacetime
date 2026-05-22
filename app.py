@@ -739,13 +739,6 @@ if btn_single:
     else:
         spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({APP_VERSION}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({APP_VERSION}) 중....]"
         
-        try:
-            with open("/content/drive/MyDrive/choyeon-spacetime/choyeon_db.json", 'r', encoding='utf-8') as f:
-                choyeon_db = json.load(f)
-        except Exception as e:
-            choyeon_db = {"wolryeong": {}, "ilju": {}}
-
-        with st.spinner(spinner_msg):
             # ------------------------------------------------------------------
             # [공통 연산 - 신청인]
             # ------------------------------------------------------------------
@@ -1162,18 +1155,6 @@ if btn_single:
                 i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
                 struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-
-                # 🎯 [정밀 범인 색출 코드: 사이드바에 출력됨]
-                if "데이터 없음" in w_val:
-                    st.sidebar.error("--- 월령 키 매칭 실패 정밀 분석 ---")
-                    st.sidebar.write(f"1. 검색하려던 w_key의 정체: {repr(w_key)}")
-                    
-                    # DB에 있는 키 중 딱 하나만 뽑아서 정체를 확인
-                    sample_db_key = list(choyeon_db.get("wolryeong", {}).keys())[0] if choyeon_db.get("wolryeong") else "DB텅빔"
-                    st.sidebar.write(f"2. DB 안에 있는 키의 정체: {repr(sample_db_key)}")
-                    
-                    if len(w_key) != len(sample_db_key):
-                        st.sidebar.warning("⚠️ 글자 수(길이)가 다릅니다!")
 
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
