@@ -971,7 +971,7 @@ if btn_single:
                 i_val = choyeon_db.get("ilju", {""}).get(i_key, f"[{i_key}] 성품 데이터 없음")
                 
                 # 일주 구조(ilju_structure) 데이터 추출 (3개 항목)
-                struct_data = choyeon_db.get("ilju_structure", {""}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                struct_data = choyeon_db.get("ilju_structure", {[""]}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
                 choyeon_golden_text = f"""
