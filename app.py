@@ -1597,7 +1597,7 @@ if btn_single:
                     
                     return master_bar + summary_html
 
-try:
+            try:
                 ai_out = gh_engine.generate_ai_report(m_ctx, f_ctx)
                 
                 # 마커로 텍스트 분리
