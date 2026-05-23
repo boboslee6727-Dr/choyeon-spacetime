@@ -1000,7 +1000,7 @@ if btn_single:
     <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
 </div>
 """
-            # ------------------------------------------------------------------
+# ------------------------------------------------------------------
             # [모드 1] 개인사주 분석
             # ------------------------------------------------------------------
             if u_product == "개인사주":
@@ -1010,9 +1010,8 @@ if btn_single:
                 p_icon = "♂️" if u_gender == "남성" else "♀️"
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 
-                # 이미 위에서 선언된 dt_mod를 활용하여 에러 원천 차단
-                import pytz
-                today_str = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y년 %m월 %d일")
+                # 🚨 [pytz 모듈 호출 완전 제거!] 에러 원천 차단. 기본 datetime으로 한국시간(+9시간) 계산
+                today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
                 # 🌟 [고도화 2] 웅장한 개인 사주풀이 표지 HTML 창조
                 cover_html = f"""
