@@ -1005,6 +1005,38 @@ if btn_single:
             # ------------------------------------------------------------------
             if u_product == "개인사주":
                 past_months_html = "" # 변수 누락 방지 완벽 조치
+                
+                # 🌟 [고도화 1] 표지 가변형 데이터 세팅 (성별 아이콘 및 색상 자동화)
+                p_icon = "♂️" if u_gender == "남성" else "♀️"
+                p_color = "#1A237E" if u_gender == "남성" else "#D50000"
+                
+                import datetime, pytz
+                today_str = datetime.datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y년 %m월 %d일")
+
+                # 🌟 [고도화 2] 웅장한 개인 사주풀이 표지 HTML 창조
+                cover_html = f"""
+                <div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
+                    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+                        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+                            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
+                        </div>
+                        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
+                            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
+                            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
+                            </div>
+                        </div>
+                        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
+                        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
+                    </div>
+                </div>
+                """
+                
+                # 표지 즉시 화면에 렌더링
+                st.markdown(cover_html, unsafe_allow_html=True)
+                
+                # 인쇄 버튼
                 components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
                 
                 ji_rel_rows = ""
@@ -1017,7 +1049,9 @@ if btn_single:
                     ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
                 disp_name = u_name if u_name.strip() else "홍길동"
-                info_h = f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:20px; font-weight:900; color:#1A237E;'>🏮 {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:16px; color:#333; font-weight:900;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
+                
+                # 🌟 [고도화 3] 사주 원국표 상단 완전체 타이틀 세팅 (가변형 이모지 및 마진 방어 적용)
+                info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
                 table_html = f"""<table class='result-table'>
                 <tr class='top-header-cell'>
@@ -1026,18 +1060,7 @@ if btn_single:
                 <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>일주</span></td>
                 <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>월주</span></td>
                 <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>년주</span></td>
-                </tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>
-                <tr><td class='header-cell-main' style='padding:0; border:1px solid #444;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
-                {ji_rel_rows}
-                <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, u_gender)) if get_general_shinsal_filtered(i, gans, jjis, u_gender) else '-'}</td>" for i in range(4)])}</tr>
-                </table>"""
+                </tr>"""
                 
                 calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
 
@@ -1610,42 +1633,81 @@ if btn_single:
                     f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
                     gunghap_main = ai_out.split("[GUNGHAP_START]")[1].strip() if "[GUNGHAP_START]" in ai_out else ai_out
 
-                    # 🚨 [문법 오류 및 코드 노출 방어]
+                    # 🚨 [문법 오류 및 코드 노출 방어] 아스키코드 암호화 정규식
                     import re
                     b3 = chr(96) + chr(96) + chr(96)
                     pattern_str = b3 + "html|" + b3
-                    
-                    # 마커로 텍스트 분리 및 꼬리표 마커 원천 삭제
-                    m_ai_content = ai_out.split("[MALE_START]")[1].split("[MALE_END]")[0].strip() if "[MALE_START]" in ai_out else ""
-                    f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
-                    
-                    # 🚨 수정된 부분: [GUNGHAP_END]를 기준으로 한 번 더 분할하여 찌꺼기 텍스트를 완벽히 도려냅니다.
-                    gunghap_main = ai_out.split("[GUNGHAP_START]")[1].split("[GUNGHAP_END]")[0].strip() if "[GUNGHAP_START]" in ai_out else ai_out.replace("[GUNGHAP_END]", "").strip()
+                    m_ai_content = re.sub(pattern_str, "", m_ai_content).strip()
+                    f_ai_content = re.sub(pattern_str, "", f_ai_content).strip()
+                    gunghap_main = re.sub(pattern_str, "", gunghap_main).strip()
 
-                    # 기존의 둥그런 테두리 박스와 대제목 유지
-                    tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
-                    tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주팔자</h1></div>"
-                    
-                    # [남성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
+                    # ---------------------------------------------------------
+                    # 🌟 [고도화 1단계] 궁합 표지(Cover Page) 이모지 고정 부활
+                    # ---------------------------------------------------------
                     m_name_target = u_name if u_gender == '남성' else p_name
-                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', (u_gender == '남성'))}<div class='content-box-loose'>{m_ai_content}</div></div>"
+                    f_name_target = p_name if u_gender == '남성' else u_name
+                    m_marital_target = u_marital if u_gender == '남성' else p_marital
+                    f_marital_target = p_marital if u_gender == '남성' else u_marital
                     
-                    # 인쇄 시 남성과 여성 사이를 끊어주는 분리선
+                    import datetime, pytz
+                    today_str = datetime.datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y년 %m월 %d일")
+
+                    cover_html = f"<div class='report-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'><div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin:auto;'><div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'><h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>💞 초연 시공명리 궁합풀이</h1></div><div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'><h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 10px; font-family:\"Malgun Gothic\", sans-serif;'>♂️ 남성 : {m_name_target} 님</h2><p style='margin-bottom: 25px; color: #555; font-weight: 600; white-space: nowrap;'>[양력] {m_ctx['birth_solar']} | [음력] {m_ctx['birth_lunar']}</p><h2 style='font-size: 24px; font-weight: 900; color: #D50000; margin-bottom: 10px; font-family:\"Malgun Gothic\", sans-serif;'>♀️ 여성 : {f_name_target} 님</h2><p style='margin-bottom: 0; color: #555; font-weight: 600; white-space: nowrap;'>[양력] {f_ctx['birth_solar']} | [음력] {f_ctx['birth_lunar']}</p></div><p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p><p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:\"Malgun Gothic\", sans-serif;'>초연 시공명리 연구소</p></div></div>"
+
+                    # ---------------------------------------------------------
+                    # 🌟 [고도화 2단계] 사주 원국표 상단 꽉 찬 타이틀 조립 (마진 방어)
+                    # ---------------------------------------------------------
+                    m_title_html = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>♂️ {m_name_target}님 (남성, {m_marital_target}, {m_ctx['age']}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {m_ctx['birth_solar']} | 음력: {m_ctx['birth_lunar']}]</span></div>"
+                    
+                    f_title_html = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:#D50000; white-space:nowrap;'>♀️ {f_name_target}님 (여성, {f_marital_target}, {f_ctx['age']}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {f_ctx['birth_solar']} | 음력: {f_ctx['birth_lunar']}]</span></div>"
+
+                    tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
+                    tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:25px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주팔자</h1></div>"
+                    
+                    # 남성 구역 (빈 타이틀을 넘기고 위에 직접 조립한 타이틀을 얹음)
+                    tables_html += f"<div>{m_title_html}{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, '', '남성', '')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', (u_gender == '남성'))}<div class='content-box-loose'>{m_ai_content}</div></div>"
+                    
+                    # 남성과 여성 분리선
                     tables_html += "<div style='page-break-before: always; margin-top: 50px;'></div>"
                     
-                    # [여성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
-                    f_name_target = p_name if u_gender == '남성' else u_name
-                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', (u_gender == '여성'))}<div class='content-box-loose'>{f_ai_content}</div></div>"
+                    # 여성 구역
+                    tables_html += f"<div>{f_title_html}{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, '', '여성', '')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', (u_gender == '여성'))}<div class='content-box-loose'>{f_ai_content}</div></div>"
+                    tables_html += "</div></div>"
+
+                    # ---------------------------------------------------------
+                    # 🌟 [고도화 3단계] 커플 인생 기상도(상하 대운표) 자체 생성 및 치환
+                    # ---------------------------------------------------------
+                    def build_daeun_row_html(ctx, gender_val):
+                        gan_list, ji_list = "甲乙丙丁戊己庚辛壬癸", "子丑寅卯辰巳午未申酉戌亥"
+                        order = 1 if (gan_list.index(ctx['yc']) % 2 == 0) == (gender_val == '남성') else -1
+                        html = "<div style='display:flex; flex-wrap:nowrap; overflow:hidden; border:2px solid #3E2723; background:white; margin-bottom:10px; font-family:\"Malgun Gothic\", sans-serif;'>"
+                        for i in range(10):
+                            val = int(ctx['daewun_num']) + i*10
+                            c = gan_list[(gan_list.index(ctx['mc'])+(i+1)*order)%10]
+                            j = ji_list[(ji_list.index(ctx['mj'])+(i+1)*order)%12]
+                            active = "background:#FFEBEE; outline:3px solid #D50000; z-index:2; position:relative;" if (val <= ctx['age'] < val+10) else ""
+                            html += f"<div style='flex:1; border-left:1px solid #ddd; text-align:center; {active}'><div style='background:#3E2723; color:white; font-size:12px; padding:2px 0;'>{val}세</div><div style='font-size:15px; font-weight:900; padding:3px 0;'>{c}</div><div style='font-size:15px; font-weight:900; padding:3px 0;'>{j}</div></div>"
+                        return html + "</div>"
+
+                    m_daeun_html = f"<div style='font-family:\"Malgun Gothic\", sans-serif; font-weight:900; color:#1A237E; margin-bottom:5px; font-size:15px;'>♂️ {m_name_target}님의 대운 흐름</div>" + build_daeun_row_html(m_ctx, '남성')
+                    f_daeun_html = f"<div style='font-family:\"Malgun Gothic\", sans-serif; font-weight:900; color:#D50000; margin-top:15px; margin-bottom:5px; font-size:15px;'>♀️ {f_name_target}님의 대운 흐름</div>" + build_daeun_row_html(f_ctx, '여성')
+                    couple_daeun_box = f"<div style='background:#FAFAFA; padding:20px; border:1px solid #1A237E; border-radius:10px; margin:15px 0;'>{m_daeun_html}{f_daeun_html}</div>"
                     
-                    tables_html += "</div></div>" # vip-inset-frame, report-page 닫기
-                    
-                    # 후반부 궁합 종합풀이 연결 (기존 로직)
+                    # 본문 마커를 대운표로 치환 (마커 분실 시 최상단 강제 결합)
+                    if "[[COUPLE_DAEUN_TABLES]]" in gunghap_main:
+                        gunghap_main = gunghap_main.replace("[[COUPLE_DAEUN_TABLES]]", couple_daeun_box)
+                    else:
+                        gunghap_main = couple_daeun_box + gunghap_main
+
+                    # 후반부 그래픽 렌더링
                     gunghap_html = gh_engine.get_graphic_html(gunghap_main)
                     
+                    # 화면 순차 출력
+                    st.markdown(cover_html, unsafe_allow_html=True)
                     st.markdown(tables_html, unsafe_allow_html=True)
                     st.markdown(gunghap_html, unsafe_allow_html=True)
                     
-                    print_btn_html = "<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border-radius: 5px; cursor: pointer;'>궁합 감명서 인쇄 / PDF 저장</button></div>"
+                    print_btn_html = "<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border-radius: 5px; cursor: pointer;'>🖨️ 궁합 감명서 인쇄 / PDF 저장</button></div>"
                     components.html(print_btn_html, height=100)
                 except Exception as e:
                     st.error(f"궁합 AI 구동 실패 오류: {e}")
