@@ -799,23 +799,27 @@ class UniversalPrintableGunghap:
 
     def get_graphic_html(self, ai_text):
         import re
-        # AI 텍스트 세탁 (채팅창 및 렌더링 파괴 기호 제거)
-        pattern = r'
-http://googleusercontent.com/immersive_entry_chip/0
+        # 🚨 [문법 오류 및 코드 노출 방어] 아스키코드로 마크다운 기호를 세탁합니다.
+        b3 = chr(96) + chr(96) + chr(96)
+        pattern_str = b3 + "html|" + b3
+        clean_ai = re.sub(pattern_str, "", ai_text).strip()
+
+        # 색상 지정
+        c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
         
+        # 막대 그래프 조립 (스트림릿 에러 방지를 위해 한 줄로 압축)
         bars_html = ""
         for item in self.details:
-            bars_html += f"""
-            <div style='display:flex; align-items:center; margin-bottom:12px;'>
-                <div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{item['label']}</div>
-                <div style='flex:1; height:12px; margin:0 10px;'>
-                    <svg width='100%' height='12' style='display:block;'>
-                        <rect width='100%' height='12' rx='6' ry='6' fill='#eeeeee' />
-                        <rect width='{item['pct']}%' height='12' rx='6' ry='6' fill='{item['color']}' />
-                    </svg>
-                </div>
-                <div style='width:35px; font-size:12px; font-weight:bold;'>{item['pct']}%</div>
-            </div>"""
+            bars_html += f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{item['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12' style='display:block;'><rect width='100%' height='12' rx='6' ry='6' fill='#eeeeee' /><rect width='{item['pct']}%' height='12' rx='6' ry='6' fill='{item['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{item['pct']}%</div></div>"
+            
+        # 맺음말 조립
+        closing = "<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'><p style='font-size: 15px; line-height: 1.8; color: #333; font-family: \"Noto Serif KR\", serif;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p><p style='font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px; font-family: \"Noto Serif KR\", serif;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p><div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Noto Serif KR\", serif;'>- 초연 시공명리 연구소 드림 -</span></div></div>"
+        
+        # 전체 레이아웃 조립
+        html_str = f"<div class='report-page' style='padding:40px; background:#fff;'><div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-family: \"Malgun Gothic\", sans-serif; font-weight: 900;'>💞 초연 시공명리 종합 궁합풀이</h1></div><div style='background-color: #FAFAFA; padding: 40px; border: 2px solid #1A237E; border-radius: 15px; margin-bottom: 40px; -webkit-box-decoration-break: clone; box-decoration-break: clone;'><div class='content-box-loose' style='margin-bottom: 50px;'>{clean_ai}</div><h2 style='text-align:center; margin-top:0; color:#333; font-family: \"Malgun Gothic\", sans-serif; font-weight: 900; font-size: 22px; margin-bottom: 25px;'>📊 최종 궁합 점수</h2><div style='display:flex; justify-content:center; align-items:center; margin-bottom:20px;'><div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({c} {self.final_score}%, #f0f0f0 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'><div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'><span style='font-size:32px; font-weight:900; color:{c};'>{self.final_score}</span><span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span></div></div></div><div style='text-align:center; margin-bottom:25px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{c}; padding:8px 32px; border-radius:30px; display: inline-block; -webkit-print-color-adjust: exact;'>{self.grade}</span></div><div style='max-width:500px; margin:0 auto; margin-bottom: 20px;'>{bars_html}</div>{closing}</div></div>"
+        
+        # 스트림릿 마크다운 렌더링 에러 방지를 위해 모든 줄바꿈을 강제로 차단하고 리턴합니다.
+        return html_str.replace('\n', '')
         
         gunghap_closing = f"""
         <div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>
