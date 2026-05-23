@@ -1615,9 +1615,12 @@ if btn_single:
                     b3 = chr(96) + chr(96) + chr(96)
                     pattern_str = b3 + "html|" + b3
                     
-                    m_ai_content = re.sub(pattern_str, "", m_ai_content).strip()
-                    f_ai_content = re.sub(pattern_str, "", f_ai_content).strip()
-                    gunghap_main = re.sub(pattern_str, "", gunghap_main).strip()
+                    # 마커로 텍스트 분리 및 꼬리표 마커 원천 삭제
+                    m_ai_content = ai_out.split("[MALE_START]")[1].split("[MALE_END]")[0].strip() if "[MALE_START]" in ai_out else ""
+                    f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
+                    
+                    # 🚨 수정된 부분: [GUNGHAP_END]를 기준으로 한 번 더 분할하여 찌꺼기 텍스트를 완벽히 도려냅니다.
+                    gunghap_main = ai_out.split("[GUNGHAP_START]")[1].split("[GUNGHAP_END]")[0].strip() if "[GUNGHAP_START]" in ai_out else ai_out.replace("[GUNGHAP_END]", "").strip()
 
                     # 기존의 둥그런 테두리 박스와 대제목 유지
                     tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
