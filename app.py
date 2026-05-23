@@ -1597,48 +1597,48 @@ if btn_single:
                     
                     return master_bar + summary_html
 
-            try:
-                ai_out = gh_engine.generate_ai_report(m_ctx, f_ctx)
-                
-                # 마커로 텍스트 분리
-                m_ai_content = ai_out.split("[MALE_START]")[1].split("[MALE_END]")[0].strip() if "[MALE_START]" in ai_out else ""
-                f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
-                gunghap_main = ai_out.split("[GUNGHAP_START]")[1].strip() if "[GUNGHAP_START]" in ai_out else ai_out
+                    # 5. 최종 레이아웃 직렬 조립
+                try:
+                    ai_out = gh_engine.generate_ai_report(m_ctx, f_ctx)
+                    
+                    # 마커로 텍스트 분리
+                    m_ai_content = ai_out.split("[MALE_START]")[1].split("[MALE_END]")[0].strip() if "[MALE_START]" in ai_out else ""
+                    f_ai_content = ai_out.split("[FEMALE_START]")[1].split("[FEMALE_END]")[0].strip() if "[FEMALE_START]" in ai_out else ""
+                    gunghap_main = ai_out.split("[GUNGHAP_START]")[1].strip() if "[GUNGHAP_START]" in ai_out else ai_out
 
-                # 🚨 [속살 코드 노출 원천 차단 - 안전한 정규식 복구]
-                # chr(96)은 백틱 기호입니다. 시스템 충돌을 막기 위해 암호화하여 패턴을 만듭니다.
-                import re
-                mark = chr(96) * 3
-                pattern = mark + r"(?:html)?|" + mark
+                    # 🚨 [문법 오류 및 코드 노출 방어]
+                    import re
+                    b3 = chr(96) + chr(96) + chr(96)
+                    pattern_str = b3 + "html|" + b3
+                    
+                    m_ai_content = re.sub(pattern_str, "", m_ai_content).strip()
+                    f_ai_content = re.sub(pattern_str, "", f_ai_content).strip()
+                    gunghap_main = re.sub(pattern_str, "", gunghap_main).strip()
 
-                m_ai_content = re.sub(pattern, '', m_ai_content).strip()
-                f_ai_content = re.sub(pattern, '', f_ai_content).strip()
-                gunghap_main = re.sub(pattern, '', gunghap_main).strip()
-
-                # 기존의 둥그런 테두리 박스와 대제목 유지
-                tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
-                tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주팔자</h1></div>"
-                
-                # [남성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
-                m_name_target = u_name if u_gender == '남성' else p_name
-                tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', (u_gender == '남성'))}<div class='content-box-loose'>{m_ai_content}</div></div>"
-                
-                # 인쇄 시 남성과 여성 사이를 끊어주는 분리선
-                tables_html += "<div style='page-break-before: always; margin-top: 50px;'></div>"
-                
-                # [여성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
-                f_name_target = p_name if u_gender == '남성' else u_name
-                tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', (u_gender == '여성'))}<div class='content-box-loose'>{f_ai_content}</div></div>"
-                
-                tables_html += "</div></div>" # vip-inset-frame, report-page 닫기
-                
-                # 후반부 궁합 종합풀이 연결 (기존 로직)
-                gunghap_html = gh_engine.get_graphic_html(gunghap_main)
-                
-                st.markdown(tables_html, unsafe_allow_html=True)
-                st.markdown(gunghap_html, unsafe_allow_html=True)
-                
-                print_btn_html = "<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border-radius: 5px; cursor: pointer;'>궁합 감명서 인쇄 / PDF 저장</button></div>"
-                components.html(print_btn_html, height=100)
-            except Exception as e:
-                st.error(f"궁합 AI 구동 실패 오류: {e}")
+                    # 기존의 둥그런 테두리 박스와 대제목 유지
+                    tables_html = "<div class='report-page' style='padding:40px; background:#fff;'><div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>"
+                    tables_html += f"<div style='text-align:center; border-bottom:4px double #3E2723; padding-bottom:15px; margin-bottom:30px;'><h1 style='margin:0; color:#3E2723; font-weight: 900; font-family:\"Malgun Gothic\", sans-serif;'>🗝️ 두 사람의 사주팔자</h1></div>"
+                    
+                    # [남성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
+                    m_name_target = u_name if u_gender == '남성' else p_name
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', '남성 원국')}{get_master_and_summary(gh_engine.m_g, gh_engine.m_j, m_name_target, '남성', (u_gender == '남성'))}<div class='content-box-loose'>{m_ai_content}</div></div>"
+                    
+                    # 인쇄 시 남성과 여성 사이를 끊어주는 분리선
+                    tables_html += "<div style='page-break-before: always; margin-top: 50px;'></div>"
+                    
+                    # [여성 구역] : 표 + 마스터바 + 1.요약(고정) + 2.구조/3.성격(AI)
+                    f_name_target = p_name if u_gender == '남성' else u_name
+                    tables_html += f"<div>{draw_rich_saju_table(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', '여성 원국')}{get_master_and_summary(gh_engine.f_g, gh_engine.f_j, f_name_target, '여성', (u_gender == '여성'))}<div class='content-box-loose'>{f_ai_content}</div></div>"
+                    
+                    tables_html += "</div></div>" # vip-inset-frame, report-page 닫기
+                    
+                    # 후반부 궁합 종합풀이 연결 (기존 로직)
+                    gunghap_html = gh_engine.get_graphic_html(gunghap_main)
+                    
+                    st.markdown(tables_html, unsafe_allow_html=True)
+                    st.markdown(gunghap_html, unsafe_allow_html=True)
+                    
+                    print_btn_html = "<div class='no-print' style='text-align: center; margin: 40px 0;'><button onclick='window.focus(); window.print()' style='padding: 12px 35px; background-color: #3E2723; color: white; font-weight: 900; border-radius: 5px; cursor: pointer;'>궁합 감명서 인쇄 / PDF 저장</button></div>"
+                    components.html(print_btn_html, height=100)
+                except Exception as e:
+                    st.error(f"궁합 AI 구동 실패 오류: {e}")
