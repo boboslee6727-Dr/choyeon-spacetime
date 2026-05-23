@@ -1010,8 +1010,9 @@ if btn_single:
                 p_icon = "♂️" if u_gender == "남성" else "♀️"
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 
-                import datetime, pytz
-                today_str = datetime.datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y년 %m월 %d일")
+                # 이미 위에서 선언된 dt_mod를 활용하여 에러 원천 차단
+                import pytz
+                today_str = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y년 %m월 %d일")
 
                 # 🌟 [고도화 2] 웅장한 개인 사주풀이 표지 HTML 창조
                 cover_html = f"""
