@@ -1018,12 +1018,18 @@ if btn_single:
             # [모드 1] 개인사주 분석 (렌더링 순서 통제 및 폰트업 완료)
             # ------------------------------------------------------------------
             if u_product == "개인사주":
-                past_months_html = ""
                 p_icon = "♂️" if u_gender == "남성" else "♀️"
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
-                components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
+                # 🚨 여기서 print_btn_html 변수를 먼저 정의합니다.
+                print_btn_html = """
+                <div class='no-print' style='text-align:right; margin: 20px 0;'>
+                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+                        🖨️ 초연 사주풀이 인쇄/PDF
+                    </button>
+                </div>
+                """      
 
                 # 🚨 표지 및 인쇄 버튼 생성 (화면 출력은 보류)
                 cover_html = f"""
