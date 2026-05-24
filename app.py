@@ -1015,7 +1015,7 @@ if btn_single:
 </div>
 """
             # ------------------------------------------------------------------
-            # [모드 1] 개인사주 분석 (렌더링 순서 통제 및 폰트업 완료)
+            # [모드 1] 개인사주 분석: 최종 순서 정리
             # ------------------------------------------------------------------
             if u_product == "개인사주":
                 past_months_html = ""
@@ -1023,16 +1023,7 @@ if btn_single:
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
-                # 🚨 여기서 print_btn_html 변수를 먼저 정의합니다.
-                print_btn_html = """
-                <div class='no-print' style='text-align:right; margin: 20px 0;'>
-                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-                        🖨️ 초연 사주풀이 인쇄/PDF
-                    </button>
-                </div>
-                """      
-
-                # 🚨 표지 및 인쇄 버튼 생성 (화면 출력은 보류)
+                # 1. 먼저 정의해야 할 변수들을 전부 셋팅합니다.
                 cover_html = f"""
                 <div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
                     <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
@@ -1051,7 +1042,6 @@ if btn_single:
                     </div>
                 </div>
                 """
-
                 # 🚨 사주 원국표 생성 (합충형파해 복원, 폰트 14px 적용, 화면 출력은 보류)
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -1089,6 +1079,7 @@ if btn_single:
 
                 gen_shinsal_list = []
                 for i in range(4):
+
                     raw_tags = get_general_shinsal_filtered(i, gans, jjis, u_gender)
                     for tag in raw_tags:
                         if ">" in tag and "<" in tag: gen_shinsal_list.append(tag.split('>')[1].split('<')[0])
@@ -1187,6 +1178,27 @@ if btn_single:
 <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
 </div>
 </div>"""
+
+                report_1_full_html = f"""
+                {cover_html}
+                <div class='no-print' style='text-align:right; margin: 20px 0;'>
+                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+                        🖨️ 초연 사주풀이 인쇄/PDF
+                    </button>
+                </div>
+                <div class='report-page'>
+                    <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
+                        <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
+                        {table_html}
+                        {master_bar_html}
+                        <div style='margin-top:20px;'>
+                            {full_content_clean}
+                        </div>
+                    </div>
+                </div>
+                """
+                
+                st.markdown(report_1_full_html, unsafe_allow_html=True)
 
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
