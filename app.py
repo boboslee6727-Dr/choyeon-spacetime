@@ -546,29 +546,43 @@ def get_daeun_su_accurate(utc_dt, order):
             sun.compute(dt)
             return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
 
-        lon = get_lon(utc_dt)
+        start_lon = get_lon(utc_dt)
         jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
         
+        # 1. 목표 절기의 각도를 360도 누적 개념으로 추출
         if order == 1:
-            targets = [l for l in jeol_lons if l > lon] + [l + 360 for l in jeol_lons if l <= lon]
+            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
         else:
-            targets = [l for l in jeol_lons if l <= lon] + [l - 360 for l in jeol_lons if l > lon]
-        t_lon = (max(targets) if order == -1 else min(targets)) % 360
+            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
             
         search_dt = utc_dt
-        step = dt_mod.timedelta(minutes=1) if order == 1 else dt_mod.timedelta(minutes=-1)
+        # 2. 10분 단위 탐색으로 효율과 범위 극대화
+        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
         
-        for _ in range(20000):
+        # 3. 6000회 탐색 (10분 * 6000 = 약 41.6일 커버)
+        for _ in range(6000):
             search_dt += step
-            l = get_lon(search_dt)
-            if (order == 1 and l >= t_lon) or (order == -1 and l <= t_lon):
-                break
+            curr_lon = get_lon(search_dt)
             
+            # 360도 경계선 회전 보정 (Unwrapping)
+            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180:
+                curr_lon += 360
+            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180:
+                curr_lon -= 360
+                
+            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped):
+                break
+                
+        # 4. 일수 계산 및 대운수 반올림
         total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
         d_su = int(round(total_days / 3.0))
-            
-        return max(1, min(10, d_su))
-    except: 
+        
+        # 5. 전통 명리학 보정
+        if d_su == 0: d_su = 1
+        elif d_su > 10: d_su = 10
+        
+        return d_su
+    except Exception as e: 
         return 1
 
 # ==============================================================================
