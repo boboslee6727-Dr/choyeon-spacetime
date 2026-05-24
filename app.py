@@ -1057,10 +1057,10 @@ if btn_single:
                 info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
                 # 🌟 [복원 1] 유실되었던 천간, 지지, 십성, 12운성 테이블 데이터 조립부 부활
-                s_gan = [get_sibsung(ds, g) for g in gans]
+                s_gan = [get_ss(ds, g) for g in gans]
                 s_gan[1] = "본원"  # 일간은 본원
-                s_ji = [get_sibsung(ds, j) for j in jjis]
-                un12 = [get_12_woonsung(ds, j) for j in jjis]
+                s_ji = [get_ss(ds, j) for j in jjis]
+                un12 = [get_unsung(ds, j) for j in jjis]
 
                 table_html = f"""
                 <div class='report-page' style='padding:40px; background:#fff;'>
