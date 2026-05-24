@@ -1181,10 +1181,12 @@ if btn_single:
 
                 report_1_full_html = f"""
                 {cover_html}
+                # [코드 수정 시작]
                 <div class='no-print' style='text-align:right; margin: 20px 0;'>
-                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+                    <button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
                         🖨️ 초연 사주풀이 인쇄/PDF
                     </button>
+                    <script>document.getElementById('print-btn').addEventListener('click', () => { window.print(); });</script>
                 </div>
                 <div class='report-page'>
                     <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
