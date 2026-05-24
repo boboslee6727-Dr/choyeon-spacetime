@@ -1000,7 +1000,7 @@ if btn_single:
     <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
 </div>
 """
-            # ------------------------------------------------------------------
+# ------------------------------------------------------------------
             # [모드 1] 개인사주 분석
             # ------------------------------------------------------------------
             if u_product == "개인사주":
@@ -1059,7 +1059,7 @@ if btn_single:
                 s_ji = [get_ss(ds, j) for j in jjis]
                 un12 = [get_unsung(ds, j) for j in jjis]
 
-                # 🚨 [핵심 조치] HTML 문자열 내부의 들여쓰기(띄어쓰기)를 0칸으로 완전 밀착!
+                # 🚨 [핵심 조치] HTML 문자열 내부의 들여쓰기를 밀착하여 마크다운 충돌 방지!
                 table_html = f"""<div class='report-page' style='padding:40px; background:#fff;'>
 <div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>
 {info_h}
@@ -1142,7 +1142,7 @@ if btn_single:
                 
                 master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
                 
-                # 🌟 [복원 3] 열어두었던 표 HTML을 닫고 최종 렌더링
+                # 🌟 [복원 3] 열어두었던 표 HTML을 닫고 최종 렌더링 (여기서 딱 한 번 출력!)
                 table_html += master_bar_html + "</div></div>"
                 st.markdown(table_html, unsafe_allow_html=True)
                 
@@ -1268,7 +1268,6 @@ if btn_single:
                     f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
-
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
                     f"1. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성(예: 무인성일 경우)을 마치 있는 것처럼 지어내어 통변하지 마십시오.\n"
                     f"2. 괄호 병기 금지: 에세이 작성 시 '(일주 공망)', '(년주 공망)', '(인성)' 등의 명리 용어나 한자를 괄호 안에 병기하는 행위를 엄격히 금지합니다.\n"
