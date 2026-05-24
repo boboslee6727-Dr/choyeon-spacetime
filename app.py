@@ -2494,53 +2494,57 @@ with st.sidebar:
 # 5. 분석 가동 및 출력 (스위치 분기)
 # ==============================================================================
 if btn_single:
-    if not u_name.strip(): st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
-    elif u_product == "궁합" and not p_name.strip(): st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
+    if not u_name.strip(): 
+        st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
+    elif u_product == "궁합" and not p_name.strip(): 
+        st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
         spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이({APP_VERSION}) 분석 중....]" if u_product == "개인사주" else f"💕 [초연 시공명리 궁합 사주풀이 분석({APP_VERSION}) 중....]"
         
         # 🎯 완벽하게 정렬된 로딩 스피너 및 메인 로직 구역
         with st.spinner(spinner_msg):
-            # ------------------------------------------------------------------
-            # [공통 연산 - 신청인]
-            # ------------------------------------------------------------------
-            klc = KoreanLunarCalendar()
-            if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
-            elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
-            else: klc.setLunarDate(u_y, u_m, u_d, True)
-            
-            is_leap = getattr(klc, 'isIntercalary', False)
-            leap_str = "윤달" if is_leap else "평달"
-            
-            sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
-            lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
-            
-            curr_dt_sys = dt_mod.datetime.now()
-            curr_y = curr_dt_sys.year
-            curr_m = curr_dt_sys.month
-            u_age = curr_y - u_y + 1
-            
-            base_y_idx = (curr_y - 1984) % 60
-            curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
-            gj = klc.getChineseGapJaString().split()
-            ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
-            
-            base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
-            hs, hb = get_time_ganji(ds, u_t, base_dt)
-            gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
-            
-            time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
-            
-            def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
-            
-            intro_html = f"""
+            # 🚨 [중요 오류 수정] 여기서부터 전체 분석 로직을 try 블록으로 감쌉니다.
+            try:
+                # ------------------------------------------------------------------
+                # [공통 연산 - 신청인]
+                # ------------------------------------------------------------------
+                klc = KoreanLunarCalendar()
+                if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
+                elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
+                else: klc.setLunarDate(u_y, u_m, u_d, True)
+                
+                is_leap = getattr(klc, 'isIntercalary', False)
+                leap_str = "윤달" if is_leap else "평달"
+                
+                sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+                lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
+                
+                curr_dt_sys = dt_mod.datetime.now()
+                curr_y = curr_dt_sys.year
+                curr_m = curr_dt_sys.month
+                u_age = curr_y - u_y + 1
+                
+                base_y_idx = (curr_y - 1984) % 60
+                curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
+                gj = klc.getChineseGapJaString().split()
+                ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+                
+                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                hs, hb = get_time_ganji(ds, u_t, base_dt)
+                gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
+                
+                time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
+                
+                def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+                
+                intro_html = f"""
 <div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; padding-bottom: 0px; margin-bottom: 25px;'>
     <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 시작합니다만,</p>
     <p style='text-indent: 15px; margin: 0 0 5px 0;'>본 초연 시공명리 사주풀이는 5년에 한 번 돌아오는 '60월령'과 '60일주'의 조합으로 3,600가지의 유형으로 보다 더 정밀한 분석이 가능합니다.</p>
     <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
 </div>
 """
-# ------------------------------------------------------------------
+            # ------------------------------------------------------------------
             # [모드 1] 개인사주 분석: 최종 순서 정리
             # ------------------------------------------------------------------
             if u_product == "개인사주":
