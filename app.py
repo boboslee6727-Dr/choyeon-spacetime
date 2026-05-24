@@ -1202,8 +1202,8 @@ if btn_single:
                 
                 st.markdown(report_1_full_html, unsafe_allow_html=True)
 
-            except Exception as e: 
-                    st.error(f"AI 연산 오류: {e}")
+        except Exception as e: 
+            st.error(f"AI 연산 오류: {e}")
 
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
