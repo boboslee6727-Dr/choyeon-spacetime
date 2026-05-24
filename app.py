@@ -1018,6 +1018,7 @@ if btn_single:
             # [모드 1] 개인사주 분석 (렌더링 순서 통제 및 폰트업 완료)
             # ------------------------------------------------------------------
             if u_product == "개인사주":
+                past_months_html = ""
                 p_icon = "♂️" if u_gender == "남성" else "♀️"
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
