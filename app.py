@@ -1042,8 +1042,15 @@ if btn_single:
                     </div>
                 </div>
                 """
-                print_btn_html = f"<div class='no-print' style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>"
-                
+                # 🚨 HTML 버튼을 st.markdown으로 직접 삽입하여 DOM을 일치시킴
+                st.markdown("""
+                <div class='no-print' style='text-align:right; margin: 20px 0;'>
+                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+                        🖨️ 초연 사주풀이 인쇄/PDF
+                    </button>
+                </div>
+                """, unsafe_allow_html=True)                
+
                 # 🚨 사주 원국표 생성 (합충형파해 복원, 폰트 14px 적용, 화면 출력은 보류)
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
