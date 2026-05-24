@@ -3050,8 +3050,6 @@ if btn_single:
                     if count_d == 0 and "table" not in clean_ai_text.lower():
                         clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
 
-                # 🚨 [김집사 긴급 복구] 모든 코드를 try 안으로 안전하게 배치
-                 try:
                     # [교정 4] 전체 알맹이(본문 + 클로징 멘트)를 하나의 단일 박스로 구성
                     full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
