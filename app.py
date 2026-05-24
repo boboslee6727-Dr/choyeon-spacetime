@@ -2547,15 +2547,15 @@ if btn_single:
                 # ------------------------------------------------------------------
                 # [모드 1] 개인사주 분석: 최종 순서 정리
                 # ------------------------------------------------------------------
- 	        if u_product == "개인사주":
-            	past_months_html = ""
+                    if u_product == "개인사주":
+                        past_months_html = ""
 	            p_icon = "♂️" if u_gender == "남성" else "♀️"
-                    	p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                    	today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
+                        p_color = "#1A237E" if u_gender == "남성" else "#D50000"
+                        today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
                     	cover_html = f"""
-                    <div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
-                        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+                        <div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
+                            <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
                                 <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
                             </div>
