@@ -11,7 +11,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 30.3 (Final Hardcoded)"
+APP_VERSION = "Ver 30.4 (Final Hardcoded)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -2540,7 +2540,7 @@ if btn_single:
     <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
 </div>
 """
-            # ------------------------------------------------------------------
+# ------------------------------------------------------------------
             # [모드 1] 개인사주 분석: 최종 순서 정리
             # ------------------------------------------------------------------
             if u_product == "개인사주":
@@ -2605,7 +2605,6 @@ if btn_single:
 
                 gen_shinsal_list = []
                 for i in range(4):
-
                     raw_tags = get_general_shinsal_filtered(i, gans, jjis, u_gender)
                     for tag in raw_tags:
                         if ">" in tag and "<" in tag: gen_shinsal_list.append(tag.split('>')[1].split('<')[0])
@@ -2705,32 +2704,7 @@ if btn_single:
 </div>
 </div>"""
 
-                report_1_full_html = f"""
-                {cover_html}
-                # [코드 수정 시작]
-                <div class='no-print' style='text-align:right; margin: 20px 0;'>
-                    <button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-                        🖨️ 초연 사주풀이 인쇄/PDF
-                    </button>
-                    <script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script>
-                </div>
-                <div class='report-page'>
-                    <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
-                        <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
-                        {table_html}
-                        {master_bar_html}
-                        <div style='margin-top:20px;'>
-                            {full_content_clean}
-                        </div>
-                    </div>
-                </div>
-                """
-                
-                st.markdown(report_1_full_html, unsafe_allow_html=True)
-
-        except Exception as e: 
-            st.error(f"AI 연산 오류: {e}")
-
+                # 💡 데이터를 준비하는 부분들
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
 
@@ -3014,6 +2988,7 @@ if btn_single:
 (※ AI 지시: 운의 흐름에 따른 합형충파해와 진술축미의 입고와 개고, 도화(연살)/망신/역마살 작용에 따른 역동성과 재물과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하시오.)
 </div>
 """
+                # 🚨 [AI 호출 및 조립 보호 구역]
                 try:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
@@ -3056,6 +3031,7 @@ if btn_single:
                     # [교정 5] 실전형 A4 둥근 사각박스 프레임 및 인쇄 버튼 조립
                     # ※ 주의: 자바스크립트 중괄호는 {{ }}로 이스케이프하여 오류 방지
                     report_1_full_html = f"""
+{cover_html}
 <div class='no-print' style='text-align:right; margin: 20px 0;'>
     <button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
         🖨️ 초연 사주풀이 인쇄/PDF
@@ -3070,7 +3046,6 @@ if btn_single:
         {table_html}
         {master_bar_html}
         <div style='margin-top:20px;'>
-            {intro_html}
             {full_content_clean}
         </div>
     </div>
@@ -3078,8 +3053,9 @@ if btn_single:
 """
                     # 화면 출력
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
+                    
                 except Exception as e: 
-                    st.error(f"AI 연산 오류: {e}") 
+                    st.error(f"AI 연산 오류: {e}")
 
             # ------------------------------------------------------------------
             # [모드 2] 궁합 분석 (폰트 14px 통일)
