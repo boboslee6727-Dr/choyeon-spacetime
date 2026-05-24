@@ -975,32 +975,32 @@ if btn_single:
         
         # 🎯 완벽하게 정렬된 로딩 스피너 및 메인 로직 구역
         with st.spinner(spinner_msg):
-        try:    
-            # ------------------------------------------------------------------
-            # [공통 연산 - 신청인]
-            # ------------------------------------------------------------------
-            klc = KoreanLunarCalendar()
-            if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
-            elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
-            else: klc.setLunarDate(u_y, u_m, u_d, True)
+            try:    
+                # ------------------------------------------------------------------
+                # [공통 연산 - 신청인]
+                # ------------------------------------------------------------------
+                klc = KoreanLunarCalendar()
+                if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
+                elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
+                else: klc.setLunarDate(u_y, u_m, u_d, True)
             
-            is_leap = getattr(klc, 'isIntercalary', False)
-            leap_str = "윤달" if is_leap else "평달"
+                is_leap = getattr(klc, 'isIntercalary', False)
+                leap_str = "윤달" if is_leap else "평달"
             
-            sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
-            lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
+                sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+                lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
             
-            curr_dt_sys = dt_mod.datetime.now()
-            curr_y = curr_dt_sys.year
-            curr_m = curr_dt_sys.month
-            u_age = curr_y - u_y + 1
+                curr_dt_sys = dt_mod.datetime.now()
+                curr_y = curr_dt_sys.year
+                curr_m = curr_dt_sys.month
+                u_age = curr_y - u_y + 1
             
-            base_y_idx = (curr_y - 1984) % 60
-            curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
-            gj = klc.getChineseGapJaString().split()
-            ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+                base_y_idx = (curr_y - 1984) % 60
+                curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
+                gj = klc.getChineseGapJaString().split()
+                ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
             
-            base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
             hs, hb = get_time_ganji(ds, u_t, base_dt)
             gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
             
