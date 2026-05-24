@@ -1022,15 +1022,9 @@ if btn_single:
                 p_icon = "♂️" if u_gender == "남성" else "♀️"
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
-                
-                # 🚨 여기서 print_btn_html 변수를 먼저 정의합니다.
-                print_btn_html = """
-                <div class='no-print' style='text-align:right; margin: 20px 0;'>
-                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-                        🖨️ 초연 사주풀이 인쇄/PDF
-                    </button>
-                </div>
-                """
+
+                components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
+
                 # 🚨 표지 및 인쇄 버튼 생성 (화면 출력은 보류)
                 cover_html = f"""
                 <div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
@@ -1050,14 +1044,6 @@ if btn_single:
                     </div>
                 </div>
                 """
-                # 🚨 HTML 버튼을 st.markdown으로 직접 삽입하여 DOM을 일치시킴
-                st.markdown("""
-                <div class='no-print' style='text-align:right; margin: 20px 0;'>
-                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-                        🖨️ 초연 사주풀이 인쇄/PDF
-                    </button>
-                </div>
-                """, unsafe_allow_html=True)                
 
                 # 🚨 사주 원국표 생성 (합충형파해 복원, 폰트 14px 적용, 화면 출력은 보류)
                 ji_rel_rows = ""
