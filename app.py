@@ -1551,8 +1551,8 @@ if btn_single:
 </div>
 """
 
-            # 화면 출력
-            st.markdown(report_1_full_html, unsafe_allow_html=True)
+                    # 화면 출력
+                    st.markdown(report_1_full_html, unsafe_allow_html=True)
                     
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}") 
