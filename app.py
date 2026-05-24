@@ -1039,6 +1039,9 @@ if btn_single:
                 # 인쇄 버튼
                 components.html(f"<div style='text-align:right;'><button style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;' onclick='window.parent.print()'>🖨️ 초연 사주풀이 인쇄/PDF</button></div>", height=50)
                 
+                # -------------------------------------------------------------
+                # 합충형파해 로직
+                # -------------------------------------------------------------
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -1053,15 +1056,51 @@ if btn_single:
                 # 🌟 [고도화 3] 사주 원국표 상단 완전체 타이틀 세팅 (가변형 이모지 및 마진 방어 적용)
                 info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
-                table_html = f"""<table class='result-table'>
-                <tr class='top-header-cell'>
-                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>구분</span></td>
-                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>시주</span></td>
-                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>일주</span></td>
-                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>월주</span></td>
-                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>년주</span></td>
-                </tr>"""
+                # 🌟 [복원 1] 유실되었던 천간, 지지, 십성, 12운성 테이블 데이터 조립부 부활
+                s_gan = [get_sibsung(ds, g) for g in gans]
+                s_gan[1] = "본원"  # 일간은 본원
+                s_ji = [get_sibsung(ds, j) for j in jjis]
+                un12 = [get_12_woonsung(ds, j) for j in jjis]
+
+                table_html = f"""
+                <div class='report-page' style='padding:40px; background:#fff;'>
+                    <div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>
+                        {info_h}
+                        <table class='result-table'>
+                            <tr class='top-header-cell'>
+                                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>구분</span></td>
+                                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>시주</span></td>
+                                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>일주</span></td>
+                                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>월주</span></td>
+                                <td style='border:1px solid #444; color:#FFFFFF !important;'><span style='color:#FFFFFF !important; font-weight:900;'>년주</span></td>
+                            </tr>
+                            <tr>
+                                <td class='header-cell-main' style='border:1px solid #444 !important; font-weight:900;'>천간</td>
+                                {td(hs)}{td(ds)}{td(ms)}{td(ys)}
+                            </tr>
+                            <tr>
+                                <td class='header-cell-main' style='border:1px solid #444 !important; font-weight:900;'>지지</td>
+                                {td(hb)}{td(db)}{td(mb)}{td(yb)}
+                            </tr>
+                            <tr>
+                                <td class='header-cell-main' style='border:1px solid #444 !important; font-weight:900; font-size:12px;'>십성(간)</td>
+                                <td style='border:1px solid #444 !important; font-size:12px;'>{s_gan[0]}</td><td style='border:1px solid #444 !important; font-size:12px; font-weight:900; color:#D50000;'>{s_gan[1]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{s_gan[2]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{s_gan[3]}</td>
+                            </tr>
+                            <tr>
+                                <td class='header-cell-main' style='border:1px solid #444 !important; font-weight:900; font-size:12px;'>십성(지)</td>
+                                <td style='border:1px solid #444 !important; font-size:12px;'>{s_ji[0]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{s_ji[1]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{s_ji[2]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{s_ji[3]}</td>
+                            </tr>
+                            <tr>
+                                <td class='header-cell-main' style='border:1px solid #444 !important; font-weight:900; font-size:12px;'>12운성</td>
+                                <td style='border:1px solid #444 !important; font-size:12px;'>{un12[0]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{un12[1]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{un12[2]}</td><td style='border:1px solid #444 !important; font-size:12px;'>{un12[3]}</td>
+                            </tr>
+                            {ji_rel_rows}
+                        </table>
+                """
                 
+                # -------------------------------------------------------------
+                # 🌟 [복원 2] 격국, 신살, 오행 등 부가 정보 계산
+                # -------------------------------------------------------------
                 calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
 
                 gen_shinsal_list = []
@@ -1104,7 +1143,11 @@ if btn_single:
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"               
+                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
+                
+                # 🌟 [복원 3] 열어두었던 표 HTML을 닫고 최종 렌더링
+                table_html += master_bar_html + "</div></div>"
+                st.markdown(table_html, unsafe_allow_html=True)
                 
                 daewun_info = []
                 un_html = f"<div style='margin-top:20px; margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
