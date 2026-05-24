@@ -1053,48 +1053,47 @@ if btn_single:
                 # 🌟 [고도화 3] 사주 원국표 상단 완전체 타이틀 세팅
                 info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
-                # 🌟 [복원 수술] 십성 및 12운성 완벽 연산 (Ver 509 원본 함수명 교체 완료)
+                # 🌟 [복원 수술] 십성 및 12운성 완벽 연산
                 s_gan = [get_ss(ds, g) for g in gans]
-                s_gan[1] = "본원"  # 일간은 본원
+                s_gan[1] = "본원"
                 s_ji = [get_ss(ds, j) for j in jjis]
                 un12 = [get_unsung(ds, j) for j in jjis]
 
-                # 🌟 사주원국 표 HTML 완벽 조립 (화면에 바로 출력하지 않고 변수에만 안전하게 저장!)
-                table_html = f"""
-                <div class='report-page' style='padding:40px; background:#fff;'>
-                    <div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>
-                        {info_h}
-                        <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-                            <tr class='top-header-cell'>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
-                            </tr>
-                            <tr>
-                                <td class='header-cell-main' style='border:1px solid #444; font-weight:900; background:#E8EAF6; color:#1A237E;'>천간</td>
-                                {td(hs)}{td(ds)}{td(ms)}{td(ys)}
-                            </tr>
-                            <tr>
-                                <td class='header-cell-main' style='border:1px solid #444; font-weight:900; background:#E8EAF6; color:#1A237E;'>지지</td>
-                                {td(hb)}{td(db)}{td(mb)}{td(yb)}
-                            </tr>
-                            <tr>
-                                <td class='header-cell-main' style='border:1px solid #444; font-weight:900; font-size:12px; background:#E8EAF6; color:#1A237E;'>십성(간)</td>
-                                <td style='border:1px solid #444; font-size:12px;'>{s_gan[0]}</td><td style='border:1px solid #444; font-size:12px; font-weight:900; color:#D50000;'>{s_gan[1]}</td><td style='border:1px solid #444; font-size:12px;'>{s_gan[2]}</td><td style='border:1px solid #444; font-size:12px;'>{s_gan[3]}</td>
-                            </tr>
-                            <tr>
-                                <td class='header-cell-main' style='border:1px solid #444; font-weight:900; font-size:12px; background:#E8EAF6; color:#1A237E;'>십성(지)</td>
-                                <td style='border:1px solid #444; font-size:12px;'>{s_ji[0]}</td><td style='border:1px solid #444; font-size:12px;'>{s_ji[1]}</td><td style='border:1px solid #444; font-size:12px;'>{s_ji[2]}</td><td style='border:1px solid #444; font-size:12px;'>{s_ji[3]}</td>
-                            </tr>
-                            <tr>
-                                <td class='header-cell-main' style='border:1px solid #444; font-weight:900; font-size:12px; background:#E8EAF6; color:#1A237E;'>12운성</td>
-                                <td style='border:1px solid #444; font-size:12px;'>{un12[0]}</td><td style='border:1px solid #444; font-size:12px;'>{un12[1]}</td><td style='border:1px solid #444; font-size:12px;'>{un12[2]}</td><td style='border:1px solid #444; font-size:12px;'>{un12[3]}</td>
-                            </tr>
-                            {ji_rel_rows}
-                        </table>
-                """
+                # 🚨 [핵심 조치] HTML 문자열 내부의 들여쓰기(띄어쓰기)를 0칸으로 완전 밀착!
+                table_html = f"""<div class='report-page' style='padding:40px; background:#fff;'>
+<div class='vip-inset-frame' style='border:2px solid #1A237E; border-radius:15px; padding:30px;'>
+{info_h}
+<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+<tr class='top-header-cell'>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
+</tr>
+<tr>
+<td class='header-cell-main' style='border:1px solid #444; font-weight:900; background:#E8EAF6; color:#1A237E;'>천간</td>
+{td(hs)}{td(ds)}{td(ms)}{td(ys)}
+</tr>
+<tr>
+<td class='header-cell-main' style='border:1px solid #444; font-weight:900; background:#E8EAF6; color:#1A237E;'>지지</td>
+{td(hb)}{td(db)}{td(mb)}{td(yb)}
+</tr>
+<tr>
+<td class='header-cell-main' style='border:1px solid #444; font-weight:900; font-size:12px; background:#E8EAF6; color:#1A237E;'>십성(간)</td>
+<td style='border:1px solid #444; font-size:12px;'>{s_gan[0]}</td><td style='border:1px solid #444; font-size:12px; font-weight:900; color:#D50000;'>{s_gan[1]}</td><td style='border:1px solid #444; font-size:12px;'>{s_gan[2]}</td><td style='border:1px solid #444; font-size:12px;'>{s_gan[3]}</td>
+</tr>
+<tr>
+<td class='header-cell-main' style='border:1px solid #444; font-weight:900; font-size:12px; background:#E8EAF6; color:#1A237E;'>십성(지)</td>
+<td style='border:1px solid #444; font-size:12px;'>{s_ji[0]}</td><td style='border:1px solid #444; font-size:12px;'>{s_ji[1]}</td><td style='border:1px solid #444; font-size:12px;'>{s_ji[2]}</td><td style='border:1px solid #444; font-size:12px;'>{s_ji[3]}</td>
+</tr>
+<tr>
+<td class='header-cell-main' style='border:1px solid #444; font-weight:900; font-size:12px; background:#E8EAF6; color:#1A237E;'>12운성</td>
+<td style='border:1px solid #444; font-size:12px;'>{un12[0]}</td><td style='border:1px solid #444; font-size:12px;'>{un12[1]}</td><td style='border:1px solid #444; font-size:12px;'>{un12[2]}</td><td style='border:1px solid #444; font-size:12px;'>{un12[3]}</td>
+</tr>
+{ji_rel_rows}
+</table>
+"""
                 
                 # -------------------------------------------------------------
                 # 🌟 [복원 2] 격국, 신살, 오행 등 부가 정보 계산
