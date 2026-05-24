@@ -1521,25 +1521,35 @@ if btn_single:
                     if count_d == 0 and "table" not in clean_ai_text.lower():
                         clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
 
+                    # [교정 4] 전체 알맹이(본문 + 클로징 멘트)를 하나의 단일 박스로 구성
                     full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
-                    # 🚨 1. 모든 요소를 여기서 한 번에 결합하여 단 한 번만 출력합니다. (조루증 완벽 해결)
+                    # [교정 5] 실전형 A4 둥근 사각박스 프레임 및 인쇄 버튼 조립
+                    # ※ 주의: 자바스크립트 중괄호는 {{ }}로 이스케이프하여 오류 방지
                     report_1_full_html = f"""
-{cover_html}
-<div style='margin-bottom:20px;'>{print_btn_html}</div>
+<div class='no-print' style='text-align:right; margin: 20px 0;'>
+    <button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+        🖨️ 초연 사주풀이 인쇄/PDF
+    </button>
+    <script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script>
+</div>
+
 <div class='report-page'>
-<div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
-<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
-{table_html}
-{master_bar_html}
-<div style='margin-top:20px;'>
-{intro_html}
-{full_content_clean}
-</div>
-</div>
+    <div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'>
+        <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
+        {info_h}
+        {table_html}
+        {master_bar_html}
+        <div style='margin-top:20px;'>
+            {intro_html}
+            {full_content_clean}
+        </div>
+    </div>
 </div>
 """
-                    st.markdown(report_1_full_html, unsafe_allow_html=True)
+
+            # 화면 출력
+            st.markdown(report_1_full_html, unsafe_allow_html=True)
                     
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}") 
