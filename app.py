@@ -1108,7 +1108,8 @@ if btn_single:
                 master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
                 
                 daewun_info = []
-                un_html = f"<div style='margin-top:20px; margin-bottom:10px; font-weight:bold;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                # 🚨 수정: margin-top:5px, font-size:18px, font-weight:900, color:#1A237E 추가
+                un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
                     val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                     daewun_info.append(f"{val}세:{c}{j}")
@@ -1117,7 +1118,6 @@ if btn_single:
                     b_left = "1px solid #ccc" if i != 9 else "none"
                     un_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div><div class='color-{get_color(c)}' style='font-size:16px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:16px; font-weight:900;'>{j}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,j)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, j)}</div></div>"
                 un_html += "</div>"
-                daewun_info_str = ", ".join(daewun_info)
 
                 cur_dw_idx = max(0, (u_age - calc_d) // 10)
                 dw_g_cur = GAN[(GAN.index(ms) + (cur_dw_idx+1)*order)%10] if ms in GAN else "-"
@@ -1127,7 +1127,8 @@ if btn_single:
                 start_year = u_y + current_daewun_age - 1
                 
                 sewun_info = []
-                se_html = f"<div style='margin-top:20px; margin-bottom:10px; font-weight:bold;'>[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                # 🚨 수정: margin-top:5px, font-size:18px, font-weight:900, color:#1A237E 추가
+                se_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
                     ty = start_year + i
                     tage = current_daewun_age + i
@@ -1139,14 +1140,14 @@ if btn_single:
                     b_left = "1px solid #ccc" if i != 9 else "none"
                     se_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
                 se_html += "</div>"
-                sewun_info_str = ", ".join(sewun_info)
 
                 wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
                 wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
                 cur_wol_g = wol_gans[curr_m - 1]
                 cur_wol_j = wol_jis[curr_m - 1]
                 
-                wol_html = f"<div style='margin-top:20px; margin-bottom:10px; font-weight:bold;'>[ 월운의 흐름 ({curr_y}년도 양력기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                # 🚨 수정: margin-top:5px, font-size:18px, font-weight:900, color:#1A237E 추가
+                wol_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 월운의 흐름 ({curr_y}년도 양력기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(12):
                     tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
                     is_cur_m = (tm == curr_m)
@@ -1384,7 +1385,7 @@ if btn_single:
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 (※ AI 지시 🚨[절대 누락 금지 규칙]: 내담자가 살아온 첫 번째 대운(초년)부터 현재 대운 직전까지의 '모든 대운'을 단 하나도 생략하거나 묶지 말고, 나이대별로 낱낱이 순서대로 나열하여 에세이로 분석하십시오. 절대 요약하거나 건너뛰지 마십시오.)
 
-(※ AI 지시: 내담자가 지나온 과거 각 대운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 표 생성 절대 금지.)
+(※ AI 지시: 내담자가 지나온 과거 각 대운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 3세~12세 대운:** 과 같이 마크다운 굵은 글씨(**)로 강조하여 2~3줄씩 요약하십시오. 표 생성 절대 금지.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 (※ AI 지시: 현재 대운의 십성과 오행 기운이 내담자의 삶에 미치는 심리적, 사회적 변화를 상세히 카운슬링하십시오.)
@@ -1397,7 +1398,7 @@ if btn_single:
 (※ AI 지시: 위 마커 자리는 파이썬이 세운 흐름표를 꽂을 자리이므로 절대 지우지 말고 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
-(※ AI 지시: 최근 지나온 과거 각 세운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 단, 올해가 새로운 대운으로 바뀌는 첫 해일 경우, 이전 대운의 마지막 2~3년간의 세운을 분석하여 대운 교체기의 흐름을 명확히 서술하십시오. 표 생성 절대 금지.)
+(※ AI 지시: 최근 지나온 과거 각 세운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2024년(갑진년):** 과 같이 마크다운 굵은 글씨(**)로 강조하여 2~3줄씩 요약하십시오. 단, 올해가 새로운 대운으로 바뀌는 첫 해일 경우, 이전 대운의 마지막 2~3년간의 세운을 분석하여 대운 교체기의 흐름을 명확히 서술하십시오. 표 생성 절대 금지.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
 (※ AI 지시: 올해 세운 전반기(양력2월~7월)의 십성과 오행 기운이 내담자의 삶에 미치는 심리적, 사회적 변화를 상세히 카운슬링하십시오.)
@@ -1410,9 +1411,8 @@ if btn_single:
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 도트(•) 형태로 나열하여 2~3줄씩 요약하십시오. 
-🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 
-표 생성 절대 금지. 예: 2026년의 경우 • 1월(기축월): 내용...)
+(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2월(병인월):** 과 같이 마크다운 굵은 글씨(**)로 강조하여 2~3줄씩 요약하십시오. 
+🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
 (※ AI 지시: 해당하는 월의 전반기(5일~19일)를 구체적인 조후와 기운의 흐름을 조언하십시오.)
