@@ -1668,7 +1668,7 @@ if btn_single:
                                     </div>
                                 </div>
                             </div>
-                            """
+                        """
                         # 4. 마지막에 딱 한 번만 출력 (중복 출력 코드 삭제)
                         st.markdown(report_html, unsafe_allow_html=True)
                     
