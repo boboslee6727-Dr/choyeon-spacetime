@@ -1535,11 +1535,11 @@ if btn_single:
                     try:
                         # 1. table_html 변수 선언과 문자열 시작 따옴표를 반드시 포함해야 합니다!
                         table_html = f"""<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>                       <tr class='top-header-cell'>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
-                                <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
+                            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
+                            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
+                            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
+                            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
+                            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
                             </tr>
                             <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>
                             {"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}
@@ -1584,7 +1584,7 @@ if btn_single:
                             dw_c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
                             dw_j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                             daewun_list.append(f"{i*10+calc_d}세:{dw_c}{dw_j}")
-                        daewun_str = " / ".join(daewun_list)
+                            daewun_str = " / ".join(daewun_list)
     
                         compare_prompt = f"""당신은 명리심리상담사 '초연 박사'입니다.
     아래에 두 가지 자료가 있습니다.
