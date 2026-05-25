@@ -1635,7 +1635,7 @@ if btn_single:
                         cover_html = f"""<div class='report-page' style='padding:0; margin:0 auto; background:linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after:always; -webkit-print-color-adjust:exact;'>
     <div style='border:4px solid #2E7D32; padding:50px 30px; border-radius:20px; text-align:center; background:white; width:85%; max-width:750px; box-shadow:0 10px 25px rgba(0,0,0,0.1); margin:auto;'>
     <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-    <h1 style='font-size:30px; color:#2E7D32; font-weight:900; margin:0; font-family:"Malgun Gothic",sans-serif;'>🔍 초연 시공명리 타 감명서 비교분석</h1>
+    <h1 style='font-size:30px; color:#2E7D32; font-weight:900; margin:0; font-family:"Malgun Gothic",sans-serif;'>&#128269; 초연 시공명리 타 감명서 비교분석</h1>
     </div>
     <div style='background:#F8F9FA; border:1px solid #C8E6C9; padding:30px 20px; border-radius:15px;'>
     <h2 style='font-size:24px; font-weight:900; color:{p_color}; margin-bottom:20px; font-family:"Malgun Gothic",sans-serif;'>{p_icon} 신청인 : {disp_name} 님</h2>
