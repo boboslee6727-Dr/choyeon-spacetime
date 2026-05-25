@@ -1037,7 +1037,17 @@ if btn_single:
                         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
     
                     disp_name = u_name if u_name.strip() else "홍길동"
-                    info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'>
+                    # 수정된 info_h 코드 (따옴표 문제를 완전히 해결한 버전)
+                    info_h = f"""
+                    <div style='text-align:center; font-family:"Malgun Gothic", sans-serif; margin-bottom:15px; line-height:1.5;'>
+                        <span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>
+                            {p_icon} {u_name}님 ({u_gender}, {u_marital}, {u_age}세)
+                    </span><br>
+                    <span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>
+                        [양력: {sol_str} | 음력: {lun_str} {time_str}]
+                    </span>
+                    </div>
+                    """
                     <span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br>
                     <span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
     
