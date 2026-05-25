@@ -1655,22 +1655,28 @@ if btn_single:
                         b3 = chr(96)*3
                         clean_ai = re.sub(b3 + r"html|" + b3, "", ai_result).strip()
     
-                        report_html = f"""
-    {cover_html}
-    <div class='report-page'>
-        <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
-            <h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>
-                {info_h2}
-                {table_html}
-                {master_bar_html}
-            <div style='margin-top:20px; font-family:"Nanum Myeongjo","바탕체",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>
-                {clean_ai}
-            </div>
-        </div>
-    </div>
-    """
-                        # 4. 마지막에 딱 한 번만 출력 (중복 출력 코드 삭제)
-                        st.markdown(report_html, unsafe_allow_html=True)
+                        report_html = """
+                            {cover_html}
+                            <div class='report-page'>
+		        <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
+		            <h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>
+		            {info_h2}
+		            {table_html}
+		            {master_bar_html}
+		            <div style='margin-top:20px; font-family:"Nanum Myeongjo","바탕체",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>
+		                {clean_ai}
+		            </div>
+		        </div>
+		    </div>
+		""".format(
+		    cover_html=cover_html,
+		    info_h2=info_h2,
+		    table_html=table_html,
+ 		    master_bar_html=master_bar_html,
+		    clean_ai=clean_ai
+		)
+
+		st.markdown(report_html, unsafe_allow_html=True)
                     
                     except Exception as e:
                         st.error(f"타 감명서 비교분석 오류: {e}")
