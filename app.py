@@ -1668,7 +1668,8 @@ if btn_single:
 		            </div>
 		        </div>
 		    </div>
-		""".format(
+		"""
+                             .format(
 		    cover_html=cover_html,
 		    info_h2=info_h2,
 		    table_html=table_html,
