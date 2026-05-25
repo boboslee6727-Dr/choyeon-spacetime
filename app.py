@@ -1018,14 +1018,14 @@ if btn_single:
     <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
 </div>
 """
-            # ------------------------------------------------------------------
-            # [모드 1] 개인사주 분석: 최종 순서 정리
-            # ------------------------------------------------------------------
-            if u_product == "개인사주":
-                past_months_html = ""
-                p_icon = "♂️" if u_gender == "남성" else "♀️"
-                p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
+                # ------------------------------------------------------------------
+                # [모드 1] 개인사주 분석: 최종 순서 정리
+                # ------------------------------------------------------------------
+                if u_product == "개인사주":
+                    past_months_html = ""
+                    p_icon = "♂️" if u_gender == "남성" else "♀️"
+                    p_color = "#1A237E" if u_gender == "남성" else "#D50000"
+                    today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
                 # 1. 먼저 정의해야 할 변수들을 전부 셋팅합니다.
                 cover_html = f"""
