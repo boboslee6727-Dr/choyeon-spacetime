@@ -1627,31 +1627,27 @@ if btn_single:
                         
                         # 커버 페이지
                         cover_html = f"""<div class='report-page' style='padding:0; margin:0 auto; background:linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after:always; -webkit-print-color-adjust:exact;'>
-    <div style='border:4px solid #2E7D32; padding:50px 30px; border-radius:20px; text-align:center; background:white; width:85%; max-width:750px; box-shadow:0 10px 25px rgba(0,0,0,0.1); margin:auto;'>
-    <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-    <h1 style='font-size:30px; color:#2E7D32; font-weight:900; margin:0; font-family:"Malgun Gothic",sans-serif;'>&#128269; 초연 시공명리 타 감명서 비교분석</h1>
-    </div>
-    <div style='background:#F8F9FA; border:1px solid #C8E6C9; padding:30px 20px; border-radius:15px;'>
-    <h2 style='font-size:24px; font-weight:900; color:{p_color}; margin-bottom:20px; font-family:"Malgun Gothic",sans-serif;'>{p_icon} 신청인 : {disp_name} 님</h2>
-    <div style='font-size:15px; font-weight:600; color:#555; line-height:1.8;'>
-    <p style='margin:0; white-space:nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-    <p style='margin:5px 0 0 0; color:#555;'>격국: {calc_gyukgook}</p>
-    </div>
-    </div>
-    <p style='font-size:18px; margin-top:50px; font-weight:bold;'>{today_str}</p>
-    <p style='font-size:22px; font-weight:900; color:#2E7D32; margin-top:20px; font-family:"Malgun Gothic",sans-serif;'>초연 시공명리 연구소</p>
-    </div>
-    </div>"""
+                            <div style='border:4px solid #2E7D32; padding:50px 30px; border-radius:20px; text-align:center; background:white; width:85%; max-width:750px; box-shadow:0 10px 25px rgba(0,0,0,0.1); margin:auto;'>
+                                <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
+                                    <h1 style='font-size:30px; color:#2E7D32; font-weight:900; margin:0; font-family:"Malgun Gothic",sans-serif;'>&#128269; 초연 시공명리 타 감명서 비교분석</h1>
+                                </div>
+                                <div style='background:#F8F9FA; border:1px solid #C8E6C9; padding:30px 20px; border-radius:15px;'>
+                                    <h2 style='font-size:24px; font-weight:900; color:{p_color}; margin-bottom:20px; font-family:"Malgun Gothic",sans-serif;'>{p_icon} 신청인 : {disp_name} 님</h2>
+                                    <div style='font-size:15px; font-weight:600; color:#555; line-height:1.8;'>
+                                        <p style='margin:0; white-space:nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                                        <p style='margin:5px 0 0 0; color:#555;'>격국: {calc_gyukgook}</p>
+                                    </div>
+                                </div>
+                                <p style='font-size:18px; margin-top:50px; font-weight:bold;'>{today_str}</p>
+                                <p style='font-size:22px; font-weight:900; color:#2E7D32; margin-top:20px; font-family:"Malgun Gothic",sans-serif;'>초연 시공명리 연구소</p>
+                            </div>
+                        </div>"""
     
                         # 사주원국표 재활용
                         info_h2 = f"<div style='text-align:center; font-family:&quot;Malgun Gothic&quot;,sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color};'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
-    
                         b3 = chr(96)*3
                         clean_ai = re.sub(b3 + r"html|" + b3, "", ai_result).strip()
-    
-                        # 24칸 들여쓰기 상태에서 시작
                         report_html = f"<div class='report-page'><div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'><h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>{info_h2}{table_html}{master_bar_html}<div style='margin-top:20px; font-family:\"Nanum Myeongjo\",\"바탕체\",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>{clean_ai}</div></div></div>"
-
                         st.markdown(report_html, unsafe_allow_html=True)
                     
                     except Exception as e: 
