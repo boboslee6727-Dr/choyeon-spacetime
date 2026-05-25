@@ -32,8 +32,8 @@ st.markdown("""
     
     .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
     .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 900 !important; }
-    .report-page h3 { font-size: 19px !important; margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E; padding-bottom: 5px; color: #1A237E !important; font-weight: 900 !important; }
-    .report-page h4 { font-size: 17px !important; margin-top: 15px !important; margin-bottom: 8px !important; font-weight: 900 !important; }
+    .report-page h3 { font-size: 22px !important; margin-top: 25px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E; padding-bottom: 5px; color: #1A237E !important; font-weight: 900 !important; }
+    .report-page h4 { font-size: 18px !important; margin-top: 15px !important; margin-bottom: 8px !important; font-weight: 900 !important; }
     
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444; padding: 1px; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; word-wrap: break-word; }
@@ -52,9 +52,6 @@ st.markdown("""
     .color-금 { background-color: #9E9E9E !important; color: white !important; }
     .color-수 { background-color: #212121 !important; color: white !important; }
     
-    /* 1~12번 대제목 크기/밑줄/마진 완벽 통일 */
-    .report-page h3 { font-size: 22px !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E; padding-bottom: 8px; color: #1A237E !important; font-weight: 900 !important; width: 100%; display: block; }
-    
     /* 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
     .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
     
@@ -64,15 +61,11 @@ st.markdown("""
     div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
     div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
     
-    @media print {
+    @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         body, .stApp { background-color: white !important; }
-        .report-page { 
-            box-shadow: none; margin: 0 auto; padding: 0; 
-            page-break-after: always; 
-            border-radius: 0; width: 100%; max-width: 100%;
-        }
+        .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
         .vip-inset-frame { border: 2px solid #000; border-radius: 20px; padding: 15px; }
