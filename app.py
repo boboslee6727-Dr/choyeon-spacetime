@@ -1560,9 +1560,9 @@ if btn_single:
 		    """
                         # 2. 필요한 변수들 정의
                         disp_name = u_name if u_name.strip() else "홍길동"
-                            p_icon = "♂️" if u_gender == "남성" else "♀️"
-                            p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                            today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
+                        p_icon = "♂️" if u_gender == "남성" else "♀️"
+                        p_color = "#1A237E" if u_gender == "남성" else "#D50000"
+                        today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
     
                         # 사주 데이터 요약
                         gans_str = f"{hs}({get_ss(ds,hs)}) {ds}(日元) {ms}({get_ss(ds,ms)}) {ys}({get_ss(ds,ys)})"
