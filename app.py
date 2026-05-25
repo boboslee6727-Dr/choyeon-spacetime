@@ -1659,7 +1659,7 @@ if btn_single:
                             {cover_html}
                             <div class='report-page'>
                                 <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
-                                    <h1 style='text-align:center; color:#2E7D32;'>🔍 타 감명서 1:1 상세 비교분석</h1>
+                                    <h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>
                                     {info_h2}
                                     {table_html}
                                     {master_bar_html}
