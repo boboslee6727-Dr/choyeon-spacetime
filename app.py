@@ -846,6 +846,7 @@ class UniversalPrintableGunghap:
         
         # 스트림릿 마크다운 렌더링 에러 방지를 위해 모든 줄바꿈을 강제로 차단하고 리턴합니다.
         return html_str.replace('\n', '')
+# ==================================================================
 # 4. 사이드바 UI
 # ==============================================================================
 with st.sidebar:
@@ -898,9 +899,9 @@ with st.sidebar:
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
     
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
-    u_name = st.text_input("이름", value="이병호", placeholder="홍길동", key="u_n")
+    u_name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
     u_gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
-    u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], index=1, key="u_m_stat")
+    u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat")
     u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
     
     col1, col2, col3 = st.columns(3)
@@ -1036,7 +1037,9 @@ if btn_single:
                         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
     
                     disp_name = u_name if u_name.strip() else "홍길동"
-                    info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
+                    info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'>
+                    <span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br>
+                    <span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
     
                     table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
@@ -1511,6 +1514,7 @@ if btn_single:
     """
                         # 화면 출력
                         st.markdown(report_1_full_html, unsafe_allow_html=True)
+                        st.markdown(table_html, unsafe_allow_html=True)
                         
                     except Exception as e: 
                         st.error(f"AI 연산 오류: {e}")
