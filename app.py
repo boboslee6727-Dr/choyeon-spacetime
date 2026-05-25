@@ -1533,7 +1533,7 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
-                        # 1. table_html 정의 (가장 안전한 줄 단위 결합 방식)
+                        # 주석처리
                         table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
                         table_html += "<tr class='top-header-cell'>"
                         table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>"
@@ -1558,29 +1558,30 @@ if btn_single:
                         p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                         today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
                         
+                        # 주석처리
                         gans_str = f"{hs}({get_ss(ds,hs)}) {ds}(日元) {ms}({get_ss(ds,ms)}) {ys}({get_ss(ds,ys)})"
                         jjis_str = f"{hb}({get_ss(ds,hb)}) {db}({get_ss(ds,db)}) {mb}({get_ss(ds,mb)}) {yb}({get_ss(ds,yb)})"
-
+                        # 주석처리
                         counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
                         for char in gans + jjis:
                             if char != "?": counts[get_color(char)] += 1
                         ohaeng_str = f"木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})"
-                        
+                        # 주석처리                        
                         calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
-                        
+                        # 주석처리                        
                         order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
                         adj_mins = get_total_time_adjustment(base_dt)
                         utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                         calc_d = get_daeun_su_accurate(utc_dt, order)
                         direction_str = "순행" if order == 1 else "역행"
-                        
+                        # 주석처리                        
                         daewun_list = []
                         for i in range(10):
                             dw_c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
                             dw_j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                             daewun_list.append(f"{i*10+calc_d}세:{dw_c}{dw_j}")
                         daewun_str = " / ".join(daewun_list)
-
+                        # 주석처리
                         compare_prompt = f"""당신은 명리심리상담사 '초연 박사'입니다.
 아래에 두 가지 자료가 있습니다.
 
@@ -1611,9 +1612,9 @@ if btn_single:
 <h3 style='color:#1A237E; font-size:22px; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:8px; margin-top:35px;'>5. 총평 및 초연 박사의 최종 소견</h3>
 <p style='text-indent:1em;'>(두 감명서를 종합적으로 평가하고, 초연 시공명리 관점에서의 최종 소견과 {disp_name}님께 드리는 조언을 작성하십시오.)</p>
 </div>"""
-                        
+                        # 주석처리                        
                         ai_result = call_claude_api(compare_prompt, max_tokens=10000)
-                        
+                        # 주석처리                        
                         cover_html = f"""<div class='report-page' style='padding:0; margin:0 auto; background:linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after:always; -webkit-print-color-adjust:exact;'>
 <div style='border:4px solid #2E7D32; padding:50px 30px; border-radius:20px; text-align:center; background:white; width:85%; max-width:750px; box-shadow:0 10px 25px rgba(0,0,0,0.1); margin:auto;'>
 <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
@@ -1630,14 +1631,14 @@ if btn_single:
 <p style='font-size:22px; font-weight:900; color:#2E7D32; margin-top:20px; font-family:"Malgun Gothic",sans-serif;'>초연 시공명리 연구소</p>
 </div>
 </div>"""
-
+                        # 주석처리
                         info_h2 = f"<div style='text-align:center; font-family:\"Malgun Gothic\",sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color};'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
-                        
+                        # 주석처리                        
                         b3 = chr(96)*3
                         clean_ai = re.sub(b3 + r"html|" + b3, "", ai_result).strip()
-                        
+                        # 주석처리                        
                         report_html = f"<div class='report-page'><div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'><h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>{info_h2}{table_html}{master_bar_html}<div style='margin-top:20px; font-family:\"Nanum Myeongjo\",\"바탕체\",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>{clean_ai}</div></div></div>"
-                        
+                        # 주석처리                        
                         st.markdown(report_html, unsafe_allow_html=True)
                         
                     except Exception as e:
