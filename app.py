@@ -930,6 +930,7 @@ with st.sidebar:
         p_t = st.selectbox("00:30 ~ 01:29 (朝子)시", idx_list, key="p_t_key")
 
     elif u_product == "타 감명서":
+
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력</div>", unsafe_allow_html=True)
         st.caption("다른 역술가의 감명서 내용을 아래에 붙여넣기 하세요.")
@@ -1532,15 +1533,39 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
+                        # 1. 먼저 table_html을 안전하게 정의
+                        # (테이블 데이터가 없으면 빈 문자열로 초기화하여 오류 방지)   
+                        <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+    <tr class='top-header-cell'>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
+    </tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>
+    <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+    {ji_rel_rows}
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, u_gender)) if get_general_shinsal_filtered(i, gans, jjis, u_gender) else '-'}</td>" for i in range(4)])}</tr>
+    </table>
+    """
+                        # 2. 필요한 변수들 정의
                         disp_name = u_name if u_name.strip() else "홍길동"
-                        p_icon = "♂️" if u_gender == "남성" else "♀️"
-                        p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                        today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
+                            p_icon = "♂️" if u_gender == "남성" else "♀️"
+                            p_color = "#1A237E" if u_gender == "남성" else "#D50000"
+                            today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
     
                         # 사주 데이터 요약
                         gans_str = f"{hs}({get_ss(ds,hs)}) {ds}(日元) {ms}({get_ss(ds,ms)}) {ys}({get_ss(ds,ys)})"
                         jjis_str = f"{hb}({get_ss(ds,hb)}) {db}({get_ss(ds,db)}) {mb}({get_ss(ds,mb)}) {yb}({get_ss(ds,yb)})"
-                        
+
                         counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
                         for char in gans + jjis:
                             if char != "?": counts[get_color(char)] += 1
@@ -1631,29 +1656,22 @@ if btn_single:
                         clean_ai = re.sub(b3 + r"html|" + b3, "", ai_result).strip()
     
                         report_html = f"""
-    {cover_html}
-    <div class='no-print' style='text-align:right; margin:20px 0;'>
-    <button id='print-btn3' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR",serif;'>
-    🖨️ 타 감명서 비교분석 인쇄/PDF
-    </button>
-    <script>document.getElementById('print-btn3').addEventListener('click', () => {{ window.print(); }});</script>
-    </div>
-    <div class='report-page'>
-    <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
-    <h1 style='text-align:center; color:#2E7D32;'>🔍 타 감명서 1:1 상세 비교분석</h1>
-    {info_h2}
-    {table_html}
-    {master_bar_html}
-    <div style='margin-top:20px; font-family:"Nanum Myeongjo","바탕체",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>
-    {clean_ai}
-    </div>
-    </div>
-    </div>
-    """
+                            {cover_html}
+                            <div class='report-page'>
+                                <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
+                                    <h1 style='text-align:center; color:#2E7D32;'>🔍 타 감명서 1:1 상세 비교분석</h1>
+                                    {info_h2}
+                                    {table_html}
+                                    {master_bar_html}
+                                    <div style='margin-top:20px; font-family:"Nanum Myeongjo","바탕체",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>
+                                        {clean_ai}
+                                    </div>
+                                </div>
+                            </div>
+                        """
+                        # 4. 마지막에 딱 한 번만 출력 (중복 출력 코드 삭제)
                         st.markdown(report_html, unsafe_allow_html=True)
-    
+                    
                     except Exception as e:
                         st.error(f"타 감명서 비교분석 오류: {e}")
     
-            except Exception as e:
-                st.error(f"⚠️ 전체 연산 오류: {e}")
