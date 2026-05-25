@@ -28,7 +28,18 @@ st.markdown("""
     .report-page { width: 210mm; max-width: 100%; margin: 30px auto; background-color: #FFFFFF !important; padding: 15mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; }
     .report-page, .report-page * { font-family: 'Noto Serif KR', serif !important; color: #000000; }
     
-    .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 20px; background: transparent; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+    .vip-inset-frame { 
+    border: 2px solid #1A237E; 
+    border-radius: 15px; 
+    padding: 20px; 
+    background: transparent; 
+    box-sizing: border-box;        /* 1. 박스 크기를 고정(padding 포함) */
+    width: 100%;                   /* 2. 가로폭 100% 강제 */
+    overflow: hidden;              /* 3. 삐져나온 내용물 강제 차단 */
+    word-break: keep-all;          /* 4. 한글 단어 단위 줄바꿈 */
+    -webkit-box-decoration-break: clone; 
+    box-decoration-break: clone; 
+}
     
     .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
     .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 900 !important; }
