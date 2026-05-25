@@ -1656,5 +1656,4 @@ if btn_single:
                     
                     except Exception as e: 
                         st.error(f"타 감명서 비교분석 오류: {e}")
-                        st.markdown(report_html, unsafe_allow_html=True)
-    
+
