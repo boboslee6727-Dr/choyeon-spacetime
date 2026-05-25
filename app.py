@@ -1533,7 +1533,8 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
-                        # 주석처리
+                        st.write("🔍 범인 수색 테스트 중입니다.")                        
+		# 주석처리
                         table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
                         table_html += "<tr class='top-header-cell'>"
                         table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>"
