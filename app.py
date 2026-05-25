@@ -1622,13 +1622,7 @@ if btn_single:
     <p style='text-indent:1em;'>(두 감명서를 종합적으로 평가하고, 초연 시공명리 관점에서의 최종 소견과 {disp_name}님께 드리는 조언을 작성하십시오.)</p>
     
     </div>
-    
-    # ※ 주의사항:
-    - 반드시 HTML 형식으로만 출력하십시오. 마크다운 기호(#, *, `, 등)는 절대 사용하지 마십시오.
-    - 본문 <p> 태그에 font-family 속성을 임의로 추가하지 마십시오.
-    - 각 항목은 충분히 상세하게 작성하십시오 (최소 3~4문단 이상).
     """
-    
                         ai_result = call_claude_api(compare_prompt, max_tokens=10000)
                         
                         # 커버 페이지
@@ -1655,29 +1649,28 @@ if btn_single:
                         b3 = chr(96)*3
                         clean_ai = re.sub(b3 + r"html|" + b3, "", ai_result).strip()
     
-                        report_html = """
+                        # 24칸 들여쓰기 상태에서 시작
+                        report_html = dedent("""
                             {cover_html}
                             <div class='report-page'>
-		        <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
-		            <h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>
-		            {info_h2}
-		            {table_html}
-		            {master_bar_html}
-		            <div style='margin-top:20px; font-family:"Nanum Myeongjo","바탕체",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>
-		                {clean_ai}
-		            </div>
-		        </div>
-		    </div>
-		"""
-                             .format(
-		    cover_html=cover_html,
-		    info_h2=info_h2,
-		    table_html=table_html,
- 		    master_bar_html=master_bar_html,
-		    clean_ai=clean_ai
-		)
-
-		st.markdown(report_html, unsafe_allow_html=True)
+                                <div class='vip-inset-frame' style='border:2px solid #2E7D32; box-sizing:border-box; padding:20px; border-radius:15px;'>
+                                    <h1 style='text-align:center; color:#2E7D32;'>&#128269; 타 감명서 1:1 상세 비교분석</h1>
+                                    {info_h2}
+                                    {table_html}
+                                    {master_bar_html}
+                                    <div style='margin-top:20px; font-family:"Nanum Myeongjo","바탕체",Batang,serif; font-size:15px; line-height:1.8; color:#000;'>
+                                        {clean_ai}
+                                    </div>
+                                </div>
+                            </div>
+                        """).format(
+                            cover_html=cover_html,
+                            info_h2=info_h2,
+                            table_html=table_html,
+                            master_bar_html=master_bar_html,
+                            clean_ai=clean_ai
+                        )
+                        st.markdown(report_html, unsafe_allow_html=True)
                     
                     except Exception as e:
                         st.error(f"타 감명서 비교분석 오류: {e}")
