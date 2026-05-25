@@ -1048,9 +1048,7 @@ if btn_single:
                     </span>
                     </div>
                     """
-                    <span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br>
-                    <span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
-    
+
                     table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
     <tr class='top-header-cell'>
