@@ -1521,6 +1521,19 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
+                        # 🚨 [수술] 개인사주 모드와 독립적인 변수 정의 (이름/나이/자의형상 매번 새로 생성)
+                        disp_name = u_name if u_name.strip() else "홍길동"
+
+                        # [대운 변수 독립 생성]
+                        adj_mins = get_total_time_adjustment(base_dt)
+                        utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+                        order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
+                        calc_d = get_daeun_su_accurate(utc_dt, order)
+
+                        # [대운 연동 변수 추가]
+                        current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
+                        dw_start_age = current_daewun_age
+
                         table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
                         table_html += "<tr class='top-header-cell'>"
                         table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>"
@@ -1544,7 +1557,7 @@ if btn_single:
                         p_icon = "♂️" if u_gender == "남성" else "♀️"
                         p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                         today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
-                        
+
                         gans_str = f"{hs}({get_ss(ds,hs)}) {ds}(日元) {ms}({get_ss(ds,ms)}) {ys}({get_ss(ds,ys)})"
                         jjis_str = f"{hb}({get_ss(ds,hb)}) {db}({get_ss(ds,db)}) {mb}({get_ss(ds,mb)}) {yb}({get_ss(ds,yb)})"
 
