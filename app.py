@@ -1525,7 +1525,7 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
-                        # [통합 데이터 엔진] - 누락 없는 변수 생성
+                        # 1. 기초 연산 (변수 정의)
                         target_name = u_name.strip() if u_name.strip() else "홍길동"
                         adj_mins = get_total_time_adjustment(base_dt)
                         utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
@@ -1533,151 +1533,33 @@ if btn_single:
                         calc_d = get_daeun_su_accurate(utc_dt, order)
                         direction_str = "순행" if order == 1 else "역행"
                         
+                        # 2. 컴포넌트 생성 (순서대로)
                         counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
                         for char in gans + jjis:
                             if char != "?": counts[get_color(char)] += 1
                         ohaeng_str = f"木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})"
-                        
-                        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
-                        guiin_str = guiin_map.get(ds, '없음')
+                        guiin_str = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음')
                         i_gong = calculate_gongmang(ds, db)
                         cur_samjae = get_samjae(yb, curr_y_ganji[1])
-                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
                         
                         daewun_list = [f"{i*10+calc_d}세:{GAN[(GAN.index(ms)+(i+1)*order)%10]}{JI[(JI.index(mb)+(i+1)*order)%12]}" for i in range(10)]
                         daewun_str = " / ".join(daewun_list)
-
-                        # [HTML 컴포넌트 조립] - 마커 없이 변수 직입
-                        master_bar_html = f"<div style='border:2px solid #3E2723; padding:8px; font-weight:900;'>⏳ 대운수: {calc_d} ({direction_str}) | 💥 오행: {ohaeng_str} | 🌟 천을귀인: {guiin_str} | 🎯 공망: {i_gong} | 🌪️ 삼재: {cur_samjae}</div>"
-
-                        # 🚨 [수술] 대운 방향 정의 (빠진 변수 보충)
-                        order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
-                        direction_str = "순행" if order == 1 else "역행"
-
-                        # 2. 표 및 분석 요소 정의
-                        ji_rel_rows = ""
-                        for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                            b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-                            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:0px solid transparent !important; border-bottom:{b_bot} !important; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                            lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
-                            ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
-
-                        # 🚨 [수술] 격국 변수 독립 생성 (타 감명서용)
-                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
-
-                        # 🚨 [수술] 대운 리스트 정의 (타 감명서용)
-                        daewun_list = []
-                        for i in range(10):
-                            dw_c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
-                            dw_j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
-                            daewun_list.append(f"{i*10+calc_d}세:{dw_c}{dw_j}")
-                        daewun_str = " / ".join(daewun_list)
+                        daewun_table = "<table style='width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; text-align:center;' border='1'><tr>" + "".join([f"<td>{d}</td>" for d in daewun_list]) + "</tr></table>"
+                        master_bar_html = f"<div style='border:2px solid #3E2723; padding:5px; margin-top:10px; font-weight:900; font-size:11px; display:flex; justify-content:space-between; border-radius:5px;'><span>⏳ 대운수:{calc_d}({direction_str})</span><span>💥 오행:{ohaeng_str}</span><span>🌟 귀인:{guiin_str}</span><span>🎯 공망:{i_gong}</span><span>🌪️ 삼재:{cur_samjae}</span></div>"
                         
-                        # (이제 이 밑에서 calc_gyukgook을 사용하여 보고서를 작성하시면 됩니다!)
-                        # [보고서용 정보 출력부] 
-                        # disp_name 대신 target_name을 사용하여 로직 간의 혼선을 완전히 제거
-                        disp_name = target_name
-
-                        table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
-                        table_html += "<tr class='top-header-cell'>"
-                        table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>"
-                        table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>"
-                        table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>"
-                        table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>"
-                        table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>"
-                        table_html += "</tr>"
-                        table_html += "<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>" + "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)]) + "</tr>"
-                        table_html += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>"
-                        table_html += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>"
-                        table_html += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>"
-                        table_html += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>"
-                        table_html += "<tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>" + "".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)]) + "</tr>"
-                        table_html += ji_rel_rows
-                        table_html += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>" + "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)]) + "</tr>"
-                        table_html += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>" + "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)]) + "</tr>"
-                        table_html += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>" + "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, u_gender)) if get_general_shinsal_filtered(i, gans, jjis, u_gender) else '-'}</td>" for i in range(4)]) + "</tr>"
-                        table_html += "</table>"
-                        disp_name = u_name if u_name.strip() else "홍길동"
-                        p_icon = "♂️" if u_gender == "남성" else "♀️"
-                        p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                        today_str = dt_mod.datetime.now(pytz.timezone("Asia/Seoul")).strftime("%Y년 %m월 %d일")
-
-                        gans_str = f"{hs}({get_ss(ds,hs)}) {ds}(日元) {ms}({get_ss(ds,ms)}) {ys}({get_ss(ds,ys)})"
-                        jjis_str = f"{hb}({get_ss(ds,hb)}) {db}({get_ss(ds,db)}) {mb}({get_ss(ds,mb)}) {yb}({get_ss(ds,yb)})"
-
-                        compare_prompt = f"""당신은 명리심리상담사 '초연 박사'입니다.
-아래에 두 가지 자료가 있습니다.
-
-[자료 1 - 초연 시공명리 사주 데이터]
-- 신청인: {disp_name} ({u_gender}, {u_marital}, {u_age}세)
-- 양력 생년월일: {sol_str} / 음력: {lun_str}
-- 사주팔자 천간: {gans_str}
-- 사주팔자 지지: {jjis_str}
-- 격국: {calc_gyukgook} ({gyukgook_detail})
-- 오행 분포: {ohaeng_str}
-- 대운수: {calc_d}세 ({direction_str})
-- 대운 흐름: {daewun_str}
-
-[자료 2 - 타 역술가의 감명서 원문]
-{other_reading_text}
-
-위 두 자료를 바탕으로 아래 형식에 맞추어 1:1 상세 비교 분석 보고서를 HTML 형식으로 작성하십시오.
-
-<div class='content-box-loose'>
-<h3 style='color:#1A237E; font-size:22px; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:8px; margin-top:35px;'>1. 핵심 사주 해석 비교</h3>
-<p style='text-indent:1em;'>(격국, 일간의 특성, 기본 성향에 대해 두 감명서가 어떻게 다르게 또는 유사하게 해석하는지 상세히 비교하십시오.)</p>
-<h3 style='color:#1A237E; font-size:22px; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:8px; margin-top:35px;'>2. 성격 및 기질 분석 비교</h3>
-<p style='text-indent:1em;'>(두 감명서에서 분석한 성격, 기질, 심리 특성을 1:1로 비교하고 어느 분석이 더 정확한지 근거를 들어 평가하십시오.)</p>
-<h3 style='color:#1A237E; font-size:22px; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:8px; margin-top:35px;'>3. 운의 흐름 분석 비교</h3>
-<p style='text-indent:1em;'>(대운, 세운에 대한 두 감명서의 분석을 비교하고 차이점과 공통점을 정리하십시오.)</p>
-<h3 style='color:#1A237E; font-size:22px; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:8px; margin-top:35px;'>4. 직업/재물/관계 분석 비교</h3>
-<p style='text-indent:1em;'>(직업 적성, 재물운, 인간관계에 대한 두 감명서의 분석을 항목별로 비교하십시오.)</p>
-<h3 style='color:#1A237E; font-size:22px; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:8px; margin-top:35px;'>5. 총평 및 초연 박사의 최종 소견</h3>
-<p style='text-indent:1em;'>(두 감명서를 종합적으로 평가하고, 초연 시공명리 관점에서의 최종 소견과 {disp_name}님께 드리는 조언을 작성하십시오.)</p>
-</div>"""
-                   
-                        ai_result = call_claude_api(compare_prompt, max_tokens=10000)
-                    
-                        cover_html = f"""<div class='report-page' style='padding:0; margin:0 auto; background:linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after:always; -webkit-print-color-adjust:exact;'>
-<div style='border:4px solid #2E7D32; padding:50px 30px; border-radius:20px; text-align:center; background:white; width:85%; max-width:750px; box-shadow:0 10px 25px rgba(0,0,0,0.1); margin:auto;'>
-<div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-<h1 style='font-size:30px; color:#2E7D32; font-weight:900; margin:0; font-family:"Malgun Gothic",sans-serif;'>&#128269; 초연 시공명리 타 감명서 비교분석</h1>
-</div>
-<div style='background:#F8F9FA; border:1px solid #C8E6C9; padding:30px 20px; border-radius:15px;'>
-<h2 style='font-size:24px; font-weight:900; color:{p_color}; margin-bottom:20px; font-family:"Malgun Gothic",sans-serif;'>{p_icon} 신청인 : {disp_name} 님</h2>
-<div style='font-size:15px; font-weight:600; color:#555; line-height:1.8;'>
-<p style='margin:0; white-space:nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-<p style='margin:5px 0 0 0; color:#555;'>격국: {calc_gyukgook}</p>
-</div>
-</div>
-<p style='font-size:18px; margin-top:50px; font-weight:bold;'>{today_str}</p>
-<p style='font-size:22px; font-weight:900; color:#2E7D32; margin-top:20px; font-family:"Malgun Gothic",sans-serif;'>초연 시공명리 연구소</p>
-</div>
-</div>"""
-
-                        info_h2 = f"<div style='text-align:center; font-family:\"Malgun Gothic\",sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color};'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
-               
+                        # 3. 리포트 병합
+                        full_report_part1 = f"<div class='report-page'>{info_h2}{table_html}{master_bar_html}<div style='margin-top:10px; font-weight:900;'>⏳ 대운의 흐름</div>{daewun_table}{감명_본문_HTML}</div>"
+                        full_report_part2 = f"<div class='report-page' style='page-break-before:always;'><h2 style='text-align:center;'>📜 타 술사 감명서 원본</h2>{comp_text.replace(chr(10), '<br>')}</div>"
+                        
+                        # 4. AI 비교분석 (인사말 제거 완료)
+                        compare_prompt = f"인사말 생략. [초연 사주: {gans_str}/{jjis_str}, 타 술사 원문: {comp_text}] 내용을 토대로 11개 항목별 상세 대조 분석을 바로 시작하십시오."
+                        c_res = model.generate_content(compare_prompt)
                         b3 = chr(96)*3
-                        clean_ai = re.sub(b3 + r"html|" + b3, "", ai_result).strip()
-                 
-                        # 최종 리포트 출력 - 표와 분석 내용을 하나의 덩어리로 병합
-                        full_report = f"""
-                        <div class='report-page'>
-                            <div class='vip-inset-frame'>
-                                {info_h2}
-                                {master_bar_html}
-                                <div style='margin-top:20px;'>{table_html}</div>
-                                <div style='margin-top:20px; padding:15px; border:1px solid #444; background:#FFF9C4; font-weight:900;'>
-                                    ⏳ 대운의 흐름: {daewun_str}
-                                </div>
-                                <div class='analysis-content' style='margin-top:30px;'>
-                                    {clean_ai}
-                                </div>
-                            </div>
-                        </div>
-                        """
-                        st.markdown(full_report, unsafe_allow_html=True)
-
+                        clean_ai = re.sub(b3 + r"html|" + b3, "", c_res.text).strip()
+                        full_report_part3 = f"<div class='report-page' style='page-break-before:always;'><h2 style='text-align:center;'>🔍 1:1 상세 비교분석 보고서</h2>{clean_ai}</div>"
+                        
+                        st.markdown(full_report_part1 + full_report_part2 + full_report_part3, unsafe_allow_html=True)
+                        
                     except Exception as e:
                         st.error(f"오류 발생: {e}")
 
