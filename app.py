@@ -910,7 +910,7 @@ with st.sidebar:
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
     u_name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
     u_gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
-    u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat")
+    u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
     u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
     
     col1, col2, col3 = st.columns(3)
@@ -1625,6 +1625,9 @@ if btn_single:
                         p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                         info_h2 = f"<div style='text-align:center; font-family:\"Malgun Gothic\",sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color};'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
 
+                        # [1단계 위치] 사주 데이터 준비가 끝난 직후
+                        st.write("DEBUG: 1단계 - 사주 생성 및 데이터 정화 성공")
+
                         prompt = f"""
 [절대 규칙]
 1. 현재 시스템 시간: {curr_y}년({curr_y_ganji}년) {curr_m}월({cur_wol_g}{cur_wol_j}월)
@@ -1725,9 +1728,13 @@ if btn_single:
 <p><b>◈ 행운에 따른 기운:</b></p>
 </div>
 """
+# ... (full_report_part1 조립 코드) ...
+                        st.write("DEBUG: 2단계 - 원본 감명서 HTML 조립 성공")
                         res = model.generate_content(prompt)
                         감명_본문_내용 = res.text # 이것이 박사님의 감명서 본문입니다.
                        
+# ... (full_report_part3/비교분석 로직 코드) ...
+                        st.write("DEBUG: 3단계 - 비교 분석 프롬프트 실행 시작")
                         # 3. 리포트 병합
                         full_report_part1 = f"<div class='report-page'>{info_h2}{table_html}{master_bar_html}<div style='margin-top:10px; font-weight:900;'>⏳ 대운의 흐름</div>{daewun_table}<div style='margin-top:20px;'>{감명_본문_내용}</div></div>"
                         full_report_part2 = f"<div class='report-page' style='page-break-before:always;'><h2 style='text-align:center;'>📜 타 술사 감명서 원본</h2>{comp_text.replace(chr(10), '<br>')}</div>"
@@ -1739,6 +1746,8 @@ if btn_single:
                         clean_ai = re.sub(b3 + r"html|" + b3, "", c_res.text).strip()
                         full_report_part3 = f"<div class='report-page' style='page-break-before:always;'><h2 style='text-align:center;'>🔍 1:1 상세 비교분석 보고서</h2>{clean_ai}</div>"
                         
+# (최종 출력 직전)
+                        st.write("DEBUG: 4단계 - 리포트 출력 준비 완료")
                         st.markdown(full_report_part1 + full_report_part2 + full_report_part3, unsafe_allow_html=True)
                         
                     except Exception as e:
