@@ -1525,6 +1525,19 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
+                        # [오류 방지] 데이터 무결성 강제 체크
+                        # 각 기둥이 올바른지 확인하고, 비어있다면 "?"로 채워 오류를 막습니다.
+                        check_gans = [hs, ds, ms, ys]
+                        check_jjis = [hb, db, mb, yb]
+                        
+                        gans = [g if (g and len(g) > 0) else "?" for g in check_gans]
+                        jjis = [j if (j and len(j) > 0) else "?" for j in check_jjis]
+                        
+                        # [디버깅 추가] 사주 데이터가 정상인지 확인
+                        if len(gans) < 4 or len(jjis) < 4:
+                            st.error(f"사주 데이터 불일치: gans={gans}, jjis={jjis}")
+                            return
+
                         # 1-1. 내담자 정보 타겟팅 변수 재정의
                         age_prompt = f"내담자의 나이는 {u_age}세이므로, 사회적 성취와 자아실현의 관점에서 분석하십시오."
                         gender_prompt = f"내담자의 성별은 {u_gender}이므로, 해당 성별의 사회적 역할과 심리적 특성을 반영하십시오."
