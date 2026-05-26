@@ -1154,14 +1154,29 @@ if btn_single:
                     cur_wol_g = wol_gans[curr_m - 1]
                     cur_wol_j = wol_jis[curr_m - 1]
                     
+                    # 🚨 [수술 2] 1월(전년도 하반기 연장선)부터 현재 달 직전까지의 과거 월운 리스트 생성 복원!
+                    past_months_html = ""
+                    for m in range(1, curr_m):
+                        g = wol_gans[m-1]
+                        j = wol_jis[m-1]
+                        if m == 1:
+                            past_months_html += f"• 1월({g}{j}월: 작년도 하반기 연장선):\n"
+                        elif m == 2:
+                            past_months_html += f"• 2월({g}{j}월: 새로운 기운의 시작):\n"
+                        else:
+                            past_months_html += f"• {m}월({g}{j}월):\n"
+                    
                     # 🚨 수정: margin-top:5px, font-size:18px, font-weight:900, color:#1A237E 추가
                     wol_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 월운의 흐름 ({curr_y}년도 양력기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                    
+                    # 🚨 (주의!) 아래 12달 표를 그리는 반복문이 꼭 있어야 합니다!
                     for i in range(12):
                         tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
                         is_cur_m = (tm == curr_m)
                         bg_col = "#E8F5E9" if is_cur_m else "transparent"
                         b_left = "1px solid #ccc" if i != 11 else "none"
                         wol_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
+                    
                     wol_html += "</div>"
                     
                     closing_html = f"""<div style='margin-top: 30px;'>
@@ -1216,13 +1231,8 @@ if btn_single:
                     struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                     s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
     
-                    choyeon_golden_text = f"""
-    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
-        <p style='text-indent: 15px; margin-bottom: 5px;'>
-            <b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
-        </p>
-    </div>
-    """
+                    # 🚨 [수술 1] 마크다운 코드블록(속살 노출) 방지를 위해 한 줄로 압축
+                    choyeon_golden_text = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'><p style='text-indent: 15px; margin-bottom: 5px;'><b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.</p></div>
                     dw_start_age = current_daewun_age
                     dw_mid_age   = current_daewun_age + 4
                     dw_mid2_age  = current_daewun_age + 5
@@ -1498,12 +1508,10 @@ if btn_single:
                         # [교정 4] 전체 알맹이(본문 + 클로징 멘트)를 하나의 단일 박스로 구성
                         full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
     
-                        # [교정 5] 실전형 A4 둥근 사각박스 프레임 및 인쇄 버튼 조립 (들여쓰기 붕괴 원천 차단)
-                        report_1_full_html = f"{cover_html}<div class='no-print' style='text-align:right; margin: 20px 0;'><button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;'>🖨️ 초연 사주풀이 인쇄/PDF</button><script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{info_h}{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
-
+                        # [교정 5] 실전형 A4 둥근 사각박스 프레임 및 인쇄 버튼 조립 (명조 이중 도출 완벽 제거)
+                        report_1_full_html = f"{cover_html}<div class='no-print' style='text-align:right; margin: 20px 0;'><button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;'>🖨️ 초연 사주풀이 인쇄/PDF</button><script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
                         # 화면 출력
                         st.markdown(report_1_full_html, unsafe_allow_html=True)
-                        st.markdown(table_html, unsafe_allow_html=True)
                         
                     except Exception as e: 
                         st.error(f"AI 연산 오류: {e}")
