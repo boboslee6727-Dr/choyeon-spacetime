@@ -1561,6 +1561,10 @@ if btn_single:
                         
                         master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: {ohaeng_str}</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
 
+                        # 🚨 [수술] 대운 방향 정의 (빠진 변수 보충)
+                        order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
+                        direction_str = "순행" if order == 1 else "역행"
+
                         # 🚨 [수술] 격국 변수 독립 생성 (타 감명서용)
                         calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
                         
