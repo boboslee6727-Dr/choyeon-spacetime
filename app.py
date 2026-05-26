@@ -1530,6 +1530,7 @@ if btn_single:
                         adj_mins = get_total_time_adjustment(base_dt)
                         utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                         order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
+                        daewun_list = [f"{i*10+calc_d}세:{GAN[(GAN.index(ms)+(i+1)*order)%10]}{JI[(JI.index(mb)+(i+1)*order)%12]}" for i in range(10)]
                         calc_d = get_daeun_su_accurate(utc_dt, order)
                         direction_str = "순행" if order == 1 else "역행"
                         
