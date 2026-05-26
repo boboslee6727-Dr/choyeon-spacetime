@@ -279,11 +279,6 @@ choyeon_db = {
 # ==============================================================================
 # 1. 시스템 변수 세팅 및 써머타임 엔진
 # ==============================================================================
-if 's_y' not in st.session_state: st.session_state.s_y = 1964
-if 's_m' not in st.session_state: st.session_state.s_m = 1
-if 's_d' not in st.session_state: st.session_state.s_d = 15
-if 's_t' not in st.session_state: st.session_state.s_t = "07:30 ~ 09:29 (辰)시"
-
 def get_total_time_adjustment(dt):
     adj = -30
     if dt_mod.datetime(1954, 3, 21) <= dt <= dt_mod.datetime(1961, 8, 9, 23, 59): adj = 0
@@ -962,7 +957,7 @@ if btn_single:
             # 🚨 [중요 오류 수정] 여기서부터 전체 분석 로직을 try 블록으로 감쌉니다.
             try:
                 # ------------------------------------------------------------------
-                # [공통 연산 - 신청인]
+                # [공통 연산 - 신청인] - 여기는 모든 모드가 공유합니다.
                 # ------------------------------------------------------------------
                 klc = KoreanLunarCalendar()
                 if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
@@ -979,7 +974,15 @@ if btn_single:
                 curr_y = curr_dt_sys.year
                 curr_m = curr_dt_sys.month
                 u_age = curr_y - u_y + 1
-                
+
+                adj_mins = get_total_time_adjustment(base_dt)
+                utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+                order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
+                calc_d = get_daeun_su_accurate(utc_dt, order)
+                current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
+
+                dw_start_age = current_daewun_age                
+
                 base_y_idx = (curr_y - 1984) % 60
                 curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
                 gj = klc.getChineseGapJaString().split()
