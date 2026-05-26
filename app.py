@@ -1538,6 +1538,15 @@ if btn_single:
                 # [모드 3] 타 감명서 1:1 비교 분석
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
+                    st.write(f"DEBUG: 진입 직후 gans 상태 = {gans}")  
+
+                    # [사주 데이터 보호] 기존에 역산 등으로 계산된 사주 데이터가 있는지 확인
+                    if 'gans' not in locals() or 'jjis' not in locals():
+                        # 없으면 오류를 내지 말고, 다시 계산하는 로직을 태우거나
+                        # 혹은 미리 계산된 로직을 재호출해야 합니다.
+                        st.warning("사주 정보를 다시 로드 중입니다...")
+                        # ... (여기서 박사님의 사주 생성 함수를 재호출)
+
                     # [데이터 로딩 확인]
                     comp_text = other_reading_text  # 사이드바에서 받아온 입력값
                     if not comp_text or len(comp_text.strip()) == 0:
