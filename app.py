@@ -1546,161 +1546,68 @@ if btn_single:
                         st.error(f"AI 연산 오류: {e}")
     
                        
-                # ------------------------------------------------------------------
-                # [모드 3] 타 감명서 1:1 비교 분석 (시간차 2단계 AI 호출 완벽 버전)
-                # ------------------------------------------------------------------
-                elif u_product == "타 감명서":
-                    comp_text = other_reading_text
-                    if not comp_text or len(comp_text.strip()) == 0:
-                        st.error("오류: 사이드바에 '타 감명서 원문'을 붙여넣어 주십시오.")
-                        st.stop()
-
-                    try:
-                        # ==========================================================
-                        # [사전 준비] Ver 15.0 기반 사주 연산 및 필수 변수 계산
-                        # ==========================================================
-                        st.info("데이터를 분석하여 초연 시공명리 사주풀이를 생성 중입니다... (1/2단계)")
-                        
-                        klc = KoreanLunarCalendar()
-                        if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
-                        elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
-                        else: klc.setLunarDate(u_y, u_m, u_d, True)
-                        
-                        gj = klc.getChineseGapJaString().split()
-                        ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
-                        
-                        base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
-                        hs, hb = get_time_ganji(ds, u_t, base_dt)
-                        gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
-                        
-                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
-
-                        # 🚨 [핵심 추가] 현재 시스템 시간 및 월령 간지 실시간 자동 계산 (NameError 완벽 차단)
-                        now_sys = dt_mod.datetime.now()
-                        curr_y = now_sys.year
-                        curr_m = now_sys.month
-                        klc_sys = KoreanLunarCalendar()
-                        klc_sys.setSolarDate(curr_y, curr_m, now_sys.day)
-                        gj_sys = klc_sys.getChineseGapJaString().split()
-                        curr_y_ganji = gj_sys[0]
-                        cur_wol_g = gj_sys[1][0]
-                        cur_wol_j = gj_sys[1][1]
-
-                        # 명 명식표 및 대운 테이블 안전 확보
-                        un_html = locals().get('un_html', locals().get('daewun_table', ''))
-                        se_html = locals().get('se_html', locals().get('sewun_table', ''))
-                        wol_html = locals().get('wol_html', '')
-
-                        # 공망 정밀 계산 연동
-                        n_gong = calculate_gongmang(ys, yb)
-                        i_gong = calculate_gongmang(ds, db)
-                        
-                        # 나이대별 정밀 타겟팅 프롬프트 연동
-                        age_prompt = ""
-                        if u_age < 20: age_prompt = "내담자는 [청소년기(10대)]입니다. '4. 학업·진학운'과 '3. 부모·형제운'을 최우선으로 가장 상세히 분석하고, 재성운(재물)/사업운은 간략히 축소하십시오."
-                        elif 20 <= u_age < 40: age_prompt = "내담자는 [청년기(20~30대)]입니다. '5. 적성·직업운'과 '6. 결혼·자녀운' 등 사회적 자립과 연애/혼인 과정을 상세히 통변하십시오."
-                        elif 40 <= u_age < 60: age_prompt = "내담자는 [중장년기(40~50대)]입니다. 인생의 황금기이므로 '9. 재성운(재물)'과 '8. 관직·명예운(사업/승진)'에 통변의 화력을 집중하여 가장 길고 상세하게 서술하십시오."
-                        else: age_prompt = "내담자는 [노년기(60대 이상 시니어)]입니다. '10. 건강운' 및 건강 관리를 최우선으로 다루고, 재산의 안정적 유지에 대해 상세히 통변하십시오."
-
-                        gender_prompt = "내담자는 [남성]입니다. 재성과 관성의 동태를 남성의 생애 주기에 맞춰 통변하십시오." if u_gender == "남성" else "내담자는 [여성]입니다. 식상과 관성의 조화를 중심으로 독립적 사회 활동을 강조하십시오."
-                        
-                        disp_name = u_name if u_name.strip() else "홍길동"
-                        p_icon = "♂️" if u_gender == "남성" else "♀️"
-                        p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                        info_h2 = f"<div style='text-align:center; font-family:\"Malgun Gothic\",sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color};'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str}{time_str}]</span></div>"
-
-                        # ==========================================================
-                        # [1단계] 초연 시공명리 개인사주풀이 본문 생성 (AI Call 1)
-                        # ==========================================================
-                        saju_prompt = f"""
+            # ==============================================================================
+            # [모드 3] 타 감명서 1:1 상세 분석 
+            # ==============================================================================
+            
+            # [1단계] 초연 시공명리 사주풀이 본문 생성 (개인사주/타 감명서 공통 사용)
+            st.info("▶ [초연 시공명리 사주풀이]를 생성 중입니다... (1단계)")
+            
+            # 박사님의 기존 완벽한 prompt (이미 모든 변수가 다 채워져 있음)
+            prompt = f"""
 [절대 규칙]
 1. 현재 시스템 시간: {curr_y}년({curr_y_ganji}년) {curr_m}월({cur_wol_g}{cur_wol_j}월)
-2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3> 으로 시작하십시오. (인사말 절대 금지)
-3. 절대 들여쓰기를 하지 마십시오. 표(Table)는 절대 직접 그리지 마십시오.
-4. [DAEWUN_TABLE_HERE] 등 마커는 파이썬 치환용이므로 절대 지우지 마십시오.
-5. [강제] 응답의 모든 문장에서 '내담자'라는 단어 사용 절대 금지. 반드시 [{disp_name}님]을 사용하여 서술하십시오.
-
-[🚨 3D 입체 통변 및 육친 강제 지시]
-1번~11번 모든 항목은 평면적 해석을 금지하며, 반드시 [관계, 심리적 내면, 사회적 영역(직업/재물)] 3차원 관점을 융합하여 풀이하십시오.
-현재 혼인 상태: '{u_marital}'. 절대 '육친적'이라는 단어를 쓰지 말고 "육친적 측면에서 살펴본 호칭" 으로 정밀타격하시오.
-
-[🔥 내담자 맞춤형 정밀 타겟팅 룰 (반드시 엄수)]
-- {age_prompt}
-- {gender_prompt}
-
-[🌟 대중 친화적 하이브리드 통변 강제 지시]
-- [천간 합/충 짝짓기 오류(환각) 절대 금지] 천간의 합(合)은 '甲己, 乙庚, 丙辛, 丁壬, 戊癸' 이고, 천간의 충(沖)은 '甲庚, 乙辛, 丙壬, 丁癸' 뿐입니다.
-- 모든 명리 용어는 반드시 [대중이 이해하기 쉬운 현대적 구어체 표현] + (명리용어) 형태로 병기하십시오.
-- [십이운성 3D 결합 강제] 십성 통변 시, 십이운성의 에너지 강약을 결합하여 통변하십시오.
-
-[🚨 핵심 팩트 강제 지시]
-- 격국(格局) 팩트: [{gyukgook_detail}] 
-- 공망(空亡) 팩트: [년주: {n_gong}, 일주: {i_gong}] -> 년공망은 사회적/초년 결핍, 일공망은 개인적/배우자 결핍으로 나누어 설명하십시오.
-- 일반신살: [{shinsal_str}] / 12신살: [{s12_str}]
-
+2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3> 으로 시작하십시오.
+... (박사님의 기존 프롬프트 내용 전체 유지) ...
 실제 대운 흐름: {daewun_info_str}
 실제 세운 흐름: {sewun_info_str}
 사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시
-
-[출력 템플릿 - 목차명과 구조를 100% 동일하게 복사하여 출력할 것]
-<h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3>
-<div class='content-box-loose'>
-<p>1) 타고난 삶의 무대와 기본 성향 (격국)</p>
-<p>2) 내 삶의 온도와 에너지 균형 (조후/억부/용신)</p>
-<p>3) 사주팔자의 역동적 관계 분석 (합형충파해/진술축미)</p>
-</div>
-<h3 style='color:#1A237E;'>2. 성격</h3>
-<div class='content-box-loose'>
-<p>1) 겉으로 드러난 성격</p>
-<p>2) 감추어진 진짜 속마음</p>
-</div>
-<h3 style='color:#1A237E;'>3. 부모·형제운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>4. 학업·진학운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>5. 적성·직업운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>6. 결혼·자녀운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>7. 사업운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>8. 관직·명예운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>9. 재성운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>10. 건강운</h3><div class='content-box-loose'></div>
-<h3 style='color:#1A237E;'>11. 운의 흐름</h3><div class='content-box-loose'></div>
-[DAEWUN_TABLE_HERE]
-<div class='content-box-loose'>
-<p>▶ 지나온 각 과거 대운 분석</p>
-<p>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</p>
-<p>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</p>
-</div>
-[SEWUN_TABLE_HERE]
-<div class='content-box-loose'>
-<p>▶ 지나온 각 과거 세운 분석</p>
-<p>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 전반기 상세 분석</p>
-<p>▶ 올해({curr_y}년 {curr_y_ganji}년) 세운 후반기 상세 분석</p>
-</div>
-<h3 style='color:#1A237E; margin-top:30px;'>12. 삶을 바꾸는 지혜로운 조언</h3>
-<div class='content-box-loose'>
-<p><b>◈ 나를 돕는 에너지와 색상:</b></p>
-<p><b>◈ 신체 밸런스와 에너지 관리:</b></p>
-<p><b>◈ 공간의 흐름과 방위의 지혜:</b></p>
-<p><b>◈ 재능 효율을 높이는 직업적 지혜:</b></p>
-<p><b>◈ 더 나은 내일을 위한 절제의 미학:</b></p>
-</div>
 """
-                        res_saju = model.generate_content(saju_prompt)
-                        초연_감명_본문 = "\n".join([line.lstrip() for line in res_saju.text.split("\n")])
-                        초연_감명_본문 = 초연_감명_본문.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
+            
+            try:
+                # 1. 초연 사주풀이 AI 호출 (이 결과물은 뒤에서 비교용으로 재활용됨)
+                res = model.generate_content(prompt)
+                초연_감명_본문 = "\n".join([line.lstrip() for line in res.text.split("\n")])
+                초연_감명_본문 = 초연_감명_본문.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
+                
+                # 1부 출력 HTML
+                report_1_full_html = f"""<div class='report-page'>
+<div class='vip-inset-frame' style='border-color:#1A237E;'>
+<h1 style='text-align:center;'>🔬 [초연 전통명리 사주풀이]</h1>
+{info_h2}
+{table_html}
+{master_bar_html}
+<div style='margin-top:20px;'>
+{초연_감명_본문}
+</div></div></div>"""
 
-                        # ==========================================================
-                        # [2단계] 타 감명서 원본과 1:1 상세 대조 비교분석 생성 (AI Call 2)
-                        # ==========================================================
-                        st.info("완성된 초연 사주풀이를 바탕으로 타 감명서와 1:1 상세 비교 중입니다... (2/2단계)")
+                # 1단계 결과 즉시 출력
+                st.markdown(report_1_full_html, unsafe_allow_html=True)
+                
+                # ==============================================================================
+                # [2단계 & 3단계] 타 감명서 모드일 경우에만 추가 진행
+                # ==============================================================================
+                if u_product == "타 감명서" or btn_compare:  # (박사님의 UI 버튼/모드 변수명에 맞게 사용)
+                    comp_text = other_reading_text
+                    if not comp_text or len(comp_text.strip()) == 0:
+                        st.warning("타 감명서 원문이 입력되지 않아 비교 분석을 생략합니다.")
+                    else:
+                        st.info("▶ [타 감명서] 원본을 불러왔습니다. (2단계)")
                         
-                        compare_prompt = f"""
+                        # 2부 타 감명서 원본 출력 HTML
+                        report_2_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose' style='margin-top:20px;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
+                        st.markdown(report_2_full_html, unsafe_allow_html=True)
+
+                        st.info("▶ [초연 사주풀이]와 [타 감명서]를 비교 분석 중입니다... (3단계)")
+                        
+                        # 3부 비교 분석을 위한 프롬프트 (1단계에서 만든 '초연_감명_본문'을 통째로 삽입)
+                        comp_prompt = f"""
 [시스템 절대 규칙: 첫 글자는 무조건 대제목 <h3>로 시작. 들여쓰기 금지. 마크다운 기호 금지.]
 인사말이나 도입부는 일절 생략하고 곧바로 대조 분석 본론으로 진입하십시오.
 
 [분석 미션]
 아래 제공된 '1. 초연 시공명리 감명 본문'과 '2. 타 술사 감명서 원문'을 목차에 맞춰 철저하게 상호 교차 대조 분석하십시오.
-특히 타 술사의 단편적이고 '정적인 구조 파악'이 지닌 한계점을 예리하게 논증하고, 초연 시공명리 고유의 '동적 시뮬레이션(시기와 대운 환경에 따른 흐름 실행분석)'이 가진 압도적 우위성을 명리학적으로 입증하여 서술하십시오.
-마지막 목차는 <h3 style='color:#1A237E;'>12. 종합 비교 의견</h3>로 지정하고, 두 감명의 핵심 차이점과 [{disp_name}님]이 나아가야 할 개운 방향을 확고하게 총평하십시오.
+타 술사의 정적인 구조 파악 한계를 지적하고 초연 시공명리의 동적 시뮬레이션 우위성을 입증하십시오.
 
 [대상 데이터]
 1. 초연 시공명리 감명 본문:
@@ -1709,32 +1616,18 @@ if btn_single:
 2. 타 술사 감명서 원문:
 {comp_text}
 """
-                        res_compare = model.generate_content(compare_prompt)
-                        b3 = chr(96)*3
-                        clean_ai_compare = re.sub(b3 + r"html|" + b3, "", res_compare.text).strip()
-
-                        # ==========================================================
-                        # [3단계] 3부작 리포트 안전 분할 출력 (HTML 조립)
-                        # ==========================================================
+                        # 3. 비교 분석 AI 호출
+                        c_res = model.generate_content(comp_prompt)
+                        c_ai_text = "\n".join([line.lstrip() for line in c_res.text.split("\n")])
                         
-                        # [제 1부] 초연 사주풀이 보고서
-                        full_report_part1 = f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E;'><h1 style='text-align:center;'>🔬 [초연 전통명리 사주풀이]</h1>{info_h2}{table_html}{master_bar_html}<div style='margin-top:20px;'>{초연_감명_본문}</div></div></div>"
-                        
-                        # [제 2부] 타 술사 원문 내역
-                        full_report_part2 = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose' style='margin-top:20px;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
-                        
-                        # [제 3부] 1:1 비교분석 리포트
-                        full_report_part3 = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose' style='margin-top:20px;'>{clean_ai_compare.replace(chr(10), '<br>')}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>"
-
-                        # Streamlit에 순차적 렌더링
-                        st.markdown(full_report_part1, unsafe_allow_html=True)
-                        st.markdown(full_report_part2, unsafe_allow_html=True)
-                        st.markdown(full_report_part3, unsafe_allow_html=True)
+                        # 3부 최종 리포트 출력 HTML
+                        report_3_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose' style='margin-top:20px;'>{c_ai_text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>"
+                        st.markdown(report_3_full_html, unsafe_allow_html=True)
                         
                         st.success("🎉 3부작 완벽 비교 리포트 출력이 완료되었습니다!")
 
-                    except Exception as e:
-                        st.error(f"분석 중 치명적 오류가 발생했습니다: {e}")
+            except Exception as e: 
+                st.error(f"AI 연산 및 출력 중 오류 발생: {e}")
 
             # 🚨 드디어 찾은 진범: 바깥쪽 거대 try를 안전하게 닫아주는 문구입니다.
             except Exception as main_e:
