@@ -1728,12 +1728,12 @@ if btn_single:
 <p><b>◈ 행운에 따른 기운:</b></p>
 </div>
 """
-# ... (full_report_part1 조립 코드) ...
+                        # ... (full_report_part1 조립 코드) ...
                         st.write("DEBUG: 2단계 - 원본 감명서 HTML 조립 성공")
                         res = model.generate_content(prompt)
                         감명_본문_내용 = res.text # 이것이 박사님의 감명서 본문입니다.
                        
-# ... (full_report_part3/비교분석 로직 코드) ...
+                        # ... (full_report_part3/비교분석 로직 코드) ...
                         st.write("DEBUG: 3단계 - 비교 분석 프롬프트 실행 시작")
                         # 3. 리포트 병합
                         full_report_part1 = f"<div class='report-page'>{info_h2}{table_html}{master_bar_html}<div style='margin-top:10px; font-weight:900;'>⏳ 대운의 흐름</div>{daewun_table}<div style='margin-top:20px;'>{감명_본문_내용}</div></div>"
@@ -1746,9 +1746,15 @@ if btn_single:
                         clean_ai = re.sub(b3 + r"html|" + b3, "", c_res.text).strip()
                         full_report_part3 = f"<div class='report-page' style='page-break-before:always;'><h2 style='text-align:center;'>🔍 1:1 상세 비교분석 보고서</h2>{clean_ai}</div>"
                         
-# (최종 출력 직전)
-                        st.write("DEBUG: 4단계 - 리포트 출력 준비 완료")
-                        st.markdown(full_report_part1 + full_report_part2 + full_report_part3, unsafe_allow_html=True)
+                        # 4. 리포트 출력 (하나로 합치지 말고 분할 출력)
+                        st.write("DEBUG: 4단계 - 리포트 출력 시작")
+                        
+                        # 각 파트별로 명확하게 출력
+                        st.markdown(full_report_part1, unsafe_allow_html=True)
+                        st.markdown(full_report_part2, unsafe_allow_html=True)
+                        st.markdown(full_report_part3, unsafe_allow_html=True)
+                        
+                        st.success("리포트 출력이 완료되었습니다.")
                         
                     except Exception as e:
                         st.error(f"오류 발생: {e}")
