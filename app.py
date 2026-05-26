@@ -1567,6 +1567,14 @@ if btn_single:
 
                         # 🚨 [수술] 격국 변수 독립 생성 (타 감명서용)
                         calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
+
+                        # 🚨 [수술] 대운 리스트 정의 (타 감명서용)
+                        daewun_list = []
+                        for i in range(10):
+                            dw_c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
+                            dw_j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
+                            daewun_list.append(f"{i*10+calc_d}세:{dw_c}{dw_j}")
+                        daewun_str = " / ".join(daewun_list)
                         
                         # (이제 이 밑에서 calc_gyukgook을 사용하여 보고서를 작성하시면 됩니다!)
                         # [보고서용 정보 출력부] 
