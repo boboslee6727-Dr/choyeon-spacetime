@@ -1525,6 +1525,10 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
+                        # 월운 오류 방지를 위한 더미 변수 할당
+                        cur_wol_g, cur_wol_j = "?", "?"
+                        past_months_html = "<p>월운 분석 자료 없음</p>"
+
                         # 1. 기초 연산 (변수 정의)
                         target_name = u_name.strip() if u_name.strip() else "홍길동"
                         adj_mins = get_total_time_adjustment(base_dt)
