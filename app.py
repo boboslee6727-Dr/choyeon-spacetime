@@ -1546,88 +1546,104 @@ if btn_single:
                         st.error(f"AI 연산 오류: {e}")
     
                        
-            # ==============================================================================
-            # [모드 3] 타 감명서 1:1 상세 분석 
-            # ==============================================================================
+                    # ==============================================================================
+                    # [모드 3] 타 감명서 1:1 상세 분석 
+                    # ==============================================================================
             
-            # [1단계] 초연 시공명리 사주풀이 본문 생성 (개인사주/타 감명서 공통 사용)
-            st.info("▶ [초연 시공명리 사주풀이]를 생성 중입니다... (1단계)")
-            
-            # 박사님의 기존 완벽한 prompt (이미 모든 변수가 다 채워져 있음)
-            prompt = f"""
-[절대 규칙]
-1. 현재 시스템 시간: {curr_y}년({curr_y_ganji}년) {curr_m}월({cur_wol_g}{cur_wol_j}월)
-2. 응답의 첫 글자는 무조건 <h3 style='color:#1A237E;'>1. 사주팔자 구조 분석</h3> 으로 시작하십시오.
-... (박사님의 기존 프롬프트 내용 전체 유지) ...
-실제 대운 흐름: {daewun_info_str}
-실제 세운 흐름: {sewun_info_str}
-사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시
-"""
-            
-            try:
-                # 1. 초연 사주풀이 AI 호출 (이 결과물은 뒤에서 비교용으로 재활용됨)
-                res = model.generate_content(prompt)
-                초연_감명_본문 = "\n".join([line.lstrip() for line in res.text.split("\n")])
-                초연_감명_본문 = 초연_감명_본문.replace("[DAEWUN_TABLE_HERE]", un_html).replace("[SEWUN_TABLE_HERE]", se_html).replace("[WOLWUN_TABLE_HERE]", wol_html)
-                
-                # 1부 출력 HTML
-                report_1_full_html = f"""<div class='report-page'>
-<div class='vip-inset-frame' style='border-color:#1A237E;'>
-<h1 style='text-align:center;'>🔬 [초연 전통명리 사주풀이]</h1>
-{info_h2}
-{table_html}
-{master_bar_html}
-<div style='margin-top:20px;'>
-{초연_감명_본문}
-</div></div></div>"""
+# 🚨 [수정 포인트] 1단계 시작 안내방송을 AI 호출(try)보다 '먼저' 내보냅니다.
+                    st.info("▶ [초연 시공명리 사주풀이]를 생성 중입니다... (1단계)")
 
-                # 1단계 결과 즉시 출력
-                st.markdown(report_1_full_html, unsafe_allow_html=True)
-                
-                # ==============================================================================
-                # [2단계 & 3단계] 타 감명서 모드일 경우에만 추가 진행
-                # ==============================================================================
-                if u_product == "타 감명서" or btn_compare:  # (박사님의 UI 버튼/모드 변수명에 맞게 사용)
-                    comp_text = other_reading_text
-                    if not comp_text or len(comp_text.strip()) == 0:
-                        st.warning("타 감명서 원문이 입력되지 않아 비교 분석을 생략합니다.")
-                    else:
-                        st.info("▶ [타 감명서] 원본을 불러왔습니다. (2단계)")
+                    # 🚨 [AI 호출 및 조립 보호 구역 시작]
+                    try:
+                        # --- [1부 생성] 박사님의 완벽한 기존 로직 그대로 유지 ---
+                        res_text = call_claude_api(prompt, max_tokens=12000)
+                        ai_text = "\n".join([line.lstrip() for line in res_text.split("\n")])
                         
-                        # 2부 타 감명서 원본 출력 HTML
-                        report_2_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose' style='margin-top:20px;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
-                        st.markdown(report_2_full_html, unsafe_allow_html=True)
+                        if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
+                            ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
+                        else:
+                            target_marker = "1) 타고난 삶의 무대와 기본 성향"
+                            if target_marker in ai_text:
+                                parts = ai_text.split(target_marker)
+                                div_marker = "<div class='content-box-loose'>"
+                                if div_marker in parts[0]:
+                                    top_clean = parts[0][:parts[0].find(div_marker) + len(div_marker)]
+                                    ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
+        
+                        un_html_clean = un_html.replace("\n", " ").replace("\r", "")
+                        se_html_clean = se_html.replace("\n", " ").replace("\r", "")
+                        wol_html_clean = wol_html.replace("\n", " ").replace("\r", "")
+        
+                        clean_ai_text = ai_text
+        
+                        daeoun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{un_html_clean}</div>"
+                        sewun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{se_html_clean}</div>"
+                        wolwun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{wol_html_clean}</div>"
+        
+                        clean_ai_text, count_d = re.subn(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
+                        clean_ai_text, count_s = re.subn(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
+                        clean_ai_text, count_w = re.subn(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+        
+                        clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_DAEOUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
+                        clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_SEEUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
+                        clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_WOLEUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
+        
+                        if count_d == 0 and "table" not in clean_ai_text.lower():
+                            clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
+        
+                        # [교정 4, 5] 알맹이 묶기 및 화면 출력
+                        full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
+                        report_1_full_html = f"{cover_html}<div class='no-print' style='text-align:right; margin: 20px 0;'><button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;'>🖨️ 초연 사주풀이 인쇄/PDF</button><script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
+                        
+                        # 1단계 완료: 초연 사주풀이 출력
+                        st.markdown(report_1_full_html, unsafe_allow_html=True)
+                        
+                        # ==============================================================================
+                        # ⚖️ [모드 3] 타 감명서 1:1 상세 분석 (비교 모드일 때만 이어서 실행)
+                        # ==============================================================================
+                        if btn_compare:  # 사이드바에서 비교 버튼을 눌렀다면 자연스럽게 이어짐
+                            comp_text = other_reading_text
+                            if not comp_text or len(comp_text.strip()) == 0:
+                                st.warning("타 감명서 원문이 입력되지 않아 비교 분석을 생략합니다.")
+                            else:
+                                st.info("▶ [타 감명서] 원본을 불러왔습니다. (2단계)")
+                                
+                                # 2부: 타 감명서 원본 출력
+                                report_2_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose' style='margin-top:20px;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
+                                st.markdown(report_2_full_html, unsafe_allow_html=True)
 
-                        st.info("▶ [초연 사주풀이]와 [타 감명서]를 비교 분석 중입니다... (3단계)")
-                        
-                        # 3부 비교 분석을 위한 프롬프트 (1단계에서 만든 '초연_감명_본문'을 통째로 삽입)
-                        comp_prompt = f"""
+                                st.info("▶ [초연 시공명리 사주풀이]와 [타 감명서]를 비교 분석 중입니다... (3단계)")
+                                
+                                # 3부: 비교 분석 프롬프트 (박사님의 정제된 'clean_ai_text'를 그대로 사용)
+                                comp_prompt = f"""
 [시스템 절대 규칙: 첫 글자는 무조건 대제목 <h3>로 시작. 들여쓰기 금지. 마크다운 기호 금지.]
 인사말이나 도입부는 일절 생략하고 곧바로 대조 분석 본론으로 진입하십시오.
 
 [분석 미션]
-아래 제공된 '1. 초연 시공명리 감명 본문'과 '2. 타 술사 감명서 원문'을 목차에 맞춰 철저하게 상호 교차 대조 분석하십시오.
-타 술사의 정적인 구조 파악 한계를 지적하고 초연 시공명리의 동적 시뮬레이션 우위성을 입증하십시오.
+아래 제공된 '1. 초연 시공명리 감명 본문'과 '2. 타 술사 감명서 원문'을 철저하게 상호 교차 대조 분석하십시오.
+타 술사의 단편적이고 정적인 구조 파악의 한계점을 예리하게 논증하고, 초연 시공명리 고유의 동적 시뮬레이션 우위성을 입증하십시오.
+마지막 목차는 <h3 style='color:#1A237E;'>12. 종합 비교 의견</h3>로 지정하고 확고하게 총평하십시오.
 
 [대상 데이터]
 1. 초연 시공명리 감명 본문:
-{초연_감명_본문}
+{clean_ai_text}
 
 2. 타 술사 감명서 원문:
 {comp_text}
 """
-                        # 3. 비교 분석 AI 호출
-                        c_res = model.generate_content(comp_prompt)
-                        c_ai_text = "\n".join([line.lstrip() for line in c_res.text.split("\n")])
-                        
-                        # 3부 최종 리포트 출력 HTML
-                        report_3_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose' style='margin-top:20px;'>{c_ai_text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>"
-                        st.markdown(report_3_full_html, unsafe_allow_html=True)
-                        
-                        st.success("🎉 3부작 완벽 비교 리포트 출력이 완료되었습니다!")
+                                # 3단계 AI 호출 실행
+                                c_res_text = call_claude_api(comp_prompt, max_tokens=8000)
+                                c_ai_text = "\n".join([line.lstrip() for line in c_res_text.split("\n")])
+                                
+                                # 3부 최종 리포트 출력
+                                report_3_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose' style='margin-top:20px;'>{c_ai_text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>"
+                                st.markdown(report_3_full_html, unsafe_allow_html=True)
+                                
+                                st.success("🎉 3부작 완벽 비교 리포트 출력이 완료되었습니다!")
 
-            except Exception as e: 
-                st.error(f"AI 연산 및 출력 중 오류 발생: {e}")
+                    # 🚨 [AI 호출 및 조립 보호 구역 종료]
+                    except Exception as e: 
+                        st.error(f"AI 연산 오류: {e}")
 
             # 🚨 드디어 찾은 진범: 바깥쪽 거대 try를 안전하게 닫아주는 문구입니다.
             except Exception as main_e:
