@@ -512,23 +512,37 @@ def check_vault_status(base_gans, base_jjis, attacker_ji):
     return results
 
 def get_gyukgook_detailed(ds, ys, ms, hs, mb):
-    if mb in ["子", "午", "卯", "酉"]:
-        core_ss = get_ss(ds, mb)
-        return core_ss + "격", f"월지 {mb}의 순수한 기운인 {core_ss}을 그대로 격으로 삼습니다."
-    
+    # 1. 안전한 지장간 가져오기
     jg = JIJANGGAN.get(mb, [])
     if not jg: return "알수없음격", "지장간 정보가 없습니다."
 
+    # 2. 안전한 get_ss 호출을 위한 래퍼(Wrapper) 함수
+    def safe_get_ss(day_gan, target_char):
+        if not target_char or target_char == "?": return "무명"
+        return get_ss(day_gan, target_char)
+
+    # 3. 자오묘유 격국 (안전하게 처리)
+    if mb in ["子", "午", "卯", "酉"]:
+        core_ss = safe_get_ss(ds, mb)
+        return core_ss + "격", f"월지 {mb}의 순수한 기운인 {core_ss}을 그대로 격으로 삼습니다."
+    
     target_gans = [ys, ms, hs] 
     main_qi = jg[-1]
     
+    # 4. 투출 확인 (인덱스 오류 방지)
+    # 정기 확인
     if main_qi in target_gans:
-        return get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {get_ss(ds, main_qi)}격이 되었습니다."
-    if len(jg) == 3 and jg[1] in target_gans:
-        return get_ss(ds, jg[1]) + "격", f"월지 {mb}의 중기인 {jg[1]}이 천간에 투출하여 {get_ss(ds, jg[1])}격이 되었습니다."
-    if jg[0] in target_gans:
-        return get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {get_ss(ds, jg[0])}격이 되었습니다."
-    return get_ss(ds, main_qi) + "격", f"월지 {mb}의 지장간이 천간에 투출하지 않아, 정기(본기)인 {main_qi}를 기준으로 {get_ss(ds, main_qi)}격으로 정합니다."
+        return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {safe_get_ss(ds, main_qi)}격이 되었습니다."
+    
+    # 중기 확인 (길이 체크)
+    if len(jg) >= 2 and jg[1] in target_gans:
+        return safe_get_ss(ds, jg[1]) + "격", f"월지 {mb}의 중기인 {jg[1]}이 천간에 투출하여 {safe_get_ss(ds, jg[1])}격이 되었습니다."
+    
+    # 여기 확인
+    if len(jg) >= 1 and jg[0] in target_gans:
+        return safe_get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {safe_get_ss(ds, jg[0])}격이 되었습니다."
+        
+    return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 지장간이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {safe_get_ss(ds, main_qi)}격으로 정합니다."
 
 def calculate_gongmang(ilgan, ilji):
     if ilgan in ["?"," ","-"] or ilji in ["?"," ","-"]: return "-"
