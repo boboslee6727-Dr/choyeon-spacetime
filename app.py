@@ -1730,6 +1730,15 @@ if btn_single:
 """
                         # ... (full_report_part1 조립 코드) ...
                         st.write("DEBUG: 2단계 - 원본 감명서 HTML 조립 성공")
+
+                        # [지지 변수 강제 보호]
+                        # 변수가 정의되지 않았거나 None일 경우를 대비해 기본값 지정
+                        hb = hb if 'hb' in locals() and hb else "?"
+                        db = db if 'db' in locals() and db else "?"
+                        mb = mb if 'mb' in locals() and mb else "?"
+                        yb = yb if 'yb' in locals() and yb else "?"
+                    
+                        st.write(f"DEBUG: 진입 직후 지지 상태 = {hb}, {db}, {mb}, {yb}")
                         res = model.generate_content(prompt)
                         감명_본문_내용 = res.text # 이것이 박사님의 감명서 본문입니다.
                        
