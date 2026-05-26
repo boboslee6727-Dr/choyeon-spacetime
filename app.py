@@ -1545,11 +1545,14 @@ if btn_single:
                     # ------------------------------------------------------------------
                     # 🚀 [모드 3] 타 감명서 비교분석
                     # ------------------------------------------------------------------
-                    st.markdown(report_1_full_html, unsafe_allow_html=True)
+
                     if u_product == "타 감명서":
                         st.info("▶ [타 감명서] 비교 분석을 위해 데이터를 불러옵니다...")
+
                         try:
+                            st.info("▶ [타 감명서] 비교 분석을 위해 데이터를 불러옵니다...") 
                             comp_text = other_reading_text
+
                             # 2단계: 타 감명서 원본 출력
                             st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>📜 타 감명서 원문</h2><div>{comp_text.replace(chr(10), '<br>')}</div></div>", unsafe_allow_html=True)
                                 
@@ -1559,6 +1562,7 @@ if btn_single:
                                 
                             # 결과 출력
                             st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>⚖️ 1:1 상세비교 리포트</h2><div>{c_res}</div></div>", unsafe_allow_html=True)
+
                         except Exception as e:
                                 st.error(f"비교 분석 중 오류: {e}")
 
