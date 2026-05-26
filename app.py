@@ -1544,15 +1544,22 @@ if btn_single:
                             lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                             ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
+                        # [공통 변수 및 오행/격국 통합 생성]
                         counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
                         for char in gans + jjis:
                             if char != "?": counts[get_color(char)] += 1
+                        
+                        # 🚨 [수술] 빠진 변수들 일괄 정의
+                        ohaeng_str = f"木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})"
+                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
+                        
                         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                         guiin_str = guiin_map.get(ds, '없음')
                         i_gong = calculate_gongmang(ds, db)
                         cur_samjae = get_samjae(yb, curr_y_ganji[1])
                         samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
-                        master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
+                        
+                        master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: {ohaeng_str}</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
 
                         # 🚨 [수술] 격국 변수 독립 생성 (타 감명서용)
                         calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
