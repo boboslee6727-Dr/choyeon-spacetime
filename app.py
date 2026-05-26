@@ -1524,26 +1524,39 @@ if btn_single:
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     try:
-                        # 🚨 [수술] 개인사주 모드와 독립적인 변수 정의 (이름/나이/자의형상 매번 새로 생성)
+                        # 🚨 [안전장치] 이름과 기본 정보의 확실한 분리
+                        # u_name은 원본으로 두고, 비교분석용 이름만 안전하게 추출합니다.
+                        target_name = u_name.strip() if u_name.strip() else "홍길동"
+                        # 1. 독립 변수 생성
                         disp_name = u_name if u_name.strip() else "홍길동"
-
-                        # [대운 변수 독립 생성]
                         adj_mins = get_total_time_adjustment(base_dt)
                         utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                         order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
                         calc_d = get_daeun_su_accurate(utc_dt, order)
-
-                        # [대운 연동 변수 추가]
                         current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
                         dw_start_age = current_daewun_age
 
-                        # 🚨 [수술] 독립적인 변수 정의 (ji_rel_rows 계산 로직 추가)
+                        # 2. 표 관련 변수 생성 (ji_rel_rows + master_bar_html)
                         ji_rel_rows = ""
                         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                             b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
                             cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:0px solid transparent !important; border-bottom:{b_bot} !important; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
                             lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                             ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+
+                        counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
+                        for char in gans + jjis:
+                            if char != "?": counts[get_color(char)] += 1
+                        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                        guiin_str = guiin_map.get(ds, '없음')
+                        i_gong = calculate_gongmang(ds, db)
+                        cur_samjae = get_samjae(yb, curr_y_ganji[1])
+                        samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
+                        master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
+
+                        # [보고서용 정보 출력부] 
+                        # disp_name 대신 target_name을 사용하여 로직 간의 혼선을 완전히 제거
+                        disp_name = target_name
 
                         table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
                         table_html += "<tr class='top-header-cell'>"
@@ -1571,27 +1584,6 @@ if btn_single:
 
                         gans_str = f"{hs}({get_ss(ds,hs)}) {ds}(日元) {ms}({get_ss(ds,ms)}) {ys}({get_ss(ds,ys)})"
                         jjis_str = f"{hb}({get_ss(ds,hb)}) {db}({get_ss(ds,db)}) {mb}({get_ss(ds,mb)}) {yb}({get_ss(ds,yb)})"
-
-                        counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
-                        for char in gans + jjis:
-                            if char != "?": counts[get_color(char)] += 1
-                        ohaeng_str = f"木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})"
-             
-                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
-                  
-                        order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
-                        adj_mins = get_total_time_adjustment(base_dt)
-                        utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-                        calc_d = get_daeun_su_accurate(utc_dt, order)
-                        direction_str = "순행" if order == 1 else "역행"
-                   
-                        daewun_list = []
-                        for i in range(10):
-                            dw_c = GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-"
-                            dw_j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
-                            daewun_list.append(f"{i*10+calc_d}세:{dw_c}{dw_j}")
-                        daewun_str = " / ".join(daewun_list)
-
 
                         compare_prompt = f"""당신은 명리심리상담사 '초연 박사'입니다.
 아래에 두 가지 자료가 있습니다.
