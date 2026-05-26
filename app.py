@@ -1672,10 +1672,10 @@ if btn_single:
 <p><b>◈ 행운에 따른 기운:</b></p>
 </div>
 """
-                       res = model.generate_content(prompt)
-                       감명_본문_내용 = res.text # 이것이 박사님의 감명서 본문입니다.
-
-                       # 3. 리포트 병합
+                        res = model.generate_content(prompt)
+                        감명_본문_내용 = res.text # 이것이 박사님의 감명서 본문입니다.
+                       
+                        # 3. 리포트 병합
                         full_report_part1 = f"<div class='report-page'>{info_h2}{table_html}{master_bar_html}<div style='margin-top:10px; font-weight:900;'>⏳ 대운의 흐름</div>{daewun_table}<div style='margin-top:20px;'>{감명_본문_내용}</div></div>"
                         full_report_part2 = f"<div class='report-page' style='page-break-before:always;'><h2 style='text-align:center;'>📜 타 술사 감명서 원본</h2>{comp_text.replace(chr(10), '<br>')}</div>"
                         
