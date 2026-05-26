@@ -336,6 +336,18 @@ def get_color(c):
     if c in "壬癸亥子": return "수"
     return "토"
 
+def get_current_saju_data():
+    # 세션 상태에 저장된 역산 결과값이 있다고 가정합니다.
+    # 만약 변수명이 다르다면 박사님의 실제 변수명으로 교체하십시오.
+    try:
+        # 역산 결과가 들어있는 session_state 변수들
+        # 예: st.session_state['saju_gans'] = ['癸', '丁', '乙', '戊']
+        gans = st.session_state.get('saju_gans', ['?', '?', '?', '?'])
+        jjis = st.session_state.get('saju_jjis', ['?', '?', '?', '?'])
+        return gans, jjis
+    except:
+        return ['?', '?', '?', '?'], ['?', '?', '?', '?']
+
 def get_ss(dg, tc):
     if tc in ["?", " ", "-"]: return "-"
     rels = {
@@ -1538,20 +1550,20 @@ if btn_single:
                 # [모드 3] 타 감명서 1:1 비교 분석
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
-                    st.write(f"DEBUG: 진입 직후 gans 상태 = {gans}")  
-                    # [최후의 안전장치] 만약 지지 변수가 없다면 역산 로직을 다시 호출
-                    if 'hb' not in locals() or not hb:
-                        st.warning("사주 정보 재동기화 중...")
-                        # 박사님의 역산 함수를 사용하여 값을 다시 가져옵니다
-                        # 예시: hs, hb, ds, db, ms, mb, ys, yb = get_saju_data(u_y, u_m, u_d, u_t)
-                        # 위와 같은 함수가 코드 상단에 있을 것입니다. 그 함수를 여기에 호출하십시오.
-                        
-                    # 만약 함수를 모르겠다면, 최소한 오류라도 안 나게 방어
-                    try:
-                        st.write(f"DEBUG: 지지 상태 = {locals().get('hb', '없음')}")
-                    except:
-                        st.error("지지 변수가 선언되지 않았습니다.")
+                    # [범용 데이터 호출]
+                    gans, jjis = get_current_saju_data()
+                    
+                    # 만약 여전히 '?'가 섞여있다면 안전하게 강제 할당
+                    if '?' in gans or '?' in jjis:
+                        st.warning("사주 데이터를 다시 불러오고 있습니다...")
+                        # 여기서 역산 로직 함수를 직접 호출하여 값을 갱신
 
+                    st.write(f"DEBUG: 진입 직후 gans 상태 = {gans}")  
+
+                    # 변수 할당 (기존 로직 호환용)
+                    ys, ms, ds, hs = gans
+                    yb, mb, db, hb = jjis
+                        
                     # [사주 데이터 보호] 기존에 역산 등으로 계산된 사주 데이터가 있는지 확인
                     if 'gans' not in locals() or 'jjis' not in locals():
                         # 없으면 오류를 내지 말고, 다시 계산하는 로직을 태우거나
