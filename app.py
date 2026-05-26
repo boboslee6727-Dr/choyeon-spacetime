@@ -1554,10 +1554,10 @@ if btn_single:
                         st.stop()
                     try:
                         # [오류 방지] 데이터 무결성 강제 체크
-                        # 각 기둥이 올바른지 확인하고, 비어있다면 "?"로 채워 오류를 막습니다.
-                        check_gans = [hs, ds, ms, ys]
-                        check_jjis = [hb, db, mb, yb]
+                        check_gans = [hs, ds, ms, ys] # <-- 여기서 오류가 날 확률은 거의 없음
+                        check_jjis = [hb, db, mb, yb] # <-- 혹시 여기서 변수명이 틀렸거나 비어있지 않습니까?
                         
+                        # 바로 여기! 여기서 범인이 있을 확률 100%입니다.
                         gans = [g if (g and len(g) > 0) else "?" for g in check_gans]
                         jjis = [j if (j and len(j) > 0) else "?" for j in check_jjis]
                         
