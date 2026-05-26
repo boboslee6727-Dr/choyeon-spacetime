@@ -1585,6 +1585,3 @@ if btn_single:
                 except Exception as e:
                     st.error(f"3단계 궁합 분석 중 오류 발생: {e}")
 
-# (들여쓰기 0칸 - 완전 바깥쪽으로 시스템 비상 오류 제어)
-except Exception as main_e:
-    st.error(f"시스템 전체 분석 중 치명적 오류가 발생했습니다: {main_e}")
