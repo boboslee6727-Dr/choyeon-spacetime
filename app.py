@@ -963,7 +963,6 @@ if btn_single:
                 if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
                 elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
                 else: klc.setLunarDate(u_y, u_m, u_d, True)
-                
                 is_leap = getattr(klc, 'isIntercalary', False)
                 leap_str = "윤달" if is_leap else "평달"
                 
@@ -975,6 +974,13 @@ if btn_single:
                 curr_m = curr_dt_sys.month
                 u_age = curr_y - u_y + 1
 
+                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                gj = klc.getChineseGapJaString().split()
+                ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+
+                hs, hb = get_time_ganji(ds, u_t, base_dt)
+                gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
+
                 adj_mins = get_total_time_adjustment(base_dt)
                 utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                 order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
@@ -985,12 +991,6 @@ if btn_single:
 
                 base_y_idx = (curr_y - 1984) % 60
                 curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
-                gj = klc.getChineseGapJaString().split()
-                ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
-                
-                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
-                hs, hb = get_time_ganji(ds, u_t, base_dt)
-                gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
                 
                 time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
                 
