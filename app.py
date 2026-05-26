@@ -1542,104 +1542,22 @@ if btn_single:
     
                        
                 # ------------------------------------------------------------------
-                # 🚀 [모드 1 & 3 통합] 개인사주 및 타 감명서 1단계 공통 수행
+                # 🚀 [모드 3] 타 감명서 비교
                 # ------------------------------------------------------------------
-                # 🚨 [수정 포인트] 개인사주 뿐만 아니라 '타 감명서' 모드일 때도 무조건 이 엔진을 타게 합니다!
-                if u_product in ["개인사주", "타 감명서"]:
-                    past_months_html = ""
-                    p_icon = "♂️" if u_gender == "남성" else "♀️"
-                    p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                    today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
-    
-                    # ... [이 사이에는 박사님의 기존 변수, cover_html, table_html, 프롬프트 조립 코드가 그대로 들어갑니다. 생략 없이 박사님 코드 그대로 유지하십시오.] ...
-                    # (코드 길이상 중간 변수 선언부는 박사님의 기존 코드를 그대로 쓰시면 됩니다.)
-                    
-                    # 🚨 [AI 호출 및 조립 보호 구역]
-                    try:
-                        res_text = call_claude_api(prompt, max_tokens=12000)
-                        ai_text = "\n".join([line.lstrip() for line in res_text.split("\n")])
-                        
-                        if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
-                            ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
-                        else:
-                            target_marker = "1) 타고난 삶의 무대와 기본 성향"
-                            if target_marker in ai_text:
-                                parts = ai_text.split(target_marker)
-                                div_marker = "<div class='content-box-loose'>"
-                                if div_marker in parts[0]:
-                                    top_clean = parts[0][:parts[0].find(div_marker) + len(div_marker)]
-                                    ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>" + target_marker + parts[1]
-        
-                        un_html_clean = un_html.replace("\n", " ").replace("\r", "")
-                        se_html_clean = se_html.replace("\n", " ").replace("\r", "")
-                        wol_html_clean = wol_html.replace("\n", " ").replace("\r", "")
-        
-                        clean_ai_text = ai_text
-        
-                        daeoun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{un_html_clean}</div>"
-                        sewun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{se_html_clean}</div>"
-                        wolwun_target = f"<div style='margin: 15px 0; overflow-x: auto;'>{wol_html_clean}</div>"
-        
-                        clean_ai_text, count_d = re.subn(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
-                        clean_ai_text, count_s = re.subn(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
-                        clean_ai_text, count_w = re.subn(r'[\#\*\_\s]*\[\s*WOLWUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
-        
-                        clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_DAEOUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, clean_ai_text, flags=re.IGNORECASE)
-                        clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_SEEUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
-                        clean_ai_text = re.sub(r'[\#\*\_\s]*\[\s*CHAM_WOLEUN_TABLE_HERE\s*\][\#\*\_\s]*', wolwun_target, clean_ai_text, flags=re.IGNORECASE)
-        
-                        if count_d == 0 and "table" not in clean_ai_text.lower():
-                            clean_ai_text = clean_ai_text + f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 운의 흐름표)</span><br>{un_html_clean}{se_html_clean}{wol_html_clean}"
-        
-                        # [교정 4] 전체 알맹이(본문 + 클로징 멘트)를 하나의 단일 박스로 구성
-                        full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
-        
-                        # [교정 5] 실전형 A4 둥근 사각박스 프레임 조립
-                        report_1_full_html = f"{cover_html}<div class='no-print' style='text-align:right; margin: 20px 0;'><button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;'>🖨️ 초연 사주풀이 인쇄/PDF</button><script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
-                        
-                        # [1단계 완료] 화면 출력
-                        st.markdown(report_1_full_html, unsafe_allow_html=True)
-                        st.success("✅ 1단계: 초연 시공명리 사주풀이 분석이 완료되었습니다.")
-                        
-                        # ==============================================================================
-                        # ⚖️ [2단계 & 3단계] '타 감명서' 모드일 때만 연속 가동!
-                        # ==============================================================================
-                        if u_product == "타 감명서":
-                            comp_text = other_reading_text
-                            
-                            st.info("▶ 2단계: [타 감명서] 원본을 화면에 출력합니다.")
-                            report_2_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose' style='margin-top:20px;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
-                            st.markdown(report_2_full_html, unsafe_allow_html=True)
-
-                            st.info("▶ 3단계: [초연 사주풀이]와 [타 감명서]를 1:1 상세 비교 분석 중입니다...")
-                            
-                            comp_prompt = f"""
-[시스템 절대 규칙: 첫 글자는 무조건 대제목 <h3>로 시작. 들여쓰기 금지. 마크다운 기호 금지.]
-인사말이나 도입부는 일절 생략하고 곧바로 대조 분석 본론으로 진입하십시오.
-
-[분석 미션]
-아래 제공된 '1. 초연 시공명리 감명 본문'과 '2. 타 술사 감명서 원문'을 목차에 맞춰 철저하게 상호 교차 대조 분석하십시오.
-타 술사의 단편적이고 정적인 구조 파악의 한계점을 예리하게 논증하고, 초연 시공명리 고유의 동적 시뮬레이션 우위성을 명리학적으로 입증하십시오.
-마지막 목차는 <h3 style='color:#1A237E;'>12. 종합 비교 의견</h3>로 지정하고 확고하게 총평하십시오.
-
-[대상 데이터]
-1. 초연 시공명리 감명 본문:
-{clean_ai_text}
-
-2. 타 술사 감명서 원문:
-{comp_text}
-"""
-                            # 3단계 비교 AI 호출 (call_claude_api 사용)
-                            c_res_text = call_claude_api(comp_prompt, max_tokens=8000)
-                            c_ai_text = "\n".join([line.lstrip() for line in c_res_text.split("\n")])
-                            
-                            report_3_full_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h2 style='text-align:center; color:#D50000;'>⚖️ 두 감명서 1:1 상세비교 리포트</h2><div class='content-box-loose' style='margin-top:20px;'>{c_ai_text}</div><div style='text-align:center; margin-top:50px; font-size:20px; font-weight:900;'>- 초연 임상 연구소 -</div></div></div>"
-                            st.markdown(report_3_full_html, unsafe_allow_html=True)
-                            
-                            st.success("🎉 3부작 완벽 비교 리포트 출력이 완료되었습니다!")
-
-                    except Exception as e: 
-                        st.error(f"AI 연산 오류: {e}")
+               if u_product == "타 감명서":
+                            try:
+                                comp_text = other_reading_text
+                                # 2단계: 타 감명서 원본 출력
+                                st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>📜 타 감명서 원문</h2><div>{comp_text.replace(chr(10), '<br>')}</div></div>", unsafe_allow_html=True)
+                                
+                                # 3단계: 상세 비교 리포트 생성 (AI 호출)
+                                comp_prompt = f"아래 [1. 초연 사주풀이]와 [2. 타 감명서]를 상세 비교 분석하십시오.\n1. 초연 풀이: {clean_ai_text}\n2. 타 감명서: {comp_text}"
+                                c_res = call_claude_api(comp_prompt, max_tokens=8000)
+                                
+                                # 결과 출력
+                                st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>⚖️ 1:1 상세비교 리포트</h2><div>{c_res}</div></div>", unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"비교 분석 중 오류: {e}")
 
             # 🚨 드디어 찾은 진범: 바깥쪽 거대 try를 안전하게 닫아주는 문구입니다.
             except Exception as main_e:
