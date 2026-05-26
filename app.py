@@ -1554,6 +1554,10 @@ if btn_single:
                         samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                         master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
 
+                        # 🚨 [수술] 격국 변수 독립 생성 (타 감명서용)
+                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
+                        
+                        # (이제 이 밑에서 calc_gyukgook을 사용하여 보고서를 작성하시면 됩니다!)
                         # [보고서용 정보 출력부] 
                         # disp_name 대신 target_name을 사용하여 로직 간의 혼선을 완전히 제거
                         disp_name = target_name
