@@ -1295,11 +1295,13 @@ if btn_single:
                     # 남명/여명 데이터 대칭 배정 정의구역
                     if u_gender == "남성":
                         m_name, m_sol, m_lun, m_time, m_age = u_name, sol_str, lun_str, time_str, u_age
-                        m_gans, m_jjis, m_yb, m_ds, m_hs, m_ms = gans, jjis, yb, ds, hs, ms
+                        m_gans, m_jjis = gans, jjis
+                        m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = ys, yb, ms, mb, ds, db, hs, hb
                         m_calc_d = calc_d
                         
                         f_name, f_sol, f_lun, f_time, f_age = p_name, p_sol_str, p_lun_str, f" {p_t.split('(')[0].strip()} ({p_hb})시" if p_t != "시간 모름" else "", p_age
-                        f_gans, f_jjis, f_yb, f_ds, f_hs, f_ms = [p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb], p_yb, p_ds, p_hs, p_ms
+                        f_gans, f_jjis = [p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb]
+                        f_ys, f_yb, f_ms, f_mb, f_ds, f_db, f_hs, f_hb = p_ys, p_yb, p_ms, p_mb, p_ds, p_db, p_hs, p_hb
                         p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=get_total_time_adjustment(p_base_dt))
                         p_order = 1 if (GAN.index(p_ys)%2==0) == (p_gender=='남성') else -1
                         f_calc_d = get_daeun_su_accurate(p_utc_dt, p_order)
@@ -1307,13 +1309,15 @@ if btn_single:
                         male_data_pack, female_data_pack = applicant_bazi, partner_bazi
                     else:
                         m_name, m_sol, m_lun, m_time, m_age = p_name, p_sol_str, p_lun_str, f" {p_t.split('(')[0].strip()} ({p_hb})시" if p_t != "시간 모름" else "", p_age
-                        m_gans, m_jjis, m_yb, m_ds, m_hs, m_ms = [p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb], p_yb, p_ds, p_hs, p_ms
+                        m_gans, m_jjis = [p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb]
+                        m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = p_ys, p_yb, p_ms, p_mb, p_ds, p_db, p_hs, p_hb
                         p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=get_total_time_adjustment(p_base_dt))
                         p_order = 1 if (GAN.index(p_ys)%2==0) == (p_gender=='남성') else -1
                         m_calc_d = get_daeun_su_accurate(p_utc_dt, p_order)
                         
                         f_name, f_sol, f_lun, f_time, f_age = u_name, sol_str, lun_str, time_str, u_age
-                        f_gans, f_jjis, f_yb, f_ds, f_hs, f_ms = gans, jjis, yb, ds, hs, ms
+                        f_gans, f_jjis = gans, jjis
+                        f_ys, f_yb, f_ms, f_mb, f_ds, f_db, f_hs, f_hb = ys, yb, ms, mb, ds, db, hs, hb
                         f_calc_d = calc_d
                         
                         male_data_pack, female_data_pack = partner_bazi, applicant_bazi
