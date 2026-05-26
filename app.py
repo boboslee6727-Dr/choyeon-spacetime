@@ -1095,6 +1095,8 @@ if btn_single:
                 for char in gans + jjis:
                     if char != "?": counts[get_color(char)] += 1
                 
+                guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+           
                 guiin_str = guiin_map.get(ds, '없음')
                 direction_str = "순행" if order == 1 else "역행"
                 n_gong = calculate_gongmang(ys, yb)
