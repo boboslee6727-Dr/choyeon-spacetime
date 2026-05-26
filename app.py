@@ -852,6 +852,97 @@ class UniversalPrintableGunghap:
         # 본 리턴 구역은 클래스 외부(Step 3 Engine)에서 마커 분할 및 조립이 이루어지므로 본래 양식을 유지합니다.
         return clean_ai, c, bars_html, closing
 
+# ==============================================================================
+# 4. 사이드바 UI
+# ==============================================================================
+with st.sidebar:
+    st.title("🏮초연 시공명리 연구소")
+    st.caption(f"{APP_VERSION} Master (Base + Gunghap)")
+    
+    with st.expander("🔍 사주팔자 역산 검색", expanded=False):
+        col_g1, col_g2 = st.columns(2)
+        with col_g1: ry = st.text_input("년주", value="")
+        with col_g2: rm = st.text_input("월주", value="")
+        col_g3, col_g4 = st.columns(2)
+        with col_g3: rd = st.text_input("일주", value="")
+        with col_g4: rt = st.text_input("시주", value="")
+        
+        K2H_GAN = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
+        K2H_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
+        
+        if st.button("🔍 생년월일 자동입력", use_container_width=True):
+            _ry, _rm, _rd = ry.replace("년","").replace(" ","")[:2], rm.replace("월","").replace(" ","")[:2], rd.replace("일","").replace(" ","")[:2]
+            if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
+                ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
+                rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
+                rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
+                klc_find = KoreanLunarCalendar(); found = False
+                for y in range(2026, 1899, -1):
+                    klc_find.setSolarDate(y, 7, 1); gj_y = klc_find.getChineseGapJaString().split()
+                    if gj_y and gj_y[0][:2] == ry_h:
+                        curr_dt = dt_mod.date(y+1, 2, 28)
+                        while curr_dt >= dt_mod.date(y, 1, 1):
+                            klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                            gj = klc_find.getChineseGapJaString().split()
+                            if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                                st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = curr_dt.year, curr_dt.month, curr_dt.day
+                                time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
+                                if rt:
+                                    ji_char = rt.replace("시","").replace(" ","")[-1]
+                                    rt_h = K2H_JI.get(ji_char, ji_char)
+                                    if rt_h in time_map_rev: st.session_state.s_t = time_map_rev[rt_h]
+                                found = True
+                                is_leap = getattr(klc_find, 'isIntercalary', False)
+                                leap_str = "윤달" if is_leap else "평달"
+                                st.success(f"✅ [양력] {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 / [음력] {klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일 ({leap_str}) 입력완료!")
+                                break
+                        curr_dt -= dt_mod.timedelta(days=1)
+                    if found: break
+                if not found: st.error("일치하는 날짜가 없습니다.")
+            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+
+    st.markdown("---")
+    u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
+    
+    st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
+    u_name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
+    u_gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
+    u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
+    u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
+    
+    col1, col2, col3 = st.columns(3)
+    u_y = col1.number_input("년", 1900, 2050, key="s_y")
+    u_m = col2.number_input("월", 1, 12, key="s_m")
+    u_d = col3.number_input("일", 1, 31, key="s_d")
+    
+    idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
+    u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
+    
+    p_name, p_gender, p_marital, p_cal, p_y, p_m, p_d, p_t = "", "여성", "미혼", "양력", 1967, 9, 24, "시간 모름"
+    other_reading_text = ""
+    if u_product == "궁합":
+        st.markdown("---")
+        st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
+        p_name = st.text_input("이름", value="", placeholder="이영희", key="p_n")
+        p_gender_default = "여성" if u_gender == "남성" else "남성"
+        p_gender = st.selectbox("성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default), key="p_g")
+        p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], index=1, key="p_m_stat")
+        p_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="p_c")
+        
+        p_col1, p_col2, p_col3 = st.columns(3)
+        p_y = p_col1.number_input("년", 1900, 2050, value=1967, key="p_y_in")
+        p_m = p_col2.number_input("월", 1, 12, value=9, key="p_m_in")
+        p_d = p_col3.number_input("일", 1, 31, value=24, key="p_d_in")
+        p_t = st.selectbox("00:30 ~ 01:29 (朝子)시", idx_list, key="p_t_key")
+
+    elif u_product == "타 감명서":
+        st.markdown("---")
+        st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력</div>", unsafe_allow_html=True)
+        st.caption("다른 역술가의 감명서 내용을 아래에 붙여넣기 하세요.")
+        other_reading_text = st.text_area("타 감명서 원문", height=250, placeholder="여기에 타 감명서 내용을 붙여넣기 하세요...", key="other_reading")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
 # ==============================================================================
 # 5. 분석 가동 및 출력 (Ver 34.5 직렬 구조 - 프로모델 최종 판본)
