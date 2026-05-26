@@ -1541,7 +1541,13 @@ if btn_single:
                         guiin_str = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음')
                         i_gong = calculate_gongmang(ds, db)
                         cur_samjae = get_samjae(yb, curr_y_ganji[1])
-
+                        ji_rel_rows = ""
+                        for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                            b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:0px solid transparent !important; border-bottom:{b_bot} !important; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                            lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
+                            ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+                        
                         # (1) 사주팔자표 조립문 (기존 로직 유지)
                         table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
                         table_html += "<tr class='top-header-cell'><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td></tr>"
