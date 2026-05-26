@@ -980,7 +980,7 @@ if btn_single:
         time.sleep(0.5)
 
         # 3. 이제 엔진 가동
-        spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]
+        spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
         with st.spinner(spinner_msg):
             if u_product == "개인사주":
                 pass
