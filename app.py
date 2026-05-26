@@ -1231,9 +1231,9 @@ if btn_single:
                     struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                     s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
     
-                    # 🚨 [수술 1] 마크다운 코드블록(속살 노출) 방지를 위해 한 줄로 압축
-                    choyeon_golden_text = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'><p style='text-indent: 15px; margin-bottom: 5px;'><b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.</p></div>
-                    dw_start_age = current_daewun_age
+                    # 🚨 [수술 1] 괄호 꼬임과 f-string 오류를 원천 차단한 안전한 결합 방식
+                    choyeon_golden_text = "<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'><p style='text-indent: 15px; margin-bottom: 5px;'><b>" + disp_name + "님</b>은 '" + w_val + "'의 시공간에서, '" + i_val + "'의 성품을 가지고 태어나셨습니다.</p></div>"
+
                     dw_mid_age   = current_daewun_age + 4
                     dw_mid2_age  = current_daewun_age + 5
                     dw_end_age   = current_daewun_age + 9
