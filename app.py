@@ -1536,7 +1536,7 @@ if btn_single:
                         # [디버깅 추가] 사주 데이터가 정상인지 확인
                         if len(gans) < 4 or len(jjis) < 4:
                             st.error(f"사주 데이터 불일치: gans={gans}, jjis={jjis}")
-                            return
+                            st.stop() # return 대신 st.stop() 사용
 
                         # 1-1. 내담자 정보 타겟팅 변수 재정의
                         age_prompt = f"내담자의 나이는 {u_age}세이므로, 사회적 성취와 자아실현의 관점에서 분석하십시오."
