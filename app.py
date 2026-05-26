@@ -1524,6 +1524,11 @@ if btn_single:
                 # [모드 3] 타 감명서 1:1 비교 분석
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
+                    # [데이터 로딩 확인]
+                    comp_text = other_reading_text  # 사이드바에서 받아온 입력값
+                    if not comp_text or len(comp_text.strip()) == 0:
+                        st.error("오류: '타 감명서 원문'이 입력되지 않았습니다. 사이드바에 내용을 붙여넣어 주십시오.")
+                        st.stop()
                     try:
                         # [오류 방지] 데이터 무결성 강제 체크
                         # 각 기둥이 올바른지 확인하고, 비어있다면 "?"로 채워 오류를 막습니다.
@@ -1538,18 +1543,13 @@ if btn_single:
                             st.error(f"사주 데이터 불일치: gans={gans}, jjis={jjis}")
                             st.stop() # return 대신 st.stop() 사용
 
-                        # 1-1. 내담자 정보 타겟팅 변수 재정의
-                        age_prompt = f"내담자의 나이는 {u_age}세이므로, 사회적 성취와 자아실현의 관점에서 분석하십시오."
-                        gender_prompt = f"내담자의 성별은 {u_gender}이므로, 해당 성별의 사회적 역할과 심리적 특성을 반영하십시오."
-                        
-                        # (추가) 월운 변수 오류 방지를 위한 최소한의 선언
-                        curr_y_ganji = "" # 필요 시 기존 코드의 변수를 사용하십시오
-                        curr_m = dt_mod.datetime.now().month
-                        cur_wol_g, cur_wol_j = "?", "?"
-                        past_months_html = "<p>월운 분석 자료 없음</p>"
-
                         # 1. 기초 연산 (변수 정의)
                         target_name = u_name.strip() if u_name.strip() else "홍길동"
+                        age_prompt = f"내담자의 나이는 {u_age}세이므로, 사회적 성취와 자아실현의 관점에서 분석하십시오."
+                        gender_prompt = f"내담자의 성별은 {u_gender}이므로, 해당 성별의 사회적 역할과 심리적 특성을 반영하십시오."
+                        curr_y_ganji, curr_m = "", dt_mod.datetime.now().month
+                        cur_wol_g, cur_wol_j, past_months_html = "?", "?", "<p>월운 분석 자료 없음</p>"
+
                         adj_mins = get_total_time_adjustment(base_dt)
                         utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                         order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
