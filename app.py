@@ -972,14 +972,20 @@ if btn_single:
     elif u_product == "타 감명서" and not other_reading_text.strip():
         st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
     else:
+        status_area = st.empty()
+        status_area.info("⏳ [초연 시공명리 분석을 시작합니다. 잠시만 기다려 주십시오...]")
 
-        spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
+        # 2. 아주 잠깐 쉬어줌으로써 브라우저가 위 문구를 먼저 그리게 합니다.
+        import time
+        time.sleep(0.5)
+
+        # 3. 이제 엔진 가동
+        spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]
         with st.spinner(spinner_msg):
             if u_product == "개인사주":
                 pass
             elif u_product == "타 감명서":
                 pass
-        # 타 감명서 로직
             try:
                 # ------------------------------------------------------------------
                 # [1단계] 공통 사주 엔진 (모든 모드 무조건 수행)
