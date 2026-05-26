@@ -972,10 +972,12 @@ if btn_single:
     elif u_product == "타 감명서" and not other_reading_text.strip():
         st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
     else:
-        # 2. 메시지 설정 후, 하나의 직렬 흐름으로 실행
+
         spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
-        
         with st.spinner(spinner_msg):
+            if u_product == "개인사주":
+            elif u_product == "타 감명서":
+        # 타 감명서 로직
             try:
                 # ------------------------------------------------------------------
                 # [1단계] 공통 사주 엔진 (모든 모드 무조건 수행)
@@ -1541,9 +1543,11 @@ if btn_single:
                         st.error(f"AI 연산 오류: {e}")
                     
                     # ------------------------------------------------------------------
-                    # 🚀 [모드 3] 타 감명서 비교
+                    # 🚀 [모드 3] 타 감명서 비교분석
                     # ------------------------------------------------------------------
+                    st.markdown(report_1_full_html, unsafe_allow_html=True)
                     if u_product == "타 감명서":
+                        st.info("▶ [타 감명서] 비교 분석을 위해 데이터를 불러옵니다...")
                         try:
                             comp_text = other_reading_text
                             # 2단계: 타 감명서 원본 출력
