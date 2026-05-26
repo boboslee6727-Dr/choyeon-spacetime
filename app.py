@@ -976,7 +976,9 @@ if btn_single:
         spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
         with st.spinner(spinner_msg):
             if u_product == "개인사주":
+                pass
             elif u_product == "타 감명서":
+                pass
         # 타 감명서 로직
             try:
                 # ------------------------------------------------------------------
