@@ -1539,24 +1539,23 @@ if btn_single:
                         
                     except Exception as e: 
                         st.error(f"AI 연산 오류: {e}")
-    
-                       
-                # ------------------------------------------------------------------
-                # 🚀 [모드 3] 타 감명서 비교
-                # ------------------------------------------------------------------
-               if u_product == "타 감명서":
-                            try:
-                                comp_text = other_reading_text
-                                # 2단계: 타 감명서 원본 출력
-                                st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>📜 타 감명서 원문</h2><div>{comp_text.replace(chr(10), '<br>')}</div></div>", unsafe_allow_html=True)
+                    
+                    # ------------------------------------------------------------------
+                    # 🚀 [모드 3] 타 감명서 비교
+                    # ------------------------------------------------------------------
+                    if u_product == "타 감명서":
+                        try:
+                            comp_text = other_reading_text
+                            # 2단계: 타 감명서 원본 출력
+                            st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>📜 타 감명서 원문</h2><div>{comp_text.replace(chr(10), '<br>')}</div></div>", unsafe_allow_html=True)
                                 
-                                # 3단계: 상세 비교 리포트 생성 (AI 호출)
-                                comp_prompt = f"아래 [1. 초연 사주풀이]와 [2. 타 감명서]를 상세 비교 분석하십시오.\n1. 초연 풀이: {clean_ai_text}\n2. 타 감명서: {comp_text}"
-                                c_res = call_claude_api(comp_prompt, max_tokens=8000)
+                            # 3단계: 상세 비교 리포트 생성 (AI 호출)
+                            comp_prompt = f"아래 [1. 초연 사주풀이]와 [2. 타 감명서]를 상세 비교 분석하십시오.\n1. 초연 풀이: {clean_ai_text}\n2. 타 감명서: {comp_text}"
+                            c_res = call_claude_api(comp_prompt, max_tokens=8000)
                                 
-                                # 결과 출력
-                                st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>⚖️ 1:1 상세비교 리포트</h2><div>{c_res}</div></div>", unsafe_allow_html=True)
-                            except Exception as e:
+                            # 결과 출력
+                            st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>⚖️ 1:1 상세비교 리포트</h2><div>{c_res}</div></div>", unsafe_allow_html=True)
+                        except Exception as e:
                                 st.error(f"비교 분석 중 오류: {e}")
 
             # 🚨 드디어 찾은 진범: 바깥쪽 거대 try를 안전하게 닫아주는 문구입니다.
