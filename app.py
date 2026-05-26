@@ -1557,18 +1557,26 @@ if btn_single:
                         st.stop()
 
                     try:
-                        # 2. 사주 데이터 확보 및 무결성 검증 (IndexError 완벽 방어)
-                        if 'gj' not in locals() or not gj or len(gj) < 4:
-                            st.warning("사주 데이터가 초기화되었습니다. 좌측 사이드바에서 생년월일시 입력 후 [초연 시공명리 사주풀이 가동] 버튼을 다시 눌러주십시오.")
-                            st.stop()
-
-                        # 안전하게 천간/지지 4기둥 분리
-                        gans = [gj[i][0] for i in range(4)]
-                        jjis = [gj[i][1] for i in range(4)]
+                        # [핵심 수정] Ver 15.0의 사주 계산 엔진을 100% 동일하게 구동
+                        klc = KoreanLunarCalendar()
+                        if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
+                        elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
+                        else: klc.setLunarDate(u_y, u_m, u_d, True)
                         
-                        ds = gans[1]  # 일간
-                        mb = jjis[1]  # 월지 
-                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, gans[0], gans[2], gans[3], mb)
+                        # 년, 월, 일 간지 추출
+                        gj = klc.getChineseGapJaString().split()
+                        ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+                        
+                        # 시 간지 추출 (시간 엔진 가동)
+                        base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                        hs, hb = get_time_ganji(ds, u_t, base_dt)
+                        
+                        # 최종 4기둥 리스트 완성 (역산 오류 원천 차단)
+                        gans = [hs, ds, ms, ys]
+                        jjis = [hb, db, mb, yb]
+                        
+                        # 격국 계산 (시주까지 포함된 완벽한 인자 전달)
+                        calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
 
                         # 필수 정보 변수 정의 
                         disp_name = u_name if u_name.strip() else "홍길동"
