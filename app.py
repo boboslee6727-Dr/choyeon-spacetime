@@ -1537,6 +1537,14 @@ if btn_single:
                         current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
                         dw_start_age = current_daewun_age
 
+                        # 🚨 [수술] 독립적인 변수 정의 (ji_rel_rows 계산 로직 추가)
+                        ji_rel_rows = ""
+                        for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                            b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:0px solid transparent !important; border-bottom:{b_bot} !important; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                            lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
+                            ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+
                         table_html = "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>"
                         table_html += "<tr class='top-header-cell'>"
                         table_html += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>"
@@ -1583,6 +1591,7 @@ if btn_single:
                             dw_j = JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
                             daewun_list.append(f"{i*10+calc_d}세:{dw_c}{dw_j}")
                         daewun_str = " / ".join(daewun_list)
+
 
                         compare_prompt = f"""당신은 명리심리상담사 '초연 박사'입니다.
 아래에 두 가지 자료가 있습니다.
