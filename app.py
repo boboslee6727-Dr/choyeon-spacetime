@@ -1547,7 +1547,7 @@ if btn_single:
     
                        
                 # ------------------------------------------------------------------
-                # [모드 3] 타 감명서 1:1 비교 분석 (시간차 2단계 AI 호출 완벽 적용)
+                # [모드 3] 타 감명서 1:1 비교 분석 (시간차 2단계 AI 호출 완벽 버전)
                 # ------------------------------------------------------------------
                 elif u_product == "타 감명서":
                     comp_text = other_reading_text
@@ -1557,7 +1557,7 @@ if btn_single:
 
                     try:
                         # ==========================================================
-                        # [사전 준비] Ver 15.0의 완벽한 사주 연산 및 필수 변수 계산
+                        # [사전 준비] Ver 15.0 기반 사주 연산 및 필수 변수 계산
                         # ==========================================================
                         st.info("데이터를 분석하여 초연 시공명리 사주풀이를 생성 중입니다... (1/2단계)")
                         
@@ -1575,10 +1575,27 @@ if btn_single:
                         
                         calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
 
-                        # 진짜 변수들 계산 (Ver 15.0 핵심 로직)
+                        # 🚨 [핵심 추가] 현재 시스템 시간 및 월령 간지 실시간 자동 계산 (NameError 완벽 차단)
+                        now_sys = dt_mod.datetime.now()
+                        curr_y = now_sys.year
+                        curr_m = now_sys.month
+                        klc_sys = KoreanLunarCalendar()
+                        klc_sys.setSolarDate(curr_y, curr_m, now_sys.day)
+                        gj_sys = klc_sys.getChineseGapJaString().split()
+                        curr_y_ganji = gj_sys[0]
+                        cur_wol_g = gj_sys[1][0]
+                        cur_wol_j = gj_sys[1][1]
+
+                        # 명 명식표 및 대운 테이블 안전 확보
+                        un_html = locals().get('un_html', locals().get('daewun_table', ''))
+                        se_html = locals().get('se_html', locals().get('sewun_table', ''))
+                        wol_html = locals().get('wol_html', '')
+
+                        # 공망 정밀 계산 연동
                         n_gong = calculate_gongmang(ys, yb)
                         i_gong = calculate_gongmang(ds, db)
                         
+                        # 나이대별 정밀 타겟팅 프롬프트 연동
                         age_prompt = ""
                         if u_age < 20: age_prompt = "내담자는 [청소년기(10대)]입니다. '4. 학업·진학운'과 '3. 부모·형제운'을 최우선으로 가장 상세히 분석하고, 재성운(재물)/사업운은 간략히 축소하십시오."
                         elif 20 <= u_age < 40: age_prompt = "내담자는 [청년기(20~30대)]입니다. '5. 적성·직업운'과 '6. 결혼·자녀운' 등 사회적 자립과 연애/혼인 과정을 상세히 통변하십시오."
@@ -1700,10 +1717,10 @@ if btn_single:
                         # [3단계] 3부작 리포트 안전 분할 출력 (HTML 조립)
                         # ==========================================================
                         
-                        # [제 1부] 초연 사주풀이
+                        # [제 1부] 초연 사주풀이 보고서
                         full_report_part1 = f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E;'><h1 style='text-align:center;'>🔬 [초연 전통명리 사주풀이]</h1>{info_h2}{table_html}{master_bar_html}<div style='margin-top:20px;'>{초연_감명_본문}</div></div></div>"
                         
-                        # [제 2부] 타 술사 원문
+                        # [제 2부] 타 술사 원문 내역
                         full_report_part2 = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 술사 감명서 원본 내역</h2><div class='content-box-loose' style='margin-top:20px;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
                         
                         # [제 3부] 1:1 비교분석 리포트
