@@ -1271,6 +1271,11 @@ if btn_single:
             # 💕 [3단계] 궁합 풀이 (Ver 35.2 - 인쇄/PDF 및 격자·색상 정밀 보정판)
             # ==================================================================
             if u_product == "궁합":
+                # --- [1단계: 안전 변수 선언부] ---
+                gh_engine = None
+                couple_daewun_tables = ""
+                m_tbl, f_tbl = "", ""
+                m_ess, f_ess, g_ess = "", "", ""
                 try:
                     st.info("▶ [종합 궁합] 남명/여명 사주 정보 동기화 및 3단계 직렬 통합 분석 가동 중...")
                     
@@ -1366,6 +1371,15 @@ if btn_single:
 
                     m_tbl = build_bazi_table("♂️", m_name, "남성", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j))
                     f_tbl = build_bazi_table("♀️", f_name, "여성", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j))
+
+                    # 3-5. 프리미엄 궁합 에세이 분석 가동
+                    # [2단계: 대운표 생성 및 에세이 분석의 순차적 격리]
+                    try:
+                        m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
+                        f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
+                        couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
+                    except Exception as e:
+                        couple_daewun_tables = f"<div style='color:red;'>대운표 생성 중 오류 발생</div>"
 
                     # 3-5. 프리미엄 궁합 에세이 분석 가동
                     gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
@@ -1515,19 +1529,22 @@ if btn_single:
                     import re
                     m_ess, f_ess, g_ess = "", "", ai_clean
                     
-                    m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
-                    if m_match: m_ess = m_match.group(1).strip()
+                    # 3-8. 마커 파싱 및 데이터 안전 확보 (방어 로직)
+                    m_ess, f_ess, g_ess = "남성 사주 분석 데이터가 준비 중입니다.", "여성 사주 분석 데이터가 준비 중입니다.", ai_clean
                     
-                    f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
-                    if f_match: f_ess = f_match.group(1).strip()
+                    import re
+                    m_m = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                    if m_m: m_ess = m_m.group(1).strip()
                     
-                    g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
-                    if g_match: 
-                        g_ess = g_match.group(1).strip()
+                    f_m = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                    if f_m: f_ess = f_m.group(1).strip()
+                    
+                    g_m = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                    if g_m:
+                        g_ess = g_m.group(1).strip()
                     else:
-                        g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
+                        g_ess = "궁합 분석 데이터가 준비 중입니다."
                     
-                    # 대운 스택 배치 교차 주입
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
                     # A4 래퍼 함수 (밑줄 포함 규격 정렬)
@@ -1556,14 +1573,15 @@ if btn_single:
                     {closing_original}
                     """
 
-                    # 3-10. 독립 레이아웃 3단 가시화 완벽 마감
-                    st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", "#1A237E", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
-                    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-                    
-                    st.markdown(wrap_a4(f"{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", "#D50000", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
-                    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-                    
-                    st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
+                    # 3-10. 렌더링 검증 및 최종 출력 (안전 출력 래퍼)
+                    try:
+                        st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess or '내용을 준비 중입니다.'}</div>", "#1A237E", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
+                        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+                        
+                        st.markdown(wrap_a4(f"{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess or '내용을 준비 중입니다.'}</div>", "#D50000", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
+                        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+                        
+                        st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
                     # 🖨️ [인쇄/PDF 저장 기능] 최종 스위치 배치
                     st.markdown("<br>", unsafe_allow_html=True)
