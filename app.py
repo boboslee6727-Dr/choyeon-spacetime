@@ -970,13 +970,7 @@ if btn_single:
     elif u_product == "궁합" and not p_name.strip(): 
         st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
     else:
-        # 2. 메시지 영역 사전 할당 및 강제 갱신
-        status_area = st.empty()
-        status_area.info("⏳ [초연 시공명리 분석을 시작합니다. 잠시만 기다려 주십시오...]")
-        import time
-        time.sleep(0.5)
-
-        # 3. 스피너 가동 및 직렬 엔진 시작
+        # 스피너 가동 및 직렬 엔진 시작
         spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
         with st.spinner(spinner_msg):
             
@@ -1286,8 +1280,6 @@ if btn_single:
             # ==================================================================
             if u_product == "궁합":
                 try:
-                    st.info("▶ [종합 궁합] 남명/여명 사주 정보 동기화 및 3단계 직렬 통합 분석 가동 중...")
-                    
                     # 3-1. 상대방(여명 또는 파트너) 정밀 역산 연산 시스템 가동
                     p_klc = KoreanLunarCalendar()
                     if p_cal == "양력": p_klc.setSolarDate(p_y, p_m, p_d)
