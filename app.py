@@ -1320,7 +1320,9 @@ if btn_single:
                         f_ys, f_yb, f_ms, f_mb, f_ds, f_db, f_hs, f_hb = ys, yb, ms, mb, ds, db, hs, hb
                         f_calc_d = calc_d
                         
-                        male_data_pack, female_data_pack = partner_bazi, applicant_bazi
+                      # 남녀 데이터 배정 (지시하신 대로 타이틀에서 '남명/여명' 삭제)
+                    m_data = {'name': u_name if u_gender == '남성' else p_name, 'age': u_age if u_gender == '남성' else p_age, 'gans': gans if u_gender == '남성' else [p_hs, p_ds, p_ms, p_ys], 'jjis': jjis if u_gender == '남성' else [p_hb, p_db, p_mb, p_yb], 'yb': yb if u_gender == '남성' else p_yb, 'ds': ds if u_gender == '남성' else p_ds, 'hs': hs if u_gender == '남성' else p_hs, 'ms': ms if u_gender == '남성' else p_ms, 'calc_d': calc_d if u_gender == '남성' else get_daeun_su_accurate(p_base_dt, 1)}
+                    f_data = {'name': p_name if u_gender == '남성' else u_name, 'age': p_age if u_gender == '남성' else u_age, 'gans': [p_hs, p_ds, p_ms, p_ys] if u_gender == '남성' else gans, 'jjis': [p_hb, p_db, p_mb, p_yb] if u_gender == '남성' else jjis, 'yb': p_yb if u_gender == '남성' else yb, 'ds': p_ds if u_gender == '남성' else ds, 'hs': p_hs if u_gender == '남성' else hs, 'ms': p_ms if u_gender == '남성' else ms, 'calc_d': get_daeun_su_accurate(p_base_dt, 1) if u_gender == '남성' else calc_d}
 
                     # 3-2. 남명용 사주팔자 HTML 표 및 마스터바 생성구역
                     m_counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
@@ -1447,7 +1449,7 @@ if btn_single:
                     final_printable_html = f"""
                     <div class='report-page'>
                         <div class='vip-inset-frame' style='border-color:#1A237E; padding:20px;'>
-                            <h1 style='text-align:center; color:#1A237E;'>[초연 시공명리 사주팔자 풀이 - 남명]</h1>
+                            <h1 style='text-align:center; color:#1A237E;'>[초연 시공명리 사주팔자 풀이]</h1>
                             <div style='margin-top:20px;'>{m_table_html}</div>
                             <div style='margin-top:20px;'>{male_part}</div>
                         </div>
@@ -1456,12 +1458,21 @@ if btn_single:
                     
                     <div class='report-page'>
                         <div class='vip-inset-frame' style='border-color:#D50000; padding:20px;'>
-                            <h1 style='text-align:center; color:#D50000;'>[초연 시공명리 사주팔자 풀이 - 여명]</h1>
+                            <h1 style='text-align:center; color:#D50000;'>[초연 시공명리 사주팔자 풀이]</h1>
                             <div style='margin-top:20px;'>{f_table_html}</div>
                             <div style='margin-top:20px;'>{female_part}</div>
                         </div>
                     </div>
                     <div class='page-break-before'></div>
+
+                    # 3. 대운 표 (상하 정렬)
+                    def get_dw_table(data, color):
+                        html = f"<div style='margin-bottom:20px;'><div style='font-size:14px; font-weight:900; color:{color};'>{data['name']}님 대운 흐름표</div><div style='display:flex; border:2px solid #3E2723;'>"
+                        order = 1 # 간략화
+                        for i in range(10):
+                            val = i*10+data['calc_d']
+                            html += f"<div style='flex:1; border-left:1px solid #ccc; text-align:center; font-family:Nanum Myeongjo;'><div style='background:#3E2723; color:#fff; font-size:11px;'>{val}세</div><div style='font-size:14px; font-weight:900;'>{GAN[(GAN.index(data['ms'])+(i+1)*order)%10]}</div><div style='font-size:14px; font-weight:900;'>{JI[(JI.index(data['jjis'][2])+(i+1)*order)%12]}</div><div style='font-size:10px; color:#C62828;'>{get_12_shinsal(data['yb'], JI[(JI.index(data['jjis'][2])+(i+1)*order)%12])}</div></div>"
+                        return html + "</div></div>"
                     
                     <div class='report-page'>
                         <div class='vip-inset-frame' style='border-color:#1B5E20; padding:20px;'>
@@ -1486,8 +1497,12 @@ if btn_single:
                         </div>
                     </div>
                     """
-                    # 화면 최종 표출
-                    st.markdown(final_printable_html, unsafe_allow_html=True)
-                    
+
+                    # 출력
+                    st.markdown(build_report_box(m_data, "[초연 시공명리 사주팔자 풀이]"), unsafe_allow_html=True)
+                    st.markdown(build_report_box(f_data, "[초연 시공명리 사주팔자 풀이]"), unsafe_allow_html=True)
+
+                    st.markdown(f"<div class='report-page'><div class='vip-inset-frame'><h1 style='text-align:center; color:#1B5E20;'>[초연 시공명리 종합 궁합풀이]</h1><h3 style='color:#1B5E20;'>🍀 두 사람의 운명적 만남에 대하여</h3><p>...</p><h3 style='color:#1A237E;'>🌈 커플의 인생 기상도 분석</h3>{get_dw_table(m_data, '#1A237E')}{get_dw_table(f_data, '#D50000')}</div></div>", unsafe_allow_html=True)
+                  
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
