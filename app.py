@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 35.1 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 37.0 (Gemini 2.5-Pro Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -943,7 +943,21 @@ with st.sidebar:
     
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
-
+    
+    # 🖨️ [임집사 추가] 사이드바 전용 프리미엄 인쇄/PDF 버튼 엔진
+    components.html("""
+    <div style='padding: 0; margin: 0;'>
+        <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: all 0.3s;'>
+            🖨️ 풀이 결과 인쇄 / PDF 저장
+        </button>
+        <script>
+            // 브라우저 샌드박스를 우회하여 최상위 부모 창(Streamlit 메인 화면)에 인쇄 명령 전달
+            document.getElementById('sidebar-pdf-print-btn').addEventListener('click', () => {
+                window.parent.print();
+            });
+        </script>
+    </div>
+    """, height=55)
 # ==============================================================================
 # 5. 분석 가동 및 출력 (Ver 34.5 직렬 구조 - 프로모델 최종 판본)
 # ==============================================================================
@@ -1384,7 +1398,8 @@ if btn_single:
                             tj = JI[(JI.index(mb)+(i+1)*order)%12]
                             bg = "#FFF9C4" if val <= age < val+10 else "transparent"
                             brd = "1px solid #ccc" if i != 9 else "none"
-                            html += f"<div style='flex:1; border-left:{brd}; text-align:center; padding-bottom:3px; background-color:{bg};'><div style='background-color:{color}; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:11px;'>{val}세</div><div style='padding:2px; font-size:11px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:11px;'>{get_ss(ds,tj)}</div><div style='font-size:10px; border-top:1px solid #eee;'>{get_unsung(ds,tj)}</div><div style='font-size:10px; color:#C62828; border-top:1px solid #eee;'>{get_12_shinsal(yb, tj)}</div></div>"
+                            # 최상단 바탕색을 {color}에서 #3E2723(진한 갈색)으로 변경 및 하단 줄눈 추가
+                            html += f"<div style='flex:1; border-left:{brd}; text-align:center; padding-bottom:3px; background-color:{bg};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:11px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:11px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:11px;'>{get_ss(ds,tj)}</div><div style='font-size:10px; border-top:1px solid #eee;'>{get_unsung(ds,tj)}</div><div style='font-size:10px; color:#C62828; border-top:1px solid #eee;'>{get_12_shinsal(yb, tj)}</div></div>"
                         return html + "</div></div>"
 
                     m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age, "#1A237E")
