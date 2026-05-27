@@ -1182,7 +1182,7 @@ if btn_single:
                 # ------------------------------------------------------------------
                 # [모드 1] 개인사주 전용 마크다운 호출 (궁합/비교 모드가 아닐 때만 실행)
                 # ------------------------------------------------------------------
-                if u_product == "개인사주":
+                if u_product in ["개인사주", "타 감명서"]:
                     db_header = (
                         f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
                         "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
@@ -1205,12 +1205,14 @@ if btn_single:
                     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석</span>
                     (상세 에세이)
                     </div>
-                    <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
+                    <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격 및 가치관</h3>
                     <div class='content-box-loose'>
                     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
                     (상세 에세이)
                     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
                     (상세 에세이)
+                    <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 무의식이 갈망하는 반려자의 상</span>
+                    (일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 내담자의 연애 및 결혼관을 상세히 에세이로 작성)
                     </div>
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>(에세이)</div>
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>(에세이)</div>
@@ -1235,8 +1237,8 @@ if btn_single:
                     report_1_full_html = f"{cover_html}<div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
                     st.markdown(report_1_full_html, unsafe_allow_html=True)
                 else:
-                    # 궁합이나 타감명서 모드일 때는 1단계 호출 생략(변수 및 레이아웃 충돌 방지용)
-                    clean_ai_text = "[개인 원본 데이터 보유]"
+                    # 궁합 모드일 때는 1단계 개별 호출 생략 (3단계에서 남녀 별도 생성) # 👈 [설명 변경]
+                    clean_ai_text = "[궁합 데이터 보유]"
                     
             except Exception as e: 
                 st.error(f"1단계 기본 엔진 가동 실패: {e}")
@@ -1427,11 +1429,13 @@ if btn_single:
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
 
-<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격</h3>
+<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
 (이곳에 남성의 내면과 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 남성의 연애 및 결혼관을 실제 에세이로 작성)
 [MALE_END]
 
 [FEMALE_START]
@@ -1442,11 +1446,13 @@ if btn_single:
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
 
-<h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격</h3>
+<h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
 (이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 여성의 연애 및 결혼관을 실제 에세이로 작성)
 [FEMALE_END]
 
 [GUNGHAP_START]
