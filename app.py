@@ -858,7 +858,8 @@ class UniversalPrintableGunghap:
 with st.sidebar:
     st.title("🏮초연 시공명리 연구소")
     st.caption(f"{APP_VERSION} Master (Base + Gunghap)")
-    
+    st.markdown("---")
+
     with st.expander("🔍 사주팔자 역산 검색", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="")
@@ -896,12 +897,12 @@ with st.sidebar:
                                 leap_str = "윤달" if is_leap else "평달"
                                 st.success(f"✅ [양력] {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 / [음력] {klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일 ({leap_str}) 입력완료!")
                                 break
-                        curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
+                            curr_dt -= dt_mod.timedelta(days=1)
+                        if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-st.markdown("---")
+    st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
     
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
@@ -920,7 +921,8 @@ st.markdown("---")
     
     p_name, p_gender, p_marital, p_cal, p_y, p_m, p_d, p_t = "", "여성", "미혼", "양력", 1967, 9, 24, "시간 모름"
     other_reading_text = ""
-    
+    run_delivery_calc = False  # [중요] 변수 사전 정의
+
     if u_product == "궁합":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
@@ -937,48 +939,31 @@ st.markdown("---")
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
         
         # ------------------------------------------------------------------
-        # 👶 [VIP 전용 옵션] 출산 가능 연령(여성 49세 이하) 스마트 필터 및 택일 코너
+        # 👶 [VIP 전용 옵션] 출산 가능 연령(여성 49세 이하) 스마트 필터
         # ------------------------------------------------------------------
-        # 실시간 입력된 년도(u_y, p_y)를 바탕으로 여성의 대략적 나이를 파악합니다.
         current_year = 2026
         f_year = u_y if u_gender == "여성" else p_y
-        approx_f_age = current_year - f_year + 1
-
-        if approx_f_age <= 49:
-            st.markdown("---")
-            with st.expander("👶 [VIP 심층 분석] 프리미엄 출산택일 코너", expanded=False):
-                st.markdown("<small style='color:#666;'>※ 출산 가능 연령대의 신혼 부부 전용 메뉴입니다.</small>", unsafe_allow_html=True)
-                
-                baby_gender = st.radio("태아 성별 선택", ["미정 (남/여 모두 분석)", "남아", "여아"], index=0, key="baby_gender_select")
-                
-                st.markdown("**출산 희망(가능) 기간 설정**")
-                col_b1, col_b2 = st.columns(2)
-                with col_b1:
-                    start_date = st.date_input("시작일", key="baby_start_date")
-                with col_b2:
-                    end_date = st.date_input("종료일", key="baby_end_date")
-                
-                run_delivery_calc = st.checkbox("이 부부의 출산택일 리포트를 생성합니다.", value=False, key="run_delivery_calc")
-        else:
-            run_delivery_calc = False
+        if (current_year - f_year + 1) <= 49:
+            with st.expander("👶 [VIP 심층 분석] 프리미엄 출산택일", expanded=False):
+                baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
+                start_date = st.date_input("탐색 시작일")
+                end_date = st.date_input("탐색 종료일")
+                run_delivery_calc = st.checkbox("출산택일 리포트 생성")
 
     elif u_product == "타 감명서":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력</div>", unsafe_allow_html=True)
-        st.caption("다른 역술가의 감명서 내용을 아래에 붙여넣기 하세요.")
-        other_reading_text = st.text_area("타 감명서 원문", height=250, placeholder="여기에 타 감명서 내용을 붙여넣기 하세요...", key="other_reading")
+        other_reading_text = st.text_area("타 감명서 원문", height=250, placeholder="여기에 내용을 붙여넣기 하세요...", key="other_reading")
     
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
     
-    # 🖨️ [임집사 추가] 사이드바 전용 프리미엄 인쇄/PDF 버튼 엔진
     components.html("""
     <div style='padding: 0; margin: 0;'>
         <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: all 0.3s;'>
             🖨️ 풀이 결과 인쇄 / PDF 저장
         </button>
         <script>
-            // 브라우저 샌드박스를 우회하여 최상위 부모 창(Streamlit 메인 화면)에 인쇄 명령 전달
             document.getElementById('sidebar-pdf-print-btn').addEventListener('click', () => {
                 window.parent.print();
             });
