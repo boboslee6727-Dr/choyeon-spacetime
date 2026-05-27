@@ -1417,8 +1417,11 @@ if btn_single:
                     
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
-                    m_tbl = build_bazi_table(m_name, m_sol, m_lun, m_time, m_age, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, m_curr_y_ganji[1]), "#1A237E")
-                    f_tbl = build_bazi_table(f_name, f_sol, f_lun, f_time, f_age, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, f_curr_y_ganji[1]), "#D50000")
+                    # 올해의 간지 지지(curr_j)를 구하여 삼재 계산에 투입
+                    curr_j = JI[((curr_y - 1984) % 60) % 12]
+
+                    m_tbl = build_bazi_table(m_name, m_sol, m_lun, m_time, m_age, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), "#1A237E")
+                    f_tbl = build_bazi_table(f_name, f_sol, f_lun, f_time, f_age, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), "#D50000")
 
                     def wrap_a4(content, title_color="#1A237E"):
                         return f"<div class='report-page'><div class='vip-inset-frame'><h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900;'>[초연 시공명리 사주팔자 풀이]</h1>{content}</div></div>"
