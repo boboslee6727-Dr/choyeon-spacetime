@@ -1526,13 +1526,34 @@ if btn_single:
                     """
 
                     # 3-10. 화면 최종 렌더링 (1P 남명, 2P 여명, 3P 궁합)
+                    # 1. 남명 출력
                     st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", "#1A237E"), unsafe_allow_html=True)
                     st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-                    
+
+                    # 2. 여명 출력                    
                     st.markdown(wrap_a4(f"{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", "#D50000"), unsafe_allow_html=True)
                     st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                     
+                    # 3. 궁합 출력
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
-                    
+
+                    # 4. [삽입] 4페이지: 프리미엄 출산택일 리포트 (궁합 출력 직후에만 실행)
+                    if 'run_delivery_calc' in st.session_state and st.session_state.run_delivery_calc:
+                        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+                        
+                        forbidden_years = ['병오'] 
+                        delivery_days = get_optimized_delivery_days(
+                            st.session_state.baby_start_date, 
+                            st.session_state.baby_end_date, 
+                            m_jjis, f_jjis, forbidden_years
+                        )
+                        
+                        del_content = "<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>"
+                        del_content += "<p>부모님의 사주와 조화를 이루는 길일입니다.</p>"
+                        for day_info in delivery_days:
+                            del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>"
+                        
+                        st.markdown(wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]"), unsafe_allow_html=True)                
+
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
