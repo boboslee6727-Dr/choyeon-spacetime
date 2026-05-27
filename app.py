@@ -1124,10 +1124,10 @@ with st.sidebar:
                 {g_ess}
                 """, unsafe_allow_html=True)                    
                 
-                    # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (try 블록 내부 유지)
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
-                        st.components.v1.html("<script>window.print();</script>", height=0, width=0)
+                # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (try 블록 내부 유지)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
+                    st.components.v1.html("<script>window.print();</script>", height=0, width=0)
 
             # 메인 관문 try에 연동되는 유일한 예외 처리기 (전체 시스템 보호용)
             except Exception as main_e:
