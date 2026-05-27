@@ -1040,15 +1040,80 @@ if btn_single:
                 f_tbl = intro_html
 
                 # ==================================================================
-                # [2단계] 대운표 생성 및 데이터 격리 처리
+                # [2단계] 대운표 생성 및 데이터 격리 처리 (시각화 표 분리 포함 완결본)
                 # ==================================================================
-                m_name, f_name = u_name, p_name
-                m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age = ds, ms, mb, yb, calc_d, order, u_age
-                f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age = ds, ms, mb, yb, calc_d, order, u_age
-                
-                male_data_pack = {"bazi": applicant_bazi, "gender": "남성", "age": u_age}
-                female_data_pack = {"bazi": applicant_bazi, "gender": "여성", "age": u_age}
+                if u_product == "궁합":
+                    # 파트너 사주 명식 계산
+                    p_klc = KoreanLunarCalendar()
+                    if p_cal == "양력": 
+                        p_klc.setSolarDate(p_y, p_m, p_d)
+                    elif p_cal == "음력(평달)": 
+                        p_klc.setLunarDate(p_y, p_m, p_d, False)
+                    else: 
+                        p_klc.setLunarDate(p_y, p_m, p_d, True)
 
+                    p_curr_dt_sys = dt_mod.datetime.now()
+                    p_age = p_curr_dt_sys.year - p_y + 1
+                    p_base_dt = dt_mod.datetime(p_y, p_m, p_d, 12, 0)
+                    
+                    p_gj = p_klc.getChineseGapJaString().split()
+                    p_ys, p_yb, p_ms, p_mb, p_ds, p_db = p_gj[0][0], p_gj[0][1], p_gj[1][0], p_gj[1][1], p_gj[2][0], p_gj[2][1]
+                    p_hs, p_hb = get_time_ganji(p_ds, p_t, p_base_dt)
+                    
+                    partner_bazi = [f"{p_hs}{p_hb}", f"{p_ds}{p_db}", f"{p_ms}{p_mb}", f"{p_ys}{p_yb}"]
+                    
+                    p_adj_mins = get_total_time_adjustment(p_base_dt)
+                    p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=p_adj_mins)
+                    p_order = 1 if (GAN.index(p_ys)%2==0) == (p_gender=='남성') else -1
+                    p_calc_d = get_daeun_su_accurate(p_utc_dt, p_order)
+
+                    # 📌 파트너 전용 명식표(그래픽) 생성
+                    p_intro_html = f"""
+                    <div class='bazi-table-wrapper' style='margin-bottom: 20px;'>
+                        <table style='width: 100%; text-align: center; border-collapse: collapse;'>
+                            <tr>
+                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>시주</th>
+                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>일주</th>
+                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>월주</th>
+                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>년주</th>
+                            </tr>
+                            <tr>
+                                {td(p_hs)}{td(p_ds)}{td(p_ms)}{td(p_ys)}
+                            </tr>
+                            <tr>
+                                {td(p_hb)}{td(p_db)}{td(p_mb)}{td(p_yb)}
+                            </tr>
+                        </table>
+                    </div>
+                    """
+
+                    # 신청인과 파트너의 성별에 따라 변수 및 '명식표(tbl)' 확정
+                    if u_gender == "남성":
+                        m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age = u_name, ds, ms, mb, yb, calc_d, order, u_age
+                        male_data_pack = {"bazi": applicant_bazi, "gender": "남성", "age": u_age}
+                        m_tbl = intro_html  # 남성(신청인) 표 배정
+                        
+                        f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age = p_name, p_ds, p_ms, p_mb, p_yb, p_calc_d, p_order, p_age
+                        female_data_pack = {"bazi": partner_bazi, "gender": "여성", "age": p_age}
+                        f_tbl = p_intro_html # 여성(파트너) 표 배정
+                    else:
+                        f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age = u_name, ds, ms, mb, yb, calc_d, order, u_age
+                        female_data_pack = {"bazi": applicant_bazi, "gender": "여성", "age": u_age}
+                        f_tbl = intro_html  # 여성(신청인) 표 배정
+                        
+                        m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age = p_name, p_ds, p_ms, p_mb, p_yb, p_calc_d, p_order, p_age
+                        male_data_pack = {"bazi": partner_bazi, "gender": "남성", "age": p_age}
+                        m_tbl = p_intro_html # 남성(파트너) 표 배정
+                else:
+                    # 개인 사주 모드
+                    m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age = u_name, ds, ms, mb, yb, calc_d, order, u_age
+                    f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age = u_name, ds, ms, mb, yb, calc_d, order, u_age
+                    male_data_pack = {"bazi": applicant_bazi, "gender": u_gender, "age": u_age}
+                    female_data_pack = {"bazi": applicant_bazi, "gender": u_gender, "age": u_age}
+                    m_tbl = intro_html
+                    f_tbl = intro_html
+
+                # 📌 대운표 생성
                 try:
                     m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
                     f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
@@ -1056,7 +1121,7 @@ if btn_single:
                 except Exception as daewun_e:
                     couple_daewun_tables = f"<div style='color:red; font-weight:bold;'>대운표 생성 중 오류 발생: {daewun_e}</div>"
 
-                # 궁합 엔진 호출 및 보고서 에세이 취득
+                # 📌 궁합 엔진 호출 및 보고서 에세이 취득
                 if u_product == "궁합":
                     gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
                     gh_engine.run_universal_logic()
