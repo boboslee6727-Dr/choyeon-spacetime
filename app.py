@@ -1398,11 +1398,23 @@ if btn_single:
                     res_text = call_claude_api(essay_prompt, max_tokens=12000)
                     ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
-                    # 3-7. 페이지 레이아웃 최종 조립
+                    # 3-7. 페이지 레이아웃 최종 조립 (안전망 탑재)
                     import re
-                    m_ess = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL).group(1).strip()
-                    f_ess = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL).group(1).strip()
-                    g_ess = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL).group(1).strip()
+                    m_ess, f_ess, g_ess = "", "", ai_clean
+                    
+                    m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                    if m_match: m_ess = m_match.group(1).strip()
+                    
+                    f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                    if f_match: f_ess = f_match.group(1).strip()
+                    
+                    g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                    if g_match: 
+                        g_ess = g_match.group(1).strip()
+                    else:
+                        # AI가 마커를 빼먹었을 경우를 대비한 비상 추출 (남/여 내용만 도려냄)
+                        g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
+                    
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
                     m_tbl = build_bazi_table(m_name, m_sol, m_lun, m_time, m_age, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, m_curr_y_ganji[1]), "#1A237E")
