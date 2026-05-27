@@ -945,152 +945,150 @@ with st.sidebar:
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
 # ==============================================================================
-    # 5. 분석 가동 및 출력 (Ver 34.5 직렬 구조 - 프로모델 최종 판본)
-    # ==============================================================================
-    if btn_single:
-        # [방어 로직 1단계] 시스템 다운을 막기 위한 전역 변수 초기화
-        gh_engine = None
-        couple_daewun_tables = ""
-        m_tbl, f_tbl = "", ""
-        m_ess = "남성 사주 분석 데이터가 준비 중입니다."
-        f_ess = "여성 사주 분석 데이터가 준비 중입니다."
-        g_ess = "궁합 분석 데이터가 준비 중입니다."
-        ai_clean = ""
+# 5. 분석 가동 및 출력 (Ver 34.5 직렬 구조 - 프로모델 최종 판본)
+# ==============================================================================
+# 🚨 if문이 화면 맨 왼쪽(0칸)에 찰싹 붙어 사이드바를 탈출합니다.
+if btn_single:
+    # [방어 로직 1단계] 시스템 다운을 막기 위한 전역 변수 초기화 (4칸 들여쓰기)
+    gh_engine = None
+    couple_daewun_tables = ""
+    m_tbl, f_tbl = "", ""
+    m_ess = "남성 사주 분석 데이터가 준비 중입니다."
+    f_ess = "여성 사주 분석 데이터가 준비 중입니다."
+    g_ess = "궁합 분석 데이터가 준비 중입니다."
+    ai_clean = ""
 
-        # 1. 유효성 검사 (입력 폼 확인)
-        if not u_name.strip(): 
-            st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
-        elif u_product == "타 감명서" and not other_reading_text.strip():
-            st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
-        elif u_product == "궁합" and not p_name.strip(): 
-            st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
-        else:
-            # 2. 메인 분석 예외 격리 블록 시작 (이 try 문이 전체 시스템을 보호합니다)
-            try:
-                spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
-                with st.spinner(spinner_msg):
+    # 1. 유효성 검사
+    if not u_name.strip(): 
+        st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
+    elif u_product == "타 감명서" and not other_reading_text.strip():
+        st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
+    elif u_product == "궁합" and not p_name.strip(): 
+        st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
+    else:
+        # 2. 메인 분석 예외 격리 블록 시작 (8칸 들여쓰기)
+        try:
+            spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
+            with st.spinner(spinner_msg):
+                
+                # ==================================================================
+                # [1단계] 공통 사주 엔진 가동 (16칸 들여쓰기)
+                # ==================================================================
+                klc = KoreanLunarCalendar()
+                if u_cal == "양력": 
+                    klc.setSolarDate(u_y, u_m, u_d)
+                elif u_cal == "음력(평달)": 
+                    klc.setLunarDate(u_y, u_m, u_d, False)
+                else: 
+                    klc.setLunarDate(u_y, u_m, u_d, True)
                     
-                    # ==================================================================
-                    # [1단계] 공통 사주 엔진 가동 (명식 계산 로직 원본 유지)
-                    # ==================================================================
-                    klc = KoreanLunarCalendar()
-                    if u_cal == "양력": 
-                        klc.setSolarDate(u_y, u_m, u_d)
-                    elif u_cal == "음력(평달)": 
-                        klc.setLunarDate(u_y, u_m, u_d, False)
-                    else: 
-                        klc.setLunarDate(u_y, u_m, u_d, True)
-                        
-                    is_leap = getattr(klc, 'isIntercalary', False)
-                    leap_str = "윤달" if is_leap else "평달"
-                    
-                    sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
-                    lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
-                    
-                    curr_dt_sys = dt_mod.datetime.now()
-                    curr_y = curr_dt_sys.year
-                    curr_m = curr_dt_sys.month
-                    u_age = curr_y - u_y + 1
+                is_leap = getattr(klc, 'isIntercalary', False)
+                leap_str = "윤달" if is_leap else "평달"
+                
+                sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+                lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
+                
+                curr_dt_sys = dt_mod.datetime.now()
+                curr_y = curr_dt_sys.year
+                curr_m = curr_dt_sys.month
+                u_age = curr_y - u_y + 1
 
-                    base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
-                    gj = klc.getChineseGapJaString().split()
-                    ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
+                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                gj = klc.getChineseGapJaString().split()
+                ys, yb, ms, mb, ds, db = gj[0][0], gj[0][1], gj[1][0], gj[1][1], gj[2][0], gj[2][1]
 
-                    hs, hb = get_time_ganji(ds, u_t, base_dt)
-                    gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
-                    
-                    applicant_bazi = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
+                hs, hb = get_time_ganji(ds, u_t, base_dt)
+                gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
+                
+                applicant_bazi = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
 
-                    adj_mins = get_total_time_adjustment(base_dt)
-                    utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-                    order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
-                    calc_d = get_daeun_su_accurate(utc_dt, order)
-                    current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
-                    dw_start_age = current_daewun_age                
-                    
-                    base_y_idx = (curr_y - 1984) % 60
-                    curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
-                    
-                    time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
-                    
-                    def td(c, size="18px"): 
-                        return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
-                    
-                    intro_html = f"""
-                    <div class='bazi-table-wrapper' style='margin-bottom: 20px;'>
-                        <table style='width: 100%; text-align: center; border-collapse: collapse;'>
-                            <tr>
-                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>시주</th>
-                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>일주</th>
-                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>월주</th>
-                                <th style='border: 1px solid #444; background-color: #f4f4f4;'>년주</th>
-                            </tr>
-                            <tr>
-                                {td(hs)}{td(ds)}{td(ms)}{td(ys)}
-                            </tr>
-                            <tr>
-                                {td(hb)}{td(db)}{td(mb)}{td(yb)}
-                            </tr>
-                        </table>
-                    </div>
-                    """
-                    
-                    # 생성된 사주 테이블을 남성/여성 테이블 변수에 안전하게 할당
-                    m_tbl = intro_html
-                    f_tbl = intro_html
+                adj_mins = get_total_time_adjustment(base_dt)
+                utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+                order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
+                calc_d = get_daeun_su_accurate(utc_dt, order)
+                current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
+                dw_start_age = current_daewun_age                
+                
+                base_y_idx = (curr_y - 1984) % 60
+                curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]            
+                
+                time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
+                
+                def td(c, size="18px"): 
+                    return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+                
+                intro_html = f"""
+                <div class='bazi-table-wrapper' style='margin-bottom: 20px;'>
+                    <table style='width: 100%; text-align: center; border-collapse: collapse;'>
+                        <tr>
+                            <th style='border: 1px solid #444; background-color: #f4f4f4;'>시주</th>
+                            <th style='border: 1px solid #444; background-color: #f4f4f4;'>일주</th>
+                            <th style='border: 1px solid #444; background-color: #f4f4f4;'>월주</th>
+                            <th style='border: 1px solid #444; background-color: #f4f4f4;'>년주</th>
+                        </tr>
+                        <tr>
+                            {td(hs)}{td(ds)}{td(ms)}{td(ys)}
+                        </tr>
+                        <tr>
+                            {td(hb)}{td(db)}{td(mb)}{td(yb)}
+                        </tr>
+                    </table>
+                </div>
+                """
+                
+                m_tbl = intro_html
+                f_tbl = intro_html
 
-                    # ==================================================================
-                    # [2단계 방어 로직] 대운표 생성 및 데이터 격리 처리 (독립적 예외 처리)
-                    # ==================================================================
-                    m_name, f_name = u_name, p_name
-                    m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age = ds, ms, mb, yb, calc_d, order, u_age
-                    f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age = ds, ms, mb, yb, calc_d, order, u_age
-                    
-                    male_data_pack = {"bazi": applicant_bazi, "gender": "남성", "age": u_age}
-                    female_data_pack = {"bazi": applicant_bazi, "gender": "여성", "age": u_age}
+                # ==================================================================
+                # [2단계] 대운표 생성 및 데이터 격리 처리
+                # ==================================================================
+                m_name, f_name = u_name, p_name
+                m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age = ds, ms, mb, yb, calc_d, order, u_age
+                f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age = ds, ms, mb, yb, calc_d, order, u_age
+                
+                male_data_pack = {"bazi": applicant_bazi, "gender": "남성", "age": u_age}
+                female_data_pack = {"bazi": applicant_bazi, "gender": "여성", "age": u_age}
 
-                    try:
-                        m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
-                        f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
-                        couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
-                    except Exception as daewun_e:
-                        couple_daewun_tables = f"<div style='color:red; font-weight:bold;'>대운표 생성 중 오류 발생: {daewun_e}</div>"
+                try:
+                    m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
+                    f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
+                    couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
+                except Exception as daewun_e:
+                    couple_daewun_tables = f"<div style='color:red; font-weight:bold;'>대운표 생성 중 오류 발생: {daewun_e}</div>"
 
-                    # 궁합 엔진 호출 및 보고서 에세이(프롬프트 결과) 취득
-                    if u_product == "궁합":
-                        gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
-                        gh_engine.run_universal_logic()
-                        
-                        # AI 결과 텍스트를 ai_clean 변수에 안전하게 가져옴
-                        if hasattr(gh_engine, 'get_report_text'):
-                            ai_clean = gh_engine.get_report_text()
-                        else:
-                            ai_clean = getattr(gh_engine, 'report_text', "")
-
-                    # ==================================================================
-                    # [3단계 방어 로직] 마커 정밀 파싱 및 불완전 데이터 완충 영역
-                    # ==================================================================
-                    import re
+                # 궁합 엔진 호출 및 보고서 에세이 취득
+                if u_product == "궁합":
+                    gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
+                    gh_engine.run_universal_logic()
                     
-                    m_m = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
-                    if m_m: 
-                        m_ess = m_m.group(1).strip()
-                    
-                    f_m = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
-                    if f_m: 
-                        f_ess = f_m.group(1).strip()
-                    
-                    g_m = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
-                    if g_m:
-                        g_ess = g_m.group(1).strip()
+                    if hasattr(gh_engine, 'get_report_text'):
+                        ai_clean = gh_engine.get_report_text()
                     else:
-                        g_ess = ai_clean # 마커가 없을 경우 전체 텍스트를 궁합 결과에 출력하여 데이터 유실 방지
-                    
-                    # 궁합 에세이 내부에 생성된 대운표 삽입
-                    g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
+                        ai_clean = getattr(gh_engine, 'report_text', "")
 
-                    # ==================================================================
-                # [4단계] 최종 렌더링 출력부 (멀티라인 안전 구조 적용)
+                # ==================================================================
+                # [3단계] 마커 정밀 파싱 및 불완전 데이터 완충 영역
+                # ==================================================================
+                import re
+                
+                m_m = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                if m_m: 
+                    m_ess = m_m.group(1).strip()
+                
+                f_m = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                if f_m: 
+                    f_ess = f_m.group(1).strip()
+                
+                g_m = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                if g_m:
+                    g_ess = g_m.group(1).strip()
+                else:
+                    g_ess = ai_clean
+                
+                g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
+
+                # ==================================================================
+                # [4단계] 최종 렌더링 출력부 (멀티라인 안전 구조 적용 및 A4틀 제거)
                 # ==================================================================
                 # 1. 남성 사주풀이 직접 출력
                 st.markdown(f"""
@@ -1122,13 +1120,13 @@ with st.sidebar:
                     [ 초연 시공명리 궁합풀이 ]
                 </h2>
                 {g_ess}
-                """, unsafe_allow_html=True)                    
-                
-                # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (try 블록 내부 유지)
+                """, unsafe_allow_html=True)
+            
+                # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (12칸 들여쓰기로 스피너와 정렬)
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
                     st.components.v1.html("<script>window.print();</script>", height=0, width=0)
 
-            # 메인 관문 try에 연동되는 유일한 예외 처리기 (전체 시스템 보호용)
-            except Exception as main_e:
-                st.error(f"3단계 궁합 종합 분석 가동 장애: {main_e}")
+        # 🚨 메인 관문 try에 연동되는 유일한 예외 처리기 (8칸 들여쓰기로 try와 정확히 짝을 맞춤)
+        except Exception as main_e:
+            st.error(f"3단계 궁합 종합 분석 가동 장애: {main_e}")
