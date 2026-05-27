@@ -1090,20 +1090,23 @@ with st.sidebar:
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
                     # ==================================================================
-                    # [4단계 방어 로직] 최종 렌더링 출력부 검증 및 웹 화면 브리핑
+                    # [4단계] 최종 렌더링 출력부 (wrap_a4 제거 및 우측 메인 화면 직출력)
                     # ==================================================================
-                    st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", "#1A237E", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
+                    # 1. 남성 사주풀이 직접 출력
+                    st.markdown(f"<h2 style='color:#1A237E; border-bottom:2px solid #1A237E; padding-bottom:10px;'>[ 초연 시공명리 사주풀이 ]</h2>{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", unsafe_allow_html=True)
                     st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-                    
-                    st.markdown(wrap_a4(f"{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", "#D50000", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
-                    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-                    
-                    st.markdown(wrap_a4(g_ess, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                 
-                # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (try 블록 내부 유지)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
-                    st.components.v1.html("<script>window.print();</script>", height=0, width=0)
+                    # 2. 여성 사주풀이 직접 출력
+                    st.markdown(f"<h2 style='color:#D50000; border-bottom:2px solid #D50000; padding-bottom:10px;'>[ 초연 시공명리 사주풀이 ]</h2>{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", unsafe_allow_html=True)
+                    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+                
+                    # 3. 궁합풀이 직접 출력
+                    st.markdown(f"<h2 style='color:#1B5E20; border-bottom:2px solid #1B5E20; pa                    
+                
+                    # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (try 블록 내부 유지)
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
+                        st.components.v1.html("<script>window.print();</script>", height=0, width=0)
 
             # 메인 관문 try에 연동되는 유일한 예외 처리기 (전체 시스템 보호용)
             except Exception as main_e:
