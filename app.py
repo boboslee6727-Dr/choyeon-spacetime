@@ -52,7 +52,7 @@ st.markdown("""
     .no-border-row td { border-top: none !important; border-bottom: none !important; }
     .no-border-row:last-of-type td { border-bottom: 1px solid #444 !important; }
     
-    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 15px !important; height: 26px !important; white-space: nowrap !important; }px !important; height: 22px !important; }
+    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
     
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; }
@@ -901,7 +901,7 @@ with st.sidebar:
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-    st.markdown("---")
+st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
     
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
@@ -920,6 +920,7 @@ with st.sidebar:
     
     p_name, p_gender, p_marital, p_cal, p_y, p_m, p_d, p_t = "", "여성", "미혼", "양력", 1967, 9, 24, "시간 모름"
     other_reading_text = ""
+    
     if u_product == "궁합":
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
@@ -933,7 +934,33 @@ with st.sidebar:
         p_y = p_col1.number_input("년", 1900, 2050, value=1967, key="p_y_in")
         p_m = p_col2.number_input("월", 1, 12, value=9, key="p_m_in")
         p_d = p_col3.number_input("일", 1, 31, value=24, key="p_d_in")
-        p_t = st.selectbox("00:30 ~ 01:29 (朝子)시", idx_list, key="p_t_key")
+        p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
+        
+        # ------------------------------------------------------------------
+        # 👶 [VIP 전용 옵션] 출산 가능 연령(여성 49세 이하) 스마트 필터 및 택일 코너
+        # ------------------------------------------------------------------
+        # 실시간 입력된 년도(u_y, p_y)를 바탕으로 여성의 대략적 나이를 파악합니다.
+        current_year = 2026
+        f_year = u_y if u_gender == "여성" else p_y
+        approx_f_age = current_year - f_year + 1
+
+        if approx_f_age <= 49:
+            st.markdown("---")
+            with st.expander("👶 [VIP 심층 분석] 프리미엄 출산택일 코너", expanded=False):
+                st.markdown("<small style='color:#666;'>※ 출산 가능 연령대의 신혼 부부 전용 메뉴입니다.</small>", unsafe_allow_html=True)
+                
+                baby_gender = st.radio("태아 성별 선택", ["미정 (남/여 모두 분석)", "남아", "여아"], index=0, key="baby_gender_select")
+                
+                st.markdown("**출산 희망(가능) 기간 설정**")
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    start_date = st.date_input("시작일", key="baby_start_date")
+                with col_b2:
+                    end_date = st.date_input("종료일", key="baby_end_date")
+                
+                run_delivery_calc = st.checkbox("이 부부의 출산택일 리포트를 생성합니다.", value=False, key="run_delivery_calc")
+        else:
+            run_delivery_calc = False
 
     elif u_product == "타 감명서":
         st.markdown("---")
@@ -1049,10 +1076,9 @@ if btn_single:
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
-                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border:1px solid #444 !important; border-bottom:{b_bot};'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
                     lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
-                    ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
-
+                    ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
                 disp_name = u_name if u_name.strip() else "홍길동"
                 info_h = f"""
                 <div style='text-align:center; font-family:"Malgun Gothic", sans-serif; margin-bottom:15px; line-height:1.5;'>
@@ -1065,14 +1091,14 @@ if btn_single:
                 </div>
                 """
 
-                table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
+                table_html = f"""
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-    <tr class='top-header-cell'>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>구분</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>시주</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>일주</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>월주</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>년주</td>
+    <tr style='background-color:#1A237E; color:white;'>
+        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>구분</td>
+        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>시주</td>
+        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>일주</td>
+        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>월주</td>
+        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>년주</td>
     </tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
