@@ -52,7 +52,7 @@ st.markdown("""
     .no-border-row td { border-top: none !important; border-bottom: none !important; }
     .no-border-row:last-of-type td { border-bottom: 1px solid #444 !important; }
     
-    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 12px !important; height: 22px !important; }
+    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 15px !important; height: 26px !important; white-space: nowrap !important; }px !important; height: 22px !important; }
     
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; }
@@ -1048,10 +1048,9 @@ if btn_single:
                 """
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                    b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-                    b_top = "0px solid transparent !important"
-                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                    lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
+                    b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
+                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                    lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
                     ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
                 disp_name = u_name if u_name.strip() else "홍길동"
@@ -1060,8 +1059,8 @@ if btn_single:
                     <span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>
                         {p_icon} {u_name}님 ({u_gender}, {u_marital}, {u_age}세)
                 </span><br>
-                <span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>
-                    [양력: {sol_str} | 음력: {lun_str} {time_str}]
+                <span style='font-size:14px; font-weight:900; color:#222; white-space:nowrap;'>
+                    [양력] {sol_str} | [음력] {lun_str}{time_str}
                 </span>
                 </div>
                 """
@@ -1069,22 +1068,22 @@ if btn_single:
                 table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
     <tr class='top-header-cell'>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
-    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>구분</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>시주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>일주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>월주</td>
+    <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>년주</td>
     </tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>
-    <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간</td>{td(hs, "15px")}{td(ds, "15px")}{td(ms, "15px")}{td(ys, "15px")}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>지지</td>{td(hb, "15px")}{td(db, "15px")}{td(mb, "15px")}{td(yb, "15px")}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>
+    <tr><td class='header-cell-main' style='padding:0; border:1px solid #444 !important;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
     {ji_rel_rows}
-    <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, u_gender)) if get_general_shinsal_filtered(i, gans, jjis, u_gender) else '-'}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, u_gender)) if get_general_shinsal_filtered(i, gans, jjis, u_gender) else '-'}</td>" for i in range(4)])}</tr>
     </table>
     """
                 calc_gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, mb, ys, ms, hs)
@@ -1345,12 +1344,9 @@ if btn_single:
                     def build_bazi_table(gender_icon, name, gender_str, marital_str, age, sol, lun, time, gans, jjis, ds, yb, counts, guiin, gong, samjae, color):
                         ji_rel_rows = ""
                         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                            b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-                            # 합충형파해 줄눈(border-top) 삭제 처리
+                            b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
                             cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                            lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444; font-size:15px !important; white-space:nowrap;'>합충형파해</td>" if l_idx==0 else ""
-                            ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
-
+                            lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
                         info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:{color};'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; color:#555;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
                         return f"""
