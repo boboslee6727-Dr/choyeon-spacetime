@@ -1583,11 +1583,10 @@ if btn_single:
                         
                         st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
-                    # 🖨️ [인쇄/PDF 저장 기능] 최종 스위치 배치
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
-                        st.components.v1.html("<script>window.print();</script>", height=0, width=0)
+                        # 🖨️ [인쇄/PDF 저장 기능] 최종 스위치 배치 (try 블록 내부로 포함)
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
+                            st.components.v1.html("<script>window.print();</script>", height=0, width=0)
 
-                except Exception as e:
-                    st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
-
+                    except Exception as e:
+                        st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
