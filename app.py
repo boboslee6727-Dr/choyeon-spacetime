@@ -1367,6 +1367,54 @@ if btn_single:
                     m_tbl = build_bazi_table("♂️", m_name, "남성", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j))
                     f_tbl = build_bazi_table("♀️", f_name, "여성", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j))
 
+                    # 3-5. 프리미엄 궁합 에세이 분석 가동
+                    gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
+                    gh_engine.run_universal_logic()
+                    
+                    m_w_val = choyeon_db.get("wolryeong", {}).get(m_ms+m_mb, "시공간")
+                    m_i_val = choyeon_db.get("ilju", {}).get(m_ds+m_db, "성품")
+                    m_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{m_name}님</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 지녔습니다.</p>"
+
+                    f_w_val = choyeon_db.get("wolryeong", {}).get(f_ms+f_mb, "시공간")
+                    f_i_val = choyeon_db.get("ilju", {}).get(f_ds+f_db, "성품")
+                    f_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{f_name}님</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 지녔습니다.</p>"
+                    
+                    essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+당신은 명리심리상담사 '초연 박사'입니다. 각 목차에 대해 실제 통변 에세이를 작성하십시오.
+
+[MALE_START]
+<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>{m_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px;'>1) 타고난 삶의 무대와 기본 성향</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>남성 {m_name}님의 격국과 자의형상을 분석하여 삶의 무대를 실제 통변하십시오.</p>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px;'>2) 내 삶의 리듬과 에너지 균형</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>남성의 오행 분포와 조후를 기반으로 에너지 리듬을 실제 통변하십시오.</p>
+<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px;'>1) 겉으로 드러난 성격</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>남성의 사회적 표면 성격을 실제 통변하십시오.</p>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px;'>2) 감추어진 내 속마음</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>남성의 내면과 무의식 기질을 실제 통변하십시오.</p>[MALE_END]
+[FEMALE_START]
+<h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>{f_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px;'>1) 타고난 삶의 무대와 기본 성향</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>여성 {f_name}님의 삶의 무대를 실제 통변하십시오.</p>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px;'>2) 내 삶의 리듬과 에너지 균형</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>여성의 에너지 리듬을 실제 통변하십시오.</p>
+<h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px;'>1) 겉으로 드러난 성격</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>여성의 사회적 표면 성격을 실제 통변하십시오.</p>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px;'>2) 감추어진 내 속마음</span><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>여성의 내면 기질을 실제 통변하십시오.</p>[FEMALE_END]
+[GUNGHAP_START]
+<h3 style='color: #1B5E20; font-size: 22px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>두 분의 인연을 종합하여 조화로운 만남을 실제 통변하십시오.</p>
+<h3 style='color: #1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 분석</h3>[COUPLE_DAEWUN_TABLES_HERE]<p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>대운표의 흐름을 보완 관점에서 실제 통변하십시오.</p>
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>💞 커플의 상생과 조화 궁합 분석</h4><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>상생과 조화의 궁합을 실제 통변하십시오.</p>
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>⚓ 조율의 지혜</h4><p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>인연을 위한 조율의 지혜를 실제 통변하십시오.</p>[GUNGHAP_END]
+"""
+                    res_text = call_claude_api(essay_prompt, max_tokens=12000)
+                    ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
+                    
+                    import re
+                    m_ess, f_ess, g_ess = "", "", ai_clean
+                    m_m = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                    if m_m: m_ess = m_m.group(1).strip()
+                    f_m = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                    if f_m: f_ess = f_m.group(1).strip()
+                    g_m = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                    g_ess = g_m.group(1).strip() if g_m else ai_clean.replace(m_ess, "").replace(f_ess, "")
+                    g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
+
                     # 3-6. 대운 흐름표 빌더 (상하 정렬용 - 타이틀 남색, 상단 바탕 갈색, 십이운성 청색 통일)
                     def build_daewun_html(name, ds, ms, mb, yb, calc_d, order, age):
                         d_str = "순행" if order == 1 else "역행"
