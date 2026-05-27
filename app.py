@@ -1268,7 +1268,7 @@ if btn_single:
                     st.error(f"2단계 비교 분석 장애: {e}")
 
             # ==================================================================
-            # 💕 [3단계] 궁합 풀이 (선택적 - 박사님 지시 사항 100% 반영 완성형)
+            # 💕 [3단계] 궁합 풀이 (Ver 34.7 - 프로모델 완전 직렬 통출력)
             # ==================================================================
             if u_product == "궁합":
                 try:
@@ -1292,19 +1292,19 @@ if btn_single:
                     p_hs, p_hb = get_time_ganji(p_ds, p_t, p_base_dt)
                     partner_bazi = [f"{p_hs}{p_hb}", f"{p_ds}{p_db}", f"{p_ms}{p_mb}", f"{p_ys}{p_yb}"]
 
-                    # 남명/여명 데이터 대칭 배정 정의구역
+                    # 3-2. 남명/여명 데이터 대칭 배정 (모든 변수 생략 없이 완벽 맵핑)
                     if u_gender == "남성":
                         m_name, m_sol, m_lun, m_time, m_age = u_name, sol_str, lun_str, time_str, u_age
                         m_gans, m_jjis = gans, jjis
                         m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = ys, yb, ms, mb, ds, db, hs, hb
-                        m_calc_d = calc_d
+                        m_calc_d, m_order = calc_d, order
                         
                         f_name, f_sol, f_lun, f_time, f_age = p_name, p_sol_str, p_lun_str, f" {p_t.split('(')[0].strip()} ({p_hb})시" if p_t != "시간 모름" else "", p_age
                         f_gans, f_jjis = [p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb]
                         f_ys, f_yb, f_ms, f_mb, f_ds, f_db, f_hs, f_hb = p_ys, p_yb, p_ms, p_mb, p_ds, p_db, p_hs, p_hb
                         p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=get_total_time_adjustment(p_base_dt))
                         p_order = 1 if (GAN.index(p_ys)%2==0) == (p_gender=='남성') else -1
-                        f_calc_d = get_daeun_su_accurate(p_utc_dt, p_order)
+                        f_calc_d, f_order = get_daeun_su_accurate(p_utc_dt, p_order), p_order
                         
                         male_data_pack, female_data_pack = applicant_bazi, partner_bazi
                     else:
@@ -1313,22 +1313,21 @@ if btn_single:
                         m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = p_ys, p_yb, p_ms, p_mb, p_ds, p_db, p_hs, p_hb
                         p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=get_total_time_adjustment(p_base_dt))
                         p_order = 1 if (GAN.index(p_ys)%2==0) == (p_gender=='남성') else -1
-                        m_calc_d = get_daeun_su_accurate(p_utc_dt, p_order)
+                        m_calc_d, m_order = get_daeun_su_accurate(p_utc_dt, p_order), p_order
                         
                         f_name, f_sol, f_lun, f_time, f_age = u_name, sol_str, lun_str, time_str, u_age
                         f_gans, f_jjis = gans, jjis
                         f_ys, f_yb, f_ms, f_mb, f_ds, f_db, f_hs, f_hb = ys, yb, ms, mb, ds, db, hs, hb
-                        f_calc_d = calc_d
+                        f_calc_d, f_order = calc_d, order
                         
-                      # 남녀 데이터 배정 (지시하신 대로 타이틀에서 '남명/여명' 삭제)
-                    m_data = {'name': u_name if u_gender == '남성' else p_name, 'age': u_age if u_gender == '남성' else p_age, 'gans': gans if u_gender == '남성' else [p_hs, p_ds, p_ms, p_ys], 'jjis': jjis if u_gender == '남성' else [p_hb, p_db, p_mb, p_yb], 'yb': yb if u_gender == '남성' else p_yb, 'ds': ds if u_gender == '남성' else p_ds, 'hs': hs if u_gender == '남성' else p_hs, 'ms': ms if u_gender == '남성' else p_ms, 'calc_d': calc_d if u_gender == '남성' else get_daeun_su_accurate(p_base_dt, 1)}
-                    f_data = {'name': p_name if u_gender == '남성' else u_name, 'age': p_age if u_gender == '남성' else u_age, 'gans': [p_hs, p_ds, p_ms, p_ys] if u_gender == '남성' else gans, 'jjis': [p_hb, p_db, p_mb, p_yb] if u_gender == '남성' else jjis, 'yb': p_yb if u_gender == '남성' else yb, 'ds': p_ds if u_gender == '남성' else ds, 'hs': p_hs if u_gender == '남성' else hs, 'ms': p_ms if u_gender == '남성' else ms, 'calc_d': get_daeun_su_accurate(p_base_dt, 1) if u_gender == '남성' else calc_d}
+                        male_data_pack, female_data_pack = partner_bazi, applicant_bazi
 
-                    # 3-2. 남명용 사주팔자 HTML 표 및 마스터바 생성구역
+                    # 3-3. 남명용 사주팔자 HTML 표, 마스터바, 대운표 생성
                     m_counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
-                    for char in m_gans + m_jjis: m_counts[get_color(char)] += 1
+                    for char in m_gans + m_jjis: 
+                        if char != "?": m_counts[get_color(char)] += 1
                     m_guiin = guiin_map.get(m_ds, '없음')
-                    m_i_gong = calculate_gongmang(m_ds, m_jjis[1])
+                    m_i_gong = calculate_gongmang(m_ds, m_db)
                     m_base_y_idx = (curr_y - 1984) % 60
                     m_curr_y_ganji = GAN[m_base_y_idx % 10] + JI[m_base_y_idx % 12]
                     m_samjae = get_samjae(m_yb, m_curr_y_ganji[1])
@@ -1341,28 +1340,40 @@ if btn_single:
                         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                         m_ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-                    m_info_html = f"<div style='text-align:center; margin-bottom:15px;'><span style='font-size:18px; font-weight:900; color:#1A237E;'>♂️ 남명(男命) 사주원국: {m_name}님 ({m_age}세)</span><br><span style='font-size:14px; color:#555;'>[양력: {m_sol} | 음력: {m_lun}{m_time}]</span></div>"
+                    m_info_html = f"<div style='text-align:center; margin-bottom:15px;'><span style='font-size:18px; font-weight:900; color:#1A237E;'>♂️ 남명(男命) : {m_name}님 ({m_age}세)</span><br><span style='font-size:14px; color:#555;'>[양력: {m_sol} | 음력: {m_lun}{m_time}]</span></div>"
                     m_table_html = f"""{m_info_html}
-    <table class='result-table'>
-    <tr class='top-header-cell'><td>구분</td><td>시주</td><td>일주</td><td>월주</td><td>년주</td></tr>
-    <tr><td class='header-cell-main'>천간합충</td>{"".join([f"<td>{get_gan_rel_all(i, m_gans)}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main'>천간십성</td><td>{get_ss(m_ds,m_hs)}</td><td><span style='color:#D50000; font-weight:900;'>日元</span></td><td>{get_ss(m_ds,m_ms)}</td><td>{get_ss(m_ds,m_ys)}</td></tr>
-    <tr><td class='header-cell-main'>천간</td>{td(m_hs)}{td(m_ds)}{td(m_ms)}{td(m_ys)}</tr>
-    <tr><td class='header-cell-main'>지지</td>{td(m_hb)}{td(m_db)}{td(m_mb)}{td(m_yb)}</tr>
-    <tr><td class='header-cell-main'>지지십성</td><td>{get_ss(m_ds,m_hb)}</td><td>{get_ss(m_ds,m_db)}</td><td>{get_ss(m_ds,m_mb)}</td><td>{get_ss(m_ds,m_yb)}</td></tr>
-    <tr><td class='header-cell-main' style='padding:0;'>지장간</td>{"".join([f"<td style='padding:0;'>{get_jijanggan_full(m_ds, m_jjis[i])}</td>" for i in range(4)])}</tr>
+    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+    <tr class='top-header-cell'><td style='border:1px solid #444;'>구분</td><td style='border:1px solid #444;'>시주</td><td style='border:1px solid #444;'>일주</td><td style='border:1px solid #444;'>월주</td><td style='border:1px solid #444;'>년주</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, m_gans)}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(m_ds,m_hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(m_ds,m_ms)}</td><td style='border:1px solid #444;'>{get_ss(m_ds,m_ys)}</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>천간</td>{td(m_hs)}{td(m_ds)}{td(m_ms)}{td(m_ys)}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>지지</td>{td(m_hb)}{td(m_db)}{td(m_mb)}{td(m_yb)}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(m_ds,m_hb)}</td><td style='border:1px solid #444;'>{get_ss(m_ds,m_db)}</td><td style='border:1px solid #444;'>{get_ss(m_ds,m_mb)}</td><td style='border:1px solid #444;'>{get_ss(m_ds,m_yb)}</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; padding:0;'>지장간</td>{"".join([f"<td style='border:1px solid #444; padding:0;'>{get_jijanggan_full(m_ds, m_jjis[i])}</td>" for i in range(4)])}</tr>
     {m_ji_rel_rows}
-    <tr><td class='header-cell-main'>십이운성</td>{"".join([f"<td style='color:#0D47A1;'>{get_unsung(m_ds, m_jjis[i])}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main'>십이신살</td>{"".join([f"<td style='color:#C62828;'>{get_12_shinsal(m_yb, m_jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>십이운성</td>{"".join([f"<td style='border:1px solid #444; color:#0D47A1;'>{get_unsung(m_ds, m_jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>십이신살</td>{"".join([f"<td style='border:1px solid #444; color:#C62828;'>{get_12_shinsal(m_yb, m_jjis[i])}</td>" for i in range(4)])}</tr>
     </table>
-    <div style='border:2px solid #3E2723; margin-top:10px; margin-bottom:30px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px;'><div>⏳ 대운수: {m_calc_d}</div><div>💥 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div><div>🌟 천을귀인: {m_guiin}</div><div>🎯 공망: [일] {m_i_gong}</div><div>🌪️ 삼재: <span style='color:{m_samjae_color};'>{m_samjae}</span></div></div>
+    <div style='border:2px solid #3E2723; margin-top:10px; margin-bottom:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px;'><div>⏳ 대운수: {m_calc_d}</div><div>💥 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div><div>🌟 천을귀인: {m_guiin}</div><div>🎯 공망: [일] {m_i_gong}</div><div>🌪️ 삼재: <span style='color:{m_samjae_color};'>{m_samjae}</span></div></div>
     """
+                    m_direction_str = "순행" if m_order == 1 else "역행"
+                    m_page_un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {m_calc_d}, {m_direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px; font-family: \"Nanum Myeongjo\", serif;'>"
+                    for i in range(10):
+                        val = i*10+m_calc_d
+                        c = GAN[(GAN.index(m_ms)+(i+1)*m_order)%10] if m_ms in GAN else "-"
+                        j = JI[(JI.index(m_mb)+(i+1)*m_order)%12] if m_mb in JI else "-"
+                        is_active = val <= m_age < val+10
+                        bg_col = "#FFF9C4" if is_active else "transparent"
+                        b_left = "1px solid #ccc" if i != 9 else "none"
+                        m_page_un_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:12px;'>{get_ss(m_ds,c)}</div><div class='color-{get_color(c)}' style='font-size:16px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:16px; font-weight:900;'>{j}</div><div style='padding:2px; font-size:12px;'>{get_ss(m_ds,j)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(m_ds,j)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(m_yb, j)}</div></div>"
+                    m_page_un_html += "</div>"
 
-                    # 3-3. 여명용 사주팔자 HTML 표 및 마스터바 생성구역
+                    # 3-4. 여명용 사주팔자 HTML 표, 마스터바, 대운표 생성
                     f_counts = {"목":0,"화":0,"토":0,"금":0,"수":0}
-                    for char in f_gans + f_jjis: f_counts[get_color(char)] += 1
+                    for char in f_gans + f_jjis: 
+                        if char != "?": f_counts[get_color(char)] += 1
                     f_guiin = guiin_map.get(f_ds, '없음')
-                    f_i_gong = calculate_gongmang(f_ds, f_jjis[1])
+                    f_i_gong = calculate_gongmang(f_ds, f_db)
                     f_base_y_idx = (curr_y - 1984) % 60
                     f_curr_y_ganji = GAN[f_base_y_idx % 10] + JI[f_base_y_idx % 12]
                     f_samjae = get_samjae(f_yb, f_curr_y_ganji[1])
@@ -1375,64 +1386,136 @@ if btn_single:
                         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                         f_ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-                    f_info_html = f"<div style='text-align:center; margin-bottom:15px;'><span style='font-size:18px; font-weight:900; color:#D50000;'>♀️ 여명(女命) 사주원국: {f_name}님 ({f_age}세)</span><br><span style='font-size:14px; color:#555;'>[양력: {f_sol} | 음력: {f_lun}{f_time}]</span></div>"
+                    f_info_html = f"<div style='text-align:center; margin-bottom:15px;'><span style='font-size:18px; font-weight:900; color:#D50000;'>♀️ 여명(女命) : {f_name}님 ({f_age}세)</span><br><span style='font-size:14px; color:#555;'>[양력: {f_sol} | 음력: {f_lun}{f_time}]</span></div>"
                     f_table_html = f"""{f_info_html}
-    <table class='result-table'>
-    <tr class='top-header-cell'><td>구분</td><td>시주</td><td>일주</td><td>월주</td><td>년주</td></tr>
-    <tr><td class='header-cell-main'>천간합충</td>{"".join([f"<td>{get_gan_rel_all(i, f_gans)}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main'>천간십성</td><td>{get_ss(f_ds,f_hs)}</td><td><span style='color:#D50000; font-weight:900;'>日元</span></td><td>{get_ss(f_ds,f_ms)}</td><td>{get_ss(f_ds,f_ys)}</td></tr>
-    <tr><td class='header-cell-main'>천간</td>{td(f_hs)}{td(f_ds)}{td(f_ms)}{td(f_ys)}</tr>
-    <tr><td class='header-cell-main'>지지</td>{td(f_hb)}{td(f_db)}{td(f_mb)}{td(f_yb)}</tr>
-    <tr><td class='header-cell-main'>지지십성</td><td>{get_ss(f_ds,f_hb)}</td><td>{get_ss(f_ds,f_db)}</td><td>{get_ss(f_ds,f_mb)}</td><td>{get_ss(f_ds,f_yb)}</td></tr>
-    <tr><td class='header-cell-main' style='padding:0;'>지장간</td>{"".join([f"<td style='padding:0;'>{get_jijanggan_full(f_ds, f_jjis[i])}</td>" for i in range(4)])}</tr>
+    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+    <tr class='top-header-cell'><td style='border:1px solid #444;'>구분</td><td style='border:1px solid #444;'>시주</td><td style='border:1px solid #444;'>일주</td><td style='border:1px solid #444;'>월주</td><td style='border:1px solid #444;'>년주</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, f_gans)}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(f_ds,f_hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(f_ds,f_ms)}</td><td style='border:1px solid #444;'>{get_ss(f_ds,f_ys)}</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>천간</td>{td(f_hs)}{td(f_ds)}{td(f_ms)}{td(f_ys)}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>지지</td>{td(f_hb)}{td(f_db)}{td(f_mb)}{td(f_yb)}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(f_ds,f_hb)}</td><td style='border:1px solid #444;'>{get_ss(f_ds,f_db)}</td><td style='border:1px solid #444;'>{get_ss(f_ds,f_mb)}</td><td style='border:1px solid #444;'>{get_ss(f_ds,f_yb)}</td></tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444; padding:0;'>지장간</td>{"".join([f"<td style='border:1px solid #444; padding:0;'>{get_jijanggan_full(f_ds, f_jjis[i])}</td>" for i in range(4)])}</tr>
     {f_ji_rel_rows}
-    <tr><td class='header-cell-main'>십이운성</td>{"".join([f"<td style='color:#0D47A1;'>{get_unsung(f_ds, f_jjis[i])}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main'>십이신살</td>{"".join([f"<td style='color:#C62828;'>{get_12_shinsal(f_yb, f_jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>십이운성</td>{"".join([f"<td style='border:1px solid #444; color:#0D47A1;'>{get_unsung(f_ds, f_jjis[i])}</td>" for i in range(4)])}</tr>
+    <tr><td class='header-cell-main' style='border:1px solid #444;'>십이신살</td>{"".join([f"<td style='border:1px solid #444; color:#C62828;'>{get_12_shinsal(f_yb, f_jjis[i])}</td>" for i in range(4)])}</tr>
     </table>
-    <div style='border:2px solid #3E2723; margin-top:10px; margin-bottom:30px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px;'><div>⏳ 대운수: {f_calc_d}</div><div>💥 오행: 木({f_counts['목']}) 火({f_counts['화']}) 土({f_counts['토']}) 金({f_counts['금']}) 水({f_counts['수']})</div><div>🌟 천을귀인: {f_guiin}</div><div>🎯 공망: [일] {f_i_gong}</div><div>🌪️ 삼재: <span style='color:{f_samjae_color};'>{f_samjae}</span></div></div>
+    <div style='border:2px solid #3E2723; margin-top:10px; margin-bottom:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px;'><div>⏳ 대운수: {f_calc_d}</div><div>💥 오행: 木({f_counts['목']}) 火({f_counts['화']}) 土({f_counts['토']}) 金({f_counts['금']}) 水({f_counts['수']})</div><div>🌟 천을귀인: {f_guiin}</div><div>🎯 공망: [일] {f_i_gong}</div><div>🌪️ 삼재: <span style='color:{f_samjae_color};'>{f_samjae}</span></div></div>
     """
-
-                    # 3-4. 상하 정렬 대운 흐름표 사전 HTML 빌드 컴파일 구역 (절대 AI 조작 불가 영역)
-                    m_order = 1 if (GAN.index(m_gans[3])%2==0) == (u_gender=='남성' if u_gender=='남성' else p_gender=='남성') else -1
-                    m_un_html = f"<div style='margin-top:5px; margin-bottom:5px; font-size:14px; font-weight:900; color:#1A237E;'>♂️ {m_name}님 대운 흐름표</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:15px;'>"
-                    for i in range(10):
-                        val = i*10+m_calc_d
-                        c = GAN[(GAN.index(m_gans[2])+(i+1)*m_order)%10] if m_gans[2] in GAN else "-"
-                        j = JI[(JI.index(m_jjis[2])+(i+1)*m_order)%12] if m_jjis[2] in JI else "-"
-                        is_active = val <= m_age < val+10
-                        bg_col = "#FFF9C4" if is_active else "transparent"
-                        m_un_html += f"<div style='flex:1; border-left:1px solid #ccc; text-align:center; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11px;'>{val}세</div><div class='color-{get_color(c)}' style='font-size:14px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:14px; font-weight:900;'>{j}</div><div style='font-size:11px; color:#C62828;'>{get_12_shinsal(m_yb, j)}</div></div>"
-                    m_un_html += "</div>"
-
-                    f_order = 1 if (GAN.index(f_gans[3])%2==0) == (u_gender=='여성' if u_gender=='여성' else p_gender=='여성') else -1
-                    f_un_html = f"<div style='margin-top:5px; margin-bottom:5px; font-size:14px; font-weight:900; color:#D50000;'>♀️ {f_name}님 대운 흐름표</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+                    f_direction_str = "순행" if f_order == 1 else "역행"
+                    f_page_un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#D50000;'>[ 대운의 흐름 (대운수: {f_calc_d}, {f_direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px; font-family: \"Nanum Myeongjo\", serif;'>"
                     for i in range(10):
                         val = i*10+f_calc_d
-                        c = GAN[(GAN.index(f_gans[2])+(i+1)*f_order)%10] if f_gans[2] in GAN else "-"
-                        j = JI[(JI.index(f_jjis[2])+(i+1)*f_order)%12] if f_jjis[2] in JI else "-"
+                        c = GAN[(GAN.index(f_ms)+(i+1)*f_order)%10] if f_ms in GAN else "-"
+                        j = JI[(JI.index(f_mb)+(i+1)*f_order)%12] if f_mb in JI else "-"
                         is_active = val <= f_age < val+10
                         bg_col = "#FFF9C4" if is_active else "transparent"
-                        f_un_html += f"<div style='flex:1; border-left:1px solid #ccc; text-align:center; background-color:{bg_col};'><div style='background-color:#E41E26; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11px;'>{val}세</div><div class='color-{get_color(c)}' style='font-size:14px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:14px; font-weight:900;'>{j}</div><div style='font-size:11px; color:#C62828;'>{get_12_shinsal(f_yb, j)}</div></div>"
-                    f_un_html += "</div>"
+                        b_left = "1px solid #ccc" if i != 9 else "none"
+                        f_page_un_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#E41E26; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:12px;'>{get_ss(f_ds,c)}</div><div class='color-{get_color(c)}' style='font-size:16px; font-weight:900;'>{c}</div><div class='color-{get_color(j)}' style='font-size:16px; font-weight:900;'>{j}</div><div style='padding:2px; font-size:12px;'>{get_ss(f_ds,j)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(f_ds,j)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(f_yb, j)}</div></div>"
+                    f_page_un_html += "</div>"
                     
-                    couple_daewun_tables_embedded = f"<div style='margin: 15px 0;'>{m_un_html}{f_un_html}</div>"
+                    # 종합 궁합에 들어갈 상하 스택형 대운표 묶음
+                    couple_daewun_tables_embedded = f"<div style='margin: 25px 0;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
 
-                    # 3-5. 프리미엄 궁합 에세이 분석 가동
+                    # 3-5. 프리미엄 궁합 에세이 분석 가동 (자연어 황금문장 준비)
+                    m_w_key, m_i_key = f"{m_ms}{m_mb}", f"{m_ds}{m_db}"
+                    m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, "")
+                    m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, "")
+                    m_golden = f"<p style='text-indent: 1em;'><b>{m_name}님</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 가지고 태어나셨습니다.</p>"
+
+                    f_w_key, f_i_key = f"{f_ms}{f_mb}", f"{f_ds}{f_db}"
+                    f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, "")
+                    f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, "")
+                    f_golden = f"<p style='text-indent: 1em;'><b>{f_name}님</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 가지고 태어나셨습니다.</p>"
+
                     m_ctx_pack = {'u_name': m_name, 'dc': m_ds}
                     f_ctx_pack = {'u_name': f_name, 'dc': f_ds}
                     
                     gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
                     gh_engine.run_universal_logic()
                     
-                    raw_ai_essay = gh_engine.generate_ai_report(m_ctx_pack, f_ctx_pack)
-                    clean_essay, theme_color, score_bars, dynamic_closing = gh_engine.get_graphic_html(raw_ai_essay)
+                    prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+당신은 명리심리상담사 '초연 박사'입니다.
+
+🚨 [출력 절대 형식 규칙]
+1. 인사말, 서론, "네, 분석을 시작합니다" 등 쓸데없는 멘트를 원천 금지합니다. 오직 마커 `[MALE_START]`, `[FEMALE_START]`, `[GUNGHAP_START]` 안의 내용만 생성하십시오.
+2. 모든 통변 문장은 반드시 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 태그로 감싸십시오.
+
+[MALE_START]
+<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 15px; margin-bottom: 8px; display:block;'>1. 사주팔자의 요약</h3>
+{m_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(남성 {m_name}님의 격국과 자의물상을 기반으로 한 현대적 핵심 성향을 A4 1페이지 규격에 맞게 3~4문장으로 밀도 있게 축약 서술)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(남성 {m_name}님의 오행 분포와 억부 조후의 조화 상태를 고려한 에너지 관리법 축약 서술)
+
+<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>2. 성격</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
+(남성 {m_name}님의 표면적 성격 축약 서술)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(남성 {m_name}님의 무의식 및 심리 상태 축약 서술)
+[MALE_END]
+
+[FEMALE_START]
+<h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 15px; margin-bottom: 8px; display:block;'>1. 사주팔자의 요약</h3>
+{f_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(여성 {f_name}님의 격국과 자의물상을 기반으로 한 현대적 핵심 성향을 A4 1페이지 규격에 맞게 3~4문장으로 밀도 있게 축약 서술)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(여성 {f_name}님의 오행 분포와 억부 조후의 조화 상태를 고려한 에너지 관리법 축약 서술)
+
+<h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>2. 성격</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
+(여성 {f_name}님의 표면적 성격 축약 서술)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(여성 {f_name}님의 무의식 및 심리 상태 축약 서술)
+[FEMALE_END]
+
+[GUNGHAP_START]
+<h3 style='color: #1B5E20; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1B5E20; padding-bottom: 5px; margin-top: 10px; display:block;'>🍀 두 사람의 운명적 만남에 대하여</h3>
+(두 사람의 원국 조화와 인연의 본질에 대한 깊이 있는 총평 에세이 서술)
+
+<h3 style='color: #1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 35px; display:block;'>🌈 커플의 인생 기상도 분석</h3>
+[COUPLE_DAEWUN_TABLES_HERE]
+(🚨경고: 위 마커는 파이썬 엔진이 대운 흐름표를 상하로 꽂아 넣을 위치입니다. 절대 건드리지 말고 이 줄 아래에서 두 사람의 상하 대운 교차점에 따른 상생/보완 에세이를 깊이 있게 통변하십시오.)
+
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>🗝️ 커플의 사주팔자 비교 분석</h4>
+<div style='margin-top: 15px; margin-bottom: 10px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>▶ 음양오행과 사주구조의 결합</span></div>
+(오행 상생 분석 서술)
+<div style='margin-top: 20px; margin-bottom: 10px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>▶ 자기 성향과 사회적 관계의 호흡</span></div>
+(사회적 호흡 서술)
+<div style='margin-top: 20px; margin-bottom: 10px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>▶ 시공의 충돌에 따른 삶의 변화</span></div>
+(시공 변화 및 조율 서술)
+
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 40px;'>💞 커플의 상생과 조화 궁합 분석</h4>
+<div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>[내면의 유대감] - 속 궁합</span></div>
+(일지 결합 및 정서적 안정감 서술)
+<div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>[사회적 환경 조화] - 겉 궁합</span></div>
+(연지, 월지 조화 및 현실적 궁합 서술)
+<div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>[기운의 상호 보완] - 오행 궁합</span></div>
+(서로의 결핍 오행 보충 관계 서술)
+
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 40px;'>⚓ 더 깊은 인연을 위한 조율의 지혜</h4>
+<div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>[환경의 차이와 포용]</span></div>
+(갈등 극복을 위한 행동 지침 서술)
+<div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 16px;'>[에너지의 균형]</span></div>
+(최종 조율 및 축복의 개운 처방 서술)
+[GUNGHAP_END]
+"""
+                    res_text = call_claude_api(prompt, max_tokens=12000)
+                    clean_essay = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
-                    # 3-6. 마커 파싱 시스템 전면 교정 및 배치 
-                    male_part = ""
-                    female_part = ""
-                    gunghap_part = clean_essay
+                    # 3-6. 그래픽 처리 (스코어바, 클로징)
+                    theme_color = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
+                    score_bars = ""
+                    for item in gh_engine.details:
+                        score_bars += f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{item['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12' style='display:block;'><rect width='100%' height='12' rx='6' ry='6' fill='#eeeeee' /><rect width='{item['pct']}%' height='12' rx='6' ry='6' fill='{item['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{item['pct']}%</div></div>"
+                    dynamic_closing = "<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'><p style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p><p style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p><div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif;'>- 초연 시공명리 연구소 드림 -</span></div></div>"
                     
+                    # 3-7. 마커 파싱 시스템 전면 교정 및 배치
                     import re
+                    male_part, female_part, gunghap_part = "", "", clean_essay
+                    
                     m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_essay, re.DOTALL)
                     if m_match: male_part = m_match.group(1).strip()
                     
@@ -1442,43 +1525,40 @@ if btn_single:
                     g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_essay, re.DOTALL)
                     if g_match: gunghap_part = g_match.group(1).strip()
                     
-                    # 인생기상도 직하방에 상하 정렬 대운표를 정확히 슬라이싱 삽입
+                    # 인생기상도 마커에 대운표 삽입
                     gunghap_part = gunghap_part.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables_embedded)
 
-                    # 3-7. 대제목 분리형 6페이지 최종 출력물 레이아웃 바인딩 공정
+                    # 3-8. A4 3페이지 완벽 독립 구조 레이아웃 바인딩 공정
                     final_printable_html = f"""
                     <div class='report-page'>
                         <div class='vip-inset-frame' style='border-color:#1A237E; padding:20px;'>
-                            <h1 style='text-align:center; color:#1A237E;'>[초연 시공명리 사주팔자 풀이]</h1>
+                            <h1 style='text-align:center; color:#1A237E; font-family:"Malgun Gothic", sans-serif; font-weight:900; margin-bottom:30px;'>[초연 시공명리 사주팔자 풀이]</h1>
                             <div style='margin-top:20px;'>{m_table_html}</div>
-                            <div style='margin-top:20px;'>{male_part}</div>
+                            <div style='margin-top:20px;'>{m_page_un_html}</div>
+                            <div style='margin-top:20px;' class='choyeon-premium-report'>{male_part}</div>
                         </div>
                     </div>
                     <div class='page-break-before'></div>
                     
                     <div class='report-page'>
                         <div class='vip-inset-frame' style='border-color:#D50000; padding:20px;'>
-                            <h1 style='text-align:center; color:#D50000;'>[초연 시공명리 사주팔자 풀이]</h1>
+                            <h1 style='text-align:center; color:#D50000; font-family:"Malgun Gothic", sans-serif; font-weight:900; margin-bottom:30px;'>[초연 시공명리 사주팔자 풀이]</h1>
                             <div style='margin-top:20px;'>{f_table_html}</div>
-                            <div style='margin-top:20px;'>{female_part}</div>
+                            <div style='margin-top:20px;'>{f_page_un_html}</div>
+                            <div style='margin-top:20px;' class='choyeon-premium-report'>{female_part}</div>
                         </div>
                     </div>
                     <div class='page-break-before'></div>
 
-                    # 3. 대운 표 (상하 정렬)
-                    def get_dw_table(data, color):
-                        html = f"<div style='margin-bottom:20px;'><div style='font-size:14px; font-weight:900; color:{color};'>{data['name']}님 대운 흐름표</div><div style='display:flex; border:2px solid #3E2723;'>"
-                        order = 1 # 간략화
-                        for i in range(10):
-                            val = i*10+data['calc_d']
-                            html += f"<div style='flex:1; border-left:1px solid #ccc; text-align:center; font-family:Nanum Myeongjo;'><div style='background:#3E2723; color:#fff; font-size:11px;'>{val}세</div><div style='font-size:14px; font-weight:900;'>{GAN[(GAN.index(data['ms'])+(i+1)*order)%10]}</div><div style='font-size:14px; font-weight:900;'>{JI[(JI.index(data['jjis'][2])+(i+1)*order)%12]}</div><div style='font-size:10px; color:#C62828;'>{get_12_shinsal(data['yb'], JI[(JI.index(data['jjis'][2])+(i+1)*order)%12])}</div></div>"
-                        return html + "</div></div>"
-                    
                     <div class='report-page'>
                         <div class='vip-inset-frame' style='border-color:#1B5E20; padding:20px;'>
                             <h1 style='text-align:center; color:#1B5E20; font-family:"Malgun Gothic", sans-serif; font-weight:900; margin-bottom:30px;'>[초연 시공명리 종합 궁합풀이]</h1>
                             
-                            <div style='margin-top:10px;'>{gunghap_part}</div>
+                            <div style='margin-top:10px;'>
+                                <div class='choyeon-premium-report' style='line-height:1.9;'>
+                                    {gunghap_part}
+                                </div>
+                            </div>
                             
                             <h2 style='text-align:center; margin-top:40px; color:#333; font-family: "Malgun Gothic", sans-serif; font-weight:900; font-size:22px; margin-bottom:25px;'>📊 최종 궁합 점수</h2>
                             <div style='display:flex; justify-content:center; align-items:center; margin-bottom:20px;'>
@@ -1497,12 +1577,14 @@ if btn_single:
                         </div>
                     </div>
                     """
-
-                    # 출력
-                    st.markdown(build_report_box(m_data, "[초연 시공명리 사주팔자 풀이]"), unsafe_allow_html=True)
-                    st.markdown(build_report_box(f_data, "[초연 시공명리 사주팔자 풀이]"), unsafe_allow_html=True)
-
-                    st.markdown(f"<div class='report-page'><div class='vip-inset-frame'><h1 style='text-align:center; color:#1B5E20;'>[초연 시공명리 종합 궁합풀이]</h1><h3 style='color:#1B5E20;'>🍀 두 사람의 운명적 만남에 대하여</h3><p>...</p><h3 style='color:#1A237E;'>🌈 커플의 인생 기상도 분석</h3>{get_dw_table(m_data, '#1A237E')}{get_dw_table(f_data, '#D50000')}</div></div>", unsafe_allow_html=True)
-                  
+                    
+                    # 3-9. 최종 출력
+                    st.markdown(final_printable_html, unsafe_allow_html=True)
+                    
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
+
+# (들여쓰기 0칸 - 완전 바깥쪽으로 시스템 비상 오류 제어)
+except Exception as main_e:
+    pass
+    # st.error(f"시스템 전체 분석 중 오류: {main_e}")
