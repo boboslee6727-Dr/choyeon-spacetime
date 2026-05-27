@@ -13,7 +13,16 @@ import re
 
 # 🎯 [버전 컨트롤 타워]
 APP_VERSION = "Ver 36.0 (Gemini 2.5-Pro Mode)"
-
+def wrap_a4(content, border_color="#1A237E", title="[ 초연 시공명리 ]"):
+    """리포트를 A4 용지 스타일로 감싸고 출력 시 깨짐을 방지하는 안전 래퍼 함수"""
+    return f"""
+    <div style="border: 2px solid {border_color}; padding: 30px; margin: 10px auto; max-width: 800px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Malgun Gothic', sans-serif;">
+        <h3 style="color: {border_color}; border-bottom: 2px solid {border_color}; padding-bottom: 10px; margin-top: 0;">{title}</h3>
+        <div style="line-height: 1.8; color: #333333;">
+            {content}
+        </div>
+    </div>
+    """
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
