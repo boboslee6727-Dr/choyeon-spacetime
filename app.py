@@ -1267,8 +1267,8 @@ if btn_single:
                 except Exception as e:
                     st.error(f"2단계 비교 분석 장애: {e}")
 
-# ==================================================================
-            # 💕 [3단계] 궁합 풀이 (Ver 35.1 - 완벽 레이아웃/에세이 복원 판본)
+            # ==================================================================
+            # 💕 [3단계] 궁합 풀이 (Ver 35.2 - 인쇄/PDF 및 격자·색상 정밀 보정판)
             # ==================================================================
             if u_product == "궁합":
                 try:
@@ -1292,8 +1292,9 @@ if btn_single:
                     p_hs, p_hb = get_time_ganji(p_ds, p_t, p_base_dt)
                     partner_bazi = [f"{p_hs}{p_hb}", f"{p_ds}{p_db}", f"{p_ms}{p_mb}", f"{p_ys}{p_yb}"]
 
-                    # 3-2. 남명/여명 데이터 대칭 배정 (모든 변수 완벽 맵핑)
+                    # 3-2. 남명/여명 데이터 대칭 및 혼인 기부 정보 완벽 바인딩
                     if u_gender == "남성":
+                        m_marital, f_marital = u_marital, p_marital
                         m_name, m_sol, m_lun, m_time, m_age = u_name, sol_str, lun_str, time_str, u_age
                         m_gans, m_jjis = gans, jjis
                         m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = ys, yb, ms, mb, ds, db, hs, hb
@@ -1308,6 +1309,7 @@ if btn_single:
                         
                         male_data_pack, female_data_pack = applicant_bazi, partner_bazi
                     else:
+                        m_marital, f_marital = p_marital, u_marital
                         m_name, m_sol, m_lun, m_time, m_age = p_name, p_sol_str, p_lun_str, f" {p_t.split('(')[0].strip()} ({p_hb})시" if p_t != "시간 모름" else "", p_age
                         m_gans, m_jjis = [p_hs, p_ds, p_ms, p_ys], [p_hb, p_db, p_mb, p_yb]
                         m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = p_ys, p_yb, p_ms, p_mb, p_ds, p_db, p_hs, p_hb
@@ -1322,7 +1324,6 @@ if btn_single:
                         
                         male_data_pack, female_data_pack = partner_bazi, applicant_bazi
 
-                    # 3-3. 올해 간지 공통 변수
                     curr_j = JI[((curr_y - 1984) % 60) % 12]
 
                     def get_counts(gans, jjis):
@@ -1333,40 +1334,43 @@ if btn_single:
 
                     m_cnt, f_cnt = get_counts(m_gans, m_jjis), get_counts(f_gans, f_jjis)
 
-                    # 3-4. 사주표 생성 함수 (인적사항 및 테이블 양식)
-                    def build_bazi_table(gender_icon, name, age, sol, lun, time, gans, jjis, ds, yb, counts, guiin, gong, samjae, color):
+                    # 3-3. 사주팔자표 빌더 (지시하신 가로 격자눈 제거 및 세로 구분열 확대 적용)
+                    def build_bazi_table(gender_icon, name, gender_str, marital_str, age, sol, lun, time, gans, jjis, ds, yb, counts, guiin, gong, samjae):
                         ji_rel_rows = ""
                         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                            b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-                            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                            lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
-                            ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+                            b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
+                            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                            lbl = f"<td rowspan='4' class='header-cell-main' style='border-left:1px solid #444 !important; border-right:1px solid #444 !important; border-top:1px solid #444 !important; border-bottom:1px solid #444 !important; font-size:15px !important; font-weight:900;'>합충형파해</td>" if l_idx==0 else ""
+                            ji_rel_rows += f"<tr style='border-top:none !important; border-bottom:{b_bot};'>{cells if l_idx>0 else lbl+cells}</tr>"
 
-                        info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:{color};'>{gender_icon} {name}님 ({age}세)</span><br><span style='font-size:14px; color:#555;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
+                        info_str = f"""<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'>
+                            <span style='font-size:18px; font-weight:900;'>{gender_icon} <span style='color:#1A237E;'>{name}</span>님 ({gender_str}, {marital_str}, {age}세)</span><br>
+                            <span style='font-size:14px; color:#555;'>[양력] {sol} | [음력] {lun} {time}</span>
+                        </div>"""
                         
                         return f"""
                         {info_str}
                         <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-                        <tr class='top-header-cell'><td style='border:1px solid #444;'>구분</td><td style='border:1px solid #444;'>시주</td><td style='border:1px solid #444;'>일주</td><td style='border:1px solid #444;'>월주</td><td style='border:1px solid #444;'>년주</td></tr>
-                        <tr><td class='header-cell-main' style='border:1px solid #444;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td></tr>
-                        <tr><td class='header-cell-main' style='border:1px solid #444;'>천간</td>{td(gans[0])}{td(gans[1])}{td(gans[2])}{td(gans[3])}</tr>
-                        <tr><td class='header-cell-main' style='border:1px solid #444;'>지지</td>{td(jjis[0])}{td(jjis[1])}{td(jjis[2])}{td(jjis[3])}</tr>
-                        <tr><td class='header-cell-main' style='border:1px solid #444;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[0])}</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[1])}</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[3])}</td></tr>
-                        <tr><td class='header-cell-main' style='border:1px solid #444; padding:0;'>지장간</td>{"".join([f"<td style='border:1px solid #444; padding:0;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                        <tr class='top-header-cell'><td style='border:1px solid #444; font-size:15px !important; font-weight:900;'>구분</td><td style='border:1px solid #444;'>시주</td><td style='border:1px solid #444;'>일주</td><td style='border:1px solid #444;'>월주</td><td style='border:1px solid #444;'>년주</td></tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td></tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900;'>천간</td>{td(gans[0])}{td(gans[1])}{td(gans[2])}{td(gans[3])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900;'>지지</td>{td(jjis[0])}{td(jjis[1])}{td(jjis[2])}{td(jjis[3])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[0])}</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[1])}</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,jjis[3])}</td></tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900; padding:0;'>지장간</td>{"".join([f"<td style='border:1px solid #444; padding:0;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
                         {ji_rel_rows}
-                        <tr><td class='header-cell-main' style='border:1px solid #444;'>십이운성</td>{"".join([f"<td style='border:1px solid #444; color:#0D47A1;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
-                        <tr><td class='header-cell-main' style='border:1px solid #444;'>십이신살</td>{"".join([f"<td style='border:1px solid #444; color:#C62828;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900;'>십이운성</td>{"".join([f"<td style='border:1px solid #444; color:#0D47A1;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                        <tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; font-weight:900;'>십이신살</td>{"".join([f"<td style='border:1px solid #444; color:#C62828;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
                         </table>
                         <div style='border:2px solid #3E2723; margin-top:10px; margin-bottom:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin}</div><div>🎯 공망: [일] {gong}</div><div>🌪️ 삼재: {samjae}</div></div>
                         """
 
-                    m_tbl = build_bazi_table("♂️", m_name, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), "#1A237E")
-                    f_tbl = build_bazi_table("♀️", f_name, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), "#D50000")
+                    m_tbl = build_bazi_table("♂️", m_name, "남성", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j))
+                    f_tbl = build_bazi_table("♀️", f_name, "여성", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j))
 
-                    # 3-5. 궁합 페이지용 상하 대운표 생성기 (3페이지 전용)
-                    def build_daewun_html(name, ds, ms, mb, yb, calc_d, order, age, color):
+                    # 3-6. 대운 흐름표 빌더 (상하 정렬용 - 타이틀 남색, 상단 바탕 갈색, 십이운성 청색 통일)
+                    def build_daewun_html(name, ds, ms, mb, yb, calc_d, order, age):
                         d_str = "순행" if order == 1 else "역행"
-                        html = f"<div style='margin-bottom:10px;'><div style='font-size:15px; font-weight:900; color:{color}; margin-bottom:5px;'>[ {name}님 대운 흐름표 (대운수: {calc_d}), {d_str} ]</div>"
+                        html = f"<div style='margin-bottom:10px;'><div style='font-size:15px; font-weight:900; color:#1A237E; margin-bottom:5px;'>[ {name}님 대운 흐름표 (대운수: {calc_d}), {d_str} ]</div>"
                         html += f"<div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white;'>"
                         for i in range(10):
                             val = i*10 + calc_d
@@ -1374,14 +1378,22 @@ if btn_single:
                             tj = JI[(JI.index(mb)+(i+1)*order)%12]
                             bg = "#FFF9C4" if val <= age < val+10 else "transparent"
                             brd = "1px solid #ccc" if i != 9 else "none"
-                            html += f"<div style='flex:1; border-left:{brd}; text-align:center; padding-bottom:3px; background-color:{bg};'><div style='background-color:{color}; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:11px;'>{val}세</div><div style='padding:2px; font-size:11px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:11px;'>{get_ss(ds,tj)}</div><div style='font-size:10px; border-top:1px solid #eee;'>{get_unsung(ds,tj)}</div><div style='font-size:10px; color:#C62828; border-top:1px solid #eee;'>{get_12_shinsal(yb, tj)}</div></div>"
+                            html += f"""<div style='flex:1; border-left:{brd}; text-align:center; padding-bottom:3px; background-color:{bg};'>
+                                <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:11px;'>{val}세</div>
+                                <div style='padding:2px; font-size:11px;'>{get_ss(ds,tc)}</div>
+                                <div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900;'>{tc}</div>
+                                <div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900;'>{tj}</div>
+                                <div style='padding:2px; font-size:11px;'>{get_ss(ds,tj)}</div>
+                                <div style='font-size:10px; color:#0D47A1; border-top:1px solid #eee; font-weight:bold;'>{get_unsung(ds,tj)}</div>
+                                <div style='font-size:10px; color:#C62828; border-top:1px solid #eee;'>{get_12_shinsal(yb, tj)}</div>
+                            </div>"""
                         return html + "</div></div>"
 
-                    m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age, "#1A237E")
-                    f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age, "#D50000")
+                    m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
+                    f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
                     couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
 
-                    # 3-6. AI 에세이 가동 (프롬프트 통제 강화)
+                    # 3-7. AI 프리미엄 심층 에세이 연산 기동
                     m_w_val = choyeon_db.get("wolryeong", {}).get(m_ms+m_mb, "시공간")
                     m_i_val = choyeon_db.get("ilju", {}).get(m_ds+m_db, "성품")
                     m_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{m_name}님</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 지녔습니다.</p>"
@@ -1390,66 +1402,63 @@ if btn_single:
                     f_i_val = choyeon_db.get("ilju", {}).get(f_ds+f_db, "성품")
                     f_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{f_name}님</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 지녔습니다.</p>"
                     
-                    gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi if u_gender=="남성" else partner_bazi, partner_bazi if u_gender=="남성" else applicant_bazi, m_calc_d)
-                    gh_engine.run_universal_logic()
-                    
                     essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다.
 
-🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
-1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
-2. 반드시 내담자의 명리적 특징을 분석하여 3~4문장 분량의 **실제 통변 내용(해석)**을 직접 글로 작성해야 합니다.
+🚨 [출력 절대 형식 및 내용 생성 규칙]
+1. 각 소제목 아래에 절대로 '(축약 에세이)', '(이곳에 작성)' 등의 지시용 안내 문구를 그대로 출력하는 행위를 엄격히 금지합니다.
+2. 반드시 각 내담자의 오행과 격국, 자의형상을 깊이 통변한 3~4문장 이상의 온전한 실제 분석 내용(해석)을 글로 풀어 쓰십시오.
 3. 모든 통변 문장은 HTML 태그 <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
 
 [MALE_START]
 <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {m_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 남성의 명리적 성향을 분석한 실제 에세이 작성)
+(여기에 남성의 실제 성향 명리 통변 서술)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+(여기에 남성의 실제 에너지 관리방안 명리 통변 서술)
 
 <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+(여기에 남성의 표면적 기질 사회적 성격 실제 서술)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 남성의 내면과 무의식을 분석한 실제 에세이 작성)
+(여기에 남성의 무의식과 심리적 방어기제 실제 서술)
 [MALE_END]
 
 [FEMALE_START]
 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 여성의 명리적 성향을 분석한 실제 에세이 작성)
+(여기에 여성의 실제 성향 명리 통변 서술)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+(여기에 여성의 실제 에너지 관리방안 명리 통변 서술)
 
 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+(여기에 여성의 표면적 기질 사회적 성격 실제 서술)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
+(여기에 여성의 무의식과 심리적 방어기제 실제 서술)
 [FEMALE_END]
 
 [GUNGHAP_START]
 <h3 style='color: #1B5E20; font-size: 22px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
-(이곳에 두 사람의 인연 총평을 깊이 있게 통변한 실제 에세이 작성)
+(여기에 두 사람의 인연의 본질에 대한 조화로운 종합 서술)
 
 <h3 style='color: #1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 분석</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
-(이곳에 상하 대운 교차점에 따른 상생/보완을 분석한 실제 에세이 작성)
+(여기에 상하 대운표의 흐름을 상호 보완 관점에서 연동 분석한 실제 심층 에세이 서술)
 
 <h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>💞 커플의 상생과 조화 궁합 분석</h4>
-(이곳에 속궁합, 겉궁합, 오행 궁합을 통합 분석한 실제 에세이 작성)
+(여기에 겉궁합 속궁합 오행조화를 집대성한 실제 통변 서술)
 
 <h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>⚓ 조율의 지혜</h4>
-(이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이 작성)
+(여기에 갈등 인내 극복 및 현실 개운 처방 실제 서술)
 [GUNGHAP_END]
 """
                     res_text = call_claude_api(essay_prompt, max_tokens=12000)
                     ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
-                    # 3-7. 강력한 마커 파싱 시스템 (에러 방지)
+                    # 3-8. 마커 파싱 시스템 방어막 가동
                     import re
                     m_ess, f_ess, g_ess = "", "", ai_clean
                     
@@ -1465,14 +1474,14 @@ if btn_single:
                     else:
                         g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
                     
-                    # 대운표 마커 조립
+                    # 대운 스택 배치 교차 주입
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
-                    # 3-8. A4 규격 컨테이너 및 대제목 밑줄 래퍼 함수
+                    # A4 래퍼 함수 (밑줄 포함 규격 정렬)
                     def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
                         return f"<div class='report-page'><div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'><h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>{content}</div></div>"
 
-                    # 3-9. 클로징 멘트 오리지널 복원 및 스코어 바 가시화
+                    # 3-9. 스코어 가시화 및 원본 클로징 멘트 복구
                     t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
                     bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div></div>" for d in gh_engine.details])
                     
@@ -1494,14 +1503,20 @@ if btn_single:
                     {closing_original}
                     """
 
-                    # 3-10. 화면 최종 렌더링 (1P 남명, 2P 여명, 3P 궁합)
-                    st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", "#1A237E"), unsafe_allow_html=True)
+                    # 3-10. 독립 레이아웃 3단 가시화 완벽 마감
+                    st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", "#1A237E", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
                     st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                     
-                    st.markdown(wrap_a4(f"{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", "#D50000"), unsafe_allow_html=True)
+                    st.markdown(wrap_a4(f"{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", "#D50000", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
                     st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                     
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
+                    # 🖨️ [인쇄/PDF 저장 기능] 최종 스위치 배치
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
+                        st.components.v1.html("<script>window.print();</script>", height=0, width=0)
+
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
+
