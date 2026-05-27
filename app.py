@@ -1589,3 +1589,7 @@ if btn_single:
 
                     except Exception as e:
                         st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
+
+            # 🚨 드디어 찾은 진범: 바깥쪽 거대 try를 안전하게 닫아주는 문구입니다.
+            except Exception as main_e:
+                st.error(f"시스템 분석 중 치명적 오류가 발생했습니다: {main_e}")
