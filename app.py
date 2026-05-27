@@ -1060,9 +1060,11 @@ if btn_single:
                 """
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                    b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
-                    cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border:1px solid #444 !important; border-bottom:{b_bot};'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                    lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
+                    # 가로 줄눈(border-bottom)을 항상 none으로 처리하여 박사님 의도대로 정리
+                    cells = "".join([f"<td style='border:1px solid #444 !important; border-bottom:none !important; color:{('#D50000' if ci==r_idx else '#000')}; font-weight:900;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else (get_ji_rel_set(jjis[r_idx], jjis[ci]) if get_ji_rel_set(jjis[r_idx], jjis[ci]) != '-' else ''))}</td>" for ci in range(4)])
+    
+                    # 레이블(합충형파해)은 첫 행에만 배치
+                    lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx == 0 else ""
                     ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
                 disp_name = u_name if u_name.strip() else "홍길동"
                 info_h = f"""
@@ -1537,23 +1539,38 @@ if btn_single:
                     # 3. 궁합 출력
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
 
-                    # 4. [삽입] 4페이지: 프리미엄 출산택일 리포트 (궁합 출력 직후에만 실행)
-                    if 'run_delivery_calc' in st.session_state and st.session_state.run_delivery_calc:
-                        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-                        
-                        forbidden_years = ['병오'] 
-                        delivery_days = get_optimized_delivery_days(
-                            st.session_state.baby_start_date, 
-                            st.session_state.baby_end_date, 
-                            m_jjis, f_jjis, forbidden_years
-                        )
-                        
-                        del_content = "<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>"
-                        del_content += "<p>부모님의 사주와 조화를 이루는 길일입니다.</p>"
-                        for day_info in delivery_days:
-                            del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>"
-                        
-                        st.markdown(wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]"), unsafe_allow_html=True)                
+# 4. [삽입] 4페이지: 프리미엄 출산택일 리포트 (궁합 출력 직후에만 실행)
+if 'run_delivery_calc' in st.session_state and st.session_state.run_delivery_calc:
+    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+    
+    # 1. 금기 리스트 설정 (변수명 통일: FORBIDDEN_LIST)
+    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+    
+    # 2. 택일 엔진 호출
+    delivery_days = get_optimized_delivery_days(
+        st.session_state.baby_start_date, 
+        st.session_state.baby_end_date, 
+        m_jjis, f_jjis, FORBIDDEN_LIST
+    )
+    
+    # 3. 리포트 본문 구성 (중복 정의 없이 한 번에 순서대로 작성)
+    del_content = "<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>"
+    del_content += "<p>부모님의 사주와 조화를 이루는 길일입니다.</p>"
+    
+    for day_info in delivery_days:
+        del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>"
+    
+    # 4. 임신 계획 가이드 추가 (본문 하단)
+    del_content += "<br><hr>"
+    del_content += "<p style='font-size:14px; line-height:1.6; color:#333;'>"
+    del_content += "<b>💡 부부를 위한 임신 계획 가이드:</b><br>"
+    del_content += "위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. "
+    del_content += "의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. "
+    del_content += "부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다."
+    del_content += "</p>"
+    
+    # 5. 최종 리포트 출력
+    st.markdown(wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]"), unsafe_allow_html=True)       
 
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
