@@ -17,7 +17,7 @@ APP_VERSION = "Ver 34.1 (Gemini 2.5-Pro Mode)"
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
-st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
+st.set_page_config(page_title=f"초연 사주풀이 {APP_VERSION}", layout="wide")
 
 st.markdown("""
 <style>
