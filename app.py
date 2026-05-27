@@ -1090,18 +1090,39 @@ with st.sidebar:
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
                     # ==================================================================
-                    # [4단계] 최종 렌더링 출력부 (wrap_a4 제거 및 우측 메인 화면 직출력)
-                    # ==================================================================
-                    # 1. 남성 사주풀이 직접 출력
-                    st.markdown(f"<h2 style='color:#1A237E; border-bottom:2px solid #1A237E; padding-bottom:10px;'>[ 초연 시공명리 사주풀이 ]</h2>{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", unsafe_allow_html=True)
-                    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+                # [4단계] 최종 렌더링 출력부 (멀티라인 안전 구조 적용)
+                # ==================================================================
+                # 1. 남성 사주풀이 직접 출력
+                st.markdown(f"""
+                <h2 style='color:#1A237E; border-bottom:2px solid #1A237E; padding-bottom:10px;'>
+                    [ 초연 시공명리 사주풀이 ]
+                </h2>
+                {m_tbl}
+                <div class='choyeon-premium-report' style='margin-top:20px;'>
+                    {m_ess}
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                 
-                    # 2. 여성 사주풀이 직접 출력
-                    st.markdown(f"<h2 style='color:#D50000; border-bottom:2px solid #D50000; padding-bottom:10px;'>[ 초연 시공명리 사주풀이 ]</h2>{f_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{f_ess}</div>", unsafe_allow_html=True)
-                    st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+                # 2. 여성 사주풀이 직접 출력
+                st.markdown(f"""
+                <h2 style='color:#D50000; border-bottom:2px solid #D50000; padding-bottom:10px;'>
+                    [ 초연 시공명리 사주풀이 ]
+                </h2>
+                {f_tbl}
+                <div class='choyeon-premium-report' style='margin-top:20px;'>
+                    {f_ess}
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                 
-                    # 3. 궁합풀이 직접 출력
-                    st.markdown(f"<h2 style='color:#1B5E20; border-bottom:2px solid #1B5E20; pa                    
+                # 3. 궁합풀이 직접 출력
+                st.markdown(f"""
+                <h2 style='color:#1B5E20; border-bottom:2px solid #1B5E20; padding-bottom:10px;'>
+                    [ 초연 시공명리 궁합풀이 ]
+                </h2>
+                {g_ess}
+                """, unsafe_allow_html=True)                    
                 
                     # 🖨️ [인쇄 스위치 배치] 최하단 제어 컴포넌트 (try 블록 내부 유지)
                     st.markdown("<br>", unsafe_allow_html=True)
