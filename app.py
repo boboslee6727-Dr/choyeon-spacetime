@@ -1437,9 +1437,14 @@ if btn_single:
                             </div>"""
                         return html + "</div></div>"
 
-                    m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
-                    f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
-                    couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
+                    # 3-6 직후, 파싱 전 안전 선언
+                    couple_daewun_tables = "<div style='color:red;'>대운 흐름표 생성 오류</div>"
+                    try:
+                        m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age)
+                        f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age)
+                        couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:15px;'></div>{f_page_un_html}</div>"
+                    except Exception as e:
+                        st.error(f"대운표 생성 실패: {e}")
 
                     # 3-7. AI 프리미엄 심층 에세이 연산 기동
                     m_w_val = choyeon_db.get("wolryeong", {}).get(m_ms+m_mb, "시공간")
