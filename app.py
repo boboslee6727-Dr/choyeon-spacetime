@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 34.0 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 34.1 (Gemini 2.5-Pro Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -1519,20 +1519,62 @@ if btn_single:
                 st.stop() # 1단계에서 꼬이면 다음 단계로 진행하지 않도록 완벽 차단
 
             # ==================================================================
-            # 🚀 [2단계] 타 감명서 비교분석 (선택적)
+            # 🚀 [2단계] 타 감명서 비교분석 (선택적 - CSS 및 디자인 완벽 동기화 판본)
             # ==================================================================
             if u_product == "타 감명서":
                 try:
                     st.info("▶ [타 감명서] 원본 출력 및 상세 비교 분석 중...") 
                     comp_text = other_reading_text
 
-                    # 타 감명서 원본 출력
-                    st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>📜 타 감명서 원문</h2><div>{comp_text.replace(chr(10), '<br>')}</div></div>", unsafe_allow_html=True)
+                    # 2-1. 타 감명서 원본 출력 (박사님 메인 A4 규격 및 명조체 스타일 100% 이식)
+                    report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2><div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111; text-align: justify; word-break: keep-all;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
+                    st.markdown(report_2_html, unsafe_allow_html=True)
                         
-                    # 1:1 비교 리포트 생성 및 출력
-                    comp_prompt = f"아래 [1. 초연 사주풀이]와 [2. 타 감명서]를 상세 비교 분석하십시오.\n1. 초연 풀이: {clean_ai_text}\n2. 타 감명서: {comp_text}"
-                    c_res = call_claude_api(comp_prompt, max_tokens=8000)
-                    st.markdown(f"<div class='page-break-before'></div><div class='vip-inset-frame'><h2 style='text-align:center;'>⚖️ 1:1 상세비교 리포트</h2><div>{c_res}</div></div>", unsafe_allow_html=True)
+                    # 2-2. 1:1 비교 리포트 생성 프롬프트 (목차 디자인, 나눔명조체, 22px 크기 완전 동기화)
+                    comp_prompt = f"""
+    당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
+    아래 [1. 초연 사주풀이]와 [2. 타 감명서]를 엄격하게 1:1 대조 분석하십시오.
+
+    🚨 [디자인 및 서식 절대 규칙]
+    1. AI 임의의 목차 서식 생성을 절대 금지합니다.
+    2. 목차 제목 출력 시, 반드시 크기 22px와 하단 청색 선이 조립된 아래 명시된 태그 서식을 그대로 출력하십시오.
+    3. 모든 본문 문단 작성 시, HTML 태그인 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 를 사용하여 모든 단락을 감싸십시오.
+
+    🚨 [내용 집중 대조 규칙]
+    - 타 감명서 원문을 분석하여, 타 감명서에서 '실제로 다루고 있는 내용(주제)'이 무엇인지 파악하십시오.
+    - 타 감명서 원문이 초연 명리의 전체 흐름과 다를 때는, 타 감명서에서 집중적으로 다룬 **'해당 내용'**에 대해서만 초연 명리의 분석과 1:1로 깊이 있게 대조 분석하십시오.
+    - 타 감명서에 언급조차 없는 내용은 억지로 분량을 채우려 하지 말고 과감히 생략하십시오.
+    - 단, 비교 분석이 끝난 후 가장 마지막의 <13. 총평 및 향후 개선점> 목차는 무슨 일이 있어도 반드시 작성해야 합니다.
+
+    [출력 목차 서식 정의]
+    <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>1. 사주팔자 구조 및 성격 비교</h3>
+    (해당 내용에 대한 집중 대조 서술)
+    
+    ... (타 감명서가 다룬 핵심 내용들에 대해서만 이 형식의 h3 목차를 활용하여 순서대로 전개) ...
+    
+    <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3>
+    <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>1) 두 감명서의 장점과 단점</span>
+    <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>[양측의 통변 기술, 논리적 근거, 내담자 공감력 등을 객관적으로 비교 서술]</p>
+    <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>2) 초연 시공명리의 누락 및 개선점 (AI 학습 피드백)</span>
+    <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>[타 감명서를 통해 초연 명리가 벤치마킹하거나 보완해야 할 통변 기법, 누락된 내용, 관점의 차이 등을 날카롭게 분석하여 향후 AI 엔진 업그레이드에 활용할 수 있도록 명확히 제시]</p>
+
+    [데이터]
+    1. 초연 사주풀이: {clean_ai_text}
+    2. 타 감명서: {comp_text}
+    """
+                    c_res = call_claude_api(comp_prompt, max_tokens=10000)
+                    
+                    # 2-3. 비교 리포트 결과 출력 (박사님 메인 A4 규격 레이아웃 완벽 편입)
+                    report_3_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:25px;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                    st.markdown(report_3_html, unsafe_allow_html=True)
+
+                except Exception as e:
+                    st.error(f"2단계 비교 분석 중 오류 발생: {e}")
+                    c_res = call_claude_api(comp_prompt, max_tokens=10000)
+                    
+                    # 2-3. 비교 리포트 결과 출력 (A4 규격 및 래퍼 적용)
+                    report_3_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000; font-family:\"Malgun Gothic\", sans-serif; font-weight:900;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:30px; font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111;'>{c_res}</div></div></div>"
+                    st.markdown(report_3_html, unsafe_allow_html=True)
 
                 except Exception as e:
                     st.error(f"2단계 비교 분석 중 오류 발생: {e}")
