@@ -1573,8 +1573,7 @@ if btn_single:
                     {closing_original}
                     """
 
-                    # 3-10. 렌더링 검증 및 최종 출력 (안전 출력 래퍼)
-                    try:
+                    # 3-10. 렌더링 검증 및 최종 출력 (메인 try 블록 내부 유지)
                         st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess or '내용을 준비 중입니다.'}</div>", "#1A237E", "[ 초연 시공명리 사주풀이 ]"), unsafe_allow_html=True)
                         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                         
@@ -1583,10 +1582,11 @@ if btn_single:
                         
                         st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
-                        # 🖨️ [인쇄/PDF 저장 기능] 최종 스위치 배치 (try 블록 내부로 포함)
+                        # 🖨️ [인쇄/PDF 저장 기능] 최종 스위치 배치
                         st.markdown("<br>", unsafe_allow_html=True)
                         if st.button("🖨️ 초연 시공명리 PDF 저장 및 리포트 인쇄", use_container_width=True, type="secondary"):
                             st.components.v1.html("<script>window.print();</script>", height=0, width=0)
 
+                    # 여기가 메인 try: 에 대응하는 짝입니다.
                     except Exception as e:
                         st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
