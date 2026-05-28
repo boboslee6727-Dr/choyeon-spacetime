@@ -1324,7 +1324,6 @@ if btn_single:
                 
                 if not start_date or not end_date: return []
                 
-                # 지지 합충형파해 점수 산출 내부 함수
                 def get_ji_score(j1, j2):
                     if not j1 or not j2 or j1 == "?" or j2 == "?": return 0
                     s = {j1, j2}
@@ -1345,29 +1344,32 @@ if btn_single:
                     gapja = klc.getChineseGapJaString().split()
                     
                     if len(gapja) >= 3:
-                        ilju = gapja[2]  # 해당 날짜의 일주 (예: 甲子)
-                        if ilju not in forbidden_list:
-                            b_j = ilju[1] # 태아의 일지
+                        # 🚨 태아의 년주, 월주, 일주 추출 (뒤에 붙은 '年', '月', '日' 글자 제거)
+                        b_year = gapja[0][:2]
+                        b_month = gapja[1][:2]
+                        b_day = gapja[2][:2]
+                        
+                        if b_day not in forbidden_list:
+                            b_j = b_day[1] # 태아의 일지
                             score = 80    # 기본 상생 점수
                             
                             # 부모의 일지/월지와 태아 일지의 조화도 정밀 대조
                             if m_jjis and len(m_jjis) >= 4:
-                                score += get_ji_score(b_j, m_jjis[1]) * 2 # 남편 일지 가중치
-                                score += get_ji_score(b_j, m_jjis[2])     # 남편 월지
+                                score += get_ji_score(b_j, m_jjis[1]) * 2
+                                score += get_ji_score(b_j, m_jjis[2])
                             if f_jjis and len(f_jjis) >= 4:
-                                score += get_ji_score(b_j, f_jjis[1]) * 2 # 아내 일지 가중치
-                                score += get_ji_score(b_j, f_jjis[2])     # 아내 월지
+                                score += get_ji_score(b_j, f_jjis[1]) * 2
+                                score += get_ji_score(b_j, f_jjis[2])
                             
-                            # 길일(80점 이상)만 필터링하여 담기
                             if score >= 80:
                                 results.append({
-                                    'date': curr_d.strftime("%Y년 %m월 %d일") + f" ({ilju}일)", 
+                                    'date': curr_d.strftime("%Y년 %m월 %d일"), 
+                                    'bazi': f"{b_year}년 {b_month}월 {b_day}일",  # 삼주 데이터 저장
                                     'score': score
                                 })
                     
                     curr_d += datetime.timedelta(days=1)
                     
-                # 상생 점수가 가장 높은 순으로 정렬하여 상위 5개만 추출
                 results.sort(key=lambda x: x['score'], reverse=True)
                 return results[:5]
 
@@ -1670,7 +1672,10 @@ if btn_single:
                             
                             if delivery_days:
                                 for day_info in delivery_days:
-                                    del_content += f"<div style='padding:10px; border-bottom:1px solid #ddd;'>✅ <b>{day_info['date']}</b> (합 점수: <span style='color:#D50000; font-weight:900;'>{day_info['score']}점</span>)</div>"
+                                    del_content += f"<div style='padding:12px; border-bottom:1px solid #ddd;'>"
+                                    del_content += f"✅ <b style='font-size:16px;'>{day_info['date']}</b> (합 점수: <span style='color:#D50000; font-weight:900;'>{day_info['score']}점</span>)<br>"
+                                    del_content += f"<span style='color:#1A237E; font-weight:bold; margin-left: 23px;'>👉 태아 사주(삼주): {day_info['bazi']}</span>"
+                                    del_content += f"</div>"
                             else:
                                 del_content += "<div style='color:red; text-align:center; font-weight:bold; padding:20px;'>해당 기간 내에 추천할 길일이 없습니다. 기간을 넓혀주세요.</div>"
                             
