@@ -621,15 +621,17 @@ def get_group_ss(ss_str):
 class UniversalPrintableGunghap:
     def __init__(self, applicant, partner_name, male, female, daeun_score=10):
         self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
+        
+        # 기본에 충실한 데이터 정제
         male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
         female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
         
-        # [긴급 교정] male[2](월주)와 male[1](일주)의 할당 위치를 엔진 연산 기준에 맞춰 변경
-        # 엔진 기준: 0=년, 1=일, 2=월, 3=시
-        self.m_g = [male[3][0], male[1][0], male[2][0], male[0][0]]
-        self.m_j = [male[3][1], male[1][1], male[2][1], male[0][1]]
-        self.f_g = [female[3][0], female[1][0], female[2][0], female[0][0]]
-        self.f_j = [female[3][1], female[1][1], female[2][1], female[0][1]]
+        # [원상 복구 완료] 박사님의 오리지널 배열 인덱스 (3, 2, 1, 0)
+        self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
+        self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
+        self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
+        self.f_j = [female[3][1], female[2][1], female[1][1], female[0][1]]
+        
         self.logic_flags, self.details = {}, []
 
     def get_ji_rel(self, j1, j2):
