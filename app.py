@@ -17,7 +17,7 @@ APP_VERSION = "Ver 37.0 (Gemini 2.5-Pro Mode)"
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
-st.set_page_config(page_title=f"초연 시공명리 사주풀이 {APP_VERSION}", layout="wide")
+st.set_page_config(page_title=f"초연 시공명리 사주 {APP_VERSION}", layout="wide")
 
 st.markdown("""
 <style>
@@ -1316,63 +1316,82 @@ if btn_single:
                     st.error(f"2단계 비교 분석 장애: {e}")
 
             # ==================================================================
-            # [긴급 복원] 출산택일 최적 길일 산출 엔진 (ver 38.0)
-            # ==================================================================
-            def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
-                import datetime
-                from korean_lunar_calendar import KoreanLunarCalendar
-                
-                if not start_date or not end_date: return []
-                
-                def get_ji_score(j1, j2):
-                    if not j1 or not j2 or j1 == "?" or j2 == "?": return 0
-                    s = {j1, j2}
-                    if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return 5
-                    if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return 3
-                    if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: return 3
-                    if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return -5
-                    if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return -3
-                    if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return -4
-                    return 0
-
-                results = []
-                curr_d = start_date
-                
-                while curr_d <= end_date:
-                    klc = KoreanLunarCalendar()
-                    klc.setSolarDate(curr_d.year, curr_d.month, curr_d.day)
-                    gapja = klc.getChineseGapJaString().split()
-                    
-                    if len(gapja) >= 3:
-                        # 🚨 태아의 년주, 월주, 일주 추출 (뒤에 붙은 '年', '月', '日' 글자 제거)
-                        b_year = gapja[0][:2]
-                        b_month = gapja[1][:2]
-                        b_day = gapja[2][:2]
+                    # [최종 복원] 출산택일 최적 길일 산출 엔진 (살성 필터링 및 합궁 기간 연산)
+                    # ==================================================================
+                    def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
+                        import datetime
+                        from korean_lunar_calendar import KoreanLunarCalendar
                         
-                        if b_day not in forbidden_list:
-                            b_j = b_day[1] # 태아의 일지
-                            score = 80    # 기본 상생 점수
+                        if not start_date or not end_date: return []
+                        
+                        def get_ji_relation_info(j1, j2):
+                            if not j1 or not j2 or j1 == "?" or j2 == "?": return 0, ""
+                            s = {j1, j2}
+                            if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return 5, "육합(六合)을 이루어 유대감이 매우 깊고"
+                            if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return 3, "방합(方合)을 이루어 끈끈한 기운을 나누며"
+                            if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: return 3, "삼합(三合)을 이루어 결속력이 강하고"
+                            if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return -5, "충(沖)이 발생하여 탈락"
+                            if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return -3, "원진(怨嗔)이 발생하여 탈락"
+                            if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return -4, "형(刑)이 발생하여 탈락"
+                            return 0, "무난한 조화를 이루며"
+        
+                        results = []
+                        curr_d = start_date
+                        
+                        while curr_d <= end_date:
+                            klc = KoreanLunarCalendar()
+                            klc.setSolarDate(curr_d.year, curr_d.month, curr_d.day)
+                            gapja = klc.getChineseGapJaString().split()
                             
-                            # 부모의 일지/월지와 태아 일지의 조화도 정밀 대조
-                            if m_jjis and len(m_jjis) >= 4:
-                                score += get_ji_score(b_j, m_jjis[1]) * 2
-                                score += get_ji_score(b_j, m_jjis[2])
-                            if f_jjis and len(f_jjis) >= 4:
-                                score += get_ji_score(b_j, f_jjis[1]) * 2
-                                score += get_ji_score(b_j, f_jjis[2])
+                            if len(gapja) >= 3:
+                                b_year = gapja[0][:2]
+                                b_month = gapja[1][:2]
+                                b_day = gapja[2][:2]
+                                ilju = gapja[2]
+                                
+                                # 🚨 박사님 지정 흉일 원천 차단
+                                if ilju not in forbidden_list:
+                                    b_j = b_day[1]
+                                    score = 80
+                                    reason_parts = []
+                                    is_bad = False
+                                    
+                                    if f_jjis and len(f_jjis) >= 4:
+                                        s, txt = get_ji_relation_info(b_j, f_jjis[1])
+                                        if s < 0: is_bad = True
+                                        else: 
+                                            score += s * 2
+                                            if s > 0: reason_parts.append(f"엄마({f_jjis[1]})와 {txt}")
+                                            
+                                    if m_jjis and len(m_jjis) >= 4:
+                                        s, txt = get_ji_relation_info(b_j, m_jjis[1])
+                                        if s < 0: is_bad = True
+                                        else: 
+                                            score += s * 2
+                                            if s > 0: reason_parts.append(f"아빠({m_jjis[1]})와 {txt}")
+                                    
+                                    if not is_bad and score >= 80:
+                                        # 💡 출생일에서 280일 역산 후 ±4일의 합궁 권장 기간 설정
+                                        conception_center = curr_d - datetime.timedelta(days=280)
+                                        c_start = conception_center - datetime.timedelta(days=4)
+                                        c_end = conception_center + datetime.timedelta(days=4)
+                                        
+                                        reason_str = " ".join(reason_parts)
+                                        if not reason_str: reason_str = "부모님과 오행의 흐름이 원만하여 가족이 화목하게 지낼 수 있는"
+                                        reason_str += " 평안하고 좋은 길일입니다."
+                                        
+                                        results.append({
+                                            'birth_date': curr_d.strftime("%Y년 %m월 %d일"), 
+                                            'conception_date': f"{c_start.strftime('%Y년 %m월 %d일')} ~ {c_end.strftime('%m월 %d일')}",
+                                            'bazi': f"{b_year}년 {b_month}월 {b_day}일", 
+                                            'score': score,
+                                            'reason': f"신생아의 일지({b_j})가 {reason_str}"
+                                        })
                             
-                            if score >= 80:
-                                results.append({
-                                    'date': curr_d.strftime("%Y년 %m월 %d일"), 
-                                    'bazi': f"{b_year}년 {b_month}월 {b_day}일",  # 삼주 데이터 저장
-                                    'score': score
-                                })
-                    
-                    curr_d += datetime.timedelta(days=1)
-                    
-                results.sort(key=lambda x: x['score'], reverse=True)
-                return results[:5]
-
+                            curr_d += datetime.timedelta(days=1)
+                            
+                        results.sort(key=lambda x: x['score'], reverse=True)
+                        return results[:5]
             # ==================================================================
             # 💕 [3단계] 궁합 풀이 (Ver 35.1 - 완벽 레이아웃/에세이 복원 판본)
             # ==================================================================
@@ -1649,18 +1668,22 @@ if btn_single:
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
                     # =====================================================================
-                    # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (모래시계 로딩 추가)
+                    # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (최종 디자인)
                     # =====================================================================
                     if run_delivery_calc:  
                         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                         
-                        # 💡 [추가 완료] 사용자가 대기 상태를 알 수 있도록 로딩 스피너(모래시계) 가동
-                        with st.spinner("⏳ 👶 AI가 새 생명 마중 출산택일 리포트를 심층 분석하여 작성 중입니다..."):
+                        with st.spinner("⏳ 👶 최적의 출생일 탐색 및 합궁일 역산 분석 중..."):
                             
-                            # 박사님 금기 리스트
-                            FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+                            # 🚨 박사님 금기 리스트 (백호, 괴강, 양인, 비인살 대거 추가)
+                            FORBIDDEN_LIST = [
+                                '병오', '임자', '계해', '신유', '경신', # 기존 흉살
+                                '갑진', '을미', '병술', '정축', '무진', '임술', '계축', # 백호대살
+                                '경진', '경술', '임진', '무술', # 괴강살 (중복 제외)
+                                '무오', # 양인살 (중복 제외)
+                                '병자', '무자', '기축', '임오', '계미' # 비인살 (중복 제외)
+                            ]
                             
-                            # 🚨 박사님의 UI 변수인 start_date와 end_date를 함수에 바로 넣습니다.
                             delivery_days = get_optimized_delivery_days(
                                 start_date, 
                                 end_date, 
@@ -1668,27 +1691,31 @@ if btn_single:
                             )
                             
                             del_content = "<h2 style='text-align:center; color:#4A148C; font-weight:900;'>👶 새 생명 마중 길일 추천</h2>"
-                            del_content += "<p style='text-align:center;'>부모님의 사주와 조화를 이루는 길일입니다.</p>"
+                            del_content += "<p style='text-align:center;'>목표 출생일에 맞춘 최적의 합궁일(임신 계획 기간) 안내입니다.</p>"
                             
                             if delivery_days:
-                                for day_info in delivery_days:
-                                    del_content += f"<div style='padding:12px; border-bottom:1px solid #ddd;'>"
-                                    del_content += f"✅ <b style='font-size:16px;'>{day_info['date']}</b> (합 점수: <span style='color:#D50000; font-weight:900;'>{day_info['score']}점</span>)<br>"
-                                    del_content += f"<span style='color:#1A237E; font-weight:bold; margin-left: 23px;'>👉 태아 사주(삼주): {day_info['bazi']}</span>"
+                                for i, day_info in enumerate(delivery_days):
+                                    bg_color = '#F8F9FA' if i % 2 == 0 else '#FFFFFF'
+                                    del_content += f"<div style='padding:15px; border-bottom:1px solid #ddd; background-color:{bg_color};'>"
+                                    del_content += f"<div style='margin-bottom:8px;'>🎯 <b style='font-size:16px; color:#1B5E20;'>[출산 목표일] {day_info['birth_date']}</b> 👉 💞 <b style='font-size:16px; color:#D50000;'>[합궁 권장 기간] {day_info['conception_date']}</b> (합 점수: <span style='font-weight:900;'>{day_info['score']}점</span>)</div>"
+                                    del_content += f"<div style='margin-bottom:5px; margin-left: 28px;'><span style='color:#1A237E; font-weight:bold;'>👶 신생아 사주(3주): {day_info['bazi']}</span></div>"
+                                    del_content += f"<div style='margin-left: 28px; font-size:14px; color:#444; line-height:1.5;'><b>💡 초연 박사의 택일 사유:</b> {day_info['reason']}</div>"
                                     del_content += f"</div>"
                             else:
-                                del_content += "<div style='color:red; text-align:center; font-weight:bold; padding:20px;'>해당 기간 내에 추천할 길일이 없습니다. 기간을 넓혀주세요.</div>"
+                                del_content += "<div style='color:red; text-align:center; font-weight:bold; padding:20px;'>해당 기간 내에 추천할 완벽한 길일이 없습니다. 살성과 충/원진을 피하기 위해 탐색 기간을 조금 더 넓혀주세요.</div>"
                             
+                            # 💡 본문과 이질감 없는 안내 가이드 및 초연 박사님 낙인 추가
                             del_content += "<br><hr style='opacity:0.3;'>"
-                            del_content += "<div style='background-color:#F3E5F5; padding:15px; border-radius:8px; margin-top:15px;'>"
-                            del_content += "<p style='font-size:14px; line-height:1.6; color:#333; margin:0;'>"
-                            del_content += "<b>💡 부부를 위한 임신 계획 가이드:</b><br>"
+                            del_content += "<div style='background-color:#F8F9FA; padding:20px; border-radius:8px; margin-top:15px; border: 1px solid #E0E0E0;'>"
+                            del_content += "<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin:0; text-align: justify;'>"
+                            del_content += "<b style='color:#4A148C;'>💡 부부를 위한 임신 계획 가이드:</b><br>"
                             del_content += "위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. "
-                            del_content += "의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. "
+                            del_content += "의학적 평균 임신 기간(약 280일)을 고려할 때, 합궁 시기는 출산 예정일로부터 약 9개월 10일(40주, 280일) 전후가 됩니다. "
                             del_content += "부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다."
                             del_content += "</p></div>"
                             
-                        # 💡 스피너가 끝난 후 화면에 렌더링
+                            del_content += "<div style='text-align: right; margin-top: 30px; page-break-inside: avoid;'><span style='font-weight: 900; font-size: 16px; color: #4A148C; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 -</span></div>"
+                            
                         st.markdown(wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]"), unsafe_allow_html=True)
 
                 except Exception as e:
