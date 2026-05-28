@@ -962,8 +962,15 @@ with st.sidebar:
         # ------------------------------------------------------------------
         # 👶 [VIP 전용 옵션] 출산 가능 연령(여성 49세 이하) 스마트 필터
         # ------------------------------------------------------------------
-        current_year = 2026
+        import datetime
+        current_year = datetime.datetime.now().year  # 실시간 현재 연도로 자동 동기화
         f_year = u_y if u_gender == "여성" else p_y
+                    
+        # 🚨 [중요] 여성 나이가 50세 이상이라 expander가 안 열릴 때를 대비한 기본값(에러 원천 차단)
+        run_delivery_calc = False
+        start_date = None
+        end_date = None
+                    
         if (current_year - f_year + 1) <= 49:
             with st.expander("👶 [VIP 심층 분석] 프리미엄 출산택일", expanded=False):
                 baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
@@ -1387,7 +1394,6 @@ if btn_single:
 
                         info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:{color};'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
-                        # [핵심 교정] 덧셈(+=) 방식을 폐기하고, 마크다운 버그 차단을 위해 HTML 태그를 좌측 끝으로 밀착시켰습니다.
                         return f"""{info_str}
 <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
 <tr class='top-header-cell'>
@@ -1561,22 +1567,22 @@ if btn_single:
                     
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
+                   # =====================================================================
+                    # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (변수 동기화 완료)
                     # =====================================================================
-                    # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (Streamlit 용)
-                    # =====================================================================
-                    if 'run_delivery_calc' in st.session_state and st.session_state.run_delivery_calc:
+                    if run_delivery_calc:  # 🚨 세션이 아닌 박사님의 UI 변수를 직접 참조합니다.
                         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                         
                         # 박사님 금기 리스트
                         FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
                         
-                        # 🚨 궁합 클래스(report_sys)에서 부모 지지 정보 안전하게 추출
                         m_jjis_for_calc = report_sys.m_j if 'report_sys' in locals() else m_jjis
                         f_jjis_for_calc = report_sys.f_j if 'report_sys' in locals() else f_jjis
                         
+                        # 🚨 박사님의 UI 변수인 start_date와 end_date를 함수에 바로 넣습니다.
                         delivery_days = get_optimized_delivery_days(
-                            st.session_state.baby_start_date, 
-                            st.session_state.baby_end_date, 
+                            start_date, 
+                            end_date, 
                             m_jjis_for_calc, f_jjis_for_calc, FORBIDDEN_LIST
                         )
                         
