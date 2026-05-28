@@ -751,26 +751,31 @@ class UniversalPrintableGunghap:
             return ", ".join(w) if w else "오행구족(조화)"
 
         m_patho, f_patho = get_patho(m_ec), get_patho(f_ec)
-        f_map = {'甲':'본능','乙':'본능','丙':'감성','丁':'감성','戊':'수렴','己':'수렴','庚':'자율','辛':'자율','壬':'사고','癸':'사고'}
-        m_psy, f_psy = f_map.get(m_ctx.get('dc', '미상'), '미상'), f_map.get(f_ctx.get('dc', '미상'), '미상')
+        
+        # 🚨 [핵심 수정] AI가 헛소리를 못 하도록 실제 명조(년/월/일/시) 문자열 생성
+        m_pillars = f"년주:{self.m_g[3]}{self.m_j[3]}, 월주:{self.m_g[2]}{self.m_j[2]}, 일주:{self.m_g[1]}{self.m_j[1]}, 시주:{self.m_g[0]}{self.m_j[0]}"
+        f_pillars = f"년주:{self.f_g[3]}{self.f_j[3]}, 월주:{self.f_g[2]}{self.f_j[2]}, 일주:{self.f_g[1]}{self.f_j[1]}, 시주:{self.f_g[0]}{self.f_j[0]}"
 
         detail_scores_text = "\n".join([f"  * {d['label']}: {d['pct']}점" for d in self.details])
 
         prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
-        당신은 명리심리상담사 '초연 박사'입니다. 아래 데이터를 바탕으로 교차 분석 궁합 에세이를 작성하십시오.
+당신은 명리심리상담사 '초연 박사'입니다. 아래 내담자의 정확한 사주 명조 데이터를 바탕으로 교차 분석 궁합 에세이를 작성하십시오.
+
+[🚨 절대 지시: 사주 데이터 위조 및 환각(Hallucination) 금지]
+당신은 내담자의 명조나 나이를 임의로 지어내거나 추측해서는 안 됩니다. 반드시 아래 제공된 [남성]과 [여성]의 년주, 월주, 일주, 시주를 있는 그대로 대조하여 통변하십시오. (예: 남성의 일지와 여성의 일지를 정확히 비교할 것)
+
+[남성({m_ctx.get('u_name', '')}) 사주 명조]: {m_pillars}
+- 오행 분포: {m_ec}
+- 병리: {m_patho}
+
+[여성({f_ctx.get('u_name', '')}) 사주 명조]: {f_pillars}
+- 오행 분포: {f_ec}
+- 병리: {f_patho}
 
 [🚨 중요 시스템 지시: 알고리즘 최종 점수 동기화]
-시스템 로직이 엄격하게 산출한 두 사람의 '최종 궁합 점수는 {self.final_score}점'이며, 세부 항목은 다음과 같습니다.
+시스템 로직이 산출한 두 사람의 '최종 궁합 점수는 {self.final_score}점'이며, 세부 항목은 다음과 같습니다.
 {detail_scores_text}
-
-당신이 작성하는 모든 분석(사주구조, 대운, 상생/조화 등)은 반드시 위 점수의 결과를 논리적으로 뒷받침해야 합니다.
-- {self.final_score}점이 80점 이상이면: 극복 가능한 긍정적 인연임을 강조.
-- {self.final_score}점이 60~79점이면: 장단점이 공존하여 뼈깎는 노력이 필요함을 객관적으로 서술.
-- {self.final_score}점이 60점 미만이면: 가치관 충돌이나 시공의 부조화, 대운의 엇갈림을 명확히 지적하고, 매우 현실적이고 엄중한 처방을 내리십시오.
 (※ 주의: 점수 숫자 자체는 본문에 절대 노출하지 마십시오.)
-
-[남성({m_ctx.get('u_name', '')})]: 오행{m_ec}, 병리({m_patho}), 심리({m_psy}인자)
-[여성({f_ctx.get('u_name', '')})]: 오행{f_ec}, 병리({f_patho}), 심리({f_psy}인자)
 
 <div class='choyeon-premium-report' style='line-height:1.9;'>
   <h3 style='font-family: "Malgun Gothic", sans-serif !important; font-size: 24px; font-weight: bold; color: #1B5E20; border-bottom: 3px double #1B5E20; padding-bottom: 10px; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
@@ -782,23 +787,22 @@ class UniversalPrintableGunghap:
 
   <h4 style='font-family: "Malgun Gothic", sans-serif !important; font-size: 20px; font-weight: bold; color: #1A237E; margin-top: 40px;'>💞 커플의 5대 심층 조화도 분석</h4>
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[내면의 유대감] - 속 궁합</span></div>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(두 사람의 일지를 대조하여 심리적, 육체적 친밀감을 구어체로 작성)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(반드시 남성의 일지와 여성의 일지를 대조하여 심리적, 육체적 친밀감을 구어체로 작성)</p>
   
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[사회적 환경 조화] - 겉 궁합</span></div>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(두 사람의 월지를 대조하여 사회적, 가정적 가치관의 조화를 구어체로 작성)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(반드시 남성의 월지와 여성의 월지를 대조하여 사회적, 가정적 가치관의 조화를 구어체로 작성)</p>
   
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[기운의 상호 보완] - 오행 궁합</span></div>
   <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(오행과 조후를 바탕으로 서로에게 부족한 기운을 어떻게 채워주는지 구어체로 작성)</p>
 
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[특수 기운] - 신살 작용</span></div>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(고란살, 간여지동, 음양차착살 등 특수 신살이 두 사람의 관계에 미치는 영향을 구어체로 작성)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(실제 명조에 존재하는 신살(간여지동 등)만 정확히 파악하여 두 사람의 관계에 미치는 영향을 구어체로 작성)</p>
 
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[리스크 방어력] - 갈등 극복과 조율</span></div>
   <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(갈등 발생 시 두 사람이 이를 극복하고 방어할 수 있는 내성 및 개운 처방을 담아 구어체로 작성)</p>
 </div>
 ※ 엄격한 주의사항: 본문(<p>) 작성 시 'font-family' 속성을 임의로 추가하지 마십시오. 전체 글꼴이 파괴됩니다.
 """
-        # 기존에 사용하시던 API 호출 방식을 그대로 보존 (call_claude_api)
         return call_claude_api(prompt, max_tokens=12000)
 
     def get_graphic_html(self, ai_text, closing_text=""):
