@@ -1547,7 +1547,7 @@ if btn_single:
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
 1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
 2. 반드시 내담자의 명리적 특징을 분석하여 3~4문장 분량의 **실제 통변 내용(해석)**을 직접 글로 작성해야 합니다.
-3. 일반인이 쉽게 이해할 수 있도록 어려운 한자성어나 명리 전문 용어(예: 식상생재, 관인상생, 충극 등)는 최대한 배제하고, 일상적이고 따뜻한 현대적 구어체(~해요, ~합니다)로 풀어서 부드럽게 설명하십시오.
+3. 일반인이 쉽게 이해할 수 있도록 어려운 한자성어나 명리 전문 용어는 최대한 배제하고, 일상적이고 따뜻한 현대적 구어체(~해요, ~합니다)로 풀어서 부드럽게 설명하십시오. (단, 특수 기운 설명 시에는 해당 신살 명칭 사용 가능)
 4. 모든 통변 문장은 HTML 태그 <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
 
 [MALE_START]
@@ -1588,15 +1588,28 @@ if btn_single:
 <h3 style='color: #1B5E20; font-size: 22px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
 (이곳에 두 사람의 인연 총평을 깊이 있게 통변한 실제 에세이를 구어체로 작성)
 
-<h3 style='color: #1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 분석</h3>
+<h3 style='color: #1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
-(🚨경고: 위 마커는 파이썬 엔진이 대운 흐름표를 상하로 나란히 꽂아 넣을 절대 성역입니다. AI가 임의로 표를 지워버리거나 스스로 표를 그리는 만행을 절대 금지합니다. 마커를 그대로 둔 상태로, 바로 아래에 대운 교차점에 따른 상생/보완 에세이를 현대적 구어체로 작성하십시오.)
+(🚨경고: 위 마커는 파이썬 엔진이 대운 흐름표를 꽂아 넣을 절대 성역입니다. 임의로 지우지 마십시오. 마커 바로 아래에 대운 교차점에 따른 상생/보완 에세이를 현대적 구어체로 작성하십시오.)
 
-<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>💞 커플의 상생과 조화 궁합 분석</h4>
-(이곳에 속궁합, 겉궁합, 오행 궁합을 통합 분석한 실제 에세이를 구어체로 작성)
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>💞 6대 심층 조화도 분석</h4>
+<span class='sub-title' style='display: block; font-size: 16px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 내면의 유대감 (속궁합)</span>
+(두 사람의 일지를 대조하여 심리적, 육체적 친밀감과 소통의 조화를 구어체로 작성)
 
-<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>⚓ 조율의 지혜</h4>
-(이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이를 구어체로 작성)
+<span class='sub-title' style='display: block; font-size: 16px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 환경 조화 (겉궁합)</span>
+(두 사람의 월지를 대조하여 사회적, 가정적 가치관과 현실적 환경의 조화를 구어체로 작성)
+
+<span class='sub-title' style='display: block; font-size: 16px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 기운 상호보완</span>
+(오행과 조후를 바탕으로 서로에게 부족한 기운을 어떻게 채워주는지 구어체로 작성)
+
+<span class='sub-title' style='display: block; font-size: 16px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>4) 특수 기운</span>
+(고란살, 간여지동, 음양차착살 등 특수 신살이 두 사람의 관계와 결혼 생활에 미치는 영향을 분석하여 구어체로 작성)
+
+<span class='sub-title' style='display: block; font-size: 16px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>5) 커플의 인생 기상도</span>
+(서로의 대운 흐름이 어떻게 맞물리며 시너지를 내는지 분석하여 구어체로 작성)
+
+<span class='sub-title' style='display: block; font-size: 16px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>6) 리스크 방어력</span>
+(갈등 발생 시 두 사람이 이를 극복하고 방어할 수 있는 내성 및 개운 처방을 담아 구어체로 작성)
 [GUNGHAP_END]
 """
                         res_text = call_claude_api(essay_prompt, max_tokens=12000)
