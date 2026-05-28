@@ -623,10 +623,13 @@ class UniversalPrintableGunghap:
         self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
         male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
         female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
-        self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
-        self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
-        self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
-        self.f_j = [female[3][1], female[2][1], female[1][1], female[0][1]]
+        
+        # [긴급 교정] male[2](월주)와 male[1](일주)의 할당 위치를 엔진 연산 기준에 맞춰 변경
+        # 엔진 기준: 0=년, 1=일, 2=월, 3=시
+        self.m_g = [male[3][0], male[1][0], male[2][0], male[0][0]]
+        self.m_j = [male[3][1], male[1][1], male[2][1], male[0][1]]
+        self.f_g = [female[3][0], female[1][0], female[2][0], female[0][0]]
+        self.f_j = [female[3][1], female[1][1], female[2][1], female[0][1]]
         self.logic_flags, self.details = {}, []
 
     def get_ji_rel(self, j1, j2):
@@ -1674,6 +1677,84 @@ if btn_single:
                     st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                     
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
+
+                    # ==================================================================
+                    # [최종 복원] 출산택일 최적 길일 산출 엔진 (살성 필터링 및 합궁 기간 연산)
+                    # ==================================================================
+                    def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
+                        import datetime
+                        from korean_lunar_calendar import KoreanLunarCalendar
+                        
+                        if not start_date or not end_date: return []
+                        
+                        def get_ji_relation_info(j1, j2):
+                            if not j1 or not j2 or j1 == "?" or j2 == "?": return 0, ""
+                            s = {j1, j2}
+                            if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return 5, "육합(六合)을 이루어 유대감이 매우 깊고"
+                            if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return 3, "방합(方合)을 이루어 끈끈한 기운을 나누며"
+                            if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: return 3, "삼합(三合)을 이루어 결속력이 강하고"
+                            if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return -5, "충(沖)이 발생하여 탈락"
+                            if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return -3, "원진(怨嗔)이 발생하여 탈락"
+                            if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return -4, "형(刑)이 발생하여 탈락"
+                            return 0, "무난한 조화를 이루며"
+        
+                        results = []
+                        curr_d = start_date
+                        
+                        while curr_d <= end_date:
+                            klc = KoreanLunarCalendar()
+                            klc.setSolarDate(curr_d.year, curr_d.month, curr_d.day)
+                            gapja = klc.getChineseGapJaString().split()
+                            
+                            if len(gapja) >= 3:
+                                b_year = gapja[0][:2]
+                                b_month = gapja[1][:2]
+                                b_day = gapja[2][:2]
+                                ilju = gapja[2]
+                                
+                                # 🚨 박사님 지정 흉일 원천 차단
+                                if ilju not in forbidden_list:
+                                    b_j = b_day[1]
+                                    score = 80
+                                    reason_parts = []
+                                    is_bad = False
+                                    
+                                    if f_jjis and len(f_jjis) >= 4:
+                                        s, txt = get_ji_relation_info(b_j, f_jjis[1])
+                                        if s < 0: is_bad = True
+                                        else: 
+                                            score += s * 2
+                                            if s > 0: reason_parts.append(f"엄마({f_jjis[1]})와 {txt}")
+                                            
+                                    if m_jjis and len(m_jjis) >= 4:
+                                        s, txt = get_ji_relation_info(b_j, m_jjis[1])
+                                        if s < 0: is_bad = True
+                                        else: 
+                                            score += s * 2
+                                            if s > 0: reason_parts.append(f"아빠({m_jjis[1]})와 {txt}")
+                                    
+                                    if not is_bad and score >= 80:
+                                        # 💡 출생일에서 280일 역산 후 ±4일의 합궁 권장 기간 설정
+                                        conception_center = curr_d - datetime.timedelta(days=280)
+                                        c_start = conception_center - datetime.timedelta(days=4)
+                                        c_end = conception_center + datetime.timedelta(days=4)
+                                        
+                                        reason_str = " ".join(reason_parts)
+                                        if not reason_str: reason_str = "부모님과 오행의 흐름이 원만하여 가족이 화목하게 지낼 수 있는"
+                                        reason_str += " 평안하고 좋은 길일입니다."
+                                        
+                                        results.append({
+                                            'birth_date': curr_d.strftime("%Y년 %m월 %d일"), 
+                                            'conception_date': f"{c_start.strftime('%Y년 %m월 %d일')} ~ {c_end.strftime('%m월 %d일')}",
+                                            'bazi': f"{b_year}년 {b_month}월 {b_day}일", 
+                                            'score': score,
+                                            'reason': f"신생아의 일지({b_j})가 {reason_str}"
+                                        })
+                            
+                            curr_d += datetime.timedelta(days=1)
+                            
+                        results.sort(key=lambda x: x['score'], reverse=True)
+                        return results[:5]
                     
                     # =====================================================================
                     # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (최종 디자인)
