@@ -1375,10 +1375,16 @@ if btn_single:
                     # 3-4. 사주표 생성 함수 (인적사항 및 테이블 양식)
                     def build_bazi_table(gender_icon, name, gender_str, marital_str, age, sol, lun, time, gans, jjis, ds, yb, counts, guiin, gong, samjae, color):
                         ji_rel_rows = ""
-                        for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                            b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
-                            cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
-                            lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
+                    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                        b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
+                        
+                        # '-' 기호가 나올 경우 화면에 빈칸으로 처리하여 깔끔하게 표시
+                        cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:none !important; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else (get_ji_rel_set(jjis[r_idx], jjis[ci]) if get_ji_rel_set(jjis[r_idx], jjis[ci]) != '-' else ''))}</td>" for ci in range(4)])
+                        lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
+                        
+                        # ✅ 해결: 루프 안에서 이 한 줄이 반드시 들어가야 화면에 표출됩니다.
+                        ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+
                         info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:{color};'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
                         # [핵심 교정] 덧셈(+=) 방식을 폐기하고, 마크다운 버그 차단을 위해 HTML 태그를 좌측 끝으로 밀착시켰습니다.
