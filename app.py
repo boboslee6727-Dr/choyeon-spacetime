@@ -1470,55 +1470,56 @@ if btn_single:
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
 1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
 2. 반드시 내담자의 명리적 특징을 분석하여 3~4문장 분량의 **실제 통변 내용(해석)**을 직접 글로 작성해야 합니다.
-3. 모든 통변 문장은 HTML 태그 <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
+3. 일반인이 쉽게 이해할 수 있도록 어려운 한자성어나 명리 전문 용어(예: 식상생재, 관인상생, 충극 등)는 최대한 배제하고, 일상적이고 따뜻한 현대적 구어체(~해요, ~합니다)로 풀어서 부드럽게 설명하십시오.
+4. 모든 통변 문장은 HTML 태그 <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
 
 [MALE_START]
 <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {m_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 남성의 명리적 성향을 분석한 실제 에세이 작성)
+(이곳에 남성의 명리적 성향을 분석한 실제 에세이를 구어체로 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+(이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이를 구어체로 작성)
 
 <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+(이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이를 구어체로 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 남성의 내면과 무의식을 분석한 실제 에세이 작성)
+(이곳에 남성의 내면과 무의식을 분석한 실제 에세이를 구어체로 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
-(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 남성의 연애 및 결혼관을 실제 에세이로 작성)
+(일지의 십성과 지장간을 바탕으로 남성의 연애 및 결혼관을 실제 에세이로 구어체로 작성)
 [MALE_END]
 
 [FEMALE_START]
 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 여성의 명리적 성향을 분석한 실제 에세이 작성)
+(이곳에 여성의 명리적 성향을 분석한 실제 에세이를 구어체로 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+(이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이를 구어체로 작성)
 
 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+(이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이를 구어체로 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
+(이곳에 여성의 내면과 무의식을 분석한 실제 에세이를 구어체로 작성)
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
-(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 여성의 연애 및 결혼관을 실제 에세이로 작성)
+(일지의 십성과 지장간을 바탕으로 여성의 연애 및 결혼관을 실제 에세이로 구어체로 작성)
 [FEMALE_END]
 
 [GUNGHAP_START]
 <h3 style='color: #1B5E20; font-size: 22px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
-(이곳에 두 사람의 인연 총평을 깊이 있게 통변한 실제 에세이 작성)
+(이곳에 두 사람의 인연 총평을 깊이 있게 통변한 실제 에세이를 구어체로 작성)
 
 <h3 style='color: #1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 분석</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
-(이곳에 상하 대운 교차점에 따른 상생/보완을 분석한 실제 에세이 작성)
+(🚨경고: 위 마커는 파이썬 엔진이 대운 흐름표를 상하로 나란히 꽂아 넣을 절대 성역입니다. AI가 임의로 표를 지워버리거나 스스로 표를 그리는 만행을 절대 금지합니다. 마커를 그대로 둔 상태로, 바로 아래에 대운 교차점에 따른 상생/보완 에세이를 현대적 구어체로 작성하십시오.)
 
 <h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>💞 커플의 상생과 조화 궁합 분석</h4>
-(이곳에 속궁합, 겉궁합, 오행 궁합을 통합 분석한 실제 에세이 작성)
+(이곳에 속궁합, 겉궁합, 오행 궁합을 통합 분석한 실제 에세이를 구어체로 작성)
 
 <h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>⚓ 조율의 지혜</h4>
-(이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이 작성)
+(이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이를 구어체로 작성)
 [GUNGHAP_END]
 """
                         res_text = call_claude_api(essay_prompt, max_tokens=12000)
@@ -1590,39 +1591,43 @@ if btn_single:
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
                     # =====================================================================
-                    # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (변수 동기화 완료)
+                    # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (모래시계 로딩 추가)
                     # =====================================================================
                     if run_delivery_calc:  
                         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                         
-                        # 박사님 금기 리스트
-                        FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-                        
-                        # 🚨 박사님의 UI 변수인 start_date와 end_date를 함수에 바로 넣습니다.
-                        delivery_days = get_optimized_delivery_days(
-                            start_date, 
-                            end_date, 
-                            m_jjis_for_calc, f_jjis_for_calc, FORBIDDEN_LIST
-                        )
-                        
-                        del_content = "<h2 style='text-align:center; color:#4A148C; font-weight:900;'>👶 새 생명 마중 길일 추천</h2>"
-                        del_content += "<p style='text-align:center;'>부모님의 사주와 조화를 이루는 길일입니다.</p>"
-                        
-                        if delivery_days:
-                            for day_info in delivery_days:
-                                del_content += f"<div style='padding:10px; border-bottom:1px solid #ddd;'>✅ <b>{day_info['date']}</b> (합 점수: <span style='color:#D50000; font-weight:900;'>{day_info['score']}점</span>)</div>"
-                        else:
-                            del_content += "<div style='color:red; text-align:center; font-weight:bold; padding:20px;'>해당 기간 내에 추천할 길일이 없습니다. 기간을 넓혀주세요.</div>"
-                        
-                        del_content += "<br><hr style='opacity:0.3;'>"
-                        del_content += "<div style='background-color:#F3E5F5; padding:15px; border-radius:8px; margin-top:15px;'>"
-                        del_content += "<p style='font-size:14px; line-height:1.6; color:#333; margin:0;'>"
-                        del_content += "<b>💡 부부를 위한 임신 계획 가이드:</b><br>"
-                        del_content += "위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. "
-                        del_content += "의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. "
-                        del_content += "부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다."
-                        del_content += "</p></div>"
-                        
+                        # 💡 [추가 완료] 사용자가 대기 상태를 알 수 있도록 로딩 스피너(모래시계) 가동
+                        with st.spinner("⏳ 👶 AI가 새 생명 마중 출산택일 리포트를 심층 분석하여 작성 중입니다..."):
+                            
+                            # 박사님 금기 리스트
+                            FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+                            
+                            # 🚨 박사님의 UI 변수인 start_date와 end_date를 함수에 바로 넣습니다.
+                            delivery_days = get_optimized_delivery_days(
+                                start_date, 
+                                end_date, 
+                                m_jjis_for_calc, f_jjis_for_calc, FORBIDDEN_LIST
+                            )
+                            
+                            del_content = "<h2 style='text-align:center; color:#4A148C; font-weight:900;'>👶 새 생명 마중 길일 추천</h2>"
+                            del_content += "<p style='text-align:center;'>부모님의 사주와 조화를 이루는 길일입니다.</p>"
+                            
+                            if delivery_days:
+                                for day_info in delivery_days:
+                                    del_content += f"<div style='padding:10px; border-bottom:1px solid #ddd;'>✅ <b>{day_info['date']}</b> (합 점수: <span style='color:#D50000; font-weight:900;'>{day_info['score']}점</span>)</div>"
+                            else:
+                                del_content += "<div style='color:red; text-align:center; font-weight:bold; padding:20px;'>해당 기간 내에 추천할 길일이 없습니다. 기간을 넓혀주세요.</div>"
+                            
+                            del_content += "<br><hr style='opacity:0.3;'>"
+                            del_content += "<div style='background-color:#F3E5F5; padding:15px; border-radius:8px; margin-top:15px;'>"
+                            del_content += "<p style='font-size:14px; line-height:1.6; color:#333; margin:0;'>"
+                            del_content += "<b>💡 부부를 위한 임신 계획 가이드:</b><br>"
+                            del_content += "위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. "
+                            del_content += "의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. "
+                            del_content += "부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다."
+                            del_content += "</p></div>"
+                            
+                        # 💡 스피너가 끝난 후 화면에 렌더링
                         st.markdown(wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]"), unsafe_allow_html=True)
 
                 except Exception as e:
