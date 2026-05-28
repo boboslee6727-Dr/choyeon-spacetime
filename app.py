@@ -1316,6 +1316,62 @@ if btn_single:
                     st.error(f"2단계 비교 분석 장애: {e}")
 
             # ==================================================================
+            # [긴급 복원] 출산택일 최적 길일 산출 엔진 (ver 38.0)
+            # ==================================================================
+            def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
+                import datetime
+                from korean_lunar_calendar import KoreanLunarCalendar
+                
+                if not start_date or not end_date: return []
+                
+                # 지지 합충형파해 점수 산출 내부 함수
+                def get_ji_score(j1, j2):
+                    if not j1 or not j2 or j1 == "?" or j2 == "?": return 0
+                    s = {j1, j2}
+                    if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return 5
+                    if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return 3
+                    if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: return 3
+                    if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return -5
+                    if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return -3
+                    if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return -4
+                    return 0
+
+                results = []
+                curr_d = start_date
+                
+                while curr_d <= end_date:
+                    klc = KoreanLunarCalendar()
+                    klc.setSolarDate(curr_d.year, curr_d.month, curr_d.day)
+                    gapja = klc.getChineseGapJaString().split()
+                    
+                    if len(gapja) >= 3:
+                        ilju = gapja[2]  # 해당 날짜의 일주 (예: 甲子)
+                        if ilju not in forbidden_list:
+                            b_j = ilju[1] # 태아의 일지
+                            score = 80    # 기본 상생 점수
+                            
+                            # 부모의 일지/월지와 태아 일지의 조화도 정밀 대조
+                            if m_jjis and len(m_jjis) >= 4:
+                                score += get_ji_score(b_j, m_jjis[1]) * 2 # 남편 일지 가중치
+                                score += get_ji_score(b_j, m_jjis[2])     # 남편 월지
+                            if f_jjis and len(f_jjis) >= 4:
+                                score += get_ji_score(b_j, f_jjis[1]) * 2 # 아내 일지 가중치
+                                score += get_ji_score(b_j, f_jjis[2])     # 아내 월지
+                            
+                            # 길일(80점 이상)만 필터링하여 담기
+                            if score >= 80:
+                                results.append({
+                                    'date': curr_d.strftime("%Y년 %m월 %d일") + f" ({ilju}일)", 
+                                    'score': score
+                                })
+                    
+                    curr_d += datetime.timedelta(days=1)
+                    
+                # 상생 점수가 가장 높은 순으로 정렬하여 상위 5개만 추출
+                results.sort(key=lambda x: x['score'], reverse=True)
+                return results[:5]
+
+            # ==================================================================
             # 💕 [3단계] 궁합 풀이 (Ver 35.1 - 완벽 레이아웃/에세이 복원 판본)
             # ==================================================================
             if u_product == "궁합":
