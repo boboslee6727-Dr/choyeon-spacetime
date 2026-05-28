@@ -756,8 +756,8 @@ class UniversalPrintableGunghap:
 
         detail_scores_text = "\n".join([f"  * {d['label']}: {d['pct']}점" for d in self.details])
 
-prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
-당신은 명리심리상담사 '초연 박사'입니다. 아래 데이터를 바탕으로 교차 분석 궁합 에세이를 작성하십시오.
+        prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+        당신은 명리심리상담사 '초연 박사'입니다. 아래 데이터를 바탕으로 교차 분석 궁합 에세이를 작성하십시오.
 
 [🚨 중요 시스템 지시: 알고리즘 최종 점수 동기화]
 시스템 로직이 엄격하게 산출한 두 사람의 '최종 궁합 점수는 {self.final_score}점'이며, 세부 항목은 다음과 같습니다.
@@ -798,8 +798,8 @@ prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 </div>
 ※ 엄격한 주의사항: 본문(<p>) 작성 시 'font-family' 속성을 임의로 추가하지 마십시오. 전체 글꼴이 파괴됩니다.
 """
-    # 기존에 사용하시던 API 호출 방식을 그대로 보존 (call_claude_api)
-    return call_claude_api(prompt, max_tokens=12000)
+        # 기존에 사용하시던 API 호출 방식을 그대로 보존 (call_claude_api)
+        return call_claude_api(prompt, max_tokens=12000)
 
     def get_graphic_html(self, ai_text, closing_text=""):
         c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
