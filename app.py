@@ -1441,19 +1441,30 @@ if btn_single:
                     
                     couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:20px;'></div>{f_page_un_html}</div>"
 
-                    # 3-6. AI 에세이 가동 (프롬프트 통제 강화)
-                    m_w_val = choyeon_db.get("wolryeong", {}).get(m_ms+m_mb, "시공간")
-                    m_i_val = choyeon_db.get("ilju", {}).get(m_ds+m_db, "성품")
-                    m_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{m_name}님</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 지녔습니다.</p>"
+                    # 3-6. AI 에세이 가동 (프롬프트 통제 강화) & 💡 캐싱 시스템 도입
+                    current_cache_key = f"gunghap_{u_name}_{curr_y}_{p_name}_{p_age}"
 
-                    f_w_val = choyeon_db.get("wolryeong", {}).get(f_ms+f_mb, "시공간")
-                    f_i_val = choyeon_db.get("ilju", {}).get(f_ds+f_db, "성품")
-                    f_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{f_name}님</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 지녔습니다.</p>"
-                    
-                    gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi if u_gender=="남성" else partner_bazi, partner_bazi if u_gender=="남성" else applicant_bazi, m_calc_d)
-                    gh_engine.run_universal_logic()
-                    
-                    essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+                    if st.session_state.get('gh_cache_key') == current_cache_key:
+                        # 💡 [캐시 적중] 이미 분석한 커플이면 AI 재호출 없이 메모리에서 0.1초 만에 불러옵니다.
+                        m_ess = st.session_state.get('gh_m_ess', "")
+                        f_ess = st.session_state.get('gh_f_ess', "")
+                        g_full_content = st.session_state.get('gh_g_full_content', "")
+                        m_jjis_for_calc = st.session_state.get('gh_m_jjis')
+                        f_jjis_for_calc = st.session_state.get('gh_f_jjis')
+                    else:
+                        # 💡 [캐시 없음] 최초 실행 시 정상적으로 AI 엔진을 가동합니다.
+                        m_w_val = choyeon_db.get("wolryeong", {}).get(m_ms+m_mb, "시공간")
+                        m_i_val = choyeon_db.get("ilju", {}).get(m_ds+m_db, "성품")
+                        m_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{m_name}님</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 지녔습니다.</p>"
+
+                        f_w_val = choyeon_db.get("wolryeong", {}).get(f_ms+f_mb, "시공간")
+                        f_i_val = choyeon_db.get("ilju", {}).get(f_ds+f_db, "성품")
+                        f_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{f_name}님</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 지녔습니다.</p>"
+                        
+                        gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi if u_gender=="남성" else partner_bazi, partner_bazi if u_gender=="남성" else applicant_bazi, m_calc_d)
+                        gh_engine.run_universal_logic()
+                        
+                        essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다.
 
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
@@ -1510,53 +1521,64 @@ if btn_single:
 (이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이 작성)
 [GUNGHAP_END]
 """
-                    res_text = call_claude_api(essay_prompt, max_tokens=12000)
-                    ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
-                    
-                    # 3-7. 강력한 마커 파싱 시스템 (에러 방지)
-                    import re
-                    m_ess, f_ess, g_ess = "", "", ai_clean
-                    
-                    m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
-                    if m_match: m_ess = m_match.group(1).strip()
-                    
-                    f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
-                    if f_match: f_ess = f_match.group(1).strip()
-                    
-                    g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
-                    if g_match: 
-                        g_ess = g_match.group(1).strip()
-                    else:
-                        g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
-                    
-                    # 대운표 마커 조립
-                    g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
+                        res_text = call_claude_api(essay_prompt, max_tokens=12000)
+                        ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
+                        
+                        # 3-7. 강력한 마커 파싱 시스템 (에러 방지)
+                        import re
+                        m_ess, f_ess, g_ess = "", "", ai_clean
+                        
+                        m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                        if m_match: m_ess = m_match.group(1).strip()
+                        
+                        f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                        if f_match: f_ess = f_match.group(1).strip()
+                        
+                        g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                        if g_match: 
+                            g_ess = g_match.group(1).strip()
+                        else:
+                            g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
+                        
+                        # 대운표 마커 조립
+                        g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
-                    # 3-8. A4 규격 컨테이너 및 대제목 밑줄 래퍼 함수
-                    def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
-                        return f"<div class='report-page'><div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'><h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>{content}</div></div>"
+                        # 3-9. 클로징 멘트 오리지널 복원 및 스코어 바 가시화
+                        t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
+                        bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div></div>" for d in gh_engine.details])
+                        
+                        closing_original = "<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'><p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p><p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p><div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 드림 -</span></div></div>"
 
-                    # 3-9. 클로징 멘트 오리지널 복원 및 스코어 바 가시화
-                    t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
-                    bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div></div>" for d in gh_engine.details])
-                    
-                    closing_original = "<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'><p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p><p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p><div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 드림 -</span></div></div>"
-
-                    g_full_content = f"""
-                    <div class='choyeon-premium-report'>{g_ess}</div>
-                    <h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>
-                    <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
-                        <div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
-                            <div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>
-                                <span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>
-                                <span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>
+                        g_full_content = f"""
+                        <div class='choyeon-premium-report'>{g_ess}</div>
+                        <h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>
+                        <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
+                            <div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
+                                <div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>
+                                    <span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>
+                                    <span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>
-                    <div style='max-width:500px; margin:0 auto;'>{bars}</div>
-                    {closing_original}
-                    """
+                        <div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>
+                        <div style='max-width:500px; margin:0 auto;'>{bars}</div>
+                        {closing_original}
+                        """
+
+                        # 🚨 [메모리 영구 박제] 새로고침해도 날아가지 않게 저장
+                        m_jjis_for_calc = gh_engine.m_j
+                        f_jjis_for_calc = gh_engine.f_j
+
+                        st.session_state['gh_cache_key'] = current_cache_key
+                        st.session_state['gh_m_ess'] = m_ess
+                        st.session_state['gh_f_ess'] = f_ess
+                        st.session_state['gh_g_full_content'] = g_full_content
+                        st.session_state['gh_m_jjis'] = m_jjis_for_calc
+                        st.session_state['gh_f_jjis'] = f_jjis_for_calc
+
+                    # 3-8. A4 규격 컨테이너 및 대제목 밑줄 래퍼 함수 (항상 선언)
+                    def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
+                        return f"<div class='report-page'><div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'><h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>{content}</div></div>"
 
                     # 3-10. 화면 최종 렌더링 (1P 남명, 2P 여명, 3P 궁합)
                     st.markdown(wrap_a4(f"{m_tbl}<div class='choyeon-premium-report' style='margin-top:20px;'>{m_ess}</div>", "#1A237E"), unsafe_allow_html=True)
@@ -1567,17 +1589,14 @@ if btn_single:
                     
                     st.markdown(wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 궁합풀이 ]"), unsafe_allow_html=True)
                     
-                   # =====================================================================
+                    # =====================================================================
                     # [긴급 복원 완료] 4단계: 출산택일 리포트 파이프라인 접합 (변수 동기화 완료)
                     # =====================================================================
-                    if run_delivery_calc:  # 🚨 세션이 아닌 박사님의 UI 변수를 직접 참조합니다.
+                    if run_delivery_calc:  
                         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
                         
                         # 박사님 금기 리스트
                         FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-                        
-                        m_jjis_for_calc = report_sys.m_j if 'report_sys' in locals() else m_jjis
-                        f_jjis_for_calc = report_sys.f_j if 'report_sys' in locals() else f_jjis
                         
                         # 🚨 박사님의 UI 변수인 start_date와 end_date를 함수에 바로 넣습니다.
                         delivery_days = get_optimized_delivery_days(
