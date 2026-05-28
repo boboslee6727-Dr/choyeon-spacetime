@@ -752,7 +752,7 @@ class UniversalPrintableGunghap:
 
         m_patho, f_patho = get_patho(m_ec), get_patho(f_ec)
         
-        # 🚨 [추가] 일간(본신)과 일주를 명확히 추출하여 변수에 저장
+        # 내담자의 일간(본신)을 자동으로 추출하는 범용 변수
         m_ilgan = self.m_g[1]
         m_ilju = f"{self.m_g[1]}{self.m_j[1]}"
         f_ilgan = self.f_g[1]
@@ -766,23 +766,22 @@ class UniversalPrintableGunghap:
         prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다. 아래 내담자의 정확한 사주 명조 데이터를 바탕으로 교차 분석 궁합 에세이를 작성하십시오.
 
-[🚨 절대 지시: 내담자의 '본질(일간)' 착각 및 환각(Hallucination) 절대 금지]
-사주에서 개인을 상징하는 기준은 무조건 '일주(특히 일간)'입니다. 월주나 년주를 개인의 본질로 착각하여 서술하면 절대 안 됩니다.
-1. 남성({m_ctx.get('u_name', '')})의 본질(일간)은 무조건 '{m_ilgan}'이며 일주는 '{m_ilju}'입니다. (절대 庚금 등 다른 글자로 착각 금지!)
-2. 여성({f_ctx.get('u_name', '')})의 본질(일간)은 무조건 '{f_ilgan}'이며 일주는 '{f_ilju}'입니다.
-※ 통변 시 반드시 "넓은 대지({m_ilgan})와 같은 남성과 따뜻한 불꽃({f_ilgan}) 같은 여성의 만남"과 같이 정확한 '일간'을 기준으로 비유하십시오.
+[🗝️ 명리 통변의 대원칙 지시]
+1. 사주 분석의 핵심 주체(본신)는 항상 '일간(日干)'을 기준으로 삼아야 합니다. 월간이나 년간의 세력이 강하더라도 이를 본신으로 오인하여 서술하지 마십시오.
+2. 남성({m_ctx.get('u_name', '')})의 본신(일간)은 '{m_ilgan}'이며, 여성({f_ctx.get('u_name', '')})의 본신(일간)은 '{f_ilgan}'입니다. 모든 통변은 이 두 일간의 조화와 상생/상극을 중심으로 풀어나가십시오.
+3. 임의의 사주 글자를 지어내거나 추측하는 행위(Hallucination)를 엄격히 배제하고, 제공된 사주 4기둥에 있는 글자만 대조하여 분석하십시오.
 
 [남성 사주 명조]: {m_pillars} (오행 분포: {m_ec}, 병리: {m_patho})
 [여성 사주 명조]: {f_pillars} (오행 분포: {f_ec}, 병리: {f_patho})
 
-[🚨 중요 시스템 지시: 알고리즘 최종 점수 동기화]
-시스템 로직이 산출한 두 사람의 '최종 궁합 점수는 {self.final_score}점'이며, 세부 항목은 다음과 같습니다.
+[📊 알고리즘 최종 점수 동기화 지시]
+시스템이 산출한 두 사람의 '최종 궁합 점수는 {self.final_score}점'이며, 세부 항목은 다음과 같습니다.
 {detail_scores_text}
 (※ 주의: 점수 숫자 자체는 본문에 절대 노출하지 마십시오.)
 
 <div class='choyeon-premium-report' style='line-height:1.9;'>
   <h3 style='font-family: "Malgun Gothic", sans-serif !important; font-size: 24px; font-weight: bold; color: #1B5E20; border-bottom: 3px double #1B5E20; padding-bottom: 10px; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(반드시 '{m_ilgan}' 일간을 가진 남성과 '{f_ilgan}' 일간을 가진 여성의 조화를 바탕으로 총평을 구어체로 서술)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>('{m_ilgan}' 일간의 남성과 '{f_ilgan}' 일간의 여성이라는 본질을 바탕으로 인연의 총평을 구어체로 서술)</p>
   
   <h4 style='font-family: "Malgun Gothic", sans-serif !important; font-size: 20px; font-weight: bold; color: #1A237E; margin-top: 40px;'>🌈 커플의 인생 기상도 분석</h4>
   <div style='margin: 10px 0 5px 0;'>[[COUPLE_DAEUN_TABLES]]</div>
@@ -790,13 +789,13 @@ class UniversalPrintableGunghap:
 
   <h4 style='font-family: "Malgun Gothic", sans-serif !important; font-size: 20px; font-weight: bold; color: #1A237E; margin-top: 40px;'>💞 커플의 5대 심층 조화도 분석</h4>
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[내면의 유대감] - 속 궁합</span></div>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(반드시 남성의 일지와 여성의 일지를 대조하여 심리적 친밀감을 서술)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(남성의 일지와 여성의 일지를 대조하여 심리적 친밀감을 서술)</p>
   
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[사회적 환경 조화] - 겉 궁합</span></div>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(반드시 남성의 월지와 여성의 월지를 대조하여 사회적 조화를 서술)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(남성의 월지와 여성의 월지를 대조하여 사회적, 현실적 조화를 서술)</p>
   
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[기운의 상호 보완] - 오행 궁합</span></div>
-  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(서로에게 부족한 기운을 어떻게 채워주는지 오행/조후를 바탕으로 서술)</p>
+  <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(서로에게 부족한 기운을 어떻게 채워주는지 오행과 조후를 바탕으로 서술)</p>
 
   <div style='margin-top: 25px; margin-bottom: 15px;'><span style='color: #1A237E; font-weight: 900; font-size: 17px;'>[특수 기운] - 신살 작용</span></div>
   <p style='text-indent: 15px; text-align: justify; word-break: keep-all; margin-bottom: 12px;'>(실제 존재하는 신살만 정확히 파악하여 관계에 미치는 영향을 서술)</p>
