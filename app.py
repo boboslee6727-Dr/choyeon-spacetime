@@ -798,8 +798,8 @@ prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 </div>
 ※ 엄격한 주의사항: 본문(<p>) 작성 시 'font-family' 속성을 임의로 추가하지 마십시오. 전체 글꼴이 파괴됩니다.
 """
-        # 기존에 사용하시던 API 호출 방식을 그대로 보존 (call_claude_api)
-        return call_claude_api(prompt, max_tokens=12000)
+    # 기존에 사용하시던 API 호출 방식을 그대로 보존 (call_claude_api)
+    return call_claude_api(prompt, max_tokens=12000)
 
     def get_graphic_html(self, ai_text, closing_text=""):
         c = "#3498db" if self.final_score >= 70 else ("#f39c12" if self.final_score >= 60 else "#e74c3c")
