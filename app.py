@@ -1053,34 +1053,37 @@ if btn_single:
         with st.spinner(spinner_msg):
             
 # ==================================================================
+# ==================================================================
             # [1단계] 공통 사주 엔진 (정통 천문 엔진 강제 오버라이딩)
             # ==================================================================
             try:
-                # 1. 입력 방식에 따른 날짜 확정 (양력/음력 변환)
                 klc = KoreanLunarCalendar()
                 if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
                 elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
                 else: klc.setLunarDate(u_y, u_m, u_d, True)
                 
-                # 2. 정통 천문 엔진 가동 (여기서 년/월주를 강제로 교정합니다!)
-                # 박사님의 u_y, u_m, u_d를 사용하여 정확한 절기 기반 간지를 뽑습니다.
-                # (시간 정보는 06:00을 기본으로 하되, 필요시 u_t 파싱 로직을 추가해도 됩니다.)
-                true_ysyb, true_msmb, _ = get_true_year_month_pillar(u_y, u_m, u_d, 6, 0)
-                ys, yb = true_ysyb[0], true_ysyb[1]
-                ms, mb = true_msmb[0], true_msmb[1]
+                is_leap = getattr(klc, 'isIntercalary', False)
+                leap_str = "윤달" if is_leap else "평달"
+                sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+                lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
                 
-                # 3. 일주와 시주는 기존 라이브러리 그대로 활용
+                curr_dt_sys = dt_mod.datetime.now()
+                u_age = curr_dt_sys.year - u_y + 1
+                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                
+                # 🚨 핵심 교정: 엉터리 년/월주를 천문 엔진 데이터로 강제 교체
+                true_ym, true_mm, _ = get_true_year_month_pillar(u_y, u_m, u_d, 12, 0)
+                ys, yb = true_ym[0], true_ym[1] # 년간, 년지
+                ms, mb = true_mm[0], true_mm[1] # 월간, 월지
+                
+                # 일주는 기존 라이브러리(klc) 활용이 정확함
                 gj = klc.getChineseGapJaString().split()
                 ds, db = gj[2][0], gj[2][1]
-                
-                # 나머지 변수 동기화
-                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+
                 hs, hb = get_time_ganji(ds, u_t, base_dt)
                 gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
                 applicant_bazi = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
 
-                # 대운 및 기타 로직 유지...
-                u_age = dt_mod.datetime.now().year - u_y + 1
                 adj_mins = get_total_time_adjustment(base_dt)
                 utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                 order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
