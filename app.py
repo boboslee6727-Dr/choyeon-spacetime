@@ -1104,7 +1104,7 @@ if btn_single:
                 </div>
                 """
 
-                ttable_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
+                table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
     <tr class='top-header-cell'>
     <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
