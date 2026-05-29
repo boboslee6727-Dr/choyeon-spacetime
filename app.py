@@ -1233,6 +1233,8 @@ if btn_single:
                     prompt = f"""{db_header}
                     [종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
                     1. 모든 통변 에세이 문장은 반드시 <p style='text-indent: 1em;'> 태그로 감싸십시오.
+                    2. 11번 항목의 표 삽입 마커([DAEWUN_TABLE_HERE] 등 3개)는 파이썬 시스템이 표를 삽입하는 중요 기준점입니다. 절대 훼손하거나 생략하지 말고 그대로 출력하십시오.
+
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
                     <div class='content-box-loose'>
                     [CHOYEON_GOLDEN_TEXT_HERE]
@@ -1243,6 +1245,7 @@ if btn_single:
                     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석</span>
                     (상세 에세이)
                     </div>
+                    
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격 및 가치관</h3>
                     <div class='content-box-loose'>
                     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
@@ -1252,6 +1255,7 @@ if btn_single:
                     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 무의식이 갈망하는 반려자의 상</span>
                     (일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 내담자의 연애 및 결혼관을 상세히 에세이로 작성)
                     </div>
+                    
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>(에세이)</div>
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>(에세이)</div>
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>5. 적성·직업운</h3><div class='content-box-loose'>(에세이)</div>
@@ -1260,9 +1264,18 @@ if btn_single:
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 사업운</h3><div class='content-box-loose'>(에세이)</div>
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>9. 관직·명예운</h3><div class='content-box-loose'>(에세이)</div>
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>10. 건강운</h3><div class='content-box-loose'>(에세이)</div>
+                    
                     <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
                     <div class='content-box-loose'>
-                    [DAEWUN_TABLE_HERE][SEWUN_TABLE_HERE][WOLWUN_TABLE_HERE]
+                    [DAEWUN_TABLE_HERE]
+                    [SEWUN_TABLE_HERE]
+                    [WOLWUN_TABLE_HERE]
+                    (아래와 같이 <ul><li> 태그를 사용하여 대운, 세운, 월운을 각각 명확한 글머리 기호(도트) 형태로 분리하여 통변하십시오.)
+                    <ul style='line-height: 2.0; font-size: 15px;'>
+                        <li><b>대운(大運)의 흐름:</b> (10년 단위의 거시적 운세 흐름과 환경 변화를 상세히 풀이)</li>
+                        <li><b>세운(歲運)의 흐름:</b> (올해와 향후 2~3년 간의 단기적 성과, 주의점 등을 상세히 풀이)</li>
+                        <li><b>월운(月運)의 흐름:</b> (현재 시점을 기준으로 가까운 월의 기운 변화와 대처 조언을 풀이)</li>
+                    </ul>
                     </div>
                     """
                     res_text = call_claude_api(prompt, max_tokens=12000)
