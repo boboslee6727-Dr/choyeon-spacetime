@@ -1241,6 +1241,9 @@ if btn_single:
                         f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
                         f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                     )
+                    # 🚨 [여기에 한 줄 추가!] AI에게 던져줄 12달 월운 간지 텍스트 조립
+                    wol_info_str = ", ".join([f"{i+1}월({wol_gans[i]}{wol_jis[i]})" for i in range(12)])
+
                     prompt = f"""
     {db_header}
     
