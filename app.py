@@ -1530,11 +1530,13 @@ if btn_single:
 
                     report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2><div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
                     st.markdown(report_2_html, unsafe_allow_html=True)
+                    
+                    # 💡 [NameError 방어] 사주 정보 변수명을 시스템 내부에서 자동으로 탐색하여 saju_info_str에 동적 할당합니다.
+                    saju_info_str = locals().get('saju_text') or locals().get('ganji_str') or locals().get('saju_info') or locals().get('user_saju') or st.session_state.get('saju_info', "현재 입력된 내담자 명조")
                         
-                    # 🚨 수정 내용: 고정 목차 13개를 삭제하고, AI가 타 감명서 흐름에 맞춰 유연하게 제목을 생성하도록 지시
                     comp_prompt = f"""
     당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
-    아래 [사주 팩트]를 절대 기준으로 삼고, [1. 초연 사주풀이]와 [2. 타 감명서]의 내용을 인사말이나 서론 없이, 곧바로 대조 포맷 규칙에 의거하여 분석하십시오.
+    아래 [사주 팩트]를 절대 기준으로 삼고, [1. 초연 사주풀이]와 [2. 타 감명서]의 내용을 인사말이나 서론 없이, 곧바로 대조 포맷 규칙에 의거하여 출력하십시오.
 
     🚨 [절대 사주 팩트 - 환각 방지용 족쇄]
     - 내담자 명조 팩트: {saju_info_str}
@@ -1555,7 +1557,7 @@ if btn_single:
 
     =========================================
     [1. 초연 사주풀이 원문]
-    {report_1_text_data}  
+    {full_content_clean}  
 
     [2. 타 감명서 원문]
     {comp_text}
