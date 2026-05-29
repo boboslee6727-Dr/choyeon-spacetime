@@ -1106,15 +1106,14 @@ if btn_single:
 
                 table_html = f"""
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-    <tr style='background-color:#1A237E; color:white;'>
-        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>구분</td>
-        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>시주</td>
-        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>일주</td>
-        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>월주</td>
-        <td style='border:1px solid #444; font-weight:900; font-size:15px !important;'>년주</td>
+    <tr style='background-color:#1A237E;'>
+        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>구분</td>
+        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>시주</td>
+        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>일주</td>
+        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>월주</td>
+        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>년주</td>
     </tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
-    <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간</td>{td(hs, "15px")}{td(ds, "15px")}{td(ms, "15px")}{td(ys, "15px")}</tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>지지</td>{td(hb, "15px")}{td(db, "15px")}{td(mb, "15px")}{td(yb, "15px")}</tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>
@@ -1511,7 +1510,8 @@ if btn_single:
 
                 full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
-                report_1_full_html = f"{cover_html}<div class='no-print' style='text-align:right; margin: 20px 0;'><button id='print-btn' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:\"Noto Serif KR\", serif;'>🖨️ 초연 사주풀이 인쇄/PDF</button><script>document.getElementById('print-btn').addEventListener('click', () => {{ window.print(); }});</script></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
+                # [수정 완료] 본문 내 중복 인쇄 버튼 삭제 및 깔끔한 레이아웃 결합
+                report_1_full_html = f"{cover_html}<div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
                 
                 # [화면 출력] 1단계가 무조건 화면에 렌더링 됩니다.
                 st.markdown(report_1_full_html, unsafe_allow_html=True)
