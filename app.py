@@ -1400,16 +1400,17 @@ if btn_single:
     (※ AI 지시: 오행의 분포와 과다/과소, 그리고 계절적 조후의 균형 상태를 분석하여 에세이를 작성하십시오. 1) 심리적 스트레스나 과로가 취약한 신체 기관(질환)으로 발현되는 원리를 명리적 물상과 연결하여 경고하고, 2) 사회 활동을 건강하게 지속하기 위한 현실적인 에너지 관리법을 제시하며, 3) 육친적 환경이 내담자의 정서적 안정과 건강에 미치는 영향까지 고려하여 친절하게 서술하십시오.)
     </div>
     
-    <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
     <div class='content-box-loose'>
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
-    [DAEWUN_TABLE_HERE]
     (🚨 대운 간지 및 방향 팩트: 대운 방향은 {direction_str}이며, 각 대운의 흐름은 [{daewun_info_str}] 입니다.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
-    (※ AI 지시 🚨[대운 환각 및 총평 절대 금지]: 바로 위에 제공된 '대운 간지 및 방향 팩트' 데이터를 반드시 확인하십시오. 절대 두 개 이상의 대운을 하나로 묶어서 서술하지 마십시오! 반드시 10년 단위로 끊어서 개별 항목으로 나열하십시오. 항목 제목은 **• {calc_d}세~{calc_d+9}세 대운:** 과 같이 마크다운 굵은 글씨로 강조하십시오. 표 생성 절대 금지.)
+    (※ AI 지시 🚨[대운 환각 및 총평 절대 금지]: 바로 위에 제공된 '대운 간지 및 방향 팩트' 데이터를 반드시 확인하십시오. 절대 두 개 이상의 대운을 하나로 묶어서 서술하지 마십시오! 반드시 10년 단위로 끊어서 개별 항목으로 나열하십시오. 항목 제목은 **• {calc_d}세~{calc_d+9}세 대운:** 과 같이 마크다운 굵은 글씨로 강조하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [DAEWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
     
+    [DAEWUN_TABLE_HERE]
+
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
     (※ AI 지시 🚨[진술축미 묘고 작용 필수 통변]: 현재 진입한 대운의 지지와 사주 원국의 지지가 만나 진(辰), 술(戌), 축(丑), 미(未)의 충(沖)이나 형(刑)으로 인한 입고(入庫) 및 개고(開庫) 작용이 발생한다면, 이로 인한 삶의 극적인 변화(재물, 대인관계, 환경 등)를 반드시 상세히 통변하십시오. 대운 한가운데를 지나고 있다는 등 시기적 착각을 절대 금지합니다.)
     
@@ -1417,26 +1418,26 @@ if btn_single:
     (※ AI 지시: 현재 대운 후반기의 십성과 오행 기운이 내담자의 삶에 미치는 심리적, 사회적 변화를 상세히 카운슬링하십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
-    [SEWUN_TABLE_HERE]
-    
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
-    (※ AI 지시: 최근 지나온 과거 각 세운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2024년(甲辰년):** 과 같이 간지를 한자로 표기하고 마크다운 굵은 글씨로 강조하여 요약하십시오. 표 생성 절대 금지.)
+    (※ AI 지시: 최근 지나온 과거 각 세운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2024년(甲辰년):** 과 같이 간지를 한자로 표기하고 마크다운 굵은 글씨로 강조하여 요약하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [SEWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
     
+    [SEWUN_TABLE_HERE]
+
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
     (※ AI 지시: 올해 세운 전반기(양력2월~7월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
     (※ AI 지시: 올해 세운 후반기(양력8월~다음년도 1월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
-    [WOLWUN_TABLE_HERE]
-    
     (🚨 올해 월운 간지 팩트: {wol_info_str})
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
     {past_months_html}
     (※ AI 지시 🚨[월운 환각 절대 금지]: 올해 지나온 각 과거 월운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2월(해당간지월):** 과 같이 마크다운 굵은 글씨(**)로 강조하여 2~3줄씩 요약하십시오. 
-    🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월(己丑월)에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 작년의 기운이 마무리되는 흐름으로 풀이하십시오. 표 생성 절대 금지.)
+    🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월(己丑월)에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 작년의 기운이 마무리되는 흐름으로 풀이하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [WOLWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
     
+    [WOLWUN_TABLE_HERE]
+
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
     (※ AI 지시: 해당하는 월의 전반기(5일~19일)를 구체적인 조후와 기운의 흐름을 조언하십시오.)
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
@@ -1530,9 +1531,14 @@ if btn_single:
                     report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2><div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111;'>{comp_text.replace(chr(10), '<br>')}</div></div></div>"
                     st.markdown(report_2_html, unsafe_allow_html=True)
                         
+                    # 🚨 수정 완료: 프롬프트에 사주 팩트와 초연 통변 원문을 강제 주입하여 환각 방지
                     comp_prompt = f"""
     당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
-    아래 [1. 초연 사주풀이]와 [2. 타 감명서]의 내용을 인사말이나 서론 없이, 곧바로 대조 포맷 규칙에 의거하여 출력하십시오.
+    아래 [사주 팩트]를 절대 기준으로 삼고, [1. 초연 사주풀이]와 [2. 타 감명서]의 내용을 대조 포맷 규칙에 의거하여 분석하십시오.
+
+    🚨 [절대 사주 팩트 - 환각 방지용 족쇄]
+    - 내담자 명조 팩트: {saju_info_str}
+    - 본 명조와 무관한 다른 일간이나 존재하지 않는 신살, 합형충파해를 언급할 경우 치명적인 시스템 오류로 간주합니다.
 
     🚨 [출력 및 서식 절대 규칙]
     1. "네, 분석을 시작합니다" 등의 서론 멘트를 철저히 금지합니다. 첫 글자는 무조건 제목 태그로 시작해야 합니다.
@@ -1540,10 +1546,18 @@ if btn_single:
     3. 통변 근거 제시 시 반드시 명리적 근거(십성, 합형충파해, 신살 등)를 기반으로 논증하십시오.
     4. 1번부터 13번(총평)까지 단 하나의 대목차 유실 없이 전체를 배분하여 성실히 완주하십시오.
 
-    [목차 규격 정의]
-    <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>1. 사주팔자 구조 및 성격 비교</h3>
-    ...
-    <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3>
+             [목차 규격 정의]
+            <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>1. 사주팔자 구조 및 성격 비교</h3>
+             ...
+            <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3>
+
+    =========================================
+    [1. 초연 사주풀이 원문]
+    {report_1_text_data}  
+
+    [2. 타 감명서 원문]
+    {comp_text}
+    =========================================
     """
                     c_res = call_claude_api(comp_prompt, max_tokens=10000)
                     report_3_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:25px;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
