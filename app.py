@@ -3,7 +3,8 @@ import pandas as pd
 import json
 import os
 import math
-import datetime as dt_mod
+import datetime as dt_mod  # 기존 박사님 코드 호환용
+from datetime import datetime # 🚨 필수: 시간 연산용
 from korean_lunar_calendar import KoreanLunarCalendar
 import ephem
 import google.generativeai as genai
