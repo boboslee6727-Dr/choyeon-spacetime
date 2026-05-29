@@ -1107,11 +1107,11 @@ if btn_single:
                 table_html = f"""
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
     <tr style='background-color:#1A237E;'>
-        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>구분</td>
-        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>시주</td>
-        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>일주</td>
-        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>월주</td>
-        <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; font-size:15px !important;'>년주</td>
+        <td style='border:1px solid #444; padding:8px;'><span style='color:#FFFFFF !important; font-weight:900; font-size:18px !important; display:block;'>구분</span></td>
+        <td style='border:1px solid #444; padding:8px;'><span style='color:#FFFFFF !important; font-weight:900; font-size:18px !important; display:block;'>시주</span></td>
+        <td style='border:1px solid #444; padding:8px;'><span style='color:#FFFFFF !important; font-weight:900; font-size:18px !important; display:block;'>일주</span></td>
+        <td style='border:1px solid #444; padding:8px;'><span style='color:#FFFFFF !important; font-weight:900; font-size:18px !important; display:block;'>월주</span></td>
+        <td style='border:1px solid #444; padding:8px;'><span style='color:#FFFFFF !important; font-weight:900; font-size:18px !important; display:block;'>년주</span></td>
     </tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
     <tr><td class='header-cell-main' style='border:1px solid #444 !important;'>천간</td>{td(hs, "15px")}{td(ds, "15px")}{td(ms, "15px")}{td(ys, "15px")}</tr>
