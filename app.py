@@ -1055,42 +1055,43 @@ if btn_single:
             
 
 # ==================================================================
-            # [1단계] 공통 사주 엔진 (정통 천문 엔진 강제 오버라이딩)
+            # [1단계] 공통 사주 엔진 (모든 변수 선언 및 천문 엔진 동기화)
             # ==================================================================
             try:
-                # 1. 날짜 세팅
+                # 1. 시스템 날짜 및 사용자 날짜 기초 변수 정의 (절대 누락 방지)
+                curr_dt_sys = dt_mod.datetime.now()
+                curr_y = curr_dt_sys.year
+                curr_m = curr_dt_sys.month
+                u_age = curr_y - u_y + 1
+                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
+                
+                # 2. 날짜 세팅 및 윤달 판별 (KoreanLunarCalendar)
                 klc = KoreanLunarCalendar()
                 if u_cal == "양력": klc.setSolarDate(u_y, u_m, u_d)
                 elif u_cal == "음력(평달)": klc.setLunarDate(u_y, u_m, u_d, False)
                 else: klc.setLunarDate(u_y, u_m, u_d, True)
                 
-                # 2. 날짜 및 연령 기초 변수 정의 (오류 방지용)
-                curr_dt_sys = dt_mod.datetime.now()
-                curr_y = curr_dt_sys.year
-                u_age = curr_y - u_y + 1
-                base_dt = dt_mod.datetime(u_y, u_m, u_d, 12, 0)
-                
-                # 3. 출력용 변수 선언 (오류 방지: sol_str, lun_str)
+                # 3. 출력용 문자열 변수 정의
                 is_leap = getattr(klc, 'isIntercalary', False)
                 leap_str = "윤달" if is_leap else "평달"
                 sol_str = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
                 lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({leap_str})"
                 
-                # 4. 정통 천문 엔진을 통한 년/월주 강제 교정
+                # 4. [엔진 교체] 정통 천문 엔진을 통한 년/월주 강제 교정
                 true_ym, true_mm, _ = get_true_year_month_pillar(u_y, u_m, u_d, 12, 0)
-                ys, yb = true_ym[0], true_ym[1] # 년간, 년지
-                ms, mb = true_mm[0], true_mm[1] # 월간, 월지
+                ys, yb = true_ym[0], true_ym[1]
+                ms, mb = true_mm[0], true_mm[1]
                 
                 # 5. 일주/시주 세팅
                 gj = klc.getChineseGapJaString().split()
                 ds, db = gj[2][0], gj[2][1]
                 hs, hb = get_time_ganji(ds, u_t, base_dt)
                 
-                # 6. 사주 리스트 구성
+                # 6. 사주 리스트 및 주요 데이터 구성
                 gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
                 applicant_bazi = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
 
-                # 7. 대운 계산 로직 연결
+                # 7. 대운 계산 로직
                 adj_mins = get_total_time_adjustment(base_dt)
                 utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
                 order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
@@ -1098,7 +1099,7 @@ if btn_single:
                 current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
                 dw_start_age = current_daewun_age
                 
-                # 8. 기타 로직 (오류 방지: curr_y_ganji 정의)
+                # 8. 연간지 로직 및 기타
                 base_y_idx = (curr_y - 1984) % 60
                 curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]
                 time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
