@@ -1236,10 +1236,14 @@ if btn_single:
                         "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
                         f"- 내담자 성함: {disp_name}\n"
                         f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
+                        f"- 🚨 [절대 기준 명조(사주팔자)]: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({hs}{hb})\n"
+                        f"- 🚨 [절대 기준 일간(본신)]: {ds} (모든 통변의 주체는 무조건 '{ds}' 일간을 기준으로 작성할 것)\n"
+                        f"- 🚨 [오행 분포 팩트]: 목({counts['목']}), 화({counts['화']}), 토({counts['토']}), 금({counts['금']}), 수({counts['수']})\n"
                         f"- marital_status: {u_marital}\n"
                         f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
                         f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
                     )
+
                     # 🚨 [여기에 한 줄 추가!] AI에게 던져줄 12달 월운 간지 텍스트 조립
                     wol_info_str = ", ".join([f"{i+1}월({wol_gans[i]}{wol_jis[i]})" for i in range(12)])
 
