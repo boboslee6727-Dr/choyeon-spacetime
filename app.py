@@ -276,6 +276,51 @@ def get_total_time_adjustment(dt):
         if s <= dt <= e: adj -= 60; break
     return adj
 
+# 십천간 / 십이지지 리스트 전역 선언
+GAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+JI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+
+def get_true_year_month_pillar(year, month, day, hour, minute):
+    """
+    [초연 시공명리 천문 엔진]
+    ephem 모듈을 사용하여 태양의 황경(24절기)을 정밀 계산 후 정확한 년주와 월주를 반환합니다.
+    """
+    kst = pytz.timezone('Asia/Seoul')
+    dt_kst = kst.localize(datetime(year, month, day, hour, minute))
+    dt_utc = dt_kst.astimezone(pytz.utc)
+    
+    sun = ephem.Sun()
+    sun.compute(dt_utc)
+    lon = math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+    
+    actual_year = year
+    if month <= 2 and lon < 315.0:
+        actual_year -= 1
+        
+    year_idx = (actual_year - 1984) % 60
+    y_gan = GAN[year_idx % 10]
+    y_ji = JI[year_idx % 12]
+    
+    if 315 <= lon < 345: m_ji_idx = 2    # 寅(인)월
+    elif 345 <= lon or lon < 15: m_ji_idx = 3  # 卯(묘)월
+    elif 15 <= lon < 45: m_ji_idx = 4    # 辰(진)월
+    elif 45 <= lon < 75: m_ji_idx = 5    # 巳(사)월
+    elif 75 <= lon < 105: m_ji_idx = 6   # 午(오)월
+    elif 105 <= lon < 135: m_ji_idx = 7  # 未(미)월
+    elif 135 <= lon < 165: m_ji_idx = 8  # 申(신)월
+    elif 165 <= lon < 195: m_ji_idx = 9  # 酉(유)월
+    elif 195 <= lon < 225: m_ji_idx = 10 # 戌(술)월
+    elif 225 <= lon < 255: m_ji_idx = 11 # 亥(해)월
+    elif 255 <= lon < 285: m_ji_idx = 0  # 子(자)월
+    elif 285 <= lon < 315: m_ji_idx = 1  # 丑(축)월
+    
+    y_gan_idx = year_idx % 10
+    start_month_gan_idx = ((y_gan_idx % 5) * 2 + 2) % 10
+    m_offset = (m_ji_idx - 2) % 12
+    m_gan = GAN[(start_month_gan_idx + m_offset) % 10]
+    
+    return f"{y_gan}{y_ji}", f"{m_gan}{JI[m_ji_idx]}", lon
+
 components.html("""
 <script>
     const doc = window.parent.document;
@@ -304,7 +349,6 @@ except Exception as _api_e:
     model = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    """Gemini API 호출 함수 (Claude 전환 전 임시)"""
     if model is None:
         return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
     try:
@@ -312,8 +356,6 @@ def call_claude_api(prompt_text, max_tokens=8000):
         return response.text.strip()
     except Exception as e:
         return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
-
-GAN, JI = "甲乙丙丁戊己庚辛壬癸", "子丑寅卯辰巳午未申酉戌亥"
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
@@ -326,11 +368,7 @@ def get_color(c):
     return "토"
 
 def get_current_saju_data():
-    # 세션 상태에 저장된 역산 결과값이 있다고 가정합니다.
-    # 만약 변수명이 다르다면 박사님의 실제 변수명으로 교체하십시오.
     try:
-        # 역산 결과가 들어있는 session_state 변수들
-        # 예: st.session_state['saju_gans'] = ['癸', '丁', '乙', '戊']
         gans = st.session_state.get('saju_gans', ['?', '?', '?', '?'])
         jjis = st.session_state.get('saju_jjis', ['?', '?', '?', '?'])
         return gans, jjis
