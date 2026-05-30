@@ -1538,9 +1538,9 @@ if btn_single:
                         st.markdown(st.session_state['saved_report_html'], unsafe_allow_html=True)
 
             # 🚨 [주의] try 구문과 정확하게 들여쓰기 라인이 일치해야 합니다!
-            except Exception as e: 
-                st.error(f"1단계 사주풀이 AI 연산 오류: {e}")
-                st.stop() # 1단계에서 꼬이면 다음 단계로 진행하지 않도록 완벽 차단
+                except Exception as e: 
+                    st.error(f"1단계 사주풀이 AI 연산 오류: {e}")
+                    st.stop() # 1단계에서 꼬이면 다음 단계로 진행하지 않도록 완벽 차단
 
         # ==================================================================
         # 🚀 [신규 업그레이드] 사이드바 캘린더 연동형 체용 폭포수 통제실
