@@ -1024,6 +1024,24 @@ with st.sidebar:
     
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
+
+    # 🚨 [김집사 특수 방어벽] 버튼 클릭 시 유효성 검사 진행 후 'app_running' 스위치 ON
+    if btn_single:
+        if not u_name.strip(): 
+            st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
+            st.session_state['app_running'] = False
+        elif u_product == "타 감명서" and not other_reading_text.strip():
+            st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
+            st.session_state['app_running'] = False
+        elif u_product == "궁합" and not p_name.strip(): 
+            st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
+            st.session_state['app_running'] = False
+        else:
+            st.session_state['app_running'] = True
+            # 새로 가동할 때 이전 캐시를 모두 비워줍니다.
+            for key in ['saved_report_html', 'gh_cache_key', 'gh_m_ess', 'gh_f_ess', 'gh_g_full_content']:
+                if key in st.session_state:
+                    del st.session_state[key]
     
     components.html("""
     <div style='padding: 0; margin: 0;'>
@@ -1037,39 +1055,20 @@ with st.sidebar:
         </script>
     </div>
     """, height=55)
+
 # ==============================================================================
 # 5. 분석 가동 및 출력 (Ver 34.5 직렬 구조 - 프로모델 최종 판본)
 # ==============================================================================
-# 덩어리 1: 버튼 클릭 시 유효성 검사를 하고 스위치를 켭니다!
-if btn_single:
-    # 1. 유효성 검사 (박사님 지시 순서 완전 동기화)
-    if not u_name.strip(): 
-        st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
-        st.session_state['app_running'] = False  # 🚨 에러 시 스위치 끔
-    elif u_product == "타 감명서" and not other_reading_text.strip():
-        st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
-        st.session_state['app_running'] = False
-    elif u_product == "궁합" and not p_name.strip(): 
-        st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
-        st.session_state['app_running'] = False
-    else:
-        # 유효성 검사 통과 시 스위치를 영구적으로 켭니다!
-        st.session_state['app_running'] = True
-        for key in ['saved_report_html', 'gh_cache_key', 'gh_m_ess', 'gh_f_ess', 'gh_g_full_content']:
-            if key in st.session_state:
-                del st.session_state[key]
-
-        # 덩어리 2: 스위치가 켜져 있다면, 달력을 클릭해도 사주풀이가 영구 유지됩니다!
-        if st.session_state.get('app_running', False):
-            
-            spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
-            with st.spinner(spinner_msg):
-
-                # ==================================================================
-                # [1단계] 공통 사주 엔진 (모든 변수 선언 및 천문 엔진 동기화)
-                # ==================================================================
-                try:
-                    # 1. 시스템 날짜 및 사용자 날짜 기초 변수 정의 (절대 누락 방지)
+# 🚨 스위치가 켜지면 메인 로직이 작동합니다 (달력 조작 시에도 꺼지지 않음!)
+if st.session_state.get('app_running', False):
+    
+    spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
+    with st.spinner(spinner_msg):
+        # ==================================================================
+        # [1단계] 공통 사주 엔진 (모든 변수 선언 및 천문 엔진 동기화)
+        # ==================================================================
+        try:
+            # 1. 시스템 날짜 및 사용자 날짜 기초 변수 정의 (절대 누락 방지)
                     curr_dt_sys = dt_mod.datetime.now()
                     curr_y = curr_dt_sys.year
                     curr_m = curr_dt_sys.month
