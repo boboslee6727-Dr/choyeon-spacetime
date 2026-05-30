@@ -1456,7 +1456,9 @@ if btn_single:
     <div class='content-box-loose'>
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
+
     [DAEWUN_TABLE_HERE]
+
     (🚨 대운 간지 및 방향 팩트: 대운 방향은 {direction_str}이며, 각 대운의 흐름은 [{daewun_info_str}] 입니다.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
@@ -1469,7 +1471,9 @@ if btn_single:
     (※ AI 지시: 현재 대운 후반기의 십성과 오행 기운이 내담자의 삶에 미치는 심리적, 사회적 변화를 상세히 카운슬링하십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
+
     [SEWUN_TABLE_HERE]
+
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
     (※ AI 지시: 위 소제목('▷ 지나온 과거 각 세운 분석')을 반드시 그대로 출력하십시오. 최근 지나온 과거 각 세운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2024년(甲辰년):** 과 같이 간지를 한자로 표기하고 굵은 글씨로 강조하여 요약하십시오. 🚨중요: [SEWUN_TABLE_HERE] 마커는 상단에 배치되었으니 하단에 중복 출력하지 마십시오.)
     
@@ -1479,7 +1483,9 @@ if btn_single:
     (※ AI 지시: 올해 세운 후반기(양력8월~다음년도 1월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
+
     [WOLWUN_TABLE_HERE]
+
     (🚨 올해 월운 간지 팩트: {wol_info_str})
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
