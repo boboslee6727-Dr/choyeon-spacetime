@@ -19,7 +19,7 @@ except ImportError:
     cy_engine = None
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 40.0 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 41.0 (Gemini 2.5-Pro Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
