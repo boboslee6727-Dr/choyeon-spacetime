@@ -1300,7 +1300,7 @@ if btn_single:
                         f"- 공망 팩트: [일주 기준] {i_gong} (※ 반드시 일주 기준 공망만 사용하여 통변할 것)\n"
                     )
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+    <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
     <div class='content-box-loose'>
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
