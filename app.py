@@ -1452,17 +1452,16 @@ if btn_single:
     (※ AI 지시: 오행의 분포와 과다/과소, 그리고 계절적 조후의 균형 상태를 분석하여 에세이를 작성하십시오. 1) 심리적 스트레스나 과로가 취약한 신체 기관(질환)으로 발현되는 원리를 명리적 물상과 연결하여 경고하고, 2) 사회 활동을 건강하게 지속하기 위한 현실적인 에너지 관리법을 제시하며, 3) 육친적 환경이 내담자의 정서적 안정과 건강에 미치는 영향까지 고려하여 친절하게 서술하십시오.)
     </div>
     
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+    <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
     <div class='content-box-loose'>
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
+    [DAEWUN_TABLE_HERE]
     (🚨 대운 간지 및 방향 팩트: 대운 방향은 {direction_str}이며, 각 대운의 흐름은 [{daewun_info_str}] 입니다.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
     (※ AI 지시 🚨[대운 환각 및 총평 절대 금지]: 바로 위에 제공된 '대운 간지 및 방향 팩트' 데이터를 반드시 확인하십시오. 절대 두 개 이상의 대운을 하나로 묶어서 서술하지 마십시오! 반드시 10년 단위로 끊어서 개별 항목으로 나열하십시오. 항목 제목은 **• {calc_d}세~{calc_d+9}세 대운:** 과 같이 마크다운 굵은 글씨로 강조하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [DAEWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
     
-    [DAEWUN_TABLE_HERE]
-
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
     (※ AI 지시 🚨[진술축미 묘고 작용 필수 통변]: 현재 진입한 대운의 지지와 사주 원국의 지지가 만나 진(辰), 술(戌), 축(丑), 미(未)의 충(沖)이나 형(刑)으로 인한 입고(入庫) 및 개고(開庫) 작용이 발생한다면, 이로 인한 삶의 극적인 변화(재물, 대인관계, 환경 등)를 반드시 상세히 통변하십시오. 대운 한가운데를 지나고 있다는 등 시기적 착각을 절대 금지합니다.)
     
@@ -1470,10 +1469,11 @@ if btn_single:
     (※ AI 지시: 현재 대운 후반기의 십성과 오행 기운이 내담자의 삶에 미치는 심리적, 사회적 변화를 상세히 카운슬링하십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
+    [SEWUN_TABLE_HERE]
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
     (※ AI 지시: 최근 지나온 과거 각 세운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2024년(甲辰년):** 과 같이 간지를 한자로 표기하고 마크다운 굵은 글씨로 강조하여 요약하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [SEWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
     
-    [SEWUN_TABLE_HERE]
+
 
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
     (※ AI 지시: 올해 세운 전반기(양력2월~7월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
@@ -1481,6 +1481,7 @@ if btn_single:
     (※ AI 지시: 올해 세운 후반기(양력8월~다음년도 1월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
+    [WOLWUN_TABLE_HERE]
     (🚨 올해 월운 간지 팩트: {wol_info_str})
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
@@ -1488,7 +1489,6 @@ if btn_single:
     (※ AI 지시 🚨[월운 환각 절대 금지]: 올해 지나온 각 과거 월운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2월(해당간지월):** 과 같이 마크다운 굵은 글씨(**)로 강조하여 2~3줄씩 요약하십시오. 
     🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월(己丑월)에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 작년의 기운이 마무리되는 흐름으로 풀이하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [WOLWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
     
-    [WOLWUN_TABLE_HERE]
 
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
     (※ AI 지시: 해당하는 월의 전반기(5일~19일)를 구체적인 조후와 기운의 흐름을 조언하십시오.)
@@ -1562,11 +1562,28 @@ if btn_single:
 
                 full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
-                # [수정 완료] 본문 내 중복 인쇄 버튼 삭제 및 깔끔한 레이아웃 결합
+                # [기존 원본 코드] 본문 내 중복 인쇄 버튼 삭제 및 깔끔한 레이아웃 결합
                 report_1_full_html = f"{cover_html}<div class='report-page'><div class='vip-inset-frame' style='border-color:#1A237E; box-sizing: border-box; padding: 20px;'><h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>{table_html}{master_bar_html}<div style='margin-top:20px;'>{full_content_clean}</div></div></div>"
                 
                 # [화면 출력] 1단계가 무조건 화면에 렌더링 됩니다.
                 st.markdown(report_1_full_html, unsafe_allow_html=True)
+                
+                # ==================================================================
+                # 🚀 [신규 삽입 좌표] 출산택일 및 일진 폭포수 통제실 위젯 삽입
+                # ==================================================================
+                # 1) 캘린더 구동을 위한 글로벌 데이터 업데이트 (현재 로컬 변수 ds, db, ys, ms 등 활용)
+                user_data_global.update({
+                    'ilgan': ds, 
+                    'ilju_ji': db, 
+                    'jjis': [yb, mb, db, hb], 
+                    'gans': [ys, ms, ds, hs] })
+                
+                # 2) 캘린더 타이틀 UI 출력 (Streamlit 방식)
+                st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'><h2 style='text-align:center; color:#1A237E; font-weight:900;' class='no-print'>🌊 출산택일 및 일진 폭포수 통제실 🌊</h2>", unsafe_allow_html=True)
+                
+                # 3) 캘린더 위젯 렌더링
+                # (주의: 기존 Jupyter의 ipywidgets 방식인 display() 대신 Streamlit 환경에 맞게 구현된 UI 코드가 들어가야 합니다.)
+                # 예: st.components.v1.html(gen_calendar_html(now_dt.year, now_dt.month), height=400)
                 
             except Exception as e: 
                 st.error(f"1단계 사주풀이 AI 연산 오류: {e}")
