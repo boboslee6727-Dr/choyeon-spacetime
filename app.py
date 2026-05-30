@@ -1351,7 +1351,7 @@ if btn_single:
     어떠한 부연 설명이나 사족도 덧붙이지 말고, 즉시 아래 '1) 타고난 삶의 무대와 나의 주력 무기' 분석으로 넘어가십시오.)
     
     <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향</span>
-    (※ AI 지시: 내담자의 사주구조({gyukgook_detail})를 바탕으로 사회적 무대와 기본 성향을 에세이로 작성하십시오.
+    (※ AI 지시: 내담자의 격국과 사주구조({gyukgook_detail})를 바탕으로 사회적 무대와 기본 성향을 에세이로 작성하십시오.
     🚨특히, 내담자의 핵심 재능(월지 지장간)이 어느 위치(연간, 월간, 시간)로 투출(뻗어 나갔는지)하였는지를 분석하여, 
     "나의 재능이 어느 시기에(조기/즉각/대기만성), 어느 정도 규모의 무대(전국구/직장/개인)에서 어떻게 발현되는지"를 일반인이 이해하기 쉬운 현대적 구어체로 아주 구체적으로 풀어서 조언하십시오.)
     
@@ -1517,33 +1517,140 @@ if btn_single:
                 
                 # [화면 출력] 1단계가 무조건 화면에 렌더링 됩니다.
                 st.markdown(report_1_full_html, unsafe_allow_html=True)
-                
-                # ==================================================================
-                # 🚀 [신규 삽입 좌표] 출산택일 및 일진 폭포수 통제실 위젯 삽입
-                # ==================================================================
-                # 1) 글로벌 변수가 없으면 먼저 만들어 줍니다. (에러 방지 핵심!)
-                if 'user_data_global' not in globals():
-                    global user_data_global
-                    user_data_global = {}
-                
-                # 글로벌 데이터 업데이트
-                user_data_global.update({
-                    'ilgan': ds, 
-                    'ilju_ji': db, 
-                    'jjis': [yb, mb, db, hb], 
-                    'gans': [ys, ms, ds, hs]
-                })
-                
-                # 2) 캘린더 타이틀 UI 출력
-                st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'><h2 style='text-align:center; color:#1A237E; font-weight:900;' class='no-print'>🌊 출산택일 및 일진 폭포수 통제실 🌊</h2>", unsafe_allow_html=True)
-                
-                # 3) 캘린더 위젯 렌더링 (추후 Streamlit 위젯 코드 삽입 위치)
-                # (주의: 기존 Jupyter의 ipywidgets 방식인 display() 대신 Streamlit 환경에 맞게 구현된 UI 코드가 들어가야 합니다.)
-                # 예: st.components.v1.html(gen_calendar_html(now_dt.year, now_dt.month), height=400)
-                
+
             except Exception as e: 
                 st.error(f"1단계 사주풀이 AI 연산 오류: {e}")
                 st.stop() # 1단계에서 꼬이면 다음 단계로 진행하지 않도록 완벽 차단
+                
+            # ==================================================================
+            # 🚀 [신규 업그레이드] 사이드바 캘린더 연동형 체용 폭포수 통제실
+            # (※ 주의: 아래 코드들은 except문보다 들여쓰기가 앞당겨져 있습니다! 그래야 독립적으로 돌아갑니다.)
+            # ==================================================================
+            st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'>", unsafe_allow_html=True)
+            
+            # 1) Streamlit 세션 상태(Session State) 안정화 방어벽 생성
+            if 'user_data_global' not in globals():
+                global user_data_global
+                user_data_global = {}
+            
+            # 원국 간지 데이터 글로벌 보따리에 사전 탑재 (기존 로컬 변수 ds, db, ys, ms 등 활용)
+            user_data_global.update({
+                'ilgan': ds, 'ilju_ji': db, 
+                'jjis': [yb, mb, db, hb], 'gans': [ys, ms, ds, hs]
+            })
+
+            if 'chosen_date' not in st.session_state:
+                st.session_state.chosen_date = None
+
+            # 2) 우측 사이드바 및 메인 연동 레이아웃 개설
+            # 출산택일 캘린더와 동일하게 사이드바 공간을 활용하여 깔끔하게 UI 격리
+            with st.sidebar:
+                st.markdown("### 🌊 일진 폭포수 통제실")
+                st.markdown("<div style='font-size:13px; color:#555; margin-bottom:10px;'>과거 또는 미래의 날짜를 선택하시면 정밀 체용 연산이 가동됩니다.</div>", unsafe_allow_html=True)
+                
+                import datetime as dt_mod
+                # 출산택일형과 동기화된 네이티브 데이트 클릭바 배치
+                calendar_input = st.date_input(
+                    "날짜 선택바", 
+                    value=dt_mod.date.today(),
+                    key="fortune_calendar_bar"
+                )
+                
+                # 클릭바의 상태 변화를 세션에 고정시켜 새로고침 튕김 현상 방지
+                if calendar_input:
+                    st.session_state.chosen_date = calendar_input
+
+            # 3) 선택된 날짜가 있을 경우에만 하단에 정밀 분석 결과 렌더링
+            if st.session_state.chosen_date:
+                t_date = st.session_state.chosen_date
+                
+                from korean_lunar_calendar import KoreanLunarCalendar
+                dklc = KoreanLunarCalendar()
+                dklc.setSolarDate(t_date.year, t_date.month, t_date.day)
+                gj_str = dklc.getChineseGapJaString()
+                
+                if gj_str:
+                    parts = gj_str.split()
+                    target_wol = parts[1]  # 선택일의 월령 간지
+                    target_il = parts[2]   # 선택일의 일진 간지
+                    
+                    # 체용 서열 알고리즘에 따른 변환 매핑 연산 (코랩 509 원본 로직 작동)
+                    ilju_lower_group = get_group_ss(get_ss(user_data_global['ilgan'], user_data_global['ilju_ji']))
+                    
+                    # 오전(천간 용운) 분석 파이프라인
+                    m_che_first = get_group_ss(get_ss(user_data_global['ilgan'], target_wol[0]))
+                    d_gan_ss = get_group_ss(get_ss(user_data_global['ilgan'], target_il[0]))     
+                    am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
+                    
+                    # 오후(지지 용운) 분석 파이프라인
+                    m_che_second = get_group_ss(get_ss(user_data_global['ilgan'], target_wol[1]))
+                    d_ji_ss = get_group_ss(get_ss(user_data_global['ilgan'], target_il[1]))       
+                    pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
+                    
+                    # 기밀 데이터베이스(cy_engine / EXEC_DB) 연동 매칭
+                    try:
+                        am_res = cy_engine.get_secret_keywords(m_che_first, am_yong)
+                        pm_res = cy_engine.get_secret_keywords(m_che_second, pm_yong)
+                    except:
+                        am_res = "선택하신 날짜 오전의 정밀 체용 분석 결과 데이터입니다."
+                        pm_res = "선택하신 날짜 오후의 정밀 체용 분석 결과 데이터입니다."
+
+                    # 원국 천간 합충극 타격 스캔
+                    gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
+                    gan_res = []
+                    gans_list = user_data_global['gans']
+                    labels_gan = ["년간", "월간", "일간", "시간"]
+                    for idx, label in enumerate(labels_gan):
+                        rel = get_gan_rel_simple(gans_list[idx], target_il[0])
+                        if rel != "-":
+                            gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il[0]}{rel}하여 {gan_desc.get(rel)} )</span>")
+                    gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
+
+                    # 원국 지지 합충형해파 타격 스캔
+                    ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오.", "파": "새롭게 재조정되는 변화가 따릅니다.", "해": "사소한 방해나 지연이 발생할 수 있습니다."}
+                    r_res = []
+                    jjis_list = user_data_global['jjis']
+                    labels_ji = ["년지", "월지", "일지", "시지"]
+                    for idx, label in enumerate(labels_ji):
+                        rel_full = get_ji_rel_set(jjis_list[idx], target_il[1])
+                        if rel_full != "-":
+                            main_rel = rel_full.split(',')[0].strip()
+                            r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
+                    r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+
+                    # 화면에 최종 출력할 미려한 HTML 컨테이너 구성
+                    html_output = f"""
+                    <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15);'>
+                        <div style='background: #1A237E; padding: 15px; text-align: center;'>
+                            <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🌊 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_il}일) 폭포수 분석</h3>
+                            <div style='color: #E8EAF6; font-size: 14px; margin-top: 5px;'>현재 월운(體): {target_wol}월 / 내담자 일주: {user_data_global['ilgan']}{user_data_global['ilju_ji']}</div>
+                        </div>
+                        <div style='padding: 20px;'>
+                            <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; border-left: 5px solid #FF9800;'>
+                                <div style='color: #E65100; font-weight: 900; font-size: 15px; border-bottom: 1px solid #FFCC80; padding-bottom: 5px; margin-bottom: 10px;'>🎯 원국 대비 타격 스캔 (일주 {user_data_global['ilgan']}{user_data_global['ilju_ji']} 기준)</div>
+                                <div style='font-size: 14px; margin-bottom: 10px; line-height:1.5;'>{gan_res_html}</div>
+                                <div style='font-size: 14px; line-height:1.5;'>{r_res_html}</div>
+                            </div>
+                            <div style='margin-bottom: 25px;'>
+                                <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (오전~오후 일찍)</h4>
+                                <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
+                                    <div style='background: #FFEBEE; color: #D50000; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>천간 타격: {target_il[0]} ({d_gan_ss})</div>
+                                    <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_first} ⚔️ 용운: {am_yong}</div>
+                                </div>
+                                <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>{am_res}</div>
+                            </div>
+                            <div>
+                                <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (오후 늦게~밤)</h4>
+                                <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
+                                    <div style='background: #E3F2FD; color: #1976D2; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>지지 타격: {target_il[1]} ({d_ji_ss})</div>
+                                    <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_second} ⚔️ 용운: {pm_yong}</div>
+                                </div>
+                                <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #1976D2; line-height: 1.6; color: #333; font-size:14px;'>{pm_res}</div>
+                            </div>
+                        </div>
+                    </div>
+                    """
+                    st.markdown(html_output, unsafe_allow_html=True)
 
             # ==================================================================
             # 🚀 [2단계] 타 감명서 비교분석 (선택적)
