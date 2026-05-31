@@ -1340,6 +1340,7 @@ if st.session_state.get('app_running', False) and 'global_gans' in st.session_st
         st.markdown("<div style='font-size:13px; color:#555; margin-bottom:10px;'>원하시는 날짜를 선택 후 <b>[가동]</b> 버튼을 누르십시오.</div>", unsafe_allow_html=True)
         
         with st.form(key="waterfall_form"):
+            import datetime as dt_mod
             cal_date = st.date_input("🔮 날짜 선택", value=dt_mod.date.today())
             btn_waterfall = st.form_submit_button("🚀 일진 폭포수 가동")
             
@@ -1378,21 +1379,36 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
         if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
         return "-"
 
+    from korean_lunar_calendar import KoreanLunarCalendar
     dklc = KoreanLunarCalendar()
     dklc.setSolarDate(t_date.year, t_date.month, t_date.day)
     gj_str = dklc.getChineseGapJaString()
     
     if gj_str:
         parts = gj_str.split()
-        target_wol = parts[1]  
-        target_il = parts[2]   
         
+        # 년, 월, 일 간지 한자만 추출
+        target_year = parts[0][:2]
+        target_wol = parts[1][:2]
+        target_il = parts[2][:2]
+        
+        # 1. 내담자의 기본 성향 그룹 도출 (일지 기준)
         ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
+        
+        # 2. 전반부 (오전) 연산: 일간 기준 월간(체), 일간(용)
+        # 체운: 선택한 날짜의 '월간'이 내 일간 대비 무슨 십성인가?
         m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
+        # 일진 타격 십성: 선택한 날짜의 '일간'이 내 일간 대비 무슨 십성인가?
         d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))     
+        # 용운: 일진 타격 십성(상위)과 내 일지 십성(하위)의 매트릭스 결과
         am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
+        
+        # 3. 후반부 (오후) 연산: 일간 기준 월지(체), 일지(용)
+        # 체운: 선택한 날짜의 '월지'가 내 일간 대비 무슨 십성인가?
         m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
+        # 일진 타격 십성: 선택한 날짜의 '일지'가 내 일간 대비 무슨 십성인가?
         d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
+        # 용운: 일진 타격 십성(상위)과 내 일지 십성(하위)의 매트릭스 결과
         pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
         
         # 🚨 [데이터 누락 디버깅 장치]
@@ -1401,8 +1417,8 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
             am_res = cy_engine.get_secret_keywords(m_che_first, am_yong)
             pm_res = cy_engine.get_secret_keywords(m_che_second, pm_yong)
         except Exception as eng_e:
-            am_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오전 연산 👉 체운: <b>{m_che_first}</b> / 용운: <b>{am_yong}</b>"
-            pm_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오후 연산 👉 체운: <b>{m_che_second}</b> / 용운: <b>{pm_yong}</b>"
+            am_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오전 연산 👉 체운: <span style='color:#D50000; font-weight:bold;'>{m_che_first}</span> / 용운: <span style='color:#1976D2; font-weight:bold;'>{am_yong}</span>"
+            pm_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오후 연산 👉 체운: <span style='color:#D50000; font-weight:bold;'>{m_che_second}</span> / 용운: <span style='color:#1976D2; font-weight:bold;'>{pm_yong}</span>"
 
         gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
         gan_res = []
@@ -1426,7 +1442,7 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
         html_output = f"""
         <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15);'>
             <div style='background: #1A237E; padding: 15px; text-align: center;'>
-                <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🌊 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_il}일) 폭포수 분석</h3>
+                <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🌊 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일) 일진(일운) 분석</h3>
                 <div style='color: #E8EAF6; font-size: 14px; margin-top: 5px;'>현재 월운(體): {target_wol}월 / 내담자 일주: {m_ilgan}{m_ilji}</div>
             </div>
             <div style='padding: 20px;'>
@@ -1436,7 +1452,7 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
                     <div style='font-size: 14px; line-height:1.5;'>{r_res_html}</div>
                 </div>
                 <div style='margin-bottom: 25px;'>
-                    <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (오전~오후 일찍)</h4>
+                    <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (자시~오시, 00:30~13:29)</h4>
                     <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
                         <div style='background: #FFEBEE; color: #D50000; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>천간 타격: {target_il[0]} ({d_gan_ss})</div>
                         <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_first} ⚔️ 용운: {am_yong}</div>
@@ -1444,7 +1460,7 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
                     <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>{am_res}</div>
                 </div>
                 <div>
-                    <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (오후 늦게~밤)</h4>
+                    <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (미시~야자시, 13:30~익일 00:29)</h4>
                     <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
                         <div style='background: #E3F2FD; color: #1976D2; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>지지 타격: {target_il[1]} ({d_ji_ss})</div>
                         <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_second} ⚔️ 용운: {pm_yong}</div>
@@ -1455,4 +1471,3 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
         </div>
         """
         st.markdown(html_output, unsafe_allow_html=True)
-
