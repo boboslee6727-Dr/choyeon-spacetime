@@ -1114,7 +1114,7 @@ if st.session_state.get('need_calc', False):
             # ------------------------------------------------------------------
             # [모드 1] 개인사주 및 타감명서 본문 AI 가동
             # ------------------------------------------------------------------
-            if u_product in ["개인사주", "타 감명서"]:
+if u_product in ["개인사주", "타 감명서"]:
                 if u_age < 30: age_prompt = "내담자는 청년기에 있으므로 현실적인 직업과 이성운에 초점을 맞출 것."
                 elif u_age < 55: age_prompt = "내담자는 중장년기에 있으므로 재물운, 사업/직장운에 초점을 맞출 것."
                 else: age_prompt = "내담자는 노년기에 있으므로 건강운과 심리적 평안, 노후 자산 안정에 초점을 맞출 것."
@@ -1125,6 +1125,45 @@ if st.session_state.get('need_calc', False):
                 wol_info_str = ", ".join([f"{i+1}월({wol_gans[i]}{wol_jis[i]})" for i in range(12)])
                 daewun_info_str = ", ".join(daewun_info)
 
+                # ====================================================================
+                # 🌊 [핵심 융합] 메인 본문(대/세/월운)에 체용 매트릭스 키워드 강제 주입
+                # ====================================================================
+                def get_execution_yong_local(upper_group, lower_group):
+                    matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
+                    return matrix.get(upper_group, {}).get(lower_group, '비겁')
+
+                ilju_lower_group = get_group_ss(get_ss(ds, db))
+                
+                # 1. 대운 체용
+                dw_che_1 = get_group_ss(get_ss(ds, dw_g_cur))
+                dw_yong_1 = get_execution_yong_local(get_group_ss(get_ss(ds, dw_g_cur)), ilju_lower_group)
+                dw_kw_1 = FORTUNE_KEYWORDS.get(dw_che_1, {}).get(dw_yong_1, "변화")
+                
+                dw_che_2 = get_group_ss(get_ss(ds, dw_j_cur))
+                dw_yong_2 = get_execution_yong_local(get_group_ss(get_ss(ds, dw_j_cur)), ilju_lower_group)
+                dw_kw_2 = FORTUNE_KEYWORDS.get(dw_che_2, {}).get(dw_yong_2, "변화")
+
+                # 2. 세운 체용
+                se_che_1 = get_group_ss(get_ss(ds, curr_y_ganji[0]))
+                se_yong_1 = get_execution_yong_local(get_group_ss(get_ss(ds, curr_y_ganji[0])), ilju_lower_group)
+                se_kw_1 = FORTUNE_KEYWORDS.get(se_che_1, {}).get(se_yong_1, "변화")
+
+                se_che_2 = get_group_ss(get_ss(ds, curr_y_ganji[1]))
+                se_yong_2 = get_execution_yong_local(get_group_ss(get_ss(ds, curr_y_ganji[1])), ilju_lower_group)
+                se_kw_2 = FORTUNE_KEYWORDS.get(se_che_2, {}).get(se_yong_2, "변화")
+
+                # 3. 이번달 월운 체용
+                cur_m_gan = wol_gans[curr_m - 1]
+                cur_m_ji = wol_jis[curr_m - 1]
+                
+                wol_che_1 = get_group_ss(get_ss(ds, cur_m_gan))
+                wol_yong_1 = get_execution_yong_local(get_group_ss(get_ss(ds, cur_m_gan)), ilju_lower_group)
+                wol_kw_1 = FORTUNE_KEYWORDS.get(wol_che_1, {}).get(wol_yong_1, "변화")
+
+                wol_che_2 = get_group_ss(get_ss(ds, cur_m_ji))
+                wol_yong_2 = get_execution_yong_local(get_group_ss(get_ss(ds, cur_m_ji)), ilju_lower_group)
+                wol_kw_2 = FORTUNE_KEYWORDS.get(wol_che_2, {}).get(wol_yong_2, "변화")
+
                 db_header = (
                     f"[시스템 강제 시간 인식: 현재 시점은 {curr_y}년 {curr_m}월 입니다.]\n"
                     "당신은 명리심리상담사 1급 자격을 갖춘 초연 박사입니다. \n"
@@ -1134,7 +1173,15 @@ if st.session_state.get('need_calc', False):
                     f"- 🚨 [절대 기준 일간(본신)]: {ds} \n"
                     f"- 🚨 [오행 분포 팩트]: 목({counts['목']}), 화({counts['화']}), 토({counts['토']}), 금({counts['금']}), 수({counts['수']})\n"
                     f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
-                    f"- 공망 팩트: [일주 기준] {i_gong}\n"
+                    f"- 공망 팩트: [일주 기준] {i_gong}\n\n"
+                    "🚨 [초연명리 체용 매트릭스 하드코딩 연산 결과 - 절대 반영 지시]\n"
+                    "본문의 대운, 세운, 이번 달 월운 분석 시, AI는 임의의 소설을 쓰지 말고 아래 파이썬 시스템이 계산한 '체용 공식 키워드'를 반드시 뼈대로 삼아 에세이를 작성해야 합니다. 작성 시 \"초연명리 체용 공식에 따르면...\" 이라는 문구를 사용하여 전통 하드코딩 방식과 융합된 해석임을 명시하십시오.\n\n"
+                    f"▶ [현재 대운 전반기]: 체운({dw_che_1}) / 용운({dw_yong_1}) 👉 적용 키워드: {dw_kw_1}\n"
+                    f"▶ [현재 대운 후반기]: 체운({dw_che_2}) / 용운({dw_yong_2}) 👉 적용 키워드: {dw_kw_2}\n"
+                    f"▶ [올해 세운 전반기]: 체운({se_che_1}) / 용운({se_yong_1}) 👉 적용 키워드: {se_kw_1}\n"
+                    f"▶ [올해 세운 후반기]: 체운({se_che_2}) / 용운({se_yong_2}) 👉 적용 키워드: {se_kw_2}\n"
+                    f"▶ [이번 달 월운 전반기]: 체운({wol_che_1}) / 용운({wol_yong_1}) 👉 적용 키워드: {wol_kw_1}\n"
+                    f"▶ [이번 달 월운 후반기]: 체운({wol_che_2}) / 용운({wol_yong_2}) 👉 적용 키워드: {wol_kw_2}\n"
                 )
 
                 prompt = f"""
