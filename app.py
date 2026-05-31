@@ -1182,36 +1182,50 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
-[DAEWUN_TABLE_HERE]
+(🚨 대운 간지 및 방향 팩트: 대운 방향은 {direction_str}이며, 각 대운의 흐름은 [{daewun_info_str}] 입니다.)
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
-(작성)
+(※ AI 지시 🚨[대운 환각 및 총평 절대 금지]: 바로 위에 제공된 '대운 간지 및 방향 팩트' 데이터를 반드시 확인하십시오. 절대 두 개 이상의 대운을 하나로 묶어서 서술하지 마십시오! 반드시 10년 단위로 끊어서 개별 항목으로 나열하십시오. 항목 제목은 **• {calc_d}세~{calc_d+9}세 대운:** 과 같이 마크다운 굵은 글씨로 강조하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [DAEWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
+
+[DAEWUN_TABLE_HERE]
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(작성)
+(※ AI 지시 🚨[진술축미 묘고 작용 필수 통변]: 현재 진입한 대운의 지지와 사주 원국의 지지가 만나 진(辰), 술(戌), 축(丑), 미(未)의 충(沖)이나 형(刑)으로 인한 입고(入庫) 및 개고(開庫) 작용이 발생한다면, 이로 인한 삶의 극적인 변화(재물, 대인관계, 환경 등)를 반드시 상세히 통변하십시오. 대운 한가운데를 지나고 있다는 등 시기적 착각을 절대 금지합니다.)
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(작성)
+(※ AI 지시: 현재 대운 후반기의 십성과 오행 기운이 내담자의 삶에 미치는 심리적, 사회적 변화를 상세히 카운슬링하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
-[SEWUN_TABLE_HERE]
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
-(작성)
+(※ AI 지시: 최근 지나온 과거 각 세운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2024년(甲辰년):** 과 같이 간지를 한자로 표기하고 마크다운 굵은 글씨로 강조하여 요약하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [SEWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
+
+[SEWUN_TABLE_HERE]
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-(작성)
+(※ AI 지시: 올해 세운 전반기(양력2월~7월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-(작성)
+(※ AI 지시: 올해 세운 후반기(양력8월~다음년도 1월)의 십성과 오행 기운을 상세히 카운슬링하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
-[WOLWUN_TABLE_HERE]
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
-(작성)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기 상세 분석</span>
-(작성)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기 상세 분석</span>
-(작성)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
-(작성)
-</div>
+(🚨 올해 월운 간지 팩트: {wol_info_str})
 
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
+{past_months_html}
+(※ AI 지시 🚨[월운 환각 절대 금지]: 올해 지나온 각 과거 월운들을 하나씩 나열하되, 항목의 제목은 반드시 **• 2월(해당간지월):** 과 같이 마크다운 굵은 글씨(**)로 강조하여 2~3줄씩 요약하십시오. 
+🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월(己丑월)에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 작년의 기운이 마무리되는 흐름으로 풀이하십시오. 표 생성 절대 금지. 🚨중요: 분석 내용 출력 직후 반드시 [WOLWUN_TABLE_HERE] 마커를 원형 그대로 출력하십시오.)
+
+[WOLWUN_TABLE_HERE]
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
+(※ AI 지시: 해당하는 월의 전반기(5일~19일)를 구체적인 조후와 기운의 흐름을 조언하십시오.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
+(※ AI 지시: 해당하는 월의 후반기(20일~다음 달 4일까지)를 구체적인 조후와 기운의 흐름을 조언하십시오.)
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
+(※ AI 지시: 대운, 세운, 월운이 융합되어 일으키는 역동적인 변화와 내담자가 취해야 할 최종 삶의 태도를 따뜻하게 서술하며 마무리하십시오.)
+</div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
 <div class='content-box-loose'>(작성)</div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'> 🎯 초연 시공명리 특별 개운 비법</h3>
@@ -1331,18 +1345,58 @@ if st.session_state.get('app_running', False):
 
 
 # ==============================================================================
-# 🌊 7. [독립 모듈] 일진 폭포수 통제실 (가장 마지막에 렌더링됨)
+# 🌊 7. [독립 모듈] 오늘의 운세 풀이 (하드코딩 DB 내장형)
 # ==============================================================================
+
+# 박사님이 업로드하신 행운 분석표 완벽 하드코딩
+FORTUNE_KEYWORDS = {
+    "비겁": {
+        "비겁": "식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정",
+        "식상": "업무원만, 진취력, 건강호조, 원행(遠行), 발표, 여행",
+        "재성": "손재, 소비, 이성난, 가정불화, 부친반목",
+        "관성": "설화, 관재, 가족불화, 직장문제, 공명심",
+        "인성": "의식주안정, 스카우트, 계약, 학업순성, 합격, 가정화목"
+    },
+    "식상": {
+        "비겁": "사업원만, 결과만족, 명진(名振), 의기투합, 긍정심",
+        "식상": "재성발흥, 재적성취, 이성운, 가정원만, 재물입고, 환대",
+        "재성": "이재순성, 사업원만, 인연, 가족화목, 건강, 횡재",
+        "관성": "건강악화, 직업불안, 직주이동, 관재, 설화, 가족불화",
+        "인성": "직업불안, 건강문제, 계약파기, 학문불안, 의식주 불안"
+    },
+    "재성": {
+        "비겁": "일득삼재, 손재, 부부갈등, 과소비, 업무지연",
+        "식상": "여행, 결과만족, 횡재수, 가정화목, 득자운",
+        "재성": "관성발흥, 직업운 상승, 이성운 순성, 가정원만",
+        "관성": "신분상승, 출마, 천거, 장기출장, 가정화목, 이성운",
+        "인성": "매사불성, 소비지출, 가족불화, 계약파기, 손재, 흉사"
+    },
+    "관성": {
+        "비겁": "업무지연, 관재, 설화, 다툼, 허언, 선민의식",
+        "식상": "명예훼손, 직업이동, 질책, 가족불화, 이성난",
+        "재성": "사업운 원만, 이성운 순성, 가정원만, 취업, 명예",
+        "관성": "인성발흥, 승진승급, 계약성사, 자식운 원만",
+        "인성": "합격, 승진, 계약, 스카우트, 의식주 안정, 당선"
+    },
+    "인성": {
+        "비겁": "건강호조, 학업원만, 신분상승, 당선, 명예, 안정",
+        "식상": "불안정, 계약파기, 학업불성, 구설, 육친흉사, 자식불효",
+        "재성": "지출, 탈재, 파재, 사기수, 손재, 분주다망, 시성종패",
+        "관성": "업무원활, 학업성취, 승진승급, 영전, 합격, 포상",
+        "인성": "비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취"
+    }
+}
+
 if st.session_state.get('app_running', False) and 'global_gans' in st.session_state:
     with st.sidebar:
         st.markdown("---")
-        st.markdown("### 🌊 일진 폭포수 통제실")
+        st.markdown("### 🌊 오늘의 운세 풀이")
         st.markdown("<div style='font-size:13px; color:#555; margin-bottom:10px;'>원하시는 날짜를 선택 후 <b>[가동]</b> 버튼을 누르십시오.</div>", unsafe_allow_html=True)
         
         with st.form(key="waterfall_form"):
             import datetime as dt_mod
             cal_date = st.date_input("🔮 날짜 선택", value=dt_mod.date.today())
-            btn_waterfall = st.form_submit_button("🚀 일진 폭포수 가동")
+            btn_waterfall = st.form_submit_button("🚀 오늘의 운세 가동")
             
             if btn_waterfall:
                 st.session_state.w_date = cal_date
@@ -1386,39 +1440,29 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
     
     if gj_str:
         parts = gj_str.split()
-        
-        # 년, 월, 일 간지 한자만 추출
         target_year = parts[0][:2]
         target_wol = parts[1][:2]
         target_il = parts[2][:2]
         
-        # 1. 내담자의 기본 성향 그룹 도출 (일지 기준)
+        # 1. 내담자 일주 성향
         ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
         
-        # 2. 전반부 (오전) 연산: 일간 기준 월간(체), 일간(용)
-        # 체운: 선택한 날짜의 '월간'이 내 일간 대비 무슨 십성인가?
+        # 2. 오전 연산
         m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
-        # 일진 타격 십성: 선택한 날짜의 '일간'이 내 일간 대비 무슨 십성인가?
         d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))     
-        # 용운: 일진 타격 십성(상위)과 내 일지 십성(하위)의 매트릭스 결과
         am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
         
-        # 3. 후반부 (오후) 연산: 일간 기준 월지(체), 일지(용)
-        # 체운: 선택한 날짜의 '월지'가 내 일간 대비 무슨 십성인가?
+        # 3. 오후 연산
         m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-        # 일진 타격 십성: 선택한 날짜의 '일지'가 내 일간 대비 무슨 십성인가?
         d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
-        # 용운: 일진 타격 십성(상위)과 내 일지 십성(하위)의 매트릭스 결과
         pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
         
-        # 🚨 [데이터 누락 디버깅 장치]
-        try:
-            if cy_engine is None: raise ImportError("cy_engine 모듈 없음")
-            am_res = cy_engine.get_secret_keywords(m_che_first, am_yong)
-            pm_res = cy_engine.get_secret_keywords(m_che_second, pm_yong)
-        except Exception as eng_e:
-            am_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오전 연산 👉 체운: <span style='color:#D50000; font-weight:bold;'>{m_che_first}</span> / 용운: <span style='color:#1976D2; font-weight:bold;'>{am_yong}</span>"
-            pm_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오후 연산 👉 체운: <span style='color:#D50000; font-weight:bold;'>{m_che_second}</span> / 용운: <span style='color:#1976D2; font-weight:bold;'>{pm_yong}</span>"
+        # 🚨 하드코딩 DB 연동 (cy_engine 삭제)
+        am_keywords = FORTUNE_KEYWORDS.get(m_che_first, {}).get(am_yong, "데이터 부족")
+        pm_keywords = FORTUNE_KEYWORDS.get(m_che_second, {}).get(pm_yong, "데이터 부족")
+        
+        am_res = f"<div style='margin-bottom:8px;'>✨ <b>분석 키워드:</b> <span style='color:#E65100; font-weight:bold;'>{am_keywords}</span></div>"
+        pm_res = f"<div style='margin-bottom:8px;'>✨ <b>분석 키워드:</b> <span style='color:#E65100; font-weight:bold;'>{pm_keywords}</span></div>"
 
         gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
         gan_res = []
@@ -1442,8 +1486,8 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
         html_output = f"""
         <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15);'>
             <div style='background: #1A237E; padding: 15px; text-align: center;'>
-                <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🌊 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일) 일진(일운) 분석</h3>
-                <div style='color: #E8EAF6; font-size: 14px; margin-top: 5px;'>현재 월운(體): {target_wol}월 / 내담자 일주: {m_ilgan}{m_ilji}</div>
+                <h3 style='color: #fff; margin: 0; font-size: 22px; font-weight: 900; line-height: 1.3;'>🌊 {t_date.year}년 {t_date.month}월 {t_date.day}일 오늘의 운세 분석<br><span style='font-size: 16px; font-weight: normal; opacity: 0.9;'>({target_year}년 {target_wol}월 {target_il}일)</span></h3>
+                <div style='color: #E8EAF6; font-size: 15px; margin-top: 8px; font-weight:bold;'>현재 월운(體): {target_wol}월 / 내담자 일주: {m_ilgan}{m_ilji}</div>
             </div>
             <div style='padding: 20px;'>
                 <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; border-left: 5px solid #FF9800;'>
