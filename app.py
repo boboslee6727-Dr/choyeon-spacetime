@@ -1159,7 +1159,7 @@ if st.session_state.get('need_calc', False):
 [ 🚨종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
 1. 🚨명리 용어 순화: 격국, 비견, 식상 등 한자어 남발을 엄격히 금지하며, 현대적 구어체로 부드럽게 풀어서 설명하십시오.
 2. 따뜻한 상담가 마인드: 내담자를 깊이 이해하는 카운슬러의 어조로 전개하십시오. 호칭은 반드시 '{disp_name}님'만 사용하십시오.
-3. 🚨[절대 성역]: 문서 상단의 '[CHOYEON_GOLDEN_TEXT_HERE]' 마커는 100% 원문 그대로 출력하십시오. 절대 이 부분에 사족을 달거나 변형하지 마십시오.
+3. 🚨[절대 성역]: 문서 상단의 '[CHOYEON_GOLDEN_TEXT_HERE]' 마커는 100% 원문 그대로 출력하십시오. 🚨마커 앞뒤로 어떠한 수식어, 인사말, 감성적인 서론(예: '호수처럼 깊고...')도 절대로(Never) 덧붙이지 마십시오! 
 
 [문단 통제 명령]
 1. 모든 통변 에세이는 <p style='text-indent: 1em;'> 태그로 감싸십시오.
@@ -1179,6 +1179,7 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
 [CHOYEON_GOLDEN_TEXT_HERE]
+(🚨 AI 지시: 위 마커와 아래 '1) 타고난...' 사이에는 절대로 단 한 글자의 텍스트나 사족(서론)도 추가하지 말고, 즉시 1)번 항목 분석으로 넘어가십시오.)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향</span>
 (격국을 바탕으로 핵심 재능과 발현 시기, 무대 규모를 에세이로 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
