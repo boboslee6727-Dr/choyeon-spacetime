@@ -1375,7 +1375,11 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
-(※ AI 지시: 위 나열된 각 과거 대운을 1~2문장으로 요약하되, 반드시 <br><br> 태그를 써서 '1) 일반 명리 풀이 / 2) 시공 명리 풀이' 포맷을 엄수하여 줄을 분리하십시오.)
+(※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. 조견표의 단어(예: 업무원만)를 로봇처럼 나열하지 말고 문장에 자연스럽게 녹여내십시오. 반드시 아래 템플릿 구조를 100% 엄수하여 <br> 태그 1개로만 줄을 바꾸십시오.
+[출력 템플릿]
+• OO세~OO세 (OO대운): 
+<br><b>1) 일반 명리 풀이:</b> (내용)
+<br><b>2) 시공 명리 풀이:</b> (내용) )
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 (작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
@@ -1388,7 +1392,11 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
-(※ AI 지시: 각 세운을 1~2문장 요약. 반드시 <br><br> 태그로 '1) 일반 명리 풀이 / 2) 시공 명리 풀이' 줄바꿈 엄수)
+(※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. 조견표의 단어(예: 업무원만)를 로봇처럼 나열하지 말고 문장에 자연스럽게 녹여내십시오. 반드시 아래 템플릿 구조를 100% 엄수하여 <br> 태그 1개로만 줄을 바꾸십시오.
+[출력 템플릿]
+• OOOO년(OO년): 
+<br><b>1) 일반 명리 풀이:</b> (내용)
+<br><b>2) 시공 명리 풀이:</b> (내용) )
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
 (작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
@@ -1401,7 +1409,11 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ 🚨AI 지시: 각 월운별로 '1) 일반 명리 풀이 / 2) 시공 명리 풀이' 포맷을 <br><br> 태그로 줄바꿈하여 서술하십시오. 단, '1월'은 명리학적 기준에 따라 '작년 하반기'의 기운으로 간주하여 풀이하십시오. 절대 내담자에게 이 지시를 언급하지 마십시오.)
+(※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. 조견표의 단어를 로봇처럼 나열하지 말고 문장에 자연스럽게 녹여내십시오. 반드시 아래 템플릿 구조를 100% 엄수하여 <br> 태그 1개로만 줄을 바꾸십시오. 단, '1월'은 명리학적 기준에 따라 '작년 하반기'의 기운으로 간주하여 풀이하십시오. 절대 내담자에게 이 지시를 언급하지 마십시오.
+[출력 템플릿]
+• O월(OO월): 
+<br><b>1) 일반 명리 풀이:</b> (내용)
+<br><b>2) 시공 명리 풀이:</b> (내용) )
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
 (작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
