@@ -975,17 +975,16 @@ if st.session_state.get('need_calc', False):
 
                 # 🚨 [1. 표지 (Cover Page) 수정] A4 인쇄 이탈 원천 차단 및 완벽 중앙 정렬
                 cover_html = f"""
-                <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; height: 95vh; max-height: 280mm; box-sizing: border-box; overflow: hidden;'>
-                    <div style='width: 90%; max-width: 600px; box-sizing: border-box; padding: 50px 40px; text-align: center; border: 3px solid #1A237E; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #ffffff; margin: 0 auto;'>
-                        <h1 style='color: #1A237E; font-size: 32px; font-weight: 900; margin-bottom: 30px;'>🏮 초연 시공명리 사주팔자 풀이</h1>
-                        <div style='font-size: 22px; font-weight: 900; color: #1A237E !important; margin-bottom: 20px;'>{p_icon} 신청인 : {disp_name} 님</div>
-                        <div style='font-size: 16px; color: #555; margin-bottom: 8px;'>[양력] {sol_str} | [음력] {lun_str}</div>
+                <div style='position: relative; width: 100%; height: 297mm; overflow: hidden; page-break-after: always;'>
+                    <div style='position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 180mm; padding: 20mm; text-align: center; border: 5px solid #1A237E; border-radius: 20px; background-color: #ffffff; box-shadow: 0 0 15px rgba(0,0,0,0.1);'>
+                        <h1 style='color: #1A237E; font-size: 32px; font-weight: 900; margin-bottom: 30px;'>🏮 초연 시공명리 사주풀이</h1>
+                        <div style='font-size: 24px; font-weight: 900; color: #1A237E !important; margin-bottom: 20px;'>{p_icon} 신청인 : {disp_name} 님</div>
+                        <div style='font-size: 16px; color: #555; margin-bottom: 10px;'>[양력] {sol_str} | [음력] {lun_str}</div>
                         <div style='font-size: 16px; color: #555; margin-bottom: 30px;'>{u_t}</div>
                         <div style='font-size: 14px; color: #777; margin-bottom: 40px;'>분석일: {today_str}</div>
                         <h3 style='color: #1A237E; margin: 0; font-size: 20px;'>초연 시공명리 연구소</h3>
                     </div>
                 </div>
-                <div style='page-break-after: always;'></div>
                 """
                 
                 # 🚨 [2. 사주 원국표 생성]
