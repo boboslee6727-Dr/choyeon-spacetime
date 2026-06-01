@@ -12,12 +12,6 @@ import pytz
 import streamlit.components.v1 as components
 import re
 
-# 🚨 [김집사 디버깅] cy_engine 임포트 에러 방어
-try:
-    import cy_engine
-except ImportError:
-    cy_engine = None
-
 # 🎯 [버전 컨트롤 타워]
 APP_VERSION = "Ver 42.0 (Gemini 2.5-Pro Mode)"
 
@@ -1454,14 +1448,11 @@ if st.session_state.get('need_calc', False):
                     past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
                 past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (대운 교체 첫 해이므로 이전 대운 마지막 2~3년 요약): "
 
-                # 2. 지나온 과거 월운 (1월 ~ 지난달)
+                # 3. 과거 월운 (출력 화면에 AI 비밀 지시어가 노출되지 않도록 깔끔하게 간지만 남김)
                 past_wol_list = []
                 for pm in range(1, curr_m):
                     tc, tj = wol_gans[pm-1], wol_jis[pm-1]
-                    if pm == 1:
-                        past_wol_list.append(f"• 1월({tc}{tj}월 - 명리학적 기준 작년 하반기 기운으로 해석): ")
-                    else:
-                        past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
+                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
                 past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
 
                 prompt = f"""
@@ -1532,41 +1523,50 @@ if st.session_state.get('need_calc', False):
 <br> - 1) 일반 명리 풀이: 일간 대비 들어오는 간지의 십성에 의한 현실적 운세 해석
 <br> - 2) 체/용(體/用) 입체 분석: [체(환경/배경)]는 ~하게 흘러가고, [용(실제 나의 체감/실행/결과)]은 ~하게 발현되는 시기.
 
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+<div class='content-box-loose'>
+(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열을 금지하며, 반드시 다음 두 가지 포맷을 <br> 태그를 사용하여 줄바꿈한 후 입체적으로 풀이하십시오.
+<br> <b>1) 일반 명리 풀이:</b> 일간 대비 운에서 들어오는 천간/지지의 십성에 따른 현실적 운세 해석
+<br> <b>2) 체/용(體/用) 입체 분석:</b> 상위십성(대운/세운/월운)이 하위십성(일주)을 보아 발생하는 실행력(용운)과 환경(체운)을 결합하여 분석하십시오. (예: 인성 체운에 인성 용운이 겹치면 비겁발흥, 명예, 칭찬, 학문적 성취가 발현되는 원리처럼 실제 체감되는 구체적 현상을 서술할 것))
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
+(※ 🚨AI 지시: 표 아래에 '3세 甲子 | 13세 癸亥...' 처럼 대운 간지를 일렬로 나열하는 텍스트를 절대 임의로 생성하지 마십시오. 바로 아래 과거 대운 분석으로 넘어가십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
-(※ AI 지시: 위 나열된 각 과거 대운의 시기별로 1~2문장으로 명확히 요약하되, 반드시 위의 '1) 일반 / 2) 체용 분석' 포맷을 지키십시오.)
+(※ AI 지시: 위 나열된 각 과거 대운을 1~2문장으로 요약하되, 반드시 <br> 태그를 써서 '1) 일반 명리 풀이 / 2) 체/용 입체 분석' 포맷을 엄수하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
+(※ 🚨AI 지시: 표 아래에 세운 간지를 일렬로 나열하는 텍스트 생성 절대 금지)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
-(※ AI 지시: 위 나열된 각 세운별로 1~2문장으로 명확히 요약하되, 반드시 '1) 일반 / 2) 체용 분석' 포맷을 지키십시오.)
+(※ AI 지시: 각 세운을 1~2문장 요약. 반드시 <br> 태그로 1)과 2) 줄바꿈 엄수)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
+(※ 🚨AI 지시: 표 아래에 월운 간지를 일렬로 나열하는 텍스트 생성 절대 금지)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ AI 지시: 위 나열된 각 월운별로 '1) 일반 / 2) 체용 분석' 포맷을 지켜 서술하십시오. 🚨단, 명리학적 기준에 따라 '양력 1월'은 무조건 '작년 하반기'의 기운으로 간주하여 풀이해야 하는 점을 절대 잊지 마십시오.)
+(※ 🚨AI 지시: 각 월운별로 '1) 일반 / 2) 체용 분석' 포맷을 <br> 태그로 줄바꿈하여 서술하십시오. 단, '1월'은 명리학적 기준에 따라 '작년 하반기'의 기운(체운/용운)으로 간주하여 풀이하십시오. 절대 내담자에게 이 지시를 언급하지 마십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
-(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
-(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
 (작성)
 </div>
@@ -1804,14 +1804,6 @@ if st.session_state.get('run_waterfall', False) and st.session_state.get('waterf
         m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
         d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
         pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
-        
-        try:
-            if cy_engine is None: raise ImportError("cy_engine 모듈 없음")
-            am_res = cy_engine.get_secret_keywords(m_che_first, am_yong)
-            pm_res = cy_engine.get_secret_keywords(m_che_second, pm_yong)
-        except Exception as eng_e:
-            am_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오전 연산 👉 체운: <span style='color:#D50000; font-weight:bold;'>{m_che_first}</span> / 용운: <span style='color:#1976D2; font-weight:bold;'>{am_yong}</span>"
-            pm_res = f"⚠️ <b>[시스템 알림]</b> 'cy_engine' 모듈이 연결되지 않아 연산값을 대체 표기합니다.<br>오후 연산 👉 체운: <span style='color:#D50000; font-weight:bold;'>{m_che_second}</span> / 용운: <span style='color:#1976D2; font-weight:bold;'>{pm_yong}</span>"
 
         gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
         gan_res = []
@@ -1832,6 +1824,59 @@ if st.session_state.get('run_waterfall', False) and st.session_state.get('waterf
                 r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
         r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
+        # 🚨 [새로운 AI 일진 폭포수 심장 탑재] 메인 AI에게 체/용 데이터를 넘겨 실시간 분석 요청!
+        iljin_prompt = f"""
+당신은 명리심리상담사 초연 박사입니다. 아래 데이터를 바탕으로 오늘 하루(일진)의 흐름을 분석하십시오.
+
+- 내담자 일주: {m_ilgan}{m_ilji}
+- 일진(오늘) 날짜: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)
+- 현재 월운(환경): {target_wol}월
+
+[오전/전반부 타격 데이터]
+- 타격 천간: {target_il[0]} ({d_gan_ss})
+- 🔹 체운(월간 기준 환경): {m_che_first} / 🔹 용운(실제 체감 및 실행): {am_yong}
+
+[오후/후반부 타격 데이터]
+- 타격 지지: {target_il[1]} ({d_ji_ss})
+- 🔹 체운(월지 기준 환경): {m_che_second} / 🔹 용운(실제 체감 및 실행): {pm_yong}
+
+🚨 [AI 절대 작성 규칙]
+1. 인사말, 결론 요약 금지. 오직 아래 지정된 HTML 구조 안의 (작성) 부분만 채워서 그대로 출력할 것.
+2. '1) 일반 명리 풀이'와 '2) 체/용 입체 분석' 사이에는 반드시 <br> 태그를 넣어 줄바꿈 할 것.
+
+[출력 포맷]
+<div style='margin-bottom: 25px;'>
+    <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (자시~오시, 00:30~13:29)</h4>
+    <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
+        <div style='background: #FFEBEE; color: #D50000; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>천간 타격: {target_il[0]} ({d_gan_ss})</div>
+        <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_first} ⚔️ 용운: {am_yong}</div>
+    </div>
+    <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>
+        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 천간 십성의 특징에 따른 오전 운세 요약)<br>
+        <b>2) 체/용(體/用) 입체 분석:</b> (작성 - [체(환경)] {m_che_first}의 환경 속에서 [용(실제 체감/실행)] {am_yong}의 성향이 어떻게 발현되는지 구체적인 심리와 행동 묘사)
+    </div>
+</div>
+<div>
+    <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (미시~야자시, 13:30~익일 00:29)</h4>
+    <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
+        <div style='background: #E3F2FD; color: #1976D2; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>지지 타격: {target_il[1]} ({d_ji_ss})</div>
+        <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_second} ⚔️ 용운: {pm_yong}</div>
+    </div>
+    <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #1976D2; line-height: 1.6; color: #333; font-size:14px;'>
+        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 지지 십성의 특징에 따른 오후 운세 요약)<br>
+        <b>2) 체/용(體/用) 입체 분석:</b> (작성 - [체(환경)] {m_che_second}의 환경 속에서 [용(실제 체감/실행)] {pm_yong}의 성향이 어떻게 발현되는지 구체적인 심리와 행동 묘사)
+    </div>
+</div>
+"""
+        
+        # 🚨 스피너 가동 및 AI 호출
+        with st.spinner("⏳ [일진 폭포수] 체/용 입체 분석 가동 중..."):
+            try:
+                res = model.generate_content(iljin_prompt)
+                ai_iljin_html = res.text.strip()
+            except Exception as e:
+                ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 통신 장애: {e}</div>"
+
         html_output = f"""
         <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15);'>
             <div style='background: #1A237E; padding: 15px; text-align: center;'>
@@ -1844,22 +1889,7 @@ if st.session_state.get('run_waterfall', False) and st.session_state.get('waterf
                     <div style='font-size: 14px; margin-bottom: 10px; line-height:1.5;'>{gan_res_html}</div>
                     <div style='font-size: 14px; line-height:1.5;'>{r_res_html}</div>
                 </div>
-                <div style='margin-bottom: 25px;'>
-                    <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (자시~오시, 00:30~13:29)</h4>
-                    <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
-                        <div style='background: #FFEBEE; color: #D50000; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>천간 타격: {target_il[0]} ({d_gan_ss})</div>
-                        <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_first} ⚔️ 용운: {am_yong}</div>
-                    </div>
-                    <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>{am_res}</div>
-                </div>
-                <div>
-                    <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (미시~야자시, 13:30~익일 00:29)</h4>
-                    <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
-                        <div style='background: #E3F2FD; color: #1976D2; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>지지 타격: {target_il[1]} ({d_ji_ss})</div>
-                        <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_second} ⚔️ 용운: {pm_yong}</div>
-                    </div>
-                    <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #1976D2; line-height: 1.6; color: #333; font-size:14px;'>{pm_res}</div>
-                </div>
+                {ai_iljin_html}
             </div>
         </div>
         """
