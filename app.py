@@ -1365,15 +1365,9 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
-(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열을 금지하며, 반드시 다음 두 가지 포맷을 <br> 태그를 사용하여 줄바꿈한 후 풀이하십시오.
-<br> <b>1) 일반 명리 풀이:</b> 일간 대비 운에서 들어오는 천간/지지의 십성에 따른 현실적 운세 해석
-<br> <b>2) 체/용(體/用) 입체 분석:</b> 기계적인 '[체]는~, [용]은~' 식의 괄호 태그 사용 및 분절된 포맷을 절대 금지합니다. 제공된 [초연 시공명리 체/용 운세 분석 키워드 매트릭스]를 바탕으로 현재 시기의 체운과 용운 조합에 해당하는 키워드들을 확인하십시오. 그 중 내담자의 연령({u_age}세), 성별({u_gender}), 혼인상태({u_marital})에 가장 부합하는 1~2개의 핵심 키워드만을 우선 선별하여, 주어진 환경 속에서 어떠한 실행과 체감이 일어나는지 한 편의 세련되고 자연스러운 현대적 문어체 에세이로 통변하십시오.)
-
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
-<div class='content-box-loose'>
-(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열을 금지하며, 반드시 다음 두 가지 포맷을 <br> 태그를 사용하여 줄바꿈한 후 입체적으로 풀이하십시오.
-<br> <b>1) 일반 명리 풀이:</b> 일간 대비 운에서 들어오는 천간/지지의 십성에 따른 현실적 운세 해석
-<br> <b>2) 체/용(體/用) 입체 분석:</b> 상위십성(대운/세운/월운)이 하위십성(일주)을 보아 발생하는 실행력(용운)과 환경(체운)을 결합하여 분석하십시오. (예: 인성 체운에 인성 용운이 겹치면 비겁발흥, 명예, 칭찬, 학문적 성취가 발현되는 원리처럼 실제 체감되는 구체적 현상을 서술할 것))
+(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열이나 학술적 명리 용어(체운, 용운, 상위십성 등) 사용을 엄격히 금지합니다. 반드시 다음 두 가지 포맷을 독립된 줄로(반드시 <br><br> 태그를 사용하여 줄바꿈) 분리하여 풀이하십시오.
+<br> <b>1) 일반 명리 풀이:</b> 일간 대비 운에서 들어오는 천간/지지의 기운을 바탕으로 현실적인 운세 현상을 세련되게 해석.
+<br> <b>2) 시공 명리 풀이:</b> 제공된 [초연 시공명리 운세 분석 키워드 매트릭스]의 결과 키워드를 바탕으로, 내담자의 연령({u_age}세), 성별({u_gender}), 혼인상태({u_marital})에 맞추어 실제 체감되는 구체적 현상을 한 편의 자연스러운 현대적 문어체 에세이로 통변하십시오. 기계적인 괄호 태그나 분절된 포맷 절대 금지.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
@@ -1381,12 +1375,12 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
-(※ AI 지시: 위 나열된 각 과거 대운을 1~2문장으로 요약하되, 반드시 <br> 태그를 써서 '1) 일반 명리 풀이 / 2) 체/용 입체 분석' 포맷을 엄수하십시오.)
+(※ AI 지시: 위 나열된 각 과거 대운을 1~2문장으로 요약하되, 반드시 <br><br> 태그를 써서 '1) 일반 명리 풀이 / 2) 시공 명리 풀이' 포맷을 엄수하여 줄을 분리하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
+(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
+(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
@@ -1394,12 +1388,12 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
-(※ AI 지시: 각 세운을 1~2문장 요약. 반드시 <br> 태그로 1)과 2) 줄바꿈 엄수)
+(※ AI 지시: 각 세운을 1~2문장 요약. 반드시 <br><br> 태그로 '1) 일반 명리 풀이 / 2) 시공 명리 풀이' 줄바꿈 엄수)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
+(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
+(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
@@ -1407,16 +1401,15 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ 🚨AI 지시: 각 월운별로 '1) 일반 / 2) 체용 분석' 포맷을 <br> 태그로 줄바꿈하여 서술하십시오. 단, '1월'은 명리학적 기준에 따라 '작년 하반기'의 기운(체운/용운)으로 간주하여 풀이하십시오. 절대 내담자에게 이 지시를 언급하지 마십시오.)
+(※ 🚨AI 지시: 각 월운별로 '1) 일반 명리 풀이 / 2) 시공 명리 풀이' 포맷을 <br><br> 태그로 줄바꿈하여 서술하십시오. 단, '1월'은 명리학적 기준에 따라 '작년 하반기'의 기운으로 간주하여 풀이하십시오. 절대 내담자에게 이 지시를 언급하지 마십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
+(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 적용)
+(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
 (작성)
 </div>
-
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
@@ -1575,32 +1568,14 @@ if st.session_state.get('app_running', False):
 
 
 # ==============================================================================
-# 🌊 7. [독립 모듈] 일진 폭포수 통제실 (가장 마지막에 렌더링됨)
+# 🌊 7. [독립 모듈] 일진 시공간 분석 결과 출력부 (백엔드 연산 전용)
 # ==============================================================================
-if st.session_state.get('app_running', False) and 'global_gans' in st.session_state:
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("### 🌊 일진 폭포수 통제실")
-        st.markdown("<div style='font-size:13px; color:#555; margin-bottom:10px;'>원하시는 날짜를 선택 후 <b>[가동]</b> 버튼을 누르십시오.</div>", unsafe_allow_html=True)
-        
-        import datetime as dt_mod
-        # 🚨 [핵심 방어막] 날짜 세션 영구 보존 (날짜를 클릭해도 절대 초기화되지 않음)
-        if 'waterfall_date' not in st.session_state:
-            st.session_state['waterfall_date'] = dt_mod.date.today()
-        
-        with st.form(key="waterfall_form"):
-            cal_date = st.date_input("🔮 날짜 선택", value=st.session_state['waterfall_date'])
-            btn_waterfall = st.form_submit_button("🚀 일진 폭포수 가동")
-            
-            if btn_waterfall:
-                st.session_state['waterfall_date'] = cal_date
-                # 🚨 [스위치 통일] 4번 코드와 동일하게 'run_waterfall' 변수를 사용!
-                st.session_state['run_waterfall'] = True
+import datetime as dt_mod
 
-# 🚨 'run_waterfall' 스위치가 켜져 있을 때만 폭포수 화면을 출력
-if st.session_state.get('run_waterfall', False) and st.session_state.get('waterfall_date'):
+# 🚨 'run_waterfall' 스위치가 켜져 있을 때만 폭포수 화면을 메인 화면 하단에 출력
+if st.session_state.get('run_waterfall', False) and st.session_state.get('target_date'):
     st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'>", unsafe_allow_html=True)
-    t_date = st.session_state['waterfall_date']
+    t_date = st.session_state['target_date']
     
     gans_list = st.session_state['global_gans']
     jjis_list = st.session_state['global_jjis']
@@ -1688,35 +1663,34 @@ if st.session_state.get('run_waterfall', False) and st.session_state.get('waterf
 
 🚨 [AI 절대 작성 규칙]
 1. 인사말, 결론 요약 금지. 오직 아래 지정된 HTML 구조 안의 (작성) 부분만 채워서 그대로 출력할 것.
-2. '1) 일반 명리 풀이'와 '2) 체/용 입체 분석' 사이에는 반드시 <br> 태그를 넣어 줄바꿈 할 것.
+2. 체운, 용운 같은 학술적 단어를 내담자에게 직접 노출하지 마십시오.
+3. '1) 일반 명리 풀이'와 '2) 시공 명리 풀이' 사이에는 반드시 <br><br> 태그를 넣어 완벽히 줄바꿈 할 것.
 
 [출력 포맷]
 <div style='margin-bottom: 25px;'>
     <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (자시~오시, 00:30~13:29)</h4>
     <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
         <div style='background: #FFEBEE; color: #D50000; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>천간 타격: {target_il[0]} ({d_gan_ss})</div>
-        <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_first} ⚔️ 용운: {am_yong}</div>
     </div>
     <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>
-        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 천간 십성의 특징에 따른 오전 운세 요약)<br>
-        <b>2) 체/용(體/用) 입체 분석:</b> (작성 - [체(환경)] {m_che_first}의 환경 속에서 [용(실제 체감/실행)] {am_yong}의 성향이 어떻게 발현되는지 구체적인 심리와 행동 묘사)
+        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 천간 십성의 특징에 따른 오전 운세 요약)<br><br>
+        <b>2) 시공 명리 풀이:</b> (작성 - 주어진 환경 속에서 실제 체감과 성향이 어떻게 발현되는지 현대적 에세이로 통변)
     </div>
 </div>
 <div>
     <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (미시~야자시, 13:30~익일 00:29)</h4>
     <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
         <div style='background: #E3F2FD; color: #1976D2; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>지지 타격: {target_il[1]} ({d_ji_ss})</div>
-        <div style='color: #555; font-size: 13px; font-weight: bold;'>체운: {m_che_second} ⚔️ 용운: {pm_yong}</div>
     </div>
     <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #1976D2; line-height: 1.6; color: #333; font-size:14px;'>
-        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 지지 십성의 특징에 따른 오후 운세 요약)<br>
-        <b>2) 체/용(體/用) 입체 분석:</b> (작성 - [체(환경)] {m_che_second}의 환경 속에서 [용(실제 체감/실행)] {pm_yong}의 성향이 어떻게 발현되는지 구체적인 심리와 행동 묘사)
+        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 지지 십성의 특징에 따른 오후 운세 요약)<br><br>
+        <b>2) 시공 명리 풀이:</b> (작성 - 주어진 환경 속에서 실제 체감과 성향이 어떻게 발현되는지 현대적 에세이로 통변)
     </div>
 </div>
 """
         
         # 🚨 스피너 가동 및 AI 호출
-        with st.spinner("⏳ [일진 폭포수] 체/용 입체 분석 가동 중..."):
+        with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
             try:
                 res = model.generate_content(iljin_prompt)
                 ai_iljin_html = res.text.strip()
@@ -1726,7 +1700,7 @@ if st.session_state.get('run_waterfall', False) and st.session_state.get('waterf
         html_output = f"""
         <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15);'>
             <div style='background: #1A237E; padding: 15px; text-align: center;'>
-                <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🌊 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일) 일진(일운) 분석</h3>
+                <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🔮 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일) 일진(일운) 분석</h3>
                 <div style='color: #E8EAF6; font-size: 14px; margin-top: 5px;'>현재 월운(體): {target_wol}월 / 내담자 일주: {m_ilgan}{m_ilji}</div>
             </div>
             <div style='padding: 20px;'>
