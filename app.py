@@ -1099,27 +1099,27 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                # 🎯 [Ver 42.1: 하드코딩 DB 완벽 연동 및 AI 오지랖 원천 차단] 
-                w_key = f"{ms}{mb}".strip()
-                i_key = f"{ds}{db}".strip()
+            # 🎯 [Ver 42.1: 하드코딩 DB 완벽 연동 및 AI 오지랖 원천 차단] 
+            w_key = f"{ms}{mb}".strip()
+            i_key = f"{ds}{db}".strip()
 
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
 
-                # 명주님의 절대 성역 (AI 개입 불가 하드코딩)
-                choyeon_golden_text = f"""
+            # 명주님의 절대 성역 (AI 개입 불가 하드코딩)
+            choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
         <b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
     </p>
 </div>
 """
-                dw_start_age = current_daewun_age
-                dw_mid_age   = current_daewun_age + 4
-                dw_mid2_age  = current_daewun_age + 5
-                dw_end_age   = current_daewun_age + 9
+            dw_start_age = current_daewun_age
+            dw_mid_age   = current_daewun_age + 4
+            dw_mid2_age  = current_daewun_age + 5
+            dw_end_age   = current_daewun_age + 9
             
             # ------------------------------------------------------------------
             # [모드 1] 개인사주 및 타감명서 본문 AI 가동
