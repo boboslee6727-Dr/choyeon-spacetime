@@ -1243,6 +1243,14 @@ if st.session_state.get('need_calc', False):
                 dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
                 current_daewun_age = cur_dw_idx * 10 + calc_d
                 
+                # 🎯 [수술 포인트 1] 현재 대운이 시작된 실제 연도(Year) 계산
+                curr_dw_start_year = u_y + current_daewun_age - 1
+                base_dw_start = (curr_dw_start_year - 1984) % 60
+                dw_start_ganji = f"{GAN[base_dw_start % 10]}{JI[base_dw_start % 12]}"
+                
+                base_last_y = (curr_y - 1 - 1984) % 60
+                last_y_ganji = f"{GAN[base_last_y % 10]}{JI[base_last_y % 12]}"
+                
                 start_year = u_y + current_daewun_age - 1
                 
                 sewun_info = []
@@ -1283,22 +1291,22 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                # 🚨 들여쓰기 0칸 (마크다운 파괴 방지)
+                # 🚨 HTML 안쪽은 절대 들여쓰기 금지! (마크다운 파괴 방지)
                 report_1_full_html = f"""{cover_html}
 <div class='no-print' style='text-align:right; margin: 20px 0;'>
-    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-        🖨️ 초연 사주풀이 인쇄/PDF
-    </button>
+<button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+🖨️ 초연 사주풀이 인쇄/PDF
+</button>
 </div>
 <div class='report-page'>
-    <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
-        <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
-        {table_html}
-        {master_bar_html}
-        <div style='margin-top:20px;'>
-            {{full_content_clean_placeholder}}
-        </div>
-    </div>
+<div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
+<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
+{table_html}
+{master_bar_html}
+<div style='margin-top:20px;'>
+{{full_content_clean_placeholder}}
+</div>
+</div>
 </div>"""
 
                 base_gans_list = [hs, ds, ms, ys]
@@ -1412,6 +1420,26 @@ if st.session_state.get('need_calc', False):
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
 
+                # 🎯 [파이썬 하드코딩] 과거 세운 및 월운 리스트 강제 생성 (AI 태업 원천 차단)
+                curr_dw_start_year = u_y + current_daewun_age - 1
+                
+                # 1. 지나온 과거 세운 (대운 시작년도 ~ 작년)
+                past_sewun_list = []
+                for py in range(curr_dw_start_year, curr_y):
+                    base = (py - 1984) % 60
+                    past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
+                past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (대운 교체 첫 해이므로 이전 대운 마지막 2~3년 요약): "
+
+                # 2. 지나온 과거 월운 (1월 ~ 지난달)
+                past_wol_list = []
+                for pm in range(1, curr_m):
+                    tc, tj = wol_gans[pm-1], wol_jis[pm-1]
+                    if pm == 1:
+                        past_wol_list.append(f"• 1월({tc}{tj}월 - 명리학적 기준 작년 하반기 기운으로 해석): ")
+                    else:
+                        past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
+                past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
+
                 prompt = f"""
 {db_header}
 
@@ -1483,7 +1511,7 @@ if st.session_state.get('need_calc', False):
 (※ 🚨AI 지시: 위 마커 자리는 파이썬이 대운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
-(※ AI 지시: 첫 대운부터 현재 대운 직전까지 모두 서술. 표 생성 금지)
+(※ AI 지시: 반드시 내담자의 첫 번째 대운({dw_start_ganji})부터 현재 대운 직전까지 살아온 모든 과거 대운을 나이대별로 순서대로 나열하여 에세이로 분석하십시오. 절대 임의로 생략하거나 묶지 마십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 (작성)
@@ -1495,7 +1523,8 @@ if st.session_state.get('need_calc', False):
 (※ 🚨AI 지시: 위 마커 자리는 파이썬이 세운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
-(작성)
+(※ AI 지시: 현재 대운이 시작된 {curr_dw_start_year}년({dw_start_ganji})부터 작년 {curr_y-1}년({last_y_ganji})까지의 세운 흐름을 분석하여 서술하십시오.)
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
 (작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
@@ -1507,7 +1536,8 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(작성)
+(※ AI 지시: 올해 지나온 각 과거 월운들을 분석하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 무조건 '작년도 세운의 마지막 달(음력 12월)'에 해당하므로, 1월 분석 시 반드시 새해가 아닌 작년의 기운으로 풀이하십시오.)
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
 (작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
