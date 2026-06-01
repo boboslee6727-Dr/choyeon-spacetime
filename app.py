@@ -870,6 +870,15 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
+    # 🚨 [수술 부위: 최고급형 일진 시공간 분석실 및 가동 버튼 이식]
+    st.markdown("---")
+    st.markdown("### 🔮 일진(일운) 시공간 분석실")
+    if st.button("🚀 오늘의 일운 정밀분석 가동", use_container_width=True):
+        st.session_state['app_running'] = True
+        st.session_state['need_calc_iljin'] = True
+        st.session_state['run_waterfall'] = True
+        st.rerun()
+
     # 🚨 유효성 검사 후 시스템 가동 상태 설정 (need_calc를 True로 설정하여 연산 시작)
     if btn_single:
         if not u_name.strip(): 
@@ -962,10 +971,10 @@ if st.session_state.get('need_calc', False):
             if u_product == "개인사주":
                 past_months_html = ""
 
-                # 🚨 [1. 표지 (Cover Page)]
+                # 🚨 [1. 표지 (Cover Page) 수정] A4 인쇄 이탈 원천 차단 및 완벽 중앙 정렬
                 cover_html = f"""
-                <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 50px 0;'>
-                    <div style='width: 90%; max-width: 600px; height: auto !important; padding: 50px 40px; text-align: center; border: 3px solid #1A237E; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #ffffff;'>
+                <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; height: 95vh; max-height: 280mm; box-sizing: border-box; overflow: hidden;'>
+                    <div style='width: 90%; max-width: 600px; box-sizing: border-box; padding: 50px 40px; text-align: center; border: 3px solid #1A237E; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #ffffff; margin: 0 auto;'>
                         <h1 style='color: #1A237E; font-size: 32px; font-weight: 900; margin-bottom: 30px;'>🏮 초연 시공명리 사주팔자 풀이</h1>
                         <div style='font-size: 22px; font-weight: 900; color: #1A237E !important; margin-bottom: 20px;'>{p_icon} 신청인 : {disp_name} 님</div>
                         <div style='font-size: 16px; color: #555; margin-bottom: 8px;'>[양력] {sol_str} | [음력] {lun_str}</div>
@@ -1131,11 +1140,6 @@ if st.session_state.get('need_calc', False):
 </div>"""
 
                 report_1_full_html = f"""{cover_html}
-<div class='no-print' style='text-align:right; margin: 20px 0;'>
-<button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-🖨️ 초연 사주풀이 인쇄/PDF
-</button>
-</div>
 <div class='report-page'>
 <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
