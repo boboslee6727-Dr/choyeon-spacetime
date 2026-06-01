@@ -1130,27 +1130,27 @@ if st.session_state.get('need_calc', False):
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
-                # 1. 먼저 정의해야 할 변수들을 전부 셋팅합니다.
+                # 1. 먼저 정의해야 할 변수들을 전부 셋팅합니다. (🚨 주의: 안쪽 HTML은 좌측에 완전히 밀착시켜야 깨지지 않습니다!)
                 cover_html = f"""
-                <div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
-                    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-                        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
-                        </div>
-                        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
-                            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
-                            </div>
-                        </div>
-                        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
-                        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
-                    </div>
-                </div>
-                """
+<div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
+    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
+        </div>
+        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
+            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
+            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
+            </div>
+        </div>
+        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
+        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
+    </div>
+</div>
+"""
                 
-                # 🚨 사주 원국표 생성 (합충형파해 복원, 폰트 14px 적용)
+                # 🚨 사주 원국표 생성
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -1283,24 +1283,23 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                report_1_full_html = f"""
-                {cover_html}
-                <div class='no-print' style='text-align:right; margin: 20px 0;'>
-                    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
-                        🖨️ 초연 사주풀이 인쇄/PDF
-                    </button>
-                </div>
-                <div class='report-page'>
-                    <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
-                        <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
-                        {table_html}
-                        {master_bar_html}
-                        <div style='margin-top:20px;'>
-                            {{full_content_clean_placeholder}}
-                        </div>
-                    </div>
-                </div>
-                """
+                # 🚨 들여쓰기 0칸 (마크다운 파괴 방지)
+                report_1_full_html = f"""{cover_html}
+<div class='no-print' style='text-align:right; margin: 20px 0;'>
+    <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
+        🖨️ 초연 사주풀이 인쇄/PDF
+    </button>
+</div>
+<div class='report-page'>
+    <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
+        <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
+        {table_html}
+        {master_bar_html}
+        <div style='margin-top:20px;'>
+            {{full_content_clean_placeholder}}
+        </div>
+    </div>
+</div>"""
 
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
@@ -1368,7 +1367,7 @@ if st.session_state.get('need_calc', False):
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
                     f"1. 서론 철저 금지: '안녕하십니까', '기쁩니다' 등의 인사말이나 감성적인 도입부를 절대로 작성하지 마십시오.\n"
-                    f"2. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성(예: 무인성)을 지어내어 통변하지 마십시오.\n"
+                    f"2. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성을 지어내어 통변하지 마십시오.\n"
                     f"3. 괄호 병기 금지: 에세이 작성 시 전문 용어나 한자를 괄호 안에 병기하는 행위를 금지합니다.\n"
                     f"4. HTML 훼손 금지: </div> 태그를 임의로 닫거나 마크다운 기호를 남발하지 마십시오.\n"
                     f"5. 이름 및 사주정보 중복 출력 금지: 결과물 상단에 이름이나 생년월일 정보를 절대 반복해서 적지 마십시오.\n"
@@ -1410,7 +1409,7 @@ if st.session_state.get('need_calc', False):
 4. 🚨 [상태별 호칭 맞춤형 타겟팅]: 내담자의 현재 혼인 상태({u_marital})를 반드시 반영하십시오. 
    - 기혼: '현재 남편/배우자'로 칭할 것.
    - 미혼: '미래의 남편/인연'으로 칭할 것.
-   - 🚨돌싱(이혼/사별): 절대 '현재 남편'라고 부르지 말고, '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운/애인)'을 맞이하는 조언으로 센스 있게 변환하여 카운슬링할 것.
+   - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
 
                 prompt = f"""
@@ -1481,6 +1480,7 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
+(※ 🚨AI 지시: 위 마커 자리는 파이썬이 대운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 (※ AI 지시: 첫 대운부터 현재 대운 직전까지 모두 서술. 표 생성 금지)
@@ -1492,6 +1492,7 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
+(※ 🚨AI 지시: 위 마커 자리는 파이썬이 세운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 (작성)
@@ -1502,6 +1503,7 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
+(※ 🚨AI 지시: 위 마커 자리는 파이썬이 월운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
@@ -1543,7 +1545,6 @@ if st.session_state.get('need_calc', False):
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
                     # 🚨 [AI 오지랖 완벽 절단 수술] 
-                    # AI가 [CHOYEON_GOLDEN_TEXT_HERE] 주변에 지어낸 소설을 물리적으로 도려냅니다.
                     div_start = "<div class='content-box-loose'>"
                     target_sub = "1) 타고난 삶의 무대와 기본 성향"
                     
