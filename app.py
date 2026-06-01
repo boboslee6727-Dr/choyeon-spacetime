@@ -982,9 +982,10 @@ if st.session_state.get('need_calc', False):
                 ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
             disp_name = u_name if u_name.strip() else "홍길동"
             info_h = f"""
-            <div style='text-align:center; font-family:"Malgun Gothic", sans-serif; margin-bottom:15px; line-height:1.5;'>
-                <span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>
-                    {p_icon} {u_name}님 ({u_gender}, {u_marital}, {u_age}세)
+            <div style='text-align:center; font-family:"Malgun Gothic", sans-serif; margin-bottom:20px; line-height:1.5;'>
+                <div style='font-size:22px; font-weight:900; color:#1A237E; margin-bottom:5px;'>🎯 [초연 시공명리 사주풀이]</div>
+                <span style='font-size:18px; font-weight:900; color:#1A237E !important; white-space:nowrap;'>
+                    {p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)
             </span><br>
             <span style='font-size:14px; font-weight:900; color:#222; white-space:nowrap;'>
                 [양력] {sol_str} | [음력] {lun_str}{time_str}
@@ -1123,26 +1124,22 @@ if st.session_state.get('need_calc', False):
                 p_icon = "♂️" if u_gender == "남성" else "♀️"
                 p_color = "#1A237E" if u_gender == "남성" else "#D50000"
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
+                disp_name = u_name if u_name.strip() else "홍길동"
 
-                # 1. 먼저 정의해야 할 변수들을 전부 셋팅합니다. (🚨 주의: 안쪽 HTML은 좌측에 완전히 밀착시켜야 깨지지 않습니다!)
+                # 🚨 [1. 표지 (Cover Page) 수정] 들여쓰기 교정, 악성 CSS 제거 및 완벽 중앙 압축 정렬
                 cover_html = f"""
-<div class='report-page cover-page' style='padding:0; margin:0 auto; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; page-break-after: always; -webkit-print-color-adjust: exact;'>
-    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 85%; max-width: 750px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
-        </div>
-        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
-            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
-            </div>
-        </div>
-        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
-        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
-    </div>
-</div>
-"""
+                <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 50px 0;'>
+                    <div style='width: 90%; max-width: 600px; height: auto !important; padding: 50px 40px; text-align: center; border: 3px solid #1A237E; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #ffffff;'>
+                        <h1 style='color: #1A237E; font-size: 32px; font-weight: 900; margin-bottom: 30px;'>🏮 초연 시공명리 사주팔자 풀이</h1>
+                        <div style='font-size: 22px; font-weight: 900; color: #1A237E !important; margin-bottom: 20px;'>{p_icon} 신청인 : {disp_name} 님</div>
+                        <div style='font-size: 16px; color: #555; margin-bottom: 8px;'>[양력] {u_y}년 {u_m:02d}월 {u_d:02d}일 | [음력] {s_y}년 {s_m:02d}월 {s_d:02d}일 ({leap_str})</div>
+                        <div style='font-size: 16px; color: #555; margin-bottom: 30px;'>{s_t}</div>
+                        <div style='font-size: 14px; color: #777; margin-bottom: 40px;'>분석일: {today_str}</div>
+                        <h3 style='color: #1A237E; margin: 0; font-size: 20px;'>초연 시공명리 연구소</h3>
+                    </div>
+                </div>
+                <div style='page-break-after: always;'></div>
+                """
                 
                 # 🚨 사주 원국표 생성
                 ji_rel_rows = ""
@@ -1562,7 +1559,7 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
-(※ 🚨AI 지시: 표 아래에 '3세 甲子 | 13세 癸亥...' 처럼 대운 간지를 일렬로 나열하는 텍스트를 절대 임의로 생성하지 마십시오. 바로 아래 과거 대운 분석으로 넘어가십시오.)
+(※ 🚨AI 절대 지시: 위 마커 자리에 마크다운 표(Table/Grid)를 직접 그리거나, 대운 간지를 일렬로 나열하는 행위를 엄격히 금지합니다. 마커 원문만 100% 그대로 남겨두고 즉시 아래 과거 대운 분석으로 넘어가십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
@@ -1575,7 +1572,7 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
-(※ 🚨AI 지시: 표 아래에 세운 간지를 일렬로 나열하는 텍스트 생성 절대 금지)
+(※ 🚨AI 절대 지시: 마크다운 표(Table) 및 간지 나열 텍스트를 직접 생성하는 것을 절대 금지합니다. 마커 원문만 남기십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
@@ -1588,7 +1585,7 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
-(※ 🚨AI 지시: 표 아래에 월운 간지를 일렬로 나열하는 텍스트 생성 절대 금지)
+(※ 🚨AI 절대 지시: 마크다운 표(Table) 및 간지 나열 텍스트 직접 생성 절대 금지. 마커 원문만 남기십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
