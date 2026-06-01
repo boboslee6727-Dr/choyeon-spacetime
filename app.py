@@ -944,7 +944,6 @@ if st.session_state.get('need_calc', False):
             order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
             calc_d = get_daeun_su_accurate(utc_dt, order)
             current_daewun_age = ((u_age - calc_d) // 10) * 10 + calc_d
-            dw_start_age = current_daewun_age
             
             base_y_idx = (curr_y - 1984) % 60
             curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]
@@ -953,53 +952,17 @@ if st.session_state.get('need_calc', False):
             def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
             
             disp_name = u_name if u_name.strip() else "홍길동"
+            p_icon = "♂️" if u_gender == "남성" else "♀️"
+            p_color = "#1A237E" if u_gender == "남성" else "#D50000"
+            today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
-            # 🚨 [중복 제거 완료] 이전에 이곳에 방치되어 있던 구버전 표지(cover_html) 및 각종 사주표 코드는 
-            # 아래쪽의 'if u_product == "개인사주":' 구역 안에서 최신형으로 생성되므로 말끔히 삭제했습니다!
-
-            closing_html = f"""<div style='margin-top: 30px;'>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드와 같지만, 우리가 살아가며 마주하는 스캐너인 운은 늘 변화하며 흐릅니다.</p>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 초연 전통명리와의 인연이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 나침반이 되기를 진심으로 기원합니다.</p>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 전통명리의 지혜와 궁금증이 있으시면 언제든 초연 전통명리 연구소의 문을 두드려 주십시오.</p>
-<p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
-<div style='text-align: right; margin-top: 30px;'>
-<span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
-</div>
-</div>"""
-
-            # 🎯 [Ver 42.1: 하드코딩 DB 완벽 연동 및 AI 오지랖 원천 차단] 
-            w_key = f"{ms}{mb}".strip()
-            i_key = f"{ds}{db}".strip()
-
-            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-
-            # 명주님의 절대 성역 (AI 개입 불가 하드코딩)
-            choyeon_golden_text = f"""
-<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
-    <p style='text-indent: 15px; margin-bottom: 5px;'>
-        <b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
-    </p>
-</div>
-"""
-            dw_start_age = current_daewun_age
-            dw_mid_age   = current_daewun_age + 4
-            dw_mid2_age  = current_daewun_age + 5
-            dw_end_age   = current_daewun_age + 9
-            
             # ------------------------------------------------------------------
             # [모드 1] 개인사주 분석: 최종 순서 정리
             # ------------------------------------------------------------------
             if u_product == "개인사주":
                 past_months_html = ""
-                p_icon = "♂️" if u_gender == "남성" else "♀️"
-                p_color = "#1A237E" if u_gender == "남성" else "#D50000"
-                today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
-                disp_name = u_name if u_name.strip() else "홍길동"
 
-                # 🚨 [1. 표지 (Cover Page) 수정] s_t 에러 원천 해결 (u_t로 변경)
+                # 🚨 [1. 표지 (Cover Page)]
                 cover_html = f"""
                 <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 50px 0;'>
                     <div style='width: 90%; max-width: 600px; height: auto !important; padding: 50px 40px; text-align: center; border: 3px solid #1A237E; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #ffffff;'>
@@ -1014,7 +977,7 @@ if st.session_state.get('need_calc', False):
                 <div style='page-break-after: always;'></div>
                 """
                 
-                # 🚨 사주 원국표 생성 (이 부분도 같은 세로줄입니다)
+                # 🚨 [2. 사주 원국표 생성]
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -1023,7 +986,6 @@ if st.session_state.get('need_calc', False):
                     lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                     ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-                disp_name = u_name if u_name.strip() else "홍길동"
                 info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {disp_name}님 ({u_gender}, {u_marital}, {u_age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
                 table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
@@ -1077,12 +1039,7 @@ if st.session_state.get('need_calc', False):
                 guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                 guiin_str = guiin_map.get(ds, '없음')
                     
-                adj_mins = get_total_time_adjustment(base_dt)
-                utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-                order = 1 if (GAN.index(ys)%2==0) == (u_gender=='남성') else -1
                 direction_str = "순행" if order == 1 else "역행"
-                calc_d = get_daeun_su_accurate(utc_dt, order)
-                
                 n_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
                 
@@ -1091,6 +1048,7 @@ if st.session_state.get('need_calc', False):
                 
                 master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
                 
+                # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
                 un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
@@ -1107,36 +1065,8 @@ if st.session_state.get('need_calc', False):
                 dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
                 current_daewun_age = cur_dw_idx * 10 + calc_d
                 
-                # 1. 과거 대운
-                past_daewun_list = []
-                for idx in range(cur_dw_idx):
-                    val = idx * 10 + calc_d
-                    d_gan = GAN[(GAN.index(ms) + (idx + 1) * order) % 10] if ms in GAN else "-"
-                    d_ji = JI[(JI.index(mb) + (idx + 1) * order) % 12] if mb in JI else "-"
-                    past_daewun_list.append(f"• {val}세~{val+9}세 ({d_gan}{d_ji}대운): ")
-                past_daewun_html = "\n".join(past_daewun_list) if past_daewun_list else "• (첫 대운 시기이므로 이전 대운 생략)"
-                
-                # 2. 과거 세운 (대운 교체기 소급 적용: 현재 연도 기준 최소 3년 전부터 강제 시작)
-                curr_dw_start_year = u_y + current_daewun_age - 1
-                sewun_start_calc = min(curr_dw_start_year, curr_y - 3)
-                past_sewun_list = []
-                for py in range(sewun_start_calc, curr_y):
-                    base = (py - 1984) % 60
-                    past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
-                past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (분석할 과거 세운 없음)"
-
-                # 3. 과거 월운 (출력 화면에 AI 비밀 지시어가 노출되지 않도록 깔끔하게 간지만 남김)
-                past_wol_list = []
-                for pm in range(1, curr_m):
-                    tc, tj = wol_gans[pm-1], wol_jis[pm-1]
-                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
-                past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
-
-                base_last_y = (curr_y - 1 - 1984) % 60
-                last_y_ganji = f"{GAN[base_last_y % 10]}{JI[base_last_y % 12]}"
-                
+                # 🚨 [4. 세운 흐름표 생성]
                 start_year = u_y + current_daewun_age - 1
-                
                 sewun_info = []
                 se_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
@@ -1151,6 +1081,7 @@ if st.session_state.get('need_calc', False):
                     se_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
                 se_html += "</div>"
 
+                # 🚨 [5. 월운 흐름표 생성]
                 wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
                 wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
                 cur_wol_g = wol_gans[curr_m - 1]
@@ -1165,6 +1096,30 @@ if st.session_state.get('need_calc', False):
                     wol_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
                 wol_html += "</div>"
                 
+                # 🚨 [6. 과거 운세 요약 생성 (AI 프롬프트용)]
+                past_daewun_list = []
+                for idx in range(cur_dw_idx):
+                    val = idx * 10 + calc_d
+                    d_gan = GAN[(GAN.index(ms) + (idx + 1) * order) % 10] if ms in GAN else "-"
+                    d_ji = JI[(JI.index(mb) + (idx + 1) * order) % 12] if mb in JI else "-"
+                    past_daewun_list.append(f"• {val}세~{val+9}세 ({d_gan}{d_ji}대운): ")
+                past_daewun_html = "\n".join(past_daewun_list) if past_daewun_list else "• (첫 대운 시기이므로 이전 대운 생략)"
+
+                curr_dw_start_year = u_y + current_daewun_age - 1
+                sewun_start_calc = min(curr_dw_start_year, curr_y - 3)
+                past_sewun_list = []
+                for py in range(sewun_start_calc, curr_y):
+                    base = (py - 1984) % 60
+                    past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
+                past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (분석할 과거 세운 없음)"
+
+                past_wol_list = []
+                for pm in range(1, curr_m):
+                    tc, tj = wol_gans[pm-1], wol_jis[pm-1]
+                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
+                past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
+
+                # 🚨 [7. 결과 출력 HTML 조립]
                 closing_html = f"""<div style='margin-top: 30px;'>
 <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드와 같지만, 우리가 살아가며 마주하는 스캐너인 운은 늘 변화하며 흐릅니다.</p>
 <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 초연 전통명리와의 인연이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 나침반이 되기를 진심으로 기원합니다.</p>
@@ -1175,7 +1130,6 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                # 🚨 HTML 안쪽은 절대 들여쓰기 금지! (마크다운 파괴 방지)
                 report_1_full_html = f"""{cover_html}
 <div class='no-print' style='text-align:right; margin: 20px 0;'>
 <button onclick='window.print()' style='background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-family:"Noto Serif KR", serif;'>
@@ -1193,6 +1147,7 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
+                # 🚨 [8. AI 프롬프트 변수 및 조건 세팅]
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
 
@@ -1209,10 +1164,8 @@ if st.session_state.get('need_calc', False):
                 hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
                 hang_un_vaults_str = ", ".join(hang_un_vaults) if hang_un_vaults else "해당 없음"
 
-                # 🎯 [파이썬 하드코딩 1] 호칭 동적 분리 (성+이름 -> 이름)
                 disp_first_name = disp_name[1:] if len(disp_name) > 2 else disp_name
                 
-                # 🎯 [파이썬 하드코딩 2] 연령대별 MZ 세대 맞춤형 지시어 주입
                 age_prompt = ""
                 if u_age < 20:
                     age_prompt = "내담자는 청소년기(10대)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
@@ -1229,7 +1182,6 @@ if st.session_state.get('need_calc', False):
                 else:
                     gender_prompt = "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
 
-                # 🎯 [Ver 41.1: 하드코딩 DB 완벽 연동 및 AI 오지랖 완벽 차단] 
                 w_key = f"{ms}{mb}".strip()
                 i_key = f"{ds}{db}".strip()
 
@@ -1308,24 +1260,6 @@ if st.session_state.get('need_calc', False):
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
 
-                # 🎯 [파이썬 하드코딩] 과거 세운 및 월운 리스트 강제 생성 (AI 태업 원천 차단)
-                curr_dw_start_year = u_y + current_daewun_age - 1
-                
-                # 1. 지나온 과거 세운 (대운 시작년도 ~ 작년)
-                past_sewun_list = []
-                for py in range(curr_dw_start_year, curr_y):
-                    base = (py - 1984) % 60
-                    past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
-                past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (대운 교체 첫 해이므로 이전 대운 마지막 2~3년 요약): "
-
-                # 3. 과거 월운 (출력 화면에 AI 비밀 지시어가 노출되지 않도록 깔끔하게 간지만 남김)
-                past_wol_list = []
-                for pm in range(1, curr_m):
-                    tc, tj = wol_gans[pm-1], wol_jis[pm-1]
-                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
-                past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
-
-                # 🚨 [새로운 AI 지능 탑재] 초연 시공명리 체/용 키워드 매트릭스 주입
                 che_yong_matrix_text = """
 [초연 시공명리 체/용(體/用) 운세 분석 키워드 매트릭스]
 - 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
