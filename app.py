@@ -1099,17 +1099,27 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-            w_key = f"{ms}{mb}".strip()
-            i_key = f"{ds}{db}".strip()
-            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-            choyeon_golden_text = "<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'><p style='text-indent: 15px; margin-bottom: 5px;'><b>" + disp_name + "님</b>은 '" + w_val + "'의 시공간에서, '" + i_val + "'의 성품을 가지고 태어나셨습니다.</p></div>"
+                # 🎯 [Ver 42.1: 하드코딩 DB 완벽 연동 및 AI 오지랖 원천 차단] 
+                w_key = f"{ms}{mb}".strip()
+                i_key = f"{ds}{db}".strip()
 
-            dw_mid_age   = current_daewun_age + 4
-            dw_mid2_age  = current_daewun_age + 5
-            dw_end_age   = current_daewun_age + 9
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+
+                # 명주님의 절대 성역 (AI 개입 불가 하드코딩)
+                choyeon_golden_text = f"""
+<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+    <p style='text-indent: 15px; margin-bottom: 5px;'>
+        <b>{disp_name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
+    </p>
+</div>
+"""
+                dw_start_age = current_daewun_age
+                dw_mid_age   = current_daewun_age + 4
+                dw_mid2_age  = current_daewun_age + 5
+                dw_end_age   = current_daewun_age + 9
             
             # ------------------------------------------------------------------
             # [모드 1] 개인사주 및 타감명서 본문 AI 가동
@@ -1135,6 +1145,12 @@ if st.session_state.get('need_calc', False):
                     f"- 🚨 [오행 분포 팩트]: 목({counts['목']}), 화({counts['화']}), 토({counts['토']}), 금({counts['금']}), 수({counts['수']})\n"
                     f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
                     f"- 공망 팩트: [일주 기준] {i_gong}\n"
+                    f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
+                    f"1. 🚨인사말 및 서론 철저 금지: '안녕하십니까', '초연 박사입니다', '기쁩니다' 등의 인사말이나 감성적인 도입부를 절대(Never) 작성하지 마십시오. 결과물의 첫 문장은 반드시 <h3...> 태그로 시작해야 합니다.\n"
+                    f"2. 원국에 없는 기운 창조 금지: 사주에 없는 십성(예: 무인성)을 있는 것처럼 지어내지 마십시오.\n"
+                    f"3. 괄호 병기 금지: 에세이 작성 시 '(일주 공망)', '(인성)' 등의 한자어나 전문 용어를 괄호 안에 병기하지 마십시오.\n"
+                    f"4. HTML 훼손 금지: </div> 태그를 임의로 닫거나 마크다운 기호를 남발하지 마십시오.\n"
+                    f"5. 🚨 이름 및 사주 중복 출력 금지: 결과물 상단에 이름이나 생년월일 정보를 절대로 반복해서 적지 마십시오.\n"
                 )
 
                 prompt = f"""
@@ -1143,10 +1159,7 @@ if st.session_state.get('need_calc', False):
 [ 🚨종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
 1. 🚨명리 용어 순화: 격국, 비견, 식상 등 한자어 남발을 엄격히 금지하며, 현대적 구어체로 부드럽게 풀어서 설명하십시오.
 2. 따뜻한 상담가 마인드: 내담자를 깊이 이해하는 카운슬러의 어조로 전개하십시오. 호칭은 반드시 '{disp_name}님'만 사용하십시오.
-3. 🚨[절대 성역 1 - 자의형상 템플릿]: 
-사주 구조 분석 첫 문장은 반드시 제공된 [월간], [월지(월령)], [일간], [일지]의 자의형상 데이터를 조합하여 다음의 템플릿에 토씨 하나 틀리지 말고 맞게 작성할 것.
-(예: {disp_name}님은 '[월간 자의형상]이 [월령 시공간 설명]'의 시공간에서, '[일주 자의형상]'의 성품을 가지고 태어나셨습니다.)
-4. 🚨[절대 성역 2 - 골든 텍스트]: 문서 상단의 '[CHOYEON_GOLDEN_TEXT_HERE]' 마커는 100% 원문 그대로 출력하십시오.
+3. 🚨[절대 성역]: 문서 상단의 '[CHOYEON_GOLDEN_TEXT_HERE]' 마커는 100% 원문 그대로 출력하십시오. 절대 이 부분에 사족을 달거나 변형하지 마십시오.
 
 [문단 통제 명령]
 1. 모든 통변 에세이는 <p style='text-indent: 1em;'> 태그로 감싸십시오.
@@ -1158,7 +1171,6 @@ if st.session_state.get('need_calc', False):
 [운세(전/후반부) 맞춤형 통변 규칙]
 - 오늘의 운세 및 전/후반부 분석 시 '분석 키워드(예: 설화, 가족불화, 관재 등)'를 그대로 나열하지 마시오.
 - 반드시 내담자의 환경(성별: {gender_prompt}, 연령: {age_prompt})에 맞춰 구어체 에세이로 통변할 것.
-- 10~20대: 학업/진로, 20~30대: 취업/연애, 30~40대: 승진/재물, 50대 이상: 건강/가족 관계 위주로 해석하십시오.
 
 [통변 데이터]
 - 격국: {gyukgook_detail}
@@ -1168,7 +1180,7 @@ if st.session_state.get('need_calc', False):
 <div class='content-box-loose'>
 [CHOYEON_GOLDEN_TEXT_HERE]
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 타고난 삶의 무대와 기본 성향</span>
-(격국을 바탕으로 핵심 재능과 발현 시기, 무대 규모를 작성)
+(격국을 바탕으로 핵심 재능과 발현 시기, 무대 규모를 에세이로 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
 (작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 사주팔자의 역동적 관계 분석</span>
