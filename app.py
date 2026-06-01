@@ -19,7 +19,7 @@ except ImportError:
     cy_engine = None
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 41.0 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 42.0 (Gemini 2.5-Pro Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -1225,7 +1225,7 @@ if st.session_state.get('need_calc', False):
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>⏳ 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
+                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
                 
                 daewun_info = []
                 un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
@@ -1243,11 +1243,31 @@ if st.session_state.get('need_calc', False):
                 dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
                 current_daewun_age = cur_dw_idx * 10 + calc_d
                 
-                # 🎯 [수술 포인트 1] 현재 대운이 시작된 실제 연도(Year) 계산
-                curr_dw_start_year = u_y + current_daewun_age - 1
-                base_dw_start = (curr_dw_start_year - 1984) % 60
-                dw_start_ganji = f"{GAN[base_dw_start % 10]}{JI[base_dw_start % 12]}"
+                # 1. 과거 대운
+                past_daewun_list = []
+                for idx in range(cur_dw_idx):
+                    val = idx * 10 + calc_d
+                    d_gan = GAN[(GAN.index(ms) + (idx + 1) * order) % 10] if ms in GAN else "-"
+                    d_ji = JI[(JI.index(mb) + (idx + 1) * order) % 12] if mb in JI else "-"
+                    past_daewun_list.append(f"• {val}세~{val+9}세 ({d_gan}{d_ji}대운): ")
+                past_daewun_html = "\n".join(past_daewun_list) if past_daewun_list else "• (첫 대운 시기이므로 이전 대운 생략)"
                 
+                # 2. 과거 세운 (대운 교체기 소급 적용: 현재 연도 기준 최소 3년 전부터 강제 시작)
+                curr_dw_start_year = u_y + current_daewun_age - 1
+                sewun_start_calc = min(curr_dw_start_year, curr_y - 3)
+                past_sewun_list = []
+                for py in range(sewun_start_calc, curr_y):
+                    base = (py - 1984) % 60
+                    past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
+                past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (분석할 과거 세운 없음)"
+
+                # 3. 과거 월운 (출력 화면에 AI 비밀 지시어가 노출되지 않도록 깔끔하게 간지만 남김)
+                past_wol_list = []
+                for pm in range(1, curr_m):
+                    tc, tj = wol_gans[pm-1], wol_jis[pm-1]
+                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
+                past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
+
                 base_last_y = (curr_y - 1 - 1984) % 60
                 last_y_ganji = f"{GAN[base_last_y % 10]}{JI[base_last_y % 12]}"
                 
@@ -1325,15 +1345,19 @@ if st.session_state.get('need_calc', False):
                 hang_un_vaults = list(dict.fromkeys(daewun_vaults + sewun_vaults + wolwun_vaults))
                 hang_un_vaults_str = ", ".join(hang_un_vaults) if hang_un_vaults else "해당 없음"
 
+                # 🎯 [파이썬 하드코딩 1] 호칭 동적 분리 (성+이름 -> 이름)
+                disp_first_name = disp_name[1:] if len(disp_name) > 2 else disp_name
+                
+                # 🎯 [파이썬 하드코딩 2] 연령대별 MZ 세대 맞춤형 지시어 주입
                 age_prompt = ""
                 if u_age < 20:
                     age_prompt = "내담자는 청소년기(10대)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
                 elif 20 <= u_age < 40:
-                    age_prompt = "내담자는 청년기(20~30대)입니다. 적성 직업운과 결혼 자녀운 등 사회적 자립과 혼인 과정을 상세히 통변하십시오."
+                    age_prompt = "내담자는 청년기(20~30대) MZ세대입니다. 고리타분한 명리 용어를 버리고 직업은 '스타트업, 프리랜서, 워라밸, 퍼스널 브랜딩', 연애는 '소개팅, 썸, 연인 간의 소통' 등 2030 청년들이 100% 공감할 수 있는 세련되고 트렌디한 어휘로 통변하십시오."
                 elif 40 <= u_age < 60:
-                    age_prompt = "내담자는 중장년기(40~50대)입니다. 재성운과 관직 명예운에 집중하여 상세하게 서술하십시오."
+                    age_prompt = "내담자는 중장년기(40~50대)입니다. 재성운과 관직 명예운에 집중하여 현실적인 자산 관리와 사회적 성취를 중심으로 서술하십시오."
                 else:
-                    age_prompt = "내담자는 노년기(60대 이상)입니다. 건강운 및 대운 세운 통변 시 건강 관리를 최우선으로 깊이 다루십시오."
+                    age_prompt = "내담자는 노년기(60대 이상)입니다. 건강운 및 심리적 평안, 노후 자산 안정을 최우선으로 깊이 다루십시오."
 
                 gender_prompt = ""
                 if u_gender == "남성":
@@ -1375,10 +1399,10 @@ if st.session_state.get('need_calc', False):
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
                     f"1. 서론 철저 금지: '안녕하십니까', '기쁩니다' 등의 인사말이나 감성적인 도입부를 절대로 작성하지 마십시오.\n"
-                    f"2. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성을 지어내어 통변하지 마십시오.\n"
-                    f"3. 괄호 병기 금지: 에세이 작성 시 전문 용어나 한자를 괄호 안에 병기하는 행위를 금지합니다.\n"
-                    f"4. HTML 훼손 금지: </div> 태그를 임의로 닫거나 마크다운 기호를 남발하지 마십시오.\n"
-                    f"5. 이름 및 사주정보 중복 출력 금지: 결과물 상단에 이름이나 생년월일 정보를 절대 반복해서 적지 마십시오.\n"
+                    f"2. 🚨호칭 절대 규칙: 각 대목차의 첫 문장은 반드시 '{disp_name}님은~'으로 격식있게 시작하고, 그 이후 본문에서는 친근하게 '{disp_first_name}님은~'으로 부르십시오. '선생님', '당신', '그대', '본인'이라는 호칭은 절대(Never) 금지합니다.\n"
+                    f"3. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성을 지어내어 통변하지 마십시오.\n"
+                    f"4. 괄호 병기 금지: 에세이 작성 시 전문 용어나 한자를 괄호 안에 병기하는 행위를 금지합니다.\n"
+                    f"5. HTML 훼손 금지: </div> 태그를 임의로 닫거나 마크다운 기호를 남발하지 마십시오.\n"
                 )
 
                 if u_gender == '남성':
@@ -1504,44 +1528,45 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
-(※ AI 지시: 운의 흐름이 내담자의 삶에 미치는 영향 총평 에세이 작성)
+(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열을 금지하며, 반드시 다음 두 가지 포맷을 병기하여 입체적으로 풀이하십시오.)
+<br> - 1) 일반 명리 풀이: 일간 대비 들어오는 간지의 십성에 의한 현실적 운세 해석
+<br> - 2) 체/용(體/用) 입체 분석: [체(환경/배경)]는 ~하게 흘러가고, [용(실제 나의 체감/실행/결과)]은 ~하게 발현되는 시기.
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
-(※ 🚨AI 지시: 위 마커 자리는 파이썬이 대운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
-(※ AI 지시: 반드시 내담자의 첫 번째 대운({dw_start_ganji})부터 현재 대운 직전까지 살아온 모든 과거 대운을 나이대별로 순서대로 나열하여 에세이로 분석하십시오. 절대 임의로 생략하거나 묶지 마십시오.)
+{past_daewun_html}
+(※ AI 지시: 위 나열된 각 과거 대운의 시기별로 1~2문장으로 명확히 요약하되, 반드시 위의 '1) 일반 / 2) 체용 분석' 포맷을 지키십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(작성)
+(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(작성)
+(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
-(※ 🚨AI 지시: 위 마커 자리는 파이썬이 세운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
-(※ AI 지시: 현재 대운이 시작된 {curr_dw_start_year}년({dw_start_ganji})부터 작년 {curr_y-1}년({last_y_ganji})까지의 세운 흐름을 분석하여 서술하십시오.)
+{past_sewun_html}
+(※ AI 지시: 위 나열된 각 세운별로 1~2문장으로 명확히 요약하되, 반드시 '1) 일반 / 2) 체용 분석' 포맷을 지키십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-(작성)
+(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-(작성)
+(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
-(※ 🚨AI 지시: 위 마커 자리는 파이썬이 월운 흐름표를 꽂을 자리이므로 절대 지우지 말고 100% 원문 그대로 두십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ AI 지시: 올해 지나온 각 과거 월운들을 분석하십시오. 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 무조건 '작년도 세운의 마지막 달(음력 12월)'에 해당하므로, 1월 분석 시 반드시 새해가 아닌 작년의 기운으로 풀이하십시오.)
+(※ AI 지시: 위 나열된 각 월운별로 '1) 일반 / 2) 체용 분석' 포맷을 지켜 서술하십시오. 🚨단, 명리학적 기준에 따라 '양력 1월'은 무조건 '작년 하반기'의 기운으로 간주하여 풀이해야 하는 점을 절대 잊지 마십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
-(작성)
+(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
-(작성)
+(작성 - 1) 일반 / 2) 체용 분석 포맷 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
 (작성)
 </div>
@@ -1606,7 +1631,9 @@ if st.session_state.get('need_calc', False):
 
                     report_1_full_html = report_1_full_html.replace("{full_content_clean_placeholder}", full_content_clean)
                     
-                    st.markdown(report_1_full_html, unsafe_allow_html=True)
+                    # 🚨 [수술 1] 생성된 최종 결과물을 세션 메모리에 영구 저장 (증발 완벽 차단!)
+                    st.session_state['saved_report_html'] = report_1_full_html
+                    # (st.markdown 직접 출력은 '6. 화면 출력부'가 알아서 안전하게 처리하므로 여기선 삭제합니다)
                     
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}")
@@ -1710,18 +1737,24 @@ if st.session_state.get('app_running', False) and 'global_gans' in st.session_st
         st.markdown("### 🌊 일진 폭포수 통제실")
         st.markdown("<div style='font-size:13px; color:#555; margin-bottom:10px;'>원하시는 날짜를 선택 후 <b>[가동]</b> 버튼을 누르십시오.</div>", unsafe_allow_html=True)
         
+        import datetime as dt_mod
+        # 🚨 [핵심 방어막] 날짜 세션 영구 보존 (날짜를 클릭해도 절대 초기화되지 않음)
+        if 'waterfall_date' not in st.session_state:
+            st.session_state['waterfall_date'] = dt_mod.date.today()
+        
         with st.form(key="waterfall_form"):
-            import datetime as dt_mod
-            cal_date = st.date_input("🔮 날짜 선택", value=dt_mod.date.today())
+            cal_date = st.date_input("🔮 날짜 선택", value=st.session_state['waterfall_date'])
             btn_waterfall = st.form_submit_button("🚀 일진 폭포수 가동")
             
             if btn_waterfall:
-                st.session_state.w_date = cal_date
-                st.session_state.run_w = True
+                st.session_state['waterfall_date'] = cal_date
+                # 🚨 [스위치 통일] 4번 코드와 동일하게 'run_waterfall' 변수를 사용!
+                st.session_state['run_waterfall'] = True
 
-if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
+# 🚨 'run_waterfall' 스위치가 켜져 있을 때만 폭포수 화면을 출력
+if st.session_state.get('run_waterfall', False) and st.session_state.get('waterfall_date'):
     st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'>", unsafe_allow_html=True)
-    t_date = st.session_state.w_date
+    t_date = st.session_state['waterfall_date']
     
     gans_list = st.session_state['global_gans']
     jjis_list = st.session_state['global_jjis']
@@ -1758,31 +1791,20 @@ if st.session_state.get('run_w', False) and st.session_state.get('w_date'):
     if gj_str:
         parts = gj_str.split()
         
-        # 년, 월, 일 간지 한자만 추출
         target_year = parts[0][:2]
         target_wol = parts[1][:2]
         target_il = parts[2][:2]
         
-        # 1. 내담자의 기본 성향 그룹 도출 (일지 기준)
         ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
         
-        # 2. 전반부 (오전) 연산: 일간 기준 월간(체), 일간(용)
-        # 체운: 선택한 날짜의 '월간'이 내 일간 대비 무슨 십성인가?
         m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
-        # 일진 타격 십성: 선택한 날짜의 '일간'이 내 일간 대비 무슨 십성인가?
-        d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))     
-        # 용운: 일진 타격 십성(상위)과 내 일지 십성(하위)의 매트릭스 결과
+        d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))      
         am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
         
-        # 3. 후반부 (오후) 연산: 일간 기준 월지(체), 일지(용)
-        # 체운: 선택한 날짜의 '월지'가 내 일간 대비 무슨 십성인가?
         m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-        # 일진 타격 십성: 선택한 날짜의 '일지'가 내 일간 대비 무슨 십성인가?
         d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
-        # 용운: 일진 타격 십성(상위)과 내 일지 십성(하위)의 매트릭스 결과
         pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
         
-        # 🚨 [데이터 누락 디버깅 장치]
         try:
             if cy_engine is None: raise ImportError("cy_engine 모듈 없음")
             am_res = cy_engine.get_secret_keywords(m_che_first, am_yong)
