@@ -999,14 +999,14 @@ if st.session_state.get('need_calc', False):
                 today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
                 disp_name = u_name if u_name.strip() else "홍길동"
 
-                # 🚨 [여기!] 윗줄(disp_name)과 세로 시작선이 정확히 같아야 합니다!
+                # 🚨 [1. 표지 (Cover Page) 수정] s_t 에러 원천 해결 (u_t로 변경)
                 cover_html = f"""
                 <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 50px 0;'>
                     <div style='width: 90%; max-width: 600px; height: auto !important; padding: 50px 40px; text-align: center; border: 3px solid #1A237E; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #ffffff;'>
                         <h1 style='color: #1A237E; font-size: 32px; font-weight: 900; margin-bottom: 30px;'>🏮 초연 시공명리 사주팔자 풀이</h1>
                         <div style='font-size: 22px; font-weight: 900; color: #1A237E !important; margin-bottom: 20px;'>{p_icon} 신청인 : {disp_name} 님</div>
                         <div style='font-size: 16px; color: #555; margin-bottom: 8px;'>[양력] {sol_str} | [음력] {lun_str}</div>
-                        <div style='font-size: 16px; color: #555; margin-bottom: 30px;'>{s_t}</div>
+                        <div style='font-size: 16px; color: #555; margin-bottom: 30px;'>{u_t}</div>
                         <div style='font-size: 14px; color: #777; margin-bottom: 40px;'>분석일: {today_str}</div>
                         <h3 style='color: #1A237E; margin: 0; font-size: 20px;'>초연 시공명리 연구소</h3>
                     </div>
