@@ -814,6 +814,7 @@ with st.sidebar:
     st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
     
+
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
     u_name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
     u_gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
@@ -866,20 +867,21 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력</div>", unsafe_allow_html=True)
         other_reading_text = st.text_area("타 감명서 원문", height=250, placeholder="여기에 내용을 붙여넣기 하세요...", key="other_reading")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+           
+    # 🚨 [가동 버튼부 정렬 및 수술 완료]
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
-    # 🚨 [수술 부위: 최고급형 일진 시공간 분석실 및 가동 버튼 이식]
-    st.markdown("---")
-    st.markdown("### 🔮 일진(일운) 시공간 분석실")
+    st.markdown("<div style='font-weight:900; color:#2E7D32; margin-top:20px; margin-bottom:5px;'>🔮 일진 시공간 분석</div>", unsafe_allow_html=True)
+    target_iljin_date = st.date_input("분석할 일자 선택", value=datetime.now())
+    
     if st.button("🚀 오늘의 일운 정밀분석 가동", use_container_width=True):
         st.session_state['app_running'] = True
         st.session_state['need_calc_iljin'] = True
         st.session_state['run_waterfall'] = True
+        st.session_state['target_date'] = target_iljin_date
         st.rerun()
 
-    # 🚨 유효성 검사 후 시스템 가동 상태 설정 (need_calc를 True로 설정하여 연산 시작)
+    # 🚨 유효성 검사부 (btn_single 사용)
     if btn_single:
         if not u_name.strip(): 
             st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
@@ -890,13 +892,13 @@ with st.sidebar:
         else:
             st.session_state['app_running'] = True
             st.session_state['need_calc'] = True
-            st.session_state['run_waterfall'] = False # 폭포수는 사주를 새로 뽑으면 닫음
+            st.session_state['run_waterfall'] = False 
             for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del']:
                 if key in st.session_state: del st.session_state[key]
     
     components.html("""
     <div style='padding: 0; margin: 0;'>
-        <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: all 0.3s;'>
+        <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15);'>
             🖨️ 풀이 결과 인쇄 / PDF 저장
         </button>
         <script>
