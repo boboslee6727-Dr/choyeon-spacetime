@@ -975,14 +975,20 @@ if st.session_state.get('need_calc', False):
 
                 # 🚨 [1. 표지 (Cover Page) 수정] A4 인쇄 이탈 원천 차단 및 완벽 중앙 정렬
                 cover_html = f"""
-                <div style='position: relative; width: 100%; height: 297mm; overflow: hidden; page-break-after: always;'>
-                    <div style='position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 180mm; padding: 20mm; text-align: center; border: 5px solid #1A237E; border-radius: 20px; background-color: #ffffff; box-shadow: 0 0 15px rgba(0,0,0,0.1);'>
-                        <h1 style='color: #1A237E; font-size: 32px; font-weight: 900; margin-bottom: 30px;'>🏮 초연 시공명리 사주풀이</h1>
-                        <div style='font-size: 24px; font-weight: 900; color: #1A237E !important; margin-bottom: 20px;'>{p_icon} 신청인 : {disp_name} 님</div>
-                        <div style='font-size: 16px; color: #555; margin-bottom: 10px;'>[양력] {sol_str} | [음력] {lun_str}</div>
-                        <div style='font-size: 16px; color: #555; margin-bottom: 30px;'>{u_t}</div>
-                        <div style='font-size: 14px; color: #777; margin-bottom: 40px;'>분석일: {today_str}</div>
-                        <h3 style='color: #1A237E; margin: 0; font-size: 20px;'>초연 시공명리 연구소</h3>
+                <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+                    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+                        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+                            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
+                        </div>
+                        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
+                            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
+                            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
+                            </div>
+                        </div>
+                        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
+                        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
                     </div>
                 </div>
                 """
