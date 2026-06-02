@@ -1309,7 +1309,7 @@ if st.session_state.get('need_calc', False):
 - 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
 """
 
-prompt = f"""
+                prompt = f"""
 {db_header}
 
 [ 🚨종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
