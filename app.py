@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 44.0 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 45.0 (Gemini 2.5-Pro Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -899,6 +899,26 @@ with st.sidebar:
     </div>
     """, height=55)
 
+    # ==============================================================================
+    # 🌊 4.5 [독립 모듈] 일진 시공간 분석 (사이드바 최하단 연동 영역)
+    # ==============================================================================
+    st.markdown("<hr style='border:2px dashed #1A237E; margin:20px 0;'>", unsafe_allow_html=True)
+    st.markdown("<div style='font-weight:900; color:#1A237E; font-size: 18px; margin-bottom:10px;'>🔮 일진 시공간 분석</div>", unsafe_allow_html=True)
+
+    # 인터넷 새로고침 시에도 선택한 일진 날짜가 증발하지 않도록 세션 보관
+    if 'target_date' not in st.session_state:
+        st.session_state['target_date'] = dt_mod.date.today()
+        
+    target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
+    st.session_state['target_date'] = target_iljin_date
+
+    # 일진 분석 가동 시, 상단의 정밀 합충형해파 로직을 그대로 관통하도록 트리거 작동
+    if st.button("🚀 오늘의 일운 정밀분석 가동", use_container_width=True):
+        if 'global_gans' in st.session_state:
+            st.session_state['app_running'] = True
+        st.session_state['run_waterfall'] = True
+        st.rerun()
+
 # ==============================================================================
 # 5. 분석 가동 로직 (need_calc 상태일 때만 무거운 연산 실행)
 # ==============================================================================
@@ -1289,7 +1309,7 @@ if st.session_state.get('need_calc', False):
 - 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
 """
 
-                prompt = f"""
+prompt = f"""
 {db_header}
 
 [ 🚨종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
@@ -1308,6 +1328,7 @@ if st.session_state.get('need_calc', False):
    [지시 3-2] '▶, ▷, ◈, •' 형태의 세부 소목차는 18px 크기 적용:
    <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 25px; margin-bottom: 5px;'>▶ 현재 대운 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 3. 표(Table) 생성 절대 금지. 운의 흐름 연도별 분석은 반드시 도트 기호(•)를 사용한 텍스트로 작성하십시오.
+4. 🚨 [출력 레이아웃 절대 규칙] 각 분석(전반기, 후반기 등) 내용 작성 시, 문단이 바뀌더라도 문단과 문단 사이에 '빈 줄(공백 줄)'을 절대 넣지 마십시오. 엔터키(줄바꿈)는 단 한 번만 사용하여 글이 빈틈없이 빽빽하게 이어지도록 출력하십시오. (HTML 태그 사용 시 <br><br> 금지, <br>만 단일 사용)
 
 [내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
@@ -1355,7 +1376,7 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
-(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열이나 학술적 명리 용어(체운, 용운, 상위십성 등) 사용을 엄격히 금지합니다. 반드시 다음 두 가지 포맷을 독립된 줄로(반드시 <br><br> 태그를 사용하여 줄바꿈) 분리하여 풀이하십시오.
+(※ 🚨AI 특수 지시: 아래의 모든 대운, 세운, 월운 분석 시 단순 십성 나열이나 학술적 명리 용어(체운, 용운, 상위십성 등) 사용을 엄격히 금지합니다. 반드시 다음 두 가지 포맷을 독립된 줄로(반드시 <br> 태그 1개만을 사용하여 줄바꿈) 분리하여 풀이하십시오.
 <br> <b>1) 일반 명리 풀이:</b> 일간 대비 운에서 들어오는 천간/지지의 기운을 바탕으로 현실적인 운세 현상을 세련되게 해석.
 <br> <b>2) 시공 명리 풀이:</b> 제공된 [초연 시공명리 운세 분석 키워드 매트릭스]의 결과 키워드를 바탕으로, 내담자의 연령({u_age}세), 성별({u_gender}), 혼인상태({u_marital})에 맞추어 실제 체감되는 구체적 현상을 한 편의 자연스러운 현대적 문어체 에세이로 통변하십시오. 기계적인 괄호 태그나 분절된 포맷 절대 금지.)
 
@@ -1366,15 +1387,16 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
 (※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. 조견표의 단어(예: 업무원만)를 로봇처럼 나열하지 말고 문장에 자연스럽게 녹여내십시오. 반드시 아래 템플릿 구조를 100% 엄수하여 <br> 태그 1개로만 줄을 바꾸십시오.
+
 [출력 템플릿]
 • OO세~OO세 (OO대운): 
 <br><b>1) 일반 명리 풀이:</b> (내용)
 <br><b>2) 시공 명리 풀이:</b> (내용) )
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
@@ -1383,15 +1405,16 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
 (※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. 조견표의 단어(예: 업무원만)를 로봇처럼 나열하지 말고 문장에 자연스럽게 녹여내십시오. 반드시 아래 템플릿 구조를 100% 엄수하여 <br> 태그 1개로만 줄을 바꾸십시오.
+
 [출력 템플릿]
 • OOOO년(OO년): 
 <br><b>1) 일반 명리 풀이:</b> (내용)
 <br><b>2) 시공 명리 풀이:</b> (내용) )
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
@@ -1400,15 +1423,16 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
 (※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. 조견표의 단어를 로봇처럼 나열하지 말고 문장에 자연스럽게 녹여내십시오. 반드시 아래 템플릿 구조를 100% 엄수하여 <br> 태그 1개로만 줄을 바꾸십시오. 단, '1월'은 명리학적 기준에 따라 '작년 하반기'의 기운으로 간주하여 풀이하십시오. 절대 내담자에게 이 지시를 언급하지 마십시오.
+
 [출력 템플릿]
 • O월(OO월): 
 <br><b>1) 일반 명리 풀이:</b> (내용)
 <br><b>2) 시공 명리 풀이:</b> (내용) )
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
-(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
-(작성 - 반드시 <br><br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
 (작성)
 </div>
@@ -1478,6 +1502,7 @@ if st.session_state.get('need_calc', False):
                     
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}")
+
             # ------------------------------------------------------------------
             # [2단계] 타 감명서 비교분석
             # ------------------------------------------------------------------
