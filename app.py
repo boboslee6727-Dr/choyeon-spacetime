@@ -871,16 +871,6 @@ with st.sidebar:
     # 🚨 [가동 버튼부 정렬 및 수술 완료]
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
-    st.markdown("<div style='font-weight:900; color:#2E7D32; margin-top:20px; margin-bottom:5px;'>🔮 일진 시공간 분석</div>", unsafe_allow_html=True)
-    target_iljin_date = st.date_input("분석할 일자 선택", value=datetime.now())
-    
-    if st.button("🚀 오늘의 일운 정밀분석 가동", use_container_width=True):
-        st.session_state['app_running'] = True
-        st.session_state['need_calc_iljin'] = True
-        st.session_state['run_waterfall'] = True
-        st.session_state['target_date'] = target_iljin_date
-        st.rerun()
-
     # 🚨 유효성 검사부 (btn_single 사용)
     if btn_single:
         if not u_name.strip(): 
@@ -1580,149 +1570,144 @@ if st.session_state.get('app_running', False):
 
 
 # ==============================================================================
-# 🌊 7. [독립 모듈] 일진 시공간 분석 결과 출력부 (백엔드 연산 전용)
+# 🌊 7. [독립 모듈] 일진 시공간 분석 (데이터 잠금 및 결과 출력부 통합)
 # ==============================================================================
 import datetime as dt_mod
 
-# 🚨 'run_waterfall' 스위치가 켜져 있을 때만 폭포수 화면을 메인 화면 하단에 출력
-if st.session_state.get('run_waterfall', False) and st.session_state.get('target_date'):
+# 🚨 메인 사주풀이가 완료되어 기본 데이터가 세션에 저장되어 있을 때만 하단에 노출
+if st.session_state.get('app_running', False) and 'global_gans' in st.session_state:
     st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'>", unsafe_allow_html=True)
-    t_date = st.session_state['target_date']
-    
-    gans_list = st.session_state['global_gans']
-    jjis_list = st.session_state['global_jjis']
-    m_ilgan = st.session_state['global_ds']
-    m_ilji = st.session_state['global_db']
-    
-    def get_execution_yong(upper_group, lower_group):
-        matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
-        return matrix.get(upper_group, {}).get(lower_group, '비겁')
+    st.markdown("<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>🔮 일진 시공간 분석실</h3>", unsafe_allow_html=True)
+    st.caption("메인 사주 분석 결과를 고정하여, 원하시는 날짜의 일운(일진)을 안전하게 스캔합니다.")
 
-    def get_gan_rel_simple(g1, g2):
-        if not g1 or not g2 or g1=="?" or g2=="?": return "-"
-        s = {g1, g2}
-        if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: return "합(合)"
-        if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]: return "충(沖)"
-        극_dict = {'甲':'戊', '乙':'己', '丙':'庚', '丁':'辛', '戊':'壬', '己':'癸', '庚':'甲', '辛':'乙', '壬':'丙', '癸':'丁'}
-        if 극_dict.get(g1) == g2 or 극_dict.get(g2) == g1: return "극(剋)"
-        return "-"
-    
-    def get_ji_rel_set_simple(j1, j2):
-        if not j1 or not j2 or j1 == "?" or j2 == "?": return "-"
-        s = {j1, j2}
-        if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
-        if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
-        if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
-        if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
-        return "-"
-
-    from korean_lunar_calendar import KoreanLunarCalendar
-    dklc = KoreanLunarCalendar()
-    dklc.setSolarDate(t_date.year, t_date.month, t_date.day)
-    gj_str = dklc.getChineseGapJaString()
-    
-    if gj_str:
-        parts = gj_str.split()
+    # 날짜 선택기 (날짜를 바꿔도 메인 결과가 날아가지 않도록 세션과 연동)
+    if 'target_date' not in st.session_state:
+        st.session_state['target_date'] = dt_mod.date.today()
         
-        target_year = parts[0][:2]
-        target_wol = parts[1][:2]
-        target_il = parts[2][:2]
-        
-        ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
-        
-        m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
-        d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))      
-        am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
-        
-        m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-        d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
-        pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
+    target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
+    st.session_state['target_date'] = target_iljin_date
 
-        gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
-        gan_res = []
-        labels_gan = ["년간", "월간", "일간", "시간"]
-        for idx, label in enumerate(labels_gan):
-            rel = get_gan_rel_simple(gans_list[idx], target_il[0])
-            if rel != "-":
-                gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il[0]}{rel}하여 {gan_desc.get(rel)} )</span>")
-        gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
+    # 가동 버튼 클릭 시 '일진 연산 트리거'만 ON 시키고 메인 사주는 그대로 유지
+    if st.button("🚀 선택한 날짜의 일운 정밀분석 가동", use_container_width=True):
+        st.session_state['run_waterfall'] = True
+        st.rerun()
 
-        ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
-        r_res = []
-        labels_ji = ["년지", "월지", "일지", "시지"]
-        for idx, label in enumerate(labels_ji):
-            rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
-            if rel_full != "-":
-                main_rel = rel_full.split(',')[0].strip()
-                r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
-        r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+    # 🚨 '일진 연산 트리거'가 켜져 있을 때만 아래에 결과 누적 출력
+    if st.session_state.get('run_waterfall', False):
+        t_date = st.session_state['target_date']
+        
+        gans_list = st.session_state['global_gans']
+        jjis_list = st.session_state['global_jjis']
+        m_ilgan = st.session_state['global_ds']
+        m_ilji = st.session_state['global_db']
+        
+        def get_execution_yong(upper_group, lower_group):
+            matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
+            return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
-        # 🚨 [새로운 AI 일진 폭포수 심장 탑재] 메인 AI에게 체/용 데이터를 넘겨 실시간 분석 요청!
-        iljin_prompt = f"""
+        def get_gan_rel_simple(g1, g2):
+            if not g1 or not g2 or g1=="?" or g2=="?": return "-"
+            s = {g1, g2}
+            if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: return "합(合)"
+            if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]: return "충(沖)"
+            극_dict = {'甲':'戊', '乙':'己', '丙':'庚', '丁':'辛', '戊':'壬', '己':'癸', '庚':'甲', '辛':'乙', '壬':'丙', '癸':'丁'}
+            if 극_dict.get(g1) == g2 or 극_dict.get(g2) == g1: return "극(剋)"
+            return "-"
+        
+        def get_ji_rel_set_simple(j1, j2):
+            if not j1 or not j2 or j1 == "?" or j2 == "?": return "-"
+            s = {j1, j2}
+            if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
+            if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
+            if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
+            if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
+            return "-"
+
+        from korean_lunar_calendar import KoreanLunarCalendar
+        dklc = KoreanLunarCalendar()
+        dklc.setSolarDate(t_date.year, t_date.month, t_date.day)
+        gj_str = dklc.getChineseGapJaString()
+        
+        if gj_str:
+            parts = gj_str.split()
+            
+            target_year = parts[0][:2]
+            target_wol = parts[1][:2]
+            target_il = parts[2][:2]
+            
+            ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
+            
+            m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
+            d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))      
+            am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
+            
+            m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
+            d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
+            pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
+
+            gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
+            gan_res = []
+            labels_gan = ["년간", "월간", "일간", "시간"]
+            for idx, label in enumerate(labels_gan):
+                rel = get_gan_rel_simple(gans_list[idx], target_il[0])
+                if rel != "-":
+                    gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il[0]}{rel}하여 {gan_desc.get(rel)} )</span>")
+            gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
+
+            ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
+            r_res = []
+            labels_ji = ["년지", "월지", "일지", "시지"]
+            for idx, label in enumerate(labels_ji):
+                rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
+                if rel_full != "-":
+                    main_rel = rel_full.split(',')[0].strip()
+                    r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
+            r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+
+            iljin_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다. 아래 데이터를 바탕으로 오늘 하루(일진)의 흐름을 분석하십시오.
-
 - 내담자 일주: {m_ilgan}{m_ilji}
 - 일진(오늘) 날짜: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)
 - 현재 월운(환경): {target_wol}월
 
-[오전/전반부 타격 데이터]
-- 타격 천간: {target_il[0]} ({d_gan_ss})
-- 🔹 체운(월간 기준 환경): {m_che_first} / 🔹 용운(실제 체감 및 실행): {am_yong}
-
-[오후/후반부 타격 데이터]
-- 타격 지지: {target_il[1]} ({d_ji_ss})
-- 🔹 체운(월지 기준 환경): {m_che_second} / 🔹 용운(실제 체감 및 실행): {pm_yong}
-
 🚨 [AI 절대 작성 규칙]
 1. 인사말, 결론 요약 금지. 오직 아래 지정된 HTML 구조 안의 (작성) 부분만 채워서 그대로 출력할 것.
-2. 체운, 용운 같은 학술적 단어를 내담자에게 직접 노출하지 마십시오.
-3. '1) 일반 명리 풀이'와 '2) 시공 명리 풀이' 사이에는 반드시 <br><br> 태그를 넣어 완벽히 줄바꿈 할 것.
+2. '1) 일반 명리 풀이'와 '2) 시공 명리 풀이' 사이에는 반드시 <br><br> 태그를 넣어 완벽히 줄바꿈 할 것.
 
 [출력 포맷]
 <div style='margin-bottom: 25px;'>
     <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (자시~오시, 00:30~13:29)</h4>
-    <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
-        <div style='background: #FFEBEE; color: #D50000; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>천간 타격: {target_il[0]} ({d_gan_ss})</div>
-    </div>
     <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>
-        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 천간 십성의 특징에 따른 오전 운세 요약)<br><br>
-        <b>2) 시공 명리 풀이:</b> (작성 - 주어진 환경 속에서 실제 체감과 성향이 어떻게 발현되는지 현대적 에세이로 통변)
+        <b>1) 일반 명리 풀이:</b> (작성)<br><br>
+        <b>2) 시공 명리 풀이:</b> (작성)
     </div>
 </div>
 <div>
     <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (미시~야자시, 13:30~익일 00:29)</h4>
-    <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 8px;'>
-        <div style='background: #E3F2FD; color: #1976D2; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;'>지지 타격: {target_il[1]} ({d_ji_ss})</div>
-    </div>
     <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #1976D2; line-height: 1.6; color: #333; font-size:14px;'>
-        <b>1) 일반 명리 풀이:</b> (작성 - 일간 대비 지지 십성의 특징에 따른 오후 운세 요약)<br><br>
-        <b>2) 시공 명리 풀이:</b> (작성 - 주어진 환경 속에서 실제 체감과 성향이 어떻게 발현되는지 현대적 에세이로 통변)
+        <b>1) 일반 명리 풀이:</b> (작성)<br><br>
+        <b>2) 시공 명리 풀이:</b> (작성)
     </div>
 </div>
 """
-        
-        # 🚨 스피너 가동 및 AI 호출
-        with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
-            try:
-                res = model.generate_content(iljin_prompt)
-                ai_iljin_html = res.text.strip()
-            except Exception as e:
-                ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 통신 장애: {e}</div>"
+            with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
+                try:
+                    res = model.generate_content(iljin_prompt)
+                    ai_iljin_html = res.text.strip()
+                except Exception as e:
+                    ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
-        html_output = f"""
-        <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15);'>
-            <div style='background: #1A237E; padding: 15px; text-align: center;'>
-                <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🔮 {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일) 일진(일운) 분석</h3>
-                <div style='color: #E8EAF6; font-size: 14px; margin-top: 5px;'>현재 월운(體): {target_wol}월 / 내담자 일주: {m_ilgan}{m_ilji}</div>
-            </div>
-            <div style='padding: 20px;'>
-                <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; border-left: 5px solid #FF9800;'>
-                    <div style='color: #E65100; font-weight: 900; font-size: 15px; border-bottom: 1px solid #FFCC80; padding-bottom: 5px; margin-bottom: 10px;'>🎯 원국 대비 타격 스캔 (일주 {m_ilgan}{m_ilji} 기준)</div>
-                    <div style='font-size: 14px; margin-bottom: 10px; line-height:1.5;'>{gan_res_html}</div>
-                    <div style='font-size: 14px; line-height:1.5;'>{r_res_html}</div>
+            html_output = f"""
+            <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden;'>
+                <div style='background: #1A237E; padding: 15px; text-align: center;'>
+                    <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🔮 {t_date.year}년 {t_date.month}월 {t_date.day}일 일진 분석 결과</h3>
                 </div>
-                {ai_iljin_html}
+                <div style='padding: 20px;'>
+                    <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px;'>
+                        {gan_res_html}<br>{r_res_html}
+                    </div>
+                    {ai_iljin_html}
+                </div>
             </div>
-        </div>
-        """
-        st.markdown(html_output, unsafe_allow_html=True)
+            """
+            st.markdown(html_output, unsafe_allow_html=True)
