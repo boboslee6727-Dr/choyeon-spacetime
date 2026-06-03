@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 45.0 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 46.0 (Gemini 2.5-Pro Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -978,9 +978,9 @@ if st.session_state.get('need_calc', False):
             today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
             # ------------------------------------------------------------------
-            # [모드 1] 개인사주 분석: 최종 순서 정리
+            # [모드 1] 개인사주 분석: 모든 상품의 기반이 되는 공통 사주풀이 엔진 구동
             # ------------------------------------------------------------------
-            if u_product == "개인사주":
+            if u_product in ["개인사주", "궁합", "타 감명서"]:
                 past_months_html = ""
 
                 # 🚨 [1. 표지 (Cover Page) 수정] A4 인쇄 이탈 원천 차단 및 완벽 중앙 정렬
@@ -1365,17 +1365,17 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-(※ 🚨AI 절대 준수 규칙: 시스템이 제공하는 [60일주 핵심 DB 데이터: {ilju_db_content}]를 바탕으로, 일주의 십성 및 십이운성과 십이신살을 중심으로 표면적인 성격과 기질을 구체적이고 현대적인 구어체 에세이로 작성하십시오. 이때 다음의 2대 규칙을 반드시 결합하여 통변해야 합니다.
+(※ 🚨AI 절대 준수 규칙: 일간과 일지의 십성(十星), 십이운성(十二運星), 그리고 배정된 십이신살의 에너지 강약을 바탕으로 표면적인 성격과 기질을 구체적이고 현대적인 구어체 에세이로 작성하십시오. 통변 전개 시 다음의 2대 조건을 반드시 결합하여 서술해야 합니다.
 
-1. [지장간 좌법(座法) 분석]: 일지 지장간 내부에 드러난 천간 성분들이 해당 왕궁(王宮) 내에 어떤 에너지 상태로 앉아 있는지 **좌법(座法)**을 기준으로 분석하십시오. 이를 통해 겉으로 드러나는 내면의 페르소나와 현실적 행동 양식을 팩트 기반으로 서술하십시오.
-2. [배우자궁(일지)의 입체적 풀이]: 일지는 내담자의 가장 사적인 안방이자 배우자궁입니다. 이를 육친적, 심리적, 사회적 관점이라는 3대 입체적 시각에서 명확히 풀이하여, 실제 가정생활과 대인관계에서 어떻게 발현되는지 구체적으로 기술하십시오.
-🚨 [용어 표기 절대 규칙]: 모든 전문 명리 용어(예: 간여지동, 음인, 장성살 등)는 절대로 전면에 노출하지 마십시오. 현대적인 구어체로 현상을 먼저 쉽게 풀이한 뒤, 문장 끝에 간단한 설명과 함께 괄호 `()` 안에만 기재해야 합니다.)
+1. [일지 지장간 좌법(座法) 해부]: 일지 지장간 내부에 내장된 천간 성분들이 해당 왕궁(王宮) 내부에서 가지는 십이운성 리듬, 즉 **좌법(座法)**을 기준으로 분석하십시오. 이를 통해 내담자가 외부 사회와 상호작용할 때 꺼내 쓰는 페르소나와 현실적 행동 메커니즘을 냉철한 팩트 기반으로 도출하십시오.
+2. [배우자궁(일지)의 3대 관점 풀이]: 일지는 내담자의 가장 내밀한 안방이자 배우자 영역입니다. 이곳의 기운이 실제 사생활에서 어떻게 발현되는지 1) 육친적 관점, 2) 심리적 관점, 3) 사회적 관점이라는 3대 입체적 시각을 유기적으로 융합하여 상세히 풀어내십시오.
+🚨 [용어 표기 절대 규칙]: 모든 전문 명리 용어(예: 간여지동, 음인, 장성살 등)는 절대로 전면에 노출하지 마십시오. 현대적인 구어체로 현실 현상을 먼저 쉽게 풀이한 뒤, 문장 끝에 간단한 설명과 함께 괄호 `()` 안에만 기재해야 합니다.)
    
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
-(※ 🚨AI 절대 연산 규칙: 추상적인 문학적 수사나 감상적인 위로(예: 외로운 섬, 고독감 등)를 엄격히 금지하며, 철저히 **인종법(引從法)**과 **육친·오행 공망의 현실적 팩트**라는 2대 연산 기반으로 내담자의 깊은 본성을 타격하십시오.
-1. [인종법(引從法)을 통한 무의식 추적]: 사주 원국 지장간에 드러나지 않은 천간 오행들을 일지로 인종(引從)하여 포태법 상태를 추적하십시오. 드러나지 않았기에 내담자가 무의식 깊은 곳에서 갈망하거나 취약한 정신적 영역, 잠재적 본성을 현대 심리학 관점의 구어체로 풀어내십시오.
-2. [공망(空亡)의 현실적 팩트 표현]: 공망을 단순한 심리적 쓸쓸함으로 뭉개지 말고, 공망이 걸린 오행과 육친이 현실 환경에서 유발하는 구체적 공백과 제약 조건을 팩트로 기술하십시오. 
-   - 예: 계해(癸亥)일주의 일공망 자축(子丑)의 경우, 자수 비견공망(자공)에 따른 비겁의 현실적 결핍 및 독자 노선 성향, 축토 편관공망(축공)에 따른 조직·명예의 흔들림 및 이를 벗어난 특수 전문 영역 추구(관성공망)라는 현실적 경계와 환경적 조건을 정확하고 날카롭게 짚어주어야 합니다.)
+(※ 🚨AI 절대 연산 규칙: 감상적인 위로나 뜬구름 잡는 문학적 묘사를 엄격히 금지하며, 철저히 **인종법(引從法)**과 **육친·오행 공망의 현실적 조건**이라는 2대 명리적 팩트 연산에만 기반하여 내담자의 무의식 세계를 타격하십시오.
+
+1. [인종법(引從法)을 통한 무의식 추적]: 사주 원국 지장간에 드러나지 않은 천간 오행들을 일지로 인종(引從)하여 포태법 상태를 계산하십시오. 겉으로 드러나지 않았기에 내담자가 무의식 깊은 곳에서 갈망하거나 심리적으로 취약할 수 있는 본질적 정신 영역을 현대 심리학 관점의 구어체로 분석하십시오.
+2. [공망(空亡)의 물리적 제약 타격]: 공망을 단순한 심리적 쓸쓸함이나 외로움으로 뭉개지 마십시오. 공망이 걸린 오행과 육친이 실제 생활 환경에서 어떤 구체적인 공백, 결핍, 궤도 수정을 유발하는지 환경적 한계 조건을 날카로운 팩트로 기술하십시오. (예: 비겁 공망에 따른 자력갱생 노선, 관성 공망에 따른 규격화된 조직 이탈 및 특수 전문 영역 추구 등))
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
@@ -1621,7 +1621,46 @@ if st.session_state.get('need_calc', False):
             # [4단계] 출산택일 리포트
             # ------------------------------------------------------------------
             if run_delivery_calc and start_date and end_date:
-                st.session_state['saved_report_del'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#4A148C;'><h1 style='text-align:center; color:#4A148C;'>👶 초연 시공명리 출산택일</h1><p style='text-align:center;'>탐색 기간: {start_date} ~ {end_date}</p><div style='text-align:center; padding: 20px; background:#f9f9f9; border-radius:10px;'>택일 분석이 성공적으로 가동되었습니다. 최적의 합궁일 데이터를 확인하세요.</div></div></div>"
+                # 🚨 [수술 완료] 부모의 기운과 연동하여 최적의 오행 조화를 이루는 프리미엄 출산일 탐색 프롬프트 설계
+                p_bazi_context = partner_bazi if u_product == "궁합" else ["대조 상대방 없음"]
+                
+                delivery_prompt = f"""
+당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
+
+[부모의 사주 정보]
+- 신청인(어머니/아버지): {u_gender} / 원국: {gans}{jjis}
+- 상대방(배우자): 원국 데이터: {p_bazi_context}
+- 탐색 지정 기간: {start_date} ~ {end_date}
+- 선호 태아 성별: {baby_gender}
+
+🚨 [출력 및 통변 포맷 절대 규칙]
+선정된 상위 추천 일자별로 반드시 박사님이 지정하신 아래의 규격화된 분리 통변 포맷을 100% 준수하여 작성하십시오. (마크다운 기호 금지, 오직 지정된 HTML 구조 사수)
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 추천 일자: OOOO년 OO월 OO일 (OO시)</span>
+<br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
+<br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
+"""
+                try:
+                    del_res = model.generate_content(delivery_prompt)
+                    ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
+                except Exception as e:
+                    ai_delivery_html = f"<div style='color:red;'>🚨 출산택일 AI 연산 엔진 구동 실패: {e}</div>"
+
+                # 최종 인쇄지에 합류할 수 있도록 포맷 바인딩 후 세션 메모리에 안전 보관
+                st.session_state['saved_report_del'] = f"""
+                <div class='page-break-before'></div>
+                <div class='report-page'>
+                    <div class='vip-inset-frame' style='border-color:#4A148C;'>
+                        <h1 style='text-align:center; color:#4A148C;'>👶 초연 시공명리 프리미엄 출산택일</h1>
+                        <div style='text-align:center; font-size:14px; font-weight:bold; color:#666; margin-bottom:20px;'>
+                            지정 탐색 기간: {start_date} ~ {end_date} (태아 성별: {baby_gender})
+                        </div>
+                        <div class='content-box-loose' style='font-size:15px; line-height:1.8;'>
+                            {ai_delivery_html}
+                        </div>
+                    </div>
+                </div>
+                """
 
             # 🚨 연산 종료 (스위치 끄기)
             st.session_state['need_calc'] = False
@@ -1753,48 +1792,50 @@ if st.session_state.get('app_running', False) and 'global_gans' in st.session_st
             r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
             iljin_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다. 아래 데이터를 바탕으로 오늘 하루(일진)의 흐름을 분석하십시오.
+당신은 명리심리상담사 초연 박사입니다. 아래의 정밀 연산된 시공간 파동 팩트를 바탕으로 오늘 하루(일진)의 흐름을 날카롭게 분석하십시오.
+
+[내담자 및 환경 정보]
 - 내담자 일주: {m_ilgan}{m_ilji}
 - 일진(오늘) 날짜: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)
 - 현재 월운(환경): {target_wol}월
 
-🚨 [AI 절대 작성 규칙]
-1. 인사말, 결론 요약 금지. 오직 아래 지정된 HTML 구조 안의 (작성) 부분만 채워서 그대로 출력할 것.
-2. '1) 일반 명리 풀이'와 '2) 시공 명리 풀이' 사이에는 반드시 <br><br> 태그를 넣어 완벽히 줄바꿈 할 것.
+[오늘의 사주 원국 상호작용 파동 데이터]
+- 천간 파동 현황: {gan_res_html}
+- 지지 형충파해 파동 현황: {r_res_html}
 
-[출력 포맷]
-<div style='margin-bottom: 25px;'>
-    <h4 style='color: #D50000; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #D50000; padding-bottom: 5px; margin-bottom: 12px;'>🌅 전반부 (자시~오시, 00:30~13:29)</h4>
-    <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #D50000; line-height: 1.6; color: #333; font-size:14px;'>
-        <b>1) 일반 명리 풀이:</b> (작성)<br><br>
-        <b>2) 시공 명리 풀이:</b> (작성)
-    </div>
-</div>
-<div>
-    <h4 style='color: #1976D2; font-size: 16px; font-weight: bold; border-bottom: 2px dashed #1976D2; padding-bottom: 5px; margin-bottom: 12px;'>🌃 후반부 (미시~야자시, 13:30~익일 00:29)</h4>
-    <div style='background: #fdfdfd; padding: 12px; border-left: 4px solid #1976D2; line-height: 1.6; color: #333; font-size:14px;'>
-        <b>1) 일반 명리 풀이:</b> (작성)<br><br>
-        <b>2) 시공 명리 풀이:</b> (작성)
-    </div>
-</div>
+🚨 [AI 출력 포맷 절대 규칙]
+전반부와 후반부를 나누어 작성하되, 반드시 지정된 명리 풀이 구분 포맷 문구를 토씨 하나 틀리지 말고 첫 줄에 적용하십시오.
+
+🌅 전반부 (자시~오시, 00:30~13:29):
+<br><b>1) 일반 명리 풀이:</b> (내반부 현실 운세 현상 상세 작성)
+<br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
+
+🌃 후반부 (미시~야자시, 13:30~익일 00:29):
+<br><b>1) 일반 명리 풀이:</b> (후반부 현실 운세 현상 상세 작성)
+<br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
 """
             with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
                 try:
                     res = model.generate_content(iljin_prompt)
-                    ai_iljin_html = res.text.strip()
+                    ai_iljin_html = res.text.strip().replace("\n", "<br>")
                 except Exception as e:
                     ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
+            # 🚨 [수술 완료] no-print 제거 및 정식 리포트용 'report-page'로 감싸 인쇄 영역에 강제 합류
             html_output = f"""
-            <div class='secret-note no-print' style='max-width:900px; margin: 15px auto; border: 3px solid #1A237E; border-radius: 12px; background: #fff; overflow: hidden;'>
-                <div style='background: #1A237E; padding: 15px; text-align: center;'>
-                    <h3 style='color: #fff; margin: 0; font-size: 20px; font-weight: 900;'>🔮 {t_date.year}년 {t_date.month}월 {t_date.day}일 일진 분석 결과</h3>
-                </div>
-                <div style='padding: 20px;'>
-                    <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px;'>
+            <div class='page-break-before'></div>
+            <div class='report-page'>
+                <div class='vip-inset-frame' style='border: 3px solid #1A237E;'>
+                    <h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>
+                    <div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>
+                        대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)
+                    </div>
+                    <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6;'>
                         {gan_res_html}<br>{r_res_html}
                     </div>
-                    {ai_iljin_html}
+                    <div class='content-box-loose' style='font-size: 15px; line-height: 1.8;'>
+                        {ai_iljin_html}
+                    </div>
                 </div>
             </div>
             """
