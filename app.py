@@ -1723,70 +1723,128 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
     m_ilgan = st.session_state['global_ds']
     m_ilji = st.session_state['global_db']
         
-        def get_execution_yong(upper_group, lower_group):
-            matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
-            return matrix.get(upper_group, {}).get(lower_group, '비겁')
+    def get_execution_yong(upper_group, lower_group):
+        matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
+        return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
-        def get_gan_rel_simple(g1, g2):
-            if not g1 or not g2 or g1=="?" or g2=="?": return "-"
-            s = {g1, g2}
-            if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: return "합(合)"
-            if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]: return "충(沖)"
-            극_dict = {'甲':'戊', '乙':'己', '丙':'庚', '丁':'辛', '戊':'壬', '己':'癸', '庚':'甲', '辛':'乙', '壬':'丙', '癸':'丁'}
-            if 극_dict.get(g1) == g2 or 극_dict.get(g2) == g1: return "극(剋)"
-            return "-"
+    def get_gan_rel_simple(g1, g2):
+        if not g1 or not g2 or g1=="?" or g2=="?": return "-"
+        s = {g1, g2}
+        if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: return "합(合)"
+        if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]: return "충(沖)"
+        극_dict = {'甲':'戊', '乙':'己', '丙':'庚', '丁':'辛', '戊':'壬', '己':'癸', '庚':'甲', '辛':'乙', '壬':'丙', '癸':'丁'}
+        if 극_dict.get(g1) == g2 or 극_dict.get(g2) == g1: return "극(剋)"
+        return "-"
         
-        def get_ji_rel_set_simple(j1, j2):
-            if not j1 or not j2 or j1 == "?" or j2 == "?": return "-"
-            s = {j1, j2}
-            if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
-            if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
-            if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
-            if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
-            return "-"
+    def get_ji_rel_set_simple(j1, j2):
+        if not j1 or not j2 or j1 == "?" or j2 == "?": return "-"
+        s = {j1, j2}
+        if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
+        if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
+        if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
+        if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
+        return "-"
 
-        from korean_lunar_calendar import KoreanLunarCalendar
-        dklc = KoreanLunarCalendar()
-        dklc.setSolarDate(t_date.year, t_date.month, t_date.day)
-        gj_str = dklc.getChineseGapJaString()
+
+    from korean_lunar_calendar import KoreanLunarCalendar
+    dklc = KoreanLunarCalendar()
+    dklc.setSolarDate(t_date.year, t_date.month, t_date.day)
+    gj_str = dklc.getChineseGapJaString()
+    
+    if gj_str:
+        parts = gj_str.split()
         
-        if gj_str:
-            parts = gj_str.split()
-            
-            target_year = parts[0][:2]
-            target_wol = parts[1][:2]
-            target_il = parts[2][:2]
-            
-            ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
-            
-            m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
-            d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))      
-            am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
-            
-            m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-            d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
-            pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
+        target_year = parts[0][:2]
+        target_wol = parts[1][:2]
+        target_il = parts[2][:2]
+        
+        ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
+        
+        m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
+        d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))      
+        am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
+        
+        m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
+        d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
+        pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
 
-            gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
-            gan_res = []
-            labels_gan = ["년간", "월간", "일간", "시간"]
-            for idx, label in enumerate(labels_gan):
-                rel = get_gan_rel_simple(gans_list[idx], target_il[0])
-                if rel != "-":
-                    gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il[0]}{rel}하여 {gan_desc.get(rel)} )</span>")
-            gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
+        gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
+        gan_res = []
+        labels_gan = ["년간", "월간", "일간", "시간"]
+        for idx, label in enumerate(labels_gan):
+            rel = get_gan_rel_simple(gans_list[idx], target_il[0])
+            if rel != "-":
+                gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il[0]}{rel}하여 {gan_desc.get(rel)} )</span>")
+        gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
 
-            ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
-            r_res = []
-            labels_ji = ["년지", "월지", "일지", "시지"]
-            for idx, label in enumerate(labels_ji):
-                rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
-                if rel_full != "-":
-                    main_rel = rel_full.split(',')[0].strip()
-                    r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
-            r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+        ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
+        r_res = []
+        labels_ji = ["년지", "월지", "일지", "시지"]
+        for idx, label in enumerate(labels_ji):
+            rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
+            if rel_full != "-":
+                main_rel = rel_full.split(',')[0].strip()
+                r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
 
-            iljin_prompt = f"""
+ 
+        r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+
+        # ------------------------------------------------------------------
+        # 🚨 [신규 장착] 일진 전용 경량화 12운성, 12신살, 핵심 4대 신살 스캐너
+        # ------------------------------------------------------------------
+        def get_wunseong_simple(gan, ji):
+            # 일간(Day Master) 기준 일진 지지(t_ji)의 12운성 스캔
+            ws_map = {
+                '甲': {'亥':'장생', '卯':'제왕', '未':'묘', '申':'절'},
+                '乙': {'午':'장생', '寅':'제왕', '戌':'묘', '酉':'절'},
+                '丙': {'寅':'장생', '午':'제왕', '戌':'묘', '亥':'절'},
+                '丁': {'酉':'장생', '巳':'제왕', '丑':'묘', '子':'절'},
+                '戊': {'寅':'장생', '午':'제왕', '戌':'묘', '亥':'절'},
+                '己': {'酉':'장생', '巳':'제왕', '丑':'묘', '子':'절'},
+                '庚': {'巳':'장생', '酉':'제왕', '丑':'묘', '寅':'절'},
+                '辛': {'子':'장생', '申':'제왕', '辰':'묘', '卯':'절'},
+                '壬': {'申':'장생', '子':'제왕', '辰':'묘', '巳':'절'},
+                '癸': {'卯':'장생', '亥':'제왕', '未':'묘', '午':'절'}
+            }
+            # 전체 12운성을 다 넣으면 무거우므로 체감이 큰 4극점(장생/제왕/묘/절)만 1차 필터링 (필요시 확장 가능)
+            return ws_map.get(gan, {}).get(ji, "평운(平運)")
+
+        def get_core_shinsal_simple(m_gan, t_gan, t_ji):
+            res_shinsal = []
+            
+            # 1. 천을귀인 (일간 기준)
+            cheoneul = {
+                '甲':['丑','未'], '戊':['丑','未'], '庚':['丑','未'],
+                '乙':['子','申'], '己':['子','申'],
+                '丙':['亥','酉'], '丁':['亥','酉'],
+                '辛':['寅','午'],
+                '壬':['巳','卯'], '癸':['巳','卯']
+            }
+            if t_ji in cheoneul.get(m_gan, []):
+                res_shinsal.append("🌟천을귀인")
+
+            # 2. 백호대살 & 괴강살 (오늘의 일진 기둥 자체 기준)
+            daily_pillar = f"{t_gan}{t_ji}"
+            if daily_pillar in ['甲辰', '乙未', '丙戌', '丁丑', '戊辰', '壬戌', '癸丑']:
+                res_shinsal.append("⚡백호살")
+            if daily_pillar in ['戊戌', '庚辰', '庚戌', '壬辰']:
+                res_shinsal.append("🔥괴강살")
+
+            # 3. 양인살 (일간 기준)
+            yangin = {'甲':'卯', '丙':'午', '戊':'午', '庚':'酉', '壬':'子'}
+            if yangin.get(m_gan) == t_ji:
+                res_shinsal.append("⚔️양인살")
+
+            return ", ".join(res_shinsal) if res_shinsal else "특이 흉살/귀인 없음"
+
+        # 연산 실행 및 문자열 바인딩
+        day_wunseong = get_wunseong_simple(m_ilgan, target_il[1])
+        day_shinsal = get_core_shinsal_simple(m_ilgan, target_il[0], target_il[1])
+        
+        # HTML 출력부에 얹기 위한 추가 현황 텍스트
+        s_res_html = f"✨ <b>오늘의 핵심 에너지:</b> 십이운성[{day_wunseong}] / 특수기운[{day_shinsal}]"
+
+        iljin_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다. 아래의 정밀 연산된 시공간 파동 팩트를 바탕으로 오늘 하루(일진)의 흐름을 날카롭게 분석하십시오.
 
 [내담자 및 환경 정보]
@@ -1811,29 +1869,29 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 <br><b>1) 일반 명리 풀이:</b> (후반부 현실 운세 현상 상세 작성)
 <br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
 """
-            with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
-                try:
-                    res = model.generate_content(iljin_prompt)
-                    ai_iljin_html = res.text.strip().replace("\n", "<br>")
-                except Exception as e:
-                    ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
+        with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
+            try:
+                res = model.generate_content(iljin_prompt)
+                ai_iljin_html = res.text.strip().replace("\n", "<br>")
+            except Exception as e:
+                ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
-            # 🚨 [수술 완료] no-print 제거 및 정식 리포트용 'report-page'로 감싸 인쇄 영역에 강제 합류
-            html_output = f"""
-            <div class='page-break-before'></div>
-            <div class='report-page'>
-                <div class='vip-inset-frame' style='border: 3px solid #1A237E;'>
-                    <h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>
-                    <div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>
-                        대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)
-                    </div>
-                    <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6;'>
-                        {gan_res_html}<br>{r_res_html}
-                    </div>
-                    <div class='content-box-loose' style='font-size: 15px; line-height: 1.8;'>
-                        {ai_iljin_html}
-                    </div>
+        # 🚨 [수술 완료] no-print 제거 및 정식 리포트용 'report-page'로 감싸 인쇄 영역에 강제 합류
+        html_output = f"""
+        <div class='page-break-before'></div>
+        <div class='report-page'>
+            <div class='vip-inset-frame' style='border: 3px solid #1A237E;'>
+                <h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>
+                <div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>
+                    대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)
+                </div>
+                <div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6;'>
+                    {gan_res_html}<br>{r_res_html}
+                </div>
+                <div class='content-box-loose' style='font-size: 15px; line-height: 1.8;'>
+                    {ai_iljin_html}
                 </div>
             </div>
-            """
-            st.markdown(html_output, unsafe_allow_html=True)
+        </div>
+        """
+        st.markdown(html_output, unsafe_allow_html=True)
