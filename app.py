@@ -1447,23 +1447,36 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
-(※ 🚨AI 절대 지시: 위 마커 자리에 마크다운 표(Table/Grid)를 직접 그리거나, 대운 간지를 일렬로 나열하는 행위를 엄격히 금지합니다. 마커 원문만 100% 그대로 남겨두고 즉시 아래 과거 대운 분석으로 넘어가십시오.)
+(※ 🚨AI 절대 지시: 위 마커 자리에 마크다운 표(Table/Grid)를 직접 그리거나, 대운 간지를 일렬로 나열하는 행위를 엄격히 금지합니다. 
+마커 원문만 100% 그대로 남겨두고 즉시 아래 과거 대운 분석으로 넘어가십시오.)
+(※ 앞선 분석 내용을 바탕으로 과거, 현재, 미래의 운세 흐름을 분석합니다.)
+
+🚨 [운의 흐름 - 반복 항목 포맷 붕괴 및 요약 절대 금지 규칙]
+1. AI의 잔꾀(Lazy generation) 절대 금지: '지나온 과거 각 대운/세운/월운' 등 항목이 많아지더라도, 절대로 임의로 내용을 한 문단으로 뭉뚱그려 요약하지 마십시오.
+2. 100% 분리 작성: 모든 연도, 모든 대운, 모든 월운 항목의 하단에는 반드시 지정된 템플릿대로 `<div style='padding-left: 20px;'>` 태그를 사용하여 블록을 지정하고, 
+그 안에 `<b>1) 일반 명리 풀이:</b>`와 `<b>2) 시공 명리 풀이:</b>`를 완벽하게 분리하여 작성해야 합니다. 
+단 한 개의 항목이라도 이 구조를 누락하면 치명적 시스템 오류로 간주합니다.
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
-(※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. ... )
-
-[대운 출력 템플릿]
+(※ 🚨AI 절대 지시: 지나온 과거 각 대운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
+[지나온 과거 각 대운 출력 템플릿]
 • <b>OO세~OO세 (OO대운):</b> 
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+(※ 🚨AI 절대 지시: 현재 대운 전반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+(※ 🚨AI 절대 지시: 현재 대운 후반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
@@ -1471,19 +1484,24 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
-(※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. ... )
-
-[세운 출력 템플릿]
+(※ 🚨AI 절대 지시: 지나온 과거 각 세운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
+[지나온 과거 각 세운 출력 템플릿]
 • <b>OOOO년(OO년):</b> 
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+(※ 🚨AI 절대 지시: 올해 세운 전반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+(※ 🚨AI 절대 지시: 올해 세운 후반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
@@ -1491,19 +1509,22 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. ... )
-
-[월운 출력 템플릿]
+(※ 🚨AI 절대 지시: 지나온 과거 각 월운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
+[지나온 과거 각 월운 출력 템플릿]
 • <b>O월(OO월):</b> 
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
-<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
-<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
+<div style='padding-left: 20px;'>
+    <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
+    <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
