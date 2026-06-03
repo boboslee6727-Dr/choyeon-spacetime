@@ -1330,10 +1330,15 @@ if st.session_state.get('need_calc', False):
 3. 표(Table) 생성 절대 금지. 운의 흐름 연도별 분석은 반드시 도트 기호(•)를 사용한 텍스트로 작성하십시오.
 4. 🚨 [출력 레이아웃 절대 규칙] 각 분석(전반기, 후반기 등) 내용 작성 시, 문단이 바뀌더라도 문단과 문단 사이에 '빈 줄(공백 줄)'을 절대 넣지 마십시오. 엔터키(줄바꿈)는 단 한 번만 사용하여 글이 빈틈없이 빽빽하게 이어지도록 출력하십시오. (HTML 태그 사용 시 <br><br> 금지, <br>만 단일 사용)
 
+🚨 [AI 환각(Hallucination) 방지 및 가독성 극대화 절대 규칙] (※ 신규 추가 구역)
+1. 🚨 없는 기운 창조 및 환각 절대 금지: 사주 원국에 없는 기운을 임의로 지어내어 통변하는 것을 엄격히 금지합니다. 특히 **공망(空亡)**을 분석할 때, 시스템이 제공한 팩트에 없는 공망(예: '년주 공망' 등)을 스스로 지어내어 기재하면 치명적 오류로 간주합니다.
+2. 🚨 명리 용어 시각적 강조: 통변 중 부득이하게 십성, 십이운성, 신살 등의 핵심 명리 용어를 기재할 때는, 내담자의 가독성을 높이기 위해 반드시 단일 인용부호를 사용하여 **'식신'**, **'장성살'**로 표기하거나 괄호를 사용하여 **(식신)** 형태로 명확히 구분해 주십시오.
+3. 🚨 적절한 문맥 줄바꿈 (답답함 해소): 하나의 거대한 문단으로 뭉쳐서 출력하지 마십시오. 글의 의미나 문맥이 전환되는 적절한 시점마다 반드시 `<br>` 태그를 1회 삽입하여 글의 숨통을 틔워주십시오.
+
 [내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
 - {gender_prompt}
-{yukchin_rule}
+- {yukchin_rule}
 
 [통변 지시]
 - 간지 표기 시 반드시 한자로 표기하십시오.
@@ -1448,15 +1453,17 @@ if st.session_state.get('need_calc', False):
 {past_daewun_html}
 (※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. ... )
 
-[출력 템플릿]
+[대운 출력 템플릿]
 • <b>OO세~OO세 (OO대운):</b> 
-<br><b>1) 일반 명리 풀이:</b> (내용)
-<br><b>2) 시공 명리 풀이:</b> (내용) )
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(작성 - 반드시 <br> 태그로 1)과 2) 줄바꿈 엄격 분리 적용)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
@@ -1466,15 +1473,17 @@ if st.session_state.get('need_calc', False):
 {past_sewun_html}
 (※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. ... )
 
-[출력 템플릿]
+[세운 출력 템플릿]
 • <b>OOOO년(OO년):</b> 
-<br><b>1) 일반 명리 풀이:</b> (내용)
-<br><b>2) 시공 명리 풀이:</b> (내용) )
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
-(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
-(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
@@ -1484,17 +1493,19 @@ if st.session_state.get('need_calc', False):
 {past_months_html}
 (※ 🚨AI 절대 지시: 과거 요약 시 포맷을 생략하거나 변형하는 것을 엄격히 금지합니다. ... )
 
-[출력 템플릿]
+[월운 출력 템플릿]
 • <b>O월(OO월):</b> 
-<br><b>1) 일반 명리 풀이:</b> (내용)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
-(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
-(작성 - 반드시 <br> 태그 1개로만 1)과 2) 줄바꿈 엄격 분리 적용)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 종합 기운 조언</span>
-(작성)
+<br>&nbsp;&nbsp;<b>1) 일반 명리 풀이:</b> (내용 작성)
+<br>&nbsp;&nbsp;<b>2) 시공 명리 풀이:</b> (내용 작성)
 </div>
+
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 나를 돕는 에너지와 색상:</span>
@@ -1511,15 +1522,15 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'> 🎯 초연 시공명리 특별 개운 비법</h3>
 <div class='content-box-loose'>
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 수호 천사의 기운:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 수호 천사의 기운 조언:</span>
 (※ AI 지시: 사주원국 및 운(시간)의 흐름에 따른 천을귀인과 길신 등의 작용에 대한 상세한 에세이를 작성하시오.)
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 백년해로의 기운:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 백년해로의 기운 조언:</span>
 (※ AI 지시: 오행의 치우침, 원진, 고란살, 고신(남명), 과숙(여명) 등 이성 관계에 영향을 미치는 사주원국 및 운의 흐름을 분석하되, 전문 용어는 철저히 숨기십시오. 
 이곳에서는 오직 '부부 및 연인 관계에서 발생할 수 있는 성격적/상황적 갈등 요소'와 이를 슬기롭게 극복하고 백년해로하기 위한 
 '실질적이고 따뜻한 개운 비법(마음가짐, 소통 방식, 행동 요령 등)'에만 100% 초점을 맞추어 카운슬러의 어조로 작성하십시오.)
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 기운:</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 행운에 따른 기운 조언:</span>
 (※ AI 지시: 운의 흐름에 따른 합형충파해와 진술축미의 입고와 개고, 도화(연살)/망신/역마살 작용에 따른 역동성과 재물과 대인관계 등 주의할 점에 대한 상세한 에세이를 작성하시오.)
 </div>
 """
@@ -1697,36 +1708,20 @@ if st.session_state.get('app_running', False):
 
 
 # ==============================================================================
-# 🌊 7. [독립 모듈] 일진 시공간 분석 (데이터 잠금 및 결과 출력부 통합)
+# 🌊 7. [독립 모듈] 일진 시공간 분석 (결과 출력부)
 # ==============================================================================
 import datetime as dt_mod
 
-# 🚨 메인 사주풀이가 완료되어 기본 데이터가 세션에 저장되어 있을 때만 하단에 노출
-if st.session_state.get('app_running', False) and 'global_gans' in st.session_state:
-    st.markdown("<hr style='border:3px double #1A237E; margin:40px 0;' class='no-print'>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>🔮 일진 시공간 분석실</h3>", unsafe_allow_html=True)
-    st.caption("메인 사주 분석 결과를 고정하여, 원하시는 날짜의 일운(일진)을 안전하게 스캔합니다.")
-
-    # 날짜 선택기 (날짜를 바꿔도 메인 결과가 날아가지 않도록 세션과 연동)
-    if 'target_date' not in st.session_state:
-        st.session_state['target_date'] = dt_mod.date.today()
-        
-    target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
-    st.session_state['target_date'] = target_iljin_date
-
-    # 가동 버튼 클릭 시 '일진 연산 트리거'만 ON 시키고 메인 사주는 그대로 유지
-    if st.button("🚀 선택한 날짜의 일운 정밀분석 가동", use_container_width=True):
-        st.session_state['run_waterfall'] = True
-        st.rerun()
-
-    # 🚨 '일진 연산 트리거'가 켜져 있을 때만 아래에 결과 누적 출력
-    if st.session_state.get('run_waterfall', False):
-        t_date = st.session_state['target_date']
-        
-        gans_list = st.session_state['global_gans']
-        jjis_list = st.session_state['global_jjis']
-        m_ilgan = st.session_state['global_ds']
-        m_ilji = st.session_state['global_db']
+# 🚨 메인 사주풀이가 완료되고, 사이드바에서 '일운 정밀분석 가동'을 눌러 트리거가 켜졌을 때만 작동
+if st.session_state.get('app_running', False) and st.session_state.get('run_waterfall', False) and 'global_gans' in st.session_state:
+    
+    # 불필요한 메인 화면 달력 UI와 버튼은 완전히 삭제됨
+    t_date = st.session_state['target_date']
+    
+    gans_list = st.session_state['global_gans']
+    jjis_list = st.session_state['global_jjis']
+    m_ilgan = st.session_state['global_ds']
+    m_ilji = st.session_state['global_db']
         
         def get_execution_yong(upper_group, lower_group):
             matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
@@ -1803,14 +1798,16 @@ if st.session_state.get('app_running', False) and 'global_gans' in st.session_st
 - 천간 파동 현황: {gan_res_html}
 - 지지 형충파해 파동 현황: {r_res_html}
 
-🚨 [AI 출력 포맷 절대 규칙]
-전반부와 후반부를 나누어 작성하되, 반드시 지정된 명리 풀이 구분 포맷 문구를 토씨 하나 틀리지 말고 첫 줄에 적용하십시오.
+🚨 [AI 출력 포맷 및 헛소리 차단 절대 규칙]
+1. 🚨오지랖 절대 금지: "네, 명리심리상담사 초연 박사입니다...", "분석해 드리겠습니다" 등의 서론 인사말이나 결론 요약을 일절 하지 마십시오.
+2. 🚨마크다운 및 잉여 기호 금지: 마크다운 볼드체(**)나 구분선(---)을 절대 사용하지 마십시오. 글씨를 굵게 할 때는 오직 HTML <b> 태그만 사용하십시오.
+3. 🚨빈 줄(공백 줄) 생성 금지: 문단과 문단 사이에 빈 줄을 절대로 넣지 마십시오. 모든 줄바꿈은 오직 1회의 `<br>` 태그로만 빽빽하게 이어 붙이십시오.
 
-🌅 전반부 (자시~오시, 00:30~13:29):
-<br><b>1) 일반 명리 풀이:</b> (내반부 현실 운세 현상 상세 작성)
+[출력 템플릿] (토씨 하나 틀리지 말고 이 양식대로만 출력할 것)
+<br><b>🌅 전반부 (자시~오시, 00:30~13:29):</b>
+<br><b>1) 일반 명리 풀이:</b> (전반부 현실 운세 현상 상세 작성)
 <br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
-
-🌃 후반부 (미시~야자시, 13:30~익일 00:29):
+<br><b>🌃 후반부 (미시~야자시, 13:30~익일 00:29):</b>
 <br><b>1) 일반 명리 풀이:</b> (후반부 현실 운세 현상 상세 작성)
 <br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
 """
