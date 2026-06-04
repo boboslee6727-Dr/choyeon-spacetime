@@ -822,9 +822,9 @@ with st.sidebar:
     u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
     
     col1, col2, col3 = st.columns(3)
-    u_y = col1.number_input("년", 1900, 2050, key="s_y")
+    u_y = col1.number_input("년", 1964, 2050, key="s_y")
     u_m = col2.number_input("월", 1, 12, key="s_m")
-    u_d = col3.number_input("일", 1, 31, key="s_d")
+    u_d = col3.number_input("일", 15, 31, key="s_d")
     
     idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
     u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
@@ -1072,8 +1072,8 @@ if st.session_state.get('need_calc', False):
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>🔢 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} | [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
-
+                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
+                
                 # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
                 un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
@@ -1374,22 +1374,17 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-(※ 🚨AI 절대 팩트 지시: 내담자의 일간({ds})과 일지({db}) 기준 십성은 [{get_ss(ds, db)}], 십이운성은 [{get_unsung(ds, db)}]입니다.
-1. [일지 지장간 좌법(座法) 해부]: AI는 절대 스스로 연산하지 마십시오! 
-시스템이 도출한 일지 지장간 좌법 팩트는 **[ {', '.join([f"{g}({get_ss(ds,g)})={get_unsung(g,db)}" for g in JIJANGGAN.get(db, ['-','-','-']) if g != '-'])} ]** 입니다. 
-이 명확한 팩트를 바탕으로 내담자의 페르소나와 현실적 행동 메커니즘을 구어체 에세이로 도출하십시오.
-2. [배우자궁(일지)의 3대 관점 풀이]: 일지는 내담자의 가장 내밀한 안방이자 배우자 영역입니다. 이곳의 기운이 실제 사생활에서 어떻게 발현되는지 1) 육친적, 2) 심리적, 3) 사회적 3대 관점을 유기적으로 융합하여 상세히 풀어내십시오.
+(※ 🚨AI 절대 준수 규칙: 일간과 일지의 십성(十星), 십이운성(十二運星), 그리고 배정된 십이신살의 에너지 강약을 바탕으로 표면적인 성격과 기질을 구체적이고 현대적인 구어체 에세이로 작성하십시오. 통변 전개 시 다음의 2대 조건을 반드시 결합하여 서술해야 합니다.
+
+1. [일지 지장간 좌법(座法) 해부]: 일지 지장간 내부에 내장된 천간 성분들이 해당 왕궁(王宮) 내부에서 가지는 십이운성 리듬, 즉 **좌법(座法)**을 기준으로 분석하십시오. 이를 통해 내담자가 외부 사회와 상호작용할 때 꺼내 쓰는 페르소나와 현실적 행동 메커니즘을 냉철한 팩트 기반으로 도출하십시오.
+2. [배우자궁(일지)의 3대 관점 풀이]: 일지는 내담자의 가장 내밀한 안방이자 배우자 영역입니다. 이곳의 기운이 실제 사생활에서 어떻게 발현되는지 1) 육친적 관점, 2) 심리적 관점, 3) 사회적 관점이라는 3대 입체적 시각을 유기적으로 융합하여 상세히 풀어내십시오.
 🚨 [용어 표기 절대 규칙]: 모든 전문 명리 용어(예: 간여지동, 음인, 장성살 등)는 절대로 전면에 노출하지 마십시오. 현대적인 구어체로 현실 현상을 먼저 쉽게 풀이한 뒤, 문장 끝에 간단한 설명과 함께 괄호 `()` 안에만 기재해야 합니다.)
    
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
-(※ 🚨AI 절대 연산 규칙: 감상적인 위로나 뜬구름 잡는 문학적 묘사를 엄격히 금지하며, 
-철저히 **인종법(引從法) [🚨팩트 확인: {', '.join([f"{g}({get_ss(ds,g)})={get_unsung(g,db)}" for g in ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']])}]**과 **육친·오행 공망 [🚨팩트 확인: {i_gong} 공망]**의 현실적 조건이라는 2대 명리적 팩트 연산에만 기반하여 내담자의 무의식 세계를 타격하십시오.
-1. [인종법(引從法)을 통한 무의식 추적]: 사주 원국 지장간에 드러나지 않은 천간 오행들을 일지로 인종(引從)하여 시스템이 도출한 위 포태법 팩트 상태를 확인하십시오. 겉으로 드러나지 않았기에 내담자가 무의식 깊은 곳에서 갈망하거나 심리적으로 취약할 수 있는 본질적 정신 영역을 현대 심리학 관점의 구어체로 분석하십시오.
-2. [공망(空亡)의 입체적 타격]: 이 사주의 공망 팩트는 **[일주 기준: {i_gong}, 년주 기준: {n_gong}]** 입니다. 
-🚨AI 절대 주의: 위 공망 글자들이 사주 원국의 년, 월, 일, 시지 중 어느 궁위에 실제 위치해 있는지 정확히 확인하십시오! (예: 공망 글자가 일지에 없는데 배우자궁이 비었다고 조작하는 등 기계적인 헛소리를 절대 금지합니다.) 오직 공망을 맞은 위치와 해당 육친에 대해서만 구체적인 현실적 결핍과 한계 조건을 날카롭게 기술하십시오.
-분석 시 두 공망의 작용을 다음과 같이 입체적으로 융합하여 서술하십시오.
-- 일주 공망({i_gong}): 내담자의 내밀한 개인적 결핍, 사생활 및 내면의 채워지지 않는 갈망.
-- 년주 공망({n_gong}): 조상 및 부모대 환경, 초년기 및 거시적인 사회적 기반의 빈자리.
+(※ 🚨AI 절대 연산 규칙: 감상적인 위로나 뜬구름 잡는 문학적 묘사를 엄격히 금지하며, 철저히 **인종법(引從法)**과 **육친·오행 공망의 현실적 조건**이라는 2대 명리적 팩트 연산에만 기반하여 내담자의 무의식 세계를 타격하십시오.
+
+1. [인종법(引從法)을 통한 무의식 추적]: 사주 원국 지장간에 드러나지 않은 천간 오행들을 일지로 인종(引從)하여 포태법 상태를 계산하십시오. 겉으로 드러나지 않았기에 내담자가 무의식 깊은 곳에서 갈망하거나 심리적으로 취약할 수 있는 본질적 정신 영역을 현대 심리학 관점의 구어체로 분석하십시오.
+2. [공망(空亡)의 물리적 제약 타격]: 공망을 단순한 심리적 쓸쓸함이나 외로움으로 뭉개지 마십시오. 공망이 걸린 오행과 육친이 실제 생활 환경에서 어떤 구체적인 공백, 결핍, 궤도 수정을 유발하는지 환경적 한계 조건을 날카로운 팩트로 기술하십시오. (예: 비겁 공망에 따른 자력갱생 노선, 관성 공망에 따른 규격화된 조직 이탈 및 특수 전문 영역 추구 등))
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
@@ -1519,6 +1514,8 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
 (※ 🚨AI 절대 지시: 지나온 과거 각 월운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
+(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 나열하되, 항목의 제목은 반드시 • 2월(병인월): 과 같이 강조하여 1~2줄씩 요약하십시오. 
+🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지.)
 [지나온 과거 각 월운 출력 템플릿]
 • <b>O월(OO월):</b> 
 <div style='padding-left: 20px;'>
