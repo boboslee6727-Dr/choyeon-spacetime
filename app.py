@@ -1710,9 +1710,18 @@ if st.session_state.get('need_calc', False):
             # [3단계] 궁합 풀이 
             # ------------------------------------------------------------------
             if u_product == "궁합":
-                gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi, partner_bazi, calc_d)
+                # 🚨 [안전 장치] 궁합 모드일 때만 partner_bazi를 세션에서 안전하게 추출
+                if 'partner_bazi' not in st.session_state:
+                    # 데이터가 없는 비상 상황 시 대비
+                    p_bazi_data = ["?", "?", "?", "?"]
+                else:
+                    p_bazi_data = st.session_state['partner_bazi']
+
+                # 이제 안전하게 추출된 p_bazi_data를 사용하여 엔진 가동
+                gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi, p_bazi_data, calc_d)
                 gh_engine.run_universal_logic()
                 
+                # 이후 에세이 프롬프트 연산 및 출력 로직 동일하게 진행...
                 essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다.
 
@@ -1788,13 +1797,15 @@ if st.session_state.get('need_calc', False):
             # [4단계] 출산택일 리포트
             # ------------------------------------------------------------------
             if run_delivery_calc and start_date and end_date:
-                # 🚨 [수술 완료] 안전 변수 초기화 후 연산 수행
-                p_bazi_context = st.session_state.get('partner_bazi', ["대조 상대방 없음"]) if u_product == "궁합" else ["대조 상대방 없음"]
                 
-                # 만약 partner_bazi가 세션에 없다면 여기서 긴급 초기화
-                if u_product == "궁합" and "partner_bazi" not in st.session_state:
-                    st.session_state['partner_bazi'] = ["대조 상대방 없음"]
+                # 🚨 [논리 통합] 궁합 모드 여부에 따라 상대방 기운을 동적으로 할당
+                # partner_bazi 변수를 직접 참조하지 않고 세션 정보를 안전하게 사용
+                if u_product == "궁합" and 'partner_bazi' in st.session_state:
+                    p_bazi_context = st.session_state['partner_bazi']
+                else:
+                    p_bazi_context = ["대조 상대방 없음"]
                 
+                # 프리미엄 출산택일 프롬프트 설계
                 delivery_prompt = f"""
 당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
 
@@ -1817,7 +1828,7 @@ if st.session_state.get('need_calc', False):
                 except Exception as e:
                     ai_delivery_html = f"<div style='color:red;'>🚨 출산택일 AI 연산 엔진 구동 실패: {e}</div>"
 
-                # 최종 인쇄지에 합류할 수 있도록 포맷 바인딩 후 세션 메모리에 안전 보관
+                # 최종 결과 저장
                 st.session_state['saved_report_del'] = f"""
                 <div class='page-break-before'></div>
                 <div class='report-page'>
