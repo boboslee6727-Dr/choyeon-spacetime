@@ -1710,20 +1710,32 @@ if st.session_state.get('need_calc', False):
             # [3단계] 궁합 풀이 
             # ------------------------------------------------------------------
             if u_product == "궁합":
-                # 🚨 [안전 장치] 궁합 모드일 때만 partner_bazi를 세션에서 안전하게 추출
                 if 'partner_bazi' not in st.session_state:
-                    # 데이터가 없는 비상 상황 시 대비
                     p_bazi_data = ["?", "?", "?", "?"]
                 else:
                     p_bazi_data = st.session_state['partner_bazi']
 
-                # 이제 안전하게 추출된 p_bazi_data를 사용하여 엔진 가동
                 gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi, p_bazi_data, calc_d)
                 gh_engine.run_universal_logic()
                 
-                # 이후 에세이 프롬프트 연산 및 출력 로직 동일하게 진행...
+                # 🚨 [프로모델 수술] 누락된 m_golden, f_golden 변수 강제 생성 로직 삽입
+                m_bazi = applicant_bazi if u_gender == "남성" else p_bazi_data
+                f_bazi = p_bazi_data if u_gender == "남성" else applicant_bazi
+                
+                m_month, m_day = m_bazi[2] if len(m_bazi) > 2 else "??", m_bazi[1] if len(m_bazi) > 1 else "??"
+                f_month, f_day = f_bazi[2] if len(f_bazi) > 2 else "??", f_bazi[1] if len(f_bazi) > 1 else "??"
+                
+                m_w_val = choyeon_db.get("wolryeong", {}).get(m_month, f"[{m_month}] 시공간 데이터 없음")
+                m_i_val = choyeon_db.get("ilju", {}).get(m_day, f"[{m_day}] 성품 데이터 없음")
+                m_golden = f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; margin-bottom: 10px;'><p style='text-indent: 15px; margin-bottom: 5px;'>남성은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 가지고 태어났습니다.</p></div>"
+
+                f_w_val = choyeon_db.get("wolryeong", {}).get(f_month, f"[{f_month}] 시공간 데이터 없음")
+                f_i_val = choyeon_db.get("ilju", {}).get(f_day, f"[{f_day}] 성품 데이터 없음")
+                f_golden = f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; margin-bottom: 10px;'><p style='text-indent: 15px; margin-bottom: 5px;'>여성은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 가지고 태어났습니다.</p></div>"
+                
+                # (기존 프롬프트 시작)
                 essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
-당신은 명리심리상담사 '초연 박사'입니다.
+당신은 명리심리상담사 '초연 박사'입니다..
 
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
 1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
