@@ -1706,7 +1706,7 @@ if st.session_state.get('need_calc', False):
                 c_res = call_claude_api(comp_prompt, max_tokens=10000)
                 st.session_state['saved_report_2'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
-            # ------------------------------------------------------------------
+# ------------------------------------------------------------------
             # [3단계] 궁합 풀이 (Ver 37.1 통합 및 에러 완벽 수정본)
             # ------------------------------------------------------------------
             if u_product == "궁합":
@@ -1841,9 +1841,30 @@ if st.session_state.get('need_calc', False):
                     {closing_original}
                     """
 
-                    # 8. 최종 결과물을 세션(st.session_state)에 저장 (출력부로 이관)
-                    st.session_state['saved_report_gh_m'] = wrap_a4(f"<div class='choyeon-premium-report'>{m_ess}</div>", "#1A237E", "[ 남명 사주 요약 ]")
-                    st.session_state['saved_report_gh_f'] = wrap_a4(f"<div class='choyeon-premium-report'>{f_ess}</div>", "#D50000", "[ 여명 사주 요약 ]")
+                    # 8. VIP 표지 생성 및 세션(st.session_state)에 저장 (출력부로 이관)
+                    cover_html = f"""
+                    <div class='report-page' style='display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#FAFAFA;'>
+                        <div class='vip-inset-frame' style='border-color:#1B5E20; width:85%; padding:60px 20px; display:flex; flex-direction:column; justify-content:center; align-items:center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background-color:#FFFFFF;'>
+                            <h2 style='color:#777; font-size:20px; font-weight:normal; letter-spacing:3px; margin-bottom:20px;'>[ 초연 시공명리 프리미엄 감명서 ]</h2>
+                            <h1 style='color:#1B5E20; font-size:42px; font-weight:900; margin-bottom:40px; text-align:center; line-height:1.4;'>운명적 만남에 대한<br>깊이 있는 통찰</h1>
+                            <div style='width:50px; height:3px; background-color:#D50000; margin-bottom:40px;'></div>
+                            <h2 style='color:#111; font-size:28px; font-weight:bold;'>남성 <span style='color:#1A237E;'>{m_name}</span> 님</h2>
+                            <h2 style='color:#333; font-size:18px; margin:10px 0;'>&</h2>
+                            <h2 style='color:#111; font-size:28px; font-weight:bold; margin-bottom:50px;'>여성 <span style='color:#D50000;'>{f_name}</span> 님</h2>
+                            <div style='font-size:16px; color:#555; font-family:"Nanum Myeongjo", serif; font-weight:bold;'>- 초연 시공명리 연구소 -</div>
+                        </div>
+                    </div>
+                    """
+                    st.session_state['saved_report_gh_cover'] = cover_html
+
+                    m_page1 = wrap_a4(m_tbl, "#1A237E", "[ 남성 사주 원국표 ]")
+                    m_page2 = wrap_a4(f"<div class='choyeon-premium-report'>{m_ess}</div>", "#1A237E", "[ 남성 사주 요약 ]")
+                    st.session_state['saved_report_gh_m'] = m_page1 + "\n<div class='page-break-before'></div>\n" + m_page2
+
+                    f_page1 = wrap_a4(f_tbl, "#D50000", "[ 여성 사주 원국표 ]")
+                    f_page2 = wrap_a4(f"<div class='choyeon-premium-report'>{f_ess}</div>", "#D50000", "[ 여성 사주 요약 ]")
+                    st.session_state['saved_report_gh_f'] = f_page1 + "\n<div class='page-break-before'></div>\n" + f_page2
+
                     st.session_state['saved_report_gh_g'] = wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 종합 궁합풀이 ]")
                     
                 except Exception as e:
@@ -1922,8 +1943,12 @@ if st.session_state.get('app_running', False):
         st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
         
-    # 3. 궁합 렌더링 (남명 요약 -> 여명 요약 -> 종합 시각화)
+    # 3. 궁합 렌더링 (표지 -> 남성 요약 -> 여성 요약 -> 종합 시각화)
     if u_product == "궁합":
+        if st.session_state.get('saved_report_gh_cover'):
+            st.markdown(st.session_state.get('saved_report_gh_cover', ''), unsafe_allow_html=True)
+            st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+            
         st.markdown(st.session_state.get('saved_report_gh_m', ''), unsafe_allow_html=True)
         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_gh_f', ''), unsafe_allow_html=True)
@@ -1931,7 +1956,7 @@ if st.session_state.get('app_running', False):
         st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
     # 4. 출산택일 렌더링
-    if run_delivery_calc and st.session_state.get('saved_report_del'):
+    if st.session_state.get('saved_report_del'):
         st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
 
 # ==============================================================================
