@@ -1945,7 +1945,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 main_rel = rel_full.split(',')[0].strip()
                 r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
 
-         r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음' # 🚨 여기가 문제!
+        r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음' # 🚨 여기가 문제!
 
         # 🚨 [신규 장착] 일진 전용 경량화 12운성, 12신살, 핵심 4대 신살 스캐너
         def get_wunseong_simple(gan, ji):
