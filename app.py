@@ -1938,13 +1938,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
         ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
         r_res = []
         labels_ji = ["년지", "월지", "일지", "시지"]
+        # (수정 전) 현재 문제가 되는 부분
         for idx, label in enumerate(labels_ji):
             rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
             if rel_full != "-":
                 main_rel = rel_full.split(',')[0].strip()
                 r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
 
-         r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+         r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음' # 🚨 여기가 문제!
 
         # 🚨 [신규 장착] 일진 전용 경량화 12운성, 12신살, 핵심 4대 신살 스캐너
         def get_wunseong_simple(gan, ji):
