@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 import math
+import calendar
 import datetime as dt_mod
 from datetime import datetime
 from korean_lunar_calendar import KoreanLunarCalendar
@@ -13,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.1 (Gemini 2.5-Pro Mode)"
+APP_VERSION = "Ver 46.2 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -814,7 +815,6 @@ with st.sidebar:
     st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
     
-
     st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>👤 신청인 정보 (공통)</div>", unsafe_allow_html=True)
     u_name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
     u_gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
@@ -867,7 +867,7 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력</div>", unsafe_allow_html=True)
         other_reading_text = st.text_area("타 감명서 원문", height=250, placeholder="여기에 내용을 붙여넣기 하세요...", key="other_reading")
-           
+            
     # 🚨 [가동 버튼부 정렬 및 수술 완료]
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
@@ -1169,6 +1169,23 @@ if st.session_state.get('need_calc', False):
 </div>"""
 
                 # 🚨 [8. AI 프롬프트 변수 및 조건 세팅]
+                
+                # 🌟 [절입일 동적 계산 엔진 가동]
+                jeolip_day = 5
+                prev_wol_pillar = ""
+                curr_wol_pillar = ""
+                _, p1, _ = get_true_year_month_pillar(curr_y, curr_m, 1, 12, 0)
+                for d in range(2, 12):
+                    _, pd, _ = get_true_year_month_pillar(curr_y, curr_m, d, 12, 0)
+                    if pd != p1:
+                        jeolip_day = d
+                        prev_wol_pillar = p1
+                        curr_wol_pillar = pd
+                        break
+                if not curr_wol_pillar:
+                    curr_wol_pillar = p1
+                    prev_wol_pillar = p1
+
                 base_gans_list = [hs, ds, ms, ys]
                 base_jjis_list = [hb, db, mb, yb]
 
@@ -1463,7 +1480,9 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
-(※ 🚨AI 절대 지시: 지나온 과거 각 대운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
+(※ AI 지시 🚨[절대 누락 금지 규칙]: 내담자가 살아온 첫 번째 대운(초년)부터 현재 대운 직전까지의 '모든 대운'을 단 하나도 생략하거나 묶지 말고, 나이대별로 낱낱이 순서대로 나열하여 에세이로 분석하십시오. 
+절대 건너뛰지 마십시오.)
+(※ 🚨AI 절대 지시: 지나온 과거 각 대운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 1~2줄로 요약하여 풀이하시오.)
 [지나온 과거 각 대운 출력 템플릿]
 • <b>OO세~OO세 (OO대운):</b> 
 <div style='padding-left: 20px;'>
@@ -1476,11 +1495,14 @@ if st.session_state.get('need_calc', False):
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 (※ 🚨AI 절대 지시: 현재 대운 후반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
@@ -1488,24 +1510,27 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
-(※ 🚨AI 절대 지시: 지나온 과거 각 세운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
+(※ 🚨AI 절대 지시: 지나온 과거 각 세운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 1~2줄로 요약하여 풀이하시오.)
 [지나온 과거 각 세운 출력 템플릿]
 • <b>OOOO년(OO년):</b> 
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석</span>
 (※ 🚨AI 절대 지시: 올해 세운 전반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석</span>
 (※ 🚨AI 절대 지시: 올해 세운 후반기 상세 분석을 생략하거나 변형하지 말고 년도별로 아래와 같은 양식으로 상세 분석하시오.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
@@ -1513,24 +1538,28 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
-(※ 🚨AI 절대 지시: 지나온 과거 각 월운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
-(※ AI 지시: 올해 지나온 각 과거 월운들을 하나씩 나열하되, 항목의 제목은 반드시 • 2월(병인월): 과 같이 강조하여 1~2줄씩 요약하십시오. 
+(※ 🚨AI 절대 지시: 지나온 과거 각 월운 분석은 생략하거나 변형하지 말고 아래와 같은 양식으로 1~2줄로 요약하여 풀이하시오.)
 🚨단, 명리학적 기준(입춘)에 따라 양력 1월은 작년도 세운의 음력 12월에 해당하므로, 1월 분석 시 반드시 이 점을 맞추어 풀이하십시오. 표 생성 절대 금지.)
 [지나온 과거 각 월운 출력 템플릿]
 • <b>O월(OO월):</b> 
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 전반기(5일~19일) 상세 분석</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ {curr_m}월 전반기(1일~{jeolip_day-1}일: {prev_wol_pillar}월 기운) 상세 분석</span>
+(※ 🚨AI 절대 지시: {curr_m}월 1일부터 {jeolip_day-1}일까지는 절입일 이전이므로, 반드시 '{prev_wol_pillar}월'의 시공간적 자의형상을 기준으로 통변하십시오. 임의 추론 절대 금지.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 이번 달 후반기(20일~다음달 4일) 상세 분석</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ {curr_m}월 후반기({jeolip_day}일~말일: {curr_wol_pillar}월 기운) 상세 분석</span>
+(※ 🚨AI 절대 지시: {curr_m}월 {jeolip_day}일 이후부터는 절기가 바뀌어 본격적인 '{curr_wol_pillar}월'에 진입하므로, 반드시 '{curr_wol_pillar}월'의 시공간적 자의형상을 기준으로 통변하십시오. 임의 추론 절대 금지.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
+</div>
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
