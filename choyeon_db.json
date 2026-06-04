@@ -1072,7 +1072,7 @@ if st.session_state.get('need_calc', False):
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
+                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>🔢 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] {n_gong} | [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
                 
                 # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
@@ -1404,6 +1404,11 @@ AI는 스스로 오행의 개수를 세거나 지어내지 마십시오! 반드�
 🚨AI 절대 주의: 내담자의 일지(배우자궁)가 위 공망 글자에 해당하지 않는다면, 절대 배우자궁이나 부부 관계가 비어있다고 헛소리를 지어내지 마십시오! 
 사주 원국의 년, 월, 시지 중 어느 궁위(위치)에 공망 글자가 위치해 있는지 확인하고, 오직 그 공망 맞은 위치와 해당 육친에 대해서만 구체적인 공백과 한계 조건을 날카롭게 기술하십시오. 
 (예: 월지 공망이면 부모/사회적 기반의 결핍 등)
+
+2. [공망(空亡)의 입체적 타격]: 이 사주의 공망 팩트는 **[일주 기준: {i_gong}, 년주 기준: {n_gong}]** 입니다. 
+🚨AI 절대 주의: 해당 공망 글자가 사주 원국의 어느 궁위에 위치해 있는지 확인하고, 기계적인 헛소리(예: 공망 글자가 일지에 없는데 배우자궁이 비었다고 하는 등)를 절대 금지하며 구체적인 한계 조건을 기술하십시오.
+1. 일주 공망({i_gong})은 내담자의 내밀한 개인적 결핍과 배우자/사생활 영역의 공백으로, 
+2. 년주 공망({n_gong})은 조상/초년기 환경 및 거시적인 사회적 기반의 빈자리로 엄격히 구분하여 분석하십시오. 
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
