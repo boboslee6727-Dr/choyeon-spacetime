@@ -873,7 +873,7 @@ with st.sidebar:
         end_date = None
                     
         if (current_year - f_year + 1) <= 49:
-            with st.expander("👶 [VIP 심층 분석] 프리미엄 출산택일", expanded=False):
+            with st.expander("👶 VIP 프리미엄 출산택일", expanded=False):
                 baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
                 start_date = st.date_input("탐색 시작일")
                 end_date = st.date_input("탐색 종료일")
@@ -1707,35 +1707,38 @@ if st.session_state.get('need_calc', False):
                 st.session_state['saved_report_2'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
             # ------------------------------------------------------------------
-            # [3단계] 궁합 풀이 
+            # [3단계] 궁합 풀이 (Ver 37.1 통합 및 에러 완벽 수정본)
             # ------------------------------------------------------------------
             if u_product == "궁합":
-                if 'partner_bazi' not in st.session_state:
-                    p_bazi_data = ["?", "?", "?", "?"]
-                else:
-                    p_bazi_data = st.session_state['partner_bazi']
+                try:
+                    # 1. 안전 장치: 궁합 모드일 때만 partner_bazi 추출
+                    if 'partner_bazi' not in st.session_state:
+                        p_bazi_data = ["?", "?", "?", "?"]
+                    else:
+                        p_bazi_data = st.session_state['partner_bazi']
 
-                gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi, p_bazi_data, calc_d)
-                gh_engine.run_universal_logic()
-                
-                # 🚨 [프로모델 수술] 누락된 m_golden, f_golden 변수 강제 생성 로직 삽입
-                m_bazi = applicant_bazi if u_gender == "남성" else p_bazi_data
-                f_bazi = p_bazi_data if u_gender == "남성" else applicant_bazi
-                
-                m_month, m_day = m_bazi[2] if len(m_bazi) > 2 else "??", m_bazi[1] if len(m_bazi) > 1 else "??"
-                f_month, f_day = f_bazi[2] if len(f_bazi) > 2 else "??", f_bazi[1] if len(f_bazi) > 1 else "??"
-                
-                m_w_val = choyeon_db.get("wolryeong", {}).get(m_month, f"[{m_month}] 시공간 데이터 없음")
-                m_i_val = choyeon_db.get("ilju", {}).get(m_day, f"[{m_day}] 성품 데이터 없음")
-                m_golden = f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; margin-bottom: 10px;'><p style='text-indent: 15px; margin-bottom: 5px;'>남성은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 가지고 태어났습니다.</p></div>"
+                    # 2. 궁합 엔진 가동 및 점수 산출
+                    gh_engine = UniversalPrintableGunghap(u_name, p_name, applicant_bazi, p_bazi_data, calc_d)
+                    gh_engine.run_universal_logic()
 
-                f_w_val = choyeon_db.get("wolryeong", {}).get(f_month, f"[{f_month}] 시공간 데이터 없음")
-                f_i_val = choyeon_db.get("ilju", {}).get(f_day, f"[{f_day}] 성품 데이터 없음")
-                f_golden = f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; margin-bottom: 10px;'><p style='text-indent: 15px; margin-bottom: 5px;'>여성은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 가지고 태어났습니다.</p></div>"
-                
-                # (기존 프롬프트 시작)
-                essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
-당신은 명리심리상담사 '초연 박사'입니다..
+                    # 3. 누락되었던 m_golden, f_golden (사주 요약) 생성 로직
+                    m_bazi = applicant_bazi if u_gender == "남성" else p_bazi_data
+                    f_bazi = p_bazi_data if u_gender == "남성" else applicant_bazi
+                    
+                    m_month, m_day = m_bazi[2] if len(m_bazi) > 2 else "??", m_bazi[1] if len(m_bazi) > 1 else "??"
+                    f_month, f_day = f_bazi[2] if len(f_bazi) > 2 else "??", f_bazi[1] if len(f_bazi) > 1 else "??"
+                    
+                    m_w_val = choyeon_db.get("wolryeong", {}).get(m_month, f"[{m_month}] 시공간 데이터 없음")
+                    m_i_val = choyeon_db.get("ilju", {}).get(m_day, f"[{m_day}] 성품 데이터 없음")
+                    m_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>남성분</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 지녔습니다.</p>"
+
+                    f_w_val = choyeon_db.get("wolryeong", {}).get(f_month, f"[{f_month}] 시공간 데이터 없음")
+                    f_i_val = choyeon_db.get("ilju", {}).get(f_day, f"[{f_day}] 성품 데이터 없음")
+                    f_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>여성분</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 지녔습니다.</p>"
+
+                    # 4. 에세이 프롬프트 (남명/여명/궁합 분리)
+                    essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+당신은 명리심리상담사 '초연 박사'입니다.
 
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
 1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
@@ -1791,19 +1794,60 @@ if st.session_state.get('need_calc', False):
 (이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이 작성)
 [GUNGHAP_END]
 """
-                res_text = call_claude_api(essay_prompt, max_tokens=12000)
-                ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
-                
-                m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
-                f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
-                g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
-                
-                st.session_state['saved_report_gh_m'] = m_match.group(1).strip() if m_match else "내용 없음"
-                st.session_state['saved_report_gh_f'] = f_match.group(1).strip() if f_match else "내용 없음"
-                st.session_state['saved_report_gh_g'] = g_match.group(1).strip().replace("[COUPLE_DAEWUN_TABLES_HERE]", "대운표가 렌더링될 자리") if g_match else ai_clean
-                st.session_state['gh_score'] = gh_engine.final_score
-                st.session_state['gh_grade'] = gh_engine.grade
-                st.session_state['gh_details'] = gh_engine.details
+                    res_text = call_claude_api(essay_prompt, max_tokens=12000)
+                    ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
+
+                    # 5. 마커 파싱 시스템 (에러 방지용 안전 파싱)
+                    import re
+                    m_ess, f_ess, g_ess = "", "", ai_clean
+                    
+                    m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                    if m_match: m_ess = m_match.group(1).strip()
+                    
+                    f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                    if f_match: f_ess = f_match.group(1).strip()
+                    
+                    g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                    if g_match: 
+                        g_ess = g_match.group(1).strip()
+                    else:
+                        g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
+                    
+                    g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", "<div style='padding:10px; background:#f5f5f5; color:#555; text-align:center; font-weight:bold; border-radius:8px;'>상하 대운 교차 분석 참조표 (준비 중)</div>")
+
+                    # 6. A4 래퍼 함수 (레이아웃 강제 유지)
+                    def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
+                        return f"<div class='report-page'><div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'><h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>{content}</div></div>"
+
+                    # 7. 시각화 그래프(스코어 링 및 바) 생성 및 클로징 멘트
+                    t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
+                    bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div></div>" for d in gh_engine.details])
+                    
+                    closing_original = "<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'><p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p><p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p><div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 드림 -</span></div></div>"
+
+                    g_full_content = f"""
+                    <div class='choyeon-premium-report'>{g_ess}</div>
+                    <h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>
+                    <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
+                        <div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
+                            <div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>
+                                <span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>
+                                <span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>
+                    <div style='max-width:500px; margin:0 auto;'>{bars}</div>
+                    {closing_original}
+                    """
+
+                    # 8. 최종 결과물을 세션(st.session_state)에 저장 (출력부로 이관)
+                    st.session_state['saved_report_gh_m'] = wrap_a4(f"<div class='choyeon-premium-report'>{m_ess}</div>", "#1A237E", "[ 남명 사주 요약 ]")
+                    st.session_state['saved_report_gh_f'] = wrap_a4(f"<div class='choyeon-premium-report'>{f_ess}</div>", "#D50000", "[ 여명 사주 요약 ]")
+                    st.session_state['saved_report_gh_g'] = wrap_a4(g_full_content, "#1B5E20", "[ 초연 시공명리 종합 궁합풀이 ]")
+                    
+                except Exception as e:
+                    st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
 
             # ------------------------------------------------------------------
             # [4단계] 출산택일 리포트
@@ -1869,21 +1913,22 @@ if st.session_state.get('need_calc', False):
 # ==============================================================================
 if st.session_state.get('app_running', False):
     
-    # 1. 개인사주 본문 렌더링
-    st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
+    # 1. 개인사주 렌더링 (궁합 모드가 아닐 때만 출력)
+    if u_product == "개인사주":
+        st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
     
-    # 2. 타 감명서 렌더링
+    # 2. 타 감명서 렌더링 
     if u_product == "타 감명서":
+        st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
         
-    # 3. 궁합 렌더링
+    # 3. 궁합 렌더링 (남명 요약 -> 여명 요약 -> 종합 시각화)
     if u_product == "궁합":
+        st.markdown(st.session_state.get('saved_report_gh_m', ''), unsafe_allow_html=True)
         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='report-page'><div class='vip-inset-frame'><h1>남성 궁합 정보</h1>{st.session_state.get('saved_report_gh_m', '')}</div></div>", unsafe_allow_html=True)
+        st.markdown(st.session_state.get('saved_report_gh_f', ''), unsafe_allow_html=True)
         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='report-page'><div class='vip-inset-frame'><h1>여성 궁합 정보</h1>{st.session_state.get('saved_report_gh_f', '')}</div></div>", unsafe_allow_html=True)
-        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='report-page'><div class='vip-inset-frame'><h1>종합 궁합 정보</h1>{st.session_state.get('saved_report_gh_g', '')}</div></div>", unsafe_allow_html=True)
+        st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
     # 4. 출산택일 렌더링
     if run_delivery_calc and st.session_state.get('saved_report_del'):
