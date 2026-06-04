@@ -1152,6 +1152,11 @@ if st.session_state.get('need_calc', False):
 
                 # 🌟 과거 월운 (절기 기준 포맷팅)
                 past_wol_list = []
+                
+                # 작년도 간지(예: 2025년 을사년) 자동 계산
+                prev_y_idx = (curr_y - 1 - 1984) % 60
+                prev_y_ganji = GAN[prev_y_idx % 10] + JI[prev_y_idx % 12]
+                
                 for pm in range(1, curr_m):
                     tc, tj = wol_gans[pm-1], wol_jis[pm-1]
                     s_day, _ = get_term_day(curr_y, pm)
@@ -1160,7 +1165,12 @@ if st.session_state.get('need_calc', False):
                     e_day, _ = get_term_day(next_y, next_m)
                     t_start = terms_name[pm]
                     t_end = terms_name[next_m]
-                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ({pm}월 {s_day}일 {t_start} ~ {next_m}월 {e_day-1}일 {t_end} 전)")
+                    
+                    # 🚨 1월일 경우에만 앞에 '작년도 간지'를 강제로 붙여줌
+                    year_prefix = f"{prev_y_ganji}년 " if pm == 1 else ""
+                    
+                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ({year_prefix}{pm}월 {s_day}일 {t_start} ~ {next_m}월 {e_day-1}일 {t_end} 전)")
+                
                 past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
 
                 # 🌟 현재 월운 (전반기/후반기 분기 로직)
