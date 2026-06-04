@@ -676,6 +676,22 @@ class UniversalPrintableGunghap:
             elif c in "壬癸亥子": counts['수'] += 1
         return counts
 
+    # 🌟 추가 보강: 묘고 및 조후 연산 (run_universal_logic 내에서 호출 가능)
+    def get_vault_harmony(self, base_gans, base_jjis, partner_jjis):
+        results = []
+        for p_ji in partner_jjis:
+            results.extend(check_vault_status(base_gans, base_jjis, p_ji))
+        return results
+
+    def get_johoo_harmony(self, m_ilgan, m_ec, f_ec):
+        # 계절별 조후 용신(水/火 위주) 보완 연산 로직
+        score = 0
+        if m_ilgan in "丙丁": # 여름생
+            if f_ec['수'] >= 2: score += 5
+        elif m_ilgan in "壬癸": # 겨울생
+            if f_ec['화'] >= 2: score += 5
+        return score
+
     def run_universal_logic(self):
         m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
         il_rel = self.get_ji_rel(m_j[1], f_j[1])
@@ -1214,9 +1230,11 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
+                # 🚨 첫 페이지의 page-break 방지를 위해 <div> 태그 속성 수정
                 report_1_full_html = f"""{cover_html}
-<div class='report-page'>
-<div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px;'>
+<div class='report-page' style='page-break-before: avoid;'>
+<div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px; margin-top: 0;'>
+
 <h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
 {table_html}
 {master_bar_html}
@@ -1226,8 +1244,7 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                # 🚨 [8. AI 프롬프트 변수 및 조건 세팅]
-                
+                # 🚨 [8. AI 프롬프트 변수 및 조건 세팅]            
                 # 🌟 [절입일 동적 계산 엔진 가동]
                 jeolip_day = 5
                 prev_wol_pillar = ""
@@ -1676,12 +1693,15 @@ if st.session_state.get('need_calc', False):
             # ------------------------------------------------------------------
             if u_product == "타 감명서":
                 comp_prompt = f"""
-당신은 '초연 박사'를 보조하는 분석관입니다. [1. 초연 사주풀이]와 [2. 타 감명서]를 대조 포맷에 맞게 분석하십시오.
+당신은 '초연 박사'를 보조하는 분석관입니다. [1. 초연 사주풀이]와 [2. 타 감명서]를 다음 팩트 기반으로 1:1 상세 비교하십시오.
 - 사주 팩트: {gans}{jjis}
-[1. 초연 사주풀이 원문]
-{full_content_clean}  
-[2. 타 감명서 원문]
-{other_reading_text}
+- [1. 초연 사주풀이 원문]: {full_content_clean}
+- [2. 타 감명서 원문]: {other_reading_text}
+
+🚨 [비교 분석 절대 규칙]
+1. 타 감명서의 핵심 논리를 추출하여 표로 정리하십시오.
+2. 초연 시공명리 관점(입고/개고/조후/체용)에서 타 감명서의 해석이 타당한지 비판적으로 대조하십시오.
+3. 내담자에게 제공할 최종 결론을 초연 박사의 어조로 '⚖️ 상세 비교 분석' 결과로 도출하십시오.
 """
                 c_res = call_claude_api(comp_prompt, max_tokens=10000)
                 st.session_state['saved_report_2'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
@@ -1694,18 +1714,60 @@ if st.session_state.get('need_calc', False):
                 gh_engine.run_universal_logic()
                 
                 essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+당신은 명리심리상담사 '초연 박사'입니다.
+
+🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
+1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
+2. 반드시 내담자의 명리적 특징을 분석하여 3~4문장 분량의 **실제 통변 내용(해석)**을 직접 글로 작성해야 합니다.
+3. 모든 통변 문장은 HTML 태그 <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
+
 [MALE_START]
 <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
-(작성)
+{m_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(이곳에 남성의 명리적 성향을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+
+<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
+(이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(이곳에 남성의 내면과 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 남성의 연애 및 결혼관을 실제 에세이로 작성)
 [MALE_END]
+
 [FEMALE_START]
 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
-(작성)
+{f_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(이곳에 여성의 명리적 성향을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+
+<h3 style='color:#D50000; font-size: 22px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
+(이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 여성의 연애 및 결혼관을 실제 에세이로 작성)
 [FEMALE_END]
+
 [GUNGHAP_START]
 <h3 style='color: #1B5E20; font-size: 22px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남에 대하여</h3>
+(이곳에 두 사람의 인연 총평을 깊이 있게 통변한 실제 에세이 작성)
+
+<h3 style='color: #1A237E; font-size: 22px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 분석</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
-(작성)
+(이곳에 상하 대운 교차점에 따른 상생/보완을 분석한 실제 에세이 작성)
+
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>💞 커플의 상생과 조화 궁합 분석</h4>
+(이곳에 속궁합, 겉궁합, 오행 궁합을 통합 분석한 실제 에세이 작성)
+
+<h4 style='color: #1A237E; font-size: 18px; font-weight: 900; margin-top: 35px;'>⚓ 조율의 지혜</h4>
+(이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이 작성)
 [GUNGHAP_END]
 """
                 res_text = call_claude_api(essay_prompt, max_tokens=12000)
@@ -1726,8 +1788,12 @@ if st.session_state.get('need_calc', False):
             # [4단계] 출산택일 리포트
             # ------------------------------------------------------------------
             if run_delivery_calc and start_date and end_date:
-                # 🚨 [수술 완료] 부모의 기운과 연동하여 최적의 오행 조화를 이루는 프리미엄 출산일 탐색 프롬프트 설계
-                p_bazi_context = partner_bazi if u_product == "궁합" else ["대조 상대방 없음"]
+                # 🚨 [수술 완료] 안전 변수 초기화 후 연산 수행
+                p_bazi_context = st.session_state.get('partner_bazi', ["대조 상대방 없음"]) if u_product == "궁합" else ["대조 상대방 없음"]
+                
+                # 만약 partner_bazi가 세션에 없다면 여기서 긴급 초기화
+                if u_product == "궁합" and "partner_bazi" not in st.session_state:
+                    st.session_state['partner_bazi'] = ["대조 상대방 없음"]
                 
                 delivery_prompt = f"""
 당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
@@ -1800,7 +1866,6 @@ if st.session_state.get('app_running', False):
     if run_delivery_calc and st.session_state.get('saved_report_del'):
         st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
 
-
 # ==============================================================================
 # 🌊 7. [독립 모듈] 일진 시공간 분석 (결과 출력부)
 # ==============================================================================
@@ -1838,7 +1903,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
         if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
         if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
         return "-"
-
 
     from korean_lunar_calendar import KoreanLunarCalendar
     dklc = KoreanLunarCalendar()
@@ -1880,12 +1944,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 main_rel = rel_full.split(',')[0].strip()
                 r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
 
- 
-        r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
+         r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
-        # ------------------------------------------------------------------
         # 🚨 [신규 장착] 일진 전용 경량화 12운성, 12신살, 핵심 4대 신살 스캐너
-        # ------------------------------------------------------------------
         def get_wunseong_simple(gan, ji):
             # 일간(Day Master) 기준 일진 지지(t_ji)의 12운성 스캔
             ws_map = {
@@ -1957,11 +2018,11 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 
 [출력 템플릿] (토씨 하나 틀리지 말고 이 양식대로만 출력할 것)
 <br><b>🌅 전반부 (자시~오시, 00:30~13:29):</b>
-<br><b>1) 일반 명리 풀이:</b> (전반부 현실 운세 현상 상세 작성)
-<br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
+<b>1) 일반 명리 풀이:</b> (전반부 현실 운세 현상 상세 작성)
+<b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
 <br><b>🌃 후반부 (미시~야자시, 13:30~익일 00:29):</b>
-<br><b>1) 일반 명리 풀이:</b> (후반부 현실 운세 현상 상세 작성)
-<br><b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
+<b>1) 일반 명리 풀이:</b> (후반부 현실 운세 현상 상세 작성)
+<b>2) 시공 명리 풀이:</b> (체용 매트릭스 기반 실제 체감 현상 에세이 작성)
 """
         with st.spinner("⏳ [일진 시공간 분석실] 정밀 연산 가동 중..."):
             try:
