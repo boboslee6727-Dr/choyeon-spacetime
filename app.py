@@ -1139,11 +1139,38 @@ if st.session_state.get('need_calc', False):
                     past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
                 past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (분석할 과거 세운 없음)"
 
+                # 🌟 [신규 장착] 24절기 및 중기(하지 등) 동적 연산 엔진
+                terms_name = {1:"소한", 2:"입춘", 3:"경칩", 4:"청명", 5:"입하", 6:"망종", 7:"소서", 8:"입추", 9:"백로", 10:"한로", 11:"입동", 12:"대설"}
+                
+                def get_term_day(y, m):
+                    # 해당 월의 절입일(일자) 추출
+                    _, p1, _ = get_true_year_month_pillar(y, m, 1, 12, 0)
+                    for d in range(2, 12):
+                        _, pd, _ = get_true_year_month_pillar(y, m, d, 12, 0)
+                        if pd != p1: return d, pd
+                    return 5, p1
+
+                # 🌟 과거 월운 (절기 기준 포맷팅)
                 past_wol_list = []
                 for pm in range(1, curr_m):
                     tc, tj = wol_gans[pm-1], wol_jis[pm-1]
-                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ")
+                    s_day, _ = get_term_day(curr_y, pm)
+                    next_m = pm + 1 if pm < 12 else 1
+                    next_y = curr_y if pm < 12 else curr_y + 1
+                    e_day, _ = get_term_day(next_y, next_m)
+                    t_start = terms_name[pm]
+                    t_end = terms_name[next_m]
+                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ({pm}월 {s_day}일 {t_start} ~ {next_m}월 {e_day-1}일 {t_end} 전)")
                 past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
+
+                # 🌟 현재 월운 (전반기/후반기 분기 로직)
+                curr_term_day, curr_wol_pillar = get_term_day(curr_y, curr_m)
+                next_m = curr_m + 1 if curr_m < 12 else 1
+                next_y = curr_y if curr_m < 12 else curr_y + 1
+                next_term_day, _ = get_term_day(next_y, next_m)
+                
+                curr_t_name = terms_name[curr_m]
+                next_t_name = terms_name[next_m]
 
                 # 🚨 [7. 결과 출력 HTML 조립]
                 closing_html = f"""<div style='margin-top: 30px;'>
@@ -1547,19 +1574,18 @@ if st.session_state.get('need_calc', False):
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ {curr_m}월 전반기(1일~{jeolip_day-1}일: {prev_wol_pillar}월 기운) 상세 분석</span>
-(※ 🚨AI 절대 지시: {curr_m}월 1일부터 {jeolip_day-1}일까지는 절입일 이전이므로, 반드시 '{prev_wol_pillar}월'의 시공간적 자의형상을 기준으로 통변하십시오. 임의 추론 절대 금지.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_first_half}</span>
+(※ 🚨AI 절대 지시: 전반기 상세 분석을 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ {curr_m}월 후반기({jeolip_day}일~말일: {curr_wol_pillar}월 기운) 상세 분석</span>
-(※ 🚨AI 절대 지시: {curr_m}월 {jeolip_day}일 이후부터는 절기가 바뀌어 본격적인 '{curr_wol_pillar}월'에 진입하므로, 반드시 '{curr_wol_pillar}월'의 시공간적 자의형상을 기준으로 통변하십시오. 임의 추론 절대 금지.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_second_half}</span>
+(※ 🚨AI 절대 지시: 후반기 상세 분석을 생략하거나 변형하지 말고 아래와 같은 양식으로 상세 분석하시오.)
 <div style='padding-left: 20px;'>
     <b>1) 일반 명리 풀이:</b> (내용 상세 작성)<br>
     <b>2) 시공 명리 풀이:</b> (내용 상세 작성)
-</div>
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
