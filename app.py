@@ -1172,6 +1172,25 @@ if st.session_state.get('need_calc', False):
                 curr_t_name = terms_name[curr_m]
                 next_t_name = terms_name[next_m]
 
+                # 하지가 포함된 6월의 특수 처리 (중기 '하지' 동적 연산)
+                if curr_m == 6:
+                    sun = ephem.Sun()
+                    haji_day = 21 # 기본값
+                    for d in range(20, 24):
+                        dt_utc = dt_mod.datetime(curr_y, 6, d, 12, 0).astimezone(pytz.utc)
+                        sun.compute(dt_utc)
+                        if math.degrees(ephem.Ecliptic(sun).lon) % 360.0 >= 90.0:
+                            haji_day = d
+                            break
+                    
+                    prompt_first_half = f"▶ 이번 달 전반기 ({curr_m}월 {curr_term_day}일 {curr_t_name} ~ {curr_m}월 {haji_day-1}일 하지 전: {curr_wol_pillar})"
+                    prompt_second_half = f"▶ 이번 달 후반기 ({curr_m}월 {haji_day}일 하지 ~ {next_m}월 {next_term_day-1}일 {next_t_name} 전: {curr_wol_pillar})"
+                else:
+                    # 6월이 아닐 경우 일반적인 절기 반분
+                    mid_day = curr_term_day + 15
+                    prompt_first_half = f"▶ 이번 달 전반기 ({curr_m}월 {curr_term_day}일 {curr_t_name} ~ {curr_m}월 {mid_day-1}일: {curr_wol_pillar})"
+                    prompt_second_half = f"▶ 이번 달 후반기 ({curr_m}월 {mid_day}일 ~ {next_m}월 {next_term_day-1}일 {next_t_name} 전: {curr_wol_pillar})"
+
                 # 🚨 [7. 결과 출력 HTML 조립]
                 closing_html = f"""<div style='margin-top: 30px;'>
 <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드와 같지만, 우리가 살아가며 마주하는 스캐너인 운은 늘 변화하며 흐릅니다.</p>
