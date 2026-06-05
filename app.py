@@ -1771,8 +1771,8 @@ if st.session_state.get('need_calc', False):
 
                     m_cnt, f_cnt = get_counts(m_gans, m_jjis), get_counts(f_gans, f_jjis)
 
-                    # 3-4. 사주표 생성 함수 (Ver 38.0 원본 완벽 복원 및 색상 고정)
-                    def build_bazi_table(gender_icon, name, gender_str, marital_str, age, sol, lun, time, t_gans, t_jjis, t_ds, t_yb, counts, guiin, gong, samjae, color):
+                    # 3-4. 사주표 생성 함수 (대운수, 년공망 추가 완벽 동기화)
+                    def build_bazi_table(gender_icon, name, gender_str, marital_str, age, sol, lun, time, t_gans, t_jjis, t_ds, t_yb, counts, guiin, y_gong, d_gong, samjae, daeun_su, color):
                         ji_rel_rows = ""
                         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                             b_bot = "1px solid #444 !important" if l_idx == 3 else "none !important"
@@ -1780,7 +1780,6 @@ if st.session_state.get('need_calc', False):
                             lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
                             ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
-                        # 🚨 [핵심수술] 이름 텍스트 색상을 테마색상({color})에 상관없이 무조건 진한 남색(#1A237E)으로 강제 고정!
                         info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:#1A237E;'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
                         def td(c): return f"<td class='color-{get_color(c)}' style='font-size:20px; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
@@ -1804,17 +1803,17 @@ if st.session_state.get('need_calc', False):
                             f"<tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; white-space:nowrap;'>십이운성</td>{''.join([f'<td style=\"border:1px solid #444; color:#0D47A1; font-weight:bold;\">{get_unsung(t_ds, t_jjis[i])}</td>' for i in range(4)])}</tr>\n"
                             f"<tr><td class='header-cell-main' style='border:1px solid #444; font-size:15px !important; white-space:nowrap;'>십이신살</td>{''.join([f'<td style=\"border:1px solid #444; color:#C62828; font-weight:bold;\">{get_12_shinsal(t_yb, t_jjis[i])}</td>' for i in range(4)])}</tr>\n"
                             f"</table>\n"
-                            f"<div style='border:2px solid #3E2723; margin-top:10px; margin-bottom:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin}</div><div>🎯 공망: [일] {gong}</div><div>🌪️ 삼재: {samjae}</div></div>"
+                            f"<div style='border:2px solid {color}; margin-top:10px; margin-bottom:20px; padding:8px 12px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; background-color:#FAFAFA;'><div>🔢 대운수: {daeun_su}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: <span style='color:{color};'>{guiin}</span></div><div>🎯 공망: [년] <span style='color:#C62828;'>{y_gong}</span> [일] <span style='color:#C62828;'>{d_gong}</span></div><div>🌪️ 삼재: {samjae}</div></div>"
                         )
 
                     m_marital = u_marital if u_gender == "남성" else p_marital
                     f_marital = p_marital if u_gender == "남성" else u_marital
                     
-                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 미','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                     
-                    m_tbl = build_bazi_table("♂️", m_name, "남명", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), "#1A237E")
-                    f_tbl = build_bazi_table("♀️", f_name, "여명", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), "#D50000")
-
+                    # 🚨 대운수(m_calc_d, f_calc_d) 및 년 공망(calculate_gongmang(m_ys, m_yb)) 변수 완벽 주입
+                    m_tbl = build_bazi_table("♂️", m_name, "남명", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ys, m_yb), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), m_calc_d, "#1A237E")
+                    f_tbl = build_bazi_table("♀️", f_name, "여명", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ys, f_yb), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), f_calc_d, "#D50000")
                     # 3-5. 궁합 페이지용 상하 대운표 생성기
                     def build_daewun_html(name, t_ds, t_ms, t_mb, t_yb, t_calc_d, t_order, age, color):
                         d_str = "순행" if t_order == 1 else "역행"
@@ -2016,32 +2015,6 @@ if st.session_state.get('need_calc', False):
             st.error(f"시스템 연산 중 치명적 오류 발생: {e}")
             st.session_state['need_calc'] = False
             st.stop()
-
-# ==============================================================================
-# 6. 화면 출력부 (세션에서 불러오므로 화면이 날아가지 않음)
-# ==============================================================================
-if st.session_state.get('app_running', False):
-    
-    if u_product == "개인사주":
-        st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
-    
-    if u_product == "타 감명서":
-        st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
-        st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
-        
-    if u_product == "궁합":
-        if st.session_state.get('saved_report_gh_cover'):
-            st.markdown(st.session_state.get('saved_report_gh_cover', ''), unsafe_allow_html=True)
-            st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-            
-        st.markdown(st.session_state.get('saved_report_gh_m', ''), unsafe_allow_html=True)
-        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-        st.markdown(st.session_state.get('saved_report_gh_f', ''), unsafe_allow_html=True)
-        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-        st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
-
-    if st.session_state.get('saved_report_del'):
-        st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
 
 # ==============================================================================
 # 🌊 7. [독립 모듈] 일진 시공간 분석 (결과 출력부)
