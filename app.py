@@ -2214,8 +2214,8 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             except Exception as e:
                 ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
-# 🚨 마크다운 버그 차단을 위해 왼쪽으로 완전히 밀착합니다.
-html_output = f"""<div class='page-break-before'></div>
+        # 🚨 마크다운 버그 차단을 위해 왼쪽으로 완전히 밀착합니다.
+        html_output = f"""<div class='page-break-before'></div>
 <div class='report-page'>
     <div class='vip-inset-frame' style='border: 3px solid #1A237E;'>
         <h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>
