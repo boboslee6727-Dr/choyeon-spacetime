@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.2 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
+APP_VERSION = "Ver 46.3 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -996,7 +996,7 @@ if st.session_state.get('need_calc', False):
                 <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                     <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                         <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
+                            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이 {APP_VERSION}</h1>
                         </div>
                         <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                             <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
@@ -1696,7 +1696,7 @@ if st.session_state.get('need_calc', False):
                 c_res = call_claude_api(comp_prompt, max_tokens=10000)
                 st.session_state['saved_report_2'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
-# ==================================================================
+            # ==================================================================
             # 💕 [3단계] 궁합 풀이 (Ver 38.0 원본 100% 복원 및 버그 완벽 척결)
             # ==================================================================
             if u_product == "궁합":
@@ -1913,7 +1913,7 @@ if st.session_state.get('need_calc', False):
                     g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
 
                     # 3-8. A4 규격 컨테이너 래퍼 
-                    def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
+                    def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):
                         return (
                             f"<div class='report-page'>\n"
                             f"<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n"
@@ -1957,20 +1957,20 @@ if st.session_state.get('need_calc', False):
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"<div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"<div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"<h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>🏮 초연 시공명리 궁합풀이</h1>\n"
+                        f"<h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>🏮 초연 시공명리 궁합풀이 {APP_VERSION}</h1>\n"
                         f"</div>\n"
                         f"<div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
                         f"<h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♂️ 남자 : {m_name} 님 <span style='font-size:16px; color:#555;'>(남명, {m_age}세)</span></h2>\n"
                         f"<div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
                         f"<p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun}</p>\n"
-                        f"<p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{m_t_str}</p>\n"
+                        f"<p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{m_time}</p>\n"
                         f"</div>\n"
                         f"</div>\n"
                         f"<div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>\n"
                         f"<h2 style='font-size: 24px; font-weight: 900; color: #D50000; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♀️ 여자 : {f_name} 님 <span style='font-size:16px; color:#555;'>(여명, {f_age}세)</span></h2>\n"
                         f"<div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
                         f"<p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun}</p>\n"
-                        f"<p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{f_t_str}</p>\n"
+                        f"<p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{f_time}</p>\n"
                         f"</div>\n"
                         f"</div>\n"
                         f"<p style='font-size: 18px; margin-top: 40px; font-weight: bold;'>{dt_mod.datetime.now().strftime('%Y년 %m월 %d일')}</p>\n"
@@ -2219,7 +2219,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             f"<div class='page-break-before'></div>\n"
             f"<div class='report-page'>\n"
             f"<div class='vip-inset-frame' style='border: 3px solid #1A237E;'>\n"
-            f"<h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>\n"
+            f"<h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서 {APP_VERSION}</h1>\n"
             f"<div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>\n"
             f"대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)\n"
             f"</div>\n"
