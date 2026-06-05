@@ -918,24 +918,24 @@ with st.sidebar:
     # ==============================================================================
     # 🌊 4.5 [독립 모듈] 일진 시공간 분석 (사이드바 최하단 연동 영역)
     # ==============================================================================
-    st.markdown("<hr style='border:2px dashed #1A237E; margin:20px 0;'>", unsafe_allow_html=True)
-    st.markdown("<div style='font-weight:900; color:#1A237E; font-size: 18px; margin-bottom:10px;'>🔮 일진 시공간 분석</div>", unsafe_allow_html=True)
+    if u_product == "개인사주":
+        st.markdown("<hr style='border:2px dashed #1A237E; margin:20px 0;'>", unsafe_allow_html=True)
+        st.markdown("<div style='font-weight:900; color:#1A237E; font-size: 18px; margin-bottom:10px;'>🔮 일진 시공간 분석</div>", unsafe_allow_html=True)
 
-    # 인터넷 새로고침 시에도 선택한 일진 날짜가 증발하지 않도록 세션 보관
-    if 'target_date' not in st.session_state:
-        kst = pytz.timezone('Asia/Seoul')
-        st.session_state['target_date'] = dt_mod.datetime.now(kst).date()
-        
-    target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
-    st.session_state['target_date'] = target_iljin_date
+        # 인터넷 새로고침 시에도 선택한 일진 날짜가 증발하지 않도록 세션 보관
+        if 'target_date' not in st.session_state:
+            kst = pytz.timezone('Asia/Seoul')
+            st.session_state['target_date'] = dt_mod.datetime.now(kst).date()
+            
+        target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
+        st.session_state['target_date'] = target_iljin_date
 
-    # 일진 분석 가동 시, 상단의 정밀 합충형해파 로직을 그대로 관통하도록 트리거 작동
-    if st.button("🚀 오늘의 일운 정밀분석 가동", use_container_width=True):
-        if 'global_gans' in st.session_state:
-            st.session_state['app_running'] = True
-        st.session_state['run_waterfall'] = True
-        st.rerun()
-
+        # 일진 분석 가동 시, 상단의 정밀 합충형해파 로직을 그대로 관통하도록 트리거 작동
+        if st.button("🚀 오늘의 일운 정밀분석 가동", use_container_width=True):
+            if 'global_gans' in st.session_state:
+                st.session_state['app_running'] = True
+            st.session_state['run_waterfall'] = True
+            st.rerun()
 # ==============================================================================
 # 5. 분석 가동 로직 (need_calc 상태일 때만 무거운 연산 실행)
 # ==============================================================================
@@ -1706,7 +1706,7 @@ if st.session_state.get('need_calc', False):
                 c_res = call_claude_api(comp_prompt, max_tokens=10000)
                 st.session_state['saved_report_2'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
-# ------------------------------------------------------------------
+            # ------------------------------------------------------------------
             # [3단계] 궁합 풀이 (Ver 37.1 통합 및 에러 완벽 수정본)
             # ------------------------------------------------------------------
             if u_product == "궁합":
@@ -1842,6 +1842,10 @@ if st.session_state.get('need_calc', False):
                     """
 
                     # 8. VIP 표지 생성 및 세션(st.session_state)에 저장 (출력부로 이관)
+                    # 🚨 [오류 해결부] 46.2 버전에 맞춰 m_name과 f_name을 여기서 동적으로 할당합니다.
+                    m_name = u_name if u_gender == "남성" else p_name
+                    f_name = p_name if u_gender == "남성" else u_name
+
                     cover_html = f"""
                     <div class='report-page' style='display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#FAFAFA;'>
                         <div class='vip-inset-frame' style='border-color:#1B5E20; width:85%; padding:60px 20px; display:flex; flex-direction:column; justify-content:center; align-items:center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background-color:#FFFFFF;'>
@@ -2016,7 +2020,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
         am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
         
         m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-        d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))       
+        d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))        
         pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
 
         gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
@@ -2031,14 +2035,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
         ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
         r_res = []
         labels_ji = ["년지", "월지", "일지", "시지"]
-        # (수정 전) 현재 문제가 되는 부분
+        
         for idx, label in enumerate(labels_ji):
             rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
             if rel_full != "-":
                 main_rel = rel_full.split(',')[0].strip()
                 r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
 
-        r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음' # 🚨 여기가 문제!
+        r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
         # 🚨 [신규 장착] 일진 전용 경량화 12운성, 12신살, 핵심 4대 신살 스캐너
         def get_wunseong_simple(gan, ji):
