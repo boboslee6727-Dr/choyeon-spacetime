@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.3 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
+APP_VERSION = "(Ver 46.3)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -694,7 +694,9 @@ class UniversalPrintableGunghap:
 
     def run_universal_logic(self):
         m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
-        il_rel = self.get_ji_rel(m_j[1], f_j[1])
+        
+        # [수술] 인덱스 정상화 (0:년, 1:월, 2:일, 3:시). 일지는 [2]입니다.
+        il_rel = self.get_ji_rel(m_j[2], f_j[2])
         
         if il_rel == "육합": s1 = 25
         elif il_rel in ["방합", "반합"]: s1 = 21
@@ -706,7 +708,8 @@ class UniversalPrintableGunghap:
         p1 = int((s1 / 25) * 100)
 
         s2 = 5 
-        n_rel, w_rel, si_rel = self.get_ji_rel(m_j[3], f_j[3]), self.get_ji_rel(m_j[2], f_j[2]), self.get_ji_rel(m_j[0], f_j[0]) 
+        # [수술] 년[0], 월[1], 시[3] 정상 비교
+        n_rel, w_rel, si_rel = self.get_ji_rel(m_j[0], f_j[0]), self.get_ji_rel(m_j[1], f_j[1]), self.get_ji_rel(m_j[3], f_j[3]) 
         if n_rel in ["육합", "방합", "반합"]: s2 += 2
         elif n_rel == "충": s2 -= 1
         if w_rel in ["육합", "방합", "반합"]: s2 += 2
@@ -726,7 +729,7 @@ class UniversalPrintableGunghap:
 
         s4 = 5
         bad_iljus, goran, nache = ["甲寅", "乙卯", "庚申", "辛酉", "戊辰", "戊戌"], ["甲寅", "乙巳", "丁巳", "戊申", "辛亥"], ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"] 
-        m_ilju, f_ilju = m_g[1] + m_j[1], f_g[1] + f_j[1]
+        m_ilju, f_ilju = m_g[2] + m_j[2], f_g[2] + f_j[2] # [수술] 일주 합치기 [2]
         if m_ilju in bad_iljus or m_ilju in goran or m_ilju in nache: s4 -= 1
         if f_ilju in bad_iljus or f_ilju in goran or f_ilju in nache: s4 -= 1
         s4 = max(0, min(5, s4))
@@ -749,7 +752,7 @@ class UniversalPrintableGunghap:
                     except: pass
             return res
         
-        m_ss, f_ss = count_ss_groups(m_g[1], m_g + m_j), count_ss_groups(f_g[1], f_g + f_j)
+        m_ss, f_ss = count_ss_groups(m_g[2], m_g + m_j), count_ss_groups(f_g[2], f_g + f_j) # [수술] 일간 [2] 기준
         if m_ss['비겁'] >= 4: risk += 0.05 
         if m_ss['재성'] == 0: risk += 0.05 
         if f_ss['식상'] >= 4: risk += 0.05 
@@ -1831,7 +1834,7 @@ if st.session_state.get('need_calc', False):
                     f_i_val = choyeon_db.get("ilju", {}).get(f_ds+f_db, "성품 데이터 없음")
                     f_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{f_name}님</b>은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 지녔습니다.</p>"
                     
-                    gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, m_calc_d)
+                    gh_engine = UniversalPrintableGunghap(u_name, p_name, male_data_pack, female_data_pack, 10)
                     gh_engine.run_universal_logic()
                     
                     essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
@@ -1910,7 +1913,11 @@ if st.session_state.get('need_calc', False):
                     else:
                         g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
                     
-                    g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", couple_daewun_tables)
+                    # [수술] AI가 마커를 훼손하거나 누락해도 강제로 대운표를 소제목 아래에 박아넣는 무적 로직
+                    import re
+                    g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', couple_daewun_tables, g_ess, flags=re.IGNORECASE)
+                    if count == 0:  # 마커가 없으면 강제로 제목 밑에 삽입
+                        g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px;">' + couple_daewun_tables + '</div>', g_ess)
 
                     # 3-8. A4 규격 컨테이너 래퍼 
                     def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):
