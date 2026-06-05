@@ -896,13 +896,14 @@ with st.sidebar:
             start_date = st.date_input("탐색 시작일")
             end_date = st.date_input("탐색 종료일")
             
+            # 🚨 [수술] 명리학적 선행 조건(궁합풀이) 강제 락(Lock) 복구
             if st.button("👶 출산택일 정밀분석 추가 가동", use_container_width=True):
-                if 'saved_report_gh_g' in st.session_state:
+                # 시스템 메모리에 부부의 궁합 결과(saved_report_gh_g)와 명조 데이터(partner_bazi)가 존재하는지 절대 검사!
+                if st.session_state.get('saved_report_gh_g') and st.session_state.get('partner_bazi'):
                     st.session_state['app_running'] = True
                     st.session_state['run_delivery_only'] = True
-                    st.rerun()
                 else:
-                    st.warning("⚠️ 먼저 위의 '초연 시공명리 사주풀이 가동' 버튼을 눌러 궁합을 분석해 주세요.")
+                    st.error("⚠️ [선행 작업 누락] 부모의 명조 분석 없이 출산택일을 가동할 수 없습니다. 반드시 상단의 [🚀 초연 시공명리 사주풀이 가동] 버튼을 먼저 눌러 궁합풀이를 완료해 주십시오.")
 
     st.markdown("---")
     
