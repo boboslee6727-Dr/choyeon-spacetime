@@ -890,11 +890,19 @@ with st.sidebar:
         if (current_year - f_year + 1) <= 49:
             st.markdown("<hr style='border:1px solid #ddd; margin:15px 0;'>", unsafe_allow_html=True)
             st.markdown("<div style='font-weight:900; color:#4A148C; margin-bottom:5px;'>👶 출산택일 달력 선택</div>", unsafe_allow_html=True)
-            run_delivery_calc = st.checkbox("출산택일 리포트 생성", value=False)
-            if run_delivery_calc:
-                baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
-                start_date = st.date_input("탐색 시작일")
-                end_date = st.date_input("탐색 종료일")
+            
+            # [수술] 기존 데이터를 날리지 않는 '전용 가동 버튼' 체제로 변경
+            baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
+            start_date = st.date_input("탐색 시작일")
+            end_date = st.date_input("탐색 종료일")
+            
+            if st.button("👶 출산택일 정밀분석 추가 가동", use_container_width=True):
+                if 'saved_report_gh_g' in st.session_state:
+                    st.session_state['app_running'] = True
+                    st.session_state['run_delivery_only'] = True
+                    st.rerun()
+                else:
+                    st.warning("⚠️ 먼저 위의 '초연 시공명리 사주풀이 가동' 버튼을 눌러 궁합을 분석해 주세요.")
 
     st.markdown("---")
     
@@ -1700,7 +1708,7 @@ if st.session_state.get('need_calc', False):
                 st.session_state['saved_report_2'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#D50000;'><h1 style='text-align:center; color:#D50000;'>⚖️ 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
             # ==================================================================
-            # 💕 [3단계] 궁합 풀이 (Ver 38.0 원본 100% 복원 및 버그 완벽 척결)
+            # 💕 [3단계] 궁합 풀이)
             # ==================================================================
             if u_product == "궁합":
                 try:
@@ -1763,7 +1771,7 @@ if st.session_state.get('need_calc', False):
 
                     m_cnt, f_cnt = get_counts(m_gans, m_jjis), get_counts(f_gans, f_jjis)
 
-                    # 3-4. 사주표 생성 함수 (Ver 38.0 원본 완벽 복원)
+                    # 3-4. 사주표 생성 함수 (Ver 38.0 원본 완벽 복원 및 색상 고정)
                     def build_bazi_table(gender_icon, name, gender_str, marital_str, age, sol, lun, time, t_gans, t_jjis, t_ds, t_yb, counts, guiin, gong, samjae, color):
                         ji_rel_rows = ""
                         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -1772,7 +1780,8 @@ if st.session_state.get('need_calc', False):
                             lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
                             ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
-                        info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:{color};'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
+                        # 🚨 [핵심수술] 이름 텍스트 색상을 테마색상({color})에 상관없이 무조건 진한 남색(#1A237E)으로 강제 고정!
+                        info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:#1A237E;'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
                         def td(c): return f"<td class='color-{get_color(c)}' style='font-size:20px; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
                             
@@ -1801,7 +1810,7 @@ if st.session_state.get('need_calc', False):
                     m_marital = u_marital if u_gender == "남성" else p_marital
                     f_marital = p_marital if u_gender == "남성" else u_marital
                     
-                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 미','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                     
                     m_tbl = build_bazi_table("♂️", m_name, "남명", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), "#1A237E")
                     f_tbl = build_bazi_table("♀️", f_name, "여명", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), "#D50000")
@@ -1809,7 +1818,8 @@ if st.session_state.get('need_calc', False):
                     # 3-5. 궁합 페이지용 상하 대운표 생성기
                     def build_daewun_html(name, t_ds, t_ms, t_mb, t_yb, t_calc_d, t_order, age, color):
                         d_str = "순행" if t_order == 1 else "역행"
-                        html = f"<div style='margin-bottom:10px;'><div style='font-size:15px; font-weight:900; color:{color}; margin-bottom:5px;'>[ {name}님 대운 흐름표 (대운수: {t_calc_d}), {d_str} ]</div>"
+                        # 🚨 [핵심수술] 대운표 제목 색상도 무조건 진한 남색(#1A237E)으로 강제 고정!
+                        html = f"<div style='margin-bottom:10px;'><div style='font-size:15px; font-weight:900; color:#1A237E; margin-bottom:5px;'>[ {name}님 대운 흐름표 (대운수: {t_calc_d}), {d_str} ]</div>"
                         html += f"<div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white;'>"
                         for i in range(10):
                             val = i*10 + t_calc_d
@@ -1820,8 +1830,9 @@ if st.session_state.get('need_calc', False):
                             html += f"<div style='flex:1; border-left:{brd}; text-align:center; padding-bottom:3px; background-color:{bg};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:11px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:11px;'>{get_ss(t_ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:11px;'>{get_ss(t_ds,tj)}</div><div style='font-size:10px; border-top:1px solid #eee;'>{get_unsung(t_ds,tj)}</div><div style='font-size:10px; color:#C62828; border-top:1px solid #eee;'>{get_12_shinsal(t_yb, tj)}</div></div>"
                         return html + "</div></div>"
 
+                    # (여성 대운표에도 무조건 #1A237E 남색을 던져서 빨간색 발현 원천 차단)
                     m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age, "#1A237E")
-                    f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age, "#D50000")
+                    f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age, "#1A237E")
                     
                     couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:20px;'></div>{f_page_un_html}</div>"
 
@@ -1997,41 +2008,6 @@ if st.session_state.get('need_calc', False):
                     
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
-
-            # ------------------------------------------------------------------
-            # 👶 [4단계] 출산택일 리포트 (Ver 38.0 파이썬 자체 연산 엔진 완벽 복원)
-            # ------------------------------------------------------------------
-            if run_delivery_calc and start_date and end_date:
-                try:
-                    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-                    # UI의 start_date, end_date 변수 활용
-                    delivery_days = get_optimized_delivery_days(
-                        start_date, 
-                        end_date, 
-                        m_jjis, f_jjis, FORBIDDEN_LIST
-                    )
-                    
-                    del_content = (
-                        f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n"
-                        f"<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
-                    )
-                    for day_info in delivery_days:
-                        del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
-                    
-                    del_content += (
-                        f"<br><hr>\n"
-                        f"<p style='font-size:14px; line-height:1.6; color:#333;'>\n"
-                        f"<b>💡 부부를 위한 임신 계획 가이드:</b><br>\n"
-                        f"위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. \n"
-                        f"의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. \n"
-                        f"부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.\n"
-                        f"</p>"
-                    )
-                    
-                    # 출력부에 전달하기 위해 세션에 저장
-                    st.session_state['saved_report_del'] = wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]")
-                except Exception as e:
-                    st.error(f"출산택일 연산 장애: {e}")
 
             # 🚨 연산 종료 (스위치 끄기)
             st.session_state['need_calc'] = False
@@ -2240,3 +2216,109 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             f"</div>"
         )
         st.markdown(html_output, unsafe_allow_html=True)
+
+# ==============================================================================
+# 👶 8. [독립 모듈] 출산택일 정밀 분석 (기존 궁합 보존 가동)
+# ==============================================================================
+if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
+    with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
+        try:
+            gans = st.session_state['global_gans']
+            jjis = st.session_state['global_jjis']
+            p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
+            
+            if u_gender == "남성":
+                m_jjis = jjis
+                f_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
+            else:
+                m_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
+                f_jjis = jjis
+
+            FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+            delivery_days = get_optimized_delivery_days(
+                start_date, 
+                end_date, 
+                m_jjis, f_jjis, FORBIDDEN_LIST
+            )
+            
+            del_content = (
+                f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n"
+                f"<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
+            )
+            for day_info in delivery_days:
+                del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
+            
+            del_content += (
+                f"<br><hr>\n"
+                f"<p style='font-size:14px; line-height:1.6; color:#333;'>\n"
+                f"<b>💡 부부를 위한 임신 계획 가이드:</b><br>\n"
+                f"위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. \n"
+                f"의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. \n"
+                f"부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.\n"
+                f"</p>"
+            )
+            
+            delivery_prompt = f"""
+당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
+
+[부모의 사주 정보]
+- 신청인(어머니/아버지): {u_gender} / 원국: {gans}{jjis}
+- 상대방(배우자): 원국 데이터: {p_bazi_context}
+- 탐색 지정 기간: {start_date} ~ {end_date}
+- 선호 태아 성별: {baby_gender}
+
+🚨 [출력 및 통변 포맷 절대 규칙]
+선정된 상위 추천 일자별로 반드시 박사님이 지정하신 아래의 규격화된 분리 통변 포맷을 100% 준수하여 작성하십시오. (마크다운 기호 금지, 오직 지정된 HTML 구조 사수)
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 추천 일자: OOOO년 OO월 OO일 (OO시)</span>
+<br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
+<br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
+"""
+            del_res = model.generate_content(delivery_prompt)
+            ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
+            
+            del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
+
+            def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
+                return (
+                    f"<div class='report-page'>\n"
+                    f"<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n"
+                    f"<h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>\n"
+                    f"{content}\n"
+                    f"</div>\n"
+                    f"</div>"
+                )
+
+            st.session_state['saved_report_del'] = wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]")
+            st.session_state['run_delivery_only'] = False # 실행 완료 후 스위치 끄기
+        except Exception as e:
+            st.error(f"출산택일 연산 장애: {e}")
+            st.session_state['run_delivery_only'] = False
+
+# ==============================================================================
+# 🖨️ 9. 화면 출력부 (모든 연산 모듈이 끝난 후, 맨 마지막에 한꺼번에 렌더링!)
+# ==============================================================================
+if st.session_state.get('app_running', False):
+    
+    if u_product == "개인사주":
+        st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
+    
+    if u_product == "타 감명서":
+        st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
+        st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
+        
+    if u_product == "궁합":
+        if st.session_state.get('saved_report_gh_cover'):
+            st.markdown(st.session_state.get('saved_report_gh_cover', ''), unsafe_allow_html=True)
+            st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+            
+        st.markdown(st.session_state.get('saved_report_gh_m', ''), unsafe_allow_html=True)
+        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+        st.markdown(st.session_state.get('saved_report_gh_f', ''), unsafe_allow_html=True)
+        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+        st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
+
+    # 출산택일 결과가 세션에 살아있다면, 궁합 풀이 바로 밑에 출력!
+    if st.session_state.get('saved_report_del'):
+        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+        st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
