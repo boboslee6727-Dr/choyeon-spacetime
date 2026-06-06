@@ -887,23 +887,19 @@ with st.sidebar:
         
         current_year = dt_mod.datetime.now().year 
         f_year = u_y if u_gender == "여성" else p_y
+
         if (current_year - f_year + 1) <= 49:
             st.markdown("<hr style='border:1px solid #ddd; margin:15px 0;'>", unsafe_allow_html=True)
-            st.markdown("<div style='font-weight:900; color:#4A148C; margin-bottom:5px;'>👶 출산택일 달력 선택</div>", unsafe_allow_html=True)
             
-            # [수술] 기존 데이터를 날리지 않는 '전용 가동 버튼' 체제로 변경
-            baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
-            start_date = st.date_input("탐색 시작일")
-            end_date = st.date_input("탐색 종료일")
-            
-            # 🚨 [수술] 명리학적 선행 조건(궁합풀이) 강제 락(Lock) 복구
-            if st.button("👶 출산택일 정밀분석 추가 가동", use_container_width=True):
-                # 시스템 메모리에 부부의 궁합 결과(saved_report_gh_g)와 명조 데이터(partner_bazi)가 존재하는지 절대 검사!
-                if st.session_state.get('saved_report_gh_g') and st.session_state.get('partner_bazi'):
-                    st.session_state['app_running'] = True
-                    st.session_state['run_delivery_only'] = True
-                else:
-                    st.error("⚠️ [선행 작업 누락] 부모의 명조 분석 없이 출산택일을 가동할 수 없습니다. 반드시 상단의 [🚀 초연 시공명리 사주풀이 가동] 버튼을 먼저 눌러 궁합풀이를 완료해 주십시오.")
+            # 🚨 [수술] 삭제가 아닌 '숨김(Hidden) 패널' 적용! 클릭 시 스르륵 열립니다.
+            with st.expander("👶 출산택일 달력 선택 (클릭하여 펼치기)", expanded=False):
+                baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
+                start_date = st.date_input("탐색 시작일")
+                end_date = st.date_input("탐색 종료일")
+                
+                st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
+                # 🚨 박사님께서 지시하신 '출산택일 확정 체크란'
+                run_delivery_calc = st.checkbox("✅ 출산택일 확정 (체크 후 하단 메인 가동버튼 클릭)", value=False)
 
     st.markdown("---")
     
