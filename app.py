@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "(Ver 46.3)"
+APP_VERSION = "(Ver 46.4)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -871,14 +871,19 @@ with st.sidebar:
     baby_gender = "미정"
 
     # [조건부 UI 노출: 상품 선택에 따라 중간 삽입]
+    run_iljin_calc = False # 🚨 변수 에러 방지용 초기화
+    
     if u_product == "개인사주":
         st.markdown("<hr style='border:1px dashed #1A237E; margin:15px 0;'>", unsafe_allow_html=True)
-        st.markdown("<div style='font-weight:900; color:#1A237E; margin-bottom:5px;'>🔮 일진 시공간 분석</div>", unsafe_allow_html=True)
-        if 'target_date' not in st.session_state:
-            kst = pytz.timezone('Asia/Seoul')
-            st.session_state['target_date'] = dt_mod.datetime.now(kst).date()
-        target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
-        st.session_state['target_date'] = target_iljin_date
+        # 🚨 [수술] 일진 분석을 무조건 띄우지 않고 '옵션 체크박스'로 변경
+        run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동 (선택)", value=False)
+        
+        if run_iljin_calc: # 체크했을 때만 날짜 선택창 노출
+            if 'target_date' not in st.session_state:
+                kst = pytz.timezone('Asia/Seoul')
+                st.session_state['target_date'] = dt_mod.datetime.now(kst).date()
+            target_iljin_date = st.date_input("분석할 일자 선택", value=st.session_state['target_date'])
+            st.session_state['target_date'] = target_iljin_date
 
     elif u_product == "타 감명서":
         st.markdown("<hr style='border:1px dashed #2E7D32; margin:15px 0;'>", unsafe_allow_html=True)
@@ -950,8 +955,10 @@ with st.sidebar:
                 if 'saved_report_del' in st.session_state: del st.session_state['saved_report_del']
             else:
                 st.session_state['need_calc'] = True # 전체 풀 가동
-                st.session_state['run_waterfall'] = True if u_product == "개인사주" else False 
-                for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del']:
+                # 🚨 [수술] 무조건 True가 아니라, 일진 체크박스(run_iljin_calc)를 선택했을 때만 연산 가동
+                st.session_state['run_waterfall'] = run_iljin_calc if u_product == "개인사주" else False 
+                # 메모리 초기화 목록에 'saved_report_iljin' 추가
+                for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
                     if key in st.session_state: del st.session_state[key]
 
 # ==============================================================================
@@ -2234,8 +2241,8 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             f"</div>\n"
             f"</div>"
         )
-        st.markdown(html_output, unsafe_allow_html=True)
-
+        # 🚨 [수술] 건방지게 화면에 먼저 출력하지 못하도록 막고 세션 메모리에 얌전히 저장
+        st.session_state['saved_report_iljin'] = html_output
 # ==============================================================================
 # 👶 8. [독립 모듈] 출산택일 정밀 분석 (기존 궁합 보존 가동)
 # ==============================================================================
@@ -2320,7 +2327,11 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 if st.session_state.get('app_running', False):
     
     if u_product == "개인사주":
+        # 🚨 [수술] 메인 리포트(사주풀이)를 먼저 웅장하게 출력하고, 
         st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
+        # 일진 리포트 연산 결과가 있다면 그 바로 밑에 찰싹 붙여서 순서대로 출력!
+        if st.session_state.get('saved_report_iljin'):
+            st.markdown(st.session_state.get('saved_report_iljin', ''), unsafe_allow_html=True)
     
     if u_product == "타 감명서":
         st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
