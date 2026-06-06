@@ -949,15 +949,21 @@ with st.sidebar:
         else:
             st.session_state['app_running'] = True
             
-            # 🚨 [수술 1] 기존 궁합이 살아있고 '택일 확정'만 체크한 경우, 메모리 보호 및 단독 가동 모드 온!
+            # 🚨 1. 궁합 보호 & 택일 단독 가동
             if u_product == "궁합" and run_delivery_calc and st.session_state.get('saved_report_gh_g'):
                 st.session_state['need_calc'] = False # 궁합 재연산 건너뛰기
                 if 'saved_report_del' in st.session_state: del st.session_state['saved_report_del']
+            
+            # 🚨 2. [신규 수술] 개인사주 보호 & 일진 분석 단독 가동! (토큰 먹는 하마 차단)
+            elif u_product == "개인사주" and run_iljin_calc and st.session_state.get('saved_report_html'):
+                st.session_state['need_calc'] = False # 메인 사주풀이 재연산 건너뛰기!
+                st.session_state['run_waterfall'] = True # 일진 모듈만 단독 가동 스위치 온!
+                if 'saved_report_iljin' in st.session_state: del st.session_state['saved_report_iljin'] # 이전 일진 기록만 삭제
+            
+            # 🚨 3. 완전 초기화 후 전체 풀 가동 (처음 실행할 때)
             else:
                 st.session_state['need_calc'] = True # 전체 풀 가동
-                # 🚨 [수술] 무조건 True가 아니라, 일진 체크박스(run_iljin_calc)를 선택했을 때만 연산 가동
                 st.session_state['run_waterfall'] = run_iljin_calc if u_product == "개인사주" else False 
-                # 메모리 초기화 목록에 'saved_report_iljin' 추가
                 for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
                     if key in st.session_state: del st.session_state[key]
 
