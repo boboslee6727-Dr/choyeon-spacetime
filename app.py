@@ -892,7 +892,7 @@ with st.sidebar:
             st.markdown("<hr style='border:1px solid #ddd; margin:15px 0;'>", unsafe_allow_html=True)
             
             # 🚨 [수술] 삭제가 아닌 '숨김(Hidden) 패널' 적용! 클릭 시 스르륵 열립니다.
-            with st.expander("👶 출산택일 달력 선택 (클릭하여 펼치기)", expanded=False):
+            with st.expander("👶 출산택일 달력 선택", expanded=False):
                 baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], index=0)
                 start_date = st.date_input("탐색 시작일")
                 end_date = st.date_input("탐색 종료일")
@@ -928,11 +928,16 @@ with st.sidebar:
             st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
         else:
             st.session_state['app_running'] = True
-            st.session_state['need_calc'] = True
-            # 개인사주일 경우 일진 분석 트리거 On
-            st.session_state['run_waterfall'] = True if u_product == "개인사주" else False 
-            for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del']:
-                if key in st.session_state: del st.session_state[key]
+            
+            # 🚨 [수술 1] 기존 궁합이 살아있고 '택일 확정'만 체크한 경우, 메모리 보호 및 단독 가동 모드 온!
+            if u_product == "궁합" and run_delivery_calc and st.session_state.get('saved_report_gh_g'):
+                st.session_state['need_calc'] = False # 궁합 재연산 건너뛰기
+                if 'saved_report_del' in st.session_state: del st.session_state['saved_report_del']
+            else:
+                st.session_state['need_calc'] = True # 전체 풀 가동
+                st.session_state['run_waterfall'] = True if u_product == "개인사주" else False 
+                for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del']:
+                    if key in st.session_state: del st.session_state[key]
 
 # ==============================================================================
 # 5. 분석 가동 로직 (need_calc 상태일 때만 무거운 연산 실행)
@@ -2273,7 +2278,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             st.session_state['run_delivery_only'] = False
 
 # ==============================================================================
-# 🖨️ 9. 화면 출력부 (모든 연산 모듈이 끝난 후, 맨 마지막에 한꺼번에 렌더링!)
+# 9. 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
     
@@ -2285,6 +2290,7 @@ if st.session_state.get('app_running', False):
         st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
         
     if u_product == "궁합":
+        # 🚨 [1단계] 저장된 궁합 리포트를 무조건 먼저 화면에 출력! (화면 유지 효과)
         if st.session_state.get('saved_report_gh_cover'):
             st.markdown(st.session_state.get('saved_report_gh_cover', ''), unsafe_allow_html=True)
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
@@ -2295,7 +2301,61 @@ if st.session_state.get('app_running', False):
         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
-    # 출산택일 결과가 세션에 살아있다면, 궁합 풀이 바로 밑에 출력!
-    if st.session_state.get('saved_report_del'):
-        st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
-        st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
+        # 🚨 [2단계] 택일 체크됨 & 연산 전일 경우 -> 하단에 독립 스피너 가동!
+        if run_delivery_calc and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
+            with st.spinner("⏳ 출산 택일 확정 중...."):
+                try:
+                    gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
+                    jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
+                    p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
+                    
+                    if u_gender == "남성":
+                        m_jjis = jjis
+                        f_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
+                        m_gans_str = "".join(gans)
+                        f_gans_str = "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context])
+                    else:
+                        m_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
+                        f_jjis = jjis
+                        m_gans_str = "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context])
+                        f_gans_str = "".join(gans)
+
+                    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+                    delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
+                    
+                    del_content = f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
+                    for day_info in delivery_days:
+                        del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
+                    
+                    del_content += f"<br><hr>\n<p style='font-size:14px; line-height:1.6; color:#333;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
+                    
+                    delivery_prompt = f"""
+당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
+
+[부모의 사주 정보]
+- 신청인: {u_gender} / 원국: {m_gans_str}{"".join(m_jjis)}
+- 상대방: 원국: {f_gans_str}{"".join(f_jjis)}
+- 탐색 지정 기간: {start_date} ~ {end_date} / 선호 태아 성별: {baby_gender}
+
+🚨 [출력 절대 규칙]
+선정된 상위 추천 일자별로 반드시 아래 규격화된 분리 통변 포맷을 100% 준수하여 작성하십시오.
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 추천 일자: OOOO년 OO월 OO일 (OO시)</span>
+<br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
+<br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
+"""
+                    del_res = model.generate_content(delivery_prompt)
+                    ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
+                    del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
+
+                    def wrap_a4_del(content, title_color="#1A237E", title="[ 초연 시공명리 출산택일 ]"):
+                        return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n<h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>\n{content}\n</div>\n</div>"
+
+                    st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]")
+                    st.rerun() # 🚨 연산 완료 즉시 화면을 갱신하여 결과 리포트를 찰싹 붙임!
+                except Exception as e:
+                    st.error(f"출산택일 연산 장애: {e}")
+
+        # 🚨 [3단계] 연산이 완료되어 세션에 저장된 택일 리포트가 있으면 궁합 밑에 최종 출력
+        if st.session_state.get('saved_report_del'):
+            st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
+            st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
