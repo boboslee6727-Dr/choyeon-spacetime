@@ -2071,7 +2071,8 @@ if st.session_state.get('need_calc', False):
                     f"    </div>\n"
                     f"</div>"
                 )
-                st.session_state['saved_report_gh_cover'] = cover_html_gunghap
+
+                    st.session_state['saved_report_gh_cover'] = cover_html_gunghap
 
                     # 3-11. 원국표 + 요약 결합 (페이지 단위로 저장)
                     m_page_content = f"{m_tbl}\n<div class='choyeon-premium-report' style='margin-top:20px;'>\n{m_ess}\n</div>"
