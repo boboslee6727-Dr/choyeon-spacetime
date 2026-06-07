@@ -1051,7 +1051,7 @@ if st.session_state.get('need_calc', False):
                     f"    </div>\n"
                     f"</div>"
                 )
-                    st.session_state['saved_report_cover'] = cover_html
+                st.session_state['saved_report_cover'] = cover_html
 
                 # 🚨 [2. 사주 원국표 생성]
                 ji_rel_rows = ""
@@ -1767,7 +1767,7 @@ if st.session_state.get('need_calc', False):
                     f"    </div>\n"
                     f"</div>"
                 )
-                    st.session_state['saved_report_2'] = other_cover_html + f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                st.session_state['saved_report_2'] = other_cover_html + f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
             # ==================================================================
             # 💕 [3단계] 궁합 풀이)
@@ -2065,7 +2065,7 @@ if st.session_state.get('need_calc', False):
                     f"    </div>\n"
                     f"</div>"
                 )
-                    st.session_state['saved_report_gh_cover'] = cover_html
+                st.session_state['saved_report_gh_cover'] = cover_html
 
                     # 3-11. 원국표 + 요약 결합 (페이지 단위로 저장)
                     m_page_content = f"{m_tbl}\n<div class='choyeon-premium-report' style='margin-top:20px;'>\n{m_ess}\n</div>"
