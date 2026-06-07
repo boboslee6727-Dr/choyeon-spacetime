@@ -19,7 +19,7 @@ APP_VERSION = "Ver 46.6"
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
-st.set_page_config(page_title=f"초연 시공명리 사주팔자 풀이", layout="wide")
+st.set_page_config(page_title=f"초연 시공명리 사주{APP_VERSION}", layout="wide")
 
 st.markdown("""
 <style>
