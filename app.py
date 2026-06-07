@@ -1277,7 +1277,7 @@ if st.session_state.get('need_calc', False):
 <div class='report-page' style='page-break-before: avoid;'>
 <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px; margin-top: 0;'>
 
-<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이] {APP_VERSION}</h1>
+<h1 style='text-align:center;'>🎯[초연 시공명리 사주풀이]</h1>
 {table_html}
 {master_bar_html}
 <div style='margin-top:20px;'>
