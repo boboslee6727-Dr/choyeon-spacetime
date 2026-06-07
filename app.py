@@ -1033,25 +1033,25 @@ if st.session_state.get('need_calc', False):
             if u_product in ["개인사주", "궁합", "타 감명서"]:
                 past_months_html = ""
 
-                # 🚨 [1. 표지 (Cover Page) 수정] 변수명 복구(cover_html) 및 확실한 고딕체 강제 적용
+                # 🚨 [1. 표지 (Cover Page) 수정] Streamlit CSS 간섭을 차단하는 !important 강제 적용
                 cover_html = (
                     f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                     f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                     f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                    f"            <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family: \'Malgun Gothic\', \'Apple SD Gothic Neo\', sans-serif;'>초연 시공명리 사주팔자 풀이</h1>\n"
+                    f"            <h1 style='font-size: 40px !important; color: #1A237E; font-weight: 900; margin:0; font-family: \"Malgun Gothic\", sans-serif !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
                     f"            <div style='text-align: right; margin-top: 10px;'>\n"
                     f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                     f"            </div>\n"
                     f"        </div>\n"
                     f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
-                    f"            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family: \'Malgun Gothic\', \'Apple SD Gothic Neo\', sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>\n"
+                    f"            <h2 style='font-size: 24px !important; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family: \"Malgun Gothic\", sans-serif !important;'>{p_icon} 신청인 : {u_name} 님</h2>\n"
                     f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
                     f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
                     f"                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>\n"
                     f"            </div>\n"
                     f"        </div>\n"
                     f"        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>\n"
-                    f"        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family: \'Malgun Gothic\', \'Apple SD Gothic Neo\', sans-serif;'>초연 시공명리 연구소</p>\n"
+                    f"        <p style='font-size: 22px !important; font-weight: 900; color: #1A237E; margin-top: 20px; font-family: \"Malgun Gothic\", sans-serif !important;'>초연 시공명리 연구소</p>\n"
                     f"    </div>\n"
                     f"</div>"
                 )
