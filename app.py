@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.6 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
+APP_VERSION = "Ver 46.6"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -800,7 +800,6 @@ class UniversalPrintableGunghap:
             {"label": "대운 기상도 조화", "pct": p5, "color": "#8e44ad"},
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
-
 
 # ==============================================================================
 # 4. 사이드바 UI (Top-Down 동적 레이아웃 및 초기값 셋팅)
