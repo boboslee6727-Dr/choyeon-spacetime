@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "(Ver 46.4)"
+APP_VERSION = "(Ver 46.5)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -796,6 +796,7 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
+
 # ==============================================================================
 # 4. 사이드바 UI (Top-Down 동적 레이아웃 및 초기값 셋팅)
 # ==============================================================================
@@ -1032,12 +1033,15 @@ if st.session_state.get('need_calc', False):
             if u_product in ["개인사주", "궁합", "타 감명서"]:
                 past_months_html = ""
 
-                # 🚨 [1. 표지 (Cover Page) 수정] A4 인쇄 이탈 원천 차단 및 완벽 중앙 정렬
+                # 🚨 [1. 표지 (Cover Page) 개선] 제목 강조 및 버전 우측 정렬
                 cover_html = f"""
                 <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                     <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                         <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이 {APP_VERSION}</h1>
+                            <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
+                            <div style='text-align: right; margin-top: 10px;'>
+                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
+                            </div>
                         </div>
                         <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                             <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
@@ -1117,6 +1121,16 @@ if st.session_state.get('need_calc', False):
                 direction_str = "순행" if order == 1 else "역행"
                 n_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
+                
+                # 🚨 [신규 수술] 파이썬이 미리 원국의 공망 위치를 정확히 계산하여 팩트만 도출!
+                gongmang_targets = n_gong.split(',') + i_gong.split(',')
+                gongmang_hits = []
+                if yb in gongmang_targets: gongmang_hits.append(f"년지({yb})")
+                if mb in gongmang_targets: gongmang_hits.append(f"월지({mb})")
+                if db in gongmang_targets: gongmang_hits.append(f"일지({db})")
+                if hb in gongmang_targets: gongmang_hits.append(f"시지({hb})")
+                
+                gongmang_actual = ", ".join(gongmang_hits) + "에 공망 작용함" if gongmang_hits else "사주 원국 내 공망 작용 없음"
                 
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
@@ -1353,14 +1367,14 @@ if st.session_state.get('need_calc', False):
                     f"- 나이 / 성별: {u_age}세 / {u_gender}\n"
                     f"- marital_status: {u_marital}\n"
                     f"- 타고난 심리 구조 팩트: {s_name} ({s_type} - {s_desc})\n"
-                    f"- 공망 팩트: [년주] {n_gong}, [일주] {i_gong}\n"
+                    f"- 실제 타격받는 공망 궁위 팩트: {gongmang_actual}\n"
                     f"- 올해({curr_y}년) 삼재 여부: {cur_samjae}\n"  
                     f"- 원국 내부 묘고(입고/개고) 작용: {won_guk_vaults_str}\n"
                     f"- 현재 행운(대/세/월운) 외부 충격에 의한 묘고 작용: {hang_un_vaults_str}\n"
                     f"🚨 [AI 환각 및 UI 파괴 원천 차단 절대 규칙]\n"
                     f"1. 서론 철저 금지: '안녕하십니까', '기쁩니다' 등의 인사말이나 감성적인 도입부를 절대로 작성하지 마십시오.\n"
-                    f"2. 🚨호칭 절대 규칙: 각 대목차의 첫 문장은 반드시 '{disp_name}님은~'으로 격식있게 시작하고, 그 이후 본문에서는 친근하게 '{disp_first_name}님은~'으로 부르십시오. '선생님', '당신', '그대', '본인'이라는 호칭은 절대(Never) 금지합니다.\n"
-                    f"3. 원국에 없는 기운 창조 금지: 내담자의 사주에 없는 십성을 지어내어 통변하지 마십시오.\n"
+                    f"2. 호칭 절대 규칙: 각 대목차의 첫 문장은 반드시 '{disp_name}님은~'으로 격식있게 시작하고, 그 이후 본문에서는 친근하게 '{disp_first_name}님은~'으로 부르십시오.\n"
+                    f"3. 🚨 공망 소설 금지: 위 '실제 타격받는 공망 궁위 팩트'에 명시된 자리만 공망으로 해석하십시오. 명시되지 않은 자리(예: 일지가 없는데 일지 공망이라고 하는 등)가 비어있다고 소설을 쓰면 즉시 치명적 시스템 오류로 간주합니다!\n"
                     f"4. 괄호 병기 금지: 에세이 작성 시 전문 용어나 한자를 괄호 안에 병기하는 행위를 금지합니다.\n"
                     f"5. HTML 훼손 금지: </div> 태그를 임의로 닫거나 마크다운 기호를 남발하지 마십시오.\n"
                 )
@@ -1470,7 +1484,7 @@ if st.session_state.get('need_calc', False):
 [통변 지시]
 - 간지 표기 시 반드시 한자로 표기하십시오.
 - 격국 팩트: {gyukgook_detail}
-- 공망 팩트: 년주 {n_gong}, 일주 {i_gong}
+- 공망 팩트: {gongmang_actual} (🚨명시되지 않은 위치의 공망 환각 절대 금지)
 - 일반신살: {shinsal_str} / 12신살: {s12_str}
 - 입고/개고 팩트: 사주팔자의 역동적 관계 분석에 반드시 묘고 작용을 포함하십시오.
 
@@ -1742,7 +1756,10 @@ if st.session_state.get('need_calc', False):
                 <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                     <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                         <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 32px; color: #2E7D32; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 타 감명서 비교 {APP_VERSION}</h1>
+                            <h1 style='font-size: 40px; color: #2E7D32; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 타 감명서 비교</h1>
+                            <div style='text-align: right; margin-top: 10px;'>
+                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
+                            </div>
                         </div>
                         <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                             <h2 style='font-size: 24px; font-weight: 900; color: #2E7D32; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>👤 신청인 : {u_name} 님</h2>
@@ -2033,7 +2050,8 @@ if st.session_state.get('need_calc', False):
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"<div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"<div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"<h1 style='font-size: 32px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>🏮 초연 시공명리 궁합풀이 {APP_VERSION}</h1>\n"
+                        f"<h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>🏮 초연 시공명리 궁합풀이</h1>\n"
+                        f"<div style='text-align: right; margin-top: 10px;'><span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span></div>\n"
                         f"</div>\n"
                         f"<div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
                         f"<h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♂️ 남자 : {m_name} 님 <span style='font-size:16px; color:#555;'>(남명, {m_age}세)</span></h2>\n"
