@@ -1055,7 +1055,7 @@ if st.session_state.get('need_calc', False):
                     </div>
                 </div>
                 """
-                st.session_state['saved_report_cover'] = cover_html_personal
+                st.markdown(cover_html_personal, unsafe_allow_html=True)
 
                 # 🚨 [2. 사주 원국표 생성]
                 ji_rel_rows = ""
@@ -1732,7 +1732,7 @@ if st.session_state.get('need_calc', False):
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}")
 
-            # ------------------------------------------------------------------
+# ------------------------------------------------------------------
             # [2단계] 타 감명서 비교분석
             # ------------------------------------------------------------------
             if u_product == "타 감명서":
@@ -1749,34 +1749,32 @@ if st.session_state.get('need_calc', False):
 """
                 c_res = call_claude_api(comp_prompt, max_tokens=10000)
                 
-                # 🚨 [수술] 개인사주/궁합과 100% 동일한 양식의 '타 감명서 전용 표지' 생성 (테마색: 진녹색 #2E7D32)
-                other_cover_html = f"""
-                <div class='page-break-before'></div>
-                <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
-                    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-                        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 40px; color: #2E7D32; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 타 감명서 비교</h1>
-                            <div style='text-align: right; margin-top: 10px;'>
-                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
-                            </div>
-                            <div style='text-align: right; margin-top: 10px;'>
-                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
-                            </div>
-                        </div>
-                        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                            <h2 style='font-size: 24px; font-weight: 900; color: #2E7D32; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>👤 신청인 : {u_name} 님</h2>
-                            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                            </div>
-                        </div>
-                        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
-                        <p style='font-size: 22px; font-weight: 900; color: #2E7D32; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
-                    </div>
-                </div>
-                """
+                # 🚨 [수술] 타 감명서 전용 표지 생성 (변수명 통일, 버전 중복 제거, 16칸 들여쓰기 완벽 적용)
+                cover_html_other = (
+                    f"<div class='page-break-before'></div>\n"
+                    f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
+                    f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                    f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
+                    f"            <h1 style='font-size: 40px; color: #2E7D32; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>초연 시공명리 타 감명서 비교</h1>\n"
+                    f"            <div style='text-align: right; margin-top: 10px;'>\n"
+                    f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                    f"            </div>\n"
+                    f"        </div>\n"
+                    f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
+                    f"            <h2 style='font-size: 24px; font-weight: 900; color: #2E7D32; margin-bottom: 20px; font-family:\"Malgun Gothic\", sans-serif;'>👤 신청인 : {u_name} 님</h2>\n"
+                    f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                    f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
+                    f"            </div>\n"
+                    f"        </div>\n"
+                    f"        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>\n"
+                    f"        <p style='font-size: 22px; font-weight: 900; color: #2E7D32; margin-top: 20px; font-family:\"Malgun Gothic\", sans-serif;'>초연 시공명리 연구소</p>\n"
+                    f"    </div>\n"
+                    f"</div>"
+                )
                 
-                # 표지 뒤에 본문 리포트 연결
-                st.session_state['saved_report_2'] = other_cover_html + f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-family:\"Malgun Gothic\", sans-serif; font-weight: 900; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                # 표지 뒤에 본문 리포트 연결 (변수명 cover_html_other로 연결)
+                st.session_state['saved_report_other_cover'] = cover_html_other
+                st.session_state['saved_report_2'] = cover_html_other + f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-family:\"Malgun Gothic\", sans-serif; font-weight: 900; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
             # ==================================================================
             # 💕 [3단계] 궁합 풀이)
@@ -2074,7 +2072,7 @@ if st.session_state.get('need_calc', False):
                         f"    </div>\n"
                         f"</div>"
                     )
-                    st.session_state['saved_report_gh_cover'] = cover_html_gunghap
+                    st.markdown(cover_html_gunghap, unsafe_allow_html=True)
 
                     # 3-11. 원국표 + 요약 결합 (페이지 단위로 저장)
                     m_page_content = f"{m_tbl}\n<div class='choyeon-premium-report' style='margin-top:20px;'>\n{m_ess}\n</div>"
