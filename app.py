@@ -1033,19 +1033,28 @@ if st.session_state.get('need_calc', False):
             if u_product in ["개인사주", "궁합", "타 감명서"]:
                 past_months_html = ""
 
-                # 🚨 [1. 표지 (Cover Page) 개선] 제목 강조 및 버전 우측 정렬
-                cover_html = f"""
+                # [개인사주 표지] 16칸 들여쓰기 적용
+                cover_html_personal = f"""
                 <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                     <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                         <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 사주팔자 풀이</h1>
-                            <div style='text-align: right; margin-top: 10px;'>
-                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
-                            </div>
+                            <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 사주팔자 풀이</h1>
                             <div style='text-align: right; margin-top: 10px;'>
                                 <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
                             </div>
                         </div>
+                        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
+                            <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
+                            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
+                            </div>
+                        </div>
+                        <p style='font-size: 18px; margin-top: 50px; font-weight: bold;'>{today_str}</p>
+                        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 연구소</p>
+                    </div>
+                </div>
+                """
                         <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                             <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
                             <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
@@ -1759,7 +1768,7 @@ if st.session_state.get('need_calc', False):
                 <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                     <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                         <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-                            <h1 style='font-size: 40px; color: #2E7D32; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 타 감명서 비교</h1>
+                            <h1 style='font-size: 40px; color: #2E7D32; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>초연 시공명리 타 감명서 비교</h1>
                             <div style='text-align: right; margin-top: 10px;'>
                                 <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
                             </div>
@@ -2051,37 +2060,34 @@ if st.session_state.get('need_calc', False):
                         f"{closing_original}"
                     )
 
-                    # 3-10. 오리지널 표지 생성 및 세션 저장 (개인사주 표지 폼 완벽 동기화 및 가운데 정렬)
-                    cover_html = (
+                    # 3-10. 궁합풀이 표지 생성 (변수명 분리 및 표준 레이아웃 적용)
+                    cover_html_gunghap = (
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
-                        f"<div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
-                        f"<div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 궁합풀이</h1>
-                        <div style='text-align: right; margin-top: 10px;'>
-                            <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
-                        </div>
-                        f"<div style='text-align: right; margin-top: 10px;'><span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span></div>\n"
-                        f"</div>\n"
-                        f"<div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
-                        f"<h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♂️ 남자 : {m_name} 님 <span style='font-size:16px; color:#555;'>(남명, {m_age}세)</span></h2>\n"
-                        f"<div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
-                        f"<p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun}</p>\n"
-                        f"<p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{m_time}</p>\n"
-                        f"</div>\n"
-                        f"</div>\n"
-                        f"<div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>\n"
-                        f"<h2 style='font-size: 24px; font-weight: 900; color: #D50000; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♀️ 여자 : {f_name} 님 <span style='font-size:16px; color:#555;'>(여명, {f_age}세)</span></h2>\n"
-                        f"<div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
-                        f"<p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun}</p>\n"
-                        f"<p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{f_time}</p>\n"
-                        f"</div>\n"
-                        f"</div>\n"
-                        f"<p style='font-size: 18px; margin-top: 40px; font-weight: bold;'>{dt_mod.datetime.now().strftime('%Y년 %m월 %d일')}</p>\n"
-                        f"<p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 15px; font-family:\"Malgun Gothic\", sans-serif;'>초연 시공명리 연구소</p>\n"
-                        f"</div>\n"
+                        f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                        f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
+                        f"            <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>초연 시공명리 궁합풀이</h1>\n"
+                        f"            <div style='text-align: right; margin-top: 10px;'>\n"
+                        f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                        f"            </div>\n"
+                        f"        </div>\n"
+                        f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
+                        f"            <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♂️ 남명 : {m_name} 님 <span style='font-size:16px; color:#555;'>( {m_age}세 )</span></h2>\n"
+                        f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                        f"                <p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun}</p>\n"
+                        f"            </div>\n"
+                        f"        </div>\n"
+                        f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>\n"
+                        f"            <h2 style='font-size: 24px; font-weight: 900; color: #D50000; margin-bottom: 15px; font-family:\"Malgun Gothic\", sans-serif;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>\n"
+                        f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                        f"                <p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun}</p>\n"
+                        f"            </div>\n"
+                        f"        </div>\n"
+                        f"        <p style='font-size: 18px; margin-top: 40px; font-weight: bold;'>{dt_mod.datetime.now().strftime('%Y년 %m월 %d일')}</p>\n"
+                        f"        <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 15px; font-family:\"Malgun Gothic\", sans-serif;'>초연 시공명리 연구소</p>\n"
+                        f"    </div>\n"
                         f"</div>"
                     )
-                    st.session_state['saved_report_gh_cover'] = cover_html
+                    st.session_state['saved_report_gh_cover'] = cover_html_gunghap
 
                     # 3-11. 원국표 + 요약 결합 (페이지 단위로 저장)
                     m_page_content = f"{m_tbl}\n<div class='choyeon-premium-report' style='margin-top:20px;'>\n{m_ess}\n</div>"
