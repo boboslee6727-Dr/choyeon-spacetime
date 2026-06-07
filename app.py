@@ -59,10 +59,32 @@ st.markdown("""
     
     .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
     
-    /* 사이드바 버튼 색상 */    
-    div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
-    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
+    /* 사이드바 및 가동 버튼 강제 제어 */    
+    div[data-testid="stSidebar"] div.stButton > button:first-child,
+    div.stButton > button[kind="primary"] { 
+        background-color: #D50000 !important; 
+        color: white !important; 
+        border: none !important; 
+        height: 45px !important; 
+    }
     
+    /* 🚨 [수술] 가동 버튼 내부 글씨(p 태그)를 인쇄 버튼과 똑같은 굵은 고딕체로 강제 주입 */
+    div[data-testid="stSidebar"] div.stButton > button:first-child p,
+    div.stButton > button[kind="primary"] p {
+        font-weight: 900 !important; 
+        font-size: 15px !important;
+        font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important;
+        color: white !important;
+        margin: 0 !important;
+    }
+
+    div[data-testid="stSidebar"] .navy-btn button { 
+        background-color: #1A237E !important; 
+        color: white !important; 
+        border: none !important; 
+        font-weight: 900 !important; 
+        height: 45px !important; 
+    }    
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
