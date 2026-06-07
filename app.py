@@ -1042,6 +1042,9 @@ if st.session_state.get('need_calc', False):
                             <div style='text-align: right; margin-top: 10px;'>
                                 <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
                             </div>
+                            <div style='text-align: right; margin-top: 10px;'>
+                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
+                            </div>
                         </div>
                         <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                             <h2 style='font-size: 24px; font-weight: 900; color: {p_color}; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>{p_icon} 신청인 : {u_name} 님</h2>
@@ -1760,6 +1763,9 @@ if st.session_state.get('need_calc', False):
                             <div style='text-align: right; margin-top: 10px;'>
                                 <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
                             </div>
+                            <div style='text-align: right; margin-top: 10px;'>
+                                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
+                            </div>
                         </div>
                         <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                             <h2 style='font-size: 24px; font-weight: 900; color: #2E7D32; margin-bottom: 20px; font-family:"Malgun Gothic", sans-serif;'>👤 신청인 : {u_name} 님</h2>
@@ -2050,7 +2056,10 @@ if st.session_state.get('need_calc', False):
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"<div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"<div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"<h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>🏮 초연 시공명리 궁합풀이</h1>\n"
+                        <h1 style='font-size: 40px; color: #1A237E; font-weight: 900; margin:0; font-family:"Malgun Gothic", sans-serif;'>🏮 초연 시공명리 궁합풀이</h1>
+                        <div style='text-align: right; margin-top: 10px;'>
+                            <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>
+                        </div>
                         f"<div style='text-align: right; margin-top: 10px;'><span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span></div>\n"
                         f"</div>\n"
                         f"<div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
