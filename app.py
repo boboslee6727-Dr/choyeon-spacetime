@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "(Ver 46.5)"
+APP_VERSION = "Ver 46.5"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -23,30 +23,45 @@ st.set_page_config(page_title=f"초연 시공명리 사주 {APP_VERSION}", layou
 
 st.markdown("""
 <style>
-    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
+    /* 폰트 임포트: 나눔명조체 로드 */
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     
     body, .stApp { background-color: #FFF8E1; }
     
     .report-page { width: 210mm; max-width: 100%; margin: 30px auto; background-color: #FFFFFF !important; padding: 15mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; }
-    .report-page, .report-page * { font-family: 'Noto Serif KR', serif !important; color: #000000; }
+    
+    /* 본문 및 표지 전체 기본 폰트: 나눔명조체 강제 적용 */
+    .report-page, .report-page * { font-family: 'Nanum Myeongjo', serif !important; color: #000000; }
+    
+    /* (삭제됨) 기존 표지 전체 고딕체 강제 적용 코드 제거 */
     
     .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 20px; background: transparent; box-sizing: border-box; width: 100%; overflow: hidden; word-break: keep-all; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
-    .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
-    .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 900 !important; }
-    .report-page h3 { font-size: 22px !important; margin-top: 25px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E; padding-bottom: 5px; color: #1A237E !important; font-weight: 900 !important; }
-    .report-page h4 { font-size: 18px !important; margin-top: 15px !important; margin-bottom: 8px !important; font-weight: 900 !important; }
+    /* 기본 H1, H2 사이즈 (본문 나눔명조 기준) */
+    .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 800 !important; }
+    .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 800 !important; }
+    
+    /* 🚨 [수정] 표지 메인 타이틀(h1)에만 예외적으로 고딕체 강제 적용 */
+    .cover-page h1 { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; font-size: 40px !important; margin-bottom: 0px !important; font-weight: 900 !important; }
+    
+    /* 표지 나머지 요소(h2, p)는 나눔명조체를 따르며 크기/굵기만 제어 */
+    .cover-page h2 { font-size: 24px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
+    .cover-page p { font-size: 18px !important; margin: 0 !important; font-weight: 700 !important; }
+    .cover-page p:last-child { font-size: 22px !important; font-weight: 800 !important; }
+
+    .report-page h3 { font-size: 22px !important; margin-top: 25px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E; padding-bottom: 5px; color: #1A237E !important; font-weight: 800 !important; }
+    .report-page h4 { font-size: 18px !important; margin-top: 15px !important; margin-bottom: 8px !important; font-weight: 800 !important; }
     
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; margin-bottom: 15px; table-layout: fixed; }
-    .result-table td { border: 1px solid #444; padding: 1px; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; word-wrap: break-word; }
+    .result-table td { border: 1px solid #444; padding: 1px; text-align: center; vertical-align: middle; font-weight: 800; font-size: 13px; line-height: 1.2; word-wrap: break-word; }
     
     .no-border-row td { border-top: none !important; border-bottom: none !important; }
     .no-border-row:last-of-type td { border-bottom: 1px solid #444 !important; }
     
-    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
+    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 800 !important; font-size: 15px !important; border: 1px solid #444 !important; }
     
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
-    .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; }
+    .top-header-cell td, .top-header-cell span { color: #FFFFFF !important; font-weight: 800 !important; font-size: 16px !important; }
     
     .color-목 { background-color: #2E7D32 !important; color: white !important; }
     .color-화 { background-color: #C62828 !important; color: white !important; }
@@ -54,14 +69,14 @@ st.markdown("""
     .color-금 { background-color: #9E9E9E !important; color: white !important; }
     .color-수 { background-color: #212121 !important; color: white !important; }
     
-    /* 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
-    .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
+    /* 일반 본문 제어 구역: 나눔명조체 통일 */
+    .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Nanum Myeongjo', serif !important; padding: 0 !important; }
     
-    .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
+    .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 800 !important; display: block; color: #111 !important; }
     
     /* 사이드바 버튼 색상 */    
-    div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
-    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
+    div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 800; height: 45px; }
+    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 800 !important; height: 45px; }
     
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
@@ -74,7 +89,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 # ==============================================================================
 # 0.5 [완전 무결점 하드코딩 DB]
 # ==============================================================================
