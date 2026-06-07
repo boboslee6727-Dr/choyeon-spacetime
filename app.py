@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.5 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
+APP_VERSION = "Ver 46.6 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
