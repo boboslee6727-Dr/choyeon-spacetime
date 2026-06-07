@@ -1055,7 +1055,8 @@ if st.session_state.get('need_calc', False):
                     </div>
                 </div>
                 """
-                
+                st.session_state['saved_report_cover'] = cover_html_personal
+
                 # 🚨 [2. 사주 원국표 생성]
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -1417,7 +1418,6 @@ if st.session_state.get('need_calc', False):
    - 미혼: '미래의 남편/인연'으로 칭할 것.
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
-
                 che_yong_matrix_text = """
 [초연 시공명리 체/용(體/用) 운세 분석 키워드 매트릭스]
 - 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
@@ -1445,7 +1445,6 @@ if st.session_state.get('need_calc', False):
 - 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
 - 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
 """
-
                 prompt = f"""
 {db_header}
 
