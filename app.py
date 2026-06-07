@@ -1039,12 +1039,19 @@ if st.session_state.get('need_calc', False):
 
                 # 🚨 변수명 원상복구(cover_html) 및 타이틀 고딕체 강제 지정
                 cover_html = (
+                        # 🚨 [수술] 스트림릿 필터링 우회를 위한 표지 전용 미니 CSS 삽입
+                        f"<style>\n"
+                        f"    .cover-title-gothic {{ font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #0054FF !important; }}\n"
+                        f"    .cover-ver-gothic {{ font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; }}\n"
+                        f"</style>\n"
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
+                        # 🚨 클래스 적용으로 고딕체 및 맑은 파란색(#0054FF) 강제 출력
+                        f"            <h1 class='cover-title-gothic' style='font-size: 40px !important; font-weight: 900 !important; margin:0 !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>{APP_VERSION}</span>\n"
+                        # 🚨 버전 정보에도 고딕체 클래스 적용
+                        f"                <span class='cover-ver-gothic' style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                         f"            </div>\n"
                         f"        </div>\n"
                         f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
@@ -1755,13 +1762,18 @@ if st.session_state.get('need_calc', False):
                 
                 # 🚨 [수술] 타 감명서 전용 표지 생성 (변수명 통일, 버전 중복 제거, 16칸 들여쓰기 완벽 적용)
                 other_cover_html = (
+                        # 🚨 [수술] 스트림릿 필터링 우회용 미니 CSS (파란색 + 굵은 고딕체)
+                        f"<style>\n"
+                        f"    .cover-title-gothic {{ font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #0054FF !important; font-weight: 900 !important; }}\n"
+                        f"    .cover-ver-gothic {{ font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; font-weight: 900 !important; }}\n"
+                        f"</style>\n"
                         f"<div class='page-break-before'></div>\n"
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>초연 시공명리 타 감명서 비교</h1>\n"
+                        f"            <h1 class='cover-title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 타 감명서 비교</h1>\n"
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>{APP_VERSION}</span>\n"
+                        f"                <span class='cover-ver-gothic' style='font-size: 14px; color: #555; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                         f"            </div>\n"
                         f"        </div>\n"
                         f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
@@ -2047,12 +2059,17 @@ if st.session_state.get('need_calc', False):
                     )
 
                     cover_html = (
+                        # 🚨 [수술] 스트림릿 필터링 우회용 미니 CSS (파란색 + 굵은 고딕체)
+                        f"<style>\n"
+                        f"    .cover-title-gothic {{ font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #0054FF !important; font-weight: 900 !important; }}\n"
+                        f"    .cover-ver-gothic {{ font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; font-weight: 900 !important; }}\n"
+                        f"</style>\n"
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>초연 시공명리 궁합풀이</h1>\n"
+                        f"            <h1 class='cover-title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 궁합풀이</h1>\n"
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>{APP_VERSION}</span>\n"
+                        f"                <span class='cover-ver-gothic' style='font-size: 14px; color: #555; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                         f"            </div>\n"
                         f"        </div>\n"
                         f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
