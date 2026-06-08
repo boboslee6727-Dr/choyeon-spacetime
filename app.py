@@ -2014,10 +2014,17 @@ if st.session_state.get('need_calc', False):
                     
                     # [수술] AI가 마커를 훼손하거나 누락해도 강제로 대운표를 소제목 아래에 박아넣는 무적 로직
                     import re
-                    g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', couple_daewun_tables, g_ess, flags=re.IGNORECASE)
-                    if count == 0:  # 마커가 없으면 강제로 제목 밑에 삽입
-                        g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px;">' + couple_daewun_tables + '</div>', g_ess)
-
+                    
+                    # 1. AI가 마커를 똑바로 썼을 경우 정상 치환
+                    g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', f"<div style='margin-top:15px; margin-bottom:15px;'>{couple_daewun_tables}</div>", g_ess, flags=re.IGNORECASE)
+                    
+                    # 2. 마커가 누락되었을 경우, 해당 목차 제목(h3 태그) 바로 아래에 강제 삽입
+                    if count == 0:  
+                        g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px; margin-bottom:15px;">' + couple_daewun_tables + '</div>', g_ess)
+                        
+                    # 만약 위 두 가지 방식으로도 표가 삽입되지 않았다면, 글 맨 마지막에 강제 출력 (최후의 보루)
+                    if "table" not in g_ess.lower() and "<th" not in couple_daewun_tables.lower():
+                         g_ess += f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 커플 대운표)</span><br><div style='margin-top:15px; margin-bottom:15px;'>{couple_daewun_tables}</div>"
                     # 3-8. A4 규격 컨테이너 래퍼 
                     def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):
                         return (
