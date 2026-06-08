@@ -14,12 +14,12 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.7"
+APP_VERSION = "Ver 46.6 (Gemini 2.5-Pro / Dynamic Solar Term Mode)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
 # ==============================================================================
-st.set_page_config(page_title=f"초연 시공명리 {APP_VERSION}", layout="wide")
+st.set_page_config(page_title=f"초연 시공명리 사주 {APP_VERSION}", layout="wide")
 
 st.markdown("""
 <style>
@@ -31,10 +31,6 @@ st.markdown("""
     .report-page, .report-page * { font-family: 'Noto Serif KR', serif !important; color: #000000; }
     
     .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 20px; background: transparent; box-sizing: border-box; width: 100%; overflow: hidden; word-break: keep-all; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-
-    /* 🚨 표지 타이틀/버전 폰트 및 파란색(#0054FF) 강제 타격 (나눔명조체 완벽 제압) */
-    .cover-page .title-gothic { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #0054FF !important; font-weight: 900 !important; }
-    .cover-page .ver-gothic { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #555555 !important; font-weight: 900 !important; }
 
     .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
     .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 900 !important; }
@@ -63,25 +59,14 @@ st.markdown("""
     
     .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
     
-    /* 사이드바 및 가동 버튼 강제 제어 */    
-    div[data-testid="stSidebar"] div.stButton > button:first-child,
-    div.stButton > button[kind="primary"] { background-color: #D50000 !important; color: white !important; border: none !important; height: 45px !important; }
+    /* 사이드바 버튼 색상 */    
+    div[data-testid="stSidebar"] div.stButton > button:first-child { background-color: #D50000; color: white; border: none; font-weight: 900; height: 45px; }
+    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px; }
     
-    /* 🚨 [수술] 가동 버튼 내부 글씨(p 태그)를 인쇄 버튼과 똑같은 굵은 고딕체로 강제 주입 */
-    div[data-testid="stSidebar"] div.stButton > button:first-child p,
-    div.stButton > button[kind="primary"] p { font-weight: 900 !important; font-size: 15px !important; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important; color: white !important; margin: 0 !important; }
-
-    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px !important; }    
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         body, .stApp { background-color: white !important; }
-        
-        /* 🚨 [수술 완료] 스트림릿 고유의 쓸데없는 상단 여백 완벽 제거 (빈 페이지 발생 원천 차단) */
-        .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
-        div[data-testid="stVerticalBlock"] { gap: 0 !important; }
-        .element-container, .stMarkdown { margin-bottom: 0 !important; }
-        
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
@@ -334,11 +319,22 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     
     return f"{y_gan}{y_ji}", f"{m_gan}{JI[m_ji_idx]}", lon
 
-    st.markdown("""
-    <button onclick='window.print()' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-bottom:15px;'>
-        🖨️ 풀이 결과 인쇄 / PDF 저장
-    </button>
-    """, unsafe_allow_html=True)
+components.html("""
+<script>
+    const doc = window.parent.document;
+    doc.addEventListener('keyup', function(e) {
+        if (e.target.tagName !== 'INPUT' || e.target.type !== 'text') return;
+        let label = e.target.getAttribute('aria-label') || "";
+        if (label.includes('년주') || label.includes('월주') || label.includes('일주')) {
+            if (e.key === ' ' || e.target.value.includes('년') || e.target.value.includes('월') || e.target.value.includes('일') || e.target.value.includes('시')) {
+                let inputs = Array.from(doc.querySelectorAll('input[type="text"]'));
+                let idx = inputs.indexOf(e.target);
+                if (idx > -1 && idx < inputs.length - 1) inputs[idx + 1].focus();
+            }
+        }
+    });
+</script>
+""", height=0, width=0)
 
 # ==============================================================================
 # 2. AI 및 명리 연산 엔진
@@ -800,6 +796,7 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
+
 # ==============================================================================
 # 4. 사이드바 UI (Top-Down 동적 레이아웃 및 초기값 셋팅)
 # ==============================================================================
@@ -930,7 +927,18 @@ with st.sidebar:
     # [하단 고정 UI] 가동 버튼 및 인쇄 버튼 배치
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
-    
+    components.html("""
+    <div style='padding: 0; margin: 0;'>
+        <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15);'>
+            🖨️ 풀이 결과 인쇄 / PDF 저장
+        </button>
+        <script>
+            document.getElementById('sidebar-pdf-print-btn').addEventListener('click', () => {
+                window.parent.print();
+            });
+        </script>
+    </div>
+    """, height=55)
 
     if btn_single:
         if not u_name.strip(): 
@@ -942,31 +950,21 @@ with st.sidebar:
         else:
             st.session_state['app_running'] = True
             
-            # [논리적 순서 1] 개인사주: 일진 분석만 단독 가동할 경우
-            if u_product == "개인사주" and run_iljin_calc and st.session_state.get('saved_report_html'):
-                st.session_state['need_calc'] = False
-                st.session_state['run_waterfall'] = True
-                if 'saved_report_iljin' in st.session_state: del st.session_state['saved_report_iljin']
-                
-            # [논리적 순서 2] 타 감명서: 무조건 전체 풀 가동 (서브 모듈 없음)
-            elif u_product == "타 감명서":
-                st.session_state['need_calc'] = True
-                st.session_state['run_waterfall'] = False
-                st.session_state['run_delivery_only'] = False
-                for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
-                    if key in st.session_state: del st.session_state[key]
-                    
-            # [논리적 순서 3] 궁합: 택일만 단독 가동할 경우
-            elif u_product == "궁합" and run_delivery_calc and st.session_state.get('saved_report_gh_g'):
-                st.session_state['need_calc'] = False
-                st.session_state['run_delivery_only'] = True
+            # 🚨 1. 궁합 보호 & 택일 단독 가동
+            if u_product == "궁합" and run_delivery_calc and st.session_state.get('saved_report_gh_g'):
+                st.session_state['need_calc'] = False # 궁합 재연산 건너뛰기
                 if 'saved_report_del' in st.session_state: del st.session_state['saved_report_del']
-                
-            # [최종 예외 처리] 완전 초기화 후 전체 풀 가동 (처음 실행이거나 조건이 변경된 경우)
+            
+            # 🚨 2. [신규 수술] 개인사주 보호 & 일진 분석 단독 가동! (토큰 먹는 하마 차단)
+            elif u_product == "개인사주" and run_iljin_calc and st.session_state.get('saved_report_html'):
+                st.session_state['need_calc'] = False # 메인 사주풀이 재연산 건너뛰기!
+                st.session_state['run_waterfall'] = True # 일진 모듈만 단독 가동 스위치 온!
+                if 'saved_report_iljin' in st.session_state: del st.session_state['saved_report_iljin'] # 이전 일진 기록만 삭제
+            
+            # 🚨 3. 완전 초기화 후 전체 풀 가동 (처음 실행할 때)
             else:
-                st.session_state['need_calc'] = True
+                st.session_state['need_calc'] = True # 전체 풀 가동
                 st.session_state['run_waterfall'] = run_iljin_calc if u_product == "개인사주" else False 
-                st.session_state['run_delivery_only'] = run_delivery_calc if u_product == "궁합" else False
                 for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
                     if key in st.session_state: del st.session_state[key]
 
@@ -974,7 +972,7 @@ with st.sidebar:
 # 5. 분석 가동 로직 (need_calc 상태일 때만 무거운 연산 실행)
 # ==============================================================================
 if st.session_state.get('need_calc', False):
-    spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이 분석({APP_VERSION}) 중....]"
+    spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
     with st.spinner(spinner_msg):
         try:
             # 1. 시스템 날짜 및 사용자 날짜 기초 변수 정의
@@ -1035,27 +1033,28 @@ if st.session_state.get('need_calc', False):
             if u_product in ["개인사주", "궁합", "타 감명서"]:
                 past_months_html = ""
 
+                # 🚨 변수명 원상복구(cover_html) 및 타이틀 고딕체 강제 지정
                 cover_html = (
-                        f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
-                        f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
-                        f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
-                        f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
-                        f"            </div>\n"
-                        f"        </div>\n"
-                        f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
-                        f"            <h2 style='font-size: 24px; font-weight: 800; color: {p_color}; margin-bottom: 20px;'>{p_icon} 신청인 : {u_name} 님</h2>\n"
-                        f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
-                        f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
-                        f"                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>\n"
-                        f"            </div>\n"
-                        f"        </div>\n"
-                        f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
-                        f"        <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
-                        f"    </div>\n"
-                        f"</div>"
-                    )
+                    f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
+                    f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                    f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
+                    f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
+                    f"            <div style='text-align: right; margin-top: 10px;'>\n"
+                    f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                    f"            </div>\n"
+                    f"        </div>\n"
+                    f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
+                    f"            <h2 style='font-size: 24px; font-weight: 800; color: {p_color}; margin-bottom: 20px;'>{p_icon} 신청인 : {u_name} 님</h2>\n"
+                    f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                    f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
+                    f"                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>\n"
+                    f"            </div>\n"
+                    f"        </div>\n"
+                    f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
+                    f"        <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
+                    f"    </div>\n"
+                    f"</div>"
+                )
                 st.session_state['saved_report_cover'] = cover_html
 
                 # 🚨 [2. 사주 원국표 생성]
@@ -1268,9 +1267,9 @@ if st.session_state.get('need_calc', False):
 
                 # 🚨 [7. 결과 출력 HTML 조립]
                 closing_html = f"""<div style='margin-top: 30px;'>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드와 같지만, 우리가 살아가며 마주하는 스캐너인 운은 늘 변화하며 흐릅니다.</p>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 초연 전통명리와의 인연이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 나침반이 되기를 진심으로 기원합니다.</p>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 전통명리의 지혜와 궁금증이 있으시면 언제든 초연 전통명리 연구소의 문을 두드려 주십시오.</p>
 <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
 <div style='text-align: right; margin-top: 30px;'>
 <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
@@ -1451,24 +1450,11 @@ if st.session_state.get('need_calc', False):
 
 [ 🚨종합 특별지시 사항 : 대중을 위한 현대적 통변 원칙]
 (※ AI 지시: AI는 전체 에세이 작성 시 아래 원칙을 반드시 뼛속 깊이 새기고 준수하십시오.)
-1. 🚨명리 용어의 전략적 노출 및 해제: 격국, 비견, 십이운성, 신살, 형충파해 등 딱딱한 한자어 전문 용어의 단순 남발을 엄격히 금지합니다. 단, 내담자의 직업 적성이나 특이 심리를 분석할 때는 "사회생활에서 조정해야 할 일이 발생하는데, 이는 명리학적으로 寅·巳 형(刑)의 에너지가 작용하기 때문입니다"와 같이 핵심 용어를 먼저 제시한 후 그 의미를 부드럽게 풀어 설명하여 통변의 전문성과 신뢰도를 높이십시오.
+1. 🚨명리 용어 순화: 격국, 비견, 식상, 관성, 조후, 용신, 희신 등의 딱딱한 한자어 전문 용어 남발을 엄격히 금지합니다.
 2. 직관적인 쉬운 해설: 부득이하게 명리 용어를 언급해야 할 경우, 반드시 일반인이 단번에 이해할 수 있는 일상적인 비유와 현대적 구어체로 부드럽게 풀어서 설명하십시오. 
 3. 따뜻한 상담가 마인드: 명리학 강의를 하듯 가르치려 들지 말고, 내담자의 삶을 깊이 이해하고 어루만져 주는 친절하고 세련된 카운슬러의 어조(현대적 구어체)로 모든 글을 전개하십시오.
 4. 🚨[절대 성역]: 단, 문서 상단에 주입되는 '[CHOYEON_GOLDEN_TEXT_HERE]' 문장은 초연 박사의 고유 선언문입니다. 부연 설명이나 인사말 없이 원문 그대로 출력하십시오.
 5. 🚨 초연 시공명리 3대 관점의 입체적 풀이: 사주를 단편적으로 해석하지 마십시오. 모든 통변을 전개할 때는 반드시 1) 육친적, 2) 심리적, 3) 사회적 관점이라는 세 가지 차원을 유기적으로 융합하십시오.
-6. 🚨 [모순 요소의 변증법적 통합]: 사주 내에 상충되는 기운(예: '무관성'의 자유로움과 '정재격'의 통제력)이 발견될 경우, 이를 분리하여 서술하지 말고 모순을 입체적인 하나의 서사로 융합하여 서술하십시오. 또한, 천간에 드러나지 않았으나 지장간에 중요한 역할을 하는 육친(예: 숨겨진 정관)의 작용력을 반드시 찾아내어 내담자의 무의식적 욕구와 현실의 괴리를 깊이 있게 분석하십시오.
-7. 🚨 [공망(空亡)의 양가적 심리 분석 강화]: 공망을 해석할 때, '기존의 틀을 깨는 독특한 방식의 성공'이라는 긍정적 측면뿐만 아니라, 그 이면에 필연적으로 수반되는 '심리적 공허감'과 '인간관계에서의 거리감' 등 내담자가 겪어왔을 부정적 감정까지 깊이 있게 다루어 복합적인 내면을 따뜻하게 어루만지십시오.
-8. 🚨 [조후(調候)의 입체적 해석]: 조후(온도와 습도)의 불균형을 설명할 때, '우울감, 무기력, 신체 냉증, 조급함' 등 고전 명리에서 지적하는 원초적이고 생리적인 현상을 먼저 명확히 짚어주십시오. 그 후, 이를 '에너지 소모 관리'나 '심리적 재충전' 같은 현대적 개운법으로 부드럽게 전환하여 서술함으로써 통변의 깊이와 권위를 더하십시오.
-9. 🚨 [고전적 숙명론의 현대적 치환]: '남편 복(덕)', '부모 덕', '자식 운' 등 내담자가 내심 궁금해하지만 상처받기 쉬운 고전적·숙명론적 주제를 무조건 회피하지 마십시오. 반드시 "과거 전통 명리에서는 이를 ~라고 단편적으로 해석했으나, 현대 사회에서는 오히려 이를 ~한 강력한 독립심이나 특수한 사회적 관계로 발현되는 것으로 봅니다"라는 '비교 재해석 프레임'을 사용하여 내담자의 궁금증을 해소함과 동시에 주체성을 극대화하십시오.
-10. 🚨 [궁성(宮星) 이론 기반의 현실적 고충 직면]: 사주의 구조적 갈등(예: 형충파해)을 단순히 '성장의 동력'이나 '창조적 파괴' 등 추상적이고 긍정적인 심리 용어로만 포장하지 마십시오. 반드시 충돌이 일어난 '궁(자리: 부모궁, 배우자궁 등)'을 팩트로 짚어, "부모의 경제적 지원 부족으로 인한 이른 독립"이나 "배우자와의 관계 설정 어려움" 등 내담자가 겪었을 '뼈아픈 현실적 고충과 사건'을 먼저 구체적으로 묘사하여 깊은 현실 공감대를 형성한 후, 이를 성장의 동력으로 승화시키십시오.
-11. 🚨 [결핍 오행(無字)의 대체 생존 전략 명시]: 사주 원국에 특정 오행이나 십성(예: 식상, 관성 등)이 아예 없는 결핍 상태인 경우, 단순히 '~가 없다'고 단정 짓거나 뭉뚱그리지 마십시오. 해당 기운의 부재가 행동 패턴에 미치는 영향을 명시하고, "식상이 없기 때문에 외부로 자신을 표출하기보다는, 본인 사주의 가장 강한 인성(印星)을 무기 삼아 끈기와 성실함으로 성취를 이루는 전략을 쓴다"는 식으로 결핍을 극복하기 위한 '대체 생존 전략'을 논리적으로 서술하십시오.
-12. 🚨 [전통 신살 및 12운성의 전략적 앵커링]: 내담자의 특수한 성향(종교적, 예술적, 특정 직업군 등)이나 현상을 설명할 때, 막연한 심리 분석으로 바로 들어가지 마십시오. 원국에 존재하는 '천문성(天文星)', '목욕지(沐浴地)', '백호살' 등의 구체적인 고전 명리 키워드를 먼저 '앵커(닻)'처럼 명시하십시오. 그 후 "이는 현대 심리학적 관점에서 ~한 에너지로 발현됩니다"라고 재해석하여, 전문적 지식과 심리적 깊이를 동시에 충족시키십시오.
-13. 🚨 [단편적 해석과 구조적 해석의 비교 화법]: 특정 흉사나 삶의 갈등(예: 배우자 불화, 금전 손실 등)을 분석할 때, "전통 명리에서는 이를 단순히 ~살이나 ~지의 작용으로 보기도 하나, 시공명리의 관점에서는 보다 근본적인 원인을 ~한 구조적 공망과 시공간의 역동성에서 찾습니다"라는 화법을 구사하십시오. 이를 통해 단편적인 현상 위주의 해석을 넘어, 내담자에게 삶의 근본적인 원인과 구조적 맥락을 객관적이고 담담하게 설명하십시오.
-14. 🚨 [과거 흉사(凶事)의 인과관계 명확화 및 직면]: 내담자가 과거에 겪었을 법한 구체적인 고통이나 사건(예: 제어되지 않은 편관으로 인한 폭력적 환경/압박감, 양인충으로 인한 수술이나 사고 등)을 두루뭉술한 심리적 성장통으로만 포장하지 마십시오. 사주 구조상 명확히 드러나는 흉(凶)의 원인을 명리학적 팩트로 정확히 짚어주어("당신이 겪은 고통은 당신 잘못이 아니라 사주의 ~한 구조적 충돌 때문이었습니다") 내담자의 과거 아픔을 먼저 강력하게 긍정하고 위로한 뒤에, 이를 극복할 심리적 성장의 방향을 제시하십시오.
-15. 🚨 [트라우마의 직면과 위로의 서사]: 극심한 충돌(예: 양인과 편관의 충 등)로 인해 내담자가 겪었을 수 있는 극단적 고통, 사고, 트라우마의 가능성을 '역동성'이라는 단어로 어설프게 순화하지 마십시오. 반드시 "이러한 맹렬한 기운의 충돌은 때로 삶에 깊은 상처나 가혹한 시련으로 나타나기도 합니다. 혹여 과거에 그러한 뼈아픈 고통을 겪으셨다면, 그것은 당신의 잘못이 아니며, 오히려 그 모든 것을 온전히 이겨낸 당신의 숭고한 강인함을 증명하는 훈장입니다"라는 화법을 사용하여, 아픔을 깊이 공감하고 위로한 뒤 회복 탄력성을 강력히 칭찬하십시오.
-16. 🚨 [현대 자본주의적 물상(物象)의 구체적 제시]: 사주 현상을 설명할 때, '노점상', '장사' 같은 구시대적 물상이나 '돈이 묶인다'는 식의 추상적 표현에 머물지 마십시오. 특히 시공명리의 핵심인 '입고(入庫)' 현상이나 재물의 변동을 설명할 때는, "예를 들어 유망한 비상장 회사에 스톡옵션을 받거나, 재개발 예정 지역의 토지를 매입하는 것처럼 당장의 현금화는 어렵지만 미래 가치가 큰 자산을 취득하는 형태입니다"와 같이, 현대 비즈니스 및 금융 투자 환경에 걸맞은 매우 구체적이고 세련된 예시를 반드시 덧붙여 통변의 현실성을 극대화하십시오.
-17. 🚨 [과거 특정 세운(歲運)의 실증적 사건 분석]: 내담자가 과거 특정 연도에 겪었을 법한 구체적인 삶의 궤적(예: 시험 낙방, 학업의 난항 등)을 단편적으로 넘기지 마십시오. 반드시 "과거 OOO년과 OOO년 경에 학업이나 시험에서 일시적인 어려움을 겪으셨다면, 이는 운에서 들어온 재성(財星)의 기운이 학문과 인내심을 상징하는 인성(印星)을 강하게 압박하여 흐름을 방해했기 때문입니다"와 같이 구체적인 연도별 운기의 인과관계를 명확히 엮어 서술함으로써 통변의 실증적 신뢰도를 극대화하십시오.
-18. 🚨 [대운·세운 상호작용 기반의 성취 시점 확정]: 합격, 결혼, 이직 등 내담자의 인생에서 가장 치열하고 구체적인 핵심 질문에 답할 때는 막연한 방향성 제시나 추상적인 시기 묘사를 엄격히 금지합니다. 반드시 대운의 대환경과 세운의 역동적 상호작용을 정밀하게 추적하여, "특히 OOOO년은 사주 내의 핵심 성분(예: 정관, 재성 등)이 강력하게 힘을 얻고 안정되는 시기이므로, 이때를 목표로 에너지를 집중하시면 원하는 성취를 이룰 수 있습니다"와 같이 구체적이고 명확한 성취 시점을 판단하여 제시하십시오.
 
 [문단 통제 명령 및 ]
 1. 모든 통변 에세이 문장은 반드시 <p style='text-indent: 1em;'> 태그로 감싸십시오.
@@ -1556,15 +1542,13 @@ if st.session_state.get('need_calc', False):
 1) 심리적으로 어떤 직무나 환경에서 가장 큰 성취감과 동기를 얻는지, 
 2) 사회적으로 탄탄한 조직(직장)형 기질인지 개인 독립(전문직/사업)형 기질인지를 짚어 구체적인 직업적 방향성을 제안하고, 
 3) 육친적인 대인관계 협업 스타일까지 종합하여 세련된 구어체로 작성하십시오.)
-4) 🚨 [구체적 직업 물상(物象) 핀셋 도출]: 단순히 '사업', '전문직', '사무직' 등 피상적인 카테고리에 머물지 마십시오. 원국 내 특정 글자의 충(沖), 형(刑) 또는 십성의 특이 조합(예: 巳亥충=운송/해외/유통, 형(刑) 맞은 상관=특수 교정/수리/의료 기술 등)을 근거로 삼아, 내담자가 머릿속에 구체적으로 그릴 수 있는 매우 독특하고 실질적인 직업군 예시를 핀셋처럼 짚어 제시하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>6. 결혼·자녀운</h3><div class='content-box-loose'>
 (※ AI 지시: 일지와 시주, 재성/관성 및 식상의 동태를 분석하여 에세이를 작성하십시오. 
-1) 육친적으로 배우자 인연의 깊이와 형태를 살피되, 배우자 성(별)이 시주에 있다고 해서 무조건 '늦게 만난다'고 한정 짓지 말고 평생을 함께하는 든든한 동반자의 관점에서 유연하게 서술하십시오. 
+1) 육친적으로 배우자 및 자녀 인연의 깊이와 형태를 살피되, 배우자 성(별)이 시주에 있다고 해서 무조건 '늦게 만난다'고 한정 짓지 말고 평생을 함께하는 든든한 동반자의 관점에서 유연하게 서술하십시오. 
 2) 심리적으로 내담자가 내면에서 바라는 이상적인 가정상과 정서적 정착 과정을 진단하며, 
-3) 사회적으로 가정을 꾸리는 것이 현실적 삶의 안정도에 미치는 변화를 카운슬러의 어조로 따뜻하게 서술하십시오.
-4) 🚨 [자녀운의 독립적/심층적 통변]: 배우자 분석에 치중하여 자녀운을 누락하거나 뭉뚱그리지 마십시오. 여명의 경우 식상(食傷), 남명의 경우 관성(官星)의 상태(왕쇠, 형충회합, 공망 여부)를 개별적으로 정밀 추적하십시오. 특히 자녀성이나 시주(時柱)에 공망이나 강한 충돌이 있을 경우 발생할 수 있는 구체적인 현상(예: 유산이나 난산의 경험, 자녀와의 이른 독립이나 물리적/정서적 거리감 등)을 피하지 말고 조심스럽지만 명확하게 통변하여 내담자의 숨겨진 아픔을 어루만져 주십시오.)
+3) 사회적으로 가정을 꾸리는 것이 현실적 삶의 안정도에 미치는 변화를 카운슬러의 어조로 따뜻하게 서술하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 재성운</h3><div class='content-box-loose'>
@@ -1572,7 +1556,6 @@ if st.session_state.get('need_calc', False):
 1) 심리적으로 돈과 물질을 대하는 가치관과 집착도를 진단하여 내담자 성향에 맞는 '재물 관리 스타일(투자형 vs 저축형)'을 정립해 주고, 
 2) 사회적으로 평생의 자산 규모와 경제적 성패의 흐름을 예측하며, 
 3) 육친적으로 재물로 인해 주변 사람들과 상생하거나 갈등하는 역동성을 조언하십시오.)
-4) 🚨 [창출과 축적의 완벽한 분리 분석]: 단순히 '재물운이 좋다/나쁘다'로 뭉뚱그리지 마십시오. 소득을 창출하는 능력(식상생재)과 형성된 부를 지켜내는 힘(재성의 온전함, 공망, 형충, 입묘 여부)을 반드시 분리하여 진단하십시오. "돈을 버는 수완은 뛰어나나, 구조적 불안정성으로 인해 자산 축적에 번번이 브레이크가 걸릴 수 있으니 현금보다는 문서나 부동산 형태로 묶어두어야 한다"와 같이 실질적인 누수 원인과 보존 대책을 명확히 제시하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 사업운</h3><div class='content-box-loose'>
@@ -1766,27 +1749,28 @@ if st.session_state.get('need_calc', False):
 """
                 c_res = call_claude_api(comp_prompt, max_tokens=10000)
                 
+                # 🚨 [수술] 타 감명서 전용 표지 생성 (변수명 통일, 버전 중복 제거, 16칸 들여쓰기 완벽 적용)
                 other_cover_html = (
-                        f"<div class='page-break-before'></div>\n"
-                        f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
-                        f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
-                        f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 타 감명서 비교</h1>\n"
-                        f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
-                        f"            </div>\n"
-                        f"        </div>\n"
-                        f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
-                        f"            <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 20px;'>👤 신청인 : {u_name} 님</h2>\n"
-                        f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
-                        f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
-                        f"            </div>\n"
-                        f"        </div>\n"
-                        f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
-                        f"        <p style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
-                        f"    </div>\n"
-                        f"</div>"
-                    )
+                    f"<div class='page-break-before'></div>\n"
+                    f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
+                    f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                    f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
+                    f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>초연 시공명리 타 감명서 비교</h1>\n"
+                    f"            <div style='text-align: right; margin-top: 10px;'>\n"
+                    f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                    f"            </div>\n"
+                    f"        </div>\n"
+                    f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
+                    f"            <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 20px;'>👤 신청인 : {u_name} 님</h2>\n"
+                    f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                    f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
+                    f"            </div>\n"
+                    f"        </div>\n"
+                    f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
+                    f"        <p style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
+                    f"    </div>\n"
+                    f"</div>"
+                )
                 st.session_state['saved_report_2'] = other_cover_html + f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
             # ==================================================================
@@ -2014,17 +1998,10 @@ if st.session_state.get('need_calc', False):
                     
                     # [수술] AI가 마커를 훼손하거나 누락해도 강제로 대운표를 소제목 아래에 박아넣는 무적 로직
                     import re
-                    
-                    # 1. AI가 마커를 똑바로 썼을 경우 정상 치환
-                    g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', f"<div style='margin-top:15px; margin-bottom:15px;'>{couple_daewun_tables}</div>", g_ess, flags=re.IGNORECASE)
-                    
-                    # 2. 마커가 누락되었을 경우, 해당 목차 제목(h3 태그) 바로 아래에 강제 삽입
-                    if count == 0:  
-                        g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px; margin-bottom:15px;">' + couple_daewun_tables + '</div>', g_ess)
-                        
-                    # 만약 위 두 가지 방식으로도 표가 삽입되지 않았다면, 글 맨 마지막에 강제 출력 (최후의 보루)
-                    if "table" not in g_ess.lower() and "<th" not in couple_daewun_tables.lower():
-                         g_ess += f"<br><br><span style='color:red; font-weight:bold;'>⚠️ (AI 표 마커 누락으로 비상 출력된 커플 대운표)</span><br><div style='margin-top:15px; margin-bottom:15px;'>{couple_daewun_tables}</div>"
+                    g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', couple_daewun_tables, g_ess, flags=re.IGNORECASE)
+                    if count == 0:  # 마커가 없으면 강제로 제목 밑에 삽입
+                        g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px;">' + couple_daewun_tables + '</div>', g_ess)
+
                     # 3-8. A4 규격 컨테이너 래퍼 
                     def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):
                         return (
@@ -2065,13 +2042,14 @@ if st.session_state.get('need_calc', False):
                         f"{closing_original}"
                     )
 
+                    # 3-10. 궁합풀이 표지 생성 (타이틀 고딕체 강제 적용 및 20칸 들여쓰기 정렬)
                     cover_html = (
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 궁합풀이</h1>\n"
+                        f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", \"Apple SD Gothic Neo\", sans-serif !important;'>초연 시공명리 궁합풀이</h1>\n"
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                        f"                <span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                         f"            </div>\n"
                         f"        </div>\n"
                         f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>\n"
