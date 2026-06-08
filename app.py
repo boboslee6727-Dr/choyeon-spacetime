@@ -1756,44 +1756,72 @@ if st.session_state.get('need_calc', False):
                     st.error(f"AI 연산 오류: {e}")
 
             # ------------------------------------------------------------------
-            # [2단계] 타 감명서 비교분석
+            # [2단계] 타 감명서 비교분석 (ver 34.1 핵심 로직 완벽 이식)
             # ------------------------------------------------------------------
             if u_product == "타 감명서":
-                comp_prompt = f"""
-당신은 '초연 박사'를 보조하는 분석관입니다. [1. 초연 사주풀이]와 [2. 타 감명서]를 다음 팩트 기반으로 1:1 상세 비교하십시오.
-- 사주 팩트: {gans}{jjis}
-- [1. 초연 사주풀이 원문]: {full_content_clean}
-- [2. 타 감명서 원문]: {other_reading_text}
+                try:
+                    # 1. 타 감명서 원본 렌더링 (ver 34.1 스타일 복원)
+                    report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2><div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111; text-align: justify; word-break: keep-all;'>{other_reading_text.replace(chr(10), '<br>')}</div></div></div>"
 
-🚨 [비교 분석 절대 규칙]
-1. 타 감명서의 핵심 논리를 추출하여 표로 정리하십시오.
-2. 초연 시공명리 관점(입고/개고/조후/체용)에서 타 감명서의 해석이 타당한지 비판적으로 대조하십시오.
-3. 내담자에게 제공할 최종 결론을 초연 박사의 어조로 '⚖️ 상세 비교 분석' 결과로 도출하십시오.
-"""
-                c_res = call_claude_api(comp_prompt, max_tokens=10000)
-                
-                other_cover_html = (
-                        f"<div class='page-break-before'></div>\n"
-                        f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
-                        f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
-                        f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 타 감명서 비교</h1>\n"
-                        f"            <div style='text-align: right; margin-top: 10px;'>\n"
-                        f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
-                        f"            </div>\n"
-                        f"        </div>\n"
-                        f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
-                        f"            <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 20px;'>👤 신청인 : {u_name} 님</h2>\n"
-                        f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
-                        f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
-                        f"            </div>\n"
-                        f"        </div>\n"
-                        f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
-                        f"        <p style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
-                        f"    </div>\n"
-                        f"</div>"
-                    )
-                st.session_state['saved_report_2'] = other_cover_html + f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                    # 2. 1:1 비교 리포트 생성 프롬프트 (ver 34.1 핵심 논리 파악 및 개선점 도출 복원)
+                    comp_prompt = f"""
+    당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
+    아래 [1. 초연 사주풀이]와 [2. 타 감명서]를 엄격하게 1:1 대조 분석하십시오.
+
+    🚨 [디자인 및 서식 절대 규칙]
+    1. AI 임의의 목차 서식 생성을 절대 금지합니다.
+    2. 목차 제목 출력 시, 반드시 크기 22px와 하단 색상 선이 조립된 아래 명시된 태그 서식을 그대로 출력하십시오.
+    3. 모든 본문 문단 작성 시, HTML 태그인 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 를 사용하여 모든 단락을 감싸십시오.
+
+    🚨 [내용 집중 대조 규칙]
+    - 타 감명서 원문을 분석하여, 타 감명서에서 '실제로 다루고 있는 내용(주제)'이 무엇인지 파악하십시오.
+    - 타 감명서 원문이 초연 명리의 전체 흐름과 다를 때는, 타 감명서에서 집중적으로 다룬 **'해당 내용'**에 대해서만 초연 명리의 분석과 1:1로 깊이 있게 대조 분석하십시오.
+    - 타 감명서에 언급조차 없는 내용은 억지로 분량을 채우려 하지 말고 과감히 생략하십시오.
+    - 단, 비교 분석이 끝난 후 가장 마지막의 <13. 총평 및 향후 개선점> 목차는 무슨 일이 있어도 반드시 작성해야 합니다.
+
+    [출력 목차 서식 정의]
+    <h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>1. 사주팔자 구조 및 성격 대조 분석</h3>
+    (타 감명서의 핵심 논리 기준, 해당 주제에 대한 초연 명리와의 1:1 대조 서술)
+    
+    ... (타 감명서가 다룬 핵심 내용들에 대해서만 이 형식의 h3 목차를 활용하여 순서대로 전개) ...
+    
+    <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3>
+    <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>1) 두 감명서의 장점과 단점</span>
+    <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>[양측의 통변 기술, 논리적 근거, 내담자 공감력 등을 객관적으로 비교 서술]</p>
+    <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 8px;'>2) 초연 시공명리의 누락 및 개선점 (AI 학습 피드백)</span>
+    <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>[타 감명서를 통해 초연 명리가 벤치마킹하거나 보완해야 할 통변 기법, 누락된 내용, 관점의 차이 등을 날카롭게 분석하여 향후 AI 엔진 업그레이드에 활용할 수 있도록 명확히 제시]</p>
+
+    [데이터]
+    1. 초연 사주풀이: {full_content_clean}
+    2. 타 감명서: {other_reading_text}
+    """
+                    c_res = call_claude_api(comp_prompt, max_tokens=10000)
+                    
+                    other_cover_html = (
+                            f"<div class='page-break-before'></div>\n"
+                            f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
+                            f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                            f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
+                            f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 타 감명서 비교</h1>\n"
+                            f"            <div style='text-align: right; margin-top: 10px;'>\n"
+                            f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                            f"            </div>\n"
+                            f"        </div>\n"
+                            f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
+                            f"            <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 20px;'>👤 신청인 : {u_name} 님</h2>\n"
+                            f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                            f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>\n"
+                            f"            </div>\n"
+                            f"        </div>\n"
+                            f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
+                            f"        <p style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
+                            f"    </div>\n"
+                            f"</div>"
+                        )
+                    st.session_state['saved_report_2'] = other_cover_html + report_2_html + f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+
+                except Exception as e:
+                    st.error(f"2단계 비교 분석 중 오류 발생: {e}")
 
             # ==================================================================
             # 💕 [3단계] 궁합 풀이)
