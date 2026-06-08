@@ -334,22 +334,11 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     
     return f"{y_gan}{y_ji}", f"{m_gan}{JI[m_ji_idx]}", lon
 
-components.html("""
-<script>
-    const doc = window.parent.document;
-    doc.addEventListener('keyup', function(e) {
-        if (e.target.tagName !== 'INPUT' || e.target.type !== 'text') return;
-        let label = e.target.getAttribute('aria-label') || "";
-        if (label.includes('년주') || label.includes('월주') || label.includes('일주')) {
-            if (e.key === ' ' || e.target.value.includes('년') || e.target.value.includes('월') || e.target.value.includes('일') || e.target.value.includes('시')) {
-                let inputs = Array.from(doc.querySelectorAll('input[type="text"]'));
-                let idx = inputs.indexOf(e.target);
-                if (idx > -1 && idx < inputs.length - 1) inputs[idx + 1].focus();
-            }
-        }
-    });
-</script>
-""", height=0, width=0)
+    st.markdown("""
+    <button onclick='window.print()' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-bottom:15px;'>
+        🖨️ 풀이 결과 인쇄 / PDF 저장
+    </button>
+    """, unsafe_allow_html=True)
 
 # ==============================================================================
 # 2. AI 및 명리 연산 엔진
@@ -941,18 +930,7 @@ with st.sidebar:
     # [하단 고정 UI] 가동 버튼 및 인쇄 버튼 배치
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
-    components.html("""
-    <div style='padding: 0; margin: 0;'>
-        <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15);'>
-            🖨️ 풀이 결과 인쇄 / PDF 저장
-        </button>
-        <script>
-            document.getElementById('sidebar-pdf-print-btn').addEventListener('click', () => {
-                window.parent.print();
-            });
-        </script>
-    </div>
-    """, height=55)
+    
 
     if btn_single:
         if not u_name.strip(): 
