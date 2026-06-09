@@ -1773,7 +1773,7 @@ if st.session_state.get('need_calc', False):
 """
                 try:
                     res = _gemini_client.models.generate_content(  # ✅ 수정
-                        model='gemini-2.0-flash',
+                        model='gemini-3.1-Pro',
                         contents=prompt
                     )
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
@@ -2331,7 +2331,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
                 try:
                     res = _gemini_client.models.generate_content(  # ✅ 수정: 신규 API 호출 방식
-                        model='gemini-2.0-flash',
+                        model='gemini-3.1-Pro',
                         contents=iljin_prompt
                     )
                     ai_iljin_html = res.text.strip().replace("\n", "<br>")
@@ -2418,7 +2418,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
             del_res = _gemini_client.models.generate_content(  # ✅ 수정
-                model='gemini-2.0-flash',
+                model='gemini-3.1-Pro',
                 contents=delivery_prompt
             )
             ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
@@ -2512,7 +2512,7 @@ if st.session_state.get('app_running', False):
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
                     del_res = _gemini_client.models.generate_content(  # ✅ 수정
-                model='gemini-2.0-flash',
+                model='gemini-3.1-Pro',
                 contents=delivery_prompt
             )
                     ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
