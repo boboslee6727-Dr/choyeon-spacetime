@@ -2531,4 +2531,3 @@ if st.session_state.get('app_running', False):
         if st.session_state.get('saved_report_del'):
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
             st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
-Gemini에서 무료 사주팔자 코드 검토 가능 여부? - Manus
