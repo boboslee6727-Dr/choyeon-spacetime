@@ -362,9 +362,7 @@ try:
         api_endpoint="https://generativelanguage.googleapis.com/v1"
     )
     
-    # 🚨 모델 이름은 박사님이 직접 확인하신 그 이름을 그대로 사용합니다.
-    # (리스트에 'gemini-3.1-pro'로 보였다면 그대로 입력하십시오)
-    model = genai.GenerativeModel('gemini-3.1-pro')
+    model = genai.GenerativeModel('gemini-2.5-pro')
     
 except Exception as _api_e:
     st.error(f"🚨 시스템 복구 실패: {_api_e}")
