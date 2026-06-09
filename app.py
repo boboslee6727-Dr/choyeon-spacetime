@@ -368,7 +368,7 @@ def call_claude_api(prompt_text, max_tokens=8000):
         return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
     try:
         response = _gemini_client.models.generate_content(
-            model='gemini-3.1-pro', # ✅ 박사님 리스트에 있던 정식 최상위 프로 모델
+            model='gemini-3.1-Pro', # ✅ 박사님 리스트에 있던 정식 최상위 프로 모델
             contents=prompt_text
         )
         return response.text.strip()
