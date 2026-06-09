@@ -355,13 +355,19 @@ components.html("""
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
 try:
-    # 이름표는 깃허브와 스트림릿 양쪽 모두 GOOGLE_API_KEY 로 통일합니다.
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    # 🚨 API 접속 경로를 v1beta가 아닌 정식 v1으로 강제 고정합니다.
+    # 이것이 통신 오류를 없애는 유일한 방법입니다.
+    genai.configure(
+        api_key=st.secrets["GOOGLE_API_KEY"],
+        api_endpoint="https://generativelanguage.googleapis.com/v1"
+    )
     
-    # 🚨 단, 모델명만 무료 티어인 1.5-pro 로 반드시 변경해 주십시오. (429 결제 에러 회피용)
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    # 🚨 모델 이름은 박사님이 직접 확인하신 그 이름을 그대로 사용합니다.
+    # (리스트에 'gemini-3.1-pro'로 보였다면 그대로 입력하십시오)
+    model = genai.GenerativeModel('gemini-3.1-pro')
+    
 except Exception as _api_e:
-    st.error(f"🚨 Gemini API 키 오류: {_api_e}")
+    st.error(f"🚨 시스템 복구 실패: {_api_e}")
     model = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
