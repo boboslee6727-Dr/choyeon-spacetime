@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.7"
+APP_VERSION = "Ver 46.8"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -354,9 +354,12 @@ components.html("""
 # ==============================================================================
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
-try:
+ry:
+    # 이름표는 깃허브와 스트림릿 양쪽 모두 GOOGLE_API_KEY 로 통일합니다.
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    
+    # 🚨 단, 모델명만 무료 티어인 1.5-pro 로 반드시 변경해 주십시오. (429 결제 에러 회피용)
+    model = genai.GenerativeModel('gemini-1.5-pro')
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     model = None
@@ -856,9 +859,9 @@ with st.sidebar:
                                 leap_str = "윤달" if is_leap else "평달"
                                 st.success(f"✅ [양력] {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 / [음력] {klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일 ({leap_str}) 입력완료!")
                                 break
-                            curr_dt -= dt_mod.timedelta(days=1)
-                        if found: break
-                if not found: st.error("일치하는 날짜가 없습니다.")
+                        curr_dt -= dt_mod.timedelta(days=1)
+                    if found: break
+            if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     st.markdown("---")
@@ -908,6 +911,51 @@ with st.sidebar:
     elif u_product == "궁합":
         st.markdown("<hr style='border:1px dashed #C62828; margin:15px 0;'>", unsafe_allow_html=True)
         st.markdown("<div style='font-weight:900; color:#C62828; margin-bottom:5px;'>💕 상대방 정보</div>", unsafe_allow_html=True)
+        
+        # ======================================================================
+        # 🚨 [신규 수술 파편] 상대방 사주팔자 역산 검색 모듈 (독립 구동)
+        # ======================================================================
+        with st.expander("🔍 상대방 사주팔자 역산 검색", expanded=False):
+            p_col_g1, p_col_g2 = st.columns(2)
+            with p_col_g1: p_ry = st.text_input("상대방 년주", value="", key="p_ry")
+            with p_col_g2: p_rm = st.text_input("상대방 월주", value="", key="p_rm")
+            p_col_g3, p_col_g4 = st.columns(2)
+            with p_col_g3: p_rd = st.text_input("상대방 일주", value="", key="p_rd")
+            with p_col_g4: p_rt = st.text_input("상대방 시주", value="", key="p_rt")
+            
+            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn"):
+                _pry, _prm, _prd = p_ry.replace("년","").replace(" ","")[:2], p_rm.replace("월","").replace(" ","")[:2], p_rd.replace("일","").replace(" ","")[:2]
+                if len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
+                    pry_h = K2H_GAN.get(_pry[0], _pry[0]) + K2H_JI.get(_pry[1], _pry[1])
+                    prm_h = K2H_GAN.get(_prm[0], _prm[0]) + K2H_JI.get(_prm[1], _prm[1])
+                    prd_h = K2H_GAN.get(_prd[0], _prd[0]) + K2H_JI.get(_prd[1], _prd[1])
+                    klc_find = KoreanLunarCalendar(); p_found = False
+                    for y in range(2026, 1899, -1):
+                        klc_find.setSolarDate(y, 7, 1); p_gj_y = klc_find.getChineseGapJaString().split()
+                        if p_gj_y and p_gj_y[0][:2] == pry_h:
+                            p_curr_dt = dt_mod.date(y+1, 2, 28)
+                            while p_curr_dt >= dt_mod.date(y, 1, 1):
+                                klc_find.setSolarDate(p_curr_dt.year, p_curr_dt.month, p_curr_dt.day)
+                                p_gj = klc_find.getChineseGapJaString().split()
+                                if len(p_gj) >= 3 and p_gj[0][:2] == pry_h and p_gj[1][:2] == prm_h and p_gj[2][:2] == prd_h:
+                                    # 역산 결과를 상대방 세션 키에 바인딩
+                                    st.session_state.p_y_in, st.session_state.p_m_in, st.session_state.p_d_in = p_curr_dt.year, p_curr_dt.month, p_curr_dt.day
+                                    time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
+                                    if p_rt:
+                                        p_ji_char = p_rt.replace("시","").replace(" ","")[-1]
+                                        p_rt_h = K2H_JI.get(p_ji_char, p_ji_char)
+                                        if p_rt_h in time_map_rev: st.session_state.p_t_key = time_map_rev[p_rt_h]
+                                    p_found = True
+                                    is_leap = getattr(klc_find, 'isIntercalary', False)
+                                    leap_str = "윤달" if is_leap else "평달"
+                                    st.success(f"✅ 상대방 [양력] {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 / [음력] {klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일 ({leap_str}) 입력완료!")
+                                    break
+                            p_curr_dt -= dt_mod.timedelta(days=1)
+                        if p_found: break
+                    if not p_found: st.error("일치하는 날짜가 없습니다.")
+                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+        # ======================================================================
+
         p_name = st.text_input("이름", value="", placeholder="이영희", key="p_n")
         p_gender_default = "여성" if u_gender == "남성" else "남성"
         p_gender = st.selectbox("성별", ["남성", "여성"], index=["남성", "여성"].index(p_gender_default), key="p_g")
@@ -941,18 +989,11 @@ with st.sidebar:
     # [하단 고정 UI] 가동 버튼 및 인쇄 버튼 배치
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
-    components.html("""
-    <div style='padding: 0; margin: 0;'>
-        <button id='sidebar-pdf-print-btn' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15);'>
-            🖨️ 풀이 결과 인쇄 / PDF 저장
-        </button>
-        <script>
-            document.getElementById('sidebar-pdf-print-btn').addEventListener('click', () => {
-                window.parent.print();
-            });
-        </script>
-    </div>
-    """, height=55)
+    st.markdown("""
+    <button onclick='window.print()' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-bottom:15px;'>
+        🖨️ 풀이 결과 인쇄 / PDF 저장
+    </button>
+    """, unsafe_allow_html=True)
 
     if btn_single:
         if not u_name.strip(): 
