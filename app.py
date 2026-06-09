@@ -359,7 +359,7 @@ try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     
     # 🚨 단, 모델명만 무료 티어인 1.5-pro 로 반드시 변경해 주십시오. (429 결제 에러 회피용)
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-pro-002')
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     model = None
