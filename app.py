@@ -355,17 +355,10 @@ components.html("""
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
 try:
-    # 🚨 API 접속 경로를 v1beta가 아닌 정식 v1으로 강제 고정합니다.
-    # 이것이 통신 오류를 없애는 유일한 방법입니다.
-    genai.configure(
-        api_key=st.secrets["GOOGLE_API_KEY"],
-        api_endpoint="https://generativelanguage.googleapis.com/v1"
-    )
-    
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-pro')
-    
 except Exception as _api_e:
-    st.error(f"🚨 시스템 복구 실패: {_api_e}")
+    st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     model = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
