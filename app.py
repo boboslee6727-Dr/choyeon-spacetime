@@ -8,13 +8,13 @@ import datetime as dt_mod
 from datetime import datetime
 from korean_lunar_calendar import KoreanLunarCalendar
 import ephem
-import google.generativeai as genai
+from google import genai
 import pytz
 import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.8"
+APP_VERSION = "Ver 46.9"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -355,17 +355,22 @@ components.html("""
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
 try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    # 이름표는 깃허브와 스트림릿 양쪽 모두 GOOGLE_API_KEY 로 통일합니다.
+    _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+    model = _gemini_client  # 클라이언트 객체를 model 변수에 바인딩
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
+    _gemini_client = None
     model = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    if model is None:
+    if _gemini_client is None:
         return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
     try:
-        response = model.generate_content(prompt_text)
+        response = _gemini_client.models.generate_content(
+            model='gemini-2.0-pro', # 💎 정식 최상위 프로 모델로 격상
+            contents=prompt_text
+        )
         return response.text.strip()
     except Exception as e:
         return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
@@ -856,9 +861,9 @@ with st.sidebar:
                                 leap_str = "윤달" if is_leap else "평달"
                                 st.success(f"✅ [양력] {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 / [음력] {klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일 ({leap_str}) 입력완료!")
                                 break
-                        curr_dt -= dt_mod.timedelta(days=1)
+                            curr_dt -= dt_mod.timedelta(days=1)  # ✅ 수정: while 루프 내부로 이동
                     if found: break
-            if not found: st.error("일치하는 날짜가 없습니다.")
+                if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     st.markdown("---")
@@ -947,7 +952,7 @@ with st.sidebar:
                                     leap_str = "윤달" if is_leap else "평달"
                                     st.success(f"✅ 상대방 [양력] {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 / [음력] {klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일 ({leap_str}) 입력완료!")
                                     break
-                            p_curr_dt -= dt_mod.timedelta(days=1)
+                                p_curr_dt -= dt_mod.timedelta(days=1)  # ✅ 수정: while 루프 내부로 이동
                         if p_found: break
                     if not p_found: st.error("일치하는 날짜가 없습니다.")
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
@@ -1767,7 +1772,10 @@ if st.session_state.get('need_calc', False):
 </div>
 """
                 try:
-                    res = model.generate_content(prompt)
+                    res = _gemini_client.models.generate_content(  # ✅ 수정
+                        model='gemini-2.0-flash',
+                        contents=prompt
+                    )
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
                     # 🚨 [AI 오지랖 완벽 절단 수술] 
@@ -2079,7 +2087,7 @@ if st.session_state.get('need_calc', False):
                         g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px;">' + couple_daewun_tables + '</div>', g_ess)
 
                     # 3-8. A4 규격 컨테이너 래퍼 
-                    def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):
+                    def wrap_a4(content, title_color="#1A237E", title=f"[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):  # ✅ 수정: f-string 적용
                         return (
                             f"<div class='report-page'>\n"
                             f"<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n"
@@ -2322,7 +2330,10 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             # 🚨 [수술 3] 스피너 문구를 센스있게 교체!
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
                 try:
-                    res = model.generate_content(iljin_prompt)
+                    res = _gemini_client.models.generate_content(  # ✅ 수정: 신규 API 호출 방식
+                        model='gemini-2.0-flash',
+                        contents=iljin_prompt
+                    )
                     ai_iljin_html = res.text.strip().replace("\n", "<br>")
                 except Exception as e:
                     ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
@@ -2406,7 +2417,10 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-            del_res = model.generate_content(delivery_prompt)
+            del_res = _gemini_client.models.generate_content(  # ✅ 수정
+                model='gemini-2.0-flash',
+                contents=delivery_prompt
+            )
             ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
             
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
@@ -2497,7 +2511,10 @@ if st.session_state.get('app_running', False):
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-                    del_res = model.generate_content(delivery_prompt)
+                    del_res = _gemini_client.models.generate_content(  # ✅ 수정
+                model='gemini-2.0-flash',
+                contents=delivery_prompt
+            )
                     ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
                     del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
@@ -2514,3 +2531,4 @@ if st.session_state.get('app_running', False):
         if st.session_state.get('saved_report_del'):
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
             st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
+Gemini에서 무료 사주팔자 코드 검토 가능 여부? - Manus
