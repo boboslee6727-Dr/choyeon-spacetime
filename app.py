@@ -1202,7 +1202,7 @@ if st.session_state.get('need_calc', False):
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
+                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:6px 8px; display:flex; justify-content:space-between; font-weight:900; font-size:11.5px; letter-spacing:-0.5px; border-radius:8px; white-space:nowrap;'><div>🔢 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] <span style='color:#C62828;'>{n_gong}</span> [일] <span style='color:#C62828;'>{i_gong}</span></div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
                 
                 # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
@@ -1549,7 +1549,7 @@ if st.session_state.get('need_calc', False):
 1. 🚨 [근묘화실 위치 조작 절대 금지]: 내담자의 사주 원국(년주, 월주, 일주, 시주)에 배속된 천간과 지지의 위치를 절대로 뒤섞거나 혼동하지 마십시오. 
    (예: 시지에 있는 글자를 년지에 있다고 하거나, 원국에 없는 글자를 끌어와 합충파해를 조작하는 행위). 
    반드시 시스템이 제공한 위치 팩트 그대로만 철저하게 통변하십시오.
-2. 🚨 없는 기운 창조 금지: 사주 원국에 없는 기운(예: 팩트에 없는 공망 등)을 임의로 지어내어 통변하는 것을 엄격히 금지합니다.
+2. 🚨 없는 구조 및 신살 창조 완벽 금지 (환각 방지): 제공된 팩트 데이터에 명시되지 않은 '간여지동', '백호살', '괴강살' 등의 특수 구조나 명리 용어를 임의로 가져다 붙여 소설을 쓰는 행위를 엄격히 금지합니다. (예: 수(水)/금(金) 구조인 계유일주를 간여지동이라 칭하는 등의 거짓 통변은 즉시 시스템 강제 종료 수준의 오류로 간주함!)
 3. 🚨 명리 용어 시각적 강조: 통변 중 핵심 명리 용어(십성, 운성, 신살 등)를 기재할 때는 반드시 단일 인용부호(' ')나 괄호( )를 사용하여 가독성을 높이십시오.
 4. 🚨 답답한 문단 해소 및 기본 들여쓰기 엄수: 하나의 거대한 문단으로 뭉쳐서 출력하지 마십시오. 
    문맥이 전환될 때는 적절히 줄바꿈을 하여 문단을 분리하고, 새로운 문단이 시작될 때는 초등학교 원고지 쓰기의 기본 원칙처럼 예외 없이 첫 줄을 들여쓰기 하십시오.
