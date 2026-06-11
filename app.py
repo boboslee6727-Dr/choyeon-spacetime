@@ -1888,8 +1888,9 @@ if st.session_state.get('need_calc', False):
     3. 모든 본문 단락은 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
 
     🚨 [내용 집중 대조 규칙]
+    - 각 비교 항목의 도입부에는 반드시 [타 감명서 관점] vs [초연 시공명리 관점]을 1줄 요약으로 먼저 제시하십시오.
     - 타 감명서 원문이 다루고 있는 핵심 주제에 대해서만 초연 명리와 1:1 대조하십시오.
-    - 단, 비교 분석이 끝난 후 가장 마지막의 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3> 목차는 무슨 일이 있어도 반드시 작성해야 합니다.
+    - 🚨 [13번 총평 작성 지침]: 본문 분석과 별개로 반드시 500자 이상의 분량을 확보하여, 두 해석의 차이 발생 원인(정보 인지 여부, 해석 관점의 차이)을 명확히 규명하고 향후 초연 명리가 취해야 할 통변 전략을 제시하십시오.
 
     [데이터]
     - 사주 팩트: {gans}{jjis}
@@ -1903,6 +1904,29 @@ if st.session_state.get('need_calc', False):
 
                 except Exception as e:
                     st.error(f"2단계 비교 분석 중 오류 발생: {e}")
+
+            # ------------------------------------------------------------------
+            # [2.5 단계] 궁합 타 감명서 비교분석 (선택적 가동 모듈)
+            # ------------------------------------------------------------------
+            if u_product == "궁합" and st.session_state.get('run_comp_mode'):
+                try:
+                    # 궁합 비교 전용 프롬프트 및 결합 로직
+                    comp_prompt = f"""
+    당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
+    [1. 초연 궁합 분석]과 [2. 타 감명서]를 1:1 대조 분석하십시오.
+    ... (중략: 이전 협의한 디자인 규칙 및 13번 총평 지침 동일 적용) ...
+    
+    [데이터]
+    - 신청인(명주1) 사주: {full_content_clean}
+    - 상대방(명주2) 사주: {partner_content_clean}
+    - 타 감명서 원문: {st.session_state.get('other_reading_text')}
+    """
+                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
+                    
+                    # 결과를 saved_report_gh_comp에 저장
+                    st.session_state['saved_report_gh_comp'] = f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center;'>⚖️ 궁합 1:1 상세비교 리포트</h1>{c_res}</div></div>"
+                except Exception as e:
+                    st.error(f"궁합 비교 분석 중 오류: {e}")
 
             # ==================================================================
             # 💕 [3단계] 궁합 풀이)
@@ -2212,6 +2236,22 @@ if st.session_state.get('need_calc', False):
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
 
+                # ------------------------------------------------------------------
+                # [궁합 모드 전용] 타 감명서 1:1 비교 입력창 삽입 (삽입 지점)
+                # ------------------------------------------------------------------
+                st.markdown("---")
+                st.subheader("⚖️ 타 감명서와 궁합 비교 분석")
+                other_reading_text = st.text_area("비교할 타 감명서 원문을 붙여넣으십시오.", height=150, key="gh_comp_input")
+                
+                if st.button("🚀 궁합 타 감명서 비교 가동"):
+                    if other_reading_text.strip():
+                        # 비교 로직 활성화 키 설정
+                        st.session_state['run_comp_mode'] = True
+                        st.session_state['other_reading_text'] = other_reading_text
+                        st.rerun() # 재연산하여 비교 리포트 생성
+                    else:
+                        st.warning("⚠️ 타 감명서 원문을 입력해 주십시오.")
+
             # 🚨 연산 종료 (스위치 끄기)
             st.session_state['need_calc'] = False
 
@@ -2219,6 +2259,7 @@ if st.session_state.get('need_calc', False):
             st.error(f"시스템 연산 중 치명적 오류 발생: {e}")
             st.session_state['need_calc'] = False
             st.stop()
+💡 [다음 단계: 통합 가동 로직]
 
 # ==============================================================================
 # 🌊 7. [독립 모듈] 일진 시공간 분석 (결과 출력부)
@@ -2373,6 +2414,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 <br><b>🌃 후반부 (미시~야자시, 13:30~익일 00:29):</b>
 <b>1) 일반 명리 풀이:</b> (내용)
 <b>2) 시공 명리 풀이:</b> (내용)
+<br><b>✨ 오늘 하루의 개운(開運) 처방:</b> (시공간 파동을 조화롭게 활용할 실질적인 행동 지침 1~2줄 작성)
 """
             # 🚨 [수술 3] 스피너 문구를 센스있게 교체!
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
@@ -2409,77 +2451,57 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
         try:
-            gans = st.session_state['global_gans']
-            jjis = st.session_state['global_jjis']
+            gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
+            jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
             p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
             
+            # 3-2. 남명/여명 데이터 대칭 배정 및 변수 직렬화
             if u_gender == "남성":
-                m_jjis = jjis
-                f_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
+                m_jjis, f_jjis = jjis, [b[1] if len(b)>1 else "?" for b in p_bazi_context]
+                m_gans_str, f_gans_str = "".join(gans), "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context])
             else:
-                m_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
-                f_jjis = jjis
+                m_jjis, f_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context], jjis
+                m_gans_str, f_gans_str = "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context]), "".join(gans)
 
             FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-            delivery_days = get_optimized_delivery_days(
-                start_date, 
-                end_date, 
-                m_jjis, f_jjis, FORBIDDEN_LIST
-            )
+            delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
             
-            del_content = (
-                f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n"
-                f"<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
-            )
+            # 택일 추천 리스트 HTML 구성
+            del_content = f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
             for day_info in delivery_days:
                 del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
             
-            del_content += (
-                f"<br><hr>\n"
-                f"<p style='font-size:14px; line-height:1.6; color:#333;'>\n"
-                f"<b>💡 부부를 위한 임신 계획 가이드:</b><br>\n"
-                f"위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. \n"
-                f"의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. \n"
-                f"부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.\n"
-                f"</p>"
-            )
+            del_content += f"<br><hr>\n<p style='font-size:14px; line-height:1.6; color:#333;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
             
+            # AI 통변 프롬프트
             delivery_prompt = f"""
-당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
+당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 부모의 사주 기운을 바탕으로, 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
 
 [부모의 사주 정보]
-- 신청인(어머니/아버지): {u_gender} / 원국: {gans}{jjis}
-- 상대방(배우자): 원국 데이터: {p_bazi_context}
-- 탐색 지정 기간: {start_date} ~ {end_date}
-- 선호 태아 성별: {baby_gender}
+- 신청인: {u_gender} / 원국: {m_gans_str}{"".join(m_jjis)}
+- 상대방: 원국 데이터: {f_gans_str}{"".join(f_jjis)}
+- 탐색 지정 기간: {start_date} ~ {end_date} / 선호 태아 성별: {baby_gender}
 
-🚨 [출력 및 통변 포맷 절대 규칙]
-선정된 상위 추천 일자별로 반드시 박사님이 지정하신 아래의 규격화된 분리 통변 포맷을 100% 준수하여 작성하십시오. (마크다운 기호 금지, 오직 지정된 HTML 구조 사수)
-
+🚨 [출력 절대 규칙]
+선정된 상위 추천 일자별로 반드시 아래 규격화된 분리 통변 포맷을 100% 준수하여 작성하십시오.
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 추천 일자: OOOO년 OO월 OO일 (OO시)</span>
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
             ai_delivery_html = call_claude_api(delivery_prompt).replace('\n', '<br>')
-            
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
-            def wrap_a4(content, title_color="#1A237E", title="[ 초연 시공명리 사주풀이 ]"):
-                return (
-                    f"<div class='report-page'>\n"
-                    f"<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n"
-                    f"<h1 style='text-align:center; color:{title_color}; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid {title_color}; padding-bottom:15px; margin-bottom:30px;'>{title}</h1>\n"
-                    f"{content}\n"
-                    f"</div>\n"
-                    f"</div>"
-                )
+            # 🚨 [수술] 보라색(#4A148C) 맑은 고딕 32px 이중선 양식
+            def wrap_a4_del(content, title_color="#4A148C", title="초연 시공명리 출산택일"):
+                return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n<div style='border-bottom:4px double {title_color}; padding-bottom:20px; margin-bottom:40px;'>\n<h1 style='text-align:center; font-size: 32px; color:{title_color}; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 {title}</h1>\n</div>\n{content}\n</div>\n</div>"
 
-            st.session_state['saved_report_del'] = wrap_a4(del_content, "#4A148C", "[ 초연 시공명리 출산택일 ]")
-            st.session_state['run_delivery_only'] = False # 실행 완료 후 스위치 끄기
+            st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C", "초연 시공명리 출산택일")
+            st.session_state['run_delivery_only'] = False # 가동 완료 후 초기화
+            st.rerun() # 즉시 화면 반영
+            
         except Exception as e:
             st.error(f"출산택일 연산 장애: {e}")
             st.session_state['run_delivery_only'] = False
-
 # ==============================================================================
 # 9. 화면 출력부
 # ==============================================================================
@@ -2566,3 +2588,33 @@ if st.session_state.get('app_running', False):
         if st.session_state.get('saved_report_del'):
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
             st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
+
+        # ------------------------------------------------------------------
+        # [삽입] 궁합 타 감명서 비교 분석 (선택적 가동 모듈)
+        # ------------------------------------------------------------------
+        # 1. 2단계 비교 분석 엔진 (이미 비교 모드가 켜진 경우에만 연산)
+        if st.session_state.get('run_comp_mode') and not st.session_state.get('saved_report_gh_comp'):
+            with st.spinner("⏳ 초연 수석 분석관이 타 감명서와 1:1 대조 중입니다..."):
+                try:
+                    comp_prompt = f"""
+    당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
+    아래 [데이터]를 바탕으로 [초연 궁합 분석]과 [타 감명서]를 1:1 대조 분석하십시오.
+
+    🚨 [디자인 및 서식 절대 규칙]
+    1. 첫 출력은 반드시 <h3 style=...> 태그로 시작할 것.
+    2. 모든 본문 단락은 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감쌀 것.
+    3. 반드시 마지막에 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3>을 작성할 것.
+
+    [데이터]
+    - [1. 초연 궁합 분석]: {g_full_content}
+    - [2. 타 감명서]: {st.session_state.get('other_reading_text')}
+    """
+                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
+                    st.session_state['saved_report_gh_comp'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 궁합 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"궁합 비교 분석 중 오류: {e}")
+
+        # 2. 비교 분석 완료 시 화면 출력
+        if st.session_state.get('saved_report_gh_comp'):
+            st.markdown(st.session_state.get('saved_report_gh_comp', ''), unsafe_allow_html=True
