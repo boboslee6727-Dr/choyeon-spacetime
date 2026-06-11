@@ -60,6 +60,7 @@ st.markdown("""
     .color-토 { background-color: #F9A825 !important; color: black !important; }
     .color-금 { background-color: #9E9E9E !important; color: white !important; }
     .color-수 { background-color: #212121 !important; color: white !important; }
+    .color-무 { background-color: white !important; }
     
     /* 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
     .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
@@ -357,7 +358,6 @@ components.html("""
 # ==============================================================================
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
-
 try:
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 except Exception as _api_e:
@@ -379,10 +379,10 @@ def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5-flash로 변경 필수
 
 def call_light_api(prompt_text):
-    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5-flash로 변경 필수
 
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
@@ -393,7 +393,7 @@ def get_color(c):
     if c in "戊己辰戌丑未": return "토"
     if c in "庚辛申酉": return "금"
     if c in "壬癸亥子": return "수"
-    return "토"
+    return "무"
 
 def get_current_saju_data():
     try:
@@ -1940,8 +1940,12 @@ if st.session_state.get('need_calc', False):
                         # 🚨 이름은 무조건 남색(#1A237E) 고정
                         info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:#1A237E;'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
-                        def td(c): return f"<td class='color-{get_color(c)}' style='font-size:20px; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
-                            
+                        def td(c):
+                            # 만약 시주(index 0) 데이터가 '?'이거나 빈칸일 경우, 무조건 흰색 배경 강제 적용
+                            # c가 입력될 때, 해당 데이터가 비어있다면 클래스 색상을 무시하고 흰색을 줍니다.
+                            bg_style = "background-color: white;" if c in ['?',' ','-'] else ""
+                            return f"<td class='color-{get_color(c)}' style='{bg_style} font-size:20px; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+
                         return (
                             f"{info_str}\n"
                             f"<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>\n"
