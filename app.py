@@ -999,11 +999,16 @@ with st.sidebar:
     # [하단 고정 UI] 가동 버튼 및 인쇄 버튼 배치
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
-    st.markdown("""
-    <button onclick='window.parent.print()' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-bottom:15px;'>
+    components.html("""
+    <script>
+        function triggerPrint() {
+            window.parent.print();
+        }
+    </script>
+    <button onclick='triggerPrint()' style='width:95%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin:5px;'>
         🖨️ 풀이 결과 인쇄 / PDF 저장
     </button>
-    """, unsafe_allow_html=True)
+    """, height=70)
 
     if btn_single:
         if not u_name.strip(): 
