@@ -4,6 +4,7 @@ import json
 import os
 import math
 import calendar
+import time  # 🚨 [추가] time.sleep() 작동을 위한 모듈 주입
 import datetime as dt_mod
 from datetime import datetime
 from korean_lunar_calendar import KoreanLunarCalendar
@@ -14,7 +15,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 46.9"
+APP_VERSION = "Ver 47.0 (AI Optimized)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -354,26 +355,33 @@ components.html("""
 # ==============================================================================
 # 2. AI 및 명리 연산 엔진
 # ==============================================================================
+
 try:
-    # 이름표는 깃허브와 스트림릿 양쪽 모두 GOOGLE_API_KEY 로 통일합니다.
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = _gemini_client  # 클라이언트 객체를 model 변수에 바인딩
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
-    model = None
 
-def call_claude_api(prompt_text, max_tokens=8000):
+@st.cache_data(show_spinner=False, ttl=3600*24)
+def get_ai_response(prompt_text, model_name='gemini-2.0-flash'):
     if _gemini_client is None:
         return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
-    try:
-        response = _gemini_client.models.generate_content(
-            model='gemini-2.5-pro', # ✅ 박사님 리스트에 있던 정식 최상위 프로 모델
-            contents=prompt_text
-        )
-        return response.text.strip()
-    except Exception as e:
-        return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
+    max_retries = 2
+    for attempt in range(max_retries + 1):
+        try:
+            response = _gemini_client.models.generate_content(model=model_name, contents=prompt_text)
+            return response.text.strip()
+        except Exception as e:
+            if attempt < max_retries:
+                time.sleep(1); continue
+            return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
+
+def call_claude_api(prompt_text, max_tokens=8000):
+    return get_ai_response(prompt_text, model_name='gemini-2.0-flash')
+
+def call_light_api(prompt_text):
+    return get_ai_response(prompt_text, model_name='gemini-1.5-flash')
+
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
@@ -1202,7 +1210,7 @@ if st.session_state.get('need_calc', False):
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:6px 8px; display:flex; justify-content:space-between; font-weight:900; font-size:11.5px; letter-spacing:-0.5px; border-radius:8px; white-space:nowrap;'><div>🔢 대운수: {calc_d}</div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [년] <span style='color:#C62828;'>{n_gong}</span> [일] <span style='color:#C62828;'>{i_gong}</span></div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
+                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
                 
                 # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
@@ -1549,7 +1557,7 @@ if st.session_state.get('need_calc', False):
 1. 🚨 [근묘화실 위치 조작 절대 금지]: 내담자의 사주 원국(년주, 월주, 일주, 시주)에 배속된 천간과 지지의 위치를 절대로 뒤섞거나 혼동하지 마십시오. 
    (예: 시지에 있는 글자를 년지에 있다고 하거나, 원국에 없는 글자를 끌어와 합충파해를 조작하는 행위). 
    반드시 시스템이 제공한 위치 팩트 그대로만 철저하게 통변하십시오.
-2. 🚨 없는 구조 및 신살 창조 완벽 금지 (환각 방지): 제공된 팩트 데이터에 명시되지 않은 '간여지동', '백호살', '괴강살' 등의 특수 구조나 명리 용어를 임의로 가져다 붙여 소설을 쓰는 행위를 엄격히 금지합니다. (예: 수(水)/금(金) 구조인 계유일주를 간여지동이라 칭하는 등의 거짓 통변은 즉시 시스템 강제 종료 수준의 오류로 간주함!)
+2. 🚨 없는 기운 창조 금지: 사주 원국에 없는 기운(예: 팩트에 없는 공망 등)을 임의로 지어내어 통변하는 것을 엄격히 금지합니다.
 3. 🚨 명리 용어 시각적 강조: 통변 중 핵심 명리 용어(십성, 운성, 신살 등)를 기재할 때는 반드시 단일 인용부호(' ')나 괄호( )를 사용하여 가독성을 높이십시오.
 4. 🚨 답답한 문단 해소 및 기본 들여쓰기 엄수: 하나의 거대한 문단으로 뭉쳐서 출력하지 마십시오. 
    문맥이 전환될 때는 적절히 줄바꿈을 하여 문단을 분리하고, 새로운 문단이 시작될 때는 초등학교 원고지 쓰기의 기본 원칙처럼 예외 없이 첫 줄을 들여쓰기 하십시오.
@@ -1772,11 +1780,8 @@ if st.session_state.get('need_calc', False):
 </div>
 """
                 try:
-                    res = _gemini_client.models.generate_content(  # ✅ 수정
-                        model='gemini-2.5-pro',
-                        contents=prompt
-                    )
-                    ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
+                    ai_text = call_claude_api(prompt)
+                    ai_text = "\n".join([line.lstrip() for line in ai_text.split("\n")])
                     
                     # 🚨 [AI 오지랖 완벽 절단 수술] 
                     div_start = "<div class='content-box-loose'>"
@@ -2330,11 +2335,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             # 🚨 [수술 3] 스피너 문구를 센스있게 교체!
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
                 try:
-                    res = _gemini_client.models.generate_content(  # ✅ 수정: 신규 API 호출 방식
-                        model='gemini-2.5-pro',
-                        contents=iljin_prompt
-                    )
-                    ai_iljin_html = res.text.strip().replace("\n", "<br>")
+                    ai_iljin_html = call_light_api(iljin_prompt).replace('\n', '<br>')
                 except Exception as e:
                     ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
@@ -2417,11 +2418,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-            del_res = _gemini_client.models.generate_content(  # ✅ 수정
-                model='gemini-2.5-pro',
-                contents=delivery_prompt
-            )
-            ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
+            ai_delivery_html = call_claude_api(delivery_prompt).replace('\n', '<br>')
             
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
@@ -2511,11 +2508,7 @@ if st.session_state.get('app_running', False):
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-                    del_res = _gemini_client.models.generate_content(  # ✅ 수정
-                model='gemini-2.5-pro',
-                contents=delivery_prompt
-            )
-                    ai_delivery_html = del_res.text.strip().replace("\n", "<br>")
+                    ai_delivery_html = call_claude_api(delivery_prompt).replace('\n', '<br>')
                     del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
                     # 🚨 [수술] 보라색(#4A148C) 유지하되, 맑은 고딕 32px & 이중선 양식 강제 통일
