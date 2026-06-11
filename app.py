@@ -363,7 +363,7 @@ except Exception as _api_e:
     _gemini_client = None
 
 @st.cache_data(show_spinner=False, ttl=3600*24)
-def get_ai_response(prompt_text, model_name='gemini-2.0-flash'):
+def get_ai_response(prompt_text, model_name='gemini-1.5-flash'):
     if _gemini_client is None:
         return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
     max_retries = 2
@@ -377,7 +377,7 @@ def get_ai_response(prompt_text, model_name='gemini-2.0-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    return get_ai_response(prompt_text, model_name='gemini-2.0-flash')
+    return get_ai_response(prompt_text, model_name='gemini-1.5-flash')
 
 def call_light_api(prompt_text):
     return get_ai_response(prompt_text, model_name='gemini-1.5-flash')
