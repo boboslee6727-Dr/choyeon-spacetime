@@ -379,10 +379,10 @@ def get_ai_response(prompt_text, model_name='gemini-1.5-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    return get_ai_response(prompt_text, model_name='gemini-2.0-flash')  # 🚨 2.5로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5로 변경 필수
 
 def call_light_api(prompt_text):
-    return get_ai_response(prompt_text, model_name='gemini-2.0-flash')  # 🚨 2.5로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5로 변경 필수
 
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
@@ -1830,7 +1830,7 @@ if st.session_state.get('need_calc', False):
     - [1. 초연 사주풀이]: {full_content_clean}
     - [2. 타 감명서]: {other_reading_text}
     """
-                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.0-flash')
+                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
                     
                     # 4. 최종 결합
                     st.session_state['saved_report_2'] = other_cover_html + report_2_html + f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
@@ -1854,7 +1854,7 @@ if st.session_state.get('need_calc', False):
     - 상대방(명주2) 사주: {partner_content_clean}
     - 타 감명서 원문: {st.session_state.get('other_reading_text')}
     """
-                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.0-flash')
+                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
                     
                     # 결과를 saved_report_gh_comp에 저장
                     st.session_state['saved_report_gh_comp'] = f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center;'>⚖️ 궁합 1:1 상세비교 리포트</h1>{c_res}</div></div>"
@@ -2541,7 +2541,7 @@ if st.session_state.get('app_running', False):
     - [1. 초연 궁합 분석]: {g_full_content}
     - [2. 타 감명서]: {st.session_state.get('other_reading_text')}
     """
-                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.0-flash')
+                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
                     st.session_state['saved_report_gh_comp'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 궁합 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
                     st.rerun()
                 except Exception as e:
