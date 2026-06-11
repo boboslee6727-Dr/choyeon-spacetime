@@ -108,7 +108,7 @@ choyeon_db = {
         "庚午": "달빛(庚)이 횟불 신호대(午)의 정적 속에 고고하게 빛을 쏟아내는 완연한 여름",
         "辛未": "서리(辛)가 화원(未)의 열기를 식히지만 가장 무더운 여름",
         "壬申": "이슬(壬)이 대도시(申)의 마른 풀끝을 적시는 서늘한 이른 가을",
-        "癸酉": "봄비(癸)가 사찰의 종(酉)을 적시며 결실을 거두는 완연 가을",
+        "癸酉": "봄비(癸)가 사찰의 종(酉)을 적시며 결실을 거두는 완연한 가을",
         "甲戌": "우뢰(甲)가 불태운 들판(戌)에 진동하며 결실을 저장하는 가을과 겨울의 환절기",
         "乙亥": "바람(乙)이 쏟아지는 강물(亥) 위를 스치며 추위가 스며드는 이른 겨울",
         "丙子": "태양(丙)이 검은 연못(子)을 비추는 깊어지는 한겨울",
@@ -1170,8 +1170,14 @@ if st.session_state.get('need_calc', False):
                 cur_samjae = get_samjae(yb, curr_y_ganji[1])
                 samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
                 
-                master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 천을귀인: {guiin_str}</div><div>🎯 공망: [일] {i_gong}</div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"                
-                
+                master_bar_html = f"""
+<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'>
+    <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
+    <div>🌟 천을귀인: {guiin_str}</div>
+    <div>🎯 공망: [년] {y_gong} / [일] {i_gong}</div>
+    <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
+</div>
+"""
                 # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
                 un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
@@ -1503,15 +1509,26 @@ if st.session_state.get('need_calc', False):
 17. 🚨 [과거 특정 세운(歲運)의 실증적 사건 분석]: 내담자가 과거 특정 연도에 겪었을 법한 구체적인 삶의 궤적(예: 시험 낙방, 학업의 난항 등)을 단편적으로 넘기지 마십시오. 반드시 "과거 OOO년과 OOO년 경에 학업이나 시험에서 일시적인 어려움을 겪으셨다면, 이는 운에서 들어온 재성(財星)의 기운이 학문과 인내심을 상징하는 인성(印星)을 강하게 압박하여 흐름을 방해했기 때문입니다"와 같이 구체적인 연도별 운기의 인과관계를 명확히 엮어 서술함으로써 통변의 실증적 신뢰도를 극대화하십시오.
 18. 🚨 [대운·세운 상호작용 기반의 성취 시점 확정]: 합격, 결혼, 이직 등 내담자의 인생에서 가장 치열하고 구체적인 핵심 질문에 답할 때는 막연한 방향성 제시나 추상적인 시기 묘사를 엄격히 금지합니다. 반드시 대운의 대환경과 세운의 역동적 상호작용을 정밀하게 추적하여, "특히 OOOO년은 사주 내의 핵심 성분(예: 정관, 재성 등)이 강력하게 힘을 얻고 안정되는 시기이므로, 이때를 목표로 에너지를 집중하시면 원하는 성취를 이룰 수 있습니다"와 같이 구체적이고 명확한 성취 시점을 판단하여 제시하십시오.
 
-[문단 통제 명령 및 ]
-1. 모든 통변 에세이 문장은 반드시 <p style='text-indent: 1em;'> 태그로 감싸십시오.
-2. 🚨 [계층별 글자 크기 및 상하 간격 강제 규격화] 토씨 하나 틀리지 말고 적용하십시오!
-   [지시 3-1] '1), 2)' 형태의 부목차는 20px 크기 적용:
-   <span class='sub-title' style='display: block; font-size: 20px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 35px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-   [지시 3-2] '▶, ▷, ◈, •' 형태의 세부 소목차는 18px 크기 적용:
-   <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 25px; margin-bottom: 5px;'>▶ 현재 대운 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-3. 표(Table) 생성 절대 금지. 운의 흐름 연도별 분석은 반드시 도트 기호(•)를 사용한 텍스트로 작성하십시오.
-4. 🚨 [출력 레이아웃 절대 규칙] 각 분석(전반기, 후반기 등) 내용 작성 시, 문단이 바뀌더라도 문단과 문단 사이에 '빈 줄(공백 줄)'을 절대 넣지 마십시오. 엔터키(줄바꿈)는 단 한 번만 사용하여 글이 빈틈없이 빽빽하게 이어지도록 출력하십시오. (HTML 태그 사용 시 <br><br> 금지, <br>만 단일 사용)
+🚨 [핵심 통변 규칙: 데이터 무결성 및 MZ 맞춤형 언어]
+1. [데이터 무결성(절대 성역)]: 
+   - 시스템이 제공한 사주 원국 팩트(년/월/일주)에 존재하지 않는 글자(특히 시주 글자)를 임의로 창조하여 해석하는 행위를 엄격히 금지합니다.
+   - 시주(時柱) 정보가 비어있는 경우(?, - 등), 시주에 대한 어떠한 해석이나 추론(예: 丙戌 등)도 절대 하지 마십시오. 3주 6자 명식으로만 정직하게 통변하십시오.
+   - 근묘화실 위치를 절대 뒤섞지 마십시오. 제공된 위치 팩트를 철저히 준수하십시오.
+
+2. [MZ 세대 맞춤형 통변 언어 가이드]:
+   - 고전 명리 한자어는 핵심 용어 제시 후 반드시 일상 언어로 풀이하십시오.
+   - 식상: '나를 드러내는 표현력과 재능' (여성일 경우 '사랑스러운 자녀 에너지' 포함)
+   - 재성: '내가 일궈낸 재물과 결과물' (남성일 경우 '이성 파트너 에너지' 포함)
+   - 관성: '사회적 책임과 나를 지켜주는 명예' (여성일 경우 '이성 파트너 에너지' 포함)
+   - 인성: '나를 성장시키는 배움과 보호 에너지'
+   - 현침살: '날카롭고 예리한 감각, 섬세하고 꼼꼼한 통찰력'
+   - 강왕(强旺): '에너지가 매우 집중되어 있습니다' 또는 '기운이 강합니다'로 순화하십시오.
+
+3. [문단 통제 및 가독성]:
+   - 모든 문단은 <p style='text-indent: 1em;'>으로 시작하여 들여쓰기를 준수하십시오.
+   - 1) 20px, ▶ 18px 크기 및 상하 마진 규격을 정확히 적용하십시오.
+   - 🚨 문단 사이 빈 줄(공백) 금지. <br> 태그만 사용하여 빈틈없이 빽빽하게 출력하십시오.
+   - 복합적인 명리 용어는 ' ' 또는 ( )로 강조하여 가독성을 높이십시오.성 시, 문단이 바뀌더라도 문단과 문단 사이에 '빈 줄(공백 줄)'을 절대 넣지 마십시오. 엔터키(줄바꿈)는 단 한 번만 사용하여 글이 빈틈없이 빽빽하게 이어지도록 출력하십시오. (HTML 태그 사용 시 <br><br> 금지, <br>만 단일 사용)
 
 🚨 [AI 환각(Hallucination) 방지 및 가독성 극대화 절대 규칙] (※ 신규 추가 구역)
 1. 🚨 [근묘화실 위치 조작 절대 금지]: 내담자의 사주 원국(년주, 월주, 일주, 시주)에 배속된 천간과 지지의 위치를 절대로 뒤섞거나 혼동하지 마십시오. 
