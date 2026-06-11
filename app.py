@@ -1850,31 +1850,55 @@ if st.session_state.get('need_calc', False):
                     st.error(f"AI 연산 오류: {e}")
 
             # ------------------------------------------------------------------
-            # [2단계] 타 감명서 비교분석 (표지 결합 오류 수정)
+            # [2단계] 타 감명서 비교분석 (오류 수정 및 캐싱 적용)
             # ------------------------------------------------------------------
             if u_product == "타 감명서":
                 try:
                     # 1. 타 감명서 원본 렌더링
                     report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2><div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111; text-align: justify; word-break: keep-all;'>{other_reading_text.replace(chr(10), '<br>')}</div></div></div>"
 
-                    # 2. 비교 분석 프롬프트 (오류 없는 변수 사용)
+                    # 2. 표지 HTML 정의 (other_cover_html 변수 선언 위치 복구)
+                    other_cover_html = (
+                        f"<div class='page-break-before'></div>\n"
+                        f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
+                        f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                        f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
+                        f"            <h1 style='font-size: 40px !important; color: #1A237E !important; font-weight: 900 !important; margin:0 !important; font-family: \"Malgun Gothic\", sans-serif !important;'>초연 시공명리 타 감명서 비교</h1>\n"
+                        f"            <div style='text-align: right; margin-top: 10px;'><span style='font-size: 14px; color: #555; font-weight: 600; letter-spacing: 1px;'>{APP_VERSION}</span></div>\n"
+                        f"        </div>\n"
+                        f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
+                        f"            <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 20px;'>👤 신청인 : {u_name} 님</h2>\n"
+                        f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'><p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p></div>\n"
+                        f"        </div>\n"
+                        f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>\n"
+                        f"        <p style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
+                        f"    </div>\n"
+                        f"</div>"
+                    )
+
+                    # 3. 비용 제로화: 캐싱된 결과 호출
                     comp_prompt = f"""
     당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
     아래 [데이터]를 바탕으로 [초연 사주풀이]와 [타 감명서]를 1:1 대조 분석하십시오.
 
-    [절대 규칙]
-    1. 첫 출력은 반드시 <h3 style=...> 태그로 시작할 것.
-    2. 모든 본문 단락은 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감쌀 것.
-    3. 반드시 마지막에 <h3 style='color:#D50000;...'>13. 총평 및 향후 개선점</h3>을 작성할 것.
+    🚨 [디자인 및 서식 절대 규칙]
+    0. 🚨 [인사말 원천 차단]: 출력의 첫 글자는 반드시 <h3 style=...> 태그로 시작할 것.
+    1. AI 임의의 목차 서식 생성을 절대 금지합니다.
+    2. 목차 제목 출력 시, 반드시 명시된 태그 서식을 그대로 출력하십시오.
+    3. 모든 본문 단락은 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
+
+    🚨 [내용 집중 대조 규칙]
+    - 타 감명서 원문이 다루고 있는 핵심 주제에 대해서만 초연 명리와 1:1 대조하십시오.
+    - 단, 비교 분석이 끝난 후 가장 마지막의 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3> 목차는 무슨 일이 있어도 반드시 작성해야 합니다.
 
     [데이터]
     - 사주 팩트: {gans}{jjis}
     - [1. 초연 사주풀이]: {full_content_clean}
     - [2. 타 감명서]: {other_reading_text}
     """
-                    c_res = call_claude_api(comp_prompt, max_tokens=10000)
+                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
                     
-                    # 3. [복구 완료] 표지 + 타 감명서 원문 + 1:1 상세비교 본문 결합
+                    # 4. 최종 결합
                     st.session_state['saved_report_2'] = other_cover_html + report_2_html + f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
                 except Exception as e:
