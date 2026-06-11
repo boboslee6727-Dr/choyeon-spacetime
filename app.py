@@ -377,10 +377,10 @@ def get_ai_response(prompt_text, model_name='gemini-1.5-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    return get_ai_response(prompt_text, model_name='gemini-1.5-flash')
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5로 변경 필수
 
 def call_light_api(prompt_text):
-    return get_ai_response(prompt_text, model_name='gemini-1.5-flash')
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5로 변경 필수
 
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
