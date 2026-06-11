@@ -1000,7 +1000,7 @@ with st.sidebar:
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
     st.markdown("""
-    <button onclick='window.print()' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-bottom:15px;'>
+    <button onclick='window.parent.print()' style='width:100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-bottom:15px;'>
         🖨️ 풀이 결과 인쇄 / PDF 저장
     </button>
     """, unsafe_allow_html=True)
@@ -2344,7 +2344,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 f"<div class='page-break-before'></div>\n"
                 f"<div class='report-page'>\n"
                 f"<div class='vip-inset-frame' style='border: 3px solid #1A237E;'>\n"
-                f"<h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서 {APP_VERSION}</h1>\n"
+                f"<h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>\n"
                 f"<div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>\n"
                 f"대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)\n"
                 f"</div>\n"
