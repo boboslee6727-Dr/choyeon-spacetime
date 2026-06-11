@@ -2616,4 +2616,4 @@ if st.session_state.get('app_running', False):
 
         # 2. 비교 분석 완료 시 화면 출력
         if st.session_state.get('saved_report_gh_comp'):
-            st.markdown(st.session_state.get('saved_report_gh_comp', ''), unsafe_allow_html=True
+            st.markdown(st.session_state.get('saved_report_gh_comp', ''), unsafe_allow_html=True)
