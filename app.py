@@ -1154,7 +1154,7 @@ if st.session_state.get('need_calc', False):
                 guiin_str = guiin_map.get(ds, '없음')
                     
                 direction_str = "순행" if order == 1 else "역행"
-                n_gong = calculate_gongmang(ys, yb)
+                y_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
                 
                 # 🚨 [신규 수술] 파이썬이 미리 원국의 공망 위치를 정확히 계산하여 팩트만 도출!
