@@ -17,7 +17,7 @@ import re
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 47.1 (AI Optimized)"
+APP_VERSION = "Ver 47.2 (AI Optimized)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -621,6 +621,38 @@ def calculate_gongmang(ilgan, ilji):
         base = (list(JI).index(ilji) - list(GAN).index(ilgan) - 2) % 12
         return list(JI)[base] + "," + list(JI)[(base+1)%12]
     except: return "-"
+
+def get_universal_analysis(ds, mb, gans, jjis):
+    """
+    ds: 일간(Day Stem), mb: 월지(Month Branch)
+    gans: [연간, 월간, 일간, 시간], jjis: [연지, 월지, 일지, 시지]
+    """
+    # 1. 지장간 추출
+    jg_list = JIJANGGAN.get(mb, []) # 해당 월지의 지장간
+    
+    # 2. 십성 & 운성 연산 함수 호출
+    def get_info(gan, target_char):
+        ss = get_ss(gan, target_char) # 십성 반환
+        # 12운성(일간 기준 해당 지지)
+        twelve = get_12_stage(gan, mb) 
+        return ss, twelve
+
+    # 3. 드러난 지장간 (좌법 풀이)
+    results = []
+    for qi in jg_list:
+        ss, twelve = get_info(ds, qi)
+        results.append(f"{qi}({ss}): {twelve}좌")
+        
+    # 4. 드러나지 않은 기운 (인종법 풀이)
+    # 원국 8글자 천간(gans)과 지지(jjis)를 제외한 기운 찾기
+    all_present = gans + [get_qi_from_ji(j) for j in jjis]
+    missing = [elem for elem in ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'] if elem not in all_present]
+    
+    for m in missing:
+        ss, twelve = get_info(ds, m)
+        results.append(f"{m}({ss}): 인종법 적용 - {twelve}종")
+        
+    return results
 
 def get_time_ganji(day_gan, time_str, dt_obj=None):
     if "시간 모름" in time_str: return "?", "?"
@@ -1530,6 +1562,9 @@ if st.session_state.get('need_calc', False):
 - 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
 - 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
 """
+                analysis_data = get_universal_analysis(ds, mb, gans, jjis) 
+                analysis_summary = "\n".join(analysis_data)
+
                 prompt = f"""
 {db_header}
 당신은 명리심리상담사 1급 자격을 갖춘 '초연 박사'입니다.
@@ -1545,11 +1580,11 @@ if st.session_state.get('need_calc', False):
 🚨 [문단 및 레이아웃 강제 규격]
 1. 모든 에세이 '문단'은 반드시 <p style='text-indent: 1em;'> 태그로 감싸 초등학교 원고지처럼 첫 줄 들여쓰기를 적용하십시오.
 2. 🚨[절대 성역]: 상단 '[CHOYEON_GOLDEN_TEXT_HERE]' 문장은 부연 설명 없이 원문 그대로 출력하십시오.
-3. 🚨 [절대 금지]: 문단 사이에 '빈 줄(공백 줄)'을 넣지 마십시오. 엔터키(줄바꿈) 금지. 
+3. 🚨 [절대 금지]: 문단 사이와 문단과 제목사이에 '빈 줄(공백 줄)'을 넣지 마십시오. 엔터키(줄바꿈) 금지. 
 4. [가독성 조절]: 문맥 전환 시 <br> 태그 하나만 단일 사용.
 5. [계층별 규격]:
-   - 부목차: <span class='sub-title' style='display: block; font-size: 20px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 25px; margin-bottom: 5px;'>...</span>
-   - 소목차: <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 15px; margin-bottom: 5px;'>...</span>
+   - 부목차: <span class='sub-title' style='display: block; font-size: 20px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 15px; margin-bottom: 5px;'>...</span>
+   - 소목차: <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 10px; margin-bottom: 5px;'>...</span>
 
 🚨 [초연 시공명리 정석 통변 알고리즘 : 강제 수행 지침]
 당신은 사주 원국 8글자(년월일시 간지) 전체를 완벽히 조망하며, 반드시 아래의 '정석(正石)' 알고리즘 순서대로만 통변을 전개해야 합니다. "정보가 없다"는 핑계는 절대 허용되지 않습니다.
@@ -1561,11 +1596,14 @@ if st.session_state.get('need_calc', False):
 1. [근묘화실 위치 및 팩트 조작 금지]: 원국에 없는 글자(비어있는 시주 등)를 창조하거나, 제공된 위치 팩트를 뒤섞는 행위를 엄격히 금지합니다.
 2. 명리 용어 시각적 강조: 통변 중 핵심 명리 용어는 단일 인용부호(' ')나 괄호( )를 사용하십시오.
 
+[분석 데이터 팩트]
+{analysis_summary}
+
 [내담자 맞춤형 정밀 타겟팅]
 - {age_prompt}
 - {gender_prompt}
 - {yukchin_rule}
-
+ 
 [통변 지시]
 - 간지 표기 시 반드시 한자로 표기하십시오.
 - 격국 팩트: {gyukgook_detail}
