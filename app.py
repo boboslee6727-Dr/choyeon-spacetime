@@ -1578,10 +1578,10 @@ if st.session_state.get('need_calc', False):
 0. [내담자 사주 명조 팩트(절대 준수)]
 - 명조: {ys}{yb}년, {ms}{mb}월, {ds}{db}일, {hs}{hb}시
 🚨[사주 원국표 절대 팩트 (AI 자체 연산 절대 금지)]
-- 년주({ys}{yb}): 천간십성({get_ss(ds, ys)}), 지지십성({get_ss(ds, yb)}), 12운성({get_unsung(ds, yb)}), 12신살({get_shinsal(yb, yb)})
-- 월주({ms}{mb}): 천간십성({get_ss(ds, ms)}), 지지십성({get_ss(ds, mb)}), 12운성({get_unsung(ds, mb)}), 12신살({get_shinsal(yb, mb)})
-- 일주({ds}{db}): 일간(본인), 지지십성({get_ss(ds, db)}), 12운성({get_unsung(ds, db)}), 12신살({get_shinsal(yb, db)})
-- 시주({hs}{hb}): 천간십성({get_ss(ds, hs)}), 지지십성({get_ss(ds, hb)}), 12운성({get_unsung(ds, hb)}), 12신살({get_shinsal(yb, hb)})
+- 년주({ys}{yb}): 천간십성({get_ss(ds, ys)}), 지지십성({get_ss(ds, yb)}), 12운성({get_unsung(ds, yb)}), 12신살({get_12_shinsal(yb, yb)})
+- 월주({ms}{mb}): 천간십성({get_ss(ds, ms)}), 지지십성({get_ss(ds, mb)}), 12운성({get_unsung(ds, mb)}), 12신살({get_12_shinsal(yb, mb)})
+- 일주({ds}{db}): 일간(본인), 지지십성({get_ss(ds, db)}), 12운성({get_unsung(ds, db)}), 12신살({get_12_shinsal(yb, db)})
+- 시주({hs}{hb}): 천간십성({get_ss(ds, hs)}), 지지십성({get_ss(ds, hb)}), 12운성({get_unsung(ds, hb)}), 12신살({get_12_shinsal(yb, hb)})
 (※ 위 명조 데이터가 유일한 진실입니다. 다른 데이터를 창조하지 마십시오.)
 
 1. [일간 앵커링]: 본 사주의 일간(日干)은 '{ds}'이며, 이는 우주적 중심 팩트이다. 절대 변경하거나 역추산하지 마십시오.
