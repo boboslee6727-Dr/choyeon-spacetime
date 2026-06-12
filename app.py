@@ -1556,7 +1556,6 @@ if st.session_state.get('need_calc', False):
 - 공망 팩트: {gongmang_actual}
 - 일반신살: {shinsal_str} / 12신살: {s12_str}
 - 입고/개고 팩트: 사주팔자의 역동적 관계 분석에 반드시 묘고 작용을 포함하십시오.
-"""
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
