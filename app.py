@@ -1395,7 +1395,7 @@ if st.session_state.get('need_calc', False):
 
                 # 4. 프롬프트용 동적 텍스트 변수 조합
                 sewun_first_half_date = f"{curr_y}.02.{ipchun_day:02d}(입춘) ~ {curr_y}.07.{soseo_day:02d}(소서 전)"
-                sewun_second_half_date = f"{curr_y}.07.{soseo_day:02d}(소서) ~ {curr_y + 1}.02.
+                sewun_second_half_date = f"{curr_y}.07.{soseo_day:02d}(소서) ~ {curr_y + 1}.02.{next_ipchun_day:02d}(입춘 전)"
                 
                 age_prompt = ""
                 if u_age < 20:
