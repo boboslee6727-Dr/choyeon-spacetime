@@ -14,8 +14,6 @@ import pytz
 import streamlit.components.v1 as components
 import re
 
-idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
-
 # 🎯 [버전 컨트롤 타워]
 APP_VERSION = "Ver 47.2 (AI Optimized)"
 
@@ -384,7 +382,6 @@ def call_claude_api(prompt_text, max_tokens=8000):
 def call_light_api(prompt_text):
     return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5-flash로 변경 필수
 
-
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
 def get_color(c):
@@ -653,6 +650,8 @@ def get_universal_analysis(ds, mb, gans, jjis):
         results.append(f"{m}({ss}): 인종법 적용 - {twelve}종")
         
     return results
+
+idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
 
 def get_time_ganji(day_gan, time_str, dt_obj=None):
     if "시간 모름" in time_str: return "?", "?"
@@ -1618,15 +1617,19 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 내 삶의 무대와 타고난 기본 성향</span>
 (※ 🚨AI 전술 지시: 본 사주의 절대 기준인 일간('{ds}')과 사주구조(격국: {gyukgook_detail})를 핵심 뼈대로 삼으십시오. 
 이 격국의 특성이 7궁위(년월일시)의 어느 무대에서, 12운성의 어떤 에너지 규모로 발현되는지 구체적으로 조언하십시오.)
+<span class='sub-title'>2) 월지 중심의 격국</span>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
-(※ 🚨AI 전술 지시: 사주팔자 오행의 분포와 조후(온도/습도), 억부의 균형을 분석하십시오. 불균형이 있다면 이를 극복하기 위해 현실 삶에서 어떤 에너지를 추구하고 채워야 하는지 상세한 에세이로 작성하십시오.)
+(※ 🚨AI 전술 지시: 사주팔자 오행의 분포와 조후(온도/습도), 억부의 균형을 분석하십시오. 
+불균형이 있다면 이를 극복하기 위해 현실 삶에서 어떤 에너지를 추구하고 채워야 하는지 상세한 에세이로 작성하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 내 삶의 역동성과 상호작용</span>
 (※ 🚨AI 전술 지시: 단순 길흉 판단 금지! 다음 3대 역동성을 드라마틱하게 서술하십시오.
-1. [합충파해 연쇄반응]: 한 글자의 움직임이 다른 글자를 어떻게 자극하여 나비효과를 내는지 추적.
+1. 천간과 지지의 [합충파해 연쇄반응]: 한 글자의 움직임이 다른 글자를 어떻게 자극하여 나비효과를 내는지 추적.
 2. [묘고(墓庫) 작용]: 입고(入庫)와 개고(開庫) 타이밍을 짚어내어 삶의 반전과 수렴을 설명.
 3. [격각(隔角)의 이탈]: 공간적 분리(이동, 독립)와 심리적 소외감(고독)을 입체적으로 풀어내십시오.)
+<p>{get_gan_rel_all_analysis(gans)}</p>
+<p>{get_ji_rel_set_analysis(jjis)}</p>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>4) 내 삶의 숨겨진 강점과 잠재적 에너지</span>
 (※ 🚨AI 전술 지시: 12신살({s12_str})과 일반신살({shinsal_str}), 삼재({cur_samjae})를 앵커(닻)로 삼되, 살(煞)의 공포를 조장하지 말고 현대 심리상담 관점의 고유한 강점으로 재해석하십시오.)
@@ -1639,12 +1642,14 @@ if st.session_state.get('need_calc', False):
 1. [표면적 기질]: 일간과 원국에 드러난 '십성', '12운성', '신살'의 상호작용을 통해 겉으로 드러난 페르소나를 풀이하십시오.
 2. [일지 지장간 좌법(座法) 해부]: 일지 지장간 내부에 내장된 천간 성분들이 해당 왕궁(王宮) 내부에서 가지는 십이운성 리듬(좌법)을 기준으로, 내담자가 사회와 상호작용할 때 꺼내 쓰는 '현실적 행동 메커니즘'을 도출하십시오.
 3. [7궁위 입체 분석]: 나머지 궁위에 배치된 기운을 접목하여 외부와 상호작용하는 방식을 육친적, 심리적, 사회적 관점으로 분석하십시오.)
+<p>{get_outer_personality(gans, jjis)}</p>
    
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
 (※ 🚨AI 절대 연산 규칙: 뜬구름 잡는 묘사를 금지하고 아래 2대 팩트로만 무의식을 타격하십시오.
 1. [인종법(引從法)의 무의식 타격]: 원국 천간에 드러나지 않은(결핍된) 오행이나 십성을 일지로 인종(끌어와서 대조)하여, 겉으로는 드러나지 않았으나 내담자조차 모르는 깊은 무의식적 갈망을 구어체로 짚어내십시오.
 2. [공망({gongmang_actual})의 현실 타격]: 공망이 걸린 오행/육친이 실제 생활에서 유발하는 심리적 공허함과 환경적 한계 조건을 날카로운 팩트로 기술하십시오.)
 </div>
+<p>{get_inner_personality_via_injon(ds, gans, jjis)}</p>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
 (※ 🚨AI 전술 지시: 년주(부모궁)와 월주(형제/사회궁)에 배치된 십성과 12운성을 분석하십시오. 
@@ -1666,6 +1671,7 @@ if st.session_state.get('need_calc', False):
 1. 배우자: 1) 육친적 인연의 깊이, 2) 심리적 이상형, 3) 사회적 안정도 서술.
 2. 자녀: 남명의 관성, 여명의 식상 상태(공망, 형충)를 독립적으로 정밀 추적하여, 자녀와의 물리적/정서적 거리감이나 아픔을 팩트있게 통변하고 조심스럽게 어루만져 주십시오.)
 </div>
+<p>{get_pillar_analysis(ds, dj)}</p>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 재성운</h3><div class='content-box-loose'>
 (※ 🚨AI 전술 지시: 식상생재와 재성의 상태를 분석하되 반드시 [창출과 축적의 완벽한 분리 분석]을 수행하십시오. 
@@ -1689,14 +1695,18 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
 <div class='content-box-loose'>
-(※ 🚨AI 특수 지시: 운세 분석 시 단순 십성 나열이나 일반적인 길흉 묘사를 엄격히 금지합니다. 
-특히 **[2) 시공 명리 풀이]** 작성 시, 반드시 아래의 '시공명리 3대 정밀 타격 알고리즘'을 기계적으로 적용하여 서술하십시오.
-1. [체용(體用) 분리 타격]: 
-   - 체운(시기분석): 일간(日干)을 절대 기준으로 행운을 대조하여, 해당 운의 전반적인 기울기와 방향성을 도출하십시오.
-   - 용운(실행분석): 일주(日柱)를 하위십성으로, 행운을 상위십성으로 대조하여 실질적인 사건의 발생 여부를 짚어내십시오. 체와 용이 상생(相生)하면 길(吉)하고, 상극(相剋)하면 흉(凶)한 굴곡을 에세이로 풀어내십시오.
-2. [합충형해파 동착(同着) 타격]: 사주 원국의 일지나 행운에서 합·충·형·해·파가 중첩(동착)되는 시기를 정밀 추적하십시오. 간지가 동일하게 겹치는 복음(伏吟)이나 천충지충하는 반음(反吟), 특정 지지가 겹쳐 흉화가 가중되는 시기(예: 사해충에 사운이 겹치는 등)에 발생하는 흉화(관재, 손재, 건강 악화 등)의 진대패(眞大敗) 타이밍을 명확한 팩트로 짚어 경고하십시오.
-3. [사고(四庫) 입고/개고 타격]: 진술축미(辰戌丑未) 사고가 운에서 충·형을 맞을 때의 요동을 낱낱이 해부하십시오. 원국 천간에 드러난 글자가 흉하게 빨려 들어가는 '왕자입고(旺者入庫)' 현상과, 장간에 숨어있던 기물이 밖으로 튀어나오는 '암신개고(暗神開庫)' 현상을 철저히 분석하십시오. 어떤 육친/십성이 입고되어 흉화를 겪고 어떤 기물이 개고되어 득을 보는지, 체용 로직의 '실행 시기'에 맞춰 핀셋처럼 짚어내십시오.
-4. 임의의 탭(Tab)키 사용을 절대 금지합니다.
+
+[※ 🚨운세풀이 방법]
+1) 전통 명리 풀이: 🚨AI 절대 지시: 이하 모든 대운/세운/월운의 '전통 명리 풀이'는 일간기준의 십성과 십이운성을 비교하고 아래의 내용을 분석하여 통변하십시오.
+- 합충형해파 동착(同着) 타격: 사주 원국의 일지나 행운에서 합·충·형·해·파가 중첩(동착)되는 시기를 정밀 추적하십시오. 
+간지가 동일하게 겹치는 복음(伏吟)이나 천충지충하는 반음(反吟), 특정 지지가 겹쳐 흉화가 가중되는 시기에 발생하는 흉화(관재, 손재, 건강 악화 등)의 진대패(眞大敗) 타이밍을 명확한 팩트로 짚어 경고하십시오.
+- 사고(四庫) 입고/개고 타격: 진술축미(辰戌丑未) 사고가 운에서 충·형을 맞을 때의 요동을 낱낱이 해부하십시오. 
+원국 천간에 드러난 글자가 흉하게 빨려 들어가는 '왕자입고(旺者入庫)' 현상과, 장간에 숨어있던 기물이 밖으로 튀어나오는 '암신개고(暗神開庫)' 현상을 철저히 분석하십시오. 
+어떤 육친/십성이 입고되어 흉화를 겪고 어떤 기물이 개고되어 득을 보는지 살펴 서술하시오.
+2) 시공 명리 풀이: 🚨AI 절대 지시: 이하 모든 대운/세운/월운의 '시공 명리 풀이'는 반드시 아래의 [체/용 운세 분석 키워드 매트릭스] 규격에 맞춰 통변하십시오.
+
+[초연 시공명리 체/용(體/用) 운세 분석 키워드 매트릭스]
+{che_yong_matrix_text}
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
@@ -1708,20 +1718,20 @@ if st.session_state.get('need_calc', False):
 [지나온 과거 각 대운 출력 템플릿]
 • <b>OO세~OO세 (OO대운):</b> 
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (요약 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (요약 작성)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (핵심만 간략히 요약)</div>
+    <div><b>2) 시공 명리 풀이: </b> (※ 상단 매트릭스 키워드를 활용하여 과거의 핵심 사건만 '간략히 요약한 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (상세 작성)</div>
+    <div><b>2) 시공 명리 풀이: </b> (※ 상단 매트릭스 키워드를 활용하여 내담자의 현재 나이, 성별, 직업 등 현실을 반영한 '매우 상세하고 깊이 있는 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (상세 작성)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 활용하여 내담자의 현재 나이, 성별, 직업 등 현실을 반영한 '매우 상세하고 깊이 있는 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
@@ -1733,20 +1743,20 @@ if st.session_state.get('need_calc', False):
 [지나온 과거 각 세운 출력 템플릿]
 • <b>OOOO년(OO년):</b> 
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (요약 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (요약 작성)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (핵심만 간략히 요약)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 활용하여 과거의 성패를 '간략히 요약한 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석 ({sewun_first_half_date})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (상세 작성)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 기반으로 올해의 체감되는 사건과 길흉을 '매우 상세하고 실용적인 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석 ({sewun_second_half_date})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (상세 작성)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 기반으로 올해의 체감되는 사건과 길흉을 '매우 상세하고 실용적인 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
@@ -1759,20 +1769,20 @@ if st.session_state.get('need_calc', False):
 [지나온 과거 각 월운 출력 템플릿]
 • <b>(파이썬이 제공한 월과 간지): (파이썬이 제공한 연도/날짜/절기 복사)</b> 
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (요약 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (요약 작성)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (핵심만 간략히 요약)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 바탕으로 지난달의 흐름을 '간략히 요약한 통변 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_first_half}</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (상세 작성)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 바탕으로 이번 달에 벌어질 사건을 '매우 구체적이고 상세한 조언 에세이'로 작성)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_second_half}</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (상세 작성)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 상단 매트릭스 키워드를 바탕으로 이번 달에 벌어질 사건을 '매우 구체적이고 상세한 조언 에세이'로 작성)</div>
 </div>
 </div>
 
