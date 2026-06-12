@@ -631,9 +631,12 @@ def get_universal_analysis(ds, mb, gans, jjis):
     
     # 2. 십성 & 운성 연산 함수 호출
     def get_info(gan, target_char):
-        ss = get_ss(gan, target_char) # 십성 반환
-        # 12운성(일간 기준 해당 지지)
-        twelve = get_12_stage(gan, mb) 
+        ss = get_ss(gan, target_char) # 십성 반환 (일간 기준)
+        
+        # 🚨 [수정 완료] 함수명 get_unsung 복구 및 논리 변수(target_char) 교체
+        # 일간이 아닌 '해당 글자(지장간/없는기운)'가 월지(mb)에 앉은 12운성을 구함
+        twelve = get_unsung(target_char, mb) 
+        
         return ss, twelve
 
     # 3. 드러난 지장간 (좌법 풀이)
@@ -644,7 +647,7 @@ def get_universal_analysis(ds, mb, gans, jjis):
         
     # 4. 드러나지 않은 기운 (인종법 풀이)
     # 원국 8글자 천간(gans)과 지지(jjis)를 제외한 기운 찾기
-    all_present = gans + [get_qi_from_ji(j) for j in jjis]
+    all_present = gans + [get_qi_from_ji(j) for j in jjis if j not in ["?", " ", "-"]]
     missing = [elem for elem in ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'] if elem not in all_present]
     
     for m in missing:
