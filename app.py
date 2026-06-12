@@ -1154,7 +1154,7 @@ if st.session_state.get('need_calc', False):
                 guiin_str = guiin_map.get(ds, '없음')
                     
                 direction_str = "순행" if order == 1 else "역행"
-                y_gong = calculate_gongmang(ys, yb)
+                n_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
                 
                 # 🚨 [신규 수술] 파이썬이 미리 원국의 공망 위치를 정확히 계산하여 팩트만 도출!
@@ -1174,7 +1174,7 @@ if st.session_state.get('need_calc', False):
 <div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'>
     <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
     <div>🌟 천을귀인: {guiin_str}</div>
-    <div>🎯 공망: [년] {y_gong} / [일] {i_gong}</div>
+    <div>🎯 공망: [년] {n_gong} / [일] {i_gong}</div>
     <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
 </div>
 """
