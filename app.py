@@ -621,7 +621,7 @@ def calculate_gongmang(ilgan, ilji):
         return list(JI)[base] + "," + list(JI)[(base+1)%12]
     except: return "-"
 
-def get_universal_analysis(ds, mb, db, gans, jjis)
+def get_universal_analysis(ds, mb, db, gans, jjis):
     """
     ds: 일간(Day Stem), mb: 월지(Month Branch)
     gans: [연간, 월간, 일간, 시간], jjis: [연지, 월지, 일지, 시지]
