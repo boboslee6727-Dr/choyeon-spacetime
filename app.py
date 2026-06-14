@@ -1686,9 +1686,9 @@ if st.session_state.get('need_calc', False):
 [CHOYEON_GOLDEN_TEXT_HERE]
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 내 삶의 무대와 타고난 기본 성향</span>
-(※ 🚨AI 전술 지시: 본 사주의 절대 기준인 일간('{ds}')과 사주구조(격국: {gyukgook_detail})를 핵심 뼈대로 삼으십시오. 
-이 격국의 특성이 7궁위(년월일시)의 어느 무대에서, 12운성의 어떤 에너지 규모로 발현되는지 구체적으로 조언하십시오.)
-<span class='sub-title'>2) 월지 중심의 격국</span>
+(※ 🚨AI 절대 지시: 가장 먼저 내담자의 사주 구조인 '격국({gyukgook_detail})'의 명칭과 그 의미를 상세히 풀이하십시오. 
+이후 우주적 중심인 일간('{ds}')을 뼈대로 삼아, 이 격국의 특성이 7궁위의 어느 무대에서 12운성의 어떤 에너지 규모로 발현되는지 구체적이고 현실적으로 조언하십시오. 
+격국에 대한 통변을 누락하면 치명적 시스템 오류로 간주합니다.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
 (※ 🚨AI 전술 지시: 사주팔자 오행의 분포와 조후(온도/습도), 억부의 균형을 분석하십시오. 
