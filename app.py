@@ -4,7 +4,7 @@ import json
 import os
 import math
 import calendar
-import time  # 🚨 [추가] time.sleep() 작동을 위한 모듈 주입
+import time  
 import datetime as dt_mod
 from datetime import datetime
 from korean_lunar_calendar import KoreanLunarCalendar
@@ -62,7 +62,6 @@ st.markdown("""
     
     /* 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
     .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
-    
     .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
     
     /* 사이드바 및 가동 버튼 강제 제어 */    
@@ -1554,7 +1553,6 @@ if st.session_state.get('need_calc', False):
    - 미혼: '미래의 남편/인연'으로 칭할 것.
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
-
                 # ==============================================================
                 # 🚨 [박사님의 핵심 수정 적용]: 간지 자체의 십성 도출 (여백 16칸 완벽 정렬)
                 # ==============================================================
@@ -1773,6 +1771,7 @@ if st.session_state.get('need_calc', False):
 (※ 🚨AI 전술 지시: 오행의 과다/과소 및 조후 불균형을 분석하여 취약한 신체 질환을 명리적 물상으로 경고하고, 현실적인 에너지 관리법을 제시하십시오.)
 </div>
 
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3><div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
 (※ 🚨AI 절대 지시: 위의 마커 '[DAEWUN_TABLE_HERE]'를 절대 지우거나 생략하지 말고, 반드시 텍스트 그대로 100% 똑같이 출력하십시오.)
@@ -2465,16 +2464,13 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             s_res_html = f"✨ <b>오늘의 핵심 에너지:</b> 십이운성[{day_wunseong}] / 특수기운[{day_shinsal}]"
 
             iljin_prompt = f"""
-당신은 명리심리상담사 1급 자격을 갖춘 '초연 박사'입니다.
-오늘 하루의 흐름을 대운/세운 분석처럼 깊이 있고 디테일한 '폭포수 에세이'로 작성하십시오.
+당신은 명리심리상담사 초연 박사입니다.
+오늘의 시공간 파동을 바탕으로 핵심만을 간결하게 통변하십시오.
 
-[분석 베이스 팩트]
-- 내담자 일주: {m_ilgan}{m_ilji}
-- 오늘 일진: {t_date.year}년 {t_date.month}월 {t_date.day}일
+[핵심 팩트]
+- 내담자: {m_ilgan}{m_ilji} / 일진: {t_date.month}월 {t_date.day}일
 - 천간/지지 파동: {gan_res_html} / {r_res_html}
-- 전반부 체용: {m_che_first} + {am_yong}
-- 후반부 체용: {m_che_second} + {pm_yong}
-- 핵심 에너지: {day_wunseong}, {day_shinsal}
+- 전반부 체용: {m_che_first}+{am_yong} / 후반부 체용: {m_che_second}+{pm_yong}
 
 🚨 [AI 통제 헌법]
 1. 서론, 인사말, '연산 팩트', '도출 키워드' 등 기술적 문구 출력 절대 금지. 템플릿의 첫 줄부터 통변 시작.
@@ -2482,23 +2478,15 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 3. 모든 줄바꿈은 `<br>` 태그만 사용.
 4. 모든 기술적 팩트는 AI의 통변 근거로만 활용하고, 출력물에는 명리학적 물상과 에세이적 문장으로만 기술할 것.
 
-[출력 템플릿]
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 오늘의 전반부 흐름 (자시~오시, 00:30~13:29)</span>
-<div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (내용)</div>
-    <div><b>2) 시공 명리 풀이:</b> (내용)</div>
-</div>
-<br>
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 오늘의 후반부 흐름 (미시~야자시, 13:30~익일 00:29)</span>
-<div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (내용)</div>
-    <div><b>2) 시공 명리 풀이:</b> (내용)</div>
-</div>
-<br>
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>✨ 오늘 하루의 개운(開運) 처방</span>
-<div style='padding-left: 20px; margin-top: 5px;'>
-(내용)
-</div>
+🚨 [통변 절대 규칙]
+1. 인사말, 기술 라벨(팩트 등) 출력 일절 금지.
+2. 각 항목은 HTML <b> 태그를 사용해 핵심만 한두 문장으로 기술.
+3. 불필요한 수식어를 제거하고, 시공명리의 핵심 '사건/물상' 위주로 직관적으로 서술.
+
+[출력 포맷]
+<span style='font-size: 16px; font-weight: 900;'>▶ 오전(자시~오시):</span> {m_che_first} + {am_yong}의 결합을 바탕으로 오늘 업무와 대인관계의 핵심을 1~2문장으로 기술.
+<br><span style='font-size: 16px; font-weight: 900;'>▶ 오후(미시~야자시):</span> {m_che_second} + {pm_yong}의 결합을 바탕으로 저녁 시간의 흐름과 핵심 사건을 1~2문장으로 기술.
+<br><span style='font-size: 16px; font-weight: 900;'>✨ 오늘의 개운 조언:</span> 박사님의 일주와 오늘 파동을 고려한 실질적인 행동 지침 1문장.
 """
             # 🚨 [수술 3] 스피너 문구를 센스있게 교체!
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
