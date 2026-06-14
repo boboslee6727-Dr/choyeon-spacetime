@@ -1540,56 +1540,90 @@ if st.session_state.get('need_calc', False):
    - 미혼: '미래의 남편/인연'으로 칭할 것.
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
-# 1) 십성 그룹화 함수
-def get_group_ss(ss_name):
-    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
-    if "비" in ss_name or "겁" in ss_name: return "비겁"
-    if "식" in ss_name or "상" in ss_name: return "식상"
-    if "재" in ss_name: return "재성"
-    if "관" in ss_name: return "관성"
-    if "인" in ss_name: return "인성"
-    return "비겁"
 
-# 2) 용운(실행) 대조 매트릭스 (상위십성과 하위십성 교차)
-def get_execution_yong(upper_group, lower_group):
-    matrix = {
-        '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
-        '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
-        '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'},
-        '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'},
-        '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'}
-    }
-    return matrix.get(upper_group, {}).get(lower_group, '비겁')
+                # ==============================================================
+                # 🚨 [박사님의 핵심 수정 적용]: 간지 자체의 십성 도출 (여백 16칸 완벽 정렬)
+                # ==============================================================
+                def get_group_ss_local(ss_name):
+                    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
+                    if "비" in ss_name or "겁" in ss_name: return "비겁"
+                    if "식" in ss_name or "상" in ss_name: return "식상"
+                    if "재" in ss_name: return "재성"
+                    if "관" in ss_name: return "관성"
+                    if "인" in ss_name: return "인성"
+                    return "비겁"
 
-# 3) 박사님 원본 텍스트에서 키워드 추출
-def get_matrix_keyword(che_group, yong_group, matrix_text):
-    target_str = f"- 체({che_group})+용({yong_group}):"
-    for line in matrix_text.splitlines():
-        if line.startswith(target_str):
-            return line.split(":", 1)[1].strip()
-    return "변화 감지"
+                def get_execution_yong_local(upper_group, lower_group):
+                    matrix = {
+                        '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
+                        '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
+                        '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'},
+                        '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'},
+                        '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'}
+                    }
+                    return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
-# ==============================================================
-# 🚨 [박사님의 핵심 수정 적용]: 간지 자체의 십성 도출
-# ==============================================================
-# 하위십성 (일주: 癸亥) - 일간이 일지를 봄
-ilju_lower_group = get_group_ss(get_ss(ds, db)) 
+                def get_matrix_keyword_local(che_group, yong_group, matrix_text):
+                    target_str = f"- 체({che_group})+용({yong_group}):"
+                    for line in matrix_text.splitlines():
+                        if line.startswith(target_str):
+                            return line.split(":", 1)[1].strip()
+                    return "변화 감지"
 
-# 상위십성 (세운: 戊戌) - 세운 천간이 세운 지지를 봄! (전통적 일간 기준 폐기)
-sewun_upper_group = get_group_ss(get_ss(sewun_gan, sewun_ji)) 
+                che_yong_matrix_text = """
+- 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
+- 체(비겁)+용(식상): 업무원만, 진취력, 건강호조, 원행, 발표, 여행
+- 체(비겁)+용(재성): 손재, 소비, 이성난, 가정불화, 부친반목
+- 체(비겁)+용(관성): 설화, 관재, 가족불화, 직장문제, 공명심
+- 체(비겁)+용(인성): 의식주안정, 스카우트, 계약, 학업순성, 합격, 가정화목
+- 체(식상)+용(비겁): 사업원만, 결과만족, 명진, 의기투합, 긍정심
+- 체(식상)+용(식상): 재성발흥, 재적성취, 이성운, 가정원만, 재물입고, 환대
+- 체(식상)+용(재성): 이재순성, 사업원만, 인연, 가족화목, 건강, 횡재
+- 체(식상)+용(관성): 건강악화, 직업불안, 직주이동, 관재, 설화, 가족불화
+- 체(식상)+용(인성): 직업불안, 건강문제, 계약파기, 학문불안, 의식주 불안
+- 체(재성)+용(비겁): 일득삼재, 손재, 부부갈등, 과소비, 업무지연
+- 체(재성)+용(식상): 여행, 결과만족, 횡재수, 가정화목, 득자운
+- 체(재성)+용(재성): 관성발흥, 직업운 상승, 이성운 순성, 가정원만
+- 체(재성)+용(관성): 신분상승, 출마, 천거, 장기출장, 가정화목, 이성운
+- 체(재성)+용(인성): 매사불성, 소비지출, 가족불화, 계약파기, 손재, 흉사
+- 체(관성)+용(비겁): 업무지연, 관재, 설화, 다툼, 허언, 선민의식
+- 체(관성)+용(식상): 명예훼손, 직업이동, 질책, 가족불화, 이성난
+- 체(관성)+용(재성): 사업운 원만, 이성운 순성, 가정원만, 취업, 명예
+- 체(관성)+용(관성): 인성발흥, 승진승급, 계약성사, 자식운 원만
+- 체(관성)+용(인성): 합격, 승진, 계약, 스카우트, 의식주 안정, 당선
+- 체(인성)+용(비겁): 건강호조, 학업원만, 신분상승, 당선, 명예, 안정
+- 체(인성)+용(식상): 불안정, 계약파기, 학업불성, 구설, 육친흉사, 자식불효
+- 체(인성)+용(재성): 지출, 탈재, 파재, 사기수, 손재, 분주다망, 시성종패
+- 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
+- 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
+"""
+                
+                # 원국 및 운세 변수 추출
+                sewun_gan = curr_y_ganji[1][0] if len(curr_y_ganji[1]) > 0 else "-"
+                sewun_ji = curr_y_ganji[1][1] if len(curr_y_ganji[1]) > 1 else "-"
+                
+                # 1. 일주(하위십성) 도출 (일간이 일지를 봄)
+                ilju_lower_group = get_group_ss_local(get_ss(ds, db)) 
+                
+                # 2. 대운 연산 팩트
+                dw_che_group = get_group_ss_local(get_ss(ds, dw_g_cur)) 
+                dw_upper_group = get_group_ss_local(get_ss(dw_g_cur, dw_j_cur))
+                dw_yong = get_execution_yong_local(dw_upper_group, ilju_lower_group)
+                dw_fact_keyword = get_matrix_keyword_local(dw_che_group, dw_yong, che_yong_matrix_text)
+                dw_fact_str = f"체운(무대): {dw_che_group} / 용운(사건): {dw_yong} ➔ 도출 키워드: {dw_fact_keyword}"
 
-# 용운(사건) 도출
-sewun_yong = get_execution_yong(sewun_upper_group, ilju_lower_group)
+                # 3. 세운 연산 팩트
+                sewun_upper_group = get_group_ss_local(get_ss(sewun_gan, sewun_ji)) 
+                sewun_yong = get_execution_yong_local(sewun_upper_group, ilju_lower_group)
+                sewun_fact_keyword = get_matrix_keyword_local(dw_che_group, sewun_yong, che_yong_matrix_text)
+                sewun_fact_str = f"체운(무대): {dw_che_group} / 용운(사건): {sewun_yong} ➔ 도출 키워드: {sewun_fact_keyword}"
 
-# 체운(무대) 도출 - 대운의 경우 일간이 대운을 봄 (예: 癸가 己를 보아 관성)
-dw_che_group = get_group_ss(get_ss(ds, dw_gan)) 
-
-# 팩트 키워드 추출
-sewun_fact_keyword = get_matrix_keyword(dw_che_group, sewun_yong, che_yong_matrix_text)
-# ➔ 결과값: "업무지연, 관재, 설화, 다툼, 허언, 선민의식" 정확히 획득!
-
-# AI에게 넘겨줄 팩트 변수 완성
-sewun_fact_str = f"체운(무대): {dw_che_group} / 용운(사건): {sewun_yong} ➔ 도출 키워드: {sewun_fact_keyword}"
+                # 4. 월운 연산 팩트
+                wol_upper_group = get_group_ss_local(get_ss(cur_wol_g, cur_wol_j))
+                wol_yong = get_execution_yong_local(wol_upper_group, ilju_lower_group)
+                sewun_che_for_wolwun = get_group_ss_local(get_ss(ds, sewun_gan)) # 세운의 무대화
+                wol_fact_keyword = get_matrix_keyword_local(sewun_che_for_wolwun, wol_yong, che_yong_matrix_text)
+                wol_fact_str = f"체운(무대): {sewun_che_for_wolwun} / 용운(사건): {wol_yong} ➔ 도출 키워드: {wol_fact_keyword}"
 
                 prompt = f"""
 {db_header}
