@@ -599,20 +599,33 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     # 2. 자오묘유 월지 전용 로직
     if mb in ["子", "午", "卯", "酉"]:
         core_ss = safe_get_ss(ds, mb)
+        # 음간의 경우 자오묘유가 비견/겁재일 수 있으므로 예외 처리 (건록/월겁)
+        if core_ss in ["비견", "겁재"]:
+            return "건록(월겁)격", f"월지 {mb}가 일간 {ds}와 같은 기운이므로 건록(월겁)격으로 삼습니다."
         return core_ss + "격", f"월지 {mb}의 순수한 기운인 {core_ss}을 그대로 격으로 삼습니다."
     
-    # 3. 투간 우선의 원칙 (전통 정격 판별)
+    # 3. 투간 우선의 원칙 (정통 8정격 판별 - 비견/겁재 배제)
     target_gans = [ys, ms, hs] 
     main_qi = jg[-1]
     
-    if main_qi in target_gans:
+    # 🚨 [추가된 핵심 로직] 십성이 비견이나 겁재면 격으로 인정하지 않는 필터
+    def is_valid_gyuk(char):
+        return safe_get_ss(ds, char) not in ["비견", "겁재"]
+    
+    # 정기, 중기, 여기가 투출했으면서 동시에 비견/겁재가 아닐 때만 격으로 인정!
+    if main_qi in target_gans and is_valid_gyuk(main_qi):
         return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {safe_get_ss(ds, main_qi)}격이 되었습니다."
-    if len(jg) >= 2 and jg[1] in target_gans:
+    if len(jg) >= 2 and jg[1] in target_gans and is_valid_gyuk(jg[1]):
         return safe_get_ss(ds, jg[1]) + "격", f"월지 {mb}의 중기인 {jg[1]}이 천간에 투출하여 {safe_get_ss(ds, jg[1])}격이 되었습니다."
-    if len(jg) >= 1 and jg[0] in target_gans:
+    if len(jg) >= 1 and jg[0] in target_gans and is_valid_gyuk(jg[0]):
         return safe_get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {safe_get_ss(ds, jg[0])}격이 되었습니다."
         
-    return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 지장간이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {safe_get_ss(ds, main_qi)}격으로 정합니다."
+    # 투출된 유효한 십성이 없으면 정기(본기)를 격으로 삼음
+    fallback_ss = safe_get_ss(ds, main_qi)
+    if fallback_ss in ["비견", "겁재"]:
+        return "건록(월겁)격", f"월지 {mb}의 본기가 {fallback_ss}이므로 건록(월겁)격으로 정합니다."
+    
+    return fallback_ss + "격", f"월지 {mb}의 지장간(비겁 제외)이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {fallback_ss}격으로 정합니다."
 
 def calculate_gongmang(ilgan, ilji):
     if ilgan in ["?"," ","-"] or ilji in ["?"," ","-"]: return "-"
