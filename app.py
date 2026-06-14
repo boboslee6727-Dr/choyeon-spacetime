@@ -378,11 +378,12 @@ def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
                 time.sleep(1); continue
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
-def call_claude_api(prompt_text, max_tokens=8000):
+# 🚨 [임집사 핀셋 수술]: 껍데기 이름만 call_gemini_api로 개명 (내부는 박사님 원본 그대로 유지)
+def call_gemini_api(prompt_text, max_tokens=8000):
     return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5-flash로 변경 필수
 
 def call_light_api(prompt_text):
-    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5-flash로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-1.5-flash')  # 🚨 1.5-flash로 변경 필수
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
@@ -1874,7 +1875,7 @@ if st.session_state.get('need_calc', False):
 </div>
 """
                 try:
-                    ai_text = call_claude_api(prompt)
+                    ai_text = call_gemini_api(prompt)
                     ai_text = "\n".join([line.lstrip() for line in ai_text.split("\n")])
                     
                     # 🚨 [AI 오지랖 완벽 절단 수술] 
@@ -2203,7 +2204,7 @@ if st.session_state.get('need_calc', False):
 (이곳에 갈등 극복 및 개운 처방을 담은 실제 에세이 작성)
 [GUNGHAP_END]
 """
-                    res_text = call_claude_api(essay_prompt, max_tokens=12000)
+                    res_text = call_gemini_api(essay_prompt, max_tokens=12000)
                     ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
                     # 3-7. 마커 파싱 시스템
@@ -2558,7 +2559,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-            ai_delivery_html = call_claude_api(delivery_prompt).replace('\n', '<br>')
+            ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '<br>')
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
             # 🚨 [수술] 보라색(#4A148C) 맑은 고딕 32px 이중선 양식
@@ -2642,7 +2643,7 @@ if st.session_state.get('app_running', False):
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-                    ai_delivery_html = call_claude_api(delivery_prompt).replace('\n', '<br>')
+                    ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '<br>')
                     del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
                     # 🚨 [수술] 보라색(#4A148C) 유지하되, 맑은 고딕 32px & 이중선 양식 강제 통일
