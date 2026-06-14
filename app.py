@@ -2403,7 +2403,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
             gan_res = []
 
-           labels_gan = ["년간", "월간", "일간", "시간"]
+            labels_gan = ["년간", "월간", "일간", "시간"]
             for idx, label in enumerate(labels_gan):
                 rel = get_gan_rel_simple(gans_list[idx], target_il_gan)
                 if rel != "-":
