@@ -357,7 +357,7 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 및 명리 연산 엔진
+# 2. AI 및 명리 연산 엔진 (엔진 강제 업그레이드 수술)
 # ==============================================================================
 try:
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -367,8 +367,13 @@ except Exception as _api_e:
 
 @st.cache_data(show_spinner=False, ttl=3600*24)
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
+    # 강제 안전 장치: 모델 이름이 1.5로 들어와도 2.5로 강제 교체
+    if '1.5' in model_name:
+        model_name = 'gemini-2.5-flash'
+        
     if _gemini_client is None:
-        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
+        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+    
     max_retries = 2
     for attempt in range(max_retries + 1):
         try:
@@ -379,12 +384,12 @@ def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
                 time.sleep(1); continue
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
-# 🚨 [임집사 핀셋 수술]: 껍데기 이름만 call_gemini_api로 개명 (내부는 박사님 원본 그대로 유지)
+# 모든 API 호출을 2.5-flash로 통일합니다.
 def call_gemini_api(prompt_text, max_tokens=8000):
-    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')  # 🚨 2.5-flash로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')
 
 def call_light_api(prompt_text):
-    return get_ai_response(prompt_text, model_name='gemini-1.5-flash')  # 🚨 1.5-flash로 변경 필수
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash') # 1.5를 절대 허용하지 않습니다.
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
