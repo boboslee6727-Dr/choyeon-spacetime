@@ -2420,6 +2420,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                     main_rel = rel_full.split(',')[0].strip()
                     r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il_ji}{main_rel}하여 변화 감지 )</span>")
 
+            gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
             r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
             def get_wunseong_simple(gan, ji):
@@ -2504,7 +2505,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 f"<div class='vip-inset-frame' style='border: 3px solid #1A237E;'>\n"
                 f"<h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>\n"
                 f"<div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>\n"
-                f"대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il}일)\n"
+                f"대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il_gan}{target_il_ji}일)\n"
                 f"</div>\n"
                 f"<div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6;'>\n"
                 f"{gan_res_html}<br>{r_res_html}\n"
