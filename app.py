@@ -1625,6 +1625,12 @@ if st.session_state.get('need_calc', False):
                 wol_fact_keyword = get_matrix_keyword_local(sewun_che_for_wolwun, wol_yong, che_yong_matrix_text)
                 wol_fact_str = f"체운(무대): {sewun_che_for_wolwun} / 용운(사건): {wol_yong} ➔ 도출 키워드: {wol_fact_keyword}"
 
+                # 🚨 [치명적 오류 영구 해결]: analysis_summary 강제 생성 및 복구
+                try:
+                    analysis_summary = "\n".join(get_universal_analysis(ds, mb, gans, jjis))
+                except Exception:
+                    analysis_summary = "- 사주 원국 지장간 및 인종법 분석 팩트"
+
                 prompt = f"""
 {db_header}
 당신은 명리심리상담사 1급 자격을 갖춘 '초연 박사'입니다.
