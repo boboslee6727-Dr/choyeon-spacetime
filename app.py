@@ -2461,8 +2461,8 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 
                 return ", ".join(res_shinsal) if res_shinsal else "특이 흉살/귀인 없음"
 
-            day_wunseong = get_wunseong_simple(m_ilgan, target_il[1])
-            day_shinsal = get_core_shinsal_simple(m_ilgan, target_il[0], target_il[1])
+            day_wunseong = get_wunseong_simple(m_ilgan, target_il_ji)
+            day_shinsal = get_core_shinsal_simple(m_ilgan, target_il_gan, target_il_ji)
             s_res_html = f"✨ <b>오늘의 핵심 에너지:</b> 십이운성[{day_wunseong}] / 특수기운[{day_shinsal}]"
 
             iljin_prompt = f"""
