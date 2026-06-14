@@ -15,7 +15,7 @@ import streamlit.components.v1 as components
 import re
 
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 47.2 (AI Optimized)"
+APP_VERSION = "Ver 47.3 (AI Optimized)"
 
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
 
@@ -621,41 +621,35 @@ def calculate_gongmang(ilgan, ilji):
         return list(JI)[base] + "," + list(JI)[(base+1)%12]
     except: return "-"
 
-def get_universal_analysis(ds, mb, gans, jjis):
+def get_universal_analysis(ds, mb, db, gans, jjis)
     """
     ds: 일간(Day Stem), mb: 월지(Month Branch)
     gans: [연간, 월간, 일간, 시간], jjis: [연지, 월지, 일지, 시지]
     """
-    # 1. 지장간 추출
-    jg_list = JIJANGGAN.get(mb, []) # 해당 월지의 지장간
+# 1. 지장간 추출 (월지 기준)
+    jg_list = JIJANGGAN.get(mb, [])
     
-    # 2. 십성 & 운성 연산 함수 호출
-    def get_info(gan, target_char):
-        ss = get_ss(gan, target_char) # 십성 반환 (일간 기준)
-        
-        # 🚨 [수정 완료] 함수명 get_unsung 복구 및 논리 변수(target_char) 교체
-        # 일간이 아닌 '해당 글자(지장간/없는기운)'가 월지(mb)에 앉은 12운성을 구함
-        twelve = get_unsung(target_char, mb) 
+# 2. 십성 & 운성 연산 내부 함수
+    def get_info(gan, target_char, base_ji):
+        ss = get_ss(gan, target_char) 
+        twelve = get_unsung(target_char, base_ji) 
         return ss, twelve
-
+        
     # 3. 드러난 지장간 (좌법 풀이)
     results = []
     for qi in jg_list:
         ss, twelve = get_info(ds, qi)
         results.append(f"{qi}({ss}): {twelve}좌")
         
-    # 4. 드러나지 않은 기운 (인종법 풀이)
-    # 원국 8글자 천간(gans)과 지지(jjis)의 지장간에 있는 모든 기운 모으기
+# 4. 드러나지 않은 기운 (인종법 풀이) - 🚨 일지(db) 기준!
     all_present = list(gans)
     for j in jjis:
         if j not in ["?", " ", "-"]:
-            all_present.extend(JIJANGGAN.get(j, [])) # 박사님의 JIJANGGAN 딕셔너리 활용
+            all_present.extend(JIJANGGAN.get(j, [])) 
             
-    # 원국(천간+지장간)에 아예 없는 글자만 핀셋 추출
     missing = [elem for elem in ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'] if elem not in all_present]
-    
     for m in missing:
-        ss, twelve = get_info(ds, m)
+        ss, twelve = get_info(ds, m, db) # 🚨 mb가 아니라 db(일지)에 앉힙니다!
         results.append(f"{m}({ss}): 인종법 적용 - {twelve}종")
     return results
 
@@ -1625,9 +1619,10 @@ if st.session_state.get('need_calc', False):
                 wol_fact_keyword = get_matrix_keyword_local(sewun_che_for_wolwun, wol_yong, che_yong_matrix_text)
                 wol_fact_str = f"체운(무대): {sewun_che_for_wolwun} / 용운(사건): {wol_yong} ➔ 도출 키워드: {wol_fact_keyword}"
 
-                # 🚨 [치명적 오류 영구 해결]: analysis_summary 강제 생성 및 복구
+# 🚨 [치명적 오류 영구 해결]: analysis_summary 강제 생성 및 복구
                 try:
-                    analysis_summary = "\n".join(get_universal_analysis(ds, mb, gans, jjis))
+                    # 🚨 기존 인자 (ds, mb, gans, jjis) 사이에 일지(db)를 추가합니다.
+                    analysis_summary = "\n".join(get_universal_analysis(ds, mb, db, gans, jjis))
                 except Exception:
                     analysis_summary = "- 사주 원국 지장간 및 인종법 분석 팩트"
 
