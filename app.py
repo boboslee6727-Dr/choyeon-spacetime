@@ -2387,36 +2387,38 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             
             target_year = parts[0][:2]
             target_wol = parts[1][:2]
-            target_il = parts[2][:2]
+            target_il_gan = parts[2][0] # 🚨 [수정 후] 오늘 일진의 천간
+            target_il_ji = parts[2][1]  # 🚨 [수정 후] 오늘 일진의 지지
             
             ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
             
             m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
-            d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il[0]))      
+            d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il_gan))  # 🚨 완벽 복구
             am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
             
             m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-            d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il[1]))        
+            d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il_ji))    # 🚨 완벽 복구
             pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
 
             gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
             gan_res = []
-            labels_gan = ["년간", "월간", "일간", "시간"]
+
+           labels_gan = ["년간", "월간", "일간", "시간"]
             for idx, label in enumerate(labels_gan):
-                rel = get_gan_rel_simple(gans_list[idx], target_il[0])
+                rel = get_gan_rel_simple(gans_list[idx], target_il_gan)
                 if rel != "-":
-                    gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il[0]}{rel}하여 {gan_desc.get(rel)} )</span>")
-            gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
+                    # 이제 target_il_gan을 사용하여 깔끔하게 통변 메시지를 생성합니다.
+                    gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il_gan}{rel}하여 {gan_desc.get(rel, '영향 발생')} )</span>")
 
             ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
             r_res = []
+
             labels_ji = ["년지", "월지", "일지", "시지"]
-            
             for idx, label in enumerate(labels_ji):
-                rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il[1])
+                rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il_ji) # 🚨 [수정 후] 확실한 지지 매칭
                 if rel_full != "-":
                     main_rel = rel_full.split(',')[0].strip()
-                    r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il[1]}{main_rel}하여 {ji_desc.get(main_rel, '변화 감지')} )</span>")
+                    r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il_ji}{main_rel}하여 변화 감지 )</span>")
 
             r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
