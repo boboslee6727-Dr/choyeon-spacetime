@@ -1540,35 +1540,56 @@ if st.session_state.get('need_calc', False):
    - 미혼: '미래의 남편/인연'으로 칭할 것.
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
-                che_yong_matrix_text = """
-[초연 시공명리 체/용(體/用) 운세 분석 키워드 매트릭스]
-- 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
-- 체(비겁)+용(식상): 업무원만, 진취력, 건강호조, 원행, 발표, 여행
-- 체(비겁)+용(재성): 손재, 소비, 이성난, 가정불화, 부친반목
-- 체(비겁)+용(관성): 설화, 관재, 가족불화, 직장문제, 공명심
-- 체(비겁)+용(인성): 의식주안정, 스카우트, 계약, 학업순성, 합격, 가정화목
-- 체(식상)+용(비겁): 사업원만, 결과만족, 명진, 의기투합, 긍정심
-- 체(식상)+용(식상): 재성발흥, 재적성취, 이성운, 가정원만, 재물입고, 환대
-- 체(식상)+용(재성): 이재순성, 사업원만, 인연, 가족화목, 건강, 횡재
-- 체(식상)+용(관성): 건강악화, 직업불안, 직주이동, 관재, 설화, 가족불화
-- 체(식상)+용(인성): 직업불안, 건강문제, 계약파기, 학문불안, 의식주 불안
-- 체(재성)+용(비겁): 일득삼재, 손재, 부부갈등, 과소비, 업무지연
-- 체(재성)+용(식상): 여행, 결과만족, 횡재수, 가정화목, 득자운
-- 체(재성)+용(재성): 관성발흥, 직업운 상승, 이성운 순성, 가정원만
-- 체(재성)+용(관성): 신분상승, 출마, 천거, 장기출장, 가정화목, 이성운
-- 체(재성)+용(인성): 매사불성, 소비지출, 가족불화, 계약파기, 손재, 흉사
-- 체(관성)+용(비겁): 업무지연, 관재, 설화, 다툼, 허언, 선민의식
-- 체(관성)+용(식상): 명예훼손, 직업이동, 질책, 가족불화, 이성난
-- 체(관성)+용(재성): 사업운 원만, 이성운 순성, 가정원만, 취업, 명예
-- 체(관성)+용(인성): 인성발흥, 승진승급, 계약성사, 자식운 원만
-- 체(인성)+용(비겁): 건강호조, 학업원만, 신분상승, 당선, 명예, 안정
-- 체(인성)+용(식상): 불안정, 계약파기, 학업불성, 구설, 육친흉사, 자식불효
-- 체(인성)+용(재성): 지출, 탈재, 파재, 사기수, 손재, 분주다망, 시성종패
-- 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
-- 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
-"""
-                analysis_data = get_universal_analysis(ds, mb, gans, jjis) 
-                analysis_summary = "\n".join(analysis_data)
+# 1) 십성 그룹화 함수
+def get_group_ss(ss_name):
+    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
+    if "비" in ss_name or "겁" in ss_name: return "비겁"
+    if "식" in ss_name or "상" in ss_name: return "식상"
+    if "재" in ss_name: return "재성"
+    if "관" in ss_name: return "관성"
+    if "인" in ss_name: return "인성"
+    return "비겁"
+
+# 2) 용운(실행) 대조 매트릭스 (상위십성과 하위십성 교차)
+def get_execution_yong(upper_group, lower_group):
+    matrix = {
+        '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
+        '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
+        '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'},
+        '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'},
+        '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'}
+    }
+    return matrix.get(upper_group, {}).get(lower_group, '비겁')
+
+# 3) 박사님 원본 텍스트에서 키워드 추출
+def get_matrix_keyword(che_group, yong_group, matrix_text):
+    target_str = f"- 체({che_group})+용({yong_group}):"
+    for line in matrix_text.splitlines():
+        if line.startswith(target_str):
+            return line.split(":", 1)[1].strip()
+    return "변화 감지"
+
+# ==============================================================
+# 🚨 [박사님의 핵심 수정 적용]: 간지 자체의 십성 도출
+# ==============================================================
+# 하위십성 (일주: 癸亥) - 일간이 일지를 봄
+ilju_lower_group = get_group_ss(get_ss(ds, db)) 
+
+# 상위십성 (세운: 戊戌) - 세운 천간이 세운 지지를 봄! (전통적 일간 기준 폐기)
+sewun_upper_group = get_group_ss(get_ss(sewun_gan, sewun_ji)) 
+
+# 용운(사건) 도출
+sewun_yong = get_execution_yong(sewun_upper_group, ilju_lower_group)
+
+# 체운(무대) 도출 - 대운의 경우 일간이 대운을 봄 (예: 癸가 己를 보아 관성)
+dw_che_group = get_group_ss(get_ss(ds, dw_gan)) 
+
+# 팩트 키워드 추출
+sewun_fact_keyword = get_matrix_keyword(dw_che_group, sewun_yong, che_yong_matrix_text)
+# ➔ 결과값: "업무지연, 관재, 설화, 다툼, 허언, 선민의식" 정확히 획득!
+
+# AI에게 넘겨줄 팩트 변수 완성
+sewun_fact_str = f"체운(무대): {dw_che_group} / 용운(사건): {sewun_yong} ➔ 도출 키워드: {sewun_fact_keyword}"
 
                 prompt = f"""
 {db_header}
@@ -1603,7 +1624,7 @@ if st.session_state.get('need_calc', False):
 🚨 [초연 시공명리 정석 통변 알고리즘 : 강제 수행 지침]
 당신은 사주 원국 8글자(년월일시 간지) 전체를 완벽히 조망하며, 반드시 아래의 '정석(正石)' 알고리즘 순서대로만 통변을 전개해야 합니다. "정보가 없다"는 핑계는 절대 허용되지 않습니다.
 1. [7궁위 입체 분석]: 일간을 절대 기준으로 삼아, 나머지 7궁위에 배치된 '십성'과 '12운성'을 접목하십시오. 내담자의 삶을 1) 육친적, 2) 심리적, 3) 사회적 관점에서 입체적으로 풀이하십시오.
-2. [신살의 가미]: 위 7궁위 분석 시, 시스템이 제공한 '12신살'과 '일반신살'의 역동성을 양념처럼 가미하여 구체적인 물상과 굴곡을 통변하십시오. (특히 3~10번 육친/사회적 목차 서술 시 적극 활용할 것)
+2. [신살의 가미]: 위 7궁위 분석 시, 시스템이 제공한 '12신살'과 '일반신살'의 역동성을 양념처럼 가미하여 구체적인 물상과 굴곡을 통변하십시오. (특히 3~10번 육친/사회적 목차 서술 시 적극 활용할 가치)
 3. [공망의 3차원 통변]: 사주 내 '공망(空亡)'이 있다면, 그 결핍과 채우려는 욕망을 1) 육친적, 2) 심리적, 3) 사회적 관점으로 나누어 심도 있게 통변하십시오.
 
 🚨 [데이터 무결성 및 환각 방지 절대 규칙]
@@ -1697,29 +1718,16 @@ if st.session_state.get('need_calc', False):
 (※ 🚨AI 전술 지시: 오행의 과다/과소 및 조후 불균형을 분석하여 취약한 신체 질환을 명리적 물상으로 경고하고, 현실적인 에너지 관리법을 제시하십시오.)
 </div>
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
-<div class='content-box-loose'>
-
-[※ 🚨운세풀이 방법]
-1) 전통 명리 풀이: 합충형해파 동착(同着), 사고(四庫) 입고/개고 타격을 정밀 분석하여 진대패(眞大敗) 타이밍을 경고하십시오.
-2) 시공 명리 풀이: 🚨AI 절대 지시: 이하 모든 운세는 반드시 아래의 [체용 하향 전이 공식]에 따라 [체/용 운세 분석 키워드 매트릭스]의 키워드를 도출하십시오.
-   - 📌 대운 분석: 체운(무대) = 대운
-   - 📌 세운 분석: 체운(무대) = 대운 / 용운(사건) = 세운 상위십성 + 일주 하위십성 대조 결과
-   - 📌 월운 분석: 체운(무대) = 세운 / 용운(사건) = 월운 상위십성 + 일주 하위십성 대조 결과
-
-[초연 시공명리 체/용(體/用) 운세 분석 키워드 매트릭스]
-{che_yong_matrix_text}
-
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
-(※ 🚨AI 절대 지시: 마크다운 표 생성 금지. 원문만 100% 남기고 즉시 다음으로 넘어가십시오.)
+(※ 🚨AI 절대 지시: 위의 마커 '[DAEWUN_TABLE_HERE]'를 절대 지우거나 생략하지 말고, 반드시 텍스트 그대로 100% 똑같이 출력하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
 [지나온 과거 각 대운 출력 템플릿]
 • <b>OO세~OO세 (OO대운):</b> 
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (핵심 요약)</div>
+    <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (핵심 요약)</div>
     <div><b>2) 시공 명리 풀이: </b> (※ 대운을 체운으로 삼아 매트릭스 키워드 기반 간략 요약)</div>
 </div>
 
@@ -1737,32 +1745,35 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
-(※ 🚨AI 절대 지시: 마크다운 표 생성 금지. 원문만 100% 남기십시오.)
+(※ 🚨AI 절대 지시: 위의 마커 '[SEWUN_TABLE_HERE]'를 절대 지우거나 생략하지 말고, 반드시 텍스트 그대로 100% 똑같이 출력하십시오.)
+
+<b>[파이썬 연산 운세 팩트]</b>
+- 올해 세운 팩트: {sewun_fact_str}
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
 [지나온 과거 각 세운 출력 템플릿]
 • <b>OOOO년(OO년):</b> 
-<div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (핵심 요약)</div>
+<div style='padding-left: 20px; margin-top: 0px;'>
+    <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (핵심 요약)</div>
     <div><b>2) 시공 명리 풀이:</b> (※ 🚨체운=대운, 용운=세운 적용하여 간략 요약)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석 ({sewun_first_half_date})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (※ 🚨체운=대운, 용운=세운 적용하여 상세 통변)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 🚨 위 '세운 팩트'의 '도출 키워드'를 기반으로 상세 통변)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석 ({sewun_second_half_date})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 작성)</div>
-    <div><b>2) 시공 명리 풀이:</b> (※ 🚨체운=대운, 용운=세운 적용하여 상세 통변)</div>
+    <div><b>2) 시공 명리 풀이:</b> (※ 🚨 위 '세운 팩트'의 '도출 키워드'를 기반으로 상세 통변)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
-(※ 🚨AI 절대 지시: 마크다운 표 생성 금지. 원문만 100% 남기십시오.)
+(※ 🚨AI 절대 지시: 위의 마커 '[WOLWUN_TABLE_HERE]'를 절대 지우거나 생략하지 말고, 반드시 텍스트 그대로 100% 똑같이 출력하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
