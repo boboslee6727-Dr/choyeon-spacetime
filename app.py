@@ -2486,7 +2486,8 @@ if st.session_state.get('app_running', False):
         st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
         # 3-2. 출산택일 연산 및 출력 (사이드바에서 택일 선택 시에만)
-        if run_delivery_calc and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
+        # 🚨 [수술 1] 체크박스 상태가 아닌, 가동 버튼이 눌려 'run_delivery_only' 스위치가 켜졌을 때만 진입!
+        if st.session_state.get('run_delivery_only', False) and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
             with st.spinner("⏳ 모래시계와 함께 출산택일 분석 중..."):
                 try:
                     gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
@@ -2508,18 +2509,20 @@ if st.session_state.get('app_running', False):
                                '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
                     def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
                     
-                    # 박사님 지시대로 부모 명조 강제 고정 맵핑 완료
-                    m_saju_kor = "계유년 경신월 무인일 임자시"
-                    f_saju_kor = "을해년 무인월 정묘일 경술시"
+                    m_saju_hanja = f"{m_gans_str[3]}{m_jjis[3]}년 {m_gans_str[2]}{m_jjis[2]}월 {m_gans_str[1]}{m_jjis[1]}일 {m_gans_str[0]}{m_jjis[0]}시"
+                    f_saju_hanja = f"{f_gans_str[3]}{f_jjis[3]}년 {f_gans_str[2]}{f_jjis[2]}월 {f_gans_str[1]}{f_jjis[1]}일 {f_gans_str[0]}{f_jjis[0]}시"
+                    m_saju_kor = h2k(m_saju_hanja)
+                    f_saju_kor = h2k(f_saju_hanja)
+                    m_ilgan_kor = h2k(m_gans_str[1])
+                    f_ilgan_kor = h2k(f_gans_str[1])
 
+                    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+                    delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
+                    
                     del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
                     del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>👶 새 생명 마중 길일(출산 택일) 추천</h2>\n"
                     del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>부모님의 사주와 조화를 이루는 합궁 길일입니다.</p>\n"
                     
-                    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-                    delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
-                    
-                    # 🚨 [수술 1] 합궁 길일 범위 분리 병합 및 순위별 실제 배정 날짜 매칭
                     ai_target_days_facts = []
                     del_content += f"<div style='display:flex; flex-direction:column; align-items:center; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:10px;'>\n"
                     if delivery_days:
@@ -2528,12 +2531,10 @@ if st.session_state.get('app_running', False):
                         score = delivery_days[0]['score']
                         del_content += f"<div style='font-size:16px; font-weight:bold; margin-bottom:10px;'>✅ 합궁 추천 기간: {f_d.year}년 {f_d.month}월 {f_d.day}일 ~ {l_d.day}일 (합 점수: {score})</div>\n"
                         
-                        # 3가지 최적의 출산 희망일 실제 데이터 빌드 (280일 후 계산)
                         for i in range(min(3, len(delivery_days))):
                             d_obj = dt_mod.datetime.strptime(delivery_days[i]['date'], '%Y-%m-%d')
                             birth_d = d_obj + dt_mod.timedelta(days=280)
                             
-                            # 해당 출산일의 정밀 사주 역산 가동
                             b_ym, b_mm, _ = get_true_year_month_pillar(birth_d.year, birth_d.month, birth_d.day, 10, 30)
                             b_klc = KoreanLunarCalendar()
                             b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
@@ -2549,22 +2550,18 @@ if st.session_state.get('app_running', False):
                             del_content += f"<div style='font-size:15px; font-weight:bold; color:#4A148C;'>{fact_line}</div>\n"
                     del_content += "</div>\n"
                     
-                    # 🚨 [수술 2] 가이드라인 폰트 크기 동기화 및 15px 들여쓰기 강제 고정
                     del_content += f"<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:15px;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>아래의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, 합궁 시기는 출산 예정일로부터 약 9개월 10일 전후가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
                     
-                    # 🚨 [수술 3] 박사님 고품격 오리지널 도입부 완전 하드코딩 (쓰레기 단어 완전 소거)
                     intro_essay = f"""<div style='margin-top:10px;'>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 무(戊)토 일간으로 강한 금수(金水)의 기운이 특징적입니다. 총명하고 재물 운이 좋으며 실리적인 면모가 돋보이나, 다소 한습한 기운이 강하여 따뜻한 화(火) 기운의 보충이 절실합니다. 이는 정신적 안정과 인성의 조화를 의미합니다. 상대방 여성분({f_saju_kor})께서는 정(丁)화 일간으로, 목화(木火)의 따뜻하고 밝은 기운이 충만하며 지혜롭고 활발한 에너지를 지니셨습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 특히 남성분의 한습한 기운을 보완하고, 부부 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 따뜻한 화(火) 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor}토 일간으로 강한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor}화 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
 </div>"""
                     del_content += intro_essay
 
-                    # AI가 분석해야 할 팩트 문자열 전달 (이로 인해 캐시 무조건 미스 유도)
                     ai_days_input_str = "\n".join(ai_target_days_facts)
 
-                    # 🚨 [수술 4] 마크다운 구분선 컷, 문단 여백 초간결 헌법 주입
                     delivery_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다. 파이썬 시스템이 부모 사주를 교차 분석하여 도출해 낸 아래 [지정된 3가지 추천 일자]에 대해 정밀 통변 에세이를 작성하십시오.
 
@@ -2589,7 +2586,6 @@ if st.session_state.get('app_running', False):
 """
                     ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '')
                     
-                    # 🚨 [수술 5] 품격 있는 오리지널 클로징 및 서명 고정 배치
                     closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>어떤 날을 선택하시든, 그 선택은 아기에게 최고의 축복이 될 것입니다. 아기의 탄생으로 가정이 더욱 행복하고 번창하시기를 간절히 축원합니다.</p>
@@ -2604,9 +2600,13 @@ if st.session_state.get('app_running', False):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
 
                     st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C")
+                    
+                    # 🚨 [수술 2] 연산이 무사히 끝났으므로 가동 허가증을 파기(False)하여 성급한 재실행을 막습니다.
+                    st.session_state['run_delivery_only'] = False
                     st.rerun() 
                 except Exception as e:
                     st.error(f"출산택일 연산 장애: {e}")
+                    st.session_state['run_delivery_only'] = False
 
         # 3-3. 생성된 택일 리포트 결합 출력
         if st.session_state.get('saved_report_del'):
