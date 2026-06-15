@@ -2237,21 +2237,6 @@ if st.session_state.get('need_calc', False):
                 except Exception as e:
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
 
-                # ------------------------------------------------------------------
-                # [궁합 모드 전용] 타 감명서 1:1 비교 입력창 삽입
-                # ------------------------------------------------------------------
-                st.markdown("---")
-                st.subheader("⚖️ 타 감명서와 궁합 비교 분석")
-                other_reading_text = st.text_area("비교할 타 감명서 원문을 붙여넣으십시오.", height=150, key="gh_comp_input")
-                
-                if st.button("🚀 궁합 타 감명서 비교 가동"):
-                    if other_reading_text.strip():
-                        st.session_state['run_comp_mode'] = True
-                        st.session_state['other_reading_text'] = other_reading_text
-                        st.rerun() 
-                    else:
-                        st.warning("⚠️ 타 감명서 원문을 입력해 주십시오.")
-
             # 🚨 연산 종료 (스위치 끄기)
             st.session_state['need_calc'] = False
 
@@ -2466,16 +2451,20 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 # ==============================================================================
 if st.session_state.get('app_running', False):
     
+    # 1. 개인사주 출력
     if u_product == "개인사주":
         st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
         if st.session_state.get('saved_report_iljin'):
             st.markdown(st.session_state.get('saved_report_iljin', ''), unsafe_allow_html=True)
     
+    # 2. 타 감명서 출력
     if u_product == "타 감명서":
         st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
         
+    # 3. 궁합 출력
     if u_product == "궁합":
+        # 3-1. 궁합 리포트 메인 출력
         if st.session_state.get('saved_report_gh_cover'):
             st.markdown(st.session_state.get('saved_report_gh_cover', ''), unsafe_allow_html=True)
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
@@ -2486,6 +2475,7 @@ if st.session_state.get('app_running', False):
         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
+        # 3-2. 출산택일 연산 및 출력 (사이드바에서 택일 선택 시에만)
         if run_delivery_calc and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
             with st.spinner("⏳ 출산 택일 확정 중...."):
                 try:
@@ -2538,31 +2528,7 @@ if st.session_state.get('app_running', False):
                 except Exception as e:
                     st.error(f"출산택일 연산 장애: {e}")
 
+        # 3-3. 생성된 택일 리포트 결합 출력
         if st.session_state.get('saved_report_del'):
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
             st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
-
-        if st.session_state.get('run_comp_mode') and not st.session_state.get('saved_report_gh_comp'):
-            with st.spinner("⏳ 초연 수석 분석관이 타 감명서와 1:1 대조 중입니다..."):
-                try:
-                    comp_prompt = f"""
-    당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
-    아래 [데이터]를 바탕으로 [초연 궁합 분석]과 [타 감명서]를 1:1 대조 분석하십시오.
-
-    🚨 [디자인 및 서식 절대 규칙]
-    1. 첫 출력은 반드시 <h3 style=...> 태그로 시작할 것.
-    2. 모든 본문 단락은 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감쌀 것.
-    3. 반드시 마지막에 <h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>13. 총평 및 향후 개선점</h3>을 작성할 것.
-
-    [데이터]
-    - [1. 초연 궁합 분석]: {g_full_content}
-    - [2. 타 감명서]: {st.session_state.get('other_reading_text')}
-    """
-                    c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
-                    st.session_state['saved_report_gh_comp'] = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 궁합 1:1 상세비교 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"궁합 비교 분석 중 오류: {e}")
-
-        if st.session_state.get('saved_report_gh_comp'):
-            st.markdown(st.session_state.get('saved_report_gh_comp', ''), unsafe_allow_html=True)
