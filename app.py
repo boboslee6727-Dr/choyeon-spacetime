@@ -926,6 +926,12 @@ with st.sidebar:
     u_d = col3.number_input("일", 1, 31, value=1, key="s_d")
     u_t = st.selectbox("태어난 시간", idx_list, key="s_t")
     
+    # 🚨 [수술 완료] 어떤 조건에서도 에러가 나지 않도록 스위치 기본값 강제 선언!
+    run_iljin_calc = False
+    run_delivery_calc = False
+    start_date = None
+    end_date = None
+    
     # 2. 상품별 동적 UI
     if u_product == "개인사주":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
