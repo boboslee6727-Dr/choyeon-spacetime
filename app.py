@@ -2875,7 +2875,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     # 화면 표출 텍스트
                     display_month = f"▶ {i+1}순위 출산 추천 월(月): {birth_d.year}년 {birth_d.month:02d}월 <span style='font-size:16px; color:#4A148C;'>({ym_hanja})</span>"
                     display_day_time = f"&nbsp;&nbsp;&nbsp;↳ 🏥 해당 월의 최적 출산 택일: {birth_d.day:02d}일 ({opt_time_str})"
-                    display_conception = f"&nbsp;&nbsp;&nbsp;↳ ❤️ 해당 출산을 위한 합궁 길일: {d_obj.year}년 {d_obj.month:02d}월 {d_obj.day:02d}일 (저녁~밤 시간대)"
+
+                    # 🚨 중심 길일로부터 전후 2일을 포함한 가임 기간(5일) 계산
+                    start_conception = d_obj - dt_mod.timedelta(days=2)
+                    end_conception = d_obj + dt_mod.timedelta(days=2)
+                    date_range_str = f"{start_conception.month}월 {start_conception.day}일 ~ {end_conception.month}월 {end_conception.day}일"
+                    
+                    # 텍스트 포맷 변경: 단일 길일 -> 가임 기간 범위
+                    display_conception = f"&nbsp;&nbsp;&nbsp;↳ ❤️ 해당 출산을 위한 합궁 가임 기간: {date_range_str} (최적일: {d_obj.month}월 {d_obj.day}일)"
                     
                     del_content += f"<div style='font-size:18px; font-weight:900; color:#111; margin-top: 15px; border-bottom:1px solid #ddd; padding-bottom:5px;'>{display_month}</div>\n"
                     del_content += f"<div style='font-size:15px; font-weight:bold; color:#0D47A1; margin-top: 8px;'>{display_day_time} <span style='color:#D81B60;'>[종합: {total_score}점 / 100점 만점]</span></div>\n"
