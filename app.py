@@ -367,7 +367,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=3600*24) #ttl=3600*24초=86,400초 24시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=60*24) #ttl=3600*24초=86,400초 24시간 감명서 유효
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
@@ -710,20 +710,24 @@ def get_daeun_su_accurate(utc_dt, order):
     except Exception as e: 
         return 1
 
-def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
+def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list=None):
     import datetime as dt_mod
     from korean_lunar_calendar import KoreanLunarCalendar
     
-    # 1. 명리학 오행 매핑 데이터 사전
+    # [설정 1] 오행 매핑
     OHENG_MAP = {
-        '갑': '목', '을': '목', '인': '목', '묘': '목',
-        '병': '화', '정': '화', '사': '화', '오': '화',
-        '무': '토', '기': '토', '축': '토', '진': '토', '미': '토', '술': '토',
-        '경': '금', '신': '금', '유': '금',
-        '임': '수', '계': '수', '자': '수', '해': '수'
+        '갑':'목', '을':'목', '인':'목', '묘':'목',
+        '병':'화', '정':'화', '사':'화', '오':'화',
+        '무':'토', '기':'토', '축':'토', '진':'토', '미':'토', '술':'토',
+        '경':'금', '신':'금', '유':'금',
+        '임':'수', '계':'수', '자':'수', '해':'수'
     }
     
-    # 육합 및 지지충 정의
+    # [설정 2] 0단계: 절대 배제 (Kill Switch) 간지 목록
+    # 박사님 지시사항 반영: 병오, 임자, 신유, 경신, 을묘, 무오, 무술, 정축 및 주요 백호/괴강살
+    KILL_SWITCH = {'병오', '임자', '신유', '경신', '을묘', '무오', '무술', '정축', '갑진', '을미', '병술', '무진', '임술', '계축'}
+    
+    # 육합/육충 리스트
     hap_list = [{'자', '축'}, {'인', '해'}, {'묘', '술'}, {'진', '유'}, {'사', '신'}, {'오', '미'}]
     choong_list = [{'자', '오'}, {'축', '미'}, {'인', '신'}, {'묘', '유'}, {'진', '술'}, {'사', '해'}]
     
@@ -735,7 +739,6 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
     raw_candidates = []
     curr = start_date
     
-    # 하루씩 순회하며 전수 연산 시행
     while curr <= end_date:
         # 합궁일 기준 280일 역산하여 출산 예정일 확정
         birth_d = curr + dt_mod.timedelta(days=280)
@@ -745,91 +748,95 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
         b_gj = b_klc.getChineseGapJaString().split()
         
         if len(b_gj) >= 3:
-            # 안전한 한글 변환 데이터 확보
-            b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]]
+            b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]] # [년주, 월주, 일주]
+            b_year, b_month, b_day = b_gj_kor[0], b_gj_kor[1], b_gj_kor[2]
             
-            # [필터] 금기 명조(forbidden_list)에 해당하면 원천 배제
-            is_forbidden = False
-            for pillar in b_gj_kor:
-                if pillar in forbidden_list:
-                    is_forbidden = True
-                    break
-            if is_forbidden:
+            # ------------------------------------------------------------------
+            # [0단계] 절대 배제 (Kill Switch) 검열
+            # ------------------------------------------------------------------
+            # 년, 월, 일 어디든 흉살이나 극단적 간여지동이 있으면 즉시 폐기
+            if b_year in KILL_SWITCH or b_month in KILL_SWITCH or b_day in KILL_SWITCH:
                 curr += dt_mod.timedelta(days=1)
                 continue
-            
+                
             # ------------------------------------------------------------------
-            # 로직 A: 신생아 3주 6자 오행 균형도 연산 (60점 만점)
+            # [1단계] 신생아 명조 범용 평가 엔진 (최대 70점 / 70% 비중)
             # ------------------------------------------------------------------
-            baby_score = 0
             characters = []
             for pillar in b_gj_kor:
-                if len(pillar) == 2:
-                    characters.extend([pillar[0], pillar[1]]) # 천간, 지지 분해
-            
-            # 오행 카운트 초기화
+                if len(pillar) == 2: characters.extend([pillar[0], pillar[1]])
+                
             oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
             for char in characters:
-                oheng = OHENG_MAP.get(char)
-                if oheng:
-                    oheng_counts[oheng] += 1
+                oh = OHENG_MAP.get(char)
+                if oh: oheng_counts[oh] += 1
+                
+            # (1-A) 오행 구비 및 균형 (30점 만점)
+            present_types = [t for t, c in oheng_counts.items() if c > 0]
+            balance_score = len(present_types) * 6  # 5개 모두 있으면 30점 만점
             
-            # 1단계: 오행 구비 다채로움 가점 (오행 종류당 12점, 5개 모두 존재 시 60점 만점)
-            present_types = [t for t, count in oheng_counts.items() if count > 0]
-            baby_score = len(present_types) * 12
+            for t, c in oheng_counts.items():
+                if c >= 3: balance_score -= 15 # 특정 오행 3개 이상 편중 시 강력 감점
             
-            # 2단계: 오행 편중 페널티 (특정 오행이 3개 이상 과다할 경우 10점 누적 감점)
-            for t, count in oheng_counts.items():
-                if count >= 3:
-                    baby_score -= 10
+            # (1-B) 조후(기후) 자동 감별 (40점 만점) - 년도 제약 없이 범용으로 작동
+            johu_score = 40
+            month_ji = b_month[1] if len(b_month) > 1 else ''
             
-            # 신생아 점수 하한/상한 안정 장치
-            baby_score = max(10, min(60, baby_score))
+            if month_ji in ['사', '오', '미']: 
+                # 조열한 여름에 태어났는데 수(水)가 없으면 생명력 위협 -> 치명적 감점
+                if oheng_counts['수'] == 0: johu_score -= 30
+            elif month_ji in ['해', '자', '축']: 
+                # 한랭한 겨울에 태어났는데 화(火)가 없으면 얼어붙음 -> 치명적 감점
+                if oheng_counts['화'] == 0: johu_score -= 30
+            elif month_ji in ['인', '묘', '진', '신', '유', '술']: 
+                # 환절기/봄/가을은 오행의 조화가 최우선
+                if len(present_types) < 3: johu_score -= 10
+                
+            baby_score = max(0, min(70, balance_score + johu_score))
             
             # ------------------------------------------------------------------
-            # 로직 B: 부모 사주 지지 조화 연산 (40점 만점)
+            # [2단계] 부모 환경 조화 엔진 (최대 30점 / 30% 비중)
             # ------------------------------------------------------------------
-            parent_score = 25  # 중립 베이스 기본 점수
-            b_ilji = b_gj_kor[2][1] if len(b_gj_kor[2]) > 1 else ''
+            parent_score = 15 # 기본 무난한 점수
+            b_ilji = b_day[1] if len(b_day) > 1 else ''
             
             if b_ilji:
                 for p_ji in m_jjis + f_jjis:
-                    if p_ji == '?': 
-                        continue
+                    if p_ji == '?': continue
                     pair = {b_ilji, p_ji}
-                    if pair in hap_list:
-                        parent_score += 5   # 부모 지지와 육합 발생 시 가점
-                    if pair in choong_list:
-                        parent_score -= 10  # 부모 지지와 지지충 발생 시 감점
+                    if pair in hap_list: parent_score += 10    # 육합 발생 시 가점
+                    if pair in choong_list: parent_score -= 10 # 육충 발생 시 감점
             
-            parent_score = max(0, min(40, parent_score))
+            parent_score = max(0, min(30, parent_score))
             
-            # 최종 정밀 합산 점수 생성
-            total_score = baby_score + parent_score
+            # [특수 장치] Tie-breaker (동점자 방지 난수)
+            # 모든 날짜가 소수점 단위로 차이를 갖게 하여 기계적 정렬 방지
+            tie_breaker = (birth_d.day * 0.001)
+            
+            total_score = baby_score + parent_score + tie_breaker
             
             raw_candidates.append({
                 'date': curr.strftime('%Y-%m-%d'),
                 'month': curr.strftime('%Y-%m'),
-                'score': total_score
+                'score': round(total_score, 3)
             })
             
         curr += dt_mod.timedelta(days=1)
         
     # ----------------------------------------------------------------------
-    # 로직 C: 월별(Month) 그룹화 및 최적 길일 분산 추출 알고리즘
+    # [3단계] 월(Month) 우선 분산 추출 (Top-Down 핀셋 로직)
     # ----------------------------------------------------------------------
     month_best_bucket = {}
     
-    # 각 월별로 가장 높은 점수를 가진 단 하루의 날짜만 버킷에 보존
+    # 1. 달력의 각 월(YYYY-MM)별로 오직 가장 점수가 높은 1등 날짜 한 개만 버킷에 저장
     for item in raw_candidates:
         m_key = item['month']
         if m_key not in month_best_bucket or item['score'] > month_best_bucket[m_key]['score']:
             month_best_bucket[m_key] = item
             
-    # 버킷에 수집된 월별 대표 날짜들을 점수 내림차순으로 최종 정렬
+    # 2. 월별 1등 날짜들을 점수순으로 줄 세운 뒤, 가장 완벽한 상위 3개의 달을 최종 선택
     sorted_months = sorted(month_best_bucket.values(), key=lambda x: x['score'], reverse=True)
     
-    # 서로 다른 달에서 추출된 최상위 3개 조합만 칼같이 반환
     return sorted_months[:3]
 # ==============================================================================
 # 3. 프리미엄 궁합 분석 엔진 클래스
