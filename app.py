@@ -2649,10 +2649,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 # 👶 8. [독립 모듈] 출산택일 정밀 분석 (연산 및 AI 두뇌 전용)
 # ==============================================================================
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
-    import re
-    import datetime as dt_mod
-    from korean_lunar_calendar import KoreanLunarCalendar
-
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
         try:
             gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
@@ -2970,6 +2966,10 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             st.session_state['saved_report_del'] = wrap_a4_del(del_content)
             st.session_state['run_delivery_only'] = False
             st.rerun()
+
+        except Exception as e:
+            st.error(f"출산택일 연산 장애: {e}")
+            st.session_state['run_delivery_only'] = False
 # ==============================================================================
 # 📺 9. 화면 출력부 (순수 모니터 역할)
 # ==============================================================================
