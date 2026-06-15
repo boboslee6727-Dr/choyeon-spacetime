@@ -2281,6 +2281,20 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                     if rel != "-":
                         gan_res.append(f"☁️ <b>{label}({g1})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {g1}{g2}{rel}하여 {gan_desc.get(rel, '영향 발생')} )</span>")
 
+            # 🚨 [수술 1] 박사님 지시 반영: 지지 파동 구체적 서술 딕셔너리 추가
+            ji_desc_map = {
+                "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.",
+                "방합": "같은 목적을 가진 세력이 강하게 결집하는 기운입니다.",
+                "반합": "새로운 국면으로 전환되거나 목적을 위해 협력하는 기운입니다.",
+                "충": "역동적인 변동이나 충돌, 혹은 이동수가 발생하기 쉽습니다.",
+                "형": "의견 조율 과정에서 시비나 조정, 수술수 등의 변동이 따릅니다.",
+                "원진": "사소한 오해나 심리적인 갈등, 원망이 생길 수 있으니 주의하십시오.",
+                "귀문": "신경이 예민해지고 직관력이 극대화되는 묘한 기운입니다.",
+                "파": "기존의 틀이나 약속이 깨지고 새로운 것을 모색하게 되는 기운입니다.",
+                "해": "예상치 못한 방해나 심리적 섭섭함이 발생할 수 있습니다.",
+                "암합": "보이지 않는 곳에서 은밀하게 뜻이 맞고 결속되는 기운입니다."
+            }
+
             r_res = []
             labels_ji = ["시지", "일지", "월지", "년지"]
             for idx, label in enumerate(labels_ji):
@@ -2288,7 +2302,8 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 rel_full = get_ji_rel_set(j1, target_il_ji) 
                 if rel_full != "-":
                     main_rel = rel_full.split(',')[0].strip()
-                    r_res.append(f"🌊 <b>{label}({j1})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {j1}{target_il_ji} {main_rel} 기운 감지 )</span>")
+                    desc_text = ji_desc_map.get(main_rel, "미세한 환경적 파동과 변화가 감지됩니다.")
+                    r_res.append(f"🌊 <b>{label}({j1})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {j1}{target_il_ji} {main_rel}하여 {desc_text} )</span>")
 
             gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
             r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
@@ -2298,7 +2313,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             
             s_res_html = f"✨ <b>오늘의 핵심 에너지:</b> 십이운성[{day_wunseong}] / 12신살[{day_12shinsal}]"
 
-            # 🚨 [수술 2] 프롬프트의 시간 출력 포맷을 직관적인 숫자로 강제 교체
+            # 🚨 [수술 2] AI 환각 통제 및 시공명리(체용) 강제 프롬프트
             iljin_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다.
 오늘의 시공간 파동을 바탕으로 핵심만을 간결하게 통변하십시오.
@@ -2306,19 +2321,19 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 [핵심 팩트]
 - 내담자: {m_ilgan}{m_ilji} / 일진: {t_date.month}월 {t_date.day}일
 - 천간/지지 파동: {gan_res_html} / {r_res_html}
-- 전반부 체용: {m_che_first}+{am_yong} / 후반부 체용: {m_che_second}+{pm_yong}
+- 전반부 체용: {m_che_first}(무대) + {am_yong}(사건)
+- 후반부 체용: {m_che_second}(무대) + {pm_yong}(사건)
 - 오늘의 운성/신살: {day_wunseong} / {day_12shinsal}
 
 🚨 [AI 통제 헌법]
-1. 서론, 인사말, '연산 팩트', '도출 키워드' 등 기술적 문구 출력 절대 금지. 템플릿의 첫 줄부터 통변 시작.
+1. 서론, 인사말, '연산 팩트' 등 기술적 문구 출력 절대 금지.
 2. 마크다운 표 및 `**` 강조 기호 사용 절대 금지. 오직 HTML <b> 태그만 사용.
-3. 모든 줄바꿈은 `<br>` 태그만 사용.
-4. 모든 기술적 팩트는 AI의 통변 근거로만 활용하고, 출력물에는 명리학적 물상과 에세이적 문장으로만 기술할 것.
+3. 🚨 가장 중요한 규칙: 감성적인 심리 묘사나 전통 명리적 통변을 철저히 배제하십시오! 오직 제공된 **[시공명리의 체(환경/무대)와 용(사건/행동)]**의 결합 원리만을 사용하여, 구체적이고 현실적인 **'사건과 실질적 결과'** 위주로 통변해야 합니다.
 
 [출력 포맷]
-<span style='font-size: 16px; font-weight: 900;'>▶ 오전(00:31~13:30):</span> {m_che_first} + {am_yong}의 결합을 바탕으로 오늘 업무와 대인관계의 핵심을 1~2문장으로 기술.
-<br><span style='font-size: 16px; font-weight: 900;'>▶ 오후(13:31~23:30):</span> {m_che_second} + {pm_yong}의 결합을 바탕으로 저녁 시간의 흐름과 핵심 사건을 1~2문장으로 기술.
-<br><span style='font-size: 16px; font-weight: 900;'>✨ 오늘의 개운 조언:</span> 박사님의 일주와 오늘 파동을 고려한 실질적인 행동 지침 1문장.
+<span style='font-size: 16px; font-weight: 900;'>▶ 오전(00:31~13:30):</span> [시공명리 체({m_che_first})+용({am_yong})]의 결합을 바탕으로 오전의 실제적인 업무/대인관계 사건을 1~2문장으로 직관적으로 통변.
+<br><span style='font-size: 16px; font-weight: 900;'>▶ 오후(13:31~23:30):</span> [시공명리 체({m_che_second})+용({pm_yong})]의 결합을 바탕으로 오후의 실질적 사건 흐름을 1~2문장으로 통변.
+<br><span style='font-size: 16px; font-weight: 900;'>✨ 오늘의 개운 조언:</span> 박사님의 일주와 오늘의 파동({day_wunseong}/{day_12shinsal})을 접목한 구체적이고 현실적인 행동 지침 1문장.
 """
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
                 try:
