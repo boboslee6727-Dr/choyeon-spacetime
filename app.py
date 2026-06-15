@@ -2231,15 +2231,15 @@ if st.session_state.get('need_calc', False):
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
 (이곳에 여성의 명리적 성향을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
 
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
 (이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
 (일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 여성의 연애 및 결혼관을 실제 에세이로 작성)
 [FEMALE_END]
 
@@ -2247,20 +2247,20 @@ if st.session_state.get('need_calc', False):
 <h3 style='color: #1B5E20; font-size: 24px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남 총평</h3>
 (두 사람의 사주 기운이 만나 형성하는 큰 틀의 인연, 만남의 의미와 전반적인 궁합 총평을 깊이 있게 통변한 실제 에세이 작성)
 
-<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 25px;'>🌈 커플의 인생 기상도 및 대운 교차 분석</h3>
+<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 및 대운 교차 분석</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
 (상하 대운표를 바탕으로, 두 사람의 운의 흐름이 어떤 시기에 서로 보완되고 상생하는지, 혹은 주의가 필요한지 교차 분석한 실제 에세이 작성)
 
-<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 25px;'>💞 초연 시공명리 심층 조화 분석</h3>
+<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>💞 초연 시공명리 심층 조화 분석</h3>
 
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 오행 및 조후의 상생 조화</span>
 (서로의 사주에서 부족하거나 넘치는 기운(온습 및 오행)을 어떻게 채워주고 완충하는지 구체적으로 명시하여 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
 (남명과 여명의 성격적/육친적 십성 구조가 현실 생활(의사소통, 재물관, 자녀관 등)에서 어떻게 융합되거나 부딪히는지 분석)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
 (일지(배우자궁)와 지장간의 합형충파해를 기반으로 한 육체적, 내적 유대감 및 은밀한 성향적 조화를 품격있게 풀이)
 
-<h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 25px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
+<h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
 (단순한 조언을 넘어, 부부/연인 관계에서 필연적으로 겪게 될 위기 상황을 짚어주고, 이를 극복하기 위한 마음가짐, 소통 방식, 행동 지침 등 실질적인 타개책을 3문단 이상의 깊이 있는 에세이로 작성)
 [GUNGHAP_END]
 """
@@ -2559,31 +2559,36 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>부모님의 사주와 조화를 이루는 합궁 길일입니다.</p>\n"
 
             ai_target_days_facts = []
-            del_content += f"<div style='display:flex; flex-direction:column; align-items:center; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:10px;'>\n"
-
+            del_content += f"<div style='display:flex; flex-direction:column; margin-bottom:15px; background:#f9f9f9; padding:20px; border-radius:10px;'>\n"
+            
             if delivery_days:
-                f_d = dt_mod.datetime.strptime(delivery_days[0]['date'], '%Y-%m-%d')
-                l_d = dt_mod.datetime.strptime(delivery_days[-1]['date'], '%Y-%m-%d')
-                score = delivery_days[0]['score']
-                del_content += f"<div style='font-size:16px; font-weight:bold; margin-bottom:10px;'>✅ 합궁 추천 기간: {f_d.year}년 {f_d.month}월 {f_d.day}일 ~ {l_d.day}일 (합 점수: {score})</div>\n"
-
+                # 점수 기반으로 정렬된 1~3순위 출력 (동점일 경우 빠른 날짜 우선)
                 for i in range(min(3, len(delivery_days))):
                     d_obj = dt_mod.datetime.strptime(delivery_days[i]['date'], '%Y-%m-%d')
                     birth_d = d_obj + dt_mod.timedelta(days=280)
-
+                    total_score = delivery_days[i]['score'] # 정밀 연산된 총합 점수
+                    
                     b_ym, b_mm, _ = get_true_year_month_pillar(birth_d.year, birth_d.month, birth_d.day, 10, 30)
                     b_klc = KoreanLunarCalendar()
                     b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
                     b_gj = b_klc.getChineseGapJaString().split()
                     b_ds, b_db = b_gj[2][0], b_gj[2][1]
                     b_hs, b_hb = get_time_ganji(b_ds, "09:30 ~ 11:29 (巳)시")
-
+                    
                     full_bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
+                    
+                    # AI 전달용 텍스트
                     fact_line = f"▶ 추천 일자: {birth_d.year}년 {birth_d.month:02d}월 {birth_d.day:02d}일 09:31~11:30 ({full_bazi_kor})"
                     ai_target_days_facts.append(fact_line)
-
-                    del_content += f"<div style='font-size:15px; font-weight:bold; color:#4A148C;'>{fact_line}</div>\n"
-
+                    
+                    # 사용자 화면 출력용 텍스트 (총합 점수 투명 공개)
+                    display_birth = f"▶ {i+1}순위 출산 추천일: {birth_d.year}년 {birth_d.month:02d}월 {birth_d.day:02d}일 (오전 09:31~11:30) <span style='color:#D81B60;'>[종합: {total_score}점]</span>"
+                    display_conception = f"&nbsp;&nbsp;&nbsp;↳ ❤️ 해당 출산을 위한 합궁 길일: {d_obj.year}년 {d_obj.month:02d}월 {d_obj.day:02d}일 (저녁~밤 시간대)"
+                    
+                    del_content += f"<div style='font-size:16px; font-weight:900; color:#4A148C; margin-top: 10px;'>{display_birth}</div>\n"
+                    del_content += f"<div style='font-size:15px; font-weight:bold; color:#555; margin-bottom: 5px;'>{display_conception}</div>\n"
+                    del_content += f"<div style='font-size:13px; color:#333; margin-bottom: 15px;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명식: {full_bazi_kor}</div>\n"
+                    
             del_content += "</div>\n"
 
             # 💡 [구조 교정] 18px 제목과 15px 내용 블록 분리 (에러 원천 차단)
@@ -2618,7 +2623,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 3. 추천 일자 제목은 원문 그대로 출력할 것.
 
 [출력 포맷 템플릿]
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:15px; margin-bottom:5px; display:block;'>▶ 추천 일자: (원문 복사)</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ 추천 일자: (원문 복사)</span>
 <div style='padding-left: 15px; margin-bottom: 15px;'>
     <div style='margin-bottom: 3px;'><b>1) 일반 명리 풀이:</b></div>
     <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
