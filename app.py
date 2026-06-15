@@ -367,7 +367,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=60*24) #ttl=3600*24초=86,400초 24시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=3600*24) #ttl=3600*24초=86,400초 24시간 감명서 유효
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
@@ -714,7 +714,6 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
     import datetime as dt_mod
     from korean_lunar_calendar import KoreanLunarCalendar
     
-    # [설정 1] 오행 매핑
     OHENG_MAP = {
         '갑':'목', '을':'목', '인':'목', '묘':'목',
         '병':'화', '정':'화', '사':'화', '오':'화',
@@ -723,24 +722,31 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
         '임':'수', '계':'수', '자':'수', '해':'수'
     }
     
-    # [설정 2] 0단계: 절대 배제 (Kill Switch) 간지 목록
-    # 박사님 지시사항 반영: 병오, 임자, 신유, 경신, 을묘, 무오, 무술, 정축 및 주요 백호/괴강살
+    # [0단계] 절대 흉살 및 백호/괴강 원천 차단 킬스위치
     KILL_SWITCH = {'병오', '임자', '신유', '경신', '을묘', '무오', '무술', '정축', '갑진', '을미', '병술', '무진', '임술', '계축'}
-    
-    # 육합/육충 리스트
     hap_list = [{'자', '축'}, {'인', '해'}, {'묘', '술'}, {'진', '유'}, {'사', '신'}, {'오', '미'}]
     choong_list = [{'자', '오'}, {'축', '미'}, {'인', '신'}, {'묘', '유'}, {'진', '술'}, {'사', '해'}]
     
-    # 한자 간지 -> 한글 변환 내부 유틸리티
     H2K_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
                '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
     def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
 
+    TIME_SLOTS = [
+        ("자", "23:30~01:29"), ("축", "01:30~03:29"), ("인", "03:30~05:29"),
+        ("묘", "05:30~07:29"), ("진", "07:30~09:29"), ("사", "09:30~11:29"),
+        ("오", "11:30~13:29"), ("미", "13:30~15:29"), ("신", "15:30~17:29"),
+        ("유", "17:30~19:29"), ("술", "19:30~21:29"), ("해", "21:30~23:29")
+    ]
+    TIME_STEM_START = {'갑':'갑', '기':'갑', '을':'병', '경':'병', '병':'무', '신':'무', '정':'경', '임':'경', '무':'임', '계':'임'}
+    GAN_LIST = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
+
     raw_candidates = []
     curr = start_date
     
+    HOT_JI = ['사', '오', '미', '술']
+    COLD_JI = ['해', '자', '축', '진']
+    
     while curr <= end_date:
-        # 합궁일 기준 280일 역산하여 출산 예정일 확정
         birth_d = curr + dt_mod.timedelta(days=280)
         
         b_klc = KoreanLunarCalendar()
@@ -748,95 +754,114 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
         b_gj = b_klc.getChineseGapJaString().split()
         
         if len(b_gj) >= 3:
-            b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]] # [년주, 월주, 일주]
+            b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]] 
             b_year, b_month, b_day = b_gj_kor[0], b_gj_kor[1], b_gj_kor[2]
             
-            # ------------------------------------------------------------------
-            # [0단계] 절대 배제 (Kill Switch) 검열
-            # ------------------------------------------------------------------
-            # 년, 월, 일 어디든 흉살이나 극단적 간여지동이 있으면 즉시 폐기
+            # [0단계] 흉살 및 복음(간지 중복) 배제
             if b_year in KILL_SWITCH or b_month in KILL_SWITCH or b_day in KILL_SWITCH:
-                curr += dt_mod.timedelta(days=1)
-                continue
-                
-            # ------------------------------------------------------------------
-            # [1단계] 신생아 명조 범용 평가 엔진 (최대 70점 / 70% 비중)
-            # ------------------------------------------------------------------
-            characters = []
-            for pillar in b_gj_kor:
-                if len(pillar) == 2: characters.extend([pillar[0], pillar[1]])
-                
-            oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
-            for char in characters:
-                oh = OHENG_MAP.get(char)
-                if oh: oheng_counts[oh] += 1
-                
-            # (1-A) 오행 구비 및 균형 (30점 만점)
-            present_types = [t for t, c in oheng_counts.items() if c > 0]
-            balance_score = len(present_types) * 6  # 5개 모두 있으면 30점 만점
-            
-            for t, c in oheng_counts.items():
-                if c >= 3: balance_score -= 15 # 특정 오행 3개 이상 편중 시 강력 감점
-            
-            # (1-B) 조후(기후) 자동 감별 (40점 만점) - 년도 제약 없이 범용으로 작동
-            johu_score = 40
-            month_ji = b_month[1] if len(b_month) > 1 else ''
-            
-            if month_ji in ['사', '오', '미']: 
-                # 조열한 여름에 태어났는데 수(水)가 없으면 생명력 위협 -> 치명적 감점
-                if oheng_counts['수'] == 0: johu_score -= 30
-            elif month_ji in ['해', '자', '축']: 
-                # 한랭한 겨울에 태어났는데 화(火)가 없으면 얼어붙음 -> 치명적 감점
-                if oheng_counts['화'] == 0: johu_score -= 30
-            elif month_ji in ['인', '묘', '진', '신', '유', '술']: 
-                # 환절기/봄/가을은 오행의 조화가 최우선
-                if len(present_types) < 3: johu_score -= 10
-                
-            baby_score = max(0, min(70, balance_score + johu_score))
+                curr += dt_mod.timedelta(days=1); continue
+            if b_year == b_month or b_month == b_day or b_year == b_day:
+                curr += dt_mod.timedelta(days=1); continue
             
             # ------------------------------------------------------------------
-            # [2단계] 부모 환경 조화 엔진 (최대 30점 / 30% 비중)
+            # [1단계 - 최우선] 년주와 월주의 기후(조후) 평가 (최대 45점)
             # ------------------------------------------------------------------
-            parent_score = 15 # 기본 무난한 점수
-            b_ilji = b_day[1] if len(b_day) > 1 else ''
+            ym_score = 25 # 기본 점수
+            y_ji = b_year[1]
+            m_ji = b_month[1]
             
-            if b_ilji:
+            # 년도의 조열/한랭함을 월(Month)이 보완해주는 달에 압도적 가점 부여
+            if y_ji in HOT_JI:
+                if m_ji in COLD_JI or m_ji in ['신', '유']: ym_score += 20
+                elif m_ji in HOT_JI: ym_score -= 20
+            elif y_ji in COLD_JI:
+                if m_ji in HOT_JI or m_ji in ['인', '묘']: ym_score += 20
+                elif m_ji in COLD_JI: ym_score -= 20
+            else:
+                ym_score += 10 
+                
+            ym_score = max(0, min(45, ym_score))
+            
+            b_day_stem = b_day[0]
+            start_stem = TIME_STEM_START.get(b_day_stem, '갑')
+            start_idx = GAN_LIST.index(start_stem)
+
+            best_time_score = -999
+            best_time_data = {}
+
+            # ------------------------------------------------------------------
+            # [2단계 - 추천] 최적의 일주/시주 핀셋 탐색 (최대 25점)
+            # ------------------------------------------------------------------
+            for t_idx, (t_ji, t_time_str) in enumerate(TIME_SLOTS):
+                t_gan = GAN_LIST[(start_idx + t_idx) % 10]
+                b_time = f"{t_gan}{t_ji}"
+
+                if b_time in KILL_SWITCH or b_time in [b_year, b_month, b_day]:
+                    continue
+
+                four_pillars = [b_year, b_month, b_day, b_time]
+                characters = []
+                for pillar in four_pillars:
+                    characters.extend([pillar[0], pillar[1]])
+                    
+                oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
+                for char in characters:
+                    oh = OHENG_MAP.get(char)
+                    if oh: oheng_counts[oh] += 1
+                    
+                # 4주 8자의 오행 구비 점수 (최대 25점)
+                present_types = [t for t, c in oheng_counts.items() if c > 0]
+                dt_score = len(present_types) * 5 
+                for t, c in oheng_counts.items():
+                    if c >= 3: dt_score -= 10 # 편중 감점
+                
+                dt_score = max(0, min(25, dt_score))
+                baby_score = ym_score + dt_score # 신생아 명식 총점 (최대 70점)
+                
+                # ------------------------------------------------------------------
+                # [3단계] 부모 조화도 (최대 30점)
+                # ------------------------------------------------------------------
+                parent_score = 15
+                b_ilji = b_day[1]
                 for p_ji in m_jjis + f_jjis:
                     if p_ji == '?': continue
                     pair = {b_ilji, p_ji}
-                    if pair in hap_list: parent_score += 10    # 육합 발생 시 가점
-                    if pair in choong_list: parent_score -= 10 # 육충 발생 시 감점
-            
-            parent_score = max(0, min(30, parent_score))
-            
-            # [특수 장치] Tie-breaker (동점자 방지 난수)
-            # 모든 날짜가 소수점 단위로 차이를 갖게 하여 기계적 정렬 방지
-            tie_breaker = (birth_d.day * 0.001)
-            
-            total_score = baby_score + parent_score + tie_breaker
-            
-            raw_candidates.append({
-                'date': curr.strftime('%Y-%m-%d'),
-                'month': curr.strftime('%Y-%m'),
-                'score': round(total_score, 3)
-            })
-            
+                    if pair in hap_list: parent_score += 10
+                    if pair in choong_list: parent_score -= 10
+                parent_score = max(0, min(30, parent_score))
+                
+                # 소수점 오류 방지: 빠른 날짜에 극미세 가중치 (31일 쏠림 방지)
+                tie_breaker = ((32 - birth_d.day) * 0.001) + (t_idx * 0.0001)
+                total_score = baby_score + parent_score + tie_breaker
+
+                if total_score > best_time_score:
+                    best_time_score = total_score
+                    best_time_data = {
+                        'time_pillar': b_time,
+                        'time_str': t_time_str,
+                        'score': total_score,
+                        'ym_score': ym_score
+                    }
+
+            if best_time_data:
+                raw_candidates.append({
+                    'date': curr.strftime('%Y-%m-%d'),
+                    'month': curr.strftime('%Y-%m'),
+                    'score': best_time_data['score'],
+                    'ym_score': best_time_data['ym_score'],
+                    'best_time': best_time_data
+                })
+                
         curr += dt_mod.timedelta(days=1)
         
-    # ----------------------------------------------------------------------
-    # [3단계] 월(Month) 우선 분산 추출 (Top-Down 핀셋 로직)
-    # ----------------------------------------------------------------------
+    # 월(Month) 단위로 그룹화 (년/월 점수가 가장 높은 달을 최우선 추출)
     month_best_bucket = {}
-    
-    # 1. 달력의 각 월(YYYY-MM)별로 오직 가장 점수가 높은 1등 날짜 한 개만 버킷에 저장
     for item in raw_candidates:
         m_key = item['month']
         if m_key not in month_best_bucket or item['score'] > month_best_bucket[m_key]['score']:
             month_best_bucket[m_key] = item
             
-    # 2. 월별 1등 날짜들을 점수순으로 줄 세운 뒤, 가장 완벽한 상위 3개의 달을 최종 선택
     sorted_months = sorted(month_best_bucket.values(), key=lambda x: x['score'], reverse=True)
-    
     return sorted_months[:3]
 # ==============================================================================
 # 3. 프리미엄 궁합 분석 엔진 클래스
@@ -2275,7 +2300,103 @@ if st.session_state.get('need_calc', False):
                     ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
                     m_ess, f_ess, g_ess = "", "", ai_clean
+    essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+당신은 명리심리상담사 '초연 박사'입니다.
+
+🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
+1. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
+2. 반드시 내담자의 명리적 특징을 분석하여 3~4문장 이상의 **실제 심층 통변 내용(해석)**을 직접 글로 작성해야 합니다.
+3. 🚨 [문단 간격 강제]: 모든 통변 문단은 반드시 HTML 태그 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 로 감싸서 개인사주 풀이와 완벽히 동일한 쫀쫀한 문단 간격을 유지하십시오. 단순 `<br>`이나 탭(Tab) 사용을 금지합니다.
+4. 🚨 [시스템 마커 절대 보존]: `[MALE_START]`, `[MALE_END]`, `[FEMALE_START]`, `[FEMALE_END]`, `[GUNGHAP_START]`, `[GUNGHAP_END]` 이 6개의 태그는 파이썬 시스템이 화면을 분할하는 핵심 스위치입니다. 단 하나라도 생략하거나 변형하지 말고 템플릿 위치 그대로 반드시 출력하십시오! 여명 풀이를 임의로 건너뛰지 마십시오.
+
+[MALE_START]
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
+{m_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(이곳에 남성의 명리적 성향을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
+(이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(이곳에 남성의 내면과 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 남성의 연애 및 결혼관을 실제 에세이로 작성)
+[MALE_END]
+
+[FEMALE_START]
+<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
+{f_golden}
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(이곳에 여성의 명리적 성향을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+
+<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
+(이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 여성의 연애 및 결혼관을 실제 에세이로 작성)
+[FEMALE_END]
+
+[GUNGHAP_START]
+<h3 style='color: #1B5E20; font-size: 24px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남 총평</h3>
+(두 사람의 사주 기운이 만나 형성하는 큰 틀의 인연, 만남의 의미와 전반적인 궁합 총평을 깊이 있게 통변한 실제 에세이 작성)
+
+<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 및 대운 교차 분석</h3>
+[COUPLE_DAEWUN_TABLES_HERE]
+(상하 대운표를 바탕으로, 두 사람의 운의 흐름이 어떤 시기에 서로 보완되고 상생하는지, 혹은 주의가 필요한지 교차 분석한 실제 에세이 작성)
+
+<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>💞 초연 시공명리 심층 조화 분석</h3>
+
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 오행 및 조후의 상생 조화</span>
+(서로의 사주에서 부족하거나 넘치는 기운(온습 및 오행)을 어떻게 채워주고 완충하는지 구체적으로 명시하여 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
+(남명과 여명의 성격적/육친적 십성 구조가 현실 생활에서 어떻게 융합되거나 부딪히는지 분석)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
+(일지(배우자궁)와 지장간의 합형충파해를 기반으로 한 육체적, 내적 유대감을 품격있게 풀이)
+
+<h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
+(단순한 조언을 넘어, 부부/연인 관계에서 필연적으로 겪게 될 위기 상황을 짚어주고, 이를 극복하기 위한 마음가짐, 소통 방식, 행동 지침 등 실질적인 타개책을 3문단 이상의 깊이 있는 에세이로 작성)
+[GUNGHAP_END]
+"""
+                    res_text = call_gemini_api(essay_prompt, max_tokens=12000)
+                    ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
+                    m_ess, f_ess, g_ess = "", "", ai_clean
+                    
+                    # 남명 추출
+                    m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
+                    if m_match: 
+                        m_ess = m_match.group(1).strip()
+                    
+                    # 🚨 여명 추출 (태그 절단 시 2차 안전망 추가)
+                    f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', ai_clean, re.DOTALL)
+                    if f_match: 
+                        f_ess = f_match.group(1).strip()
+                    else:
+                        # [FEMALE_END]가 없어도 [GUNGHAP_START] 이전까지 강제 추출
+                        f_fallback = re.search(r'\[FEMALE_START\](.*?)\[GUNGHAP_START\]', ai_clean, re.DOTALL)
+                        if f_fallback: 
+                            f_ess = f_fallback.group(1).strip()
+                        else: 
+                            f_ess = "<div style='color:#D50000; font-weight:bold; padding:20px; text-align:center;'>여명 통변 데이터가 AI 연산 중 유실되었습니다. 시스템 재실행이 필요합니다.</div>"
+                    
+                    # 궁합 종합 추출
+                    g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', ai_clean, re.DOTALL)
+                    if g_match: 
+                        g_ess = g_match.group(1).strip()
+                    else:
+                        g_fallback = re.search(r'\[GUNGHAP_START\](.*)', ai_clean, re.DOTALL)
+                        if g_fallback:
+                            g_ess = g_fallback.group(1).strip()
+                        else:
+                            g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
+                
                     m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
                     if m_match: m_ess = m_match.group(1).strip()
                     
@@ -2288,6 +2409,7 @@ if st.session_state.get('need_calc', False):
                     else:
                         g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
                     
+
                     g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', couple_daewun_tables, g_ess, flags=re.IGNORECASE)
                     if count == 0:  
                         g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px;">' + couple_daewun_tables + '</div>', g_ess)
@@ -2569,32 +2691,42 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             del_content += f"<div style='display:flex; flex-direction:column; margin-bottom:15px; background:#f9f9f9; padding:20px; border-radius:10px;'>\n"
             
             if delivery_days:
-                # 점수 기반으로 정렬된 1~3순위 출력 (동점일 경우 빠른 날짜 우선)
+                # 점수 기반 정렬된 1~3순위 월별 계층형 출력
                 for i in range(min(3, len(delivery_days))):
                     d_obj = dt_mod.datetime.strptime(delivery_days[i]['date'], '%Y-%m-%d')
                     birth_d = d_obj + dt_mod.timedelta(days=280)
-                    total_score = delivery_days[i]['score'] # 정밀 연산된 총합 점수
+                    total_score = int(delivery_days[i]['score']) 
+                    
+                    best_time_info = delivery_days[i]['best_time']
+                    opt_time_str = best_time_info['time_str']
+                    b_hs_hb = best_time_info['time_pillar']
+                    b_hs, b_hb = b_hs_hb[0], b_hs_hb[1]
                     
                     b_ym, b_mm, _ = get_true_year_month_pillar(birth_d.year, birth_d.month, birth_d.day, 10, 30)
                     b_klc = KoreanLunarCalendar()
                     b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
                     b_gj = b_klc.getChineseGapJaString().split()
                     b_ds, b_db = b_gj[2][0], b_gj[2][1]
-                    b_hs, b_hb = get_time_ganji(b_ds, "09:30 ~ 11:29 (巳)시")
                     
-                    full_bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
+                    # 🚨 한자 간지 및 한글 병기
+                    bazi_hanja = f"{b_ym}년 {b_mm}월 {b_ds}{b_db}일 {b_hs}{b_hb}시"
+                    bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
+                    ym_hanja = f"{b_ym}년 {b_mm}월"
+                    ym_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월"
                     
-                    # AI 전달용 텍스트
-                    fact_line = f"▶ 추천 일자: {birth_d.year}년 {birth_d.month:02d}월 {birth_d.day:02d}일 09:31~11:30 ({full_bazi_kor})"
+                    # AI 전달 텍스트 (년월 최우선 논리 주입)
+                    fact_line = f"▶ {i+1}순위 추천 월령: {birth_d.year}년 {birth_d.month:02d}월 ({ym_hanja}) / 택일 추천: {birth_d.day:02d}일 {opt_time_str} / 명식: {bazi_hanja}"
                     ai_target_days_facts.append(fact_line)
                     
-                    # 사용자 화면 출력용 텍스트 (총합 점수 투명 공개)
-                    display_birth = f"▶ {i+1}순위 출산 추천일: {birth_d.year}년 {birth_d.month:02d}월 {birth_d.day:02d}일 (오전 09:31~11:30) <span style='color:#D81B60;'>[종합: {total_score}점]</span>"
+                    # 화면 표출 텍스트 (하향식 계층 구조)
+                    display_month = f"▶ {i+1}순위 출산 추천 월(月): {birth_d.year}년 {birth_d.month:02d}월 <span style='font-size:16px; color:#4A148C;'>({ym_hanja})</span>"
+                    display_day_time = f"&nbsp;&nbsp;&nbsp;↳ 🏥 해당 월의 최적 출산 택일: {birth_d.day:02d}일 ({opt_time_str})"
                     display_conception = f"&nbsp;&nbsp;&nbsp;↳ ❤️ 해당 출산을 위한 합궁 길일: {d_obj.year}년 {d_obj.month:02d}월 {d_obj.day:02d}일 (저녁~밤 시간대)"
                     
-                    del_content += f"<div style='font-size:16px; font-weight:900; color:#4A148C; margin-top: 10px;'>{display_birth}</div>\n"
-                    del_content += f"<div style='font-size:15px; font-weight:bold; color:#555; margin-bottom: 5px;'>{display_conception}</div>\n"
-                    del_content += f"<div style='font-size:13px; color:#333; margin-bottom: 15px;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명식: {full_bazi_kor}</div>\n"
+                    del_content += f"<div style='font-size:18px; font-weight:900; color:#111; margin-top: 15px; border-bottom:1px solid #ddd; padding-bottom:5px;'>{display_month}</div>\n"
+                    del_content += f"<div style='font-size:15px; font-weight:bold; color:#0D47A1; margin-top: 8px;'>{display_day_time} <span style='color:#D81B60;'>[종합: {total_score}점 / 100점 만점]</span></div>\n"
+                    del_content += f"<div style='font-size:14px; font-weight:bold; color:#555; margin-top: 3px;'>{display_conception}</div>\n"
+                    del_content += f"<div style='font-size:15px; color:#333; margin-top: 5px; margin-bottom: 20px; background:#fff; padding:8px; border-left:4px solid #4A148C;'>&nbsp;&nbsp;완성 명식: <b>{bazi_hanja}</b> <span style='font-size:13px; color:#777;'>({bazi_kor})</span></div>\n"
                     
             del_content += "</div>\n"
 
