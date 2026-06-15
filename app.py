@@ -2713,8 +2713,11 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                 raw_candidates = []
                 curr = start_date
                 
+                # 🚨 탐색 기준 변경: curr는 이제 '출산 예정일'입니다.
                 while curr <= end_date:
-                    birth_d = curr + dt_mod.timedelta(days=280)
+                    birth_d = curr
+                    conception_d = birth_d - dt_mod.timedelta(days=280) # 280일 역산하여 합궁일 도출
+                    
                     b_klc = KoreanLunarCalendar()
                     b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
                     b_gj = b_klc.getChineseGapJaString().split()
@@ -2806,8 +2809,10 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
                         if best_time_data:
                             raw_candidates.append({
-                                'date': curr.strftime('%Y-%m-%d'), 'month': curr.strftime('%Y-%m'),
-                                'score': best_time_data['score'], 'best_time': best_time_data
+                                'date': conception_d.strftime('%Y-%m-%d'), # 기존 UI 호환을 위해 합궁일을 date에 저장
+                                'month': birth_d.strftime('%Y-%m'),        # 그룹화 기준은 '출산월'로 확정
+                                'score': best_time_data['score'], 
+                                'best_time': best_time_data
                             })
                             
                     curr += dt_mod.timedelta(days=1)
