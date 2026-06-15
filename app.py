@@ -2641,8 +2641,13 @@ if st.session_state.get('app_running', False):
 </div>
 </div>"""
 
-                    # 🚨 지워졌던 병합 코드 복구: AI 풀이(ai_delivery_html)와 클로징 멘트를 del_content에 합침
-                    del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n{closing_del_html}\n</div>"
+                    # 1. 가이드라인 제목 (18px)
+                    del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'>"
+                    del_content += "<span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
+
+                    # 2. 가이드라인 내용 (15px)
+                    del_content += "<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'>"
+                    del_content += "<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
 
                     def wrap_a4_del(content, title_color="#4A148C"):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
