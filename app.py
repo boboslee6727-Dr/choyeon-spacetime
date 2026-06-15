@@ -934,10 +934,13 @@ with st.sidebar:
     
     # 2. 상품별 동적 UI
     if u_product == "개인사주":
+        # 패턴 1: 개인사주 -> 체크박스로 일진 추가
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
-        if run_iljin_calc: st.session_state['target_date'] = st.date_input("분석 일자", value=dt_mod.datetime.now().date())
-        
+        if run_iljin_calc: 
+            st.session_state['target_date'] = st.date_input("분석 일자", value=dt_mod.datetime.now().date())
+            
     elif u_product == "타 감명서":
+        # 패턴 2: 타 감명서 -> 원문 입력창
         other_reading_text = st.text_area("📄 타 감명서 원문", height=150, key="other_reading")
         
     elif u_product == "궁합":
@@ -980,30 +983,30 @@ with st.sidebar:
         st.markdown("<div style='font-weight:900; color:#D50000; margin-bottom:5px; margin-top:15px;'>👥 상대방 정보</div>", unsafe_allow_html=True)
         p_name = st.text_input("이름", value="", key="p_n")
         
-        # 🚨 [수술 1] 신청인 성별(u_gender)에 따라 상대방 성별 자동 반전!
-        p_gender_default = 1 if u_gender == "남성" else 0
-        p_gender = st.selectbox("성별", ["남성", "여성"], index=p_gender_default, key="p_g")
+        p_gender_options = ["여성", "남성"] if u_gender == "남성" else ["남성", "여성"]
+        p_gender = st.selectbox("성별", p_gender_options, key="p_g")
         
         p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="p_m_stat")
         p_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="p_c")
         
-        # 🚨 [수술 2] 개인사주와 완벽히 똑같이 3단 가로 컬럼으로 배치! (드래그 느낌/여백 낭비 원천 차단)
         p_col1, p_col2, p_col3 = st.columns(3)
-        p_y = p_col1.number_input("상대방 년", 1900, 2050, value=1980, key="p_y_in")
-        p_m = p_col2.number_input("상대방 월", 1, 12, value=1, key="p_m_in")
-        p_d = p_col3.number_input("상대방 일", 1, 31, value=1, key="p_d_in")
+        p_y = p_col1.number_input("년 (상대)", 1900, 2050, value=1980, key="p_y_in")
+        p_m = p_col2.number_input("월 (상대)", 1, 12, value=1, key="p_m_in")
+        p_d = p_col3.number_input("일 (상대)", 1, 31, value=1, key="p_d_in")
         
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
         
-        # 출산 택일 옵션
-        if (dt_mod.datetime.now().year - u_y + 1) <= 49:
-            with st.expander("👶 출산택일 달력 선택", expanded=False):
-                baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"])
-                start_date = st.date_input("탐색 시작일")
-                end_date = st.date_input("탐색 종료일")
-                run_delivery_calc = st.checkbox("✅ 출산택일 확정", value=False)
+        st.markdown("---")
+        
+        # 🚨 [박사님 의도 100% 반영] 패턴 3: 궁합 -> 체크박스로 출산택일 추가 (일진 분석과 완벽히 동일한 UI 전개)
+        run_delivery_calc = st.checkbox("👶 출산택일 분석 추가 가동", value=False)
+        if run_delivery_calc:
+            baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"])
+            start_date = st.date_input("탐색 시작일", value=dt_mod.datetime.now().date())
+            end_date = st.date_input("탐색 종료일", value=dt_mod.datetime.now().date() + dt_mod.timedelta(days=30))
 
     st.markdown("---")
+
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
     components.html("""
