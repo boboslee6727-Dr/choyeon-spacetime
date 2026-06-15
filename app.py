@@ -2527,7 +2527,6 @@ if st.session_state.get('app_running', False):
         # 3-2. 출산택일 연산 및 출력 (사이드바에서 택일 선택 시에만)
         if st.session_state.get('run_delivery_only', False) and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
             
-            # 박사님이 임시 설정하신 세션 관리 및 스피너 유지
             with st.spinner("⏳ 모래시계와 함께 출산택일 분석 중..."):
                 try:
                     gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
@@ -2563,9 +2562,9 @@ if st.session_state.get('app_running', False):
                     FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
                     delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
                     
-                    # 🚨 [완전 동적 변경 1] 파이썬 연산기 결과에 연동된 날짜 및 한글 간지 자동 빌드
                     ai_target_days_facts = []
                     del_content += f"<div style='display:flex; flex-direction:column; align-items:center; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:10px;'>\n"
+                    
                     if delivery_days:
                         f_d = dt_mod.datetime.strptime(delivery_days[0]['date'], '%Y-%m-%d')
                         l_d = dt_mod.datetime.strptime(delivery_days[-1]['date'], '%Y-%m-%d')
@@ -2574,7 +2573,7 @@ if st.session_state.get('app_running', False):
                         
                         for i in range(min(3, len(delivery_days))):
                             d_obj = dt_mod.datetime.strptime(delivery_days[i]['date'], '%Y-%m-%d')
-                            birth_d = d_obj + dt_mod.timedelta(days=280) # 출산 예정일 계산
+                            birth_d = d_obj + dt_mod.timedelta(days=280)
                             
                             b_ym, b_mm, _ = get_true_year_month_pillar(birth_d.year, birth_d.month, birth_d.day, 10, 30)
                             b_klc = KoreanLunarCalendar()
@@ -2583,79 +2582,76 @@ if st.session_state.get('app_running', False):
                             b_ds, b_db = b_gj[2][0], b_gj[2][1]
                             b_hs, b_hb = get_time_ganji(b_ds, "09:30 ~ 11:29 (巳)시")
                             
-                            # 한자 간지를 한글로 즉시 번역
                             full_bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
-                            day_weeks = ["월", "화", "수", "목", "금", "토", "일"][birth_d.weekday()]
-                            
                             fact_line = f"▶ 추천 일자: {birth_d.year}년 {birth_d.month:02d}월 {birth_d.day:02d}일 09:31~11:30 ({full_bazi_kor})"
                             ai_target_days_facts.append(fact_line)
+                            
                             del_content += f"<div style='font-size:15px; font-weight:bold; color:#4A148C;'>{fact_line}</div>\n"
+                            
                     del_content += "</div>\n"
-                    
-                    del_content += f"""<p style='line-height:1.8; color:#333; text-indent: 15px; margin-top: 15px; margin-bottom: 15px;'>
-<span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span><br>
-<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span>
-</p>"""
-                    
+
+                    # 🚨 안내문 및 에세이는 반복문 밖에서 1번만 출력되도록 구조 교정 완료
+                    del_content += "<p style='line-height:1.8; color:#333; text-indent: 15px; margin-top: 15px; margin-bottom: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span><br><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></p>"
+
                     intro_essay = f"""<div style='margin-top:10px;'>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor}토 일간으로 강한 금수(金水)의 기운이 특징적입니다. 총명하고 재물 운이 좋으며 실리적인 면모가 돋보이나, 다소 한습한 기운이 강하여 따뜻한 화(火) 기운의 보충이 절실합니다. 이는 정신적 안정และ 인성의 조화를 의미합니다. 상대방 여성분({f_saju_kor})께서는 정(丁)화 일간으로, 목화(木火)의 따뜻하고 밝은 기운이 충만하며 지혜롭고 활발한 에너지를 지니셨습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아기가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 특히 남성분의 한습한 기운을 보완하고, 부부 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 따뜻한 화(火) 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor} 일간으로 자신만의 강인한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor} 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
 </div>"""
                     del_content += intro_essay
 
-                    # 🚨 파이썬 연산 결과 주입을 위한 변수 바인딩
                     ai_days_input_str = "\n".join(ai_target_days_facts)
 
-                    # 🚨 [완전 동적 변경 2] 프롬프트 내부 하드코딩 완전 제거 및 성별 통변 지침 보강
                     delivery_prompt = f"""
-당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 파이썬 시스템이 부모 사주를 교차 분석하여 도출해 낸 아래 [지정된 3가지 추천 일자]에 대해 정밀 통변 에세이를 작성하십시오.
+당신은 명리심리상담사 초연 박사입니다. 시스템이 도출한 아래 [지정된 3가지 추천 일자]에 대해 통변 에세이를 작성하십시오.
 
 [지정된 추천 일자 리스트]
 {ai_days_input_str}
 
-[선택된 태아 성별 조건]
-- 현재 설정된 성별 조건: {baby_gender}
+[태아 성별 조건]
+- {baby_gender} (통변 시 성별에 따른 대운의 순행/역행 유불리를 서술할 것)
 
-🚨 [출력 절대 통제 규칙]
-1. 에세이 상단에 어떠한 제목도 일절 적지 마십시오.
-2. 단락 구분에 '---' 같은 마크다운 구분선을 사용하면 시스템이 파괴되므로 절대 금지합니다.
-3. 맺음말(감사합니다 등)은 생략하십시오.
-4. 모든 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로만 묶어 좁고 쫀쫀한 문단 간격을 사수하십시오. 빈 공백 줄(엔터) 출력을 전면 금지합니다.
-5. 위 [지정된 추천 일자 리스트]에 명시된 날짜 포맷과 한글 간지 명식을 소제목에 토씨 하나 틀리지 말고 그대로 복사 출력한 뒤 그 아래에 통변을 전개하십시오.
-
-🚨 [성별 맞춤형 통변 지침]
-- 만약 성별이 '남아' 혹은 '여아'로 고정된 경우, 성별과 명식의 음양을 대조하여 대운의 순행/역행 경로를 확정 짓고 미래 10년 주기 운로를 분석하십시오.
-- 만약 성별이 '미정'인 경우, 각 추천 일자마다 반드시 "만약 남아로 태어난다면 대운이 O행하여 ~한 성취를 이루고, 여아로 태어난다면 대운이 O행하여 ~한 복록을 누린다"는 식으로 성별에 따른 유불리와 운로의 차이점을 명확히 쪼개어 서술하십시오.
+🚨 [출력 절대 규칙]
+1. 에세이 상단 제목, 인사말, 맺음말(감사합니다 등) 절대 금지.
+2. 모든 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로 묶을 것.
+3. 추천 일자 제목은 원문 그대로 출력할 것.
 
 [출력 포맷 템플릿]
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:15px; margin-bottom:5px; display:block;'>시스템이 제공한 해당 순위 추천 일자 라인을 그대로 출력</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:15px; margin-bottom:5px; display:block;'>▶ 추천 일자: (원문 복사)</span>
 <div style='padding-left: 15px; margin-bottom: 15px;'>
     <div style='margin-bottom: 3px;'><b>1) 일반 명리 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 기재) </p>
+    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
     <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 기재) </p>
+    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
 </div>
 """
-                    ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '')
-                    
+                    import re
+                    ai_delivery_html = call_gemini_api(delivery_prompt)
+                    ai_delivery_html = ai_delivery_html.replace('---', '')
+                    ai_delivery_html = re.sub(r'^.*?((?=<span class=\'sub-title\')|(?=▶))', '', ai_delivery_html, flags=re.DOTALL)
+                    ai_delivery_html = re.sub(r'(?i)존경하는 부모님.*|초연 박사 올림.*|감사합니다.*', '', ai_delivery_html, flags=re.DOTALL)
+                    ai_delivery_html = ai_delivery_html.replace('\n', '')
+
                     closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>어떤 날을 선택하시든, 그 선택은 아기에게 최고의 축복이 될 것입니다. 아기의 탄생으로 가정이 더욱 행복하고 번창하시기를 간절히 축원합니다.</p>
 <div style='text-align: right; margin-top: 25px;'>
-<span style='font-weight: 900; font-size: 18px; color: #4A148C; font-family: \"Nanum Myeongjo\", serif;'>초연 시공명리 연구소</span>
+<span style='font-weight: 900; font-size: 18px; color: #4A148C; font-family: "Nanum Myeongjo", serif;'>초연 시공명리 연구소</span>
 </div>
 </div>"""
 
-                    del_content += "<p style='line-height:1.8; color:#333; text-indent: 15px; margin-top: 15px; margin-bottom: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span><br><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></p>"
+                    # 🚨 지워졌던 병합 코드 복구: AI 풀이(ai_delivery_html)와 클로징 멘트를 del_content에 합침
+                    del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n{closing_del_html}\n</div>"
 
                     def wrap_a4_del(content, title_color="#4A148C"):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
 
+                    # 🚨 최종 리포트를 세션에 저장하고 앱을 새로고침
                     st.session_state['saved_report_del'] = wrap_a4_del(del_content)
                     st.session_state['run_delivery_only'] = False
-                    st.rerun() 
+                    st.rerun()
+                    
                 except Exception as e:
                     st.error(f"출산택일 연산 장애: {e}")
                     st.session_state['run_delivery_only'] = False
