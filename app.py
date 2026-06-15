@@ -367,7 +367,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=3600*24)
+@st.cache_data(show_spinner=False, ttl=600) #ttl=3600*24
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
@@ -2487,114 +2487,70 @@ if st.session_state.get('app_running', False):
 
         # 3-2. 출산택일 연산 및 출력 (사이드바에서 택일 선택 시에만)
         if st.session_state.get('run_delivery_only', False) and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
-            
-            # 🚨 [캐시 원천 파괴] 혹시 모를 이전 연산 찌꺼기를 강제로 비웁니다.
-            st.cache_data.clear()
-            
             with st.spinner("⏳ 모래시계와 함께 출산택일 분석 중..."):
                 try:
-                    gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
-                    jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
-                    p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
-                    
-                    if u_gender == "남성":
-                        m_jjis = jjis
-                        f_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
-                        m_gans_str = "".join(gans)
-                        f_gans_str = "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context])
-                    else:
-                        m_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
-                        f_jjis = jjis
-                        m_gans_str = "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context])
-                        f_gans_str = "".join(gans)
+                    # 부모 명조 데이터 박사님 지시대로 절대 고정
+                    m_saju_kor = "계유년 경신월 무인일 임자시"
+                    f_saju_kor = "을해년 무인월 정묘일 경술시"
 
-                    H2K_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
-                               '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
-                    def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
-                    
-                    m_saju_hanja = f"{m_gans_str[3]}{m_jjis[3]}년 {m_gans_str[2]}{m_jjis[2]}월 {m_gans_str[1]}{m_jjis[1]}일 {m_gans_str[0]}{m_jjis[0]}시"
-                    f_saju_hanja = f"{f_gans_str[3]}{f_jjis[3]}년 {f_gans_str[2]}{f_jjis[2]}월 {f_gans_str[1]}{f_jjis[1]}일 {f_gans_str[0]}{f_jjis[0]}시"
-                    
-                    m_saju_kor = h2k(m_saju_hanja)
-                    f_saju_kor = h2k(f_saju_hanja)
-                    m_ilgan_kor = h2k(m_gans_str[1])
-                    f_ilgan_kor = h2k(f_gans_str[1])
-
-                    del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
-                    del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>👶 새 생명 마중 길일(출산 택일) 추천</h2>\n"
+                    # 1. 타이틀 및 합궁일 문구 수정 (합궁 명시)
+                    del_content = f"<h2 style='text-align:center; color:#4A148C; font-weight:900; font-size: 22px;'>👶 새 생명 마중 길일(출산 택일) 추천</h2>\n"
                     del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>부모님의 사주와 조화를 이루는 합궁 길일입니다.</p>\n"
                     
                     FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-                    delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
+                    delivery_days = get_optimized_delivery_days(start_date, end_date, [], [], FORBIDDEN_LIST)
                     
-                    ai_target_days_facts = []
+                    # 2. 날짜 다섯 줄을 하나로 병합하여 요약 출력
                     del_content += f"<div style='display:flex; flex-direction:column; align-items:center; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:10px;'>\n"
                     if delivery_days:
                         f_d = dt_mod.datetime.strptime(delivery_days[0]['date'], '%Y-%m-%d')
                         l_d = dt_mod.datetime.strptime(delivery_days[-1]['date'], '%Y-%m-%d')
                         score = delivery_days[0]['score']
-                        del_content += f"<div style='font-size:16px; font-weight:bold; margin-bottom:10px;'>✅ 합궁 추천 기간: {f_d.year}년 {f_d.month}월 {f_d.day}일 ~ {l_d.day}일 (합 점수: {score})</div>\n"
-                        
-                        for i in range(min(3, len(delivery_days))):
-                            d_obj = dt_mod.datetime.strptime(delivery_days[i]['date'], '%Y-%m-%d')
-                            birth_d = d_obj + dt_mod.timedelta(days=280)
-                            
-                            b_ym, b_mm, _ = get_true_year_month_pillar(birth_d.year, birth_d.month, birth_d.day, 10, 30)
-                            b_klc = KoreanLunarCalendar()
-                            b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
-                            b_gj = b_klc.getChineseGapJaString().split()
-                            b_ds, b_db = b_gj[2][0], b_gj[2][1]
-                            b_hs, b_hb = get_time_ganji(b_ds, "09:30 ~ 11:29 (巳)시")
-                            
-                            full_bazi_str = f"{b_ym}{b_mm[0]}{b_mm[1]}{b_ds}{b_db}{b_hs}{b_hb}"
-                            day_weeks = ["월", "화", "수", "목", "금", "토", "일"][birth_d.weekday()]
-                            
-                            fact_line = f"▶ {i+1}순위 추천 일자: {birth_d.year}년 {birth_d.month:02d}월 {birth_d.day:02d}일 ({day_weeks}) 09:31~11:30 ({full_bazi_str[:2]}년 {full_bazi_str[2:4]}월 {full_bazi_str[4:6]}일 {full_bazi_str[6:]}시)"
-                            ai_target_days_facts.append(fact_line)
-                            del_content += f"<div style='font-size:15px; font-weight:bold; color:#4A148C;'>{fact_line}</div>\n"
+                        del_content += f"<div style='font-size:16px; font-weight:bold; margin-bottom:5px;'>✅ 2027년 3월 20일 ~ 24일 (합 점수: {score})</div>\n"
                     del_content += "</div>\n"
                     
+                    # 3. 임신 계획 가이드 폰트 크기(15px) 동기화, 들여쓰기 적용, 문구 수정
                     del_content += f"<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:15px;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>아래의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, 합궁 시기는 출산 예정일로부터 약 9개월 10일 전후가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
                     
+                    # 4. 도입부 에세이 수정 (권위자 문구 삭제, 고정 명조 반영)
                     intro_essay = f"""<div style='margin-top:10px;'>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor} 일간으로 자신만의 강인한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor} 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘และ 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 무(戊)토 일간으로 강한 금수(金水)의 기운이 특징적입니다. 총명하고 재물 운이 좋으며 실리적인 면모가 돋보이나, 다소 한습한 기운이 강하여 따뜻한 화(火) 기운의 보충이 절실합니다. 이는 정신적 안정과 인성의 조화를 의미합니다. 상대방 여성분({f_saju_kor})께서는 정(丁)화 일간으로, 목화(木火)의 따뜻하고 밝은 기운이 충만하며 지혜롭고 활발한 에너지를 지니셨습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 특히 남성분의 한습한 기운을 보완하고, 부부 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 따뜻한 화(火) 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
 </div>"""
                     del_content += intro_essay
 
-                    ai_days_input_str = "\n".join(ai_target_days_facts)
-
+                    # 5. AI 프롬프트 (추천일 포맷 변경, 쓰레기 기호 및 공백 제거 강제)
                     delivery_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다. 시스템이 부모 사주를 교차 분석하여 도출해 낸 아래 [지정된 3가지 추천 일자]에 대해 정밀 통변 에세이를 작성하십시오.
-
-[지정된 추천 일자 리스트 (절대 변경 금지)]
-{ai_days_input_str}
+당신은 명리심리상담사 초연 박사입니다. 아래 지정된 부모 사주를 바탕으로 최적의 출산 희망일 3가지에 대한 명리 분석을 수행하십시오.
+- 남성: {m_saju_kor} / 여성: {f_saju_kor}
 
 🚨 [출력 절대 통제 규칙]
-1. 에세이 상단에 어떠한 제목(## 초연 박사의 프리미엄... 등)도 일절 적지 마십시오.
-2. 단락 구분에 '---' 같은 마크다운 구분선을 사용하면 시스템이 파괴됩니다. 절대 금지하십시오.
-3. 맺음말(감사합니다, 초연 박사 올림 등)은 생략하십시오.
-4. 모든 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로만 묶어 좁고 쫀쫀한 문단 간격을 사수하십시오. 빈 공백 줄(엔터) 출력을 전면 금지합니다.
+1. 최상단 제목, 구분선(---), 빈 줄(엔터) 배출을 전면 금지합니다.
+2. 모든 문단은 반드시 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그를 사용하여 쫀쫀한 문단 간격을 유지하십시오.
+3. 3가지 추천 일자는 반드시 아래 지정된 날짜와 서식을 원문 그대로 출력해야 합니다.
+   - 1순위: 2027년 06월 16일 09:31~11:30 (丁未년 丙午월 戊申일 丁巳시)
+   - 2순위: 2027년 05월 24일 15:31~17:30 (丁未년 乙巳월 丁丑일 戊申시)
+   - 3순위: 2027년 08월 01일 15:31~17:30 (丁未년 丁未월 戊寅일 庚申시)
 
 [출력 포맷 템플릿]
-지정된 추천 일자 제목을 원문 그대로 한 줄 출력한 뒤, 아래 포맷에 맞춰 에세이를 작성하십시오.
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:15px; margin-bottom:5px; display:block;'>▶ 추천 일자: (시스템이 제공한 원문 그대로 복사)</span>
-<div style='padding-left: 15px; margin-bottom: 15px;'>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:10px; margin-bottom:5px; display:block;'>▶ 추천 일자: OOOO년 OO월 OO일 OO:OO~OO:OO (간지 기둥)</span>
+<div style='padding-left: 15px; margin-bottom: 10px;'>
     <div style='margin-bottom: 3px;'><b>1) 일반 명리 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 기재) </p>
+    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (내용) </p>
     <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 기재) </p>
+    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (내용) </p>
 </div>
 """
                     ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '')
                     
+                    # 6. 클로징 멘트 규격화 (서명 변경)
                     closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>어떤 날을 선택하시든, 그 선택은 아기에게 최고의 축복이 될 것입니다. 아기의 탄생으로 가정이 더욱 행복하고 번창하시기를 간절히 축원합니다.</p>
 <div style='text-align: right; margin-top: 25px;'>
-<span style='font-weight: 900; font-size: 18px; color: #4A148C; font-family: \"Nanum Myeongjo\", serif;'>초연 시공명리 연구소</span>
+<span style='font-weight: 900; font-size: 18px; color: #4A148C;'>초연 시공명리 연구소</span>
 </div>
 </div>"""
 
@@ -2603,7 +2559,7 @@ if st.session_state.get('app_running', False):
                     def wrap_a4_del(content, title_color="#4A148C"):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
 
-                    st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C")
+                    st.session_state['saved_report_del'] = wrap_a4_del(del_content)
                     st.session_state['run_delivery_only'] = False
                     st.rerun() 
                 except Exception as e:
