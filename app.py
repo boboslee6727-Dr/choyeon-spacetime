@@ -2931,11 +2931,28 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
             
-            # AI 환각 물리적 절단
+            # ==============================================================================
+            # 🚨 [최종 수술] AI 환각 방어 및 1순위 폰트 작아짐 원천 차단 (파이썬 강제 주입)
+            # ==============================================================================
+            
+            # 1. 꼬리말 제거
+            ai_delivery_html = re.sub(r'(?i)(존경하는 부모님|초연 박사 올림|감사합니다).*', '', ai_delivery_html, flags=re.DOTALL)
             ai_delivery_html = ai_delivery_html.replace('---', '')
-            ai_delivery_html = re.sub(r'^.*?((?=<span class=\'sub-title\')|(?=▶))', '', ai_delivery_html, flags=re.DOTALL)
-            ai_delivery_html = re.sub(r'(?i)존경하는 부모님.*|초연 박사 올림.*|감사합니다.*', '', ai_delivery_html, flags=re.DOTALL)
-            ai_delivery_html = ai_delivery_html.replace('\n', '')
+            
+            # 2. AI가 멋대로 쓴 불안정한 제목 태그들(span, ** 등)을 일단 싹 다 벗겨냄 (통일성을 위해)
+            ai_delivery_html = re.sub(r'<span class=[\'"]sub-title[\'"][^>]*>(.*?)</span>', r'\1', ai_delivery_html)
+            ai_delivery_html = ai_delivery_html.replace('**', '')
+            
+            # 3. 파이썬이 직접 '▶ X순위...' 패턴을 찾아 18px 제목 박스로 완벽하게 강제 포장 (AI 의존도 0%)
+            ai_delivery_html = re.sub(
+                r'(▶\s*[123]순위\s*추천\s*월령:[^<]+)', 
+                r"<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:25px; margin-bottom:10px; display:block;'>\1</span>", 
+                ai_delivery_html
+            )
+            
+            # 4. 화면이 깨지지 않도록 불필요한 줄바꿈 정리
+            ai_delivery_html = ai_delivery_html.strip()
+            # ==============================================================================
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
@@ -2953,11 +2970,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             st.session_state['saved_report_del'] = wrap_a4_del(del_content)
             st.session_state['run_delivery_only'] = False
             st.rerun()
-            
-        except Exception as e:
-            st.error(f"출산택일 연산 장애: {e}")
-            st.session_state['run_delivery_only'] = False
-
 # ==============================================================================
 # 📺 9. 화면 출력부 (순수 모니터 역할)
 # ==============================================================================
