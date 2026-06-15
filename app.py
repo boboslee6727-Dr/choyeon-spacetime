@@ -367,7 +367,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=600*24) #ttl=600*24 시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=60) #ttl=600*24 시간 감명서 유효
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
@@ -711,14 +711,39 @@ def get_daeun_su_accurate(utc_dt, order):
         return 1
 
 def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
+    import datetime as dt_mod
+    from korean_lunar_calendar import KoreanLunarCalendar
+    
     results = []
-    curr_date = start_date
-    while curr_date <= end_date:
-        score = 80 
-        results.append({'date': curr_date.strftime('%Y-%m-%d'), 'score': score})
-        curr_date += dt_mod.timedelta(days=1)
-    return sorted(results, key=lambda x: x['score'], reverse=True)[:5]
-
+    curr = start_date
+    
+    # 합/충 판단용 기본 리스트
+    hap_list = [{'자','축'}, {'인','해'}, {'묘','술'}, {'진','유'}, {'사','신'}, {'오','미'}]
+    choong_list = [{'자','오'}, {'축','미'}, {'인','신'}, {'묘','유'}, {'진','술'}, {'사','해'}]
+    
+    while curr <= end_date:
+        score = 80
+        birth_d = curr + dt_mod.timedelta(days=280) # 출산일 역산
+        b_klc = KoreanLunarCalendar()
+        b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
+        b_gj = b_klc.getChineseGapJaString().split()
+        
+        if len(b_gj) >= 3:
+            b_ilji = b_gj[2][1] # 태어날 아이의 일지
+            
+            # 부모 지지와 대조하여 동적 스코어링
+            for p_ji in m_jjis + f_jjis:
+                if p_ji == '?': continue
+                pair = {b_ilji, p_ji}
+                if pair in hap_list: score += 10    # 합이 되면 가점
+                if pair in choong_list: score -= 15 # 충이 되면 감점
+                
+        results.append({'date': curr.strftime('%Y-%m-%d'), 'score': score})
+        curr += dt_mod.timedelta(days=1)
+        
+    # 점수 높은 순으로 정렬 후 상위 3개만 추출
+    results.sort(key=lambda x: x['score'], reverse=True)
+    return results[:3]
 # ==============================================================================
 # 3. 프리미엄 궁합 분석 엔진 클래스
 # ==============================================================================
@@ -2426,7 +2451,10 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             for day_info in delivery_days:
                 del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
             
-            del_content += f"<br><hr>\n<p style='font-size:14px; line-height:1.6; color:#333;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
+            del_content += f"<p style='line-height:1.8; color:#333; text-indent: 15px; margin-top: 15px; margin-bottom: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b>
+</span><br><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 
+의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 
+부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></p>"
             
             delivery_prompt = f"""
 당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 부모의 사주 기운을 바탕으로, 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
@@ -2442,7 +2470,18 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 <br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
 <br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
 """
-            ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '<br>')
+            ai_delivery_html = call_gemini_api(delivery_prompt)
+                    
+            # 🚨 [AI 환각 물리적 절단 (가위질)]
+            # 1. '---' 마크다운 쓰레기 무조건 삭제
+            ai_delivery_html = ai_delivery_html.replace('---', '')
+            # 2. '▶ 추천 일자' 이전에 AI가 멋대로 떠든 인사말(존경하는 부모님께 등) 통째로 날림
+            ai_delivery_html = re.sub(r'^.*?((?=<span class=\'sub-title\')|(?=▶))', '', ai_delivery_html, flags=re.DOTALL)
+            # 3. '초연 박사 올림' 등 하단의 쓸데없는 맺음말 삭제
+            ai_delivery_html = re.sub(r'존경하는 부모님.*|초연 박사 올림.*', '', ai_delivery_html, flags=re.DOTALL)
+            # 4. 줄바꿈 제거하여 쫀쫀한 HTML 폼 유지
+            ai_delivery_html = ai_delivery_html.replace('\n', '')
+
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
             def wrap_a4_del(content, title_color="#4A148C", title="초연 시공명리 출산택일"):
