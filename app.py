@@ -2480,7 +2480,8 @@ if st.session_state.get('app_running', False):
 
         # 3-2. 출산택일 연산 및 출력 (사이드바에서 택일 선택 시에만)
         if run_delivery_calc and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
-            with st.spinner("⏳ 출산 택일 확정 중...."):
+            # 🚨 [박사님 지시 반영 1] 스피너 문구 교체
+            with st.spinner("⏳ 모래시계와 함께 출산택일 분석 중..."):
                 try:
                     gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
                     jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
@@ -2500,12 +2501,16 @@ if st.session_state.get('app_running', False):
                     FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
                     delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
                     
-                    del_content = f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
+                    # 🚨 [박사님 지시 반영 2] 길일은 '출산일'임을 명시
+                    del_content = f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n<p style='text-align:center; font-weight:bold; color:#4A148C;'>부모님의 사주와 조화를 이루는 '출산(제왕절개 등) 추천일'입니다.</p>\n<div style='display:flex; flex-direction:column; align-items:center; margin-bottom:15px;'>"
                     for day_info in delivery_days:
-                        del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
+                        del_content += f"<div style='font-size:16px; font-weight:bold;'>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
+                    del_content += "</div>"
                     
-                    del_content += f"<br><hr>\n<p style='font-size:14px; line-height:1.6; color:#333;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
+                    # 🚨 [박사님 지시 반영 3] 가이드라인 들여쓰기 15px 및 폰트 통일
+                    del_content += f"<hr style='border:1px solid #eee;'>\n<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일(위의 추천 일자)로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
                     
+                    # 🚨 [박사님 지시 반영 4] AI 환각 억제 (쓸데없는 제목, 구분선 컷 / 간지 병기 강제)
                     delivery_prompt = f"""
 당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 제공된 부모의 사주 기운을 바탕으로, 요청된 탐색 기간 내에서 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 가장 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
 
@@ -2515,13 +2520,33 @@ if st.session_state.get('app_running', False):
 - 탐색 지정 기간: {start_date} ~ {end_date} / 선호 태아 성별: {baby_gender}
 
 🚨 [출력 절대 규칙]
-선정된 상위 추천 일자별로 반드시 아래 규격화된 분리 통변 포맷을 100% 준수하여 작성하십시오.
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 추천 일자: OOOO년 OO월 OO일 (OO시)</span>
-<br><b>1) 일반 명리 풀이:</b> (선정된 날짜와 시간의 오행 분포, 아이가 가질 선천적 격국의 강점 및 부모 사주와의 끈끈한 육친적 정서 조화 상태를 구어체로 상세 기술)
-<br><b>2) 시공 명리 풀이:</b> (해당 시공간의 기운이 아이의 성장기 학업, 향후 성인이 되었을 때의 직업적/사회적 성취 및 자산 안정성에 미치는 장기적 운명의 궤도를 세련된 에세이로 기술)
+1. 에세이 최상단에 '## 초연 박사의 프리미엄 출산택일 명리 에세이' 같은 제목을 절대 적지 마십시오.
+2. 단락을 구분할 때 '---' 같은 마크다운 구분선을 절대 사용하지 마십시오.
+3. 맺음말(감사합니다, 초연 박사 올림 등)을 절대로 출력하지 마십시오. (시스템이 하단에 자동 생성합니다.)
+4. 추천 일자 출력 시 반드시 괄호 기호를 활용해 사주 팔자(간지 8글자)를 병기하십시오.
+5. 모든 단락은 반드시 `<p style='text-indent: 15px; margin-bottom: 8px;'>` 태그로 감싸십시오.
+
+[출력 포맷 템플릿]
+<p style='text-indent: 15px; ...'>존경하는 부모님께,... (도입부 에세이)</p>
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:25px; margin-bottom:10px; display:block;'>▶ 추천 일자: OOOO년 OO월 OO일 (요일) O시 (OO시 OO분 ~ OO시 OO분) [OO년 OO월 OO일 OO시]</span>
+<div style='padding-left: 15px; margin-bottom: 20px;'>
+    <div style='margin-bottom: 5px;'><b>1) 일반 명리 풀이:</b> (상세 기술)</div>
+    <div><b>2) 시공 명리 풀이:</b> (상세 기술)</div>
+</div>
 """
-                    ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '<br>')
-                    del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
+                    # AI 호출 (이때 구분선이나 쓸데없는 엔터 제거)
+                    ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '')
+                    
+                    # 🚨 [박사님 지시 반영 5] 옛 버전의 품격 있는 클로징 문구 및 서명 복구
+                    closing_del_html = f"""<div style='margin-top: 35px;'>
+<p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>초연 박사는 위에 제시된 명식 모두 아이의 선천적 기운이 매우 강건하고, 부모님과의 오행 조화 또한 극대화될 수 있는 최상의 선택지라고 확신합니다. 두 분의 깊은 사랑으로 태어날 귀한 아이가 이 명리적 지혜를 바탕으로 밝고 건강하게 성장하여, 행복하고 성공적인 삶을 영위하기를 진심으로 기원합니다.</p>
+<div style='text-align: right; margin-top: 30px;'>
+<span style='font-weight: 900; font-size: 18px; color: #4A148C;'>- 초연 시공명리 연구소 드림 -</span>
+</div>
+</div>"""
+
+                    del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n{closing_del_html}\n</div>"
 
                     def wrap_a4_del(content, title_color="#4A148C", title="초연 시공명리 출산택일"):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n<div style='border-bottom:4px double {title_color}; padding-bottom:20px; margin-bottom:40px;'>\n<h1 style='text-align:center; font-size: 32px; color:{title_color}; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 {title}</h1>\n</div>\n{content}\n</div>\n</div>"
