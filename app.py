@@ -17,7 +17,7 @@ import re
 # ==============================================================================
 # 🎯 [버전 컨트롤 타워]
 # ==============================================================================
-APP_VERSION = "Ver 47.5 (Master AI Optimized)"
+APP_VERSION = "Ver 47.6 (Master AI Optimized)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -930,8 +930,10 @@ with st.sidebar:
     if u_product == "개인사주":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
         if run_iljin_calc: st.session_state['target_date'] = st.date_input("분석 일자", value=dt_mod.datetime.now().date())
+        
     elif u_product == "타 감명서":
         other_reading_text = st.text_area("📄 타 감명서 원문", height=150, key="other_reading")
+        
     elif u_product == "궁합":
         with st.expander("🔍 상대방 사주팔자 역산 검색", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
@@ -942,17 +944,52 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn"):
                 _pry, _prm, _prd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
-                # ... (역산 로직 동일, 생략 가능부분은 위 로직 참고하여 작동)
+                if len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
+                    p_ry_h = K2H_GAN.get(_pry[0], _pry[0]) + K2H_JI.get(_pry[1], _pry[1])
+                    p_rm_h = K2H_GAN.get(_prm[0], _prm[0]) + K2H_JI.get(_prm[1], _prm[1])
+                    p_rd_h = K2H_GAN.get(_prd[0], _prd[0]) + K2H_JI.get(_prd[1], _prd[1])
+                    p_klc_find = KoreanLunarCalendar(); p_found = False
+                    for y in range(2026, 1899, -1):
+                        p_klc_find.setSolarDate(y, 7, 1); p_gj_y = p_klc_find.getChineseGapJaString().split()
+                        if p_gj_y and p_gj_y[0][:2] == p_ry_h:
+                            p_curr_dt = dt_mod.date(y+1, 2, 28)
+                            while p_curr_dt >= dt_mod.date(y, 1, 1):
+                                p_klc_find.setSolarDate(p_curr_dt.year, p_curr_dt.month, p_curr_dt.day)
+                                p_gj = p_klc_find.getChineseGapJaString().split()
+                                if len(p_gj) >= 3 and p_gj[0][:2] == p_ry_h and p_gj[1][:2] == p_rm_h and p_gj[2][:2] == p_rd_h:
+                                    st.session_state.p_y_in, st.session_state.p_m_in, st.session_state.p_d_in = p_curr_dt.year, p_curr_dt.month, p_curr_dt.day
+                                    time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
+                                    if p_rt:
+                                        p_ji_char = extract_ganji(p_rt)[-1]
+                                        p_rt_h = K2H_JI.get(p_ji_char, p_ji_char)
+                                        if p_rt_h in time_map_rev: st.session_state.p_t_key = time_map_rev[p_rt_h]
+                                    p_found = True
+                                    st.success(f"✅ 상대방 {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 입력완료!")
+                                    break
+                                p_curr_dt -= dt_mod.timedelta(days=1)
+                        if p_found: break
+                    if not p_found: st.error("일치하는 날짜가 없습니다.")
+                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
         
+        st.markdown("<div style='font-weight:900; color:#D50000; margin-bottom:5px; margin-top:15px;'>👥 상대방 정보</div>", unsafe_allow_html=True)
         p_name = st.text_input("이름", value="", key="p_n")
-        p_gender = st.selectbox("성별", ["남성", "여성"], key="p_g")
+        
+        # 🚨 [수술 1] 신청인 성별(u_gender)에 따라 상대방 성별 자동 반전!
+        p_gender_default = 1 if u_gender == "남성" else 0
+        p_gender = st.selectbox("성별", ["남성", "여성"], index=p_gender_default, key="p_g")
+        
         p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="p_m_stat")
         p_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="p_c")
-        p_y = st.number_input("년", 1900, 2050, value=2010, key="p_y_in")
-        p_m = st.number_input("월", 1, 12, value=1, key="p_m_in")
-        p_d = st.number_input("일", 1, 31, value=1, key="p_d_in")
+        
+        # 🚨 [수술 2] 개인사주와 완벽히 똑같이 3단 가로 컬럼으로 배치! (드래그 느낌/여백 낭비 원천 차단)
+        p_col1, p_col2, p_col3 = st.columns(3)
+        p_y = p_col1.number_input("상대방 년", 1900, 2050, value=1980, key="p_y_in")
+        p_m = p_col2.number_input("상대방 월", 1, 12, value=1, key="p_m_in")
+        p_d = p_col3.number_input("상대방 일", 1, 31, value=1, key="p_d_in")
+        
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
         
+        # 출산 택일 옵션
         if (dt_mod.datetime.now().year - u_y + 1) <= 49:
             with st.expander("👶 출산택일 달력 선택", expanded=False):
                 baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"])
