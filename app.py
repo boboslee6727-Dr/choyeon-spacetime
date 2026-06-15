@@ -2353,7 +2353,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
         m_ilji = st.session_state['global_db']
         
         # 🚨 [수술 1] 박사님 명조 정보 추출 (배열: [시, 일, 월, 년])
-        myongjo_str = f"명조: {gans_list[3]}{jjis_list[3]}년 {gans_list[2]}{jjis_list[2]}월 {gans_list[1]}{jjis_list[1]}일 {gans_list[0]}{jjis_list[0]}시 ({u_gender}, {u_age}세)"
+        local_curr_y = dt_mod.datetime.now().year
+        local_u_age = local_curr_y - u_y + 1
+        myongjo_str = f"명조: {gans_list[3]}{jjis_list[3]}년 {gans_list[2]}{jjis_list[2]}월 {gans_list[1]}{jjis_list[1]}일 {gans_list[0]}{jjis_list[0]}시 ({u_gender}, {local_u_age}세)"
         
         from korean_lunar_calendar import KoreanLunarCalendar
         dklc = KoreanLunarCalendar()
