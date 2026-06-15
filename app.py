@@ -2935,31 +2935,32 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 - 여명: {f_direction} (년주가 {year_gan}년이므로)
 - 규칙: 성별과 년간의 음양에 따른 정확한 순/역행 방향으로 대운을 분석할 것.
 """
+            
+           # 🚨 부모 사주 정보를 AI가 명확히 인지하도록 전달
+            parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
-            # 🚨 AI 통제용 프롬프트 (폰트 크기 및 한자 표기 강제 명령 하달)
+            # 🚨 AI 통제용 프롬프트 강화
             delivery_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다. 
-{prompt_daewun_info}
-시스템이 도출한 아래 [지정된 3가지 추천 일정]에 대해 통변 에세이를 작성하십시오.
+당신은 명리심리상담사 초연 박사입니다.
+{parent_info}
 
-[지정된 추천 일정 리스트]
+시스템이 도출한 아래 [추천 출산 명식 및 부모 조화 점수]에 대해 통변 에세이를 작성하십시오.
+
+[추천 일정 리스트]
 {ai_days_input_str}
 
-[태아 성별 조건]
-- {baby_gender} (통변 시 성별에 따른 대운의 순행/역행 유불리를 서술할 것)
+🚨 [필수 준수 사항 - 위반 시 감점]
+1. 각 순위별 명리 풀이 시 반드시 '부모 사주와의 상생 관계'를 첫 문단에 배치하십시오.
+   - 예: "이 사주는 부(父)의 사주에서 부족한 [오행]을 [십성]으로 보완하며, 모(母)의 일지와 [합/충] 관계를 통해 깊은 유대감을 형성할 수 있는 구조입니다."
+2. 1순위, 2순위, 3순위의 제목 폰트 크기 및 구조는 [출력 포맷 템플릿]을 100% 따를 것.
+3. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
 
-🚨 [출력 절대 규칙 - 이것을 어기면 시스템이 붕괴됩니다!]
-1. 1순위, 2순위, 3순위의 제목 폰트 크기가 달라지는 시스템 오류를 막아야 합니다. 1순위를 포함한 모든 순위의 제목은 반드시 아래 [출력 포맷 템플릿]의 `<span class='sub-title'...>` HTML 태그를 100% 동일하게 복사하여 적용하십시오!
-2. 명식의 모든 간지는 풀이 내용 안에서도 무조건 한자(漢字)로만 표기하십시오. (예: 정해 -> 丁亥)
-3. 에세이 상단 제목, 인사말, 맺음말(감사합니다 등) 절대 금지.
-4. 모든 통변 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로 묶어 간격을 맞출 것.
-
-[출력 포맷 템플릿] (이 구조를 1~3순위마다 정확히 반복하십시오)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ (입력받은 1,2,3순위 텍스트 원문을 그대로 복사)</span>
+[출력 포맷 템플릿]
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ (입력받은 1,2,3순위 텍스트)</span>
 <div style='padding-left: 15px; margin-bottom: 15px;'>
-    <div style='margin-bottom: 3px;'><b>1) 일반 명리 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
-    <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 풀이:</b></div>
+    <div style='margin-bottom: 3px;'><b>1) 일반 명리 및 부모 조화 풀이:</b></div>
+    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 부모 사주와의 궁합 비중 30%를 포함하여 기술) </p>
+    <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 및 성장 환경 풀이:</b></div>
     <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
 </div>
 """
