@@ -2909,7 +2909,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             # 🚨 AI 통제용 프롬프트 (폰트 크기 및 한자 표기 강제 명령 하달)
             delivery_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다. 시스템이 도출한 아래 [지정된 3가지 추천 일정]에 대해 통변 에세이를 작성하십시오.
+당신은 명리심리상담사 초연 박사입니다. 
+{prompt_daewun_info}
+시스템이 도출한 아래 [지정된 3가지 추천 일정]에 대해 통변 에세이를 작성하십시오.
 
 [지정된 추천 일정 리스트]
 {ai_days_input_str}
@@ -2932,12 +2934,30 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
     <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
 </div>
 """
+            # 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
+            # 년간이 甲(양), 丙(양), 戊(양), 庚(양), 壬(양)이면 남순/여역
+            # 년간이 乙(음), 丁(음), 己(음), 辛(음), 癸(음)이면 남역/여순
+            yang_gans = ['갑', '병', '무', '경', '임']
+            year_gan = h2k(gans[3][0]) # 년간 추출
+            is_yang_year = year_gan in yang_gans
+            
+            # 남성: 양년생(순행), 음년생(역행) / 여성: 양년생(역행), 음년생(순행)
+            m_direction = "순행" if is_yang_year else "역행"
+            f_direction = "역행" if is_yang_year else "순행"
+
+            # 프롬프트에 이 값을 강제로 주입
+            prompt_daewun_info = f"""
+[성별 및 대운 방향 설정]
+- 남명: {m_direction} (년주가 {year_gan}년이므로)
+- 여명: {f_direction} (년주가 {year_gan}년이므로)
+- 규칙: 성별과 년간의 음양에 따른 정확한 순/역행 방향으로 대운을 분석할 것.
+"""
             ai_delivery_html = call_gemini_api(delivery_prompt)
             
             # ==============================================================================
             # 🚨 [최종 수술] AI 환각 방어 및 1순위 폰트 작아짐 원천 차단 (파이썬 강제 주입)
             # ==============================================================================
-            
+           
             # 1. 꼬리말 제거
             ai_delivery_html = re.sub(r'(?i)(존경하는 부모님|초연 박사 올림|감사합니다).*', '', ai_delivery_html, flags=re.DOTALL)
             ai_delivery_html = ai_delivery_html.replace('---', '')
@@ -2977,6 +2997,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
         except Exception as e:
             st.error(f"출산택일 연산 장애: {e}")
             st.session_state['run_delivery_only'] = False
+
 # ==============================================================================
 # 📺 9. 화면 출력부 (순수 모니터 역할)
 # ==============================================================================
