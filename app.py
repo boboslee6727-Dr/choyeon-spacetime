@@ -2592,7 +2592,10 @@ if st.session_state.get('app_running', False):
                             del_content += f"<div style='font-size:15px; font-weight:bold; color:#4A148C;'>{fact_line}</div>\n"
                     del_content += "</div>\n"
                     
-                    del_content += f"<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:15px;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>아래의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, 합궁 시기는 출산 예정일로부터 약 9개월 10일 전후가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
+                    del_content += f"""<p style='line-height:1.8; color:#333; text-indent: 15px; margin-top: 15px; margin-bottom: 15px;'>
+<span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span><br>
+<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span>
+</p>"""
                     
                     intro_essay = f"""<div style='margin-top:10px;'>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
