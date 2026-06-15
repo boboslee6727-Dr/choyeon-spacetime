@@ -714,43 +714,123 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
     import datetime as dt_mod
     from korean_lunar_calendar import KoreanLunarCalendar
     
-    results = []
-    curr = start_date
-    hap_list = [{'자','축'}, {'인','해'}, {'묘','술'}, {'진','유'}, {'사','신'}, {'오','미'}]
-    choong_list = [{'자','오'}, {'축','미'}, {'인','신'}, {'묘','유'}, {'진','술'}, {'사','해'}]
+    # 1. 명리학 오행 매핑 데이터 사전
+    OHENG_MAP = {
+        '갑': '목', '을': '목', '인': '목', '묘': '목',
+        '병': '화', '정': '화', '사': '화', '오': '화',
+        '무': '토', '기': '토', '축': '토', '진': '토', '미': '토', '술': '토',
+        '경': '금', '신': '금', '유': '금',
+        '임': '수', '계': '수', '자': '수', '해': '수'
+    }
     
+    # 육합 및 지지충 정의
+    hap_list = [{'자', '축'}, {'인', '해'}, {'묘', '술'}, {'진', '유'}, {'사', '신'}, {'오', '미'}]
+    choong_list = [{'자', '오'}, {'축', '미'}, {'인', '신'}, {'묘', '유'}, {'진', '술'}, {'사', '해'}]
+    
+    # 한자 간지 -> 한글 변환 내부 유틸리티
+    H2K_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
+               '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
+    def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
+
+    raw_candidates = []
+    curr = start_date
+    
+    # 하루씩 순회하며 전수 연산 시행
     while curr <= end_date:
-        # 점수 범위를 50~100으로 넓혀 80점 고정 탈피
-        score = 50 
+        # 합궁일 기준 280일 역산하여 출산 예정일 확정
         birth_d = curr + dt_mod.timedelta(days=280)
+        
         b_klc = KoreanLunarCalendar()
         b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
         b_gj = b_klc.getChineseGapJaString().split()
         
         if len(b_gj) >= 3:
-            b_ilji = b_gj[2][1]
-            for p_ji in m_jjis + f_jjis:
-                if p_ji == '?': continue
-                pair = {b_ilji, p_ji}
-                if pair in hap_list: score += 15 # 가점 상향
-                if pair in choong_list: score -= 20 # 감점 상향
-        
-        results.append({'date': curr.strftime('%Y-%m-%d'), 'month': curr.strftime('%Y-%m'), 'score': score})
+            # 안전한 한글 변환 데이터 확보
+            b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]]
+            
+            # [필터] 금기 명조(forbidden_list)에 해당하면 원천 배제
+            is_forbidden = False
+            for pillar in b_gj_kor:
+                if pillar in forbidden_list:
+                    is_forbidden = True
+                    break
+            if is_forbidden:
+                curr += dt_mod.timedelta(days=1)
+                continue
+            
+            # ------------------------------------------------------------------
+            # 로직 A: 신생아 3주 6자 오행 균형도 연산 (60점 만점)
+            # ------------------------------------------------------------------
+            baby_score = 0
+            characters = []
+            for pillar in b_gj_kor:
+                if len(pillar) == 2:
+                    characters.extend([pillar[0], pillar[1]]) # 천간, 지지 분해
+            
+            # 오행 카운트 초기화
+            oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
+            for char in characters:
+                oheng = OHENG_MAP.get(char)
+                if oheng:
+                    oheng_counts[oheng] += 1
+            
+            # 1단계: 오행 구비 다채로움 가점 (오행 종류당 12점, 5개 모두 존재 시 60점 만점)
+            present_types = [t for t, count in oheng_counts.items() if count > 0]
+            baby_score = len(present_types) * 12
+            
+            # 2단계: 오행 편중 페널티 (특정 오행이 3개 이상 과다할 경우 10점 누적 감점)
+            for t, count in oheng_counts.items():
+                if count >= 3:
+                    baby_score -= 10
+            
+            # 신생아 점수 하한/상한 안정 장치
+            baby_score = max(10, min(60, baby_score))
+            
+            # ------------------------------------------------------------------
+            # 로직 B: 부모 사주 지지 조화 연산 (40점 만점)
+            # ------------------------------------------------------------------
+            parent_score = 25  # 중립 베이스 기본 점수
+            b_ilji = b_gj_kor[2][1] if len(b_gj_kor[2]) > 1 else ''
+            
+            if b_ilji:
+                for p_ji in m_jjis + f_jjis:
+                    if p_ji == '?': 
+                        continue
+                    pair = {b_ilji, p_ji}
+                    if pair in hap_list:
+                        parent_score += 5   # 부모 지지와 육합 발생 시 가점
+                    if pair in choong_list:
+                        parent_score -= 10  # 부모 지지와 지지충 발생 시 감점
+            
+            parent_score = max(0, min(40, parent_score))
+            
+            # 최종 정밀 합산 점수 생성
+            total_score = baby_score + parent_score
+            
+            raw_candidates.append({
+                'date': curr.strftime('%Y-%m-%d'),
+                'month': curr.strftime('%Y-%m'),
+                'score': total_score
+            })
+            
         curr += dt_mod.timedelta(days=1)
         
-    # 점수 정렬 후, 월(Month) 단위로 중복 제거하여 3개 추출
-    results.sort(key=lambda x: x['score'], reverse=True)
+    # ----------------------------------------------------------------------
+    # 로직 C: 월별(Month) 그룹화 및 최적 길일 분산 추출 알고리즘
+    # ----------------------------------------------------------------------
+    month_best_bucket = {}
     
-    final_results = []
-    seen_months = set()
-    for r in results:
-        if r['month'] not in seen_months:
-            final_results.append(r)
-            seen_months.add(r['month'])
-        if len(final_results) >= 3:
-            break
+    # 각 월별로 가장 높은 점수를 가진 단 하루의 날짜만 버킷에 보존
+    for item in raw_candidates:
+        m_key = item['month']
+        if m_key not in month_best_bucket or item['score'] > month_best_bucket[m_key]['score']:
+            month_best_bucket[m_key] = item
             
-    return final_results
+    # 버킷에 수집된 월별 대표 날짜들을 점수 내림차순으로 최종 정렬
+    sorted_months = sorted(month_best_bucket.values(), key=lambda x: x['score'], reverse=True)
+    
+    # 서로 다른 달에서 추출된 최상위 3개 조합만 칼같이 반환
+    return sorted_months[:3]
 # ==============================================================================
 # 3. 프리미엄 궁합 분석 엔진 클래스
 # ==============================================================================
@@ -2151,15 +2231,15 @@ if st.session_state.get('need_calc', False):
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
 (이곳에 여성의 명리적 성향을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
 
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
 (이곳에 여성의 내면과 무의식을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
 (일지의 십성과 십이운성, 지장간의 포태법을 바탕으로 육친적, 심리적, 사회적 관점을 살려 여성의 연애 및 결혼관을 실제 에세이로 작성)
 [FEMALE_END]
 
@@ -2167,19 +2247,20 @@ if st.session_state.get('need_calc', False):
 <h3 style='color: #1B5E20; font-size: 24px; font-weight: 900; margin-top: 10px;'>🍀 두 사람의 운명적 만남 총평</h3>
 (두 사람의 사주 기운이 만나 형성하는 큰 틀의 인연, 만남의 의미와 전반적인 궁합 총평을 깊이 있게 통변한 실제 에세이 작성)
 
-<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>🌈 커플의 인생 기상도 및 대운 교차 분석</h3>
+<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 25px;'>🌈 커플의 인생 기상도 및 대운 교차 분석</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
 (상하 대운표를 바탕으로, 두 사람의 운의 흐름이 어떤 시기에 서로 보완되고 상생하는지, 혹은 주의가 필요한지 교차 분석한 실제 에세이 작성)
 
-<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>💞 초연 시공명리 심층 조화 분석</h3>
+<h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 25px;'>💞 초연 시공명리 심층 조화 분석</h3>
+
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 오행 및 조후의 상생 조화</span>
 (서로의 사주에서 부족하거나 넘치는 기운(온습 및 오행)을 어떻게 채워주고 완충하는지 구체적으로 명시하여 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
 (남명과 여명의 성격적/육친적 십성 구조가 현실 생활(의사소통, 재물관, 자녀관 등)에서 어떻게 융합되거나 부딪히는지 분석)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 25px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
 (일지(배우자궁)와 지장간의 합형충파해를 기반으로 한 육체적, 내적 유대감 및 은밀한 성향적 조화를 품격있게 풀이)
 
-<h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
+<h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 25px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
 (단순한 조언을 넘어, 부부/연인 관계에서 필연적으로 겪게 될 위기 상황을 짚어주고, 이를 극복하기 위한 마음가짐, 소통 방식, 행동 지침 등 실질적인 타개책을 3문단 이상의 깊이 있는 에세이로 작성)
 [GUNGHAP_END]
 """
