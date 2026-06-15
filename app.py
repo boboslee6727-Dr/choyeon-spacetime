@@ -2907,6 +2907,25 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             ai_days_input_str = "\n".join(ai_target_days_facts)
 
+            # 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
+            # 년간이 甲(양), 丙(양), 戊(양), 庚(양), 壬(양)이면 남순/여역
+            # 년간이 乙(음), 丁(음), 己(음), 辛(음), 癸(음)이면 남역/여순
+            yang_gans = ['갑', '병', '무', '경', '임']
+            year_gan = h2k(gans[3][0]) # 년간 추출
+            is_yang_year = year_gan in yang_gans
+            
+            # 남성: 양년생(순행), 음년생(역행) / 여성: 양년생(역행), 음년생(순행)
+            m_direction = "순행" if is_yang_year else "역행"
+            f_direction = "역행" if is_yang_year else "순행"
+
+            # 프롬프트에 이 값을 강제로 주입
+            prompt_daewun_info = f"""
+[성별 및 대운 방향 설정]
+- 남명: {m_direction} (년주가 {year_gan}년이므로)
+- 여명: {f_direction} (년주가 {year_gan}년이므로)
+- 규칙: 성별과 년간의 음양에 따른 정확한 순/역행 방향으로 대운을 분석할 것.
+"""
+
             # 🚨 AI 통제용 프롬프트 (폰트 크기 및 한자 표기 강제 명령 하달)
             delivery_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다. 
@@ -2933,24 +2952,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
     <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 풀이:</b></div>
     <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
 </div>
-"""
-            # 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
-            # 년간이 甲(양), 丙(양), 戊(양), 庚(양), 壬(양)이면 남순/여역
-            # 년간이 乙(음), 丁(음), 己(음), 辛(음), 癸(음)이면 남역/여순
-            yang_gans = ['갑', '병', '무', '경', '임']
-            year_gan = h2k(gans[3][0]) # 년간 추출
-            is_yang_year = year_gan in yang_gans
-            
-            # 남성: 양년생(순행), 음년생(역행) / 여성: 양년생(역행), 음년생(순행)
-            m_direction = "순행" if is_yang_year else "역행"
-            f_direction = "역행" if is_yang_year else "순행"
-
-            # 프롬프트에 이 값을 강제로 주입
-            prompt_daewun_info = f"""
-[성별 및 대운 방향 설정]
-- 남명: {m_direction} (년주가 {year_gan}년이므로)
-- 여명: {f_direction} (년주가 {year_gan}년이므로)
-- 규칙: 성별과 년간의 음양에 따른 정확한 순/역행 방향으로 대운을 분석할 것.
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
             
