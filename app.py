@@ -2486,8 +2486,11 @@ if st.session_state.get('app_running', False):
         st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
         # 3-2. 출산택일 연산 및 출력 (사이드바에서 택일 선택 시에만)
-        # 🚨 [수술 1] 체크박스 상태가 아닌, 가동 버튼이 눌려 'run_delivery_only' 스위치가 켜졌을 때만 진입!
         if st.session_state.get('run_delivery_only', False) and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
+            
+            # 🚨 [캐시 원천 파괴] 혹시 모를 이전 연산 찌꺼기를 강제로 비웁니다.
+            st.cache_data.clear()
+            
             with st.spinner("⏳ 모래시계와 함께 출산택일 분석 중..."):
                 try:
                     gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
@@ -2511,17 +2514,18 @@ if st.session_state.get('app_running', False):
                     
                     m_saju_hanja = f"{m_gans_str[3]}{m_jjis[3]}년 {m_gans_str[2]}{m_jjis[2]}월 {m_gans_str[1]}{m_jjis[1]}일 {m_gans_str[0]}{m_jjis[0]}시"
                     f_saju_hanja = f"{f_gans_str[3]}{f_jjis[3]}년 {f_gans_str[2]}{f_jjis[2]}월 {f_gans_str[1]}{f_jjis[1]}일 {f_gans_str[0]}{f_jjis[0]}시"
+                    
                     m_saju_kor = h2k(m_saju_hanja)
                     f_saju_kor = h2k(f_saju_hanja)
                     m_ilgan_kor = h2k(m_gans_str[1])
                     f_ilgan_kor = h2k(f_gans_str[1])
 
-                    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
-                    delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
-                    
                     del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
                     del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>👶 새 생명 마중 길일(출산 택일) 추천</h2>\n"
                     del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>부모님의 사주와 조화를 이루는 합궁 길일입니다.</p>\n"
+                    
+                    FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+                    delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
                     
                     ai_target_days_facts = []
                     del_content += f"<div style='display:flex; flex-direction:column; align-items:center; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:10px;'>\n"
@@ -2554,7 +2558,7 @@ if st.session_state.get('app_running', False):
                     
                     intro_essay = f"""<div style='margin-top:10px;'>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor}토 일간으로 강한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor}화 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor} 일간으로 자신만의 강인한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor} 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
 <p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
 </div>"""
@@ -2563,7 +2567,7 @@ if st.session_state.get('app_running', False):
                     ai_days_input_str = "\n".join(ai_target_days_facts)
 
                     delivery_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다. 파이썬 시스템이 부모 사주를 교차 분석하여 도출해 낸 아래 [지정된 3가지 추천 일자]에 대해 정밀 통변 에세이를 작성하십시오.
+당신은 명리심리상담사 초연 박사입니다. 시스템이 부모 사주를 교차 분석하여 도출해 낸 아래 [지정된 3가지 추천 일자]에 대해 정밀 통변 에세이를 작성하십시오.
 
 [지정된 추천 일자 리스트 (절대 변경 금지)]
 {ai_days_input_str}
@@ -2571,7 +2575,7 @@ if st.session_state.get('app_running', False):
 🚨 [출력 절대 통제 규칙]
 1. 에세이 상단에 어떠한 제목(## 초연 박사의 프리미엄... 등)도 일절 적지 마십시오.
 2. 단락 구분에 '---' 같은 마크다운 구분선을 사용하면 시스템이 파괴됩니다. 절대 금지하십시오.
-3. 맺음말(감사합니다 등)은 생략하십시오.
+3. 맺음말(감사합니다, 초연 박사 올림 등)은 생략하십시오.
 4. 모든 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로만 묶어 좁고 쫀쫀한 문단 간격을 사수하십시오. 빈 공백 줄(엔터) 출력을 전면 금지합니다.
 
 [출력 포맷 템플릿]
@@ -2600,8 +2604,6 @@ if st.session_state.get('app_running', False):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
 
                     st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C")
-                    
-                    # 🚨 [수술 2] 연산이 무사히 끝났으므로 가동 허가증을 파기(False)하여 성급한 재실행을 막습니다.
                     st.session_state['run_delivery_only'] = False
                     st.rerun() 
                 except Exception as e:
