@@ -2771,16 +2771,26 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                                 
                             # (3) 길신/흉신 점수 (최대 20점)
                             god_score = 10
+                        
+                            # 🚨 [생존 필터] 일간이 절지(絶地)인 경우 치명적 감점 (일간이 약한 경우 원천 차단)
+                            # 예: 甲木이 申을 만나면 절지, 乙木이 酉를 만나면 절지 등
+                            if b_day[1] in ['신', '유', '인', '묘', '사', '오', '해', '자']: # 본인의 절/태지 감점
+                                god_score -= 15
+
                             noble_branches = GUIIN_MAP.get(b_day_stem, [])
                             munchang_branch = MUNCHANG_MAP.get(b_day_stem, '')
-                            for ji in [b_year[1], b_month[1], b_day[1], b_time[1]]:
-                                if ji in noble_branches: god_score += 8
-                                if ji == munchang_branch: god_score += 4
-                                
+                        
+                            # 길신 가점은 오행 균형이 잡혔을 때만 적용하도록 축소
+                            if len(present_types) >= 3:
+                                for ji in [b_year[1], b_month[1], b_day[1], b_time[1]]:
+                                    if ji in noble_branches: god_score += 4 # 가점 축소
+                                    if ji == munchang_branch: god_score += 2
+                            
+                            # 원진/귀문 등 흉살 감점 대폭 강화
                             for idx1 in range(4):
                                 for idx2 in range(idx1 + 1, 4):
                                     pair = {four_pillars[idx1][1], four_pillars[idx2][1]}
-                                    if pair in wonjin_gwimun: god_score -= 6
+                                    if pair in wonjin_gwimun: god_score -= 15 # 감점 대폭 강화
                                     
                             baby_score = max(0, min(70, ym_johu_score + structure_score + god_score))
                             
