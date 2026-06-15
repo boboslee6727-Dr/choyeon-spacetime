@@ -2674,6 +2674,153 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                        '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
             def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
 
+            # 🚨 [신규 이식] 출산택일 정밀 연산 함수 (7:3 비율, 조후, 길신/흉신 통제)
+            def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
+                OHENG_MAP = {
+                    '갑':'목', '을':'목', '인':'목', '묘':'목', '병':'화', '정':'화', '사':'화', '오':'화',
+                    '무':'토', '기':'토', '축':'토', '진':'토', '미':'토', '술':'토', '경':'금', '신':'금', '유':'금',
+                    '임':'수', '계':'수', '자':'수', '해':'수'
+                }
+                
+                KILL_SWITCH = set(forbidden_list)
+                KILL_SWITCH.update({'갑진', '을미', '병술', '정축', '무진', '임술', '계축'}) # 백호/괴강 등 흉살 추가 배제
+                
+                hap_list = [{'자', '축'}, {'인', '해'}, {'묘', '술'}, {'진', '유'}, {'사', '신'}, {'오', '미'}]
+                choong_list = [{'자', '오'}, {'축', '미'}, {'인', '신'}, {'묘', '유'}, {'진', '술'}, {'사', '해'}]
+                wonjin_gwimun = [{'자', '미'}, {'축', '오'}, {'인', '유'}, {'묘', '신'}, {'진', '해'}, {'사', '술'}]
+                
+                TIME_SLOTS = [
+                    ("자", "23:30~01:29"), ("축", "01:30~03:29"), ("인", "03:30~05:29"),
+                    ("묘", "05:30~07:29"), ("진", "07:30~09:29"), ("사", "09:30~11:29"),
+                    ("오", "11:30~13:29"), ("미", "13:30~15:29"), ("신", "15:30~17:29"),
+                    ("유", "17:30~19:29"), ("술", "19:30~21:29"), ("해", "21:30~23:29")
+                ]
+                TIME_STEM_START = {'갑':'갑', '기':'갑', '을':'병', '경':'병', '병':'무', '신':'무', '정':'경', '임':'경', '무':'임', '계':'임'}
+                GAN_LIST = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
+
+                GUIIN_MAP = {
+                    '갑': ['축', '미'], '을': ['자', '신'], '병': ['해', '유'], '정': ['해', '유'], '무': ['축', '미'],
+                    '기': ['자', '신'], '경': ['축', '미'], '신': ['인', '오'], '임': ['묘', '사'], '계': ['묘', '사']
+                }
+                MUNCHANG_MAP = {
+                    '갑': '사', '을': '오', '병': '신', '정': '유', '무': '신',
+                    '기': '유', '경': '해', '신': '자', '임': '인', '계': '묘'
+                }
+                
+                HOT_JI = ['사', '오', '미', '술']
+                COLD_JI = ['해', '자', '축', '진']
+
+                raw_candidates = []
+                curr = start_date
+                
+                while curr <= end_date:
+                    birth_d = curr + dt_mod.timedelta(days=280)
+                    b_klc = KoreanLunarCalendar()
+                    b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
+                    b_gj = b_klc.getChineseGapJaString().split()
+                    
+                    if len(b_gj) >= 3:
+                        b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]] 
+                        b_year, b_month, b_day = b_gj_kor[0], b_gj_kor[1], b_gj_kor[2]
+                        
+                        # [0단계] 흉살 및 복음(간지 중복) 배제
+                        if b_year in KILL_SWITCH or b_month in KILL_SWITCH or b_day in KILL_SWITCH:
+                            curr += dt_mod.timedelta(days=1); continue
+                        if b_year == b_month or b_month == b_day or b_year == b_day:
+                            curr += dt_mod.timedelta(days=1); continue
+                        
+                        b_day_stem = b_day[0]
+                        start_stem = TIME_STEM_START.get(b_day_stem, '갑')
+                        start_idx = GAN_LIST.index(start_stem)
+
+                        best_time_score = -999
+                        best_time_data = {}
+
+                        for t_idx, (t_ji, t_time_str) in enumerate(TIME_SLOTS):
+                            t_gan = GAN_LIST[(start_idx + t_idx) % 10]
+                            b_time = f"{t_gan}{t_ji}"
+
+                            if b_time in KILL_SWITCH or b_time in [b_year, b_month, b_day]:
+                                continue
+
+                            four_pillars = [b_year, b_month, b_day, b_time]
+                            characters = []
+                            for pillar in four_pillars:
+                                characters.extend([pillar[0], pillar[1]])
+                                
+                            oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
+                            for char in characters:
+                                oh = OHENG_MAP.get(char)
+                                if oh: oheng_counts[oh] += 1
+                                
+                            # (1) 조후 점수 (최대 30점)
+                            ym_johu_score = 15
+                            y_ji = b_year[1]; m_ji = b_month[1]
+                            if y_ji in HOT_JI:
+                                if m_ji in COLD_JI or m_ji in ['신', '유']: ym_johu_score += 15
+                                elif m_ji in HOT_JI: ym_johu_score -= 15
+                            elif y_ji in COLD_JI:
+                                if m_ji in HOT_JI or m_ji in ['인', '묘']: ym_johu_score += 15
+                                elif m_ji in COLD_JI: ym_johu_score -= 15
+                            else: ym_johu_score += 10
+                            
+                            # (2) 오행 균형 점수 (최대 20점)
+                            present_types = [t for t, c in oheng_counts.items() if c > 0]
+                            structure_score = len(present_types) * 4
+                            for t, c in oheng_counts.items():
+                                if c >= 3: structure_score -= 10
+                                
+                            # (3) 길신/흉신 점수 (최대 20점)
+                            god_score = 10
+                            noble_branches = GUIIN_MAP.get(b_day_stem, [])
+                            munchang_branch = MUNCHANG_MAP.get(b_day_stem, '')
+                            for ji in [b_year[1], b_month[1], b_day[1], b_time[1]]:
+                                if ji in noble_branches: god_score += 8
+                                if ji == munchang_branch: god_score += 4
+                                
+                            for idx1 in range(4):
+                                for idx2 in range(idx1 + 1, 4):
+                                    pair = {four_pillars[idx1][1], four_pillars[idx2][1]}
+                                    if pair in wonjin_gwimun: god_score -= 6
+                                    
+                            baby_score = max(0, min(70, ym_johu_score + structure_score + god_score))
+                            
+                            # (4) 부모 궁합 점수 (최대 30점)
+                            parent_score = 15
+                            b_ilji = b_day[1]
+                            for p_ji in m_jjis + f_jjis:
+                                if p_ji == '?': continue
+                                pair = {b_ilji, p_ji}
+                                if pair in hap_list: parent_score += 7
+                                if pair in choong_list: parent_score -= 10
+                            parent_score = max(0, min(30, parent_score))
+                            
+                            tie_breaker = ((32 - birth_d.day) * 0.001) + (t_idx * 0.0001)
+                            total_score = baby_score + parent_score + tie_breaker
+
+                            if total_score > best_time_score:
+                                best_time_score = total_score
+                                best_time_data = {
+                                    'time_pillar': b_time, 'time_str': t_time_str, 'score': total_score
+                                }
+
+                        if best_time_data:
+                            raw_candidates.append({
+                                'date': curr.strftime('%Y-%m-%d'), 'month': curr.strftime('%Y-%m'),
+                                'score': best_time_data['score'], 'best_time': best_time_data
+                            })
+                            
+                    curr += dt_mod.timedelta(days=1)
+                    
+                month_best_bucket = {}
+                for item in raw_candidates:
+                    m_key = item['month']
+                    if m_key not in month_best_bucket or item['score'] > month_best_bucket[m_key]['score']:
+                        month_best_bucket[m_key] = item
+                        
+                sorted_months = sorted(month_best_bucket.values(), key=lambda x: x['score'], reverse=True)
+                return sorted_months[:3]
+
             m_saju_hanja = f"{m_gans_str[3]}{m_jjis[3]}년 {m_gans_str[2]}{m_jjis[2]}월 {m_gans_str[1]}{m_jjis[1]}일 {m_gans_str[0]}{m_jjis[0]}시"
             f_saju_hanja = f"{f_gans_str[3]}{f_jjis[3]}년 {f_gans_str[2]}{f_jjis[2]}월 {f_gans_str[1]}{f_jjis[1]}일 {f_gans_str[0]}{f_jjis[0]}시"
             m_saju_kor = h2k(m_saju_hanja)
@@ -2681,7 +2828,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             m_ilgan_kor = h2k(m_gans_str[1])
             f_ilgan_kor = h2k(f_gans_str[1])
 
-            FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
+            FORBIDDEN_LIST = ['갑인', '을묘', '병오', '정사', '무진', '무술', '기미', '기축', '신유', '경신', '임자', '계해']
             delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
 
             del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
@@ -2692,6 +2839,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             del_content += f"<div style='display:flex; flex-direction:column; margin-bottom:15px; background:#f9f9f9; padding:20px; border-radius:10px;'>\n"
             
             if delivery_days:
+                # 🚨 한글 -> 한자 역변환 맵 (시주 한자 표기용)
+                K2H_MAP = {v: k for k, v in H2K_MAP.items()}
+                
                 # 점수 기반 정렬된 1~3순위 월별 계층형 출력
                 for i in range(min(3, len(delivery_days))):
                     d_obj = dt_mod.datetime.strptime(delivery_days[i]['date'], '%Y-%m-%d')
@@ -2709,17 +2859,19 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     b_gj = b_klc.getChineseGapJaString().split()
                     b_ds, b_db = b_gj[2][0], b_gj[2][1]
                     
-                    # 🚨 한자 간지 및 한글 병기
-                    bazi_hanja = f"{b_ym}년 {b_mm}월 {b_ds}{b_db}일 {b_hs}{b_hb}시"
+                    # 🚨 시주(시간)를 한자로 완벽 변환 (예: 정해 -> 丁亥)
+                    b_hs_hanja = K2H_MAP.get(b_hs, b_hs)
+                    b_hb_hanja = K2H_MAP.get(b_hb, b_hb)
+                    
+                    bazi_hanja = f"{b_ym}년 {b_mm}월 {b_ds}{b_db}일 {b_hs_hanja}{b_hb_hanja}시"
                     bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
                     ym_hanja = f"{b_ym}년 {b_mm}월"
-                    ym_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월"
                     
-                    # AI 전달 텍스트 (년월 최우선 논리 주입)
+                    # AI 전달 텍스트 
                     fact_line = f"▶ {i+1}순위 추천 월령: {birth_d.year}년 {birth_d.month:02d}월 ({ym_hanja}) / 택일 추천: {birth_d.day:02d}일 {opt_time_str} / 명식: {bazi_hanja}"
                     ai_target_days_facts.append(fact_line)
                     
-                    # 화면 표출 텍스트 (하향식 계층 구조)
+                    # 화면 표출 텍스트
                     display_month = f"▶ {i+1}순위 출산 추천 월(月): {birth_d.year}년 {birth_d.month:02d}월 <span style='font-size:16px; color:#4A148C;'>({ym_hanja})</span>"
                     display_day_time = f"&nbsp;&nbsp;&nbsp;↳ 🏥 해당 월의 최적 출산 택일: {birth_d.day:02d}일 ({opt_time_str})"
                     display_conception = f"&nbsp;&nbsp;&nbsp;↳ ❤️ 해당 출산을 위한 합궁 길일: {d_obj.year}년 {d_obj.month:02d}월 {d_obj.day:02d}일 (저녁~밤 시간대)"
@@ -2728,10 +2880,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     del_content += f"<div style='font-size:15px; font-weight:bold; color:#0D47A1; margin-top: 8px;'>{display_day_time} <span style='color:#D81B60;'>[종합: {total_score}점 / 100점 만점]</span></div>\n"
                     del_content += f"<div style='font-size:14px; font-weight:bold; color:#555; margin-top: 3px;'>{display_conception}</div>\n"
                     del_content += f"<div style='font-size:15px; color:#333; margin-top: 5px; margin-bottom: 20px; background:#fff; padding:8px; border-left:4px solid #4A148C;'>&nbsp;&nbsp;완성 명식: <b>{bazi_hanja}</b> <span style='font-size:13px; color:#777;'>({bazi_kor})</span></div>\n"
-                    
+
             del_content += "</div>\n"
 
-            # 💡 [구조 교정] 18px 제목과 15px 내용 블록 분리 (에러 원천 차단)
             del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'>"
             del_content += "<span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
             
@@ -2748,22 +2899,24 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             ai_days_input_str = "\n".join(ai_target_days_facts)
 
+            # 🚨 AI 통제용 프롬프트 (폰트 크기 및 한자 표기 강제 명령 하달)
             delivery_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다. 시스템이 도출한 아래 [지정된 3가지 추천 일자]에 대해 통변 에세이를 작성하십시오.
+당신은 명리심리상담사 초연 박사입니다. 시스템이 도출한 아래 [지정된 3가지 추천 일정]에 대해 통변 에세이를 작성하십시오.
 
-[지정된 추천 일자 리스트]
+[지정된 추천 일정 리스트]
 {ai_days_input_str}
 
 [태아 성별 조건]
 - {baby_gender} (통변 시 성별에 따른 대운의 순행/역행 유불리를 서술할 것)
 
-🚨 [출력 절대 규칙]
-1. 에세이 상단 제목, 인사말, 맺음말(감사합니다 등) 절대 금지.
-2. 모든 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로 묶을 것.
-3. 추천 일자 제목은 원문 그대로 출력할 것.
+🚨 [출력 절대 규칙 - 이것을 어기면 시스템이 붕괴됩니다!]
+1. 1순위, 2순위, 3순위의 제목 폰트 크기가 달라지는 시스템 오류를 막아야 합니다. 1순위를 포함한 모든 순위의 제목은 반드시 아래 [출력 포맷 템플릿]의 `<span class='sub-title'...>` HTML 태그를 100% 동일하게 복사하여 적용하십시오!
+2. 명식의 모든 간지는 풀이 내용 안에서도 무조건 한자(漢字)로만 표기하십시오. (예: 정해 -> 丁亥)
+3. 에세이 상단 제목, 인사말, 맺음말(감사합니다 등) 절대 금지.
+4. 모든 통변 문단은 무조건 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 태그로 묶어 간격을 맞출 것.
 
-[출력 포맷 템플릿]
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ 추천 일자: (원문 복사)</span>
+[출력 포맷 템플릿] (이 구조를 1~3순위마다 정확히 반복하십시오)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ (입력받은 1,2,3순위 텍스트 원문을 그대로 복사)</span>
 <div style='padding-left: 15px; margin-bottom: 15px;'>
     <div style='margin-bottom: 3px;'><b>1) 일반 명리 풀이:</b></div>
     <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
