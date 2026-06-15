@@ -2300,7 +2300,8 @@ if st.session_state.get('need_calc', False):
                     ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
                     m_ess, f_ess, g_ess = "", "", ai_clean
-    essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
+
+                    essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다.
 
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
