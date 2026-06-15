@@ -2341,10 +2341,7 @@ import datetime as dt_mod
 
 if st.session_state.get('app_running', False) and st.session_state.get('run_waterfall', False) and 'global_gans' in st.session_state:
     
-    # 🚨 이미 연산된 일진 리포트가 없을 때만 가동! (토큰 중복 소모 완벽 차단)
     if not st.session_state.get('saved_report_iljin'):
-        
-        # 🚨 연산(스피너)이 돌기 전에, 메인 사주풀이를 화면에 먼저 깔아줍니다.
         if st.session_state.get('saved_report_html'):
             st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
             
@@ -2354,6 +2351,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
         jjis_list = st.session_state['global_jjis']
         m_ilgan = st.session_state['global_ds']
         m_ilji = st.session_state['global_db']
+        
+        # 🚨 [수술 1] 박사님 명조 정보 추출 (배열: [시, 일, 월, 년])
+        myongjo_str = f"명조: {gans_list[3]}{jjis_list[3]}년 {gans_list[2]}{jjis_list[2]}월 {gans_list[1]}{jjis_list[1]}일 {gans_list[0]}{jjis_list[0]}시 ({u_gender}, {u_age}세)"
         
         from korean_lunar_calendar import KoreanLunarCalendar
         dklc = KoreanLunarCalendar()
@@ -2367,24 +2367,20 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             target_il_gan = parts[2][0]
             target_il_ji = parts[2][1] 
             
-            # 🚨 [박사님 지시 반영] 기존 글로벌 '체용 연산' 매트릭스 재사용
             def get_execution_yong(upper_group, lower_group):
                 matrix = {'비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'}, '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'}, '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'}, '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'}, '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'} }
                 return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
             ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
             
-            # 전반기 체용
             m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
             d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il_gan))  
             am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
             
-            # 후반기 체용
             m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
             d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il_ji))    
             pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
 
-            # 천간 파동 (간소화 로직 유지 - 합충극 1:1 비교)
             gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
             gan_res = []
             labels_gan = ["시간", "일간", "월간", "년간"]
@@ -2400,7 +2396,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                     if rel != "-":
                         gan_res.append(f"☁️ <b>{label}({g1})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {g1}{g2}{rel}하여 {gan_desc.get(rel, '영향 발생')} )</span>")
 
-            # 🚨 [박사님 지시 반영] 기존 글로벌 함수 `get_ji_rel_set` 완벽 재사용
             r_res = []
             labels_ji = ["시지", "일지", "월지", "년지"]
             for idx, label in enumerate(labels_ji):
@@ -2413,12 +2408,12 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             gan_res_html = '<br>'.join(gan_res) if gan_res else '특이 천간 파동 없음'
             r_res_html = '<br>'.join(r_res) if r_res else '특이 지지 파동 없음'
 
-            # 🚨 [박사님 지시 반영] 기존 글로벌 함수 `get_unsung`, `get_12_shinsal` 완벽 재사용
             day_wunseong = get_unsung(m_ilgan, target_il_ji)
-            day_12shinsal = get_12_shinsal(jjis_list[3], target_il_ji) # 년지 기준 신살
+            day_12shinsal = get_12_shinsal(jjis_list[3], target_il_ji) 
             
             s_res_html = f"✨ <b>오늘의 핵심 에너지:</b> 십이운성[{day_wunseong}] / 12신살[{day_12shinsal}]"
 
+            # 🚨 [수술 2] 프롬프트의 시간 출력 포맷을 직관적인 숫자로 강제 교체
             iljin_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다.
 오늘의 시공간 파동을 바탕으로 핵심만을 간결하게 통변하십시오.
@@ -2436,24 +2431,24 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 4. 모든 기술적 팩트는 AI의 통변 근거로만 활용하고, 출력물에는 명리학적 물상과 에세이적 문장으로만 기술할 것.
 
 [출력 포맷]
-<span style='font-size: 16px; font-weight: 900;'>▶ 오전(자시~오시):</span> {m_che_first} + {am_yong}의 결합을 바탕으로 오늘 업무와 대인관계의 핵심을 1~2문장으로 기술.
-<br><span style='font-size: 16px; font-weight: 900;'>▶ 오후(미시~야자시):</span> {m_che_second} + {pm_yong}의 결합을 바탕으로 저녁 시간의 흐름과 핵심 사건을 1~2문장으로 기술.
+<span style='font-size: 16px; font-weight: 900;'>▶ 오전(00:31~13:30):</span> {m_che_first} + {am_yong}의 결합을 바탕으로 오늘 업무와 대인관계의 핵심을 1~2문장으로 기술.
+<br><span style='font-size: 16px; font-weight: 900;'>▶ 오후(13:31~23:30):</span> {m_che_second} + {pm_yong}의 결합을 바탕으로 저녁 시간의 흐름과 핵심 사건을 1~2문장으로 기술.
 <br><span style='font-size: 16px; font-weight: 900;'>✨ 오늘의 개운 조언:</span> 박사님의 일주와 오늘 파동을 고려한 실질적인 행동 지침 1문장.
 """
-            # 스피너 가동
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
                 try:
                     ai_iljin_html = call_light_api(iljin_prompt).replace('\n', '<br>')
                 except Exception as e:
                     ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
-            # 괄호 문자열 처리로 들여쓰기 에러 완벽 해결
+            # 🚨 [수술 3] 화면 출력부에 박사님 명조 정보 삽입
             html_output = (
                 f"<div class='page-break-before'></div>\n"
                 f"<div class='report-page'>\n"
                 f"<div class='vip-inset-frame' style='border: 3px solid #1A237E;'>\n"
                 f"<h1 style='text-align: center; color: #1A237E;'>🔮 일진 시공간 정밀 분석서</h1>\n"
                 f"<div style='text-align: center; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 20px;'>\n"
+                f"{myongjo_str}<br>\n"
                 f"대상일자: {t_date.year}년 {t_date.month}월 {t_date.day}일 ({target_year}년 {target_wol}월 {target_il_gan}{target_il_ji}일)\n"
                 f"</div>\n"
                 f"<div style='margin-bottom: 25px; background: #FFF8E1; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6;'>\n"
@@ -2466,7 +2461,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 f"</div>"
             )
             
-            # 연산 완료 후 영구 저장 및 재호출
             st.session_state['saved_report_iljin'] = html_output
             st.rerun()
 # ==============================================================================
