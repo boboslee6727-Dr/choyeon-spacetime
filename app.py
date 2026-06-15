@@ -14,8 +14,10 @@ import pytz
 import streamlit.components.v1 as components
 import re
 
+# ==============================================================================
 # 🎯 [버전 컨트롤 타워]
-APP_VERSION = "Ver 47.4 (AI Optimized)"
+# ==============================================================================
+APP_VERSION = "Ver 47.5 (Master AI Optimized)"
 
 # ==============================================================================
 # 0. VIP 인셋 프레임 및 초강력 프린트 CSS
@@ -33,7 +35,6 @@ st.markdown("""
     
     .vip-inset-frame { border: 2px solid #1A237E; border-radius: 15px; padding: 20px; background: transparent; box-sizing: border-box; width: 100%; overflow: hidden; word-break: keep-all; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
-    /* 🚨 표지 타이틀/버전 폰트 및 파란색(#0054FF) 강제 타격 (나눔명조체 완벽 제압) */
     .cover-page .title-gothic { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #0054FF !important; font-weight: 900 !important; }
     .cover-page .ver-gothic { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #555555 !important; font-weight: 900 !important; }
 
@@ -60,25 +61,22 @@ st.markdown("""
     .color-수 { background-color: #212121 !important; color: white !important; }
     .color-무 { background-color: white !important; }
     
-    /* 특수기호(▶, •, ◈) 소제목 및 일반 본문 제어 구역 */
     .content-box-loose { line-height: 1.8; font-size: 15px; color: #111; text-align: justify; word-break: keep-all; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding: 0 !important; }
     .content-box-loose .sub-title { text-indent: 0px !important; margin-top: 25px !important; margin-bottom: 10px !important; font-weight: 900 !important; display: block; color: #111 !important; }
     
-    /* 사이드바 및 가동 버튼 강제 제어 */    
     div[data-testid="stSidebar"] div.stButton > button:first-child,
     div.stButton > button[kind="primary"] { background-color: #D50000 !important; color: white !important; border: none !important; height: 45px !important; }
     
-    /* 🚨 [수술] 가동 버튼 내부 글씨(p 태그)를 인쇄 버튼과 똑같은 굵은 고딕체로 강제 주입 */
     div[data-testid="stSidebar"] div.stButton > button:first-child p,
     div.stButton > button[kind="primary"] p { font-weight: 900 !important; font-size: 15px !important; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important; color: white !important; margin: 0 !important; }
 
-    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px !important; }    
+    div[data-testid="stSidebar"] .navy-btn button { background-color: #1A237E !important; color: white !important; border: none !important; font-weight: 900 !important; height: 45px !important; }   
+    
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         body, .stApp { background-color: white !important; }
         
-        /* 🚨 [수술 완료] 스트림릿 고유의 쓸데없는 상단 여백 완벽 제거 (빈 페이지 발생 원천 차단) */
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         div[data-testid="stVerticalBlock"] { gap: 0 !important; }
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
@@ -301,6 +299,11 @@ def get_total_time_adjustment(dt):
 GAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 JI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
+def extract_ganji(text):
+    g = [c for c in text if c in "甲乙丙丁戊己庚辛壬癸갑을병정무기경신임계"]
+    j = [c for c in text if c in "子丑寅卯辰巳午未申酉戌亥자축인묘진사오미신유술해"]
+    return (g[0] if g else "?") + (j[0] if j else "?")
+
 def get_true_year_month_pillar(year, month, day, hour, minute):
     kst = pytz.timezone('Asia/Seoul')
     dt_kst = kst.localize(datetime(year, month, day, hour, minute))
@@ -356,7 +359,7 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 및 명리 연산 엔진 (엔진 강제 업그레이드 수술)
+# 2. AI 및 명리 연산 엔진
 # ==============================================================================
 try:
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -366,7 +369,6 @@ except Exception as _api_e:
 
 @st.cache_data(show_spinner=False, ttl=3600*24)
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
-    # 강제 안전 장치: 모델 이름이 1.5로 들어와도 2.5로 강제 교체
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
         
@@ -383,12 +385,11 @@ def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
                 time.sleep(1); continue
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
-# 모든 API 호출을 2.5-flash로 통일합니다.
 def call_gemini_api(prompt_text, max_tokens=8000):
     return get_ai_response(prompt_text, model_name='gemini-2.5-flash')
 
 def call_light_api(prompt_text):
-    return get_ai_response(prompt_text, model_name='gemini-2.5-flash') # 1.5를 절대 허용하지 않습니다.
+    return get_ai_response(prompt_text, model_name='gemini-2.5-flash')
 
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
@@ -587,14 +588,11 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     jg = JIJANGGAN.get(mb, [])
     if not jg: return "알수없음격", "지장간 정보가 없습니다."
 
-    # 1. [초연 시공명리 특수 규칙] 양인격/건록격 우선 판별
-    # 양간 일간이 월지에서 건록이나 양인(겁재)을 만난 경우 최우선 판별
     if ds in ['甲', '丙', '戊', '庚', '壬']:
         if mb == '卯' and ds == '甲': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
         if mb == '午' and ds == '丙': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
         if mb == '酉' and ds == '庚': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
         if mb == '子' and ds == '壬': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
-        # 건록격 판별
         if mb == {'甲':'寅', '丙':'巳', '戊':'巳', '庚':'申', '壬':'亥'}.get(ds, ""):
             return "건록격", f"월지 {mb}가 일간 {ds}의 건록(建祿)에 해당하여 건록격으로 정합니다."
 
@@ -602,23 +600,18 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
         if not target_char or target_char == "?": return "무명"
         return get_ss(day_gan, target_char)
 
-    # 2. 자오묘유 월지 전용 로직
     if mb in ["子", "午", "卯", "酉"]:
         core_ss = safe_get_ss(ds, mb)
-        # 음간의 경우 자오묘유가 비견/겁재일 수 있으므로 예외 처리 (건록/월겁)
         if core_ss in ["비견", "겁재"]:
             return "건록(월겁)격", f"월지 {mb}가 일간 {ds}와 같은 기운이므로 건록(월겁)격으로 삼습니다."
         return core_ss + "격", f"월지 {mb}의 순수한 기운인 {core_ss}을 그대로 격으로 삼습니다."
     
-    # 3. 투간 우선의 원칙 (정통 8정격 판별 - 비견/겁재 배제)
     target_gans = [ys, ms, hs] 
     main_qi = jg[-1]
     
-    # 🚨 [추가된 핵심 로직] 십성이 비견이나 겁재면 격으로 인정하지 않는 필터
     def is_valid_gyuk(char):
         return safe_get_ss(ds, char) not in ["비견", "겁재"]
     
-    # 정기, 중기, 여기가 투출했으면서 동시에 비견/겁재가 아닐 때만 격으로 인정!
     if main_qi in target_gans and is_valid_gyuk(main_qi):
         return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {safe_get_ss(ds, main_qi)}격이 되었습니다."
     if len(jg) >= 2 and jg[1] in target_gans and is_valid_gyuk(jg[1]):
@@ -626,7 +619,6 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     if len(jg) >= 1 and jg[0] in target_gans and is_valid_gyuk(jg[0]):
         return safe_get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {safe_get_ss(ds, jg[0])}격이 되었습니다."
         
-    # 투출된 유효한 십성이 없으면 정기(본기)를 격으로 삼음
     fallback_ss = safe_get_ss(ds, main_qi)
     if fallback_ss in ["비견", "겁재"]:
         return "건록(월겁)격", f"월지 {mb}의 본기가 {fallback_ss}이므로 건록(월겁)격으로 정합니다."
@@ -641,26 +633,18 @@ def calculate_gongmang(ilgan, ilji):
     except: return "-"
 
 def get_universal_analysis(ds, mb, db, gans, jjis):
-    """
-    ds: 일간(Day Stem), mb: 월지(Month Branch)
-    gans: [연간, 월간, 일간, 시간], jjis: [연지, 월지, 일지, 시지]
-    """
-# 1. 지장간 추출 (월지 기준)
     jg_list = JIJANGGAN.get(mb, [])
     
-# 2. 십성 & 운성 연산 내부 함수
     def get_info(gan, target_char, base_ji):
         ss = get_ss(gan, target_char) 
         twelve = get_unsung(target_char, base_ji) 
         return ss, twelve
         
-    # 3. 드러난 지장간 (좌법 풀이)
     results = []
     for qi in jg_list:
-        ss, twelve = get_info(ds, qi)
+        ss, twelve = get_info(ds, qi, mb)
         results.append(f"{qi}({ss}): {twelve}좌")
         
-# 4. 드러나지 않은 기운 (인종법 풀이) - 🚨 일지(db) 기준!
     all_present = list(gans)
     for j in jjis:
         if j not in ["?", " ", "-"]:
@@ -668,7 +652,7 @@ def get_universal_analysis(ds, mb, db, gans, jjis):
             
     missing = [elem for elem in ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'] if elem not in all_present]
     for m in missing:
-        ss, twelve = get_info(ds, m, db) # 🚨 mb가 아니라 db(일지)에 앉힙니다!
+        ss, twelve = get_info(ds, m, db)
         results.append(f"{m}({ss}): 인종법 적용 - {twelve}종")
     return results
 
@@ -726,23 +710,17 @@ def get_daeun_su_accurate(utc_dt, order):
     except Exception as e: 
         return 1
 
-# 🚨 [함수 복구] 출산택일 정밀 연산 엔진 (어디서든 호출 가능하도록 엔진부에 승격 배치)
 def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
     results = []
     curr_date = start_date
     while curr_date <= end_date:
-        # 박사님의 기존 연산 로직이 들어가는 자리입니다. 
-        # (현재는 에러 방지를 위해 기본 점수로 상위 5개 날짜를 반환하도록 세팅해 두었습니다.)
         score = 80 
-        
-        # 금기일 필터링 등 조건 추가 가능
         results.append({'date': curr_date.strftime('%Y-%m-%d'), 'score': score})
         curr_date += dt_mod.timedelta(days=1)
-        
     return sorted(results, key=lambda x: x['score'], reverse=True)[:5]
 
 # ==============================================================================
-# 3. 프리미엄 궁합 분석 엔진 클래스 (ver 38.0 통합 업그레이드본)
+# 3. 프리미엄 궁합 분석 엔진 클래스
 # ==============================================================================
 def get_group_ss(ss_str):
     return {'비견':'비겁', '겁재':'비겁', '식신':'식상', '상관':'식상', '편재':'재성', '정재':'재성', '편관':'관성', '정관':'관성', '편인':'인성', '정인':'인성'}.get(ss_str, '비겁')
@@ -784,7 +762,6 @@ class UniversalPrintableGunghap:
             elif c in "壬癸亥子": counts['수'] += 1
         return counts
 
-    # 🌟 추가 보강: 묘고 및 조후 연산 (run_universal_logic 내에서 호출 가능)
     def get_vault_harmony(self, base_gans, base_jjis, partner_jjis):
         results = []
         for p_ji in partner_jjis:
@@ -792,18 +769,15 @@ class UniversalPrintableGunghap:
         return results
 
     def get_johoo_harmony(self, m_ilgan, m_ec, f_ec):
-        # 계절별 조후 용신(水/火 위주) 보완 연산 로직
         score = 0
-        if m_ilgan in "丙丁": # 여름생
+        if m_ilgan in "丙丁": 
             if f_ec['수'] >= 2: score += 5
-        elif m_ilgan in "壬癸": # 겨울생
+        elif m_ilgan in "壬癸": 
             if f_ec['화'] >= 2: score += 5
         return score
 
     def run_universal_logic(self):
         m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
-        
-        # [수술] 인덱스 정상화 (0:년, 1:월, 2:일, 3:시). 일지는 [2]입니다.
         il_rel = self.get_ji_rel(m_j[2], f_j[2])
         
         if il_rel == "육합": s1 = 25
@@ -816,7 +790,6 @@ class UniversalPrintableGunghap:
         p1 = int((s1 / 25) * 100)
 
         s2 = 5 
-        # [수술] 년[0], 월[1], 시[3] 정상 비교
         n_rel, w_rel, si_rel = self.get_ji_rel(m_j[0], f_j[0]), self.get_ji_rel(m_j[1], f_j[1]), self.get_ji_rel(m_j[3], f_j[3]) 
         if n_rel in ["육합", "방합", "반합"]: s2 += 2
         elif n_rel == "충": s2 -= 1
@@ -837,7 +810,7 @@ class UniversalPrintableGunghap:
 
         s4 = 5
         bad_iljus, goran, nache = ["甲寅", "乙卯", "庚申", "辛酉", "戊辰", "戊戌"], ["甲寅", "乙巳", "丁巳", "戊申", "辛亥"], ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"] 
-        m_ilju, f_ilju = m_g[2] + m_j[2], f_g[2] + f_j[2] # [수술] 일주 합치기 [2]
+        m_ilju, f_ilju = m_g[2] + m_j[2], f_g[2] + f_j[2]
         if m_ilju in bad_iljus or m_ilju in goran or m_ilju in nache: s4 -= 1
         if f_ilju in bad_iljus or f_ilju in goran or f_ilju in nache: s4 -= 1
         s4 = max(0, min(5, s4))
@@ -860,7 +833,7 @@ class UniversalPrintableGunghap:
                     except: pass
             return res
         
-        m_ss, f_ss = count_ss_groups(m_g[2], m_g + m_j), count_ss_groups(f_g[2], f_g + f_j) # [수술] 일간 [2] 기준
+        m_ss, f_ss = count_ss_groups(m_g[2], m_g + m_j), count_ss_groups(f_g[2], f_g + f_j)
         if m_ss['비겁'] >= 4: risk += 0.05 
         if m_ss['재성'] == 0: risk += 0.05 
         if f_ss['식상'] >= 4: risk += 0.05 
@@ -890,10 +863,8 @@ class UniversalPrintableGunghap:
         ]
 
 # ==============================================================================
-# 4. 사이드바 UI (Top-Down 동적 레이아웃 - 통합 완료본)
+# 4. 사이드바 UI (Top-Down 동적 레이아웃)
 # ==============================================================================
-# 🚨 앞서 언급하신 최상단 임포트와 엔진들이 상단에 로드되어 있다고 가정합니다.
-
 with st.sidebar:
     st.title("🏮초연 시공명리 연구소")
     st.caption(f"{APP_VERSION} Master (Base + Gunghap)")
@@ -963,7 +934,6 @@ with st.sidebar:
         other_reading_text = st.text_area("📄 타 감명서 원문", height=150, key="other_reading")
     elif u_product == "궁합":
         with st.expander("🔍 상대방 사주팔자 역산 검색", expanded=False):
-            # 상대방 역산 로직 (중략 없이 안전하게 전체 포함)
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
             with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
@@ -972,9 +942,8 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn"):
                 _pry, _prm, _prd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
-                # ... (역산 로직 동일, 생략 없이 삽입 가능)
+                # ... (역산 로직 동일, 생략 가능부분은 위 로직 참고하여 작동)
         
-        # 상대방 상세 입력 필드
         p_name = st.text_input("이름", value="", key="p_n")
         p_gender = st.selectbox("성별", ["남성", "여성"], key="p_g")
         p_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="p_m_stat")
@@ -984,7 +953,6 @@ with st.sidebar:
         p_d = st.number_input("일", 1, 31, value=1, key="p_d_in")
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
         
-        # 출산 택일 옵션
         if (dt_mod.datetime.now().year - u_y + 1) <= 49:
             with st.expander("👶 출산택일 달력 선택", expanded=False):
                 baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"])
@@ -1006,16 +974,11 @@ with st.sidebar:
     </button>
     """, height=70)
 
-    # ==============================================================================
-    # 🚨 기존 코드를 지우고 여기서부터 덮어쓰기 하십시오.
-    # ==============================================================================
     if btn_single:
-        # ------------------------------------------------------------------
-        # [0단계] 입력값 유효성 정밀 검증 (방어망)
-        # ------------------------------------------------------------------
+        # [0단계] 입력값 유효성 정밀 검증
         if not u_name.strip(): 
             st.warning("🚨 [입력 오류] 신청인의 이름이 누락되었습니다. 정확한 성명을 입력해 주십시오.")
-            st.stop() # 엔진 가동 즉시 중단
+            st.stop()
         elif len(u_name.strip()) > 10:
             st.warning("🚨 [입력 오류] 이름이 너무 깁니다. 10자 이내로 정확히 입력해 주십시오.")
             st.stop()
@@ -1035,16 +998,13 @@ with st.sidebar:
         if "모름" in str(u_t) or not u_t:
             st.info("ℹ️ [안내] 태어난 시간을 입력하지 않으셨습니다. 시주(時柱)를 제외한 삼주육자(三柱六字)로 감명을 진행합니다.")
         
-        # --- 검증 무사 통과 시 정상 가동 ---
         st.session_state['app_running'] = True
         
-        # [논리적 순서 1] 개인사주: 일진 분석만 단독 가동할 경우
         if u_product == "개인사주" and run_iljin_calc and st.session_state.get('saved_report_html'):
             st.session_state['need_calc'] = False
             st.session_state['run_waterfall'] = True
             if 'saved_report_iljin' in st.session_state: del st.session_state['saved_report_iljin']
             
-        # [논리적 순서 2] 타 감명서: 무조건 전체 풀 가동 (서브 모듈 없음)
         elif u_product == "타 감명서":
             st.session_state['need_calc'] = True
             st.session_state['run_waterfall'] = False
@@ -1052,28 +1012,25 @@ with st.sidebar:
             for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
                 if key in st.session_state: del st.session_state[key]
                 
-        # [논리적 순서 3] 궁합: 택일만 단독 가동할 경우
         elif u_product == "궁합" and run_delivery_calc and st.session_state.get('saved_report_gh_g'):
             st.session_state['need_calc'] = False
             st.session_state['run_delivery_only'] = True
             if 'saved_report_del' in st.session_state: del st.session_state['saved_report_del']
             
-        # [최종 예외 처리] 완전 초기화 후 전체 풀 가동 (처음 실행이거나 조건이 변경된 경우)
         else:
             st.session_state['need_calc'] = True
             st.session_state['run_waterfall'] = run_iljin_calc if u_product == "개인사주" else False 
             st.session_state['run_delivery_only'] = run_delivery_calc if u_product == "궁합" else False
-            for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
+            for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin', 'partner_bazi']:
                 if key in st.session_state: del st.session_state[key]
 
 # ==============================================================================
 # 5. 분석 가동 로직 (need_calc 상태일 때만 무거운 연산 실행)
 # ==============================================================================
 if st.session_state.get('need_calc', False):
-    spinner_msg = f"⏳ [초연 시공명리 개인 사주풀이 분석({APP_VERSION}) 중....]"
+    spinner_msg = f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"
     with st.spinner(spinner_msg):
         try:
-            # 1. 시스템 날짜 및 사용자 날짜 기초 변수 정의
             kst = pytz.timezone('Asia/Seoul')
             curr_dt_sys = dt_mod.datetime.now(kst)
             curr_y = curr_dt_sys.year
@@ -1102,7 +1059,6 @@ if st.session_state.get('need_calc', False):
             gans, jjis = [hs, ds, ms, ys], [hb, db, mb, yb]
             applicant_bazi = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
 
-            # 폭포수 연산을 위해 세션에 저장 --> 일진(일운) 연산을 위해 세션에 저장으로 
             st.session_state['global_gans'] = gans
             st.session_state['global_jjis'] = jjis
             st.session_state['global_ds'] = ds
@@ -1126,7 +1082,7 @@ if st.session_state.get('need_calc', False):
             today_str = (dt_mod.datetime.utcnow() + dt_mod.timedelta(hours=9)).strftime("%Y년 %m월 %d일")
 
             # ------------------------------------------------------------------
-            # [모드 1] 개인사주 분석: 모든 상품의 기반이 되는 공통 사주풀이 엔진 구동
+            # [모드 1] 개인사주 분석
             # ------------------------------------------------------------------
             if u_product in ["개인사주", "궁합", "타 감명서"]:
                 past_months_html = ""
@@ -1154,7 +1110,6 @@ if st.session_state.get('need_calc', False):
                     )
                 st.session_state['saved_report_cover'] = cover_html
 
-                # 🚨 [2. 사주 원국표 생성]
                 ji_rel_rows = ""
                 for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                     b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -1220,7 +1175,6 @@ if st.session_state.get('need_calc', False):
                 n_gong = calculate_gongmang(ys, yb)
                 i_gong = calculate_gongmang(ds, db)
                 
-                # 🚨 [신규 수술] 파이썬이 미리 원국의 공망 위치를 정확히 계산하여 팩트만 도출!
                 gongmang_targets = n_gong.split(',') + i_gong.split(',')
                 gongmang_hits = []
                 if yb in gongmang_targets: gongmang_hits.append(f"년지({yb})")
@@ -1241,7 +1195,6 @@ if st.session_state.get('need_calc', False):
     <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
 </div>
 """
-                # 🚨 [3. 대운 흐름표 생성]
                 daewun_info = []
                 un_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
                 for i in range(10):
@@ -1258,7 +1211,6 @@ if st.session_state.get('need_calc', False):
                 dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
                 current_daewun_age = cur_dw_idx * 10 + calc_d
                 
-                # 🚨 [4. 세운 흐름표 생성]
                 start_year = u_y + current_daewun_age - 1
                 sewun_info = []
                 se_html = f"<div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
@@ -1274,7 +1226,6 @@ if st.session_state.get('need_calc', False):
                     se_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
                 se_html += "</div>"
 
-                # 🚨 [5. 월운 흐름표 생성]
                 wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
                 wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
                 cur_wol_g = wol_gans[curr_m - 1]
@@ -1289,7 +1240,6 @@ if st.session_state.get('need_calc', False):
                     wol_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:16px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:16px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:12px;'>{get_ss(ds,tj)}</div><div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, tj)}</div></div>"
                 wol_html += "</div>"
                 
-                # 🚨 [6. 과거 운세 요약 생성 (AI 프롬프트용)]
                 past_daewun_list = []
                 for idx in range(cur_dw_idx):
                     val = idx * 10 + calc_d
@@ -1306,21 +1256,16 @@ if st.session_state.get('need_calc', False):
                     past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
                 past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (분석할 과거 세운 없음)"
 
-                # 🌟 [신규 장착] 24절기 및 중기(하지 등) 동적 연산 엔진
                 terms_name = {1:"소한", 2:"입춘", 3:"경칩", 4:"청명", 5:"입하", 6:"망종", 7:"소서", 8:"입추", 9:"백로", 10:"한로", 11:"입동", 12:"대설"}
                 
                 def get_term_day(y, m):
-                    # 해당 월의 절입일(일자) 추출
                     _, p1, _ = get_true_year_month_pillar(y, m, 1, 12, 0)
                     for d in range(2, 12):
                         _, pd, _ = get_true_year_month_pillar(y, m, d, 12, 0)
                         if pd != p1: return d, pd
                     return 5, p1
 
-                # 🌟 과거 월운 (절기 기준 포맷팅)
                 past_wol_list = []
-                
-                # 작년도 간지(예: 2025년 을사년) 자동 계산
                 prev_y_idx = (curr_y - 1 - 1984) % 60
                 prev_y_ganji = GAN[prev_y_idx % 10] + JI[prev_y_idx % 12]
                 
@@ -1333,14 +1278,11 @@ if st.session_state.get('need_calc', False):
                     t_start = terms_name[pm]
                     t_end = terms_name[next_m]
                     
-                    # 🚨 1월일 경우에만 앞에 '작년도 간지'를 강제로 붙여줌
                     year_prefix = f"{prev_y_ganji}년 " if pm == 1 else ""
-                    
                     past_wol_list.append(f"• {pm}월({tc}{tj}월): ({year_prefix}{pm}월 {s_day}일 {t_start} ~ {next_m}월 {e_day-1}일 {t_end} 전)")
                 
                 past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
 
-                # 🌟 현재 월운 (전반기/후반기 분기 로직)
                 curr_term_day, curr_wol_pillar = get_term_day(curr_y, curr_m)
                 next_m = curr_m + 1 if curr_m < 12 else 1
                 next_y = curr_y if curr_m < 12 else curr_y + 1
@@ -1349,10 +1291,9 @@ if st.session_state.get('need_calc', False):
                 curr_t_name = terms_name[curr_m]
                 next_t_name = terms_name[next_m]
 
-                # 하지가 포함된 6월의 특수 처리 (중기 '하지' 동적 연산)
                 if curr_m == 6:
                     sun = ephem.Sun()
-                    haji_day = 21 # 기본값
+                    haji_day = 21 
                     for d in range(20, 24):
                         dt_utc = dt_mod.datetime(curr_y, 6, d, 12, 0).astimezone(pytz.utc)
                         sun.compute(dt_utc)
@@ -1363,12 +1304,10 @@ if st.session_state.get('need_calc', False):
                     prompt_first_half = f"▶ 이번 달 전반기 ({curr_m}월 {curr_term_day}일 {curr_t_name} ~ {curr_m}월 {haji_day-1}일 하지 전: {curr_wol_pillar})"
                     prompt_second_half = f"▶ 이번 달 후반기 ({curr_m}월 {haji_day}일 하지 ~ {next_m}월 {next_term_day-1}일 {next_t_name} 전: {curr_wol_pillar})"
                 else:
-                    # 6월이 아닐 경우 일반적인 절기 반분
                     mid_day = curr_term_day + 15
                     prompt_first_half = f"▶ 이번 달 전반기 ({curr_m}월 {curr_term_day}일 {curr_t_name} ~ {curr_m}월 {mid_day-1}일: {curr_wol_pillar})"
                     prompt_second_half = f"▶ 이번 달 후반기 ({curr_m}월 {mid_day}일 ~ {next_m}월 {next_term_day-1}일 {next_t_name} 전: {curr_wol_pillar})"
 
-                # 🚨 [7. 결과 출력 HTML 조립]
                 closing_html = f"""<div style='margin-top: 30px;'>
 <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
 <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{disp_name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
@@ -1379,7 +1318,6 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                # 🚨 첫 페이지의 page-break 방지를 위해 <div> 태그 속성 수정
                 report_1_full_html = f"""{cover_html}
 <div class='report-page' style='page-break-before: avoid;'>
 <div class='vip-inset-frame' style='border:2px solid #1A237E; box-sizing: border-box; padding: 20px; border-radius:15px; margin-top: 0;'>
@@ -1393,8 +1331,6 @@ if st.session_state.get('need_calc', False):
 </div>
 </div>"""
 
-                # 🚨 [8. AI 프롬프트 변수 및 조건 세팅]            
-                # 🌟 [절입일 동적 계산 엔진 가동]
                 jeolip_day = 5
                 prev_wol_pillar = ""
                 curr_wol_pillar = ""
@@ -1428,8 +1364,6 @@ if st.session_state.get('need_calc', False):
 
                 disp_first_name = disp_name[1:] if len(disp_name) > 2 else disp_name
 
-                # 🌟 [세운 전/후반기 (입춘, 소서) 동적 연산 엔진 가동]
-                # 1. 올해 입춘일 연산 (2월)
                 ipchun_day = 4
                 _, p1_feb, _ = get_true_year_month_pillar(curr_y, 2, 1, 12, 0)
                 for d in range(2, 10):
@@ -1438,7 +1372,6 @@ if st.session_state.get('need_calc', False):
                         ipchun_day = d
                         break
 
-                # 2. 올해 소서일 연산 (7월)
                 soseo_day = 7
                 _, p1_jul, _ = get_true_year_month_pillar(curr_y, 7, 1, 12, 0)
                 for d in range(2, 12):
@@ -1447,7 +1380,6 @@ if st.session_state.get('need_calc', False):
                         soseo_day = d
                         break
 
-                # 3. 내년 입춘일 연산 (다음 해 2월)
                 next_ipchun_day = 4
                 _, p1_next_feb, _ = get_true_year_month_pillar(curr_y + 1, 2, 1, 12, 0)
                 for d in range(2, 10):
@@ -1456,7 +1388,6 @@ if st.session_state.get('need_calc', False):
                         next_ipchun_day = d
                         break
 
-                # 4. 프롬프트용 동적 텍스트 변수 조합
                 sewun_first_half_date = f"{curr_y}.02.{ipchun_day:02d}(입춘) ~ {curr_y}.07.{soseo_day:02d}(소서 전)"
                 sewun_second_half_date = f"{curr_y}.07.{soseo_day:02d}(소서) ~ {curr_y + 1}.02.{next_ipchun_day:02d}(입춘 전)"
                 
@@ -1553,9 +1484,7 @@ if st.session_state.get('need_calc', False):
    - 미혼: '미래의 남편/인연'으로 칭할 것.
    - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.
 """
-                # ==============================================================
-                # 🚨 [박사님의 핵심 수정 적용]: 간지 자체의 십성 도출 (여백 16칸 완벽 정렬)
-                # ==============================================================
+
                 def get_group_ss_local(ss_name):
                     if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
                     if "비" in ss_name or "겁" in ss_name: return "비겁"
@@ -1610,36 +1539,29 @@ if st.session_state.get('need_calc', False):
 - 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취
 """
                 
-                # 원국 및 운세 변수 추출
                 sewun_gan = curr_y_ganji[1][0] if len(curr_y_ganji[1]) > 0 else "-"
                 sewun_ji = curr_y_ganji[1][1] if len(curr_y_ganji[1]) > 1 else "-"
                 
-                # 1. 일주(하위십성) 도출 (일간이 일지를 봄)
                 ilju_lower_group = get_group_ss_local(get_ss(ds, db)) 
                 
-                # 2. 대운 연산 팩트
                 dw_che_group = get_group_ss_local(get_ss(ds, dw_g_cur)) 
                 dw_upper_group = get_group_ss_local(get_ss(dw_g_cur, dw_j_cur))
                 dw_yong = get_execution_yong_local(dw_upper_group, ilju_lower_group)
                 dw_fact_keyword = get_matrix_keyword_local(dw_che_group, dw_yong, che_yong_matrix_text)
                 dw_fact_str = f"체운(무대): {dw_che_group} / 용운(사건): {dw_yong} ➔ 도출 키워드: {dw_fact_keyword}"
 
-                # 3. 세운 연산 팩트
                 sewun_upper_group = get_group_ss_local(get_ss(sewun_gan, sewun_ji)) 
                 sewun_yong = get_execution_yong_local(sewun_upper_group, ilju_lower_group)
                 sewun_fact_keyword = get_matrix_keyword_local(dw_che_group, sewun_yong, che_yong_matrix_text)
                 sewun_fact_str = f"체운(무대): {dw_che_group} / 용운(사건): {sewun_yong} ➔ 도출 키워드: {sewun_fact_keyword}"
 
-                # 4. 월운 연산 팩트
                 wol_upper_group = get_group_ss_local(get_ss(cur_wol_g, cur_wol_j))
                 wol_yong = get_execution_yong_local(wol_upper_group, ilju_lower_group)
-                sewun_che_for_wolwun = get_group_ss_local(get_ss(ds, sewun_gan)) # 세운의 무대화
+                sewun_che_for_wolwun = get_group_ss_local(get_ss(ds, sewun_gan)) 
                 wol_fact_keyword = get_matrix_keyword_local(sewun_che_for_wolwun, wol_yong, che_yong_matrix_text)
                 wol_fact_str = f"체운(무대): {sewun_che_for_wolwun} / 용운(사건): {wol_yong} ➔ 도출 키워드: {wol_fact_keyword}"
 
-# 🚨 [치명적 오류 영구 해결]: analysis_summary 강제 생성 및 복구
                 try:
-                    # 🚨 기존 인자 (ds, mb, gans, jjis) 사이에 일지(db)를 추가합니다.
                     analysis_summary = "\n".join(get_universal_analysis(ds, mb, db, gans, jjis))
                 except Exception:
                     analysis_summary = "- 사주 원국 지장간 및 인종법 분석 팩트"
@@ -1675,7 +1597,7 @@ if st.session_state.get('need_calc', False):
    - 소목차: <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; line-height: 1.4; margin-top: 10px; margin-bottom: 5px;'>...</span>
 
 🚨 [초연 시공명리 정석 통변 알고리즘 : 강제 수행 지침]
-당신은 사주 원국 8글자(년월일시 간지) 전체를 완벽히 조망하며, 반드시 아래의 '정석(正石)' 알고리즘 순서대로만 통변을 전개해야 합니다. "정보가 없다"는 핑계는 절대 허용되지 않습니다.
+당신은 사주 원국 8글자(년월일시 간지) 전체를 완벽히 조망하며, 반드시 아래의 '정석(正石)' 알고리즘 순서대로만 통변 전개해야 합니다.
 1. [7궁위 입체 분석]: 일간을 절대 기준으로 삼아, 나머지 7궁위에 배치된 '십성'과 '12운성'을 접목하십시오. 내담자의 삶을 1) 육친적, 2) 심리적, 3) 사회적 관점에서 입체적으로 풀이하십시오.
 2. [신살의 가미]: 위 7궁위 분석 시, 시스템이 제공한 '12신살'과 '일반신살'의 역동성을 양념처럼 가미하여 구체적인 물상과 굴곡을 통변하십시오. (특히 3~10번 육친/사회적 목차 서술 시 적극 활용할 가치)
 3. [공망의 3차원 통변]: 사주 내 '공망(空亡)'이 있다면, 그 결핍과 채우려는 욕망을 1) 육친적, 2) 심리적, 3) 사회적 관점으로 나누어 심도 있게 통변하십시오.
@@ -1705,12 +1627,10 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 내 삶의 무대와 타고난 기본 성향</span>
 (※ 🚨AI 절대 지시: 가장 먼저 내담자의 사주 구조인 '격국({gyukgook_detail})'의 명칭과 그 의미를 상세히 풀이하십시오. 
-이후 우주적 중심인 일간('{ds}')을 뼈대로 삼아, 이 격국의 특성이 7궁위의 어느 무대에서 12운성의 어떤 에너지 규모로 발현되는지 구체적이고 현실적으로 조언하십시오. 
-격국에 대한 통변을 누락하면 치명적 시스템 오류로 간주합니다.)
+이후 우주적 중심인 일간('{ds}')을 뼈대로 삼아, 이 격국의 특성이 7궁위의 어느 무대에서 12운성의 어떤 에너지 규모로 발현되는지 구체적이고 현실적으로 조언하십시오. 격국에 대한 통변을 누락하면 치명적 시스템 오류로 간주합니다.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
-(※ 🚨AI 전술 지시: 사주팔자 오행의 분포와 조후(온도/습도), 억부의 균형을 분석하십시오. 
-불균형이 있다면 이를 극복하기 위해 현실 삶에서 어떤 에너지를 추구하고 채워야 하는지 상세한 에세이로 작성하십시오.)
+(※ 🚨AI 전술 지시: 사주팔자 오행의 분포와 조후(온도/습도), 억부의 균형을 분석하십시오. 불균형이 있다면 이를 극복하기 위해 현실 삶에서 어떤 에너지를 추구하고 채워야 하는지 상세한 에세이로 작성하십시오.)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 내 삶의 역동성과 상호작용</span>
 (※ 🚨AI 전술 지시: 단순 길흉 판단 금지! 다음 3대 역동성을 드라마틱하게 서술하십시오.
@@ -1742,8 +1662,7 @@ if st.session_state.get('need_calc', False):
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>
-(※ 🚨AI 전술 지시: 인성(수용)과 식상(표출), 관성(통제)의 십성 관계만 분석하여
- 1) 심리적 호기심의 방향, 2) 학업 성취도를 이해하기 쉽게 조언하십시오.)
+(※ 🚨AI 전술 지시: 인성(수용)과 식상(표출), 관성(통제)의 십성 관계만 분석하여 1) 심리적 호기심의 방향, 2) 학업 성취도를 이해하기 쉽게 조언하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>5. 적성·직업운</h3><div class='content-box-loose'>
@@ -1751,8 +1670,7 @@ if st.session_state.get('need_calc', False):
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>6. 결혼·자녀운</h3><div class='content-box-loose'>
-(※ 🚨AI 전술 지시: 일지(배우자궁)와 시주(자녀궁) 및 재성/관성/식상의 동태를 독립적으로 정밀 추적하십시오. 
-물리적/정서적 거리감이나 인연의 깊이를 팩트있게 통변하십시오.)
+(※ 🚨AI 전술 지시: 일지(배우자궁)와 시주(자녀궁) 및 재성/관성/식상의 동태를 독립적으로 정밀 추적하십시오. 물리적/정서적 거리감이나 인연의 깊이를 팩트있게 통변하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 재성운</h3><div class='content-box-loose'>
@@ -1880,7 +1798,6 @@ if st.session_state.get('need_calc', False):
                     ai_text = call_gemini_api(prompt)
                     ai_text = "\n".join([line.lstrip() for line in ai_text.split("\n")])
                     
-                    # 🚨 [AI 오지랖 완벽 절단 수술] 
                     div_start = "<div class='content-box-loose'>"
                     target_sub = "1) 내 삶의 무대와 타고난 기본 성향"
                     
@@ -1911,23 +1828,18 @@ if st.session_state.get('need_calc', False):
                     full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{closing_html}</div>"
 
                     report_1_full_html = report_1_full_html.replace("{full_content_clean_placeholder}", full_content_clean)
-                    
-                    # 🚨 [수술 1] 생성된 최종 결과물을 세션 메모리에 영구 저장 (증발 완벽 차단!)
                     st.session_state['saved_report_html'] = report_1_full_html
-                    # (st.markdown 직접 출력은 '6. 화면 출력부'가 알아서 안전하게 처리하므로 여기선 삭제합니다)
                     
                 except Exception as e: 
                     st.error(f"AI 연산 오류: {e}")
 
             # ------------------------------------------------------------------
-            # [2단계] 타 감명서 비교분석 (오류 수정 및 캐싱 적용)
+            # [2단계] 타 감명서 비교분석
             # ------------------------------------------------------------------
             if u_product == "타 감명서":
                 try:
-                    # 1. 타 감명서 원본 렌더링
                     report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2><div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #111; text-align: justify; word-break: keep-all;'>{other_reading_text.replace(chr(10), '<br>')}</div></div></div>"
 
-                    # 2. 표지 HTML 정의 (other_cover_html 변수 선언 위치 복구)
                     other_cover_html = (
                         f"<div class='page-break-before'></div>\n"
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
@@ -1946,7 +1858,6 @@ if st.session_state.get('need_calc', False):
                         f"</div>"
                     )
 
-                    # 3. 비용 제로화: 캐싱된 결과 호출
                     comp_prompt = f"""
     당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
     아래 [데이터]를 바탕으로 [초연 사주풀이]와 [타 감명서]를 1:1 대조 분석하십시오.
@@ -1968,8 +1879,6 @@ if st.session_state.get('need_calc', False):
     - [2. 타 감명서]: {other_reading_text}
     """
                     c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
-                    
-                    # 4. 최종 결합
                     st.session_state['saved_report_2'] = other_cover_html + report_2_html + f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
                 except Exception as e:
@@ -1980,11 +1889,9 @@ if st.session_state.get('need_calc', False):
             # ------------------------------------------------------------------
             if u_product == "궁합" and st.session_state.get('run_comp_mode'):
                 try:
-                    # 궁합 비교 전용 프롬프트 및 결합 로직
                     comp_prompt = f"""
     당신은 명리심리상담사 '초연 박사'를 보조하는 수석 분석관입니다.
     [1. 초연 궁합 분석]과 [2. 타 감명서]를 1:1 대조 분석하십시오.
-    ... (중략: 이전 협의한 디자인 규칙 및 13번 총평 지침 동일 적용) ...
     
     [데이터]
     - 신청인(명주1) 사주: {full_content_clean}
@@ -1992,18 +1899,15 @@ if st.session_state.get('need_calc', False):
     - 타 감명서 원문: {st.session_state.get('other_reading_text')}
     """
                     c_res = get_ai_response(comp_prompt, model_name='gemini-2.5-flash')
-                    
-                    # 결과를 saved_report_gh_comp에 저장
                     st.session_state['saved_report_gh_comp'] = f"<div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center;'>⚖️ 궁합 1:1 상세비교 리포트</h1>{c_res}</div></div>"
                 except Exception as e:
                     st.error(f"궁합 비교 분석 중 오류: {e}")
 
             # ==================================================================
-            # 💕 [3단계] 궁합 풀이)
+            # 💕 [3단계] 궁합 풀이
             # ==================================================================
             if u_product == "궁합":
                 try:
-                    # 3-1. 상대방(여명 또는 파트너) 정밀 역산 연산 시스템 가동
                     p_klc = KoreanLunarCalendar()
                     if p_cal == "양력": p_klc.setSolarDate(p_y, p_m, p_d)
                     elif p_cal == "음력(평달)": p_klc.setLunarDate(p_y, p_m, p_d, False)
@@ -2020,8 +1924,8 @@ if st.session_state.get('need_calc', False):
                     p_ys, p_yb, p_ms, p_mb, p_ds, p_db = p_gj[0][0], p_gj[0][1], p_gj[1][0], p_gj[1][1], p_gj[2][0], p_gj[2][1]
                     p_hs, p_hb = get_time_ganji(p_ds, p_t, p_base_dt)
                     partner_bazi = [f"{p_hs}{p_hb}", f"{p_ds}{p_db}", f"{p_ms}{p_mb}", f"{p_ys}{p_yb}"]
+                    st.session_state['partner_bazi'] = partner_bazi # 🚨 출산택일 연산을 위해 영구 저장
 
-                    # 3-2. 남명/여명 데이터 대칭 배정 (모든 변수 완벽 맵핑)
                     if u_gender == "남성":
                         m_name, m_sol, m_lun, m_time, m_age = u_name, sol_str, lun_str, time_str, u_age
                         m_gans, m_jjis = gans, jjis
@@ -2051,7 +1955,6 @@ if st.session_state.get('need_calc', False):
                         
                         male_data_pack, female_data_pack = partner_bazi, applicant_bazi
 
-                    # 3-3. 올해 간지 공통 변수
                     curr_j = JI[((curr_y - 1984) % 60) % 12]
 
                     def get_counts(t_gans, t_jjis):
@@ -2062,7 +1965,6 @@ if st.session_state.get('need_calc', False):
 
                     m_cnt, f_cnt = get_counts(m_gans, m_jjis), get_counts(f_gans, f_jjis)
 
-                    # 3-4. 사주표 생성 함수 (이름 '+' 기호 원천 제거 및 마스터 바 한 줄 정렬)
                     m_name = m_name.replace("+", "").strip()
                     f_name = f_name.replace("+", "").strip()
 
@@ -2074,12 +1976,9 @@ if st.session_state.get('need_calc', False):
                             lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important;'>합충형파해</td>" if l_idx==0 else ""
                             ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
-                        # 🚨 이름은 무조건 남색(#1A237E) 고정
                         info_str = f"<div style='text-align:center; margin-bottom:15px; font-family:\"Malgun Gothic\", sans-serif;'><span style='font-size:18px; font-weight:900; color:#1A237E;'>{gender_icon} {name}님 ({gender_str}, {marital_str}, {age}세)</span><br><span style='font-size:14px; font-weight:900; color:#222;'>[양력] {sol} | [음력] {lun}{time}</span></div>"
                         
                         def td(c):
-                            # 만약 시주(index 0) 데이터가 '?'이거나 빈칸일 경우, 무조건 흰색 배경 강제 적용
-                            # c가 입력될 때, 해당 데이터가 비어있다면 클래스 색상을 무시하고 흰색을 줍니다.
                             bg_style = "background-color: white;" if c in ['?',' ','-'] else ""
                             return f"<td class='color-{get_color(c)}' style='{bg_style} font-size:20px; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
@@ -2108,18 +2007,13 @@ if st.session_state.get('need_calc', False):
                     m_marital = u_marital if u_gender == "남성" else p_marital
                     f_marital = p_marital if u_gender == "남성" else u_marital
                     
-                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 단','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                     
                     m_tbl = build_bazi_table("♂️", m_name, "남명", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ys, m_yb), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), m_calc_d, "#1A237E")
                     f_tbl = build_bazi_table("♀️", f_name, "여명", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ys, f_yb), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), f_calc_d, "#D50000")
                     
-                    # 🚨 대운수(m_calc_d, f_calc_d) 및 년 공망(calculate_gongmang(m_ys, m_yb)) 변수 완벽 주입
-                    m_tbl = build_bazi_table("♂️", m_name, "남명", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ys, m_yb), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), m_calc_d, "#1A237E")
-                    f_tbl = build_bazi_table("♀️", f_name, "여명", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ys, f_yb), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), f_calc_d, "#D50000")
-                    # 3-5. 궁합 페이지용 상하 대운표 생성기
                     def build_daewun_html(name, t_ds, t_ms, t_mb, t_yb, t_calc_d, t_order, age, color):
                         d_str = "순행" if t_order == 1 else "역행"
-                        # 🚨 [핵심수술] 대운표 제목 색상도 무조건 진한 남색(#1A237E)으로 강제 고정!
                         html = f"<div style='margin-bottom:10px;'><div style='font-size:15px; font-weight:900; color:#1A237E; margin-bottom:5px;'>[ {name}님 대운 흐름표 (대운수: {t_calc_d}), {d_str} ]</div>"
                         html += f"<div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white;'>"
                         for i in range(10):
@@ -2131,13 +2025,11 @@ if st.session_state.get('need_calc', False):
                             html += f"<div style='flex:1; border-left:{brd}; text-align:center; padding-bottom:3px; background-color:{bg};'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:11px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:2px; font-size:11px;'>{get_ss(t_ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900;'>{tj}</div><div style='padding:2px; font-size:11px;'>{get_ss(t_ds,tj)}</div><div style='font-size:10px; border-top:1px solid #eee;'>{get_unsung(t_ds,tj)}</div><div style='font-size:10px; color:#C62828; border-top:1px solid #eee;'>{get_12_shinsal(t_yb, tj)}</div></div>"
                         return html + "</div></div>"
 
-                    # (여성 대운표에도 무조건 #1A237E 남색을 던져서 빨간색 발현 원천 차단)
                     m_page_un_html = build_daewun_html(m_name, m_ds, m_ms, m_mb, m_yb, m_calc_d, m_order, m_age, "#1A237E")
                     f_page_un_html = build_daewun_html(f_name, f_ds, f_ms, f_mb, f_yb, f_calc_d, f_order, f_age, "#1A237E")
                     
                     couple_daewun_tables = f"<div style='margin-bottom: 25px;'>{m_page_un_html}<div style='height:20px;'></div>{f_page_un_html}</div>"
 
-                    # 3-6. AI 에세이 가동
                     m_w_val = choyeon_db.get("wolryeong", {}).get(m_ms+m_mb, "시공간 데이터 없음")
                     m_i_val = choyeon_db.get("ilju", {}).get(m_ds+m_db, "성품 데이터 없음")
                     m_golden = f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em;'><b>{m_name}님</b>은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 지녔습니다.</p>"
@@ -2209,8 +2101,6 @@ if st.session_state.get('need_calc', False):
                     res_text = call_gemini_api(essay_prompt, max_tokens=12000)
                     ai_clean = "\n".join([line.lstrip() for line in res_text.split("\n")])
                     
-                    # 3-7. 마커 파싱 시스템
-                    import re
                     m_ess, f_ess, g_ess = "", "", ai_clean
                     
                     m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', ai_clean, re.DOTALL)
@@ -2225,14 +2115,11 @@ if st.session_state.get('need_calc', False):
                     else:
                         g_ess = ai_clean.replace(m_ess, "").replace(f_ess, "").replace("[MALE_START]", "").replace("[MALE_END]", "").replace("[FEMALE_START]", "").replace("[FEMALE_END]", "")
                     
-                    # [수술] AI가 마커를 훼손하거나 누락해도 강제로 대운표를 소제목 아래에 박아넣는 무적 로직
-                    import re
                     g_ess, count = re.subn(r'\[\s*COUPLE_DAEWUN_TABLES_HERE\s*\]', couple_daewun_tables, g_ess, flags=re.IGNORECASE)
-                    if count == 0:  # 마커가 없으면 강제로 제목 밑에 삽입
+                    if count == 0:  
                         g_ess = re.sub(r'(<h3[^>]*>🌈 커플의 인생 기상도 분석</h3>)', r'\1\n<div style="margin-top:15px;">' + couple_daewun_tables + '</div>', g_ess)
 
-                    # 3-8. A4 규격 컨테이너 래퍼 
-                    def wrap_a4(content, title_color="#1A237E", title=f"[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):  # ✅ 수정: f-string 적용
+                    def wrap_a4(content, title_color="#1A237E", title=f"[ 초연 시공명리 사주풀이 {APP_VERSION} ]"):  
                         return (
                             f"<div class='report-page'>\n"
                             f"<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n"
@@ -2242,7 +2129,6 @@ if st.session_state.get('need_calc', False):
                             f"</div>"
                         )
 
-                    # 3-9. 클로징 멘트 오리지널 복원 및 스코어 바
                     t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
                     bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div></div>" for d in gh_engine.details])
                     
@@ -2254,7 +2140,6 @@ if st.session_state.get('need_calc', False):
                         f"</div>"
                     )
 
-                    # 🚨 [버그 원천 차단] 모든 HTML 문자열을 소괄호 묶음으로 처리 (들여쓰기 에러 및 화면 깨짐 영구 방지)
                     g_full_content = (
                         f"<div class='choyeon-premium-report'>\n{g_ess}\n</div>\n"
                         f"<h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>\n"
@@ -2299,7 +2184,6 @@ if st.session_state.get('need_calc', False):
                     )
                     st.session_state['saved_report_gh_cover'] = cover_html
 
-                    # 3-11. 원국표 + 요약 결합 (페이지 단위로 저장)
                     m_page_content = f"{m_tbl}\n<div class='choyeon-premium-report' style='margin-top:20px;'>\n{m_ess}\n</div>"
                     f_page_content = f"{f_tbl}\n<div class='choyeon-premium-report' style='margin-top:20px;'>\n{f_ess}\n</div>"
                     
@@ -2311,7 +2195,7 @@ if st.session_state.get('need_calc', False):
                     st.error(f"3단계 궁합 종합 분석 가동 장애: {e}")
 
                 # ------------------------------------------------------------------
-                # [궁합 모드 전용] 타 감명서 1:1 비교 입력창 삽입 (삽입 지점)
+                # [궁합 모드 전용] 타 감명서 1:1 비교 입력창 삽입
                 # ------------------------------------------------------------------
                 st.markdown("---")
                 st.subheader("⚖️ 타 감명서와 궁합 비교 분석")
@@ -2319,10 +2203,9 @@ if st.session_state.get('need_calc', False):
                 
                 if st.button("🚀 궁합 타 감명서 비교 가동"):
                     if other_reading_text.strip():
-                        # 비교 로직 활성화 키 설정
                         st.session_state['run_comp_mode'] = True
                         st.session_state['other_reading_text'] = other_reading_text
-                        st.rerun() # 재연산하여 비교 리포트 생성
+                        st.rerun() 
                     else:
                         st.warning("⚠️ 타 감명서 원문을 입력해 주십시오.")
 
@@ -2341,10 +2224,7 @@ import datetime as dt_mod
 
 if st.session_state.get('app_running', False) and st.session_state.get('run_waterfall', False) and 'global_gans' in st.session_state:
     
-    # 🚨 [수술 1] 이미 연산된 일진 리포트가 없을 때만 가동! (토큰 중복 소모 완벽 차단)
     if not st.session_state.get('saved_report_iljin'):
-        
-        # 🚨 [수술 2] 연산(스피너)이 돌기 전에, 메인 사주풀이를 화면에 먼저 깔아줍니다.
         if st.session_state.get('saved_report_html'):
             st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
             
@@ -2387,17 +2267,17 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             
             target_year = parts[0][:2]
             target_wol = parts[1][:2]
-            target_il_gan = parts[2][0] # 🚨 [수정 후] 오늘 일진의 천간
-            target_il_ji = parts[2][1]  # 🚨 [수정 후] 오늘 일진의 지지
+            target_il_gan = parts[2][0]
+            target_il_ji = parts[2][1] 
             
             ilju_lower_group = get_group_ss(get_ss(m_ilgan, m_ilji))
             
             m_che_first = get_group_ss(get_ss(m_ilgan, target_wol[0]))
-            d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il_gan))  # 🚨 완벽 복구
+            d_gan_ss = get_group_ss(get_ss(m_ilgan, target_il_gan))  
             am_yong = get_execution_yong(d_gan_ss, ilju_lower_group)
             
             m_che_second = get_group_ss(get_ss(m_ilgan, target_wol[1]))
-            d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il_ji))    # 🚨 완벽 복구
+            d_ji_ss = get_group_ss(get_ss(m_ilgan, target_il_ji))    
             pm_yong = get_execution_yong(d_ji_ss, ilju_lower_group)
 
             gan_desc = {"합(合)": "생각과 뜻이 맞고 긍정적 결속력이 생기는 하루입니다.", "충(沖)": "정신적인 대립이나 스트레스가 발생할 수 있습니다.", "극(剋)": "상황을 통제하느라 피로감이 따를 수 있습니다."}
@@ -2407,7 +2287,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             for idx, label in enumerate(labels_gan):
                 rel = get_gan_rel_simple(gans_list[idx], target_il_gan)
                 if rel != "-":
-                    # 이제 target_il_gan을 사용하여 깔끔하게 통변 메시지를 생성합니다.
                     gan_res.append(f"☁️ <b>{label}({gans_list[idx]})</b> → <span style='color:#1976D2; font-weight:bold;'>천간 {rel}</span> <span style='color:#555; font-size:13px;'>( {gans_list[idx]}{target_il_gan}{rel}하여 {gan_desc.get(rel, '영향 발생')} )</span>")
 
             ji_desc = {"충": "역동적인 변동이나 이동수가 발생하기 쉽습니다.", "원진": "심리적인 갈등이 생길 수 있으니 주의하십시오.", "육합": "일이 순조롭게 풀리고 화합하는 기운입니다.", "형": "조정하는 과정에서 시비가 따를 수 있으니 조심하십시오."}
@@ -2415,7 +2294,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 
             labels_ji = ["년지", "월지", "일지", "시지"]
             for idx, label in enumerate(labels_ji):
-                rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il_ji) # 🚨 [수정 후] 확실한 지지 매칭
+                rel_full = get_ji_rel_set_simple(jjis_list[idx], target_il_ji) 
                 if rel_full != "-":
                     main_rel = rel_full.split(',')[0].strip()
                     r_res.append(f"🌊 <b>{label}({jjis_list[idx]})</b> → <span style='color:#D50000; font-weight:bold;'>{rel_full}</span> <span style='color:#555; font-size:13px;'>( {jjis_list[idx]}{target_il_ji}{main_rel}하여 변화 감지 )</span>")
@@ -2491,14 +2370,12 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 <br><span style='font-size: 16px; font-weight: 900;'>▶ 오후(미시~야자시):</span> {m_che_second} + {pm_yong}의 결합을 바탕으로 저녁 시간의 흐름과 핵심 사건을 1~2문장으로 기술.
 <br><span style='font-size: 16px; font-weight: 900;'>✨ 오늘의 개운 조언:</span> 박사님의 일주와 오늘 파동을 고려한 실질적인 행동 지침 1문장.
 """
-            # 🚨 [수술 3] 스피너 문구를 센스있게 교체!
             with st.spinner("⏳ 메인 사주풀이 보존 완료! 하단에 [일진 시공간 분석]을 추가 가동 중입니다..."):
                 try:
                     ai_iljin_html = call_light_api(iljin_prompt).replace('\n', '<br>')
                 except Exception as e:
                     ai_iljin_html = f"<div style='color:red; font-weight:bold; padding:10px;'>🚨 AI 일진 분석 장애: {e}</div>"
 
-            # 🚨 [버그 원천 차단] 괄호 문자열 처리로 들여쓰기 에러 완벽 해결
             html_output = (
                 f"<div class='page-break-before'></div>\n"
                 f"<div class='report-page'>\n"
@@ -2517,11 +2394,11 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 f"</div>"
             )
             
-            # 🚨 [수술 4] 7번 모듈에서 강제 출력 금지! 메모리에 저장만 하고 깔끔하게 새로고침
             st.session_state['saved_report_iljin'] = html_output
-            st.rerun() # 연산 완료 즉시 9번 출력부로 토스하여 예쁘게 합침!
+            st.rerun() 
+
 # ==============================================================================
-# 👶 8. [독립 모듈] 출산택일 정밀 분석 (기존 궁합 보존 가동)
+# 👶 8. [독립 모듈] 출산택일 정밀 분석
 # ==============================================================================
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
@@ -2530,7 +2407,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
             p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
             
-            # 3-2. 남명/여명 데이터 대칭 배정 및 변수 직렬화
             if u_gender == "남성":
                 m_jjis, f_jjis = jjis, [b[1] if len(b)>1 else "?" for b in p_bazi_context]
                 m_gans_str, f_gans_str = "".join(gans), "".join([b[0] if len(b)>0 else "?" for b in p_bazi_context])
@@ -2541,14 +2417,12 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             FORBIDDEN_LIST = ['병오', '임자', '계해', '신유', '경신']
             delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
             
-            # 택일 추천 리스트 HTML 구성
             del_content = f"<h2 style='text-align:center;'>👶 새 생명 마중 길일 추천</h2>\n<p>부모님의 사주와 조화를 이루는 길일입니다.</p>\n"
             for day_info in delivery_days:
                 del_content += f"<div>✅ {day_info['date']} (합 점수: {day_info['score']})</div>\n"
             
             del_content += f"<br><hr>\n<p style='font-size:14px; line-height:1.6; color:#333;'><b>💡 부부를 위한 임신 계획 가이드:</b><br>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</p>"
             
-            # AI 통변 프롬프트
             delivery_prompt = f"""
 당신은 명리심리상담사 및 출산택일 최고 권위자인 초연 박사입니다. 아래 부모의 사주 기운을 바탕으로, 태어날 아이의 선천적 명식과 부모간의 오행 상생 조화가 극대화되는 '최고의 프리미엄 출산 희망일 및 시간'을 선정하여 전통 명리 에세이로 풀어내십시오.
 
@@ -2566,26 +2440,24 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '<br>')
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
-            # 🚨 [수술] 보라색(#4A148C) 맑은 고딕 32px 이중선 양식
             def wrap_a4_del(content, title_color="#4A148C", title="초연 시공명리 출산택일"):
                 return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n<div style='border-bottom:4px double {title_color}; padding-bottom:20px; margin-bottom:40px;'>\n<h1 style='text-align:center; font-size: 32px; color:{title_color}; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 {title}</h1>\n</div>\n{content}\n</div>\n</div>"
 
             st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C", "초연 시공명리 출산택일")
-            st.session_state['run_delivery_only'] = False # 가동 완료 후 초기화
-            st.rerun() # 즉시 화면 반영
+            st.session_state['run_delivery_only'] = False
+            st.rerun() 
             
         except Exception as e:
             st.error(f"출산택일 연산 장애: {e}")
             st.session_state['run_delivery_only'] = False
+
 # ==============================================================================
 # 9. 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
     
     if u_product == "개인사주":
-        # 🚨 [수술] 메인 리포트(사주풀이)를 먼저 웅장하게 출력하고, 
         st.markdown(st.session_state.get('saved_report_html', ''), unsafe_allow_html=True)
-        # 일진 리포트 연산 결과가 있다면 그 바로 밑에 찰싹 붙여서 순서대로 출력!
         if st.session_state.get('saved_report_iljin'):
             st.markdown(st.session_state.get('saved_report_iljin', ''), unsafe_allow_html=True)
     
@@ -2594,7 +2466,6 @@ if st.session_state.get('app_running', False):
         st.markdown(st.session_state.get('saved_report_2', ''), unsafe_allow_html=True)
         
     if u_product == "궁합":
-        # 🚨 [1단계] 저장된 궁합 리포트를 무조건 먼저 화면에 출력! (화면 유지 효과)
         if st.session_state.get('saved_report_gh_cover'):
             st.markdown(st.session_state.get('saved_report_gh_cover', ''), unsafe_allow_html=True)
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
@@ -2605,7 +2476,6 @@ if st.session_state.get('app_running', False):
         st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
         st.markdown(st.session_state.get('saved_report_gh_g', ''), unsafe_allow_html=True)
 
-        # 🚨 [2단계] 택일 체크됨 & 연산 전일 경우 -> 하단에 독립 스피너 가동!
         if run_delivery_calc and start_date and end_date and not st.session_state.get('saved_report_del') and st.session_state.get('saved_report_gh_g'):
             with st.spinner("⏳ 출산 택일 확정 중...."):
                 try:
@@ -2650,24 +2520,18 @@ if st.session_state.get('app_running', False):
                     ai_delivery_html = call_gemini_api(delivery_prompt).replace('\n', '<br>')
                     del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n</div>"
 
-                    # 🚨 [수술] 보라색(#4A148C) 유지하되, 맑은 고딕 32px & 이중선 양식 강제 통일
                     def wrap_a4_del(content, title_color="#4A148C", title="초연 시공명리 출산택일"):
                         return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n<div style='border-bottom:4px double {title_color}; padding-bottom:20px; margin-bottom:40px;'>\n<h1 style='text-align:center; font-size: 32px; color:{title_color}; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 {title}</h1>\n</div>\n{content}\n</div>\n</div>"
 
                     st.session_state['saved_report_del'] = wrap_a4_del(del_content, "#4A148C", "초연 시공명리 출산택일")
-                    st.rerun() # 🚨 연산 완료 즉시 화면을 갱신하여 결과 리포트를 찰싹 붙임!
+                    st.rerun() 
                 except Exception as e:
                     st.error(f"출산택일 연산 장애: {e}")
 
-        # 🚨 [3단계] 연산이 완료되어 세션에 저장된 택일 리포트가 있으면 궁합 밑에 최종 출력
         if st.session_state.get('saved_report_del'):
             st.markdown("<div class='page-break-before'></div>", unsafe_allow_html=True)
             st.markdown(st.session_state.get('saved_report_del', ''), unsafe_allow_html=True)
 
-        # ------------------------------------------------------------------
-        # [삽입] 궁합 타 감명서 비교 분석 (선택적 가동 모듈)
-        # ------------------------------------------------------------------
-        # 1. 2단계 비교 분석 엔진 (이미 비교 모드가 켜진 경우에만 연산)
         if st.session_state.get('run_comp_mode') and not st.session_state.get('saved_report_gh_comp'):
             with st.spinner("⏳ 초연 수석 분석관이 타 감명서와 1:1 대조 중입니다..."):
                 try:
@@ -2690,6 +2554,5 @@ if st.session_state.get('app_running', False):
                 except Exception as e:
                     st.error(f"궁합 비교 분석 중 오류: {e}")
 
-        # 2. 비교 분석 완료 시 화면 출력
         if st.session_state.get('saved_report_gh_comp'):
             st.markdown(st.session_state.get('saved_report_gh_comp', ''), unsafe_allow_html=True)
