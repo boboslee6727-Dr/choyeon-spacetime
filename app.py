@@ -367,7 +367,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=60) #ttl=600*24 시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=3600*24) #ttl=3600*24초=86,400초 24시간 감명서 유효
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
@@ -716,34 +716,41 @@ def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_
     
     results = []
     curr = start_date
-    
-    # 합/충 판단용 기본 리스트
     hap_list = [{'자','축'}, {'인','해'}, {'묘','술'}, {'진','유'}, {'사','신'}, {'오','미'}]
     choong_list = [{'자','오'}, {'축','미'}, {'인','신'}, {'묘','유'}, {'진','술'}, {'사','해'}]
     
     while curr <= end_date:
-        score = 80
-        birth_d = curr + dt_mod.timedelta(days=280) # 출산일 역산
+        # 점수 범위를 50~100으로 넓혀 80점 고정 탈피
+        score = 50 
+        birth_d = curr + dt_mod.timedelta(days=280)
         b_klc = KoreanLunarCalendar()
         b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
         b_gj = b_klc.getChineseGapJaString().split()
         
         if len(b_gj) >= 3:
-            b_ilji = b_gj[2][1] # 태어날 아이의 일지
-            
-            # 부모 지지와 대조하여 동적 스코어링
+            b_ilji = b_gj[2][1]
             for p_ji in m_jjis + f_jjis:
                 if p_ji == '?': continue
                 pair = {b_ilji, p_ji}
-                if pair in hap_list: score += 10    # 합이 되면 가점
-                if pair in choong_list: score -= 15 # 충이 되면 감점
-                
-        results.append({'date': curr.strftime('%Y-%m-%d'), 'score': score})
+                if pair in hap_list: score += 15 # 가점 상향
+                if pair in choong_list: score -= 20 # 감점 상향
+        
+        results.append({'date': curr.strftime('%Y-%m-%d'), 'month': curr.strftime('%Y-%m'), 'score': score})
         curr += dt_mod.timedelta(days=1)
         
-    # 점수 높은 순으로 정렬 후 상위 3개만 추출
+    # 점수 정렬 후, 월(Month) 단위로 중복 제거하여 3개 추출
     results.sort(key=lambda x: x['score'], reverse=True)
-    return results[:3]
+    
+    final_results = []
+    seen_months = set()
+    for r in results:
+        if r['month'] not in seen_months:
+            final_results.append(r)
+            seen_months.add(r['month'])
+        if len(final_results) >= 3:
+            break
+            
+    return final_results
 # ==============================================================================
 # 3. 프리미엄 궁합 분석 엔진 클래스
 # ==============================================================================
