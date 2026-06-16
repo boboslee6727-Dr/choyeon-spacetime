@@ -2833,7 +2833,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     if m_key not in month_best_bucket or item['score'] > month_best_bucket[m_key]['score']:
                         month_best_bucket[m_key] = item
                         
-                sorted_months = sorted(month_best_bucket.values(), key=lambda x: x['score'], reverse=True)
+                sorted_months = sorted(month_best_bucket.values(), key=lambda x: (-int(x['score']), x['month']))
                 return sorted_months[:3]
 
             m_saju_hanja = f"{m_gans_str[3]}{m_jjis[3]}년 {m_gans_str[2]}{m_jjis[2]}월 {m_gans_str[1]}{m_jjis[1]}일 {m_gans_str[0]}{m_jjis[0]}시"
