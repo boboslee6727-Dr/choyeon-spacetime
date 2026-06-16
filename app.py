@@ -2646,14 +2646,48 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
             st.rerun()
 
 # ==============================================================================
+# 🩸 [신규 UI] 산모 생리 주기 및 가임기 기반 출산 윈도우 산출
+# ==============================================================================
+# 🚨 들여쓰기 주의: 이전 모듈 블록에서 완전히 빠져나와 8번 모듈과 같은 선상에 둡니다.
+
+st.markdown("<h3 style='color:#4A148C;'>🩸 산모 생체 리듬 및 가임기 설정</h3>", unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+with col1:
+    last_period_date = st.date_input("마지막 생리 시작일 (또는 최근 기준일)", value=dt_mod.date.today())
+with col2:
+    period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=50, value=28, step=1)
+
+# 🧬 [산부인과 의학 로직] 배란일 및 가임 기간 도출
+next_period_date = last_period_date + dt_mod.timedelta(days=period_cycle)
+ovulation_date = next_period_date - dt_mod.timedelta(days=14)
+fertile_start = ovulation_date - dt_mod.timedelta(days=5)
+fertile_end = ovulation_date
+
+# 👶 [명리학 탐색 윈도우 로직] 실제 출산 가능 기간 도출
+expected_delivery_date = ovulation_date + dt_mod.timedelta(days=266)
+search_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
+search_end_date = expected_delivery_date
+
+st.info(f"""
+**의학적 산출 결과**
+- 🎯 **최적 배란일(합궁일):** {ovulation_date.strftime('%Y년 %m월 %d일')} 
+- ❤️ **가임 권장 기간:** {fertile_start.strftime('%m월 %d일')} ~ {fertile_end.strftime('%m월 %d일')}
+- 🏥 **명식 탐색 구간 (출산 가능일):** {search_start_date.strftime('%Y년 %m월 %d일')} ~ {search_end_date.strftime('%m월 %d일')}
+""")
+
+# ==============================================================================
 # 👶 8. [독립 모듈] 출산택일 정밀 분석 (연산 및 AI 두뇌 전용)
 # ==============================================================================
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
         try:
+            # 🚨 UI에서 도출한 날짜를 여기서 내부 변수로 받아서 사용합니다.
+            start_date = search_start_date
+            end_date = search_end_date
+
             gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
             jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
-            p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
 
             if u_gender == "남성":
                 m_jjis = jjis
@@ -2671,6 +2705,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
 
             # 🚨 [신규 이식] 출산택일 정밀 연산 함수 (7:3 비율, 조후, 길신/흉신 통제)
+            # 🚨 [신규 이식] 출산택일 범용 정밀 연산 함수 (조후 기반 봄/가을 우선, 일간 득근 필수 필터링)
             def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list):
                 OHENG_MAP = {
                     '갑':'목', '을':'목', '인':'목', '묘':'목', '병':'화', '정':'화', '사':'화', '오':'화',
@@ -2679,12 +2714,32 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                 }
                 
                 KILL_SWITCH = set(forbidden_list)
-                KILL_SWITCH.update({'갑진', '을미', '병술', '정축', '무진', '임술', '계축'}) # 백호/괴강 등 흉살 추가 배제
+                KILL_SWITCH.update({'갑진', '을미', '병술', '정축', '무진', '임술', '계축'}) # 백호/괴강 등 배제
                 
+                # 🚨 흉살 리스트 강화 (형살 추가)
                 hap_list = [{'자', '축'}, {'인', '해'}, {'묘', '술'}, {'진', '유'}, {'사', '신'}, {'오', '미'}]
                 choong_list = [{'자', '오'}, {'축', '미'}, {'인', '신'}, {'묘', '유'}, {'진', '술'}, {'사', '해'}]
                 wonjin_gwimun = [{'자', '미'}, {'축', '오'}, {'인', '유'}, {'묘', '신'}, {'진', '해'}, {'사', '술'}]
-                
+                hyung_list = [{'인', '사'}, {'사', '신'}, {'인', '신'}, {'축', '술'}, {'술', '미'}, {'축', '미'}, {'자', '묘'}] # 자형(진진,오오 등)은 유연성 위해 제외
+
+                # 🚨 일간 득근(통근) 맵 (일간이 생존할 수 있는 튼튼한 뿌리)
+                ROOT_MAP = {
+                    '갑': ['인', '묘', '진', '해', '미'],
+                    '을': ['인', '묘', '진', '해', '미'],
+                    '병': ['사', '오', '미', '인', '술'],
+                    '정': ['사', '오', '미', '인', '술'],
+                    '무': ['진', '술', '축', '미', '사', '오'],
+                    '기': ['진', '술', '축', '미', '사', '오'],
+                    '경': ['신', '유', '술', '사', '축'],
+                    '신': ['신', '유', '술', '사', '축'],
+                    '임': ['해', '자', '축', '신', '진'],
+                    '계': ['해', '자', '축', '신', '진']
+                }
+
+                # 🚨 범용 계절 분류
+                SPRING_AUTUMN = ['인', '묘', '진', '신', '유'] 
+                EXTREME_SUMMER_WINTER = ['사', '오', '미', '해', '자', '축', '술']
+
                 TIME_SLOTS = [
                     ("자", "23:30~01:29"), ("축", "01:30~03:29"), ("인", "03:30~05:29"),
                     ("묘", "05:30~07:29"), ("진", "07:30~09:29"), ("사", "09:30~11:29"),
@@ -2693,26 +2748,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                 ]
                 TIME_STEM_START = {'갑':'갑', '기':'갑', '을':'병', '경':'병', '병':'무', '신':'무', '정':'경', '임':'경', '무':'임', '계':'임'}
                 GAN_LIST = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
-
-                GUIIN_MAP = {
-                    '갑': ['축', '미'], '을': ['자', '신'], '병': ['해', '유'], '정': ['해', '유'], '무': ['축', '미'],
-                    '기': ['자', '신'], '경': ['축', '미'], '신': ['인', '오'], '임': ['묘', '사'], '계': ['묘', '사']
-                }
-                MUNCHANG_MAP = {
-                    '갑': '사', '을': '오', '병': '신', '정': '유', '무': '신',
-                    '기': '유', '경': '해', '신': '자', '임': '인', '계': '묘'
-                }
-                
-                HOT_JI = ['사', '오', '미', '술']
-                COLD_JI = ['해', '자', '축', '진']
+                GUIIN_MAP = {'갑': ['축', '미'], '을': ['자', '신'], '병': ['해', '유'], '정': ['해', '유'], '무': ['축', '미'], '기': ['자', '신'], '경': ['축', '미'], '신': ['인', '오'], '임': ['묘', '사'], '계': ['묘', '사']}
 
                 raw_candidates = []
                 curr = start_date
                 
-                # 🚨 탐색 기준 변경: curr는 이제 '출산 예정일'입니다.
                 while curr <= end_date:
                     birth_d = curr
-                    conception_d = birth_d - dt_mod.timedelta(days=280) # 280일 역산하여 합궁일 도출
+                    conception_d = birth_d - dt_mod.timedelta(days=280)
                     
                     b_klc = KoreanLunarCalendar()
                     b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
@@ -2722,90 +2765,75 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                         b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]] 
                         b_year, b_month, b_day = b_gj_kor[0], b_gj_kor[1], b_gj_kor[2]
                         
-                        # [0단계] 흉살 및 복음(간지 중복) 배제
+                        # [1단계] 복음 및 지정 흉살 기본 배제
                         if b_year in KILL_SWITCH or b_month in KILL_SWITCH or b_day in KILL_SWITCH:
                             curr += dt_mod.timedelta(days=1); continue
                         if b_year == b_month or b_month == b_day or b_year == b_day:
                             curr += dt_mod.timedelta(days=1); continue
+
+                        # [2단계] 년, 월, 일 삼주(三柱) 내 흉살(충, 원진, 형) 원천 차단 (Hard Drop)
+                        is_bad_structure = False
+                        for idx1 in range(3):
+                            for idx2 in range(idx1 + 1, 3):
+                                pair = {b_gj_kor[idx1][1], b_gj_kor[idx2][1]}
+                                if pair in choong_list or pair in wonjin_gwimun or pair in hyung_list:
+                                    is_bad_structure = True; break
+                            if is_bad_structure: break
                         
+                        if is_bad_structure:
+                            curr += dt_mod.timedelta(days=1); continue
+
+                        # [3단계] 일간의 득근 여부 확인 (신약무근 즉시 폐기)
                         b_day_stem = b_day[0]
+                        if b_month[1] not in ROOT_MAP[b_day_stem] and b_day[1] not in ROOT_MAP[b_day_stem]:
+                            curr += dt_mod.timedelta(days=1); continue # 뿌리가 없으면 폐기
+
+                        # [4단계] 계절 및 조후 가중치 부여 (봄/가을 최우선)
+                        season_score = 0
+                        if b_month[1] in SPRING_AUTUMN:
+                            season_score += 50  # 진짜 쾌적한 달에 절대적 가점 부여
+                        elif b_month[1] in EXTREME_SUMMER_WINTER:
+                            season_score -= 100 # 흉한 달은 -100점 처리하여 점수 랭킹에서 아예 보이지 않게 매장
+
                         start_stem = TIME_STEM_START.get(b_day_stem, '갑')
                         start_idx = GAN_LIST.index(start_stem)
 
                         best_time_score = -999
                         best_time_data = {}
 
+                        # 시주(시간) 결합 및 점수 연산
                         for t_idx, (t_ji, t_time_str) in enumerate(TIME_SLOTS):
                             t_gan = GAN_LIST[(start_idx + t_idx) % 10]
                             b_time = f"{t_gan}{t_ji}"
 
                             if b_time in KILL_SWITCH or b_time in [b_year, b_month, b_day]:
                                 continue
+                            
+                            # 시주와 기존 삼주 간의 충/원진 추가 검사
+                            is_time_bad = False
+                            for p in b_gj_kor:
+                                pair = {p[1], t_ji}
+                                if pair in choong_list or pair in wonjin_gwimun:
+                                    is_time_bad = True; break
+                            if is_time_bad: continue
 
-                            four_pillars = [b_year, b_month, b_day, b_time]
-                            characters = []
-                            for pillar in four_pillars:
-                                characters.extend([pillar[0], pillar[1]])
-                                
-                            oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
-                            for char in characters:
-                                oh = OHENG_MAP.get(char)
-                                if oh: oheng_counts[oh] += 1
-                                
-                            # (1) 조후 점수 (최대 30점)
-                            ym_johu_score = 15
-                            y_ji = b_year[1]; m_ji = b_month[1]
-                            if y_ji in HOT_JI:
-                                if m_ji in COLD_JI or m_ji in ['신', '유']: ym_johu_score += 15
-                                elif m_ji in HOT_JI: ym_johu_score -= 15
-                            elif y_ji in COLD_JI:
-                                if m_ji in HOT_JI or m_ji in ['인', '묘']: ym_johu_score += 15
-                                elif m_ji in COLD_JI: ym_johu_score -= 15
-                            else: ym_johu_score += 10
-                            
-                            # (2) 오행 균형 점수 (최대 20점)
-                            present_types = [t for t, c in oheng_counts.items() if c > 0]
-                            structure_score = len(present_types) * 4
-                            for t, c in oheng_counts.items():
-                                if c >= 3: structure_score -= 10
-                                
-                            # (3) 길신/흉신 점수 (최대 20점)
-                            god_score = 10
-                        
-                            # 🚨 [생존 필터] 일간이 절지(絶地)인 경우 치명적 감점 (일간이 약한 경우 원천 차단)
-                            # 예: 甲木이 申을 만나면 절지, 乙木이 酉를 만나면 절지 등
-                            if b_day[1] in ['신', '유', '인', '묘', '사', '오', '해', '자']: # 본인의 절/태지 감점
-                                god_score -= 15
-
-                            noble_branches = GUIIN_MAP.get(b_day_stem, [])
-                            munchang_branch = MUNCHANG_MAP.get(b_day_stem, '')
-                        
-                            # 길신 가점은 오행 균형이 잡혔을 때만 적용하도록 축소
-                            if len(present_types) >= 3:
-                                for ji in [b_year[1], b_month[1], b_day[1], b_time[1]]:
-                                    if ji in noble_branches: god_score += 4 # 가점 축소
-                                    if ji == munchang_branch: god_score += 2
-                            
-                            # 원진/귀문 등 흉살 감점 대폭 강화
-                            for idx1 in range(4):
-                                for idx2 in range(idx1 + 1, 4):
-                                    pair = {four_pillars[idx1][1], four_pillars[idx2][1]}
-                                    if pair in wonjin_gwimun: god_score -= 15 # 감점 대폭 강화
-                                    
-                            baby_score = max(0, min(70, ym_johu_score + structure_score + god_score))
-                            
-                            # (4) 부모 궁합 점수 (최대 30점)
+                            # 부모 사주와의 조화 (월주/시주 중심)
                             parent_score = 15
-                            b_ilji = b_day[1]
                             for p_ji in m_jjis + f_jjis:
                                 if p_ji == '?': continue
-                                pair = {b_ilji, p_ji}
-                                if pair in hap_list: parent_score += 7
+                                pair = {b_month[1], p_ji} # 부모궁(월지)과의 조화를 우선
+                                if pair in hap_list: parent_score += 10
                                 if pair in choong_list: parent_score -= 10
-                            parent_score = max(0, min(30, parent_score))
+
+                            # 길신/귀인 가점
+                            god_score = 10
+                            noble_branches = GUIIN_MAP.get(b_day_stem, [])
+                            if b_month[1] in noble_branches or b_day[1] in noble_branches or t_ji in noble_branches:
+                                god_score += 10
                             
+                            # 종합 점수 = 계절 점수 + 부모 조화 + 길신 + 미세 타이 브레이커
                             tie_breaker = ((32 - birth_d.day) * 0.001) + (t_idx * 0.0001)
-                            total_score = baby_score + parent_score + tie_breaker
+                            total_score = max(0, min(100, season_score + parent_score + god_score)) + tie_breaker
 
                             if total_score > best_time_score:
                                 best_time_score = total_score
@@ -2815,14 +2843,15 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
                         if best_time_data:
                             raw_candidates.append({
-                                'date': conception_d.strftime('%Y-%m-%d'), # 기존 UI 호환을 위해 합궁일을 date에 저장
-                                'month': birth_d.strftime('%Y-%m'),        # 그룹화 기준은 '출산월'로 확정
+                                'date': conception_d.strftime('%Y-%m-%d'),
+                                'month': birth_d.strftime('%Y-%m'), 
                                 'score': best_time_data['score'], 
                                 'best_time': best_time_data
                             })
                             
                     curr += dt_mod.timedelta(days=1)
                     
+                # 최상위 3개의 월(Month) 그룹화 및 반환
                 month_best_bucket = {}
                 for item in raw_candidates:
                     m_key = item['month']
@@ -2844,7 +2873,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
             del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>👶 새 생명 마중 길일(출산 택일) 추천</h2>\n"
-            del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>부모님의 사주와 조화를 이루는 합궁 길일입니다.</p>\n"
+            del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>출산 및 합궁 길일</p>\n"
 
             ai_target_days_facts = []
             del_content += f"<div style='display:flex; flex-direction:column; margin-bottom:15px; background:#f9f9f9; padding:20px; border-radius:10px;'>\n"
@@ -2917,7 +2946,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             ai_days_input_str = "\n".join(ai_target_days_facts)
 
-            # 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
+# 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
             # 년간이 甲(양), 丙(양), 戊(양), 庚(양), 壬(양)이면 남순/여역
             # 년간이 乙(음), 丁(음), 己(음), 辛(음), 癸(음)이면 남역/여순
             yang_gans = ['갑', '병', '무', '경', '임']
@@ -2928,21 +2957,22 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             m_direction = "순행" if is_yang_year else "역행"
             f_direction = "역행" if is_yang_year else "순행"
 
-            # 프롬프트에 이 값을 강제로 주입
+            # 🚨 [수정 및 강화] 태아 성별 미정에 따른 대운(大運) 분석 지침을 강제로 주입
             prompt_daewun_info = f"""
-[성별 및 대운 방향 설정]
-- 남명: {m_direction} (년주가 {year_gan}년이므로)
-- 여명: {f_direction} (년주가 {year_gan}년이므로)
-- 규칙: 성별과 년간의 음양에 따른 정확한 순/역행 방향으로 대운을 분석할 것.
+[태아 성별 미정에 따른 대운(大運) 분석 지침]
+현재 태아의 성별이 확정되지 않았습니다. 따라서 명식 풀이 시 **반드시 남아(대운: {m_direction})와 여아(대운: {f_direction}) 두 가지 경우의 대운 흐름을 모두 통변**해야 합니다.
+- 남아({m_direction}): 초년~중년 대운의 유불리 및 특징
+- 여아({f_direction}): 초년~중년 대운의 유불리 및 특징
 """
             
            # 🚨 부모 사주 정보를 AI가 명확히 인지하도록 전달
             parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
-            # 🚨 AI 통제용 프롬프트 강화
             delivery_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다.
 {parent_info}
+
+{prompt_daewun_info}
 
 시스템이 도출한 아래 [추천 출산 명식 및 부모 조화 점수]에 대해 통변 에세이를 작성하십시오.
 
@@ -2952,16 +2982,17 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 🚨 [필수 준수 사항 - 위반 시 감점]
 1. 각 순위별 명리 풀이 시 반드시 '부모 사주와의 상생 관계'를 첫 문단에 배치하십시오.
    - 예: "이 사주는 부(父)의 사주에서 부족한 [오행]을 [십성]으로 보완하며, 모(母)의 일지와 [합/충] 관계를 통해 깊은 유대감을 형성할 수 있는 구조입니다."
-2. 1순위, 2순위, 3순위의 제목 폰트 크기 및 구조는 [출력 포맷 템플릿]을 100% 따를 것.
-3. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
+2. 남아로 태어날 경우({m_direction})와 여아로 태어날 경우({f_direction}) 각각의 대운 흐름에 따른 장단점을 반드시 포함하여 서술하십시오.
+3. 1순위, 2순위, 3순위의 제목 폰트 크기 및 구조는 [출력 포맷 템플릿]을 100% 따를 것.
+4. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
 
 [출력 포맷 템플릿]
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ (입력받은 1,2,3순위 텍스트)</span>
 <div style='padding-left: 15px; margin-bottom: 15px;'>
     <div style='margin-bottom: 3px;'><b>1) 일반 명리 및 부모 조화 풀이:</b></div>
     <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 부모 사주와의 궁합 비중 30%를 포함하여 기술) </p>
-    <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 및 성장 환경 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
+    <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 및 성별 대운 흐름 풀이:</b></div>
+    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 남아일 때와 여아일 때의 대운 장단점을 각각 명확히 나누어 서술) </p>
 </div>
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
