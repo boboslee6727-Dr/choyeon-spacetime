@@ -1143,9 +1143,8 @@ with st.sidebar:
         # 🚨 [박사님 의도 100% 반영] 패턴 3: 출산택일 옵션 및 탐색 기간 직접 통제 UI 복구
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
         if run_delivery_calc:
-            # 시각적으로 깔끔하게 묶어주는 미니 박스 디자인
-            st.markdown("<div style='padding:15px; border-radius:10px; background-color:#F4F1FA; border-left: 4px solid #4A148C; margin-bottom:15px;'>", unsafe_allow_html=True)
-            st.markdown("<h5 style='color:#4A148C; margin-top:0px; margin-bottom:10px;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
+            # 🚨 [오류 원인 철거] 화면을 깨지게 만들던 강제 HTML div 래퍼를 완전히 삭제했습니다.
+            st.markdown("<h5 style='color:#4A148C; margin-top:10px; margin-bottom:10px;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
             
             # 달력 팝업 없이 키보드로 직접 입력하기 편한 심플한 구조
             col_b1, col_b2 = st.columns(2)
@@ -1162,13 +1161,13 @@ with st.sidebar:
             auto_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
             auto_end_date = expected_delivery_date
 
-            # 배란 예정일만 텍스트로 강조
+            # 배란 예정일 텍스트 안내
             st.markdown(f"<span style='font-size:13px; color:#D50000; font-weight:bold; display:block; margin-top:5px;'>🎯 의학적 배란(합궁) 예정일: {ovulation_date.strftime('%Y/%m/%d')}</span>", unsafe_allow_html=True)
             
             st.markdown("<hr style='margin:10px 0px; border: 0.5px dashed #ccc;'>", unsafe_allow_html=True)
             st.markdown("<h5 style='color:#1A237E; margin-top:0px; margin-bottom:10px;'>📅 출산 탐색 기간 (자유 변경 가능)</h5>", unsafe_allow_html=True)
             
-            # 🚨 [복구 완료] 탐색 기간 직접 선택창 (기본값은 자동 계산된 날짜)
+            # 🚨 탐색 기간 직접 선택창 (기본값은 자동 계산된 날짜)
             col_d1, col_d2 = st.columns(2)
             with col_d1:
                 final_start_date = st.date_input("탐색 시작일", value=auto_start_date)
