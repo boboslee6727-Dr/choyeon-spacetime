@@ -2857,7 +2857,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                 K2H_MAP = {v: k for k, v in H2K_MAP.items()}
                 
                 for i in range(min(3, len(delivery_days))):
-                    # 🚨 [출력부 변경] 딕셔너리에 저장해둔 진짜 날짜 2개를 꺼내서 사용합니다.
                     ovul_d_obj = dt_mod.datetime.strptime(delivery_days[i]['ovulation_date'], '%Y-%m-%d')
                     birth_d_obj = dt_mod.datetime.strptime(delivery_days[i]['birth_date'], '%Y-%m-%d')
                     total_score = int(delivery_days[i]['score']) 
@@ -2883,33 +2882,24 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     fact_line = f"▶ {i+1}순위 추천 월령: {birth_d_obj.year}년 {birth_d_obj.month:02d}월 ({ym_hanja}) / 택일 추천: {birth_d_obj.day:02d}일 {opt_time_str} / 명식: {bazi_hanja}"
                     ai_target_days_facts.append(fact_line)
                     
-                    # 🚨 순위별 메달 데코레이션 설정
                     medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
-                    
-                    # 🚨 가임 기간 날짜 연산
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
                     end_conception = ovul_d_obj
                     date_range_str = f"{start_conception.year}년 {start_conception.month}월 {start_conception.day}일 ~ {end_conception.year}년 {end_conception.month}월 {end_conception.day}일"
 
-                    # 🚨 박사님 지시 포맷팅 적용 완료 (초간편/명료화)
-                    del_content += f"""
-                    <div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: "Malgun Gothic", sans-serif;'>
-                        <div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>
-                            {medal} {i+1}순위 추천 월령 : {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str} <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span>
-                        </div>
-                        <div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>
-                            <div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>
-                            <div style='background-color: #FFF3E0; padding: 10px 15px; border-radius: 6px; font-weight: 900; color: #E65100; font-size: 16px;'>
-                                🔮 완성 명식 : <span style='letter-spacing: 1px;'>{bazi_hanja}</span> <span style='font-size: 14px; color: #666; font-weight: normal;'>({bazi_kor})</span>
-                            </div>
-                        </div>
-                    </div>
-                    """
+                    # 🚨 [수술 완료] 마크다운 공백 에러를 막기 위해 멀티라인(""" """)을 폐기하고 한 줄씩(+) 강제 조립
+                    del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
+                    del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 월령 : {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str} <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
+                    del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
+                    del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
+                    del_content += f"<div style='background-color: #FFF3E0; padding: 10px 15px; border-radius: 6px; font-weight: 900; color: #E65100; font-size: 16px;'>🔮 완성 명식 : <span style='letter-spacing: 1px;'>{bazi_hanja}</span> <span style='font-size: 14px; color: #666; font-weight: normal;'>({bazi_kor})</span></div>\n"
+                    del_content += "</div></div>\n"
+                    
             del_content += "</div>\n"
 
-            del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'>"
-            del_content += "<span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
-            
+            del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
+            del_content += f"<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 {period_cycle}일 주기를 고려한 실제 가임 기간</b>이 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
+
             del_content += "<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px Toggle;'>"
             del_content += "<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
 
@@ -3003,7 +2993,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             
             # 4. 화면이 깨지지 않도록 불필요한 줄바꿈 정리
             ai_delivery_html = ai_delivery_html.strip()
-            # ==============================================================================
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
