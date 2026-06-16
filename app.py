@@ -1140,7 +1140,7 @@ with st.sidebar:
         
         st.markdown("---")
         
-        # 🚨 [박사님 의도 100% 반영] 패턴 3: 출산택일 옵션 및 산모 생체 리듬 간편 설정
+        # 🚨 [박사님 의도 100% 반영] 패턴 3: 출산택일 옵션 및 탐색 기간 직접 통제 UI 복구
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
         if run_delivery_calc:
             # 시각적으로 깔끔하게 묶어주는 미니 박스 디자인
@@ -1154,23 +1154,34 @@ with st.sidebar:
             with col_b2:
                 period_cycle = st.number_input("생리 주기(일)", min_value=20, max_value=50, value=28, step=1)
 
-            # 🧬 [의학 로직 & 탐색 윈도우 계산] (화면에는 보이지 않고 내부에서 초고속 연산)
+            # 🧬 [의학 로직 & 탐색 윈도우 기본값 계산]
             next_period_date = last_period_date + dt_mod.timedelta(days=period_cycle)
             ovulation_date = next_period_date - dt_mod.timedelta(days=14)
             
             expected_delivery_date = ovulation_date + dt_mod.timedelta(days=266)
-            search_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
-            search_end_date = expected_delivery_date
+            auto_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
+            auto_end_date = expected_delivery_date
 
-            # 8번 모듈로 전달할 메모리 저장 (안전한 세션 상태 활용)
-            st.session_state['search_start_date'] = search_start_date
-            st.session_state['search_end_date'] = search_end_date
+            # 배란 예정일만 텍스트로 강조
+            st.markdown(f"<span style='font-size:13px; color:#D50000; font-weight:bold; display:block; margin-top:5px;'>🎯 의학적 배란(합궁) 예정일: {ovulation_date.strftime('%Y/%m/%d')}</span>", unsafe_allow_html=True)
+            
+            st.markdown("<hr style='margin:10px 0px; border: 0.5px dashed #ccc;'>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color:#1A237E; margin-top:0px; margin-bottom:10px;'>📅 출산 탐색 기간 (자유 변경 가능)</h5>", unsafe_allow_html=True)
+            
+            # 🚨 [복구 완료] 탐색 기간 직접 선택창 (기본값은 자동 계산된 날짜)
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                final_start_date = st.date_input("탐색 시작일", value=auto_start_date)
+            with col_d2:
+                final_end_date = st.date_input("탐색 종료일", value=auto_end_date)
 
-            # 핵심 요약 정보만 한 줄로 깔끔하게 표출
-            st.markdown(f"<span style='font-size:13px; color:#333; line-height: 1.5; display:block; margin-top:8px;'>🎯 <b>배란(합궁)일:</b> {ovulation_date.strftime('%Y/%m/%d')}<br>🏥 <b>출산탐색:</b> {search_start_date.strftime('%Y/%m/%d')} ~ {search_end_date.strftime('%m/%d')}</span>", unsafe_allow_html=True)
+            # 8번 모듈로 전달할 메모리 저장 (최종적으로 박사님이 확정한 날짜 전달)
+            st.session_state['search_start_date'] = final_start_date
+            st.session_state['search_end_date'] = final_end_date
+
             st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("---")
+    # 🚨 [삭제 완료] 박사님 지시대로 버튼 위 st.markdown("---") 삭제 완료
 
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
