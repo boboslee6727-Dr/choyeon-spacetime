@@ -2856,6 +2856,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             if delivery_days:
                 K2H_MAP = {v: k for k, v in H2K_MAP.items()}
                 
+                # 👇 여기서부터 1~3순위를 반복해서 그리는 구간입니다.
                 for i in range(min(3, len(delivery_days))):
                     ovul_d_obj = dt_mod.datetime.strptime(delivery_days[i]['ovulation_date'], '%Y-%m-%d')
                     birth_d_obj = dt_mod.datetime.strptime(delivery_days[i]['birth_date'], '%Y-%m-%d')
@@ -2882,12 +2883,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     fact_line = f"▶ {i+1}순위 추천 월령: {birth_d_obj.year}년 {birth_d_obj.month:02d}월 ({ym_hanja}) / 택일 추천: {birth_d_obj.day:02d}일 {opt_time_str} / 명식: {bazi_hanja}"
                     ai_target_days_facts.append(fact_line)
                     
-                    medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
+                    # 🚨 가임 기간 날짜 연산
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
                     end_conception = ovul_d_obj
-                    date_range_str = f"{start_conception.year}년 {start_conception.month}월 {start_conception.day}일 ~ {end_conception.year}년 {end_conception.month}월 {end_conception.day}일"
+                    date_range_str = f"{start_conception.year}년 {start_conception.month:02d}월 {start_conception.day:02d}일 ~ {end_conception.year}년 {end_conception.month:02d}월 {end_conception.day:02d}일"
 
-                    # 🚨 [수술 완료] 마크다운 공백 에러를 막기 위해 멀티라인(""" """)을 폐기하고 한 줄씩(+) 강제 조립
+                    # 🚨 [여기서부터 복구!] 박사님이 원하신 초간편 명료화 프리미엄 카드 UI (에러 방지 1줄 조립법 적용)
+                    medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
+                    
                     del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
                     del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 월령 : {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str} <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
                     del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
