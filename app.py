@@ -2703,12 +2703,13 @@ st.info(f"""
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
         try:
-            # 🚨 UI에서 도출한 날짜를 여기서 내부 변수로 받아서 사용합니다.
-            start_date = search_start_date
-            end_date = search_end_date
+            # 🚨 [잔재 UI 삭제 완료] 사이드바에서 내부 연산하여 넘겨준 탐색 윈도우를 메모리에서 꺼내옴
+            start_date = st.session_state.get('search_start_date', dt_mod.date.today())
+            end_date = st.session_state.get('search_end_date', dt_mod.date.today() + dt_mod.timedelta(days=365))
 
             gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
             jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
+            p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
 
             if u_gender == "남성":
                 m_jjis = jjis
