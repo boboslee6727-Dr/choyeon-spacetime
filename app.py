@@ -2914,21 +2914,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 </div>"""
             del_content += intro_essay
 
-            del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
-            del_content += f"<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 {period_cycle}일 주기를 고려한 실제 가임 기간</b>이 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
-
-            del_content += "<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px Toggle;'>"
-            del_content += "<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
-
-            intro_essay = f"""<div style='margin-top:10px;'>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor} 일간으로 자신만의 강인한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor} 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
-</div>"""
-            del_content += intro_essay
-
-
             ai_days_input_str = "\n".join(ai_target_days_facts)
 
             # 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
@@ -2952,23 +2937,23 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             # 🚨 부모 사주 정보를 AI가 명확히 인지하도록 전달
             parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
+            # 🚨 [수술 완료] 따뜻한 인사말 복구 및 출력 템플릿 재조정
             delivery_prompt = f"""
 당신은 명리심리상담사 초연 박사입니다.
 {parent_info}
 
 {prompt_daewun_info}
 
-시스템이 도출한 아래 [추천 출산 명식 및 부모 조화 점수]에 대해 통변 에세이를 작성하십시오.
+시스템이 도출한 아래 [추천 출산 명식]에 대해 통변 에세이를 작성하십시오.
 
 [추천 일정 리스트]
 {ai_days_input_str}
 
 🚨 [필수 준수 사항 - 위반 시 감점]
 1. 각 순위별 명리 풀이 시 반드시 '부모 사주와의 상생 관계'를 첫 문단에 배치하십시오.
-   - 예: "이 사주는 부(父)의 사주에서 부족한 [오행]을 [십성]으로 보완하며, 모(母)의 일지와 [합/충] 관계를 통해 깊은 유대감을 형성할 수 있는 구조입니다."
 2. 남아로 태어날 경우({m_direction})와 여아로 태어날 경우({f_direction}) 각각의 대운 흐름에 따른 장단점을 반드시 포함하여 서술하십시오.
-3. 1순위, 2순위, 3순위의 제목 폰트 크기 및 구조는 [출력 포맷 템플릿]을 100% 따를 것.
-4. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
+3. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
+4. 통변의 첫 시작은 반드시 박사님의 따뜻한 인사말로 시작할 것. (아래 출력 템플릿 참고)
 
 [초연 시공명리 대운(大運) 평가 절대 원칙]
 1. 대운의 흐름은 다음의 구조로 흐를 때 최상급으로 평가한다:
@@ -2976,15 +2961,17 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
    - 청년운(30~40대): 식상(食傷) 또는 재성(財星) 기운으로 능력 발휘 및 부의 축적
    - 장년/말년운(50대 이후): 관성(官星) 기운으로 명예, 권위, 안정 획득
 2. 통변 시, 남아와 여아의 대운 흐름(순행/역행)을 비교하여 위 원칙에 더 부합하는 성별이 어느 쪽인지 분석하고 그 이유를 서술할 것.
-3. [포맷팅 엄수]: 통변 내용을 작성할 때 문단이 바뀌어 **줄바꿈을 할 때는 반드시 문장 맨 앞에 공백 4칸(&nbsp;&nbsp;&nbsp;&nbsp;)을 넣어 들여쓰기**를 할 것.
 
 [출력 포맷 템플릿]
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ (입력받은 1,2,3순위 텍스트)</span>
-<div style='padding-left: 15px; margin-bottom: 15px;'>
-    <div style='margin-bottom: 3px;'><b>1) 일반 명리 및 부모 조화 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 부모 사주와의 궁합 비중 30%를 포함하여 기술) </p>
-    <div style='margin-bottom: 3px; margin-top:5px;'><b>2) 시공 명리 및 성별 대운 흐름 풀이:</b></div>
-    <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 남아일 때와 여아일 때의 대운 장단점을 각각 명확히 나누어 서술) </p>
+<p style='text-indent: 15px; margin-bottom: 25px; font-size: 15px; line-height: 1.8; color: #111;'><b>명리심리상담사 초연 박사입니다. 귀한 자녀의 탄생을 앞두고 명식 풀이를 의뢰해 주셔서 진심으로 축하드리며 깊은 감사를 드립니다.</b> (이후 자연스럽게 도입부 1~2문장 작성)</p>
+<div style='margin-bottom: 25px;'>
+    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[메달 아이콘(🥇🥈🥉)] 해당 순위 추천 명식 풀이</div>
+    <div style='padding-left: 10px;'>
+        <div style='margin-bottom: 3px; color:#D50000;'><b>1) 일반 명리 및 부모 조화 풀이:</b></div>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
+        <div style='margin-bottom: 3px; margin-top:5px; color:#D50000;'><b>2) 시공 명리 및 성별 대운 흐름 풀이:</b></div>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 남아와 여아 대운 장단점 비교) </p>
+    </div>
 </div>
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
@@ -2992,7 +2979,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             # ==============================================================================
             # 🚨 [최종 수술] AI 환각 방어 및 1순위 폰트 작아짐 원천 차단 (파이썬 강제 주입)
             # ==============================================================================
-           
+        
             # 1. 꼬리말 제거
             ai_delivery_html = re.sub(r'(?i)(존경하는 부모님|초연 박사 올림|감사합니다).*', '', ai_delivery_html, flags=re.DOTALL)
             ai_delivery_html = ai_delivery_html.replace('---', '')
