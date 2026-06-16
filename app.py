@@ -1073,8 +1073,6 @@ with st.sidebar:
     # 🚨 [수술 완료] 어떤 조건에서도 에러가 나지 않도록 스위치 기본값 강제 선언!
     run_iljin_calc = False
     run_delivery_calc = False
-    start_date = None
-    end_date = None
     
     # 2. 상품별 동적 UI
     if u_product == "개인사주":
@@ -1142,12 +1140,35 @@ with st.sidebar:
         
         st.markdown("---")
         
-        # 🚨 [박사님 의도 100% 반영] 패턴 3: 궁합 -> 체크박스로 출산택일 추가 (일진 분석과 완벽히 동일한 UI 전개)
-        run_delivery_calc = st.checkbox("👶 출산택일 분석 추가 가동", value=False)
+        # 🚨 [박사님 의도 100% 반영] 패턴 3: 출산택일 옵션 및 산모 생체 리듬 간편 설정
+        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
         if run_delivery_calc:
-            baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"])
-            start_date = st.date_input("탐색 시작일", value=dt_mod.datetime.now().date())
-            end_date = st.date_input("탐색 종료일", value=dt_mod.datetime.now().date() + dt_mod.timedelta(days=30))
+            # 시각적으로 깔끔하게 묶어주는 미니 박스 디자인
+            st.markdown("<div style='padding:15px; border-radius:10px; background-color:#F4F1FA; border-left: 4px solid #4A148C; margin-bottom:15px;'>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color:#4A148C; margin-top:0px; margin-bottom:10px;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
+            
+            # 달력 팝업 없이 키보드로 직접 입력하기 편한 심플한 구조
+            col_b1, col_b2 = st.columns(2)
+            with col_b1:
+                last_period_date = st.date_input("생리 시작일", value=dt_mod.date.today())
+            with col_b2:
+                period_cycle = st.number_input("생리 주기(일)", min_value=20, max_value=50, value=28, step=1)
+
+            # 🧬 [의학 로직 & 탐색 윈도우 계산] (화면에는 보이지 않고 내부에서 초고속 연산)
+            next_period_date = last_period_date + dt_mod.timedelta(days=period_cycle)
+            ovulation_date = next_period_date - dt_mod.timedelta(days=14)
+            
+            expected_delivery_date = ovulation_date + dt_mod.timedelta(days=266)
+            search_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
+            search_end_date = expected_delivery_date
+
+            # 8번 모듈로 전달할 메모리 저장 (안전한 세션 상태 활용)
+            st.session_state['search_start_date'] = search_start_date
+            st.session_state['search_end_date'] = search_end_date
+
+            # 핵심 요약 정보만 한 줄로 깔끔하게 표출
+            st.markdown(f"<span style='font-size:13px; color:#333; line-height: 1.5; display:block; margin-top:8px;'>🎯 <b>배란(합궁)일:</b> {ovulation_date.strftime('%Y/%m/%d')}<br>🏥 <b>출산탐색:</b> {search_start_date.strftime('%Y/%m/%d')} ~ {search_end_date.strftime('%m/%d')}</span>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
