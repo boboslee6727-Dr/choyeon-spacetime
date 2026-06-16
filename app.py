@@ -2891,7 +2891,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     end_conception = ovul_d_obj
                     date_range_str = f"{start_conception.year}년 {start_conception.month}월 {start_conception.day}일 ~ {end_conception.year}년 {end_conception.month}월 {end_conception.day}일"
 
-                   # 🚨 박사님 지시 포맷팅 적용 완료 (초간편/명료화)
+                    # 🚨 박사님 지시 포맷팅 적용 완료 (초간편/명료화)
                     del_content += f"""
                     <div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: "Malgun Gothic", sans-serif;'>
                         <div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>
@@ -2910,7 +2910,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'>"
             del_content += "<span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
             
-            del_content += "<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'>"
+            del_content += "<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px Toggle;'>"
             del_content += "<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
 
             intro_essay = f"""<div style='margin-top:10px;'>
@@ -2942,7 +2942,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 - 여아({f_direction}): 초년~중년 대운의 유불리 및 특징
 """
             
-           # 🚨 부모 사주 정보를 AI가 명확히 인지하도록 전달
+            # 🚨 부모 사주 정보를 AI가 명확히 인지하도록 전달
             parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
             delivery_prompt = f"""
