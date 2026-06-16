@@ -1138,20 +1138,18 @@ with st.sidebar:
         
         p_t = st.selectbox("태어난 시간", idx_list, key="p_t_key")
         
-        st.markdown("---")
-        
         # 🚨 [박사님 의도 100% 반영] 패턴 3: 출산택일 옵션 및 탐색 기간 직접 통제 UI 복구
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
         if run_delivery_calc:
             # 🚨 [오류 원인 철거] 화면을 깨지게 만들던 강제 HTML div 래퍼를 완전히 삭제했습니다.
             st.markdown("<h5 style='color:#4A148C; margin-top:10px; margin-bottom:10px;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
             
-            # 달력 팝업 없이 키보드로 직접 입력하기 편한 심플한 구조
+            # 🚨 [수술 1] key="고유이름" 을 부여하여 메모리 증발을 원천 차단
             col_b1, col_b2 = st.columns(2)
             with col_b1:
-                last_period_date = st.date_input("생리 시작일", value=dt_mod.date.today())
+                last_period_date = st.date_input("생리 시작일", value=dt_mod.date.today(), key="input_last_period")
             with col_b2:
-                period_cycle = st.number_input("생리 주기(일)", min_value=20, max_value=50, value=28, step=1)
+                period_cycle = st.number_input("생리 주기(일)", min_value=20, max_value=50, value=28, step=1, key="input_period_cycle")
 
             # 🧬 [의학 로직 & 탐색 윈도우 기본값 계산]
             next_period_date = last_period_date + dt_mod.timedelta(days=period_cycle)
@@ -1161,26 +1159,23 @@ with st.sidebar:
             auto_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
             auto_end_date = expected_delivery_date
 
-            # 배란 예정일 텍스트 안내
             st.markdown(f"<span style='font-size:13px; color:#D50000; font-weight:bold; display:block; margin-top:5px;'>🎯 의학적 배란(합궁) 예정일: {ovulation_date.strftime('%Y/%m/%d')}</span>", unsafe_allow_html=True)
             
             st.markdown("<hr style='margin:10px 0px; border: 0.5px dashed #ccc;'>", unsafe_allow_html=True)
             st.markdown("<h5 style='color:#1A237E; margin-top:0px; margin-bottom:10px;'>📅 출산 탐색 기간 (자유 변경 가능)</h5>", unsafe_allow_html=True)
             
-            # 🚨 탐색 기간 직접 선택창 (기본값은 자동 계산된 날짜)
+            # 🚨 [수술 2] 탐색 기간에도 key를 부여하여 안전하게 고정
             col_d1, col_d2 = st.columns(2)
             with col_d1:
-                final_start_date = st.date_input("탐색 시작일", value=auto_start_date)
+                final_start_date = st.date_input("탐색 시작일", value=auto_start_date, key="input_search_start")
             with col_d2:
-                final_end_date = st.date_input("탐색 종료일", value=auto_end_date)
+                final_end_date = st.date_input("탐색 종료일", value=auto_end_date, key="input_search_end")
 
-            # 8번 모듈로 전달할 메모리 저장 (최종적으로 박사님이 확정한 날짜 전달)
+            # 🚨 [수술 3] 8번 모듈로 전달하기 위해 변수 4개를 모두 명시적으로 저장
             st.session_state['search_start_date'] = final_start_date
             st.session_state['search_end_date'] = final_end_date
-
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    # 🚨 [삭제 완료] 박사님 지시대로 버튼 위 st.markdown("---") 삭제 완료
+            st.session_state['last_period_date'] = last_period_date
+            st.session_state['period_cycle'] = period_cycle
 
     btn_single = st.button("🚀 초연 시공명리 사주풀이 가동", use_container_width=True, type="primary")
 
@@ -2683,12 +2678,11 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
         try:
-            # (8번 모듈 try: 바로 아래 부분부터 덮어씌웁니다)
-            # 🚨 사이드바에서 전달받은 생리 주기 정보 추가 호출
-            start_date = st.session_state.get('search_start_date', dt_mod.date.today())
-            end_date = st.session_state.get('search_end_date', dt_mod.date.today() + dt_mod.timedelta(days=365))
-            last_period_date = st.session_state.get('last_period_date', dt_mod.date.today())
-            period_cycle = st.session_state.get('period_cycle', 28)
+            # 🚨 [수술 4] 사이드바에 부여한 고유 key에서 직접 탈취하여 기본값(오늘 날짜) 덮어쓰기 원천 차단
+            start_date = st.session_state.get('input_search_start', st.session_state.get('search_start_date'))
+            end_date = st.session_state.get('input_search_end', st.session_state.get('search_end_date'))
+            last_period_date = st.session_state.get('input_last_period', st.session_state.get('last_period_date'))
+            period_cycle = st.session_state.get('input_period_cycle', st.session_state.get('period_cycle'))
 
             gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
             jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
