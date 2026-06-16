@@ -2883,21 +2883,28 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     fact_line = f"▶ {i+1}순위 추천 월령: {birth_d_obj.year}년 {birth_d_obj.month:02d}월 ({ym_hanja}) / 택일 추천: {birth_d_obj.day:02d}일 {opt_time_str} / 명식: {bazi_hanja}"
                     ai_target_days_facts.append(fact_line)
                     
-                    display_month = f"▶ {i+1}순위 출산 추천 월(月): {birth_d_obj.year}년 {birth_d_obj.month:02d}월 <span style='font-size:16px; color:#4A148C;'>({ym_hanja})</span>"
-                    display_day_time = f"&nbsp;&nbsp;&nbsp;↳ 🏥 해당 월의 최적 출산 택일: {birth_d_obj.day:02d}일 ({opt_time_str}) <span style='color:#D81B60; font-size:14px;'>[종합: {total_score}점]</span>"
-
-                    # 🚨 실제 배란일에 기반한 5일간의 가임 기간 출력
+                    # 🚨 순위별 메달 데코레이션 설정
+                    medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
+                    
+                    # 🚨 가임 기간 날짜 연산
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
                     end_conception = ovul_d_obj
-                    date_range_str = f"{start_conception.month}월 {start_conception.day}일 ~ {end_conception.month}월 {end_conception.day}일"
-                    
-                    display_conception = f"&nbsp;&nbsp;&nbsp;↳ ❤️ 해당 출산을 위한 합궁 가임 기간: {date_range_str} (최적일: {ovul_d_obj.month}월 {ovul_d_obj.day}일)"
-                    
-                    del_content += f"<div style='font-size:18px; font-weight:900; color:#111; margin-top: 15px; border-bottom:1px solid #ddd; padding-bottom:5px;'>{display_month}</div>\n"
-                    del_content += f"<div style='font-size:15px; font-weight:bold; color:#0D47A1; margin-top: 8px;'>{display_day_time}</div>\n"
-                    del_content += f"<div style='font-size:14px; font-weight:bold; color:#555; margin-top: 3px;'>{display_conception}</div>\n"
-                    del_content += f"<div style='font-size:15px; color:#333; margin-top: 5px; margin-bottom: 20px; background:#fff; padding:8px; border-left:4px solid #4A148C;'>&nbsp;&nbsp;완성 명식: <b>{bazi_hanja}</b> <span style='font-size:13px; color:#777;'>({bazi_kor})</span></div>\n"
+                    date_range_str = f"{start_conception.year}년 {start_conception.month}월 {start_conception.day}일 ~ {end_conception.year}년 {end_conception.month}월 {end_conception.day}일"
 
+                   # 🚨 박사님 지시 포맷팅 적용 완료 (초간편/명료화)
+                    del_content += f"""
+                    <div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: "Malgun Gothic", sans-serif;'>
+                        <div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>
+                            {medal} {i+1}순위 추천 월령 : {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str} <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span>
+                        </div>
+                        <div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>
+                            <div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>
+                            <div style='background-color: #FFF3E0; padding: 10px 15px; border-radius: 6px; font-weight: 900; color: #E65100; font-size: 16px;'>
+                                🔮 완성 명식 : <span style='letter-spacing: 1px;'>{bazi_hanja}</span> <span style='font-size: 14px; color: #666; font-weight: normal;'>({bazi_kor})</span>
+                            </div>
+                        </div>
+                    </div>
+                    """
             del_content += "</div>\n"
 
             del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'>"
@@ -2955,6 +2962,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 2. 남아로 태어날 경우({m_direction})와 여아로 태어날 경우({f_direction}) 각각의 대운 흐름에 따른 장단점을 반드시 포함하여 서술하십시오.
 3. 1순위, 2순위, 3순위의 제목 폰트 크기 및 구조는 [출력 포맷 템플릿]을 100% 따를 것.
 4. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
+
+[초연 시공명리 대운(大運) 평가 절대 원칙]
+1. 대운의 흐름은 다음의 구조로 흐를 때 최상급으로 평가한다:
+   - 초년운(10~20대): 인성(印星) 또는 비겁(比劫) 기운으로 자아 확립 및 학업 성취
+   - 청년운(30~40대): 식상(食傷) 또는 재성(財星) 기운으로 능력 발휘 및 부의 축적
+   - 장년/말년운(50대 이후): 관성(官星) 기운으로 명예, 권위, 안정 획득
+2. 통변 시, 남아와 여아의 대운 흐름(순행/역행)을 비교하여 위 원칙에 더 부합하는 성별이 어느 쪽인지 분석하고 그 이유를 서술할 것.
+3. [포맷팅 엄수]: 통변 내용을 작성할 때 문단이 바뀌어 **줄바꿈을 할 때는 반드시 문장 맨 앞에 공백 4칸(&nbsp;&nbsp;&nbsp;&nbsp;)을 넣어 들여쓰기**를 할 것.
 
 [출력 포맷 템플릿]
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:18px; margin-bottom:5px; display:block;'>▶ (입력받은 1,2,3순위 텍스트)</span>
