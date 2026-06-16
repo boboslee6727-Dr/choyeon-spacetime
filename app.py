@@ -2663,39 +2663,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_wate
                 f"</div>"
             )
             
+            # 🚨 [중요] 지워졌던 7번 모듈 마무리 저장 및 리런 코드 복구
             st.session_state['saved_report_iljin'] = html_output
             st.rerun()
-
-# ==============================================================================
-# 🩸 [신규 UI] 산모 생리 주기 및 가임기 기반 출산 윈도우 산출
-# ==============================================================================
-# 🚨 들여쓰기 주의: 이전 모듈 블록에서 완전히 빠져나와 8번 모듈과 같은 선상에 둡니다.
-
-st.markdown("<h3 style='color:#4A148C;'>🩸 산모 생체 리듬 및 가임기 설정</h3>", unsafe_allow_html=True)
-
-col1, col2 = st.columns(2)
-with col1:
-    last_period_date = st.date_input("마지막 생리 시작일 (또는 최근 기준일)", value=dt_mod.date.today())
-with col2:
-    period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=50, value=28, step=1)
-
-# 🧬 [산부인과 의학 로직] 배란일 및 가임 기간 도출
-next_period_date = last_period_date + dt_mod.timedelta(days=period_cycle)
-ovulation_date = next_period_date - dt_mod.timedelta(days=14)
-fertile_start = ovulation_date - dt_mod.timedelta(days=5)
-fertile_end = ovulation_date
-
-# 👶 [명리학 탐색 윈도우 로직] 실제 출산 가능 기간 도출
-expected_delivery_date = ovulation_date + dt_mod.timedelta(days=266)
-search_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
-search_end_date = expected_delivery_date
-
-st.info(f"""
-**의학적 산출 결과**
-- 🎯 **최적 배란일(합궁일):** {ovulation_date.strftime('%Y년 %m월 %d일')} 
-- ❤️ **가임 권장 기간:** {fertile_start.strftime('%m월 %d일')} ~ {fertile_end.strftime('%m월 %d일')}
-- 🏥 **명식 탐색 구간 (출산 가능일):** {search_start_date.strftime('%Y년 %m월 %d일')} ~ {search_end_date.strftime('%m월 %d일')}
-""")
 
 # ==============================================================================
 # 👶 8. [독립 모듈] 출산택일 정밀 분석 (연산 및 AI 두뇌 전용)
@@ -2703,14 +2673,15 @@ st.info(f"""
 if st.session_state.get('app_running', False) and st.session_state.get('run_delivery_only', False) and 'global_gans' in st.session_state:
     with st.spinner("⏳ [출산택일 분석실] 최적의 길일 연산 및 AI 통변 중... (기존 궁합풀이는 안전하게 보존 중입니다)"):
         try:
-            # 🚨 [잔재 UI 삭제 완료] 사이드바에서 내부 연산하여 넘겨준 탐색 윈도우를 메모리에서 꺼내옴
+            # 🚨 [수술 완료] 잡다한 UI 껍데기가 완벽히 사라지고 사이드바 메모리만 호출합니다.
             start_date = st.session_state.get('search_start_date', dt_mod.date.today())
             end_date = st.session_state.get('search_end_date', dt_mod.date.today() + dt_mod.timedelta(days=365))
 
             gans = st.session_state.get('global_gans', ["?", "?", "?", "?"])
             jjis = st.session_state.get('global_jjis', ["?", "?", "?", "?"])
             p_bazi_context = st.session_state.get('partner_bazi', ["?", "?", "?", "?"])
-
+            
+            # (이하 기존 출산택일 연산 로직 쭉 이어짐) ...
             if u_gender == "남성":
                 m_jjis = jjis
                 f_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
