@@ -2846,14 +2846,24 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             FORBIDDEN_LIST = ['갑인', '을묘', '병오', '정사', '무진', '무술', '기미', '기축', '신유', '경신', '임자', '계해']
             delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
 
-            del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
-            del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>👶 새 생명 마중 길일(출산 택일) 추천</h2>\n"
-            del_content += f"<p style='text-align:center; font-weight:bold; color:#4A148C; margin-bottom:15px;'>출산 및 합궁 길일</p>\n"
+del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
+            del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>🎯 새 생명 마중 길일(출산 택일) 추천</h2>\n"
+            
+            # 🚨 [수술 1] 가이드와 에세이를 상단으로 끌어올리고 중복 문구를 싹 정리했습니다.
+            del_content += "<div style='color:#333; margin-top: 25px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
+            del_content += f"<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 25px; text-indent: 15px;'><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 {period_cycle}일 주기를 고려한 실제 가임 기간</b>이 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
+
+            intro_essay = f"""<div style='margin-top:10px; margin-bottom:30px;'>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor} 일간으로 자신만의 강인한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor} 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
+<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
+</div>"""
+            del_content += intro_essay
 
             ai_target_days_facts = []
             del_content += f"<div style='display:flex; flex-direction:column; margin-bottom:15px; background:#f9f9f9; padding:20px; border-radius:10px;'>\n"
             
-            # 🚨 [신규 추가] 월주를 기준으로 대운 간지를 8개 뽑아내는 도우미 함수
             def get_daewun_sequence(start_gan, start_ji, direction, count=8):
                 GAN_L = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
                 JI_L = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
@@ -2870,7 +2880,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             if delivery_days:
                 K2H_MAP = {v: k for k, v in H2K_MAP.items()}
                 
-                # 👇 여기서부터 1~3순위를 반복해서 그리는 구간입니다.
                 for i in range(min(3, len(delivery_days))):
                     ovul_d_obj = dt_mod.datetime.strptime(delivery_days[i]['ovulation_date'], '%Y-%m-%d')
                     birth_d_obj = dt_mod.datetime.strptime(delivery_days[i]['birth_date'], '%Y-%m-%d')
@@ -2890,14 +2899,19 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     b_hs_hanja = K2H_MAP.get(b_hs, b_hs)
                     b_hb_hanja = K2H_MAP.get(b_hb, b_hb)
                     
+                    # 🚨 화면용 명식(년 월 일 시)과 AI 전달용 명식(年 月 日 時) 분리
                     bazi_hanja = f"{b_ym}년 {b_mm}월 {b_ds}{b_db}일 {b_hs_hanja}{b_hb_hanja}시"
+                    bazi_hanja_strict = f"{b_ym}年 {b_mm}月 {b_ds}{b_db}日 {b_hs_hanja}{b_hb_hanja}時"
+                    
                     bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
                     ym_hanja = f"{b_ym}년 {b_mm}월"
                     
-                    # 🚨 [대운 엔진 가동]
                     is_yang_year = b_ym[0] in ['甲', '丙', '戊', '庚', '壬']
                     m_dir = 1 if is_yang_year else -1
                     f_dir = -1 if is_yang_year else 1
+                    
+                    m_dir_str = "순행" if m_dir == 1 else "역행"
+                    f_dir_str = "순행" if f_dir == 1 else "역행"
                     
                     try:
                         b_hour, b_minute = int(opt_time_str[0:2]), int(opt_time_str[3:5])
@@ -2913,7 +2927,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     m_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], m_dir, 10)
                     f_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], f_dir, 10)
                     
-                    fact_line = f"▶ {i+1}순위 추천 명식: {bazi_hanja}\n  - 남아: 대운수 {m_dsu}, 흐름({', '.join(m_daewun_list)})\n  - 여아: 대운수 {f_dsu}, 흐름({', '.join(f_daewun_list)})"
+                    fact_line = f"▶ {i+1}순위 추천 명식: {bazi_hanja_strict}\n  - 남아: 대운수 {m_dsu}, {m_dir_str}\n  - 여아: 대운수 {f_dsu}, {f_dir_str}"
                     ai_target_days_facts.append(fact_line)
                     
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
@@ -2921,18 +2935,18 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     date_range_str = f"{start_conception.year}년 {start_conception.month:02d}월 {start_conception.day:02d}일 ~ {end_conception.year}년 {end_conception.month:02d}월 {end_conception.day:02d}일"
                     medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
                     
-                    # 🚨 [UI 조립용 사주 데이터 매핑 및 꽉 찬 배경색 td 함수]
+                    # 🚨 [UI 데이터 매핑 및 슬림한 배경색 꽉 찬 td 함수]
                     gans = [b_hs_hanja, b_ds, b_mm[0], b_ym[0]]
                     jjis = [b_hb_hanja, b_db, b_mm[1], b_ym[1]]
                     hs, ds, ms, ys = b_hs_hanja, b_ds, b_mm[0], b_ym[0]
                     hb, db, mb, yb = b_hb_hanja, b_db, b_mm[1], b_ym[1]
 
                     def td(char):
-                        if char in ["?", "-", " "]: return f"<td style='border:1px solid #444; padding:10px;'>{char}</td>"
+                        if char in ["?", "-", " "]: return f"<td style='border:1px solid #444; padding:3px 0;'>{char}</td>"
                         color_key = get_color(char)
                         bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(color_key, '#888')
                         tc = 'white' if color_key != '토' else 'black'
-                        return f"<td style='border:1px solid #444; background-color:{bg}; color:{tc}; font-weight:900; font-size:22px; padding:10px;'>{char}</td>"
+                        return f"<td style='border:1px solid #444; background-color:{bg}; color:{tc}; font-weight:900; font-size:18px; padding:3px 0; line-height:1.2;'>{char}</td>"
 
                     ji_rel_rows = ""
                     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -2942,7 +2956,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-                    # 🚨 1, 2, 3순위 카드 껍데기 조립
+                    # 🚨 1, 2, 3순위 카드 껍데기 조립 (출산/합궁 내용이 타이틀 밑으로 바로 붙음)
                     del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
                     del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 <b>{bazi_hanja}</b> <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
                     del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
@@ -2969,7 +2983,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     del_content += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>" + "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(idx, gans, jjis, '남성')) if get_general_shinsal_filtered(idx, gans, jjis, '남성') else '-'}</td>" for idx in range(4)]) + "</tr>\n"
                     del_content += "</table>\n"
 
-                    # 🚨 꽉 찬 오행 배경색이 들어간 대운표 조립 함수
                     def build_daewun_bar(dsu, d_list, gender_label, bg_color, d_dir):
                         bar_html = f"<div style='margin-top:15px; margin-bottom:5px; font-size:14px; font-weight:900; color:{bg_color};'>[ {gender_label} 대운 흐름 (대운수: {dsu}, {'순행' if d_dir==1 else '역행'}) ]</div>"
                         bar_html += f"<div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white;'>"
@@ -2977,9 +2990,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                             val = k * 10 + dsu
                             c, j = d_list[k][0], d_list[k][1]
                             b_left = "1px solid #ccc" if k != 9 else "none"
-                            bar_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px;'>"
-                            bar_html += f"<div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>"
-                            bar_html += f"<div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div>"
+                            bar_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px;'>"
+                            bar_html += f"<div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>"
+                            bar_html += f"<div style='padding:1px; font-size:12px;'>{get_ss(ds,c)}</div>"
                             
                             c_color, j_color = get_color(c), get_color(j)
                             c_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(c_color, '#fff')
@@ -2987,9 +3000,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                             c_tc = 'white' if c_color != '토' else 'black'
                             j_tc = 'white' if j_color != '토' else 'black'
                             
-                            bar_html += f"<div style='font-size:16px; font-weight:900; background-color:{c_bg}; color:{c_tc}; padding:4px 0;'>{c}</div>"
-                            bar_html += f"<div style='font-size:16px; font-weight:900; background-color:{j_bg}; color:{j_tc}; padding:4px 0;'>{j}</div>"
-                            bar_html += f"<div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div>"
+                            bar_html += f"<div style='font-size:16px; font-weight:900; background-color:{c_bg}; color:{c_tc}; padding:2px 0; line-height:1.2;'>{c}</div>"
+                            bar_html += f"<div style='font-size:16px; font-weight:900; background-color:{j_bg}; color:{j_tc}; padding:2px 0; line-height:1.2;'>{j}</div>"
+                            bar_html += f"<div style='padding:1px; font-size:12px;'>{get_ss(ds,j)}</div>"
                             bar_html += f"<div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,j)}</div>"
                             bar_html += f"<div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, j)}</div>"
                             bar_html += "</div>"
@@ -3001,25 +3014,13 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     
                     del_content += "</div>\n" # 하얀 바탕 끝
                     del_content += "</div></div>\n" # 전체 카드 끝
-
-            del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
-            del_content += f"<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 {period_cycle}일 주기를 고려한 실제 가임 기간</b>이 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
-
-            del_content += "<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px Toggle;'>"
-            del_content += "<span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 9개월 10일 전후</b>가 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
-
-            intro_essay = f"""<div style='margin-top:10px;'>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>깊고 고요한 시간의 흐름 속에서, 새로운 생명의 탄생은 하늘과 땅, 그리고 부모의 염원이 조화롭게 어우러지는 기적과 같습니다. 귀한 부부께서 보내주신 소중한 사주 정보를 바탕으로, 장차 태어날 아기의 선천적 명식이 부모님과의 오행 상생 조화를 극대화하고, 나아가 아이 스스로 빛나는 삶의 궤적을 그려나갈 수 있도록 '최고의 프리미엄 출산 희망일과 시간'을 심혈을 기울여 선정하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>부부의 사주를 살펴보니, 신청인 남성분({m_saju_kor})께서는 {m_ilgan_kor} 일간으로 자신만의 강인한 기운이 특징적입니다. 상대방 여성분({f_saju_kor})께서는 {f_ilgan_kor} 일간으로 지혜롭고 활발한 에너지를 지니셨습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>아이가 태어날 시공간은 부모의 사주에 부족한 오행을 채우고, 동시에 아이 자신이 타고난 길운(吉運)을 펼칠 수 있는 절묘한 지점을 찾아야 합니다. 부모 모두에게 긍정적인 상생의 흐름을 만들어낼 수 있는 기운을 중심으로, 동시에 아이의 명식이 균형과 조화를 이루는 날들을 엄선하였습니다.</p>
-<p style='font-size:15px; line-height:1.8; color:#000; text-indent: 15px; margin-top:0px; margin-bottom:8px;'>이제, 부부의 간절한 바람을 담아 선정한 세 가지 최적의 출산 희망일을 <b>초연 시공명리 궁합</b> 관점에서 자세히 풀어내어 올립니다. 부디 이 추천들이 아기의 밝은 미래를 여는 데 귀한 나침반이 되기를 바랍니다.</p>
-</div>"""
-            del_content += intro_essay
+            
+            del_content += "</div>\n" # 반복문 종료 및 회색 배경 닫기
 
             ai_days_input_str = "\n".join(ai_target_days_facts)
             parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
-            # 🚨 [신규 프롬프트] 인사말 삭제 및 템플릿 간소화
+            # 🚨 [신규 프롬프트] 인사말 제거 & 남녀 대운 분리 심층 풀이 템플릿 적용
             delivery_prompt = f"""
 당신은 전통 명리학에 정통한 명리심리상담사 초연 박사입니다.
 {parent_info}
@@ -3031,22 +3032,26 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
 [필수 준수 사항]
 1. 각 순위별로 사주 원국(일간의 특성, 오행의 조화 등)의 전통 명리학적 장점과 부모 사주와의 상생/조화를 1번 항목에 서술하십시오.
-2. 2번 항목에서는 시스템이 제공한 '남아의 실제 대운수 및 간지 흐름'과 '여아의 실제 대운수 및 간지 흐름'을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
+2. 2번 항목에서는 남아와 여아를 명확히 나누어, 각 성별의 대운수와 순/역행 흐름을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
 3. 어떤 명칭(규칙, 알고리즘, 시스템 등)도 언급하지 말고 자연스러운 명리학자의 해설로 작성하십시오.
 
 [출력 포맷 템플릿]
 <div style='margin-bottom: 25px;'>
-    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[해당 메달 아이콘] [해당 순위]순위 추천 [해당 한자 명식] 풀이</div>
+    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[해당 메달 아이콘] [해당 순위]순위 추천 명식: [해당 한자 명식(年/月/日/時)] 풀이</div>
     <div style='padding-left: 10px;'>
         <div style='margin-bottom: 3px; color:#D50000;'><b>1) 전통 명리 및 부모 조화 풀이:</b></div>
         <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (통변 내용) </p>
         <div style='margin-bottom: 3px; margin-top:5px; color:#D50000;'><b>2) 성별 대운 흐름표 기반 심층 풀이:</b></div>
-        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (통변 내용) </p>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 5px;'><b>▶ 남아 (대운수 [남아대운수], [순/역행]):</b></p>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 10px;'> (남아 통변 내용) </p>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 5px;'><b>▶ 여아 (대운수 [여아대운수], [순/역행]):</b></p>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (여아 통변 내용) </p>
     </div>
 </div>
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
-            ai_delivery_html = ai_delivery_html.replace('```html', '').replace('```', '').strip()
+            ai_delivery_html = ai_delivery_html.replace('```html', '').replace('
+```', '').strip()
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
