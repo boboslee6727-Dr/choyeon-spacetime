@@ -2894,9 +2894,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
                     ym_hanja = f"{b_ym}년 {b_mm}월"
                     
-                    # ==========================================================
-                    # 🚨 [핵심 엔진 이식] 남아/여아 대운수 및 대운 흐름 연산
-                    # ==========================================================
+                    # 🚨 [대운 엔진 가동]
                     is_yang_year = b_ym[0] in ['甲', '丙', '戊', '庚', '壬']
                     m_dir = 1 if is_yang_year else -1
                     f_dir = -1 if is_yang_year else 1
@@ -2912,47 +2910,96 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     m_dsu = get_daeun_su_accurate(utc_dt, m_dir)
                     f_dsu = get_daeun_su_accurate(utc_dt, f_dir)
                     
-                    m_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], m_dir, 8)
-                    f_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], f_dir, 8)
+                    m_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], m_dir, 10)
+                    f_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], f_dir, 10)
                     
-                    # AI에게 정확한 대운 정보를 먹이로 줍니다.
                     fact_line = f"▶ {i+1}순위 추천 명식: {bazi_hanja}\n  - 남아: 대운수 {m_dsu}, 흐름({', '.join(m_daewun_list)})\n  - 여아: 대운수 {f_dsu}, 흐름({', '.join(f_daewun_list)})"
                     ai_target_days_facts.append(fact_line)
                     
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
                     end_conception = ovul_d_obj
                     date_range_str = f"{start_conception.year}년 {start_conception.month:02d}월 {start_conception.day:02d}일 ~ {end_conception.year}년 {end_conception.month:02d}월 {end_conception.day:02d}일"
-
                     medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
                     
+                    # 🚨 [UI 조립용 사주 데이터 매핑]
+                    gans = [b_hs_hanja, b_ds, b_mm[0], b_ym[0]]
+                    jjis = [b_hb_hanja, b_db, b_mm[1], b_ym[1]]
+                    hs, ds, ms, ys = b_hs_hanja, b_ds, b_mm[0], b_ym[0]
+                    hb, db, mb, yb = b_hb_hanja, b_db, b_mm[1], b_ym[1]
+
+                    def td(char):
+                        if char in ["?", "-", " "]: return f"<td style='border:1px solid #444;'>{char}</td>"
+                        color_key = get_color(char)
+                        bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(color_key, '#888')
+                        tc = 'white' if color_key != '토' else 'black'
+                        return f"<td style='border:1px solid #444; padding:5px;'><div style='width:40px; height:40px; margin:0 auto; display:flex; align-items:center; justify-content:center; background:{bg}; color:{tc}; font-weight:900; font-size:22px; border-radius:4px; box-shadow: 1px 1px 3px rgba(0,0,0,0.3);'>{char}</div></td>"
+
+                    ji_rel_rows = ""
+                    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                        b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                        b_top = "0px solid transparent !important"
+                        cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
+                        ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+
+                    # 🚨 1, 2, 3순위 카드 껍데기 조립
                     del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
                     del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 <b>{bazi_hanja}</b> <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
                     del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
                     del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
                     del_content += f"<div style='margin-bottom: 4px;'>🏥 <b>최적 출산 택일:</b> {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str}</div>\n"
                     
-                    # 🔮 사주 원국 & 대운 흐름표 HTML (속살 노출 원천 차단 - 1줄 조립법)
-                    del_content += "<div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px;'>\n"
-                    del_content += "<div style='font-weight: bold; color: #4A148C; margin-bottom: 8px; text-align: center;'>[ 사주 원국 및 남녀 대운 흐름표 ]</div>\n"
-                    del_content += "<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 15px;'>\n"
-                    del_content += "<tr style='background-color: #f5f5f5; border-top: 2px solid #666; border-bottom: 1px solid #ddd;'>\n"
-                    del_content += "<th style='padding: 5px;'>구분</th><th style='padding: 5px;'>시주(時)</th><th style='padding: 5px;'>일주(日)</th><th style='padding: 5px;'>월주(月)</th><th style='padding: 5px;'>년주(年)</th>\n"
+                    # ==========================================================
+                    # 🚨 개인사주 100% 동일 규격 테이블 조립 (마크다운 방지 1줄 결합)
+                    # ==========================================================
+                    del_content += "<div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px;'>\n"
+                    del_content += f"<div style='text-align:center; margin-bottom:10px;'><div style='font-size: 16px; font-weight: bold; color: #4A148C;'>[ {i+1}순위 사주원국 및 남녀 대운 흐름 ]</div></div>\n"
+                    
+                    del_content += "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>\n"
+                    del_content += "<tr class='top-header-cell' style='background-color:#4A148C;'>\n"
+                    del_content += "<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td><td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>\n"
                     del_content += "</tr>\n"
-                    del_content += "<tr style='border-bottom: 1px solid #ddd;'>\n"
-                    del_content += "<td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>천간</td>\n"
-                    del_content += f"<td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hs_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ds}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[0]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[0]}</td>\n"
-                    del_content += "</tr>\n"
-                    del_content += "<tr style='border-bottom: 2px solid #666;'>\n"
-                    del_content += "<td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>지지</td>\n"
-                    del_content += f"<td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hb_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_db}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[1]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[1]}</td>\n"
-                    del_content += "</tr>\n"
+                    
+                    del_content += "<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>" + "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(idx, gans)}</td>" for idx in range(4)]) + "</tr>\n"
+                    del_content += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td><td style='border:1px solid #444;'>{get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{get_ss(ds,ys)}</td></tr>\n"
+                    del_content += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>\n"
+                    del_content += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>\n"
+                    del_content += f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td><td style='border:1px solid #444;'>{get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{get_ss(ds,db)}</td><td style='border:1px solid #444;'>{get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{get_ss(ds,yb)}</td></tr>\n"
+                    del_content += "<tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>" + "".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[idx])}</td>" for idx in range(4)]) + "</tr>\n"
+                    del_content += ji_rel_rows + "\n"
+                    del_content += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>" + "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[idx])}</td>" for idx in range(4)]) + "</tr>\n"
+                    del_content += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>" + "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[idx])}</td>" for idx in range(4)]) + "</tr>\n"
+                    del_content += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>" + "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(idx, gans, jjis, '남성')) if get_general_shinsal_filtered(idx, gans, jjis, '남성') else '-'}</td>" for idx in range(4)]) + "</tr>\n"
                     del_content += "</table>\n"
-                    del_content += "<div style='margin-top: 10px; font-size: 14px;'>\n"
-                    del_content += f"<div style='margin-bottom: 5px;'><span style='display:inline-block; width:60px; font-weight:bold; color:#0D47A1;'>남아 대운</span> (대운수: {m_dsu}) | {' - '.join(m_daewun_list)}</div>\n"
-                    del_content += f"<div><span style='display:inline-block; width:60px; font-weight:bold; color:#D81B60;'>여아 대운</span> (대운수: {f_dsu}) | {' - '.join(f_daewun_list)}</div>\n"
-                    del_content += "</div>\n"
-                    del_content += "</div>\n"
-                    del_content += "</div></div>\n"
+
+                    # 🚨 개인사주 100% 동일 규격 [대운표] 조립 함수
+                    def build_daewun_bar(dsu, d_list, gender_label, bg_color, d_dir):
+                        bar_html = f"<div style='margin-top:15px; margin-bottom:5px; font-size:14px; font-weight:900; color:{bg_color};'>[ {gender_label} 대운 흐름 (대운수: {dsu}, {'순행' if d_dir==1 else '역행'}) ]</div>"
+                        bar_html += f"<div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white;'>"
+                        for k in range(10):
+                            val = k * 10 + dsu
+                            c, j = d_list[k][0], d_list[k][1]
+                            b_left = "1px solid #ccc" if k != 9 else "none"
+                            bar_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px;'>"
+                            bar_html += f"<div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>"
+                            bar_html += f"<div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div>"
+                            # 오행 컬러 강제 주입
+                            c_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(get_color(c), '#000')
+                            j_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(get_color(j), '#000')
+                            bar_html += f"<div style='font-size:16px; font-weight:900; color:{c_bg};'>{c}</div>"
+                            bar_html += f"<div style='font-size:16px; font-weight:900; color:{j_bg};'>{j}</div>"
+                            bar_html += f"<div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div>"
+                            bar_html += f"<div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,j)}</div>"
+                            bar_html += f"<div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, j)}</div>"
+                            bar_html += "</div>"
+                        bar_html += "</div>"
+                        return bar_html
+
+                    del_content += build_daewun_bar(m_dsu, m_daewun_list, "🟦 남아", "#0D47A1", m_dir)
+                    del_content += build_daewun_bar(f_dsu, f_daewun_list, "🟥 여아", "#D81B60", f_dir)
+                    
+                    del_content += "</div>\n" # 하얀 바탕 끝
+                    del_content += "</div></div>\n" # 전체 카드 끝
 
             del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
             del_content += f"<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 {period_cycle}일 주기를 고려한 실제 가임 기간</b>이 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
