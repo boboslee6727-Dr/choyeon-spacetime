@@ -2899,17 +2899,13 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     b_hs_hanja = K2H_MAP.get(b_hs, b_hs)
                     b_hb_hanja = K2H_MAP.get(b_hb, b_hb)
                     
-                    # 🚨 화면용 명식(년 월 일 시)과 AI 전달용 명식(年 月 日 時) 분리
                     bazi_hanja = f"{b_ym}년 {b_mm}월 {b_ds}{b_db}일 {b_hs_hanja}{b_hb_hanja}시"
                     bazi_hanja_strict = f"{b_ym}年 {b_mm}月 {b_ds}{b_db}日 {b_hs_hanja}{b_hb_hanja}時"
-                    
                     bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
-                    ym_hanja = f"{b_ym}년 {b_mm}월"
                     
                     is_yang_year = b_ym[0] in ['甲', '丙', '戊', '庚', '壬']
                     m_dir = 1 if is_yang_year else -1
                     f_dir = -1 if is_yang_year else 1
-                    
                     m_dir_str = "순행" if m_dir == 1 else "역행"
                     f_dir_str = "순행" if f_dir == 1 else "역행"
                     
@@ -2927,15 +2923,11 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     m_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], m_dir, 10)
                     f_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], f_dir, 10)
                     
-                    fact_line = f"▶ {i+1}순위 추천 명식: {bazi_hanja_strict}\n  - 남아: 대운수 {m_dsu}, {m_dir_str}\n  - 여아: 대운수 {f_dsu}, {f_dir_str}"
-                    ai_target_days_facts.append(fact_line)
-                    
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
                     end_conception = ovul_d_obj
                     date_range_str = f"{start_conception.year}년 {start_conception.month:02d}월 {start_conception.day:02d}일 ~ {end_conception.year}년 {end_conception.month:02d}월 {end_conception.day:02d}일"
                     medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
                     
-                    # 🚨 [UI 데이터 매핑 및 슬림한 배경색 꽉 찬 td 함수]
                     gans = [b_hs_hanja, b_ds, b_mm[0], b_ym[0]]
                     jjis = [b_hb_hanja, b_db, b_mm[1], b_ym[1]]
                     hs, ds, ms, ys = b_hs_hanja, b_ds, b_mm[0], b_ym[0]
@@ -2956,7 +2948,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-                    # 🚨 1, 2, 3순위 카드 껍데기 조립 (출산/합궁 내용이 타이틀 밑으로 바로 붙음)
                     del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
                     del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 <b>{bazi_hanja}</b> <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
                     del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
@@ -3011,46 +3002,48 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
                     del_content += build_daewun_bar(m_dsu, m_daewun_list, "🟦 남아", "#0D47A1", m_dir)
                     del_content += build_daewun_bar(f_dsu, f_daewun_list, "🟥 여아", "#D81B60", f_dir)
+                    del_content += "</div>\n" 
                     
-                    del_content += "</div>\n" # 하얀 바탕 끝
-                    del_content += "</div></div>\n" # 전체 카드 끝
-            
-            del_content += "</div>\n" # 반복문 종료 및 회색 배경 닫기
+                    # 🚨 [새로운 방식] 루프 안에서 각 순위별로 AI 호출 (표 바로 아래에 풀이 삽입)
+                    fact_line = f"▶ {i+1}순위 추천 명식: {bazi_hanja_strict}\n  - 남아: 대운수 {m_dsu}, {m_dir_str}\n  - 여아: 대운수 {f_dsu}, {f_dir_str}"
+                    parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
-            ai_days_input_str = "\n".join(ai_target_days_facts)
-            parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
-
-            # 🚨 [신규 프롬프트] 인사말 제거 & 남녀 대운 분리 심층 풀이 템플릿 적용
-            delivery_prompt = f"""
+                    delivery_prompt = f"""
 당신은 전통 명리학에 정통한 명리심리상담사 초연 박사입니다.
 {parent_info}
 
-시스템이 연산한 아래 [추천 출산 명식 및 남/여 대운 데이터]를 바탕으로, 부모에게 전달할 품격 있는 통변 에세이를 작성하십시오.
+아래 [추천 명식 및 대운 데이터]를 바탕으로 해당 명식에 대한 통변 에세이를 작성하십시오.
 
 [추천 명식 및 대운 데이터]
-{ai_days_input_str}
+{fact_line}
 
 [필수 준수 사항]
-1. 각 순위별로 사주 원국(일간의 특성, 오행의 조화 등)의 전통 명리학적 장점과 부모 사주와의 상생/조화를 1번 항목에 서술하십시오.
-2. 2번 항목에서는 남아와 여아를 명확히 나누어, 각 성별의 대운수와 순/역행 흐름을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
+1. 사주 원국(일간의 특성, 오행의 조화 등)의 전통 명리학적 장점과 부모 사주와의 상생/조화를 1번 항목에 서술하십시오.
+2. 2번 항목에서는 남아와 여아를 나누어, 각 성별의 대운수와 순/역행 흐름을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
 3. 어떤 명칭(규칙, 알고리즘, 시스템 등)도 언급하지 말고 자연스러운 명리학자의 해설로 작성하십시오.
 
-[출력 포맷 템플릿]
-<div style='margin-bottom: 25px;'>
-    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[해당 메달 아이콘] [해당 순위]순위 추천 명식: [해당 한자 명식(年/月/日/時)] 풀이</div>
+[출력 포맷 템플릿] (반드시 아래 HTML 형태를 그대로 사용하여 출력할 것)
+<div style='margin-bottom: 10px; margin-top: 25px;'>
+    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>{medal} {i+1}순위 추천 명식: {bazi_hanja_strict} 풀이</div>
     <div style='padding-left: 10px;'>
         <div style='margin-bottom: 3px; color:#D50000;'><b>1) 전통 명리 및 부모 조화 풀이:</b></div>
         <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (통변 내용) </p>
         <div style='margin-bottom: 3px; margin-top:5px; color:#D50000;'><b>2) 성별 대운 흐름표 기반 심층 풀이:</b></div>
-        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 5px;'><b>▶ 남아 (대운수 [남아대운수], [순/역행]):</b></p>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 5px;'><b>▶ 남아 (대운수 {m_dsu}, {m_dir_str}):</b></p>
         <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 10px;'> (남아 통변 내용) </p>
-        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 5px;'><b>▶ 여아 (대운수 [여아대운수], [순/역행]):</b></p>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 5px;'><b>▶ 여아 (대운수 {f_dsu}, {f_dir_str}):</b></p>
         <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (여아 통변 내용) </p>
     </div>
 </div>
 """
-            ai_delivery_html = call_gemini_api(delivery_prompt)
-            ai_delivery_html = ai_delivery_html.replace("```html", "").replace("```", "").strip()
+                    ai_delivery_html = call_gemini_api(delivery_prompt)
+                    ai_delivery_html = ai_delivery_html.replace('```html', '').replace('
+```', '').strip()
+                    
+                    del_content += ai_delivery_html
+                    del_content += "</div></div>\n" # 전체 순위 카드 닫기
+
+            del_content += "</div>\n" # display:flex 컨테이너 닫기
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
@@ -3060,7 +3053,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 </div>
 </div>"""
 
-            del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{ai_delivery_html}\n{closing_del_html}\n</div>"
+            del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{closing_del_html}\n</div>"
 
             def wrap_a4_del(content, title_color="#4A148C"):
                 return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
