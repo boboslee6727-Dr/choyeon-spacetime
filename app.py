@@ -2846,7 +2846,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             FORBIDDEN_LIST = ['갑인', '을묘', '병오', '정사', '무진', '무술', '기미', '기축', '신유', '경신', '임자', '계해']
             delivery_days = get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, FORBIDDEN_LIST)
 
-del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
+            del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15px; margin-bottom:30px;'><h1 style='text-align:center; font-size: 30px; color:#4A148C; font-weight: 900; margin:0; font-family:\"Malgun Gothic\", sans-serif;'>👶 초연 시공명리 출산택일</h1></div>\n"
             del_content += f"<h2 style='text-align:center; color:#111; font-weight:900; font-size: 22px;'>🎯 새 생명 마중 길일(출산 택일) 추천</h2>\n"
             
             # 🚨 [수술 1] 가이드와 에세이를 상단으로 끌어올리고 중복 문구를 싹 정리했습니다.
