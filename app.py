@@ -2948,13 +2948,16 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
                         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-                    del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
-                    del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 <b>{bazi_hanja}</b> <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
-                    del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
-                    del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
-                    del_content += f"<div style='margin-bottom: 4px;'>🏥 <b>최적 출산 택일:</b> {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str}</div>\n"
+                    # 🚨 [수술 1] 겹박스 제거로 가로폭 100% 확보 & PDF 인쇄 시 중간 잘림 방지(page-break-inside: avoid)
+                    del_content += "<div style='page-break-inside: avoid; margin-bottom: 30px; font-family: \"Malgun Gothic\", sans-serif;'>\n"
+                    del_content += f"<div style='font-size: 18px; font-weight: 900; color: #4A148C; border-bottom: 2px solid #4A148C; padding-bottom: 8px; margin-bottom: 12px;'>{medal} {i+1}순위 추천 명식 요약 <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
+                    del_content += "<div style='line-height: 1.6; font-size: 15px; color: #333; padding-left: 5px; margin-bottom: 15px;'>\n"
+                    del_content += f"<div style='margin-bottom: 4px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
+                    del_content += f"<div>🏥 <b>최적 출산 택일:</b> {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str}</div>\n"
+                    del_content += "</div>\n"
                     
-                    del_content += "<div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px;'>\n"
+                    # 안쪽 사주 표는 얇고 심플한 테두리만 남겨 넓게 사용
+                    del_content += "<div style='border: 2px solid #eee; border-radius: 8px; padding: 10px;'>\n"
                     del_content += f"<div style='text-align:center; margin-bottom:10px;'><div style='font-size: 16px; font-weight: bold; color: #4A148C;'>[ {i+1}순위 사주원국 및 남녀 대운 흐름 ]</div></div>\n"
                     
                     del_content += "<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>\n"
@@ -3040,7 +3043,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     ai_delivery_html = ai_delivery_html.replace('```html', '').replace('```', '').strip()
                     
                     del_content += ai_delivery_html
-                    del_content += "</div></div>\n" # 전체 순위 카드 닫기
+                    del_content += "</div>\n" # 🚨 전체 순위 카드 닫기 (이중 겹박스를 뺐으므로 </div> 한 개만 닫습니다)
 
             del_content += "</div>\n" # display:flex 컨테이너 닫기
 
@@ -3054,8 +3057,28 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{closing_del_html}\n</div>"
 
+            # 🚨 [수술 2] 인쇄(PDF) 시 여백과 줄간격을 압축하여 1페이지로 밀어넣는 다이어트 CSS 적용
             def wrap_a4_del(content, title_color="#4A148C"):
-                return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
+                return f"""
+<style>
+@media print {{
+    .report-page {{ padding: 10px !important; margin: 0 auto !important; height: auto !important; page-break-after: always; }}
+    .vip-inset-frame {{ padding: 10px !important; margin: 0 !important; border-width: 2px !important; }}
+    /* 표 셀 안의 위아래 공간을 극단적으로 줄임 */
+    .result-table td {{ padding: 2px 0 !important; font-size: 13.5px !important; line-height: 1.1 !important; }}
+    /* 문단의 줄간격과 밑단 여백 축소 */
+    p {{ margin-bottom: 4px !important; line-height: 1.4 !important; font-size: 14px !important; }}
+    h1, h2, h3 {{ margin-top: 5px !important; margin-bottom: 5px !important; }}
+    /* 중간 잘림 방지 강력 속성 */
+    div {{ page-break-inside: avoid !important; }}
+}}
+</style>
+<div class='report-page'>
+<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>
+{content}
+</div>
+</div>
+"""
 
             st.session_state['saved_report_del'] = wrap_a4_del(del_content)
             st.session_state['run_delivery_only'] = False
@@ -3064,7 +3087,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
         except Exception as e:
             st.error(f"출산택일 연산 장애: {e}")
             st.session_state['run_delivery_only'] = False
-
 # ==============================================================================
 # 📺 9. 화면 출력부 (순수 모니터 역할)
 # ==============================================================================
