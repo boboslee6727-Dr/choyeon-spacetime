@@ -2931,8 +2931,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
                     del_content += f"<div style='margin-bottom: 4px;'>🏥 <b>최적 출산 택일:</b> {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str}</div>\n"
                     
-                    # 🔮 사주 원국 & 대운 흐름표 HTML
-                    del_content += f"""
                     # 🔮 사주 원국 & 대운 흐름표 HTML (속살 노출 원천 차단 - 1줄 조립법)
                     del_content += "<div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px;'>\n"
                     del_content += "<div style='font-weight: bold; color: #4A148C; margin-bottom: 8px; text-align: center;'>[ 사주 원국 및 남녀 대운 흐름표 ]</div>\n"
