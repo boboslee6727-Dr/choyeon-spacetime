@@ -2895,7 +2895,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 월령 : {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str} <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
                     del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
                     del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
-                    del_content += f"<div style='background-color: #FFF3E0; padding: 10px 15px; border-radius: 6px; font-weight: 900; color: #E65100; font-size: 16px;'>🔮 완성 명식 : <span style='letter-spacing: 1px;'>{bazi_hanja}</span> <span style='font-size: 14px; color: #666; font-weight: normal;'>({bazi_kor})</span></div>\n"
+                    del_content += f"<div style='padding: 5px 5px; font-weight: 900; color: #E65100; font-size: 16px;'>🔮 완성 명식 : <span style='letter-spacing: 1px;'>{bazi_hanja}</span></div>\n"
                     del_content += "</div></div>\n"
                     
             del_content += "</div>\n"
@@ -2965,7 +2965,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 [출력 포맷 템플릿]
 <p style='text-indent: 15px; margin-bottom: 25px; font-size: 15px; line-height: 1.8; color: #111;'><b>명리심리상담사 초연 박사입니다. 귀한 자녀의 탄생을 앞두고 명식 풀이를 의뢰해 주셔서 진심으로 축하드리며 깊은 감사를 드립니다.</b> (이후 자연스럽게 도입부 1~2문장 작성)</p>
 <div style='margin-bottom: 25px;'>
-    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[메달 아이콘(🥇🥈🥉)] 해당 순위 추천 명식 풀이</div>
+    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[메달 아이콘(🥇🥈🥉)] [해당 순위]순위 추천 [해당 한자 명식] 풀이</div>
     <div style='padding-left: 10px;'>
         <div style='margin-bottom: 3px; color:#D50000;'><b>1) 일반 명리 및 부모 조화 풀이:</b></div>
         <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
