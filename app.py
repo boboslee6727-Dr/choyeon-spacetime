@@ -3037,8 +3037,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 </div>
 """
                     ai_delivery_html = call_gemini_api(delivery_prompt)
-                    ai_delivery_html = ai_delivery_html.replace('```html', '').replace('
-```', '').strip()
+                    ai_delivery_html = ai_delivery_html.replace('```html', '').replace('```', '').strip()
                     
                     del_content += ai_delivery_html
                     del_content += "</div></div>\n" # 전체 순위 카드 닫기
