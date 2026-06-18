@@ -2853,6 +2853,20 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             ai_target_days_facts = []
             del_content += f"<div style='display:flex; flex-direction:column; margin-bottom:15px; background:#f9f9f9; padding:20px; border-radius:10px;'>\n"
             
+            # 🚨 [신규 추가] 월주를 기준으로 대운 간지를 8개 뽑아내는 도우미 함수
+            def get_daewun_sequence(start_gan, start_ji, direction, count=8):
+                GAN_L = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+                JI_L = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+                try:
+                    g_idx = GAN_L.index(start_gan)
+                    j_idx = JI_L.index(start_ji)
+                except: return ["?"] * count
+                seq = []
+                for k in range(1, count + 1):
+                    step = k if direction == 1 else -k
+                    seq.append(f"{GAN_L[(g_idx + step) % 10]}{JI_L[(j_idx + step) % 12]}")
+                return seq
+
             if delivery_days:
                 K2H_MAP = {v: k for k, v in H2K_MAP.items()}
                 
@@ -2880,25 +2894,67 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     bazi_kor = f"{h2k(b_ym)}년 {h2k(b_mm)}월 {h2k(b_ds+b_db)}일 {h2k(b_hs+b_hb)}시"
                     ym_hanja = f"{b_ym}년 {b_mm}월"
                     
-                    fact_line = f"▶ {i+1}순위 추천 월령: {birth_d_obj.year}년 {birth_d_obj.month:02d}월 ({ym_hanja}) / 택일 추천: {birth_d_obj.day:02d}일 {opt_time_str} / 명식: {bazi_hanja}"
+                    # ==========================================================
+                    # 🚨 [핵심 엔진 이식] 남아/여아 대운수 및 대운 흐름 연산
+                    # ==========================================================
+                    is_yang_year = b_ym[0] in ['甲', '丙', '戊', '庚', '壬']
+                    m_dir = 1 if is_yang_year else -1
+                    f_dir = -1 if is_yang_year else 1
+                    
+                    try:
+                        b_hour, b_minute = int(opt_time_str[0:2]), int(opt_time_str[3:5])
+                    except: b_hour, b_minute = 12, 0
+                        
+                    kst = pytz.timezone('Asia/Seoul')
+                    dt_kst = kst.localize(dt_mod.datetime(birth_d_obj.year, birth_d_obj.month, birth_d_obj.day, b_hour, b_minute))
+                    utc_dt = dt_kst.astimezone(pytz.utc)
+                    
+                    m_dsu = get_daeun_su_accurate(utc_dt, m_dir)
+                    f_dsu = get_daeun_su_accurate(utc_dt, f_dir)
+                    
+                    m_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], m_dir, 8)
+                    f_daewun_list = get_daewun_sequence(b_mm[0], b_mm[1], f_dir, 8)
+                    
+                    # AI에게 정확한 대운 정보를 먹이로 줍니다.
+                    fact_line = f"▶ {i+1}순위 추천 명식: {bazi_hanja}\n  - 남아: 대운수 {m_dsu}, 흐름({', '.join(m_daewun_list)})\n  - 여아: 대운수 {f_dsu}, 흐름({', '.join(f_daewun_list)})"
                     ai_target_days_facts.append(fact_line)
                     
-                    # 🚨 가임 기간 날짜 연산
                     start_conception = ovul_d_obj - dt_mod.timedelta(days=5)
                     end_conception = ovul_d_obj
                     date_range_str = f"{start_conception.year}년 {start_conception.month:02d}월 {start_conception.day:02d}일 ~ {end_conception.year}년 {end_conception.month:02d}월 {end_conception.day:02d}일"
 
-                    # 🚨 [여기서부터 복구!] 박사님이 원하신 초간편 명료화 프리미엄 카드 UI (에러 방지 1줄 조립법 적용)
                     medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
                     
                     del_content += "<div style='border: 1px solid #D1C4E9; border-radius: 10px; padding: 18px; background-color: #FAFAFA; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); font-family: \"Malgun Gothic\", sans-serif;'>\n"
-                    del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 월령 : {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str} <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
+                    del_content += f"<div style='font-size: 17px; font-weight: 900; color: #111; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;'>{medal} {i+1}순위 추천 <b>{bazi_hanja}</b> <span style='color: #D81B60; font-size: 15px;'>[종합점수: {total_score}점]</span></div>\n"
                     del_content += "<div style='line-height: 1.8; font-size: 15px; color: #333; padding-left: 5px;'>\n"
                     del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
-                    del_content += f"<div style='padding: 5px 5px; font-weight: 900; color: #E65100; font-size: 16px;'>🔮 완성 명식 : <span style='letter-spacing: 1px;'>{bazi_hanja}</span></div>\n"
-                    del_content += "</div></div>\n"
+                    del_content += f"<div style='margin-bottom: 4px;'>🏥 <b>최적 출산 택일:</b> {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str}</div>\n"
                     
-            del_content += "</div>\n"
+                    # 🔮 사주 원국 & 대운 흐름표 HTML
+                    del_content += f"""
+                    <div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px;'>
+                        <div style='font-weight: bold; color: #4A148C; margin-bottom: 8px; text-align: center;'>[ 사주 원국 및 남녀 대운 흐름표 ]</div>
+                        <table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 15px;'>
+                            <tr style='background-color: #f5f5f5; border-top: 2px solid #666; border-bottom: 1px solid #ddd;'>
+                                <th style='padding: 5px;'>구분</th><th style='padding: 5px;'>시주(時)</th><th style='padding: 5px;'>일주(日)</th><th style='padding: 5px;'>월주(月)</th><th style='padding: 5px;'>년주(年)</th>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #ddd;'>
+                                <td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>천간</td>
+                                <td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hs_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ds}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[0]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[0]}</td>
+                            </tr>
+                            <tr style='border-bottom: 2px solid #666;'>
+                                <td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>지지</td>
+                                <td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hb_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_db}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[1]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[1]}</td>
+                            </tr>
+                        </table>
+                        <div style='margin-top: 10px; font-size: 14px;'>
+                            <div style='margin-bottom: 5px;'><span style='display:inline-block; width:60px; font-weight:bold; color:#0D47A1;'>남아 대운</span> (대운수: {m_dsu}) | {' - '.join(m_daewun_list)}</div>
+                            <div><span style='display:inline-block; width:60px; font-weight:bold; color:#D81B60;'>여아 대운</span> (대운수: {f_dsu}) | {' - '.join(f_daewun_list)}</div>
+                        </div>
+                    </div>
+                    """
+                    del_content += "</div></div>\n"
 
             del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
             del_content += f"<div style='color:#333; line-height:1.8; margin-top: 0px; margin-bottom: 15px; text-indent: 15px;'><span style='font-size:15px;'>위의 출산 길일은 아이의 사주 기운을 우선으로 선정한 것입니다. 의학적 평균 임신 기간(약 280일)을 고려할 때, <b>합궁 시기는 출산 예정일로부터 약 {period_cycle}일 주기를 고려한 실제 가임 기간</b>이 됩니다. 부인분의 생리 주기와 배란일을 면밀히 고려하시어, 부부께서 상의하에 가장 건강한 시기를 계획하시길 바랍니다.</span></div>\n"
@@ -2915,88 +2971,40 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             del_content += intro_essay
 
             ai_days_input_str = "\n".join(ai_target_days_facts)
-
-            # 🚨 [대운 방향 확정 로직] 남/여 성별 + 년간 음양에 따른 순/역행 자동 계산
-            # 년간이 甲(양), 丙(양), 戊(양), 庚(양), 壬(양)이면 남순/여역
-            # 년간이 乙(음), 丁(음), 己(음), 辛(음), 癸(음)이면 남역/여순
-            yang_gans = ['갑', '병', '무', '경', '임']
-            year_gan = h2k(gans[3][0]) # 년간 추출
-            is_yang_year = year_gan in yang_gans
-            
-            # 남성: 양년생(순행), 음년생(역행) / 여성: 양년생(역행), 음년생(순행)
-            m_direction = "순행" if is_yang_year else "역행"
-            f_direction = "역행" if is_yang_year else "순행"
-
-            # 🚨 [수정 및 강화] 태아 성별 미정에 따른 대운(大運) 분석 지침을 강제로 주입
-            prompt_daewun_info = f"""
-[태아 성별 미정에 따른 대운(大運) 분석 지침]
-현재 태아의 성별이 확정되지 않았습니다. 따라서 명식 풀이 시 **반드시 남아(대운: {m_direction})와 여아(대운: {f_direction}) 두 가지 경우의 대운 흐름을 모두 통변**해야 합니다.
-- 남아({m_direction}): 초년~중년 대운의 유불리 및 특징
-- 여아({f_direction}): 초년~중년 대운의 유불리 및 특징
-"""
-            # 🚨 부모 사주 정보를 AI가 명확히 인지하도록 전달
             parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
-            # 🚨 [수술 완료] 따뜻한 인사말 복구 및 출력 템플릿 재조정
+            # 🚨 [신규 프롬프트] 정확한 데이터 기반 전통 명리 심층 풀이 지시
             delivery_prompt = f"""
-당신은 명리심리상담사 초연 박사입니다.
+당신은 전통 명리학에 정통한 명리심리상담사 초연 박사입니다.
 {parent_info}
 
-{prompt_daewun_info}
+시스템이 연산한 아래 [추천 출산 명식 및 남/여 대운 데이터]를 바탕으로, 부모에게 전달할 품격 있는 통변 에세이를 작성하십시오.
 
-시스템이 도출한 아래 [추천 출산 명식]에 대해 통변 에세이를 작성하십시오.
-
-[추천 일정 리스트]
+[추천 명식 및 대운 데이터]
 {ai_days_input_str}
 
-🚨 [필수 준수 사항 - 위반 시 감점]
-1. 각 순위별 명리 풀이 시 반드시 '부모 사주와의 상생 관계'를 첫 문단에 배치하십시오.
-2. 남아로 태어날 경우({m_direction})와 여아로 태어날 경우({f_direction}) 각각의 대운 흐름에 따른 장단점을 반드시 포함하여 서술하십시오.
-3. 명식 간지는 무조건 한자(丁未, 庚戌 등)로 표기.
-4. 통변의 첫 시작은 반드시 박사님의 따뜻한 인사말로 시작할 것. (아래 출력 템플릿 참고)
-
-[초연 시공명리 대운(大運) 평가 절대 원칙]
-1. 대운의 흐름은 다음의 구조로 흐를 때 최상급으로 평가한다:
-   - 초년운(10~20대): 인성(印星) 또는 비겁(比劫) 기운으로 자아 확립 및 학업 성취
-   - 청년운(30~40대): 식상(食傷) 또는 재성(財星) 기운으로 능력 발휘 및 부의 축적
-   - 장년/말년운(50대 이후): 관성(官星) 기운으로 명예, 권위, 안정 획득
-2. 통변 시, 남아와 여아의 대운 흐름(순행/역행)을 비교하여 위 원칙에 더 부합하는 성별이 어느 쪽인지 분석하고 그 이유를 서술할 것.
+🚨 [필수 준수 사항]
+1. 통변의 첫 시작은 반드시 아래 [출력 포맷 템플릿]에 있는 인사말로 시작하십시오.
+2. 각 순위별로 사주 원국(일간의 특성, 오행의 조화 등)의 전통 명리학적 장점과 부모 사주와의 상생/조화를 1번 항목에 서술하십시오.
+3. 2번 항목에서는 시스템이 제공한 '남아의 실제 대운수 및 간지 흐름'과 '여아의 실제 대운수 및 간지 흐름'을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
+4. 어떤 명칭(규칙, 알고리즘, 시스템 등)도 언급하지 말고 자연스러운 명리학자의 해설로 작성하십시오.
 
 [출력 포맷 템플릿]
-<p style='text-indent: 15px; margin-bottom: 25px; font-size: 15px; line-height: 1.8; color: #111;'><b>명리심리상담사 초연 박사입니다. 귀한 자녀의 탄생을 앞두고 명식 풀이를 의뢰해 주셔서 진심으로 축하드리며 깊은 감사를 드립니다.</b> (이후 자연스럽게 도입부 1~2문장 작성)</p>
+<p style='text-indent: 15px; margin-bottom: 25px; font-size: 15px; line-height: 1.8; color: #111;'><b>명리심리상담사 초연 박사입니다. 귀한 자녀의 탄생을 앞두고 출산 택일 명식 풀이를 의뢰해 주셔서 진심으로 축하드리며 깊은 감사를 드립니다.</b></p>
 <div style='margin-bottom: 25px;'>
     <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[메달 아이콘(🥇🥈🥉)] [해당 순위]순위 추천 [해당 한자 명식] 풀이</div>
     <div style='padding-left: 10px;'>
-        <div style='margin-bottom: 3px; color:#D50000;'><b>1) 일반 명리 및 부모 조화 풀이:</b></div>
-        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용) </p>
-        <div style='margin-bottom: 3px; margin-top:5px; color:#D50000;'><b>2) 시공 명리 및 성별 대운 흐름 풀이:</b></div>
-        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'> (통변 내용 - 남아와 여아 대운 장단점 비교) </p>
+        <div style='margin-bottom: 3px; color:#D50000;'><b>1) 전통 명리 및 부모 조화 풀이:</b></div>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (통변 내용) </p>
+        <div style='margin-bottom: 3px; margin-top:5px; color:#D50000;'><b>2) 성별 대운 흐름표 기반 심층 풀이:</b></div>
+        <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (통변 내용) </p>
     </div>
 </div>
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
             
-            # ==============================================================================
-            # 🚨 [최종 수술] AI 환각 방어 및 1순위 폰트 작아짐 원천 차단 (파이썬 강제 주입)
-            # ==============================================================================
-        
-            # 1. 꼬리말 제거
-            ai_delivery_html = re.sub(r'(?i)(존경하는 부모님|초연 박사 올림|감사합니다).*', '', ai_delivery_html, flags=re.DOTALL)
-            ai_delivery_html = ai_delivery_html.replace('---', '')
-            
-            # 2. AI가 멋대로 쓴 불안정한 제목 태그들(span, ** 등)을 일단 싹 다 벗겨냄 (통일성을 위해)
-            ai_delivery_html = re.sub(r'<span class=[\'"]sub-title[\'"][^>]*>(.*?)</span>', r'\1', ai_delivery_html)
-            ai_delivery_html = ai_delivery_html.replace('**', '')
-            
-            # 3. 파이썬이 직접 '▶ X순위...' 패턴을 찾아 18px 제목 박스로 완벽하게 강제 포장 (AI 의존도 0%)
-            ai_delivery_html = re.sub(
-                r'(▶\s*[123]순위\s*추천\s*월령:[^<]+)', 
-                r"<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; margin-top:25px; margin-bottom:10px; display:block;'>\1</span>", 
-                ai_delivery_html
-            )
-            
-            # 4. 화면이 깨지지 않도록 불필요한 줄바꿈 정리
-            ai_delivery_html = ai_delivery_html.strip()
+            # 🚨 [최종 수술] 통변 내용을 싹 날려버리던 파이썬 정규식을 안전하게 폐기! 마크다운 기호만 지웁니다.
+            ai_delivery_html = ai_delivery_html.replace('```html', '').replace('```', '').strip()
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
