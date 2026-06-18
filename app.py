@@ -2933,27 +2933,27 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     
                     # 🔮 사주 원국 & 대운 흐름표 HTML
                     del_content += f"""
-                    <div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px;'>
-                        <div style='font-weight: bold; color: #4A148C; margin-bottom: 8px; text-align: center;'>[ 사주 원국 및 남녀 대운 흐름표 ]</div>
-                        <table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 15px;'>
-                            <tr style='background-color: #f5f5f5; border-top: 2px solid #666; border-bottom: 1px solid #ddd;'>
-                                <th style='padding: 5px;'>구분</th><th style='padding: 5px;'>시주(時)</th><th style='padding: 5px;'>일주(日)</th><th style='padding: 5px;'>월주(月)</th><th style='padding: 5px;'>년주(年)</th>
-                            </tr>
-                            <tr style='border-bottom: 1px solid #ddd;'>
-                                <td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>천간</td>
-                                <td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hs_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ds}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[0]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[0]}</td>
-                            </tr>
-                            <tr style='border-bottom: 2px solid #666;'>
-                                <td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>지지</td>
-                                <td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hb_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_db}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[1]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[1]}</td>
-                            </tr>
-                        </table>
-                        <div style='margin-top: 10px; font-size: 14px;'>
-                            <div style='margin-bottom: 5px;'><span style='display:inline-block; width:60px; font-weight:bold; color:#0D47A1;'>남아 대운</span> (대운수: {m_dsu}) | {' - '.join(m_daewun_list)}</div>
-                            <div><span style='display:inline-block; width:60px; font-weight:bold; color:#D81B60;'>여아 대운</span> (대운수: {f_dsu}) | {' - '.join(f_daewun_list)}</div>
-                        </div>
-                    </div>
-                    """
+                    # 🔮 사주 원국 & 대운 흐름표 HTML (속살 노출 원천 차단 - 1줄 조립법)
+                    del_content += "<div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px;'>\n"
+                    del_content += "<div style='font-weight: bold; color: #4A148C; margin-bottom: 8px; text-align: center;'>[ 사주 원국 및 남녀 대운 흐름표 ]</div>\n"
+                    del_content += "<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 15px;'>\n"
+                    del_content += "<tr style='background-color: #f5f5f5; border-top: 2px solid #666; border-bottom: 1px solid #ddd;'>\n"
+                    del_content += "<th style='padding: 5px;'>구분</th><th style='padding: 5px;'>시주(時)</th><th style='padding: 5px;'>일주(日)</th><th style='padding: 5px;'>월주(月)</th><th style='padding: 5px;'>년주(年)</th>\n"
+                    del_content += "</tr>\n"
+                    del_content += "<tr style='border-bottom: 1px solid #ddd;'>\n"
+                    del_content += "<td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>천간</td>\n"
+                    del_content += f"<td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hs_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ds}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[0]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[0]}</td>\n"
+                    del_content += "</tr>\n"
+                    del_content += "<tr style='border-bottom: 2px solid #666;'>\n"
+                    del_content += "<td style='padding: 5px; font-weight: bold; background-color: #fafafa;'>지지</td>\n"
+                    del_content += f"<td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_hb_hanja}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_db}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_mm[1]}</td><td style='padding: 5px; font-weight: bold; font-size: 18px;'>{b_ym[1]}</td>\n"
+                    del_content += "</tr>\n"
+                    del_content += "</table>\n"
+                    del_content += "<div style='margin-top: 10px; font-size: 14px;'>\n"
+                    del_content += f"<div style='margin-bottom: 5px;'><span style='display:inline-block; width:60px; font-weight:bold; color:#0D47A1;'>남아 대운</span> (대운수: {m_dsu}) | {' - '.join(m_daewun_list)}</div>\n"
+                    del_content += f"<div><span style='display:inline-block; width:60px; font-weight:bold; color:#D81B60;'>여아 대운</span> (대운수: {f_dsu}) | {' - '.join(f_daewun_list)}</div>\n"
+                    del_content += "</div>\n"
+                    del_content += "</div>\n"
                     del_content += "</div></div>\n"
 
             del_content += "<div style='color:#333; margin-top: 15px; margin-bottom: 5px; text-indent: 15px;'><span style='font-size:18px;'><b>💡 부부를 위한 임신 계획 가이드:</b></span></div>\n"
