@@ -2921,18 +2921,18 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     date_range_str = f"{start_conception.year}년 {start_conception.month:02d}월 {start_conception.day:02d}일 ~ {end_conception.year}년 {end_conception.month:02d}월 {end_conception.day:02d}일"
                     medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
                     
-                    # 🚨 [UI 조립용 사주 데이터 매핑]
+                    # 🚨 [UI 조립용 사주 데이터 매핑 및 꽉 찬 배경색 td 함수]
                     gans = [b_hs_hanja, b_ds, b_mm[0], b_ym[0]]
                     jjis = [b_hb_hanja, b_db, b_mm[1], b_ym[1]]
                     hs, ds, ms, ys = b_hs_hanja, b_ds, b_mm[0], b_ym[0]
                     hb, db, mb, yb = b_hb_hanja, b_db, b_mm[1], b_ym[1]
 
                     def td(char):
-                        if char in ["?", "-", " "]: return f"<td style='border:1px solid #444;'>{char}</td>"
+                        if char in ["?", "-", " "]: return f"<td style='border:1px solid #444; padding:10px;'>{char}</td>"
                         color_key = get_color(char)
                         bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(color_key, '#888')
                         tc = 'white' if color_key != '토' else 'black'
-                        return f"<td style='border:1px solid #444; padding:5px;'><div style='width:40px; height:40px; margin:0 auto; display:flex; align-items:center; justify-content:center; background:{bg}; color:{tc}; font-weight:900; font-size:22px; border-radius:4px; box-shadow: 1px 1px 3px rgba(0,0,0,0.3);'>{char}</div></td>"
+                        return f"<td style='border:1px solid #444; background-color:{bg}; color:{tc}; font-weight:900; font-size:22px; padding:10px;'>{char}</td>"
 
                     ji_rel_rows = ""
                     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -2949,9 +2949,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     del_content += f"<div style='margin-bottom: 8px;'>❤️ <b>합궁 가임 기간:</b> {date_range_str} <span style='font-size: 14px; color: #666;'>(최적일: {ovul_d_obj.month:02d}월 {ovul_d_obj.day:02d}일)</span></div>\n"
                     del_content += f"<div style='margin-bottom: 4px;'>🏥 <b>최적 출산 택일:</b> {birth_d_obj.year}년 {birth_d_obj.month:02d}월 {birth_d_obj.day:02d}일 {opt_time_str}</div>\n"
                     
-                    # ==========================================================
-                    # 🚨 개인사주 100% 동일 규격 테이블 조립 (마크다운 방지 1줄 결합)
-                    # ==========================================================
                     del_content += "<div style='margin-top: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px;'>\n"
                     del_content += f"<div style='text-align:center; margin-bottom:10px;'><div style='font-size: 16px; font-weight: bold; color: #4A148C;'>[ {i+1}순위 사주원국 및 남녀 대운 흐름 ]</div></div>\n"
                     
@@ -2972,7 +2969,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                     del_content += "<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>" + "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(get_general_shinsal_filtered(idx, gans, jjis, '남성')) if get_general_shinsal_filtered(idx, gans, jjis, '남성') else '-'}</td>" for idx in range(4)]) + "</tr>\n"
                     del_content += "</table>\n"
 
-                    # 🚨 개인사주 100% 동일 규격 [대운표] 조립 함수
+                    # 🚨 꽉 찬 오행 배경색이 들어간 대운표 조립 함수
                     def build_daewun_bar(dsu, d_list, gender_label, bg_color, d_dir):
                         bar_html = f"<div style='margin-top:15px; margin-bottom:5px; font-size:14px; font-weight:900; color:{bg_color};'>[ {gender_label} 대운 흐름 (대운수: {dsu}, {'순행' if d_dir==1 else '역행'}) ]</div>"
                         bar_html += f"<div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white;'>"
@@ -2983,11 +2980,15 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                             bar_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px;'>"
                             bar_html += f"<div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>"
                             bar_html += f"<div style='padding:2px; font-size:12px;'>{get_ss(ds,c)}</div>"
-                            # 오행 컬러 강제 주입
-                            c_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(get_color(c), '#000')
-                            j_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(get_color(j), '#000')
-                            bar_html += f"<div style='font-size:16px; font-weight:900; color:{c_bg};'>{c}</div>"
-                            bar_html += f"<div style='font-size:16px; font-weight:900; color:{j_bg};'>{j}</div>"
+                            
+                            c_color, j_color = get_color(c), get_color(j)
+                            c_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(c_color, '#fff')
+                            j_bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(j_color, '#fff')
+                            c_tc = 'white' if c_color != '토' else 'black'
+                            j_tc = 'white' if j_color != '토' else 'black'
+                            
+                            bar_html += f"<div style='font-size:16px; font-weight:900; background-color:{c_bg}; color:{c_tc}; padding:4px 0;'>{c}</div>"
+                            bar_html += f"<div style='font-size:16px; font-weight:900; background-color:{j_bg}; color:{j_tc}; padding:4px 0;'>{j}</div>"
                             bar_html += f"<div style='padding:2px; font-size:12px;'>{get_ss(ds,j)}</div>"
                             bar_html += f"<div style='font-size:11px; border-top:1px solid #ccc;'>{get_unsung(ds,j)}</div>"
                             bar_html += f"<div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{get_12_shinsal(yb, j)}</div>"
@@ -3018,7 +3019,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
             ai_days_input_str = "\n".join(ai_target_days_facts)
             parent_info = f"부모 사주 정보 - 부(남성): {m_saju_kor}, 모(여성): {f_saju_kor}"
 
-            # 🚨 [신규 프롬프트] 정확한 데이터 기반 전통 명리 심층 풀이 지시
+            # 🚨 [신규 프롬프트] 인사말 삭제 및 템플릿 간소화
             delivery_prompt = f"""
 당신은 전통 명리학에 정통한 명리심리상담사 초연 박사입니다.
 {parent_info}
@@ -3028,16 +3029,14 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 [추천 명식 및 대운 데이터]
 {ai_days_input_str}
 
-#🚨 [필수 준수 사항]
-1. 통변의 첫 시작은 반드시 아래 [출력 포맷 템플릿]에 있는 인사말로 시작하십시오.
-2. 각 순위별로 사주 원국(일간의 특성, 오행의 조화 등)의 전통 명리학적 장점과 부모 사주와의 상생/조화를 1번 항목에 서술하십시오.
-3. 2번 항목에서는 시스템이 제공한 '남아의 실제 대운수 및 간지 흐름'과 '여아의 실제 대운수 및 간지 흐름'을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
-4. 어떤 명칭(규칙, 알고리즘, 시스템 등)도 언급하지 말고 자연스러운 명리학자의 해설로 작성하십시오.
+[필수 준수 사항]
+1. 각 순위별로 사주 원국(일간의 특성, 오행의 조화 등)의 전통 명리학적 장점과 부모 사주와의 상생/조화를 1번 항목에 서술하십시오.
+2. 2번 항목에서는 시스템이 제공한 '남아의 실제 대운수 및 간지 흐름'과 '여아의 실제 대운수 및 간지 흐름'을 바탕으로 초년/청년/장년의 유불리를 구체적으로 비교 분석하십시오.
+3. 어떤 명칭(규칙, 알고리즘, 시스템 등)도 언급하지 말고 자연스러운 명리학자의 해설로 작성하십시오.
 
 [출력 포맷 템플릿]
-<p style='text-indent: 15px; margin-bottom: 25px; font-size: 15px; line-height: 1.8; color: #111;'><b>명리심리상담사 초연 박사입니다. 귀한 자녀의 탄생을 앞두고 출산 택일 명식 풀이를 의뢰해 주셔서 진심으로 축하드리며 깊은 감사를 드립니다.</b></p>
 <div style='margin-bottom: 25px;'>
-    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[메달 아이콘(🥇🥈🥉)] [해당 순위]순위 추천 [해당 한자 명식] 풀이</div>
+    <div style='font-size: 18px; font-weight: 900; color: #111; margin-bottom: 10px; border-bottom: 2px solid #4A148C; padding-bottom: 5px;'>[해당 메달 아이콘] [해당 순위]순위 추천 [해당 한자 명식] 풀이</div>
     <div style='padding-left: 10px;'>
         <div style='margin-bottom: 3px; color:#D50000;'><b>1) 전통 명리 및 부모 조화 풀이:</b></div>
         <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px;'> (통변 내용) </p>
@@ -3046,10 +3045,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
     </div>
 </div>
 """
-            
             ai_delivery_html = call_gemini_api(delivery_prompt)
-            
-            # 🚨 [최종 수술] 통변 내용을 싹 날려버리던 파이썬 정규식을 안전하게 폐기! 마크다운 기호만 지웁니다.
             ai_delivery_html = ai_delivery_html.replace('```html', '').replace('```', '').strip()
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
