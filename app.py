@@ -3050,8 +3050,7 @@ del_content = f"<div style='border-bottom:4px double #4A148C; padding-bottom:15p
 </div>
 """
             ai_delivery_html = call_gemini_api(delivery_prompt)
-            ai_delivery_html = ai_delivery_html.replace('```html', '').replace('
-```', '').strip()
+            ai_delivery_html = ai_delivery_html.replace("```html", "").replace("```", "").strip()
 
             closing_del_html = f"""<div style='margin-top: 20px;'>
 <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 세 가지 출산 희망일은 각각 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
