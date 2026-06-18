@@ -3001,6 +3001,7 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
     </div>
 </div>
 """
+            
             ai_delivery_html = call_gemini_api(delivery_prompt)
             
             # 🚨 [최종 수술] 통변 내용을 싹 날려버리던 파이썬 정규식을 안전하게 폐기! 마크다운 기호만 지웁니다.
