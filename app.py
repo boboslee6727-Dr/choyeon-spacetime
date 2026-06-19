@@ -3057,28 +3057,9 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
 
             del_content += f"<div class='content-box-loose' style='font-size:15px; line-height:1.8; margin-top:20px;'>\n{closing_del_html}\n</div>"
 
-            # 🚨 [수술 2] 인쇄(PDF) 시 여백과 줄간격을 압축하여 1페이지로 밀어넣는 다이어트 CSS 적용
+            # 🚨 [긴급 복구] 표지와 개인사주를 망가뜨리던 전역 CSS 폭탄을 완전히 제거했습니다.
             def wrap_a4_del(content, title_color="#4A148C"):
-                return f"""
-<style>
-@media print {{
-    .report-page {{ padding: 10px !important; margin: 0 auto !important; height: auto !important; page-break-after: always; }}
-    .vip-inset-frame {{ padding: 10px !important; margin: 0 !important; border-width: 2px !important; }}
-    /* 표 셀 안의 위아래 공간을 극단적으로 줄임 */
-    .result-table td {{ padding: 2px 0 !important; font-size: 13.5px !important; line-height: 1.1 !important; }}
-    /* 문단의 줄간격과 밑단 여백 축소 */
-    p {{ margin-bottom: 4px !important; line-height: 1.4 !important; font-size: 14px !important; }}
-    h1, h2, h3 {{ margin-top: 5px !important; margin-bottom: 5px !important; }}
-    /* 중간 잘림 방지 강력 속성 */
-    div {{ page-break-inside: avoid !important; }}
-}}
-</style>
-<div class='report-page'>
-<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>
-{content}
-</div>
-</div>
-"""
+                return f"<div class='report-page'>\n<div class='vip-inset-frame' style='border-color:{title_color}; padding:20px;'>\n{content}\n</div>\n</div>"
 
             st.session_state['saved_report_del'] = wrap_a4_del(del_content)
             st.session_state['run_delivery_only'] = False
