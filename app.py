@@ -367,7 +367,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=60) #ttl=3600*24초=86,400초 24시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=3600*24) #ttl=3600*24초=86,400초 24시간 감명서 유효
 def get_ai_response(prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
@@ -2287,73 +2287,79 @@ if st.session_state.get('need_calc', False):
 ========================================================
 """
                     
-                    # 🚨 [수술 적용 2] 프롬프트 문단 간격 절대 강제 및 궁합 종합 분석 Deep Dive (맵핑표 주입)
+                    # 🚨 [궁합 분량 대확장] 총 8페이지 규격 (남명 2도, 여명 2도, 종합궁합 4도 강제 분할)
                     essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다.
-아래 제공된 [의뢰인 명식표]를 기반으로, 남성과 여성 각각에 대한 심층 개인사주 통변과 궁합 에세이를 작성하십시오.
 
 {ai_saju_mapping}
 
-🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
-1. 남성의 본질(일주)은 반드시 '{m_ds}{m_db}'이며, 여성의 본질(일주)은 반드시 '{f_ds}{f_db}'입니다. 두 사람의 사주나 일/월주를 절대 섞거나 착각하지 마십시오!
-2. 각 소제목 아래에 절대로 '(축약 에세이)', '(에세이)' 등의 안내 문구를 그대로 복사해서 출력하지 마십시오!
-3. 반드시 내담자의 명리적 특징을 분석하여 3~4문장 이상의 **실제 심층 통변 내용(해석)**을 직접 글로 작성해야 합니다.
-4. 🚨 [문단 간격 강제]: 모든 통변 문단은 반드시 HTML 태그 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 8px;'>` 로 감싸서 개인사주 풀이와 완벽히 동일한 쫀쫀한 문단 간격을 유지하십시오. 단순 `<br>`이나 탭(Tab) 사용을 금지합니다.
-5. 🚨 [시스템 마커 절대 보존]: `[MALE_START]`, `[MALE_END]`, `[FEMALE_START]`, `[FEMALE_END]`, `[GUNGHAP_START]`, `[GUNGHAP_END]` 이 6개의 태그는 파이썬 시스템이 화면을 분할하는 핵심 스위치입니다. 단 하나라도 생략하거나 변형하지 말고 템플릿 위치 그대로 반드시 출력하십시오! 여명 풀이를 임의로 건너뛰지 마십시오.
+🚨 [중요: 분량 및 페이지 제한 규칙 - 위반 시 감명서 폐기]
+1. 남성 풀이([MALE_START]~[MALE_END])와 여성 풀이([FEMALE_START]~[FEMALE_END])는 인쇄 기준 각각 '정확히 2페이지' 분량이 나와야 합니다. 이를 위해 각 하위 항목(성향, 리듬, 성격, 속마음, 반려자상)마다 최소 4~5문단 이상의 매우 방대하고 깊이 있는 장문 에세이(항목당 800자 이상)를 작성하십시오.
+2. 종합 궁합 풀이([GUNGHAP_START]~[GUNGHAP_END])는 '정확히 4페이지' 분량으로 확장되어야 합니다. 지저분한 요약은 전면 금지하며, 명리학적 근거를 바탕으로 대필 작가가 쓰듯 최고급 대서사시 형태로 길게 서술하십시오.
+3. 모든 통변 문단은 반드시 HTML 태그 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.8;'>` 로 감싸십시오.
 
 [MALE_START]
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {m_golden}
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 남성의 일간 '{m_ds}'와 월지 '{m_mb}'를 중심으로 명리적 성향을 분석한 장문의 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 남성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(이곳에 남성의 일간 '{m_ds}'와 월지 '{m_mb}'를 중심으로 명리적 성향을 분석한 매우 깊고 방대한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(이곳에 남성의 오행 및 조후 에너지를 분석한 매우 깊고 방대한 실제 에세이 작성)
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
+<div style='page-break-after: always;'></div>
+
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 남성 공망 '{m_gongmang_actual}'과 지장간을 활용해 내면과 무의식을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(이곳에 남성 공망 '{m_gongmang_actual}'과 지장간을 활용해 내면 및 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
 (남성 일지 '{m_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관을 실제 에세이로 작성)
 [MALE_END]
 
 [FEMALE_START]
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {f_golden}
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 여성의 일간 '{f_ds}'와 월지 '{f_mb}'를 중심으로 명리적 성향을 분석한 장문의 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 여성의 오행 및 조후 에너지를 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
+(이곳에 여성의 일간 '{f_ds}'와 월지 '{f_mb}'를 중심으로 명리적 성향을 분석한 매우 깊고 방대한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
+(이곳에 여성의 오행 및 조후 에너지를 분석한 매우 깊고 방대한 실제 에세이 작성)
 
-<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 35px;'>2. 성격 및 가치관</h3>
+<div style='page-break-after: always;'></div>
+
+<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 여성 공망 '{f_gongmang_actual}'과 지장간을 활용해 내면과 무의식을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(이곳에 여성 공망 '{f_gongmang_actual}'과 지장간을 활용해 내면 및 무의식을 분석한 실제 에세이 작성)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
 (여성 일지 '{f_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관을 실제 에세이로 작성)
 [FEMALE_END]
 
 [GUNGHAP_START]
 <h3 style='color: #1B5E20; font-size: 24px; font-weight: 900; margin-top: 15px;'>🍀 두 사람의 운명적 만남 총평</h3>
-(남성 일주 '{m_ds}{m_db}'와 여성 일주 '{f_ds}{f_db}'의 만남이 형성하는 큰 틀의 인연, 전반적인 궁합 총평을 깊이 있게 통변한 실제 에세이 작성)
+(남성 일주 '{m_ds}{m_db}'와 여성 일주 '{f_ds}{f_db}'의 기운적 융합과 만남의 우주적 의미를 대서사시 형태로 매우 길게 서술)
+
+<div style='page-break-after: always;'></div>
 
 <h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>🌈 커플의 인생 기상도 및 대운 교차 분석</h3>
 [COUPLE_DAEWUN_TABLES_HERE]
-(상하 대운표를 바탕으로, 두 사람의 운의 흐름이 어떤 시기에 서로 보완되고 상생하는지, 혹은 주의가 필요한지 교차 분석한 실제 에세이 작성)
+(위 대운표를 바탕으로 향후 수십 년간 두 사람의 운이 교차하며 상생하는 지점과 극복 과제를 매우 상세히 도출)
+
+<div style='page-break-after: always;'></div>
 
 <h3 style='color: #1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>💞 초연 시공명리 심층 조화 분석</h3>
-
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 오행 및 조후의 상생 조화</span>
-(서로의 사주에서 부족하거나 넘치는 기운(온습 및 오행)을 어떻게 채워주고 완충하는지 구체적으로 명시하여 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
-(남명과 여명의 성격적/육친적 십성 구조가 현실 생활에서 어떻게 융합되거나 부딪히는지 분석)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
-(일지(배우자궁)와 지장간의 합형충파해를 기반으로 한 육체적, 내적 유대감을 품격있게 풀이)
+(오행의 과부족 완충 관계를 상세히 기록)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 심리 및 가치관의 결속력</span>
+(십성 구조에 따른 현실적 소통 및 재물관 융합 분석)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 내면의 깊은 유대감 (속궁합)</span>
+(일지 및 지장간 합형충파해 기반의 성향적 조화를 품격 있게 기술)
+
+<div style='page-break-after: always;'></div>
 
 <h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
-(단순한 조언을 넘어, 부부/연인 관계에서 필연적으로 겪게 될 위기 상황을 짚어주고, 이를 극복하기 위한 마음가짐, 소통 방식, 행동 지침 등 실질적인 타개책을 3문단 이상의 깊이 있는 에세이로 작성)
+(두 사람이 필연적으로 마주할 갈등 상황과 명리적 타개책, 실질적 행동 지침을 최소 3~4문단 이상의 최고급 조언으로 완성)
 [GUNGHAP_END]
 """
                     res_text = call_gemini_api(essay_prompt, max_tokens=12000)
