@@ -1861,15 +1861,18 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-(※ 🚨AI 절대 준수 규칙: 일간('{ds}')을 우주적 중심으로 삼으십시오. 
+(※ 🚨AI 절대 준수 규칙: 일간('{ds}')을 우주적 중심으로 삼으십시오.
 1. [표면적 기질]: 일간과 원국에 드러난 '십성', '12운성', '신살'의 상호작용을 통해 겉으로 드러난 페르소나를 풀이하십시오.
-2. [일지 지장간 좌법(座法) 해부]: 일지 지장간 내부에 내장된 천간 성분들이 해당 왕궁(王宮) 내부에서 가지는 십이운성 리듬(좌법)을 기준으로, 내담자가 사회와 상호작용할 때 꺼내 쓰는 '현실적 행동 메커니즘'을 도출하십시오.
-3. [7궁위 입체 분석]: 나머지 궁위에 배치된 기운을 접목하여 외부와 상호작용하는 방식을 육친적, 심리적, 사회적 관점으로 분석하십시오.)
+2. [일지 지장간 좌법(座法) 해부]: 일지 지장간에 투출(암장)된 성분들이 일주 자체의 기운에서 어떤 '좌(座)'와 '궁(宮)'에 놓이는지 정확히 대입하십시오. 
+   - 형식: ▪ 십성(육친): [십이운성]좌 [십이운성]궁 — 내담자가 사회와 상호작용할 때 꺼내 쓰는 '현실적 행동 메커니즘'을 도출하십시오.
+3. [7궁위 입체 분석]: 7궁위(년/월/일/시의 천간/지지 및 지장간)에 배치된 기운을 융합하십시오. 특정 궁위가 가진 육친적 특징, 심리적 지향점, 사회적 역할이 일간과 어떻게 상호작용하며 페르소나를 형성하는지 7궁위의 관계를 입체적으로 서술하십시오.)
    
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
-(※ 🚨AI 절대 연산 규칙: 뜬구름 잡는 묘사를 금지하고 아래 2대 팩트로만 무의식을 타격하십시오.
-1. [인종법(引從法)의 무의식 타격]: 원국 천간에 드러나지 않은(결핍된) 오행이나 십성을 일지로 인종(끌어와서 대조)하여, 겉으로는 드러나지 않았으나 내담자조차 모르는 깊은 무의식적 갈망을 구어체로 짚어내십시오.
-2. [공망({gongmang_actual})의 현실 타격]: 공망이 걸린 오행/육친이 실제 생활에서 유발하는 심리적 공허함과 환경적 한계 조건을 날카로운 팩트로 기술하십시오.)
+(※ 🚨AI 절대 연산 규칙: 묘사나 비유를 금지하고 아래 2대 팩트 로직을 엄수하십시오.
+1. [인종법(引從法)의 무의식 타격]: 원국 천간에 드러나지 않은(결핍된) 십성들을 대상으로 하십시오.
+   - 반드시 일지를 근거(引)로 하여, 그 성분이 십이운성 상 어느 위치(포태법)에 '인종(從)'되어 나오는지를 역추적하십시오.
+   - 형식: ▪ 십성(육친): [십이운성]·[십이운성]종 [십이운성]궁 — 겉으로 드러나지 않았으나 내담자가 환경적 결핍을 채우기 위해 무의식적으로 갈망하는 근원적 에너지를 구어체로 기술하십시오.
+2. [공망({gongmang_actual})의 현실 타격]: 명시된 공망 궁위 팩트만 기술하십시오. 해당 오행/육친이 실제 생활에서 유발하는 심리적 공허함과 환경적 한계 조건을 팩트로만 기술하십시오.)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
@@ -2286,12 +2289,17 @@ if st.session_state.get('need_calc', False):
 * 공망: {f_gongmang_actual}
 ========================================================
 """
+                    # 🚨 [최종 수술] 궁합 모듈 내 '육친 규칙' 및 '상태별 호칭' 통합
+                    gender_rules = yukchin_rule if u_gender == '남성' else yukchin_rule # 이 로직을 프롬프트 안에 직접 삽입합니다.
                     
                     # 🚨 [궁합 분량 대확장] 총 8페이지 규격 (남명 2도, 여명 2도, 종합궁합 4도 강제 분할)
                     essay_prompt = f"""[SYSTEM ROLE: CHOYEON SIGONG MASTER]
 당신은 명리심리상담사 '초연 박사'입니다.
+남성 의뢰인({m_name}, {m_age}세)과 여성 의뢰인({f_name}, {f_age}세)의 궁합을 연령의 눈 높이에 마추어 현대적 구어체로 통변하십시오.
 
+{db_header}
 {ai_saju_mapping}
+{yukchin_rule}
 
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
 1. 남성 풀이([MALE_START]~[MALE_END])와 여성 풀이([FEMALE_START]~[FEMALE_END])는 인쇄 기준 각각 '정확히 2페이지' 분량이 나와야 합니다. 각 하위 항목마다 최소 4~5문단 이상의 방대한 에세이(항목당 800자 이상)를 작성하십시오.
@@ -2304,40 +2312,55 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {m_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 남성의 일간 '{m_ds}'와 월지 '{m_mb}'를 중심으로 명리적 성향을 분석한 매우 깊고 방대한 실제 에세이 작성)
+(남성 의뢰인의 사주 구조인 '격국({m_gyukgook_detail})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 남성의 오행 및 조후 에너지를 분석한 매우 깊고 방대한 실제 에세이 작성)
+(남성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
 
 <div style='page-break-after: always;'></div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(이곳에 남성의 사회적 표면 성격을 분석한 실제 에세이 작성)
+(※ 🚨AI 절대 준수: 남성 의뢰인의 일간 '{m_ds}'을 우주의 중심으로 삼으십시오.
+1. [표면적 기질]: 일간과 원국에 드러난 십성, 12운성, 신살의 상호작용으로 드러난 페르소나 풀이.
+2. [일지 지장간 좌법(座法) 해부]: 일지 '{m_db}' 지장간 투출(암장) 성분들이 일주 자체의 기운에서 가지는 좌법을 적용하십시오. ▪ 십성(육친): [십이운성]좌 [십이운성]궁 — 행동 메커니즘 도출.
+3. [7궁위 입체 분석]: 7궁위 배치 기운을 융합하여 육친적, 심리적, 사회적 관계를 입체적으로 분석하십시오.)
+
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 남성 공망 '{m_gongmang_actual}'과 지장간을 활용해 내면 및 무의식을 분석한 실제 에세이 작성)
+(※ 🚨AI 절대 연산 규칙: 아래 2대 팩트 로직을 엄수하십시오.
+1. [인종법(引從法)의 무의식 타격]: 원국 천간에 없는 결핍 십성을 일지로 인종하여 십이운성 포태법으로 분석하십시오. ▪ 십성(육친): [십이운성]·[십이운성]종 [십이운성]궁 — 무의식적 갈망 분석.
+2. [공망({m_gongmang_actual})의 현실 타격]: 명시된 공망 궁위 팩트만으로 심리적 공허함과 한계 조건을 기술하십시오.)
+
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
-(남성 일지 '{m_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관을 실제 에세이로 작성)
+(남성 일지 '{m_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관 기술)
 [MALE_END]
 
 [FEMALE_START]
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(이곳에 여성의 일간 '{f_ds}'와 월지 '{f_mb}'를 중심으로 명리적 성향을 분석한 매우 깊고 방대한 실제 에세이 작성)
+(여성 의뢰인의 사주 구조인 '격국({f_gyukgook_detail})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(이곳에 여성의 오행 및 조후 에너지를 분석한 매우 깊고 방대한 실제 에세이 작성)
+(여성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
 
 <div style='page-break-after: always;'></div>
 
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(이곳에 여성의 사회적 표면 성격을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(이곳에 여성 공망 '{f_gongmang_actual}'과 지장간을 활용해 내면 및 무의식을 분석한 실제 에세이 작성)
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
-(여성 일지 '{f_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관을 실제 에세이로 작성)
-[FEMALE_END]
+(※ 🚨AI 절대 준수: 여성 의뢰인의 일간 '{f_ds}'을 우주의 중심으로 삼으십시오.
+1. [표면적 기질]: 일간과 원국에 드러난 십성, 12운성, 신살의 상호작용으로 드러난 페르소나 풀이.
+2. [일지 지장간 좌법(座法) 해부]: 일지 '{f_db}' 지장간 투출(암장) 성분들이 일주 자체의 기운에서 가지는 좌법을 적용하십시오. ▪ 십성(육친): [십이운성]좌 [십이운성]궁 — 행동 메커니즘 도출.
+3. [7궁위 입체 분석]: 7궁위 배치 기운을 융합하여 육친적, 심리적, 사회적 관계를 입체적으로 분석하십시오.)
 
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
+(※ 🚨AI 절대 연산 규칙: 아래 2대 팩트 로직을 엄수하십시오.
+1. [인종법(引從法)의 무의식 타격]: 원국 천간에 없는 결핍 십성을 일지로 인종하여 십이운성 포태법으로 분석하십시오. ▪ 십성(육친): [십이운성]·[십이운성]종 [십이운성]궁 — 무의식적 갈망 분석.
+2. [공망({f_gongmang_actual})의 현실 타격]: 명시된 공망 궁위 팩트만으로 심리적 공허함과 한계 조건을 기술하십시오.)
+
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
+(여성 일지 '{f_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관 기술)
+[FEMALE_END]
 [GUNGHAP_START]
 <h3 style='color: #1B5E20; font-size: 24px; font-weight: 900; margin-top: 15px;'>🍀 두 사람의 운명적 만남 총평</h3>
 (남성 일주 '{m_ds}{m_db}'와 여성 일주 '{f_ds}{f_db}'의 기운적 융합과 만남의 우주적 의미를 대서사시 형태로 매우 길게 서술)
