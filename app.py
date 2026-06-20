@@ -2293,10 +2293,11 @@ if st.session_state.get('need_calc', False):
 
 {ai_saju_mapping}
 
-🚨 [중요: 분량 및 페이지 제한 규칙 - 위반 시 감명서 폐기]
-1. 남성 풀이([MALE_START]~[MALE_END])와 여성 풀이([FEMALE_START]~[FEMALE_END])는 인쇄 기준 각각 '정확히 2페이지' 분량이 나와야 합니다. 이를 위해 각 하위 항목(성향, 리듬, 성격, 속마음, 반려자상)마다 최소 4~5문단 이상의 매우 방대하고 깊이 있는 장문 에세이(항목당 800자 이상)를 작성하십시오.
-2. 종합 궁합 풀이([GUNGHAP_START]~[GUNGHAP_END])는 '정확히 4페이지' 분량으로 확장되어야 합니다. 지저분한 요약은 전면 금지하며, 명리학적 근거를 바탕으로 대필 작가가 쓰듯 최고급 대서사시 형태로 길게 서술하십시오.
-3. 모든 통변 문단은 반드시 HTML 태그 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.8;'>` 로 감싸십시오.
+🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
+1. 남성 풀이([MALE_START]~[MALE_END])와 여성 풀이([FEMALE_START]~[FEMALE_END])는 인쇄 기준 각각 '정확히 2페이지' 분량이 나와야 합니다. 이를 위해 각 하위 항목마다 최소 4~5문단 이상의 방대한 에세이(항목당 800자 이상)를 작성하십시오.
+2. 종합 궁합 풀이([GUNGHAP_START]~[GUNGHAP_END])는 '정확히 4페이지' 분량으로 확장되어야 합니다. 지저분한 요약은 전면 금지하며, 명리학적 근거를 바탕으로 대서사시 형태로 길게 서술하십시오.
+3. 🚨 [문단 간격 강제]: 모든 통변 문단은 반드시 HTML 태그 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.8;'>` 로 감싸십시오. 단순 `<br>`이나 탭(Tab) 사용을 금지합니다.
+4. 🚨 [시스템 마커 절대 보존]: `[MALE_START]`, `[MALE_END]`, `[FEMALE_START]`, `[FEMALE_END]`, `[GUNGHAP_START]`, `[GUNGHAP_END]`, 그리고 `[COUPLE_DAEWUN_TABLES_HERE]` 이 7개의 태그는 파이썬 시스템이 화면을 분할하고 대운표를 삽입하는 핵심 스위치입니다. 단 하나라도 생략하거나 내용을 임의로 채우지 말고, 영문 철자와 대괄호 기호 그대로 반드시 출력하십시오!
 
 [MALE_START]
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
