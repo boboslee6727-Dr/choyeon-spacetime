@@ -2312,7 +2312,7 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {m_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(남성 의뢰인의 사주 구조인 '격국({m_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+(남성 의뢰인의 사주 구조인 '격국({calc_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
 
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (남성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
@@ -2342,7 +2342,7 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(여성 의뢰인의 사주 구조인 '격국({f_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+(여성 의뢰인의 사주 구조인 '격국({calc_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
 
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (여성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
