@@ -2302,17 +2302,17 @@ if st.session_state.get('need_calc', False):
 {yukchin_rule}
 
 🚨 [출력 절대 형식 및 내용 생성 규칙 - 매우 중요!]
-1. 남성 풀이([MALE_START]~[MALE_END])와 여성 풀이([FEMALE_START]~[FEMALE_END])는 인쇄 기준 각각 '정확히 2페이지' 분량이 나와야 합니다. 각 하위 항목마다 최소 4~5문단 이상의 방대한 에세이(항목당 800자 이상)를 작성하십시오.
-2. 종합 궁합 풀이([GUNGHAP_START]~[GUNGHAP_END])는 '정확히 4페이지' 분량으로 확장되어야 합니다. 명리학적 근거를 바탕으로 대서사시 형태로 길게 서술하십시오.
-3. 🚨 [문단 간격 강제]: 모든 통변 문단은 반드시 HTML 태그 `<p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.8;'>` 로 감싸십시오. 단순 `<br>`이나 탭(Tab) 사용을 금지합니다.
-4. 🚨 [시스템 마커 절대 보존]: `[MALE_START]`, `[MALE_END]`, `[FEMALE_START]`, `[FEMALE_END]`, `[GUNGHAP_START]`, `[GUNGHAP_END]`, 그리고 `[COUPLE_DAEWUN_TABLES_HERE]` 이 7개의 태그는 파이썬 시스템의 핵심 스위치입니다. 단 하나라도 생략하거나 변형하지 말고 그대로 출력하십시오.
-5. 🚨 [연령 맞춤형 Tone & Manner 강제]: 의뢰인은 남성 {m_age}세, 여성 {f_age}세입니다. 2030 MZ세대가 완벽히 공감할 수 있도록, 고리타분한 한자어나 어려운 명리 전문 용어 사용을 지양하십시오. 대신 '현대 심리상담' 스타일의 트렌디하고 세련된 구어체로 부드럽게 풀어서 설명하고, 해당 연령대의 현실적 고민(직장, 커리어, 연애 등)에 맞춘 실용적인 조언을 에세이에 녹여내십시오.
+1. 남성 풀이([MALE_START]~[MALE_END])와 여성 풀이([FEMALE_START]~[FEMALE_END])는 인쇄 기준 각각 '정확히 2페이지' 분량이 나와야 합니다.
+2. 종합 궁합 풀이([GUNGHAP_START]~[GUNGHAP_END])는 '정확히 4페이지' 분량으로 확장되어야 합니다.
+3. 🚨 [문단 간격 강제]: 모든 통변 문단은 반드시 HTML 태그 <p style='text-indent: 15px; margin-top: 0px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.8;'> 로 감싸십시오.
+4. 🚨 [시스템 마커 절대 보존]: [MALE_START], [MALE_END], [FEMALE_START], [FEMALE_END], [GUNGHAP_START], [GUNGHAP_END], [COUPLE_DAEWUN_TABLES_HERE] 태그를 절대 변형하지 마십시오.
+5. 🚨 [연령 맞춤형 Tone & Manner]: 의뢰인의 나이와 상태에 맞춰 스스로 톤을 결정하십시오.
 
 [MALE_START]
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {m_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(남성 의뢰인의 사주 구조인 '격국({m_gyukgook_detail})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+(남성 의뢰인의 사주 구조인 '격국({m_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
 
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (남성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
@@ -2320,7 +2320,6 @@ if st.session_state.get('need_calc', False):
 <div style='page-break-after: always;'></div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
-
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (※ 🚨AI 절대 준수: 남성 의뢰인의 일간 '{m_ds}'을 우주의 중심으로 삼고, {m_age}세/{u_gender} 상태에 맞춘 톤으로 통변하십시오.
 1. [표면적 기질]: 일간과 원국에 드러난 십성, 12운성, 신살의 상호작용으로 드러난 페르소나 풀이.
@@ -2334,6 +2333,7 @@ if st.session_state.get('need_calc', False):
    - 형식: ▪ (구어체로 푼 무의식적 갈망) (십성명 + 십이운성 + '종' + 십이운성 + '궁')
 2. [공망({m_gongmang_actual})의 현실 타격]: 공망 궁위 팩트만으로 심리적 공허함을 기술하십시오.
    - 형식: ▪ (구어체로 푼 공망의 현실적 영향) (공망 십성명))
+
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
 (남성 일지 '{m_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관 기술)
 [MALE_END]
@@ -2342,15 +2342,14 @@ if st.session_state.get('need_calc', False):
 <h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(여성 의뢰인의 사주 구조인 '격국({f_gyukgook_detail})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+(여성 의뢰인의 사주 구조인 '격국({f_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
 
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
 (여성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
 
 <div style='page-break-after: always;'></div>
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
-
+<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
 (※ 🚨AI 절대 준수: 여성 의뢰인의 일간 '{f_ds}'을 우주의 중심으로 삼고, {f_age}세/{u_gender} 상태에 맞춘 톤으로 통변하십시오.
 1. [표면적 기질]: 일간과 원국에 드러난 십성, 12운성, 신살의 상호작용으로 드러난 페르소나 풀이.
@@ -2368,7 +2367,7 @@ if st.session_state.get('need_calc', False):
 
 [GUNGHAP_START]
 <h3 style='color: #1B5E20; font-size: 24px; font-weight: 900; margin-top: 15px;'>🍀 두 사람의 운명적 만남 총평</h3>
-(남성 일주 '{m_ds}{m_db}'와 여성 일주 '{f_ds}{f_db}'의 기운적 융합과 만남의 우주적 의미를 대서사시 형태로 매우 길게 서술)
+(남성 일주 '{m_ds}{m_db}'와 여성 일주 '{f_ds}{f_db}'의 기운적 융합과 만남의 우주적 의미를 대서사시 형태로 매우 상세히 서술하시오.)
 
 <div style='page-break-after: always;'></div>
 
@@ -2389,7 +2388,7 @@ if st.session_state.get('need_calc', False):
 <div style='page-break-after: always;'></div>
 
 <h3 style='color: #D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>⚓ 백년해로를 위한 조율의 지혜</h3>
-(두 사람이 필연적으로 마주할 갈등 상황과 명리적 타개책, 실질적 행동 지침을 최소 3~4문단 이상의 최고급 조언으로 완성)
+(두 사람이 필연적으로 마주할 갈등 상황과 명리적 타개책, 실질적 행동 지침을 최고급 조언으로 완성)
 [GUNGHAP_END]
 """
                     res_text = call_gemini_api(essay_prompt, max_tokens=12000)
