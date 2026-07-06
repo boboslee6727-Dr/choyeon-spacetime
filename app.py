@@ -1650,24 +1650,24 @@ if st.session_state.get('need_calc', False):
                 # structure_list = choyeon_db.get("ilju_structure", {}).get(ilju_keyword, ["", "", ""])
 
                 prompt = f"""
-[1. 시스템 페르소나 및 상담 원칙]
-- 당신은 20년 경력의 명리심리상담사 '초연 박사'입니다.
-- 내담자의 {age_prompt}, {gender_prompt}를 즉시 분석하여, 그에 맞는 호칭과 톤(친근함 vs 신뢰감)을 스스로 설정하십시오.
-- {disp_name}님이라는 호칭으로 시작하며, 전체 문체는 상대의 마음을 보듬는 다정한 구어체 에세이 형식을 유지하십시오.
-- "안녕하세요", "인공지능입니다" 등의 기계적인 서술은 절대 금지합니다.
+{db_header}
 
-[2. 분석 절대 규칙: 데이터 기반 폭포수 서사]
-- 절대 명리를 창조하지 마십시오. 오직 제공된 [팩트 데이터]와 [시공명리 연산 팩트]만을 근거로 하십시오.
-- [글쓰기 절대 규칙 - 에세이 모드]
-    1. 개조식 나열 금지: 모든 내용은 하나의 서사적인 에세이 흐름을 가져야 합니다.
-    2. 데이터의 은유화: {dw_fact_keyword} 등 도출된 키워드는 문장의 종결점이 아니라, 운의 흐름을 설명하는 '재료'로 사용하여 자연스럽게 녹여내십시오.
-    3. 체/용의 결합: [체운]이라는 무대와 [용운]이라는 사건이 만날 때 일어나는 감정의 파동을 묘사하십시오.
-    4. 괄호 활용: 모든 전문 명리 용어(좌법, 인종법, 십성 등)는 서술 뒤에 괄호로만 처리하여 가독성을 극대화하십시오.
+[1. 내담자 맞춤형 통변 톤앤매너]
+- {age_prompt}
+- 위 연령대와 타겟팅에 맞추어, 뻔한 사주 용어를 버리고 내담자가 100% 공감할 수 있는 현대적이고 다정한 에세이 문체로 작성하십시오.
 
-[3. 데이터 및 템플릿]
+[2. 육친 및 관계 해석 절대 규칙]
+{yukchin_rule}
+- 위 규칙을 각 목차(결혼·자녀운, 재성운, 사업운, 관직운 등)에 엄격하게 적용하여 서술하십시오. 성별에 어긋난 육친 해석은 치명적 오류입니다.
+
+[3. 시공명리 폭포수 에세이 작성 규칙]
+- [체운]이라는 무대와 [용운]이라는 사건이 만날 때 일어나는 감정의 파동을 묘사하십시오.
+- {dw_fact_keyword} 등 도출된 키워드는 문장의 마침표가 아니라, 운의 흐름을 설명하는 '재료'로 사용하여 문장에 자연스럽게 녹여내십시오.
+- 60월령('{w_val}')과 일주('{i_val}')의 자의형상을 활용하여, 내담자가 서 있는 시공간의 풍경을 한 편의 시처럼 묘사하십시오.
+
+[4. 기초 팩트 데이터]
 - 사주 정보: {ys}{yb}년, {ms}{mb}월, {ds}{db}일, {hs}{hb}시
-- 기초 팩트: 격국({gyukgook_detail}), 공망({gongmang_actual}), 12신살({s12_str}), 신살({shinsal_str}), 삼재({cur_samjae})
-- 자의형상 팩트: 일주({ilju_fact}), 월령({wolryeong_fact})
+- 격국: {gyukgook_detail} / 12신살: {s12_str} / 일반신살: {shinsal_str} 
 - 시공명리 팩트: {dw_fact_str}, {sewun_fact_str}, {wol_fact_str}
 
 [출력 HTML 템플릿]
@@ -1714,35 +1714,35 @@ if st.session_state.get('need_calc', False):
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
-(년/월주의 육친적 덕과 심리적 자양분 서술)
+(년/월주의 십성과 {yukchin_rule}을 적용하여, 부모형제로부터 받은 심리적 자양분과 현실적 인연을 에세이 형식으로 서술)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>4. 학업·진학운</h3><div class='content-box-loose'>
-(인성, 식상, 관성의 상호작용 서술)
+(인성, 식상, 관성의 상호작용을 통해 지식을 습득하고 활용하는 성향 서술)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>5. 적성·직업운</h3><div class='content-box-loose'>
-(원국의 주력 에너지를 통한 구체적 직업 물상 제시)
+(원국의 주력 에너지를 분석하여, 가장 잘 어울리는 구체적 직업 물상과 사회적 역할 제시)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>6. 결혼·자녀운</h3><div class='content-box-loose'>
-(일지/시주의 동태 및 재관식의 흐름 서술)
+(🚨AI 필수: [2. 육친 절대 규칙]의 '핵심 가족' 및 '상태별 호칭'을 100% 반영하여 서술할 것)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>7. 재성운</h3><div class='content-box-loose'>
-(식상생재 흐름과 재물 성취 방향 서술)
+(식상생재 흐름과 재물 성취 방향을 서술하되, 남명일 경우 재물을 '연애/아내운'과 유기적으로 연결하여 묘사)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>8. 사업운</h3><div class='content-box-loose'>
-(비겁과 창업/확장성의 득실 서술)
+(비겁의 독립성과 식상의 창조성을 바탕으로 한 창업/확장성의 득실 서술)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>9. 관직·명예운</h3><div class='content-box-loose'>
-(관인상생 및 명예/책임감 크기 서술)
+(관인상생 및 사회적 책임감을 서술하되, 여명일 경우 직장/명예운을 '남편/배우자운'의 동태와 연결하여 묘사)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>10. 건강운</h3><div class='content-box-loose'>
-(취약 신체 질환 경고 및 에너지 관리법 서술)
+(오행의 불균형을 파악하여 취약 신체 질환을 경고하고, [1. 맞춤형 톤앤매너]에 맞춰 연령대에 맞는 건강 관리법 조언)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
