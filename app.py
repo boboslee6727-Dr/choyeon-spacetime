@@ -1691,9 +1691,9 @@ if st.session_state.get('need_calc', False):
 
 [과거 분석 출력 템플릿]
 (※ 🚨AI 지시: 위 데이터들을 빠짐없이 각각 아래 HTML 구조로 요약 작성. 변명/생략 금지.)
-<div style='padding-left: 20px; margin-top: 10px;'>
-    <div style='margin-bottom: 8px;'><b>1) 전통 명리 풀이:</b> (전통 관점 1~2문장 핵심 요약)</div>
-    <div style='margin-bottom: 15px;'><b>2) 시공 명리 풀이:</b> (체용 매트릭스 관점 간략 요약)</div>
+<div style='padding-left: 20px; margin-top: 0px; margin-bottom: 0px;'>
+    <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (전통 관점 1~2문장 핵심 요약)</div>
+    <div style='margin-bottom: 5px;'><b>2) 시공 명리 풀이:</b> (체용 매트릭스 관점 간략 요약)</div>
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
