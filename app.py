@@ -1782,11 +1782,29 @@ if st.session_state.get('need_calc', False):
                 except Exception:
                     analysis_summary = "- 사주 원국 지장간 및 인종법 분석 팩트"
 
+                # -----------------------------------------------------------------------------
+                # [만세력 초연사주 팩트 주입 로직] AI가 변명하지 못하도록 텍스트에 '명찰'을 달아줍니다.
+                # -----------------------------------------------------------------------------
+                # 1. 대운/세운/월운 팩트 텍스트 강제 조립 
+                # (※ 주의: current_daewun_ganji 등의 변수는 앞단에서 파싱되어 있다고 가정합니다.)
+                dw_fact_str = f"[제공 팩트: 대운 간지 {current_daewun_ganji} / 십성: {get_ss(ds, current_daewun_ganji[0])},{get_ss(ds, current_daewun_ganji[1])} / 12운성: {get_unsung(ds, current_daewun_ganji[1])}]"
+                sewun_fact_str = f"[제공 팩트: 세운 간지 {current_sewun_ganji} / 십성: {get_ss(ds, current_sewun_ganji[0])},{get_ss(ds, current_sewun_ganji[1])} / 12운성: {get_unsung(ds, current_sewun_ganji[1])}]"
+                wolwun_fact_str = f"[제공 팩트: 월운 간지 {current_wolwun_ganji} / 십성: {get_ss(ds, current_wolwun_ganji[0])},{get_ss(ds, current_wolwun_ganji[1])} / 12운성: {get_unsung(ds, current_wolwun_ganji[1])}]"
+
+                # 2. 프롬프트에 들어갈 기존 변수들에 팩트 문자열을 결합하여 새로운 변수 생성
+                dw_start_age_str = f"{dw_start_age}세~{dw_mid_age}세 {dw_fact_str}"
+                dw_mid2_age_str = f"{dw_mid2_age}세~{dw_end_age}세 {dw_fact_str}"
+                sewun_first_half_date_str = f"{sewun_first_half_date} {sewun_fact_str}"
+                sewun_second_half_date_str = f"{sewun_second_half_date} {sewun_fact_str}"
+                prompt_first_half_str = f"{prompt_first_half} {wolwun_fact_str}"
+                prompt_second_half_str = f"{prompt_second_half} {wolwun_fact_str}"
+                # -----------------------------------------------------------------------------
+                
                 prompt = f"""
 [시스템 가이드: 만세력 초연사주 마스터 에디터]
 1. 본 분석은 '만세력 초연사주'의 정밀한 파이썬 로직으로 산출된 검증된 데이터를 바탕으로 합니다.
-2. AI는 사주 명리를 스스로 연산하거나 창조하지 마십시오. 아래 제공된 [사주 정보 팩트 (수정 불가)]를 '절대적 기준'으로 삼아 통변에만 집중하십시오.
-3. 2030 세대가 읽기 편안하도록 다정하고 전문적인 명리심리상담사 '초연 박사'의 구어체 어조로 작성하십시오.
+2. AI는 사주 명리를 스스로 연산하거나 창조하지 마십시오. 오직 각 목차 제목 옆에 명시된 '[제공 팩트: ...]' 데이터만을 절대적 기준으로 삼아 통변에만 집중하십시오.
+3. 2030 세대가 읽기 편안하도록 다정하고 전문적인 명리심리상담사의 구어체 어조로 작성하십시오. (※ 본인을 특정 이름이나 3인칭으로 지칭하지 말 것)
 
 [사주 정보 팩트 (수정 불가)]
 - 명조: {ys}{yb}년, {ms}{mb}월, {ds}{db}일, {hs}{hb}시 (일간: {ds})
@@ -1798,10 +1816,11 @@ if st.session_state.get('need_calc', False):
 - 내담자 정보: {age_prompt}, {gender_prompt}, {yukchin_rule}
 
 [글쓰기 절대 규칙 (HTML 및 용어)]
-1. 용어 통제: '임관' 절대 금지. 박사님의 표준 용어('건록', '생좌생궁' 등)만 사용하십시오.
+1. 용어 통제: '임관' 절대 금지. '건록', '생좌생궁' 등 시스템이 제공한 표준 용어만 사용하십시오.
 2. 괄호 표기법: 모든 명리 용어(십성, 12운성, 신살, 좌법 등)는 흐름을 끊지 않도록 "현대적 풀이 (명리 용어)" 형식으로 괄호 안에 표기하십시오.
 3. 마커 보존: [CHOYEON_GOLDEN_TEXT_HERE], [DAEWUN_TABLE_HERE], [SEWUN_TABLE_HERE], [WOLWUN_TABLE_HERE] 마커는 절대 지우지 말고 그대로 출력하십시오.
 4. 문단 포맷: 모든 본문 문단은 <p style='text-indent: 15px; margin-bottom: 8px;'> 태그로 감싸십시오. 빈 줄(엔터) 사용은 금지합니다.
+5. 🚨 변명 금지령: "정보가 제공되지 않았습니다" 같은 시스템 핑계는 일절 금지합니다. 제목 옆에 제공된 '[제공 팩트]'를 활용하여 전문가답게 막힘없이 카운슬링을 전개하십시오.
 
 [출력 HTML 템플릿]
 (※ 아래의 HTML 구조를 100% 그대로 유지하면서, 각 항목의 해설 부분만 지시에 맞춰 작성하십시오.)
@@ -1865,54 +1884,39 @@ if st.session_state.get('need_calc', False):
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
+(※ 🚨AI 지시: 위 각 과거 대운 목차 아래에, 제공된 간지를 바탕으로 1~2문장의 핵심 요약 통변만 당당하게 작성하십시오.)
 
-(※ 🚨AI 대운 상세 분석 지시: 아래 '현재 대운 전반기/후반기' 작성 시, 반드시 다음 4가지 관점을 융합하여 서술하십시오.
- 1. 운의 환경 변화: 대운의 간지와 십성을 바탕으로 사주 원국에 가져오는 전반적인 환경과 무대의 변화.
- 2. 성취와 심리: 12운성의 수치를 절대적 근거로 삼아, 이 시기의 사회적 성취 규모와 내면의 심리적 동요.
- 3. 현실적 삶의 영역: 직업, 재물운, 건강 및 대인관계에서 예상되는 구체적인 주요 변화.
- 4. 초연 박사의 조언: 반드시 잡아야 할 기회와 피해야 할 함정, 그리고 다음 시기를 준비하는 현실적인 행동 지침.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age_str})</span>
+(※ 🚨AI 대운 지시: 목차에 명시된 [제공 팩트]를 바탕으로 1. 운의 환경 변화, 2. 성취와 심리, 3. 현실적 삶의 영역, 4. 전문가의 조언을 상세히 통변하십시오.)
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age}세~{dw_mid_age}세)</span>
-(위 지시사항을 바탕으로 구어체 상세 통변)
-
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age}세~{dw_end_age}세)</span>
-(위 지시사항을 바탕으로 구어체 상세 통변)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age_str})</span>
+(위 대운 지시사항과 동일하게 후반기 관점에서 상세 통변)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
 [SEWUN_TABLE_HERE]
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
+(※ 🚨AI 지시: 위 각 과거 세운 목차 아래에, 제공된 간지를 바탕으로 1~2문장의 핵심 요약 통변만 당당하게 작성하십시오.)
 
-(※ 🚨AI 세운 상세 분석 지시: 아래 '올해 세운 전반기/후반기' 작성 시, 반드시 다음 4가지 관점을 융합하여 서술하십시오.
- 1. 핵심 운의 흐름: 올해의 세운이 사주 원국 및 현재 대운과 상호작용하여 만들어내는 전체적인 환경과 흐름.
- 2. 실생활 영역의 변화: 세운의 십성과 12운성을 절대적 근거로 삼아 직업, 재물, 대인관계, 건강의 구체적 변화 서술.
- 3. 기회와 리스크: 올해 반드시 잡아야 할 긍정적 기회와 전문가적 관점에서 주의가 필요한 리스크를 짚어주기.
- 4. 초연 박사의 행동 지침: 올해의 기운을 가장 현명하게 활용하기 위해 취해야 할 구체적인 태도와 행동 조언.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석 ({sewun_first_half_date_str})</span>
+(※ 🚨AI 세운 지시: 목차에 명시된 [제공 팩트]를 바탕으로 1. 핵심 운의 상호작용 흐름, 2. 실생활 4대 영역 변화, 3. 기회와 리스크, 4. 행동 지침을 상세히 통변하십시오.)
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석 ({sewun_first_half_date})</span>
-(위 지시사항을 바탕으로 구어체 상세 통변)
-
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석 ({sewun_second_half_date})</span>
-(위 지시사항을 바탕으로 구어체 상세 통변)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석 ({sewun_second_half_date_str})</span>
+(위 세운 지시사항과 동일하게 후반기 관점에서 상세 통변)
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
 [WOLWUN_TABLE_HERE]
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
+(※ 🚨AI 지시: 위 각 과거 월운 목차 아래에, 제공된 간지를 바탕으로 1~2문장의 핵심 요약 통변만 당당하게 작성하십시오.)
 
-(※ 🚨AI 월운 상세 분석 지시: 아래 '{prompt_first_half}' 및 '{prompt_second_half}' 작성 시, 반드시 다음 4가지 관점을 융합하여 서술하십시오.
- 1. 세운 속의 변곡점: 월운의 간지와 십성, 12운성 정보를 바탕으로, 이번 달이 전체적인 올해(세운) 흐름 속에서 어떤 구체적인 변곡점이 되는지 분석.
- 2. 실질적 삶의 변화: 제공된 월운의 십성 기운을 절대적 기준으로 삼아, 이번 달의 직업적 성과, 재물 흐름, 대인관계의 변화를 실질적 관점에서 서술.
- 3. 집중과 변수 관리 조언: 이번 달에 특히 집중해야 할 긍정적인 기회와, 예기치 않게 발생할 수 있는 부정적인 변수를 관리하기 위한 현실적인 조언 제시.
- 4. 심리적 상태와 행동 지침: 해당 월의 12운성 기운이 시사하는 심리적 상태를 고려하여, 이번 한 달을 가장 후회 없이 보낼 수 있는 핵심 행동 지침을 들려줄 것.)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_first_half_str}</span>
+(※ 🚨AI 월운 지시: 목차에 명시된 [제공 팩트]를 바탕으로 1. 세운 속의 변곡점, 2. 실질적 삶의 변화, 3. 집중과 변수 관리 조언, 4. 심리적 상태와 후회 없는 행동 지침을 상세히 통변하십시오.)
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_first_half}</span>
-(위 지시사항을 바탕으로 구어체 상세 통변)
-
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_second_half}</span>
-(위 지시사항을 바탕으로 구어체 상세 통변)
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_second_half_str}</span>
+(위 월운 지시사항과 동일하게 후반기 관점에서 상세 통변)
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>12. 삶을 바꾸는 지혜로운 조언</h3>
@@ -1929,7 +1933,7 @@ if st.session_state.get('need_calc', False):
 (작성)
 </div>
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'> 🎯 초연 시공명리 특별 개운 비법</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'> 🎯 특별 개운 비법</h3>
 <div class='content-box-loose'>
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>◈ 수호 천사의 기운 조언:</span>
 (천을귀인 등 길신 작용 서술)
