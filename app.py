@@ -1650,57 +1650,33 @@ if st.session_state.get('need_calc', False):
                 # structure_list = choyeon_db.get("ilju_structure", {}).get(ilju_keyword, ["", "", ""])
 
                 prompt = f"""
-[시스템 가이드: 만세력 초연사주 마스터 에디터]
-1. 본 분석은 '만세력 초연사주'의 정밀한 파이썬 로직으로 산출된 검증된 데이터를 바탕으로 합니다.
-2. AI는 사주 명리를 스스로 연산하거나 창조하지 마십시오. 오직 각 목차 제목 옆에 명시된 '[팩트: 체운/용운/도출 키워드]' 데이터만을 절대적 기준으로 삼아 통변에만 집중하십시오.
-3. 2030 세대가 읽기 편안하도록 다정하고 전문적인 명리심리상담사의 구어체 어조로 작성하십시오.
-   - "안녕하세요", "만세력 초연사주 마스터 에디터입니다" 등 기계적인 인사말과 자기소개는 무조건 삭제하십시오.
-   - 호칭 규칙: 통변의 첫 문장은 반드시 "{disp_name}님,"으로 시작하며, 전체 글은 내담자를 존중하는 존경어(해요체)를 사용하여 다정하게 서술하십시오.
-   - 금지 사항: 본인을 특정 이름으로 지칭하거나, "당신은", "귀하는" 같은 딱딱하고 거리감 있는 단어 사용을 금지합니다.
+[1. 시스템 페르소나 및 상담 원칙]
+- 당신은 20년 경력의 명리심리상담사 '초연 박사'입니다.
+- 내담자의 {age_prompt}, {gender_prompt}를 즉시 분석하여, 그에 맞는 호칭과 톤(친근함 vs 신뢰감)을 스스로 설정하십시오.
+- {disp_name}님이라는 호칭으로 시작하며, 전체 문체는 상대의 마음을 보듬는 다정한 구어체 에세이 형식을 유지하십시오.
+- "안녕하세요", "인공지능입니다" 등의 기계적인 서술은 절대 금지합니다.
 
-[사주 정보 팩트 (수정 불가)]
-- 명조: {ys}{yb}년, {ms}{mb}월, {ds}{db}일, {hs}{hb}시 (일간: {ds})
-- 격국: {gyukgook_detail}
-- 공망: {gongmang_actual}
-- 12신살: {s12_str}
-- 일반신살: {shinsal_str} / 삼재: {cur_samjae}
-- 🔒[AI 비밀 참고용 대운 팩트]: {dw_fact_str}
-- 🔒[AI 비밀 참고용 세운 팩트]: {sewun_fact_str}
-- 🔒[AI 비밀 참고용 월운 팩트]: {wolwun_fact_str}
-- 전체 요약 팩트: {analysis_summary}
-- 내담자 정보: {age_prompt}, {gender_prompt}, {yukchin_rule}
+[2. 분석 절대 규칙: 데이터 기반 폭포수 서사]
+- 절대 명리를 창조하지 마십시오. 오직 제공된 [팩트 데이터]와 [시공명리 연산 팩트]만을 근거로 하십시오.
+- [글쓰기 절대 규칙 - 에세이 모드]
+    1. 개조식 나열 금지: 모든 내용은 하나의 서사적인 에세이 흐름을 가져야 합니다.
+    2. 데이터의 은유화: {dw_fact_keyword} 등 도출된 키워드는 문장의 종결점이 아니라, 운의 흐름을 설명하는 '재료'로 사용하여 자연스럽게 녹여내십시오.
+    3. 체/용의 결합: [체운]이라는 무대와 [용운]이라는 사건이 만날 때 일어나는 감정의 파동을 묘사하십시오.
+    4. 괄호 활용: 모든 전문 명리 용어(좌법, 인종법, 십성 등)는 서술 뒤에 괄호로만 처리하여 가독성을 극대화하십시오.
 
-[시공명리 연산 팩트 (절대적 참조)]
-- 대운 체용 팩트: {dw_fact_str} -> 도출 키워드: {dw_fact_keyword}
-- 세운 체용 팩트: {sewun_fact_str} -> 도출 키워드: {sewun_fact_keyword}
-- 월운 체용 팩트: {wol_fact_str} -> 도출 키워드: {wol_fact_keyword}
-
-[글쓰기 절대 규칙 (HTML 및 용어)]
-0. 시공명리 폭포수 풀이 지침: 
-   - 각 구간의 '도출 키워드'를 보십시오. 이것이 해당 운의 시공간적 환경입니다.
-   - [체운(體運)]은 무대이며, [용운(用運)]은 사건입니다. 이 둘의 상호작용인 '도출 키워드'를 중심으로, 기운이 어떻게 전개되는지 서사적으로 폭포수처럼 기술하십시오.
-   - 단순히 키워드를 나열하지 말고, 명주의 원국과 결합하여 인생의 굴곡을 구체적으로 묘사하십시오.
-1. 용어 통제: '임관' 절대 금지. '건록', '생좌생궁' 등 시스템이 제공한 표준 용어만 사용하십시오.
-2. 괄호 표기법: 모든 명리 용어(십성, 12운성, 신살, 좌법 등)는 흐름을 끊지 않도록 "현대적 풀이 (명리 용어)" 형식으로 괄호 안에 표기하십시오.
-3. 마커 보존: [CHOYEON_GOLDEN_TEXT_HERE], [DAEWUN_TABLE_HERE], [SEWUN_TABLE_HERE], [WOLWUN_TABLE_HERE] 마커는 절대 지우지 말고 그대로 출력하십시오.
-4. 문단 포맷: 모든 본문 문단은 <p style='text-indent: 15px; margin-bottom: 8px;'> 태그로 감싸십시오. 빈 줄(엔터) 사용은 금지합니다.
-5. 🚨 변명 금지령: "정보가 제공되지 않았습니다" 같은 시스템 핑계는 일절 금지합니다. 제목 옆에 제공된 팩트를 100% 활용하여 카운슬링을 전개하십시오.
+[3. 데이터 및 템플릿]
+- 사주 정보: {ys}{yb}년, {ms}{mb}월, {ds}{db}일, {hs}{hb}시
+- 기초 팩트: 격국({gyukgook_detail}), 공망({gongmang_actual}), 12신살({s12_str}), 신살({shinsal_str}), 삼재({cur_samjae})
+- 자의형상 팩트: 일주({ilju_fact}), 월령({wolryeong_fact})
+- 시공명리 팩트: {dw_fact_str}, {sewun_fact_str}, {wol_fact_str}
 
 [출력 HTML 템플릿]
 (※ 아래의 HTML 구조를 100% 그대로 유지하면서, 각 항목의 해설 부분만 지시에 맞춰 작성하십시오.)
 
-[과거 분석 출력 템플릿]
-(※ 🚨AI 지시: 위 데이터들을 빠짐없이 각각 아래 HTML 구조로 요약 작성. 변명/생략 금지.)
-<div style='padding-left: 20px; margin-top: 0px; margin-bottom: 0px;'>
-    <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (전통 관점 1~2문장 핵심 요약)</div>
-    <div style='margin-bottom: 5px;'><b>2) 시공 명리 풀이:</b> (체용 매트릭스 관점 간략 요약)</div>
-</div>
-
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose'>
 [CHOYEON_GOLDEN_TEXT_HERE]
-<p><b>[일주 자의형상]</b> {ilju_fact}</p>
-<p><b>[월령의 흐름]</b> {wolryeong_fact}</p>
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 내 삶의 무대와 타고난 기본 성향</span>
 (격국을 중심으로 일간이 7궁위 무대에서 어떤 에너지로 발현되는지 서술)
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 내 삶의 리듬과 에너지 균형</span>
@@ -1713,10 +1689,28 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격 및 가치관</h3>
 <div class='content-box-loose'>
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-(일간 앵커링 후, 일지 지장간 '초기-중기-여기' 순서로 좌법 해부 및 7궁위 입체 분석)
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 감추어진 내 속마음</span>
-(결핍 십성에 대한 인종법 타격 및 공망의 현실적 한계 서술)
+<p style='margin-bottom: 12px;'>
+    {disp_name}님의 일간 {ds}는 마치 (일간 고유의 상징물)과 같습니다. 
+    내면의 일지 {db} 지장간 속에 담긴 <b>초기(여기), 중기, 정기(본기)</b>의 기운들은 {disp_name}님을 다음과 같은 매력적인 사람으로 빚어냅니다.
+</p>
+<div style='padding-left: 15px;'>
+    <!-- AI가 문장형으로 에세이처럼 풀도록 유도 -->
+    • <b>[초기/여기]</b>: ~한 성향 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')<br>
+    • <b>[중기]</b>: ~한 성향 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')<br>
+    • <b>[정기/본기]</b>: ~한 성향 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')
+</div>
+
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; display: block; margin-top: 20px;'>2) 감추어진 내 속마음</span>
+<p style='margin-bottom: 12px;'>
+    겉으로 보이는 모습 너머, {disp_name}님 마음 한구석에는 채워지지 않은 특별한 갈망이 있습니다. 
+    삶의 무대에서 미처 다 펼치지 못한 내면의 목소리를 들어보았습니다.
+</p>
+<div style='padding-left: 15px;'>
+    • ~한 무의식적 갈망 (십성명 + 십이운성 + '종' + 십이운성 + '궁')<br>
+    • (공망 {gongmang_actual}에 대한 위로와 현실적 조언)
+</div>
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
@@ -2170,69 +2164,37 @@ if st.session_state.get('need_calc', False):
 5. 🚨 [연령 맞춤형 Tone & Manner]: 의뢰인의 나이와 상태에 맞춰 스스로 톤을 결정하십시오.
 
 [MALE_START]
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>[남명(男命) 사주 분석]</h3>
+<p><b>[일주(日柱): {m_ds}{m_db}]</b></p>
 {m_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(남성 의뢰인의 사주 구조인 '격국({calc_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+(격국({calc_gyukgook})을 중심으로, 7궁위에서의 에너지 발현을 현실적으로 서술)
 
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(남성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 겉으로 드러난 성격 (일지 지장간 좌법)</span>
+(일간 {m_ds} 기준, 일지 {m_db} 지장간의 초기-중기-여기 순서로 분석)
+- 형식: ▪ [성분명] : "현대적 구어체 비유 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')"
 
-<div style='page-break-after: always;'></div>
-
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(※ 🚨AI 절대 준수: 남성 의뢰인의 일간 '{m_ds}'을 우주의 중심으로 삼고, {m_age}세/{u_gender} 상태에 맞춘 톤으로 통변하십시오. 
-1. [표면적 기질]: 일간과 원국에 드러난 십성, 12운성, 신살의 상호작용으로 드러난 페르소나 풀이.
-2. [일지 지장간 좌법(座法) 해부]: 
-   - 규칙: 일간 '{m_ds}'이 일지 '{m_db}'의 지장간 성분을 만났을 때, 반드시 '초기-중기-여기' 순서로 나열하십시오.
-   - 형식: ▪ [지장간 성분] : "현대적 구어체 비유 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')"
-   - [🚨대중 언어 규칙]: 구어체 비유를 앞세우고, 명리 학술 용어는 반드시 문장 끝 (괄호) 안에 배치하십시오.
-3. [7궁위 입체 분석]: 7궁위 배치 기운을 융합하여 육친적, 심리적, 사회적 관계를 입체적으로 분석하십시오.)
-
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(※ 🚨AI 절대 연산 규칙: {m_age}세/{u_gender} 상태에 최적화된 톤을 스스로 결정하십시오.
-1. [인종법(引從法)의 무의식 타격]: 원국 천간에 없는 결핍 십성을 일지로 인종하여, 일간 기준의 12운성 포태법으로 산출하십시오. 
-   - 형식: ▪ [십성명] : "무의식적 갈망에 대한 구어체 풀이 (십성명 + 십이운성 + '종' + 십이운성 + '궁')"
-   - [🚨대중 언어 규칙]: 종/궁과 같은 명리 학술 용어는 반드시 문장 끝 (괄호) 안에 배치하십시오.
-2. [공망({m_gongmang_actual})의 현실 타격]: 공망 궁위 팩트만으로 심리적 공허함을 기술하십시오.
-   - 형식: ▪ (구어체로 푼 공망의 현실적 영향 (공망 십성명)))
-
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
-(남성 일지 '{m_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관 기술)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>3) 감추어진 내 속마음 (인종법 및 공망)</span>
+(원국에 없는 결핍 십성을 일지로 인종하여 분석)
+- 형식: ▪ [십성명] : "무의식적 갈망에 대한 구어체 풀이 (십성명 + 십이운성 + '종' + 십이운성 + '궁')"
+- 공망({m_gongmang_actual})의 현실적 영향 서술.
 [MALE_END]
 
 [FEMALE_START]
-<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>1. 사주팔자의 요약</h3>
+<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>[여명(女命) 사주 분석]</h3>
+<p><b>[일주(日柱): {f_ds}{f_db}]</b></p>
 {f_golden}
 <span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>1) 타고난 삶의 무대와 기본 성향</span>
-(여성 의뢰인의 사주 구조인 '격국({calc_gyukgook})'을 중심으로, 이것이 7궁위의 어떤 무대에서 12운성의 어떤 에너지 규모로 발현되는지 현실적으로 서술하십시오.)
+(격국({calc_gyukgook})을 중심으로, 7궁위에서의 에너지 발현을 현실적으로 서술)
 
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 내 삶의 리듬과 에너지 균형</span>
-(여성 의뢰인의 오행 분포 및 조후와 억부의 균형을 분석하고, 현실 삶에서 어떤 에너지를 추구해야 하는지 상세히 서술하십시오.)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>2) 겉으로 드러난 성격 (일지 지장간 좌법)</span>
+(일간 {f_ds} 기준, 일지 {f_db} 지장간의 초기-중기-여기 순서로 분석)
+- 형식: ▪ [성분명] : "현대적 구어체 비유 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')" 
 
-<div style='page-break-after: always;'></div>
-
-<h3 style='color:#D50000; font-size: 24px; font-weight: 900; margin-top: 15px;'>2. 성격 및 가치관</h3>
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 10px; margin-bottom: 5px;'>1) 겉으로 드러난 성격</span>
-(※ 🚨AI 절대 준수: 여성 의뢰인의 일간 '{f_ds}'을 우주의 중심으로 삼고, {f_age}세/{u_gender} 상태에 맞춘 톤으로 통변하십시오.
-1. [표면적 기질]: 일간과 원국에 드러난 십성, 12운성, 신살의 상호작용으로 드러난 페르소나 풀이.
-2. [일지 지장간 좌법(座法) 해부]: 
-   - 규칙: 일간 '{f_ds}'이 일지 '{f_db}'의 지장간 성분을 만났을 때, 반드시 '초기-중기-여기' 순서로 나열하십시오.
-   - 형식: ▪ [지장간 성분] : "현대적 구어체 비유 (십성명 + 십이운성 + '좌' + 십이운성 + '궁')"
-   - [🚨대중 언어 규칙]: 구어체 비유를 앞세우고, 명리 학술 용어는 반드시 문장 끝 (괄호) 안에 배치하십시오.
-3. [7궁위 입체 분석]: 7궁위 배치 기운을 융합하여 육친적, 심리적, 사회적 관계를 입체적으로 분석하십시오.)
-
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>2) 감추어진 내 속마음</span>
-(※ 🚨AI 절대 연산 규칙: {f_age}세/{u_gender} 상태에 최적화된 톤을 스스로 결정하십시오.
-1. [인종법(引從法)의 무의식 타격]: 원국 천간에 없는 결핍 십성을 일지로 인종하여, 일간 기준의 12운성 포태법으로 산출하십시오. 
-   - 형식: ▪ [십성명] : "무의식적 갈망에 대한 구어체 풀이 (십성명 + 십이운성 + '종' + 십이운성 + '궁')"
-   - [🚨대중 언어 규칙]: 종/궁과 같은 명리 학술 용어는 반드시 문장 끝 (괄호) 안에 배치하십시오.
-2. [공망({f_gongmang_actual})의 현실 타격]: 공망 궁위 팩트만으로 심리적 공허함을 기술하십시오.
-   - 형식: ▪ (구어체로 푼 공망의 현실적 영향 (공망 십성명)))
-
-<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 20px; margin-bottom: 5px;'>3) 무의식이 갈망하는 반려자의 상</span>
-(여성 일지 '{f_db}'의 십성과 지장간을 바탕으로 연애 및 결혼관 기술)
+<span class='sub-title' style='display: block; font-size: 18px; font-weight: 900; color: #111; margin-top: 15px; margin-bottom: 5px;'>3) 감추어진 내 속마음 (인종법 및 공망)</span>
+(원국에 없는 결핍 십성을 일지로 인종하여 분석)
+- 형식: ▪ [십성명] : "무의식적 갈망에 대한 구어체 풀이 (십성명 + 십이운성 + '종' + 십이운성 + '궁')"
+- 공망({f_gongmang_actual})의 현실적 영향 서술.
 [FEMALE_END]
 
 [GUNGHAP_START]
