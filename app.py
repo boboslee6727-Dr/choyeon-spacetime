@@ -1744,29 +1744,37 @@ if st.session_state.get('need_calc', False):
 (취약 신체 질환 경고 및 에너지 관리법 서술)
 </div>
 
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3><div class='content-box-loose'>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>11. 운의 흐름</h3>
+<div class='content-box-loose'>
+
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 대운의 흐름</span>
 [DAEWUN_TABLE_HERE]
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 대운 분석</span>
 {past_daewun_html}
 [과거 대운 출력 템플릿]
-(※ 🚨AI 지시: 아래 HTML 구조를 100% 유지하며 요약 작성. 변명 금지.)
+(※ 🚨AI 지시: 위 데이터들을 빠짐없이 각각 아래 HTML 구조로 요약 작성. 변명/생략 금지.)
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (전통 관점 1~2문장 핵심 요약)</div>
-    <div><b>2) 시공 명리 풀이: </b> (체용 매트릭스 관점 간략 요약)</div>
+    <div><b>2) 시공 명리 풀이:</b> (체용 매트릭스 관점 간략 요약)</div>
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 {current_daewun_ganji}대운 전반기 상세 분석 ({dw_start_age_str})</span>({dw_start_age_str})</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 {current_daewun_ganji}대운 전반기 상세 분석 ({dw_start_age_str})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (운의 환경 변화, 성취와 심리, 현실적 삶의 영역, 조언을 상세히 서술)</div>
-    <div><b>2) 시공 명리 풀이: </b> (목차의 [팩트: 체운/용운/도출 키워드]를 바탕으로 시공명리 관점에서 상세 서술)</div>
+    <div><b>2) 시공 명리 풀이:</b> (🚨지침: {dw_fact_str} 팩트 데이터를 체/용으로 엄격히 분리하여 폭포수처럼 기술)
+        <p><b>[체운(體運): 환경의 본질]</b> {current_daewun_ganji}가 사주 원국에서 시공간을 어떻게 점유하는지 본질적 에너지 상태 서술.</p>
+        <p><b>[용운(用運): 현상의 작용]</b> 본질적 체운이 현실의 삶에서 어떤 십성적/신살적 작용으로 표출되는지 구체적 발현 방식 서술.</p>
+    </div>
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 후반기 상세 분석 ({dw_mid2_age_str})</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 {current_daewun_ganji}대운 후반기 상세 분석 ({dw_mid2_age_str})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 서술)</div>
-    <div><b>2) 시공 명리 풀이: </b> (상세 서술)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (운의 환경 변화, 성취와 심리, 현실적 삶의 영역, 조언을 상세히 서술)</div>
+    <div><b>2) 시공 명리 풀이:</b> (🚨지침: {dw_fact_str} 팩트 데이터를 체/용으로 엄격히 분리하여 폭포수처럼 기술)
+        <p><b>[체운(體運): 환경의 본질]</b> {current_daewun_ganji}가 사주 원국에서 시공간을 어떻게 점유하는지 본질적 에너지 상태 서술.</p>
+        <p><b>[용운(用運): 현상의 작용]</b> 본질적 체운이 현실의 삶에서 어떤 십성적/신살적 작용으로 표출되는지 구체적 발현 방식 서술.</p>
+    </div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>2) 세운의 흐름</span>
@@ -1775,22 +1783,28 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 세운 분석</span>
 {past_sewun_html}
 [과거 세운 출력 템플릿]
-(※ 🚨AI 지시: 아래 HTML 구조를 100% 유지하며 요약 작성. 변명 금지.)
+(※ 🚨AI 지시: 위 데이터들을 빠짐없이 각각 아래 HTML 구조로 요약 작성. 변명/생략 금지.)
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (전통 관점 1~2문장 핵심 요약)</div>
-    <div><b>2) 시공 명리 풀이: </b> (체용 매트릭스 관점 간략 요약)</div>
+    <div><b>2) 시공 명리 풀이:</b> (체용 매트릭스 관점 간략 요약)</div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 전반기 상세 분석 ({sewun_first_half_date_str})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (핵심 운의 상호작용 흐름, 실생활 4대 영역 변화, 기회와 리스크, 행동 지침을 상세히 서술)</div>
-    <div><b>2) 시공 명리 풀이: </b> (목차의 [팩트: 체운/용운/도출 키워드]를 바탕으로 시공명리 관점에서 상세 서술)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> 올해 상반기 운의 흐름, 기회와 리스크, 행동 지침 서술.</div>
+    <div><b>2) 시공 명리 풀이:</b> (🚨지침: {sewun_fact_str} 팩트 데이터 기반 상세 서술)
+        <p><b>[체운(體運): 환경의 본질]</b> {current_sewun_ganji}년 상반기 천간 에너지가 주는 본질적 흐름 서술.</p>
+        <p><b>[용운(用運): 현상의 작용]</b> 상반기에 발생하는 구체적 현실 변화와 대처 방안 서술.</p>
+    </div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 올해 세운 후반기 상세 분석 ({sewun_second_half_date_str})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 서술)</div>
-    <div><b>2) 시공 명리 풀이: </b> (상세 서술)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> 하반기 운의 결실과 주의사항, 마무리를 위한 전략 서술.</div>
+    <div><b>2) 시공 명리 풀이:</b> (🚨지침: {sewun_fact_str} 팩트 데이터 기반 상세 서술)
+        <p><b>[체운(體運): 환경의 본질]</b> {current_sewun_ganji}년 하반기 지지 에너지가 주는 환경적 특성 서술.</p>
+        <p><b>[용운(用運): 현상의 작용]</b> 하반기에 나타나는 실질적 성과와 구체적 대응 서술.</p>
+    </div>
 </div>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>3) 월운의 흐름</span>
@@ -1799,22 +1813,28 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▷ 지나온 과거 각 월운 분석</span>
 {past_months_html}
 [과거 월운 출력 템플릿]
-(※ 🚨AI 지시: 아래 HTML 구조를 100% 유지하며 요약 작성. 변명 금지.)
+(※ 🚨AI 지시: 위 데이터들을 빠짐없이 각각 아래 HTML 구조로 요약 작성. 변명/생략 금지.)
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 0px;'><b>1) 전통 명리 풀이:</b> (전통 관점 1~2문장 핵심 요약)</div>
-    <div><b>2) 시공 명리 풀이: </b> (체용 매트릭스 관점 간략 요약)</div>
+    <div><b>2) 시공 명리 풀이:</b> (목차의 [팩트: 체운/용운/도출 키워드]를 바탕으로 시공명리 관점에서 상세 서술)</div>
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_first_half_str}</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ {prompt_first_half_str}</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (세운 속의 변곡점, 실질적 삶의 변화, 집중과 변수 관리 조언, 후회 없는 행동 지침을 상세히 서술)</div>
-    <div><b>2) 시공 명리 풀이: </b> (목차의 [팩트: 체운/용운/도출 키워드]를 바탕으로 시공명리 관점에서 상세 서술)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> 이번 달 상반기 변곡점, 집중해야 할 이슈와 행동 지침 서술.</div>
+    <div><b>2) 시공 명리 풀이:</b> (🚨지침: {wolwun_fact_str} 팩트 데이터 기반 상세 서술)
+        <p><b>[체운(體運): 환경의 본질]</b> 금월 상반기 에너지가 갖는 본질적 성격과 흐름 서술.</p>
+        <p><b>[용운(用運): 현상의 작용]</b> 상반기에 발생할 구체적 사건과 실천적 지침 서술.</p>
+    </div>
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{prompt_second_half_str}</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ {prompt_second_half_str}</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
-    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (상세 서술)</div>
-    <div><b>2) 시공 명리 풀이: </b> (상세 서술)</div>
+    <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> 이번 달 하반기 마무리, 성과 관리 및 다음 달 대비 조언 서술.</div>
+    <div><b>2) 시공 명리 풀이:</b> (🚨지침: {wolwun_fact_str} 팩트 데이터 기반 상세 서술)
+        <p><b>[체운(體運): 환경의 본질]</b> 금월 하반기 에너지가 갖는 본질적 의미 서술.</p>
+        <p><b>[용운(用運): 현상의 작용]</b> 하반기에 취해야 할 실질적 행동과 결과물 관리 서술.</p>
+    </div>
 </div>
 </div>
 
