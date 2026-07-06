@@ -1670,6 +1670,11 @@ if st.session_state.get('need_calc', False):
 - 격국: {gyukgook_detail} / 12신살: {s12_str} / 일반신살: {shinsal_str} 
 - 시공명리 팩트: {dw_fact_str}, {sewun_fact_str}, {wol_fact_str}
 
+[분석 지시 사항]
+- 너는 내담자의 일주를 바탕으로 일지의 지장간(여기, 중기, 정기)을 스스로 도출하라.
+- 도출한 각 지장간의 십성과 12운성 좌법을 바탕으로 에세이를 작성하라.
+- 괄호 안의 데이터는 반드시 AI가 스스로 계산한 결과값을 텍스트로 기입하라.
+
 [초연명리 상담가 시스템 지침: 범용 버전]
 
 1. [데이터 호출 및 연산]:
@@ -1706,19 +1711,17 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>2. 성격 및 가치관</h3>
 <div class='content-box-loose'>
+    <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
+    <p style='margin-bottom: 12px; text-indent: 15px;'>
+        {disp_name}님은 일간 {ds}의 물상을 바탕으로, 타고난 기질과 사회적 환경이 어우러져 {disp_name}님만의 고유한 페르소나를 형성합니다. 
+        일지 지장간에 숨겨진 세 기운을 스스로 도출하여 각 기운의 좌법을 분석하고, 그 결과를 괄호 속에 데이터로 기입하라.
+    </p>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>1) 겉으로 드러난 성격</span>
-<p style='margin-bottom: 12px; text-indent: 15px;'>
-    {disp_name}님은 일간 {ds}의 물상을 바탕으로, 타고난 기질과 사회적 환경인 {s12_str}, {shinsal_str}이 어우러져 {disp_name}님만의 고유한 페르소나를 형성합니다. 
-    일지 지장간에 숨겨진 초기, 중기, 정기의 기운은 {disp_name}님을 더욱 입체적인 인물로 빚어내며, 
-    각 기운이 작용하는 방식은 다음과 같습니다. <b>({{지장간_일지_좌법_팩트}})</b>
-</p>
-
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; display: block; margin-top: 20px;'>2) 감추어진 내 속마음</span>
-<p style='margin-bottom: 12px; text-indent: 15px;'>
+    <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; display: block; margin-top: 20px;'>2) 감추어진 내 속마음</span>
+    <p style='margin-bottom: 12px; text-indent: 15px;'>
     겉으로 드러난 활기찬 모습 이면에 {disp_name}님은 스스로도 잘 인지하지 못하는 내면의 갈망을 품고 계십니다. 
-    원국에서 인종한 오행의 에너지와 비어있는 공망의 영역은 삶의 무대 위에서 미처 다 펼치지 못한 {disp_name}님의 깊은 속마음을 대변합니다. <b>({{지장간_일지_인종법_및_공망_팩트}})</b>
-</p>
+    원국에서 인종한 오행의 에너지와 비어있는 공망의 영역은 삶의 무대 위에서 미처 다 펼치지 못한 {disp_name}님의 깊은 속마음을 대변합니다. <b>(AI가 스스로 인종법 및 공망 분석 결과를 이곳에 서술하고 팩트를 괄호로 병기하시오)</b>
+    </p>
 </div>
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 부모·형제운</h3><div class='content-box-loose'>
