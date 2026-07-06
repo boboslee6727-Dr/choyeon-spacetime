@@ -1713,7 +1713,7 @@ if st.session_state.get('need_calc', False):
 <p style='margin-bottom: 12px; text-indent: 15px;'>
     {disp_name}님은 일간 {ds}의 물상을 바탕으로, 타고난 기질과 사회적 환경인 {s12_str}, {shinsal_str}이 어우러져 {disp_name}님만의 고유한 페르소나를 형성합니다. 
     일지 지장간에 숨겨진 초기, 중기, 정기의 기운은 {disp_name}님을 더욱 입체적인 인물로 빚어내며, 
-    각 기운이 작용하는 방식은 다음과 같습니다. <b>({지장간_전체_좌법_팩트})</b>
+    각 기운이 작용하는 방식은 다음과 같습니다. <b>({{지장간_전체_좌법_팩트}})</b>
 </p>
 
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; display: block; margin-top: 20px;'>2) 감추어진 내 속마음</span>
