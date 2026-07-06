@@ -36,7 +36,7 @@ def load_choyeon_db():
         
     # 2. 한글 깨짐 방지 및 JSON 로드
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
             return json.load(f)
     except json.JSONDecodeError:
         st.error("🚨 JSON 파일 내부의 괄호나 쉼표 형식이 깨져 있습니다. 문법을 확인해 주세요.")
@@ -1641,6 +1641,11 @@ if st.session_state.get('need_calc', False):
                
                 # (만약 일주 구조 리스트가 필요하시다면 아래처럼 빼옵니다)
                 # structure_list = choyeon_db.get("ilju_structure", {}).get(ilju_keyword, ["", "", ""])
+
+                # [김 집사 긴급 패치: AI 팩트 주입용 현재 운세 변수 매핑]
+                current_daewun_ganji = f"{dw_g_cur}{dw_j_cur}"
+                current_sewun_ganji = f"{GAN[(curr_y - 1984) % 10]}{JI[(curr_y - 1984) % 12]}"
+                current_wolwun_ganji = curr_wol_pillar
 
                 prompt = f"""
 [시스템 가이드: 만세력 초연사주 마스터 에디터]
