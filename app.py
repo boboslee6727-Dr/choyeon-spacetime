@@ -1614,10 +1614,17 @@ if st.session_state.get('need_calc', False):
                     analysis_summary = "- 사주 원국 지장간 및 인종법 분석 팩트"
 
                 # -----------------------------------------------------------------------------
+                # [김 집사 긴급 패치: AI 팩트 주입용 현재 운세 변수 매핑]
+                # (※ 반드시 팩트 문자열 조립 '이전'에 변수가 정의되어야 에러가 안 납니다.)
+                # -----------------------------------------------------------------------------
+                current_daewun_ganji = f"{dw_g_cur}{dw_j_cur}"
+                current_sewun_ganji = f"{GAN[(curr_y - 1984) % 10]}{JI[(curr_y - 1984) % 12]}"
+                current_wolwun_ganji = curr_wol_pillar
+                
+                # -----------------------------------------------------------------------------
                 # [만세력 초연사주 팩트 주입 로직] AI가 변명하지 못하도록 텍스트에 '명찰'을 달아줍니다.
                 # -----------------------------------------------------------------------------
                 # 1. 대운/세운/월운 팩트 텍스트 강제 조립 
-                # (※ 주의: current_daewun_ganji 등의 변수는 앞단에서 파싱되어 있다고 가정합니다.)
                 dw_fact_str = f"[제공 팩트: 대운 간지 {current_daewun_ganji} / 십성: {get_ss(ds, current_daewun_ganji[0])},{get_ss(ds, current_daewun_ganji[1])} / 12운성: {get_unsung(ds, current_daewun_ganji[1])}]"
                 sewun_fact_str = f"[제공 팩트: 세운 간지 {current_sewun_ganji} / 십성: {get_ss(ds, current_sewun_ganji[0])},{get_ss(ds, current_sewun_ganji[1])} / 12운성: {get_unsung(ds, current_sewun_ganji[1])}]"
                 wolwun_fact_str = f"[제공 팩트: 월운 간지 {current_wolwun_ganji} / 십성: {get_ss(ds, current_wolwun_ganji[0])},{get_ss(ds, current_wolwun_ganji[1])} / 12운성: {get_unsung(ds, current_wolwun_ganji[1])}]"
@@ -1638,14 +1645,9 @@ if st.session_state.get('need_calc', False):
                 # 2. JSON DB에서 깔끔하게 데이터 빼오기
                 wolryeong_fact = choyeon_db.get("wolryeong", {}).get(wol_keyword, "월령 정보가 없습니다.")
                 ilju_fact = choyeon_db.get("ilju", {}).get(ilju_keyword, "일주 자의형상 정보가 없습니다.")
-               
+                
                 # (만약 일주 구조 리스트가 필요하시다면 아래처럼 빼옵니다)
                 # structure_list = choyeon_db.get("ilju_structure", {}).get(ilju_keyword, ["", "", ""])
-
-                # [김 집사 긴급 패치: AI 팩트 주입용 현재 운세 변수 매핑]
-                current_daewun_ganji = f"{dw_g_cur}{dw_j_cur}"
-                current_sewun_ganji = f"{GAN[(curr_y - 1984) % 10]}{JI[(curr_y - 1984) % 12]}"
-                current_wolwun_ganji = curr_wol_pillar
 
                 prompt = f"""
 [시스템 가이드: 만세력 초연사주 마스터 에디터]
