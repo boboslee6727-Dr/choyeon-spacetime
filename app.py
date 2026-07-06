@@ -1719,7 +1719,7 @@ if st.session_state.get('need_calc', False):
 <span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111; display: block; margin-top: 20px;'>2) 감추어진 내 속마음</span>
 <p style='margin-bottom: 12px; text-indent: 15px;'>
     겉으로 드러난 활기찬 모습 이면에 {disp_name}님은 스스로도 잘 인지하지 못하는 내면의 갈망을 품고 계십니다. 
-    원국에서 인종한 오행의 에너지와 비어있는 공망의 영역은 삶의 무대 위에서 미처 다 펼치지 못한 {disp_name}님의 깊은 속마음을 대변합니다. <b>({인종법_및_공망_팩트})</b>
+    원국에서 인종한 오행의 에너지와 비어있는 공망의 영역은 삶의 무대 위에서 미처 다 펼치지 못한 {disp_name}님의 깊은 속마음을 대변합니다. <b>({{인종법_및_공망_팩트}})</b>
 </p>
 </div>
 
