@@ -1629,13 +1629,13 @@ if st.session_state.get('need_calc', False):
                 sewun_fact_str = f"[제공 팩트: 세운 간지 {current_sewun_ganji} / 십성: {get_ss(ds, current_sewun_ganji[0])},{get_ss(ds, current_sewun_ganji[1])} / 12운성: {get_unsung(ds, current_sewun_ganji[1])}]"
                 wolwun_fact_str = f"[제공 팩트: 월운 간지 {current_wolwun_ganji} / 십성: {get_ss(ds, current_wolwun_ganji[0])},{get_ss(ds, current_wolwun_ganji[1])} / 12운성: {get_unsung(ds, current_wolwun_ganji[1])}]"
 
-                # 2. 프롬프트에 들어갈 기존 변수들에 팩트 문자열을 결합하여 새로운 변수 생성
-                dw_start_age_str = f"{dw_start_age}세~{dw_mid_age}세 {dw_fact_str}"
-                dw_mid2_age_str = f"{dw_mid2_age}세~{dw_end_age}세 {dw_fact_str}"
-                sewun_first_half_date_str = f"{sewun_first_half_date} {sewun_fact_str}"
-                sewun_second_half_date_str = f"{sewun_second_half_date} {sewun_fact_str}"
-                prompt_first_half_str = f"{prompt_first_half} {wolwun_fact_str}"
-                prompt_second_half_str = f"{prompt_second_half} {wolwun_fact_str}"
+                # 2. 프롬프트에 들어갈 변수들은 화면 출력용이므로 깔끔하게 나이/날짜만 남깁니다.
+                dw_start_age_str = f"{dw_start_age}세~{dw_mid_age}세"
+                dw_mid2_age_str = f"{dw_mid2_age}세~{dw_end_age}세"
+                sewun_first_half_date_str = f"{sewun_first_half_date}"
+                sewun_second_half_date_str = f"{sewun_second_half_date}"
+                prompt_first_half_str = f"{prompt_first_half}"
+                prompt_second_half_str = f"{prompt_second_half}"
                 # -----------------------------------------------------------------------------
                 
                 # 1. 내담자의 월주/일주 키워드 조립
@@ -1653,7 +1653,10 @@ if st.session_state.get('need_calc', False):
 [시스템 가이드: 만세력 초연사주 마스터 에디터]
 1. 본 분석은 '만세력 초연사주'의 정밀한 파이썬 로직으로 산출된 검증된 데이터를 바탕으로 합니다.
 2. AI는 사주 명리를 스스로 연산하거나 창조하지 마십시오. 오직 각 목차 제목 옆에 명시된 '[팩트: 체운/용운/도출 키워드]' 데이터만을 절대적 기준으로 삼아 통변에만 집중하십시오.
-3. 2030 세대가 읽기 편안하도록 다정하고 전문적인 명리심리상담사의 구어체 어조로 작성하십시오. (※ 본인을 특정 이름이나 3인칭으로 지칭하지 말 것)
+3. 2030 세대가 읽기 편안하도록 다정하고 전문적인 명리심리상담사의 구어체 어조로 작성하십시오.
+   - 호칭 규칙: 통변의 첫 문장은 반드시 "{client_name}님,"으로 시작하며, 전체 글은 내담자를 존중하는 존경어(해요체/하십시오체)를 사용하여 다정하게 서술하십시오.
+   - 금지 사항: 본인을 특정 이름으로 지칭하거나, "당신은", "귀하는" 같은 딱딱하고 거리감 있는 단어 사용을 금지합니다.
+   - 지향 어조: 친근한 상담가로서 내담자의 고민을 깊이 공감하고, 시공명리의 깊이를 따뜻하게 풀어내는 어조를 유지하십시오.
 
 [사주 정보 팩트 (수정 불가)]
 - 명조: {ys}{yb}년, {ms}{mb}월, {ds}{db}일, {hs}{hb}시 (일간: {ds})
@@ -1661,10 +1664,22 @@ if st.session_state.get('need_calc', False):
 - 공망: {gongmang_actual}
 - 12신살: {s12_str}
 - 일반신살: {shinsal_str} / 삼재: {cur_samjae}
+- 🔒[AI 비밀 참고용 대운 팩트]: {dw_fact_str}
+- 🔒[AI 비밀 참고용 세운 팩트]: {sewun_fact_str}
+- 🔒[AI 비밀 참고용 월운 팩트]: {wolwun_fact_str}
 - 전체 요약 팩트: {analysis_summary}
 - 내담자 정보: {age_prompt}, {gender_prompt}, {yukchin_rule}
 
+[시공명리 연산 팩트 (절대적 참조)]
+- 대운 체용 팩트: {dw_fact_str} -> 도출 키워드: {dw_fact_keyword}
+- 세운 체용 팩트: {sewun_fact_str} -> 도출 키워드: {sewun_fact_keyword}
+- 월운 체용 팩트: {wol_fact_str} -> 도출 키워드: {wol_fact_keyword}
+
 [글쓰기 절대 규칙 (HTML 및 용어)]
+0. 시공명리 폭포수 풀이 지침: 
+   - 각 구간의 '도출 키워드'를 보십시오. 이것이 해당 운의 시공간적 환경입니다.
+   - [체운(體運)]은 무대이며, [용운(用運)]은 사건입니다. 이 둘의 상호작용인 '도출 키워드'를 중심으로, 기운이 어떻게 전개되는지 서사적으로 폭포수처럼 기술하십시오.
+   - 단순히 키워드를 나열하지 말고, 명주의 원국과 결합하여 인생의 굴곡을 구체적으로 묘사하십시오.
 1. 용어 통제: '임관' 절대 금지. '건록', '생좌생궁' 등 시스템이 제공한 표준 용어만 사용하십시오.
 2. 괄호 표기법: 모든 명리 용어(십성, 12운성, 신살, 좌법 등)는 흐름을 끊지 않도록 "현대적 풀이 (명리 용어)" 형식으로 괄호 안에 표기하십시오.
 3. 마커 보존: [CHOYEON_GOLDEN_TEXT_HERE], [DAEWUN_TABLE_HERE], [SEWUN_TABLE_HERE], [WOLWUN_TABLE_HERE] 마커는 절대 지우지 말고 그대로 출력하십시오.
@@ -1742,7 +1757,7 @@ if st.session_state.get('need_calc', False):
     <div><b>2) 시공 명리 풀이: </b> (체용 매트릭스 관점 간략 요약)</div>
 </div>
 
-<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 대운 전반기 상세 분석 ({dw_start_age_str})</span>
+<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>▶ 현재 {current_daewun_ganji}대운 전반기 상세 분석 ({dw_start_age_str})</span>({dw_start_age_str})</span>
 <div style='padding-left: 20px; margin-top: 5px;'>
     <div style='margin-bottom: 5px;'><b>1) 전통 명리 풀이:</b> (운의 환경 변화, 성취와 심리, 현실적 삶의 영역, 조언을 상세히 서술)</div>
     <div><b>2) 시공 명리 풀이: </b> (목차의 [팩트: 체운/용운/도출 키워드]를 바탕으로 시공명리 관점에서 상세 서술)</div>
