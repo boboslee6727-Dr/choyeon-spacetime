@@ -373,8 +373,8 @@ if btn_run:
             )
             components.html(cover_html, height=800)
             
-            ji_rel_rows = f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지관계</td>" + \
-                          "".join([f"<td style='border:1px solid #444;'>{engine.get_ji_rel_set(jjis[i], jjis[(i+1)%4])}</td>" for i in range(4)]) + "</tr>"
+            # 지지 관계 행 생성을 위한 필수 변수 (들여쓰기 12칸으로 고정)
+            ji_rel_rows = f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지관계</td>" + "".join([f"<td style='border:1px solid #444;'>{engine.get_ji_rel_set(jjis[i], jjis[(i+1)%4])}</td>" for i in range(4)]) + "</tr>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px; font-family: "Nanum Myeongjo", serif;'>{name}님 사주원국</div>
             <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; font-family: "Nanum Myeongjo", serif;'>
