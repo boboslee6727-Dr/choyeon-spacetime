@@ -2,7 +2,6 @@ import streamlit as st
 import json
 import os
 from google import genai
-
 import engine
 import prompts
 
@@ -16,13 +15,17 @@ st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", la
 # ✅ UI 스타일링 (사이드바 연한 노랑, 타이틀 붉은색, 메인화면 여백 최적화)
 st.markdown("""
 <style>
-    /* 사이드바 배경 연한 노랑색 */
-    [data-testid="stSidebar"] {
-        background-color: #FFFDE7 !important;
-    }
-    /* 메인 화면 상단 여백 깔끔하게 정리 */
-    .block-container {
-        padding-top: 2rem;
+    /* 사이드바 배경 및 스타일 복구 */
+    [data-testid="stSidebar"] { background-color: #FFFDE7; }
+    
+    /* [초연 시공명리 풀이] 버튼: 빨간 배경, 굵은 글씨 */
+    div.stButton > button {
+        background-color: #D32F2F !important;
+        color: white !important;
+        font-weight: 900 !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        width: 100% !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -67,11 +70,9 @@ st.sidebar.markdown(f"<h2 style='color:#D32F2F; font-weight:900;'>🔮 초연 �
 st.sidebar.markdown("---")
 
 # 2. 통합 메뉴 (출산택일은 궁합 안으로 편입)
-u_product = st.sidebar.radio(
-    "📊 [분석 모드 선택]", 
-    ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"]
-)
-st.sidebar.markdown("---")
+u_product = st.sidebar.radio("📊 [분석 모드 선택]", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"])
+
+TIME_LIST = ["시간 모름", "朝子(조자)", "丑(축)", "寅(인)", "卯(묘)", "辰(진)", "巳(사)", "午(오)", "未(미)", "申(신)", "酉(유)", "戌(술)", "亥(해)", "夜子(야자)"]
 
 # ==============================================================================
 # ▶ 1. 개인사주 분석 모듈
