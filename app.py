@@ -10,13 +10,13 @@ import engine
 import prompts
 
 # ==============================================================================
-# ############ 1. 초기 설정 및 공통 함수
+# 1. 초기 설정 및 공통 함수
 # ==============================================================================
 APP_VERSION = "ver 50.0"
 
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# UI 스타일링 (회색 사이드바, 연노랑 메인화면, 빨간색 버튼)
+# UI 스타일링
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
@@ -32,9 +32,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 필수 리스트 및 세션 초기화
-idx_list = ["시간 모름", "朝子(조자)", "丑(축)", "寅(인)", "卯(묘)", "辰(진)", "巳(사)", "午(오)", "未(미)", "申(신)", "酉(유)", "戌(술)", "亥(해)", "夜子(야자)"]
-
+idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
+    "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
+    "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", 
+    "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
 if 'app_running' not in st.session_state: st.session_state['app_running'] = False
 
 @st.cache_data
@@ -51,22 +52,33 @@ def get_ai_response(system_prompt, user_prompt):
     try:
         api_key = st.secrets.get("GEMINI_API_KEY", "API_키를_입력하세요")
         client = genai.Client(api_key=api_key)
+        # ASCII 에러 방지를 위해 강제로 문자열 인코딩 처리 후 전달
+        safe_sys_prompt = str(system_prompt).encode('utf-8', 'ignore').decode('utf-8')
+        safe_usr_prompt = str(user_prompt).encode('utf-8', 'ignore').decode('utf-8')
+        
         response = client.models.generate_content(
             model='gemini-2.5-pro',
-            contents=user_prompt,
-            config=genai.types.GenerateContentConfig(system_instruction=system_prompt, temperature=0.7),
+            contents=safe_usr_prompt,
+            config=genai.types.GenerateContentConfig(system_instruction=safe_sys_prompt, temperature=0.7),
         )
         return response.text
     except Exception as e:
         return f"AI 연산 중 오류가 발생했습니다: {str(e)}"
 
+# 한자(一-龥)와 한글(가-힣)을 모두 허용하는 안전한 필터링 함수
+def extract_ganji(text):
+    if not text: return ""
+    return re.sub(r'[^가-힣一-龥]', '', text)
+
 # ==============================================================================
-# ############ 2. 사이드바 - 사주팔자 역산 검색 (본인)
+# 2. 사이드바 통제 센터 (입력 및 실행 버튼)
 # ==============================================================================
 with st.sidebar:
-    st.markdown(f"<h2 style='color:#D32F2F; font-weight:900;'>🔮 초연 시공명리 연구소 <br><span style='font-size:14px; color:#333;'>({APP_VERSION})</span></h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color:#D32F2F; font-weight:900;'>🔮 초연 시공명리 연구소</h2>", unsafe_allow_html=True)
+    st.caption(f"{APP_VERSION} Master (Base + Gunghap)")
     st.markdown("---")
 
+    # [역산 검색]
     with st.expander("🔍 사주팔자 역산 검색", expanded=True):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="")
@@ -79,8 +91,7 @@ with st.sidebar:
         K2H_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
         
         if st.button("🔍 생년월일 자동입력", use_container_width=True):
-            # 간지 추출 시 에러 방지를 위한 정규식 적용
-            _ry, _rm, _rd = re.sub(r'[^가-힣]', '', ry), re.sub(r'[^가-힣]', '', rm), re.sub(r'[^가-힣]', '', rd)
+            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
                 ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
                 rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
@@ -94,13 +105,13 @@ with st.sidebar:
                             klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                             gj = klc_find.getChineseGapJaString().split()
                             if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                                # 찾은 날짜를 세션 상태에 저장하여 아래 입력창과 실시간 연동
                                 st.session_state.s_y = curr_dt.year
                                 st.session_state.s_m = curr_dt.month
                                 st.session_state.s_d = curr_dt.day
                                 time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
                                 if rt:
-                                    ji_char = re.sub(r'[^가-힣]', '', rt)[-1] if re.sub(r'[^가-힣]', '', rt) else ""
+                                    # 한자/한글 모두 추출하여 안전하게 매핑
+                                    ji_char = extract_ganji(rt)[-1] if extract_ganji(rt) else ""
                                     rt_h = K2H_JI.get(ji_char, ji_char)
                                     if rt_h in time_map_rev: st.session_state.s_t = time_map_rev[rt_h]
                                 found = True
@@ -112,9 +123,6 @@ with st.sidebar:
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-# ==============================================================================
-# ############ 3. 사이드바 - 공통 신청인 정보
-# ==============================================================================
     st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"])
     
@@ -123,120 +131,29 @@ with st.sidebar:
     gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
     
     col_y, col_m, col_d = st.columns(3)
-    # session_state에 저장된 역산 결과값이 있으면 그 값을, 없으면 기본값을 띄웁니다.
     with col_y: b_year = st.number_input("연도", 1900, 2050, key="s_y")
     with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
     with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
     b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
 
-# ==============================================================================
-# ############ 4. 상품별 동적 UI 및 메인 풀이 로직
-# ==============================================================================
-    # --------------------------------------------------------------------------
-    # [상품 1] 개인사주 및 일진 분석
-    # --------------------------------------------------------------------------
+    # 변수 초기화
+    run_iljin_calc, run_delivery_calc = False, False
+    other_report, f_name, p_ry, p_rm, p_rd, p_rt = "", "", "", "", "", ""
+    final_start_date, final_end_date = None, None
+
+    # 상품별 옵션
     if u_product == "1. 개인사주 및 일진 분석":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
-        if run_iljin_calc: 
-            target_date = st.date_input("분석 일자", value=dt_mod.datetime.now().date())
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("✨ [초연 시공명리 풀이]", key="btn_1", use_container_width=True):
-            with st.spinner("개인사주 풀이 중..."):
-                # [엔진 연산 및 AI 호출]
-                ilgan, ilju = "甲", "甲寅" # 향후 engine.get_true_year_month_pillar 연동 위치
-                wolryeong = db.get("wolryeong", {}).get("甲寅", "정보 없음")
-                
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=ilgan, ilju=ilju,
-                    wolryeong=wolryeong, jijanggan_info="寅(戊,丙,甲)",
-                    missing_and_gongmang="수(水) 부족 / 공망: 子, 丑",
-                    shinsal_info="백호대살", vault_info="없음"
-                )
-                ai_result = get_ai_response(prompts.SYSTEM_ROLE, fact_sheet)
-                
-                # [메인 화면 출력]
-                st.markdown(prompts.HTML_LAYOUTS["section_title"].format(title=f"{name}님의 초연명리 감명서"), unsafe_allow_html=True)
-                st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
-
-    # --------------------------------------------------------------------------
-    # [상품 2] 타 감명서 비교
-    # --------------------------------------------------------------------------
+        if run_iljin_calc: target_date = st.date_input("분석 일자", value=dt_mod.datetime.now().date())
+            
     elif u_product == "2. 타 감명서 비교":
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("✨ [초연 시공명리 풀이]", key="btn_2", use_container_width=True):
-            if not other_report:
-                st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-            else:
-                with st.spinner("타 감명서 비교 분석 중..."):
-                    compare_prompt = prompts.COMPARE_PROMPT.format(
-                        other_report=other_report, ilju="丙寅", # 향후 역산된 일주 연동
-                        wolryeong="기준 월령", saju_structure="격국 정보"
-                    )
-                    ai_result = get_ai_response(prompts.SYSTEM_ROLE, compare_prompt)
-                    
-                    st.markdown(prompts.HTML_LAYOUTS["section_title"].format(title="⚖️ 초연 시공명리 타 감명서 1:1 비교"), unsafe_allow_html=True)
-                    st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
-
-    # --------------------------------------------------------------------------
-    # [상품 3] 궁합 및 출산 택일
-    # --------------------------------------------------------------------------
     elif u_product == "3. 궁합 및 출산 택일":
-        st.markdown("<div style='font-weight:900; color:#D50000; margin-bottom:5px; margin-top:15px;'>👥 상대방 정보</div>", unsafe_allow_html=True)
-        
-        # 상대방 역산 검색 (48.9 로직 완벽 복구)
-        with st.expander("🔍 상대방 사주팔자 역산 검색", expanded=False):
-            p_col_g1, p_col_g2 = st.columns(2)
-            with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
-            with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
-            p_col_g3, p_col_g4 = st.columns(2)
-            with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
-            with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
-            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn"):
-                _pry, _prm, _prd = re.sub(r'[^가-힣]', '', p_ry), re.sub(r'[^가-힣]', '', p_rm), re.sub(r'[^가-힣]', '', p_rd)
-                if len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
-                    p_ry_h = K2H_GAN.get(_pry[0], _pry[0]) + K2H_JI.get(_pry[1], _pry[1])
-                    p_rm_h = K2H_GAN.get(_prm[0], _prm[0]) + K2H_JI.get(_prm[1], _prm[1])
-                    p_rd_h = K2H_GAN.get(_prd[0], _prd[0]) + K2H_JI.get(_prd[1], _prd[1])
-                    p_klc_find = KoreanLunarCalendar(); p_found = False
-                    for y in range(2026, 1899, -1):
-                        p_klc_find.setSolarDate(y, 7, 1); p_gj_y = p_klc_find.getChineseGapJaString().split()
-                        if p_gj_y and p_gj_y[0][:2] == p_ry_h:
-                            p_curr_dt = dt_mod.date(y+1, 2, 28)
-                            while p_curr_dt >= dt_mod.date(y, 1, 1):
-                                p_klc_find.setSolarDate(p_curr_dt.year, p_curr_dt.month, p_curr_dt.day)
-                                p_gj = p_klc_find.getChineseGapJaString().split()
-                                if len(p_gj) >= 3 and p_gj[0][:2] == p_ry_h and p_gj[1][:2] == p_rm_h and p_gj[2][:2] == p_rd_h:
-                                    st.session_state.p_y_in = p_curr_dt.year
-                                    st.session_state.p_m_in = p_curr_dt.month
-                                    st.session_state.p_d_in = p_curr_dt.day
-                                    time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
-                                    if p_rt:
-                                        p_ji_char = re.sub(r'[^가-힣]', '', p_rt)[-1] if re.sub(r'[^가-힣]', '', p_rt) else ""
-                                        p_rt_h = K2H_JI.get(p_ji_char, p_ji_char)
-                                        if p_rt_h in time_map_rev: st.session_state.p_t_key = time_map_rev[p_rt_h]
-                                    p_found = True
-                                    st.success(f"✅ 상대방 {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 입력완료!")
-                                    st.rerun()
-                                    break
-                                p_curr_dt -= dt_mod.timedelta(days=1)
-                        if p_found: break
-                    if not p_found: st.error("일치하는 날짜가 없습니다.")
-                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
-
-        f_name = st.text_input("이름", "이영희", key="f_n")
-        p_col1, p_col2, p_col3 = st.columns(3)
-        f_y = p_col1.number_input("년 (상대)", 1900, 2050, key="p_y_in")
-        f_m = p_col2.number_input("월 (상대)", 1, 12, key="p_m_in")
-        f_d = p_col3.number_input("일 (상대)", 1, 31, key="p_d_in")
-        f_t = st.selectbox("태어난 시간 (상대)", idx_list, key="p_t_key")
-
-        # 출산 택일 모듈
+        f_name = st.text_input("상대방 이름", "이영희", key="f_n")
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
         if run_delivery_calc:
-            st.markdown("<h5 style='color:#4A148C; margin-top:10px; margin-bottom:10px;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color:#4A148C;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
             col_b1, col_b2 = st.columns(2)
             with col_b1: last_period_date = st.date_input("생리 시작일", value=dt_mod.date.today(), key="input_last_period")
             with col_b2: period_cycle = st.number_input("생리 주기(일)", min_value=20, max_value=50, value=28, step=1, key="input_period_cycle")
@@ -247,42 +164,66 @@ with st.sidebar:
             auto_start_date = expected_delivery_date - dt_mod.timedelta(days=14)
             auto_end_date = expected_delivery_date
 
-            st.markdown(f"<span style='font-size:13px; color:#D50000; font-weight:bold; display:block; margin-top:5px;'>🎯 의학적 배란(합궁) 예정일: {ovulation_date.strftime('%Y/%m/%d')}</span>", unsafe_allow_html=True)
-            st.markdown("<hr style='margin:10px 0px; border: 0.5px dashed #ccc;'>", unsafe_allow_html=True)
-            st.markdown("<h5 style='color:#1A237E; margin-top:0px; margin-bottom:10px;'>📅 출산 탐색 기간 (자유 변경 가능)</h5>", unsafe_allow_html=True)
-
+            st.markdown(f"<span style='font-size:13px; color:#D50000; font-weight:bold;'>🎯 의학적 배란 예정일: {ovulation_date.strftime('%Y/%m/%d')}</span>", unsafe_allow_html=True)
+            
             col_d1, col_d2 = st.columns(2)
             with col_d1: final_start_date = st.date_input("탐색 시작일", value=auto_start_date, key="input_search_start")
             with col_d2: final_end_date = st.date_input("탐색 종료일", value=auto_end_date, key="input_search_end")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("✨ [초연 시공명리 풀이]", key="btn_3", use_container_width=True):
-            loading_msg = "궁합 및 출산 택일 길일 연산 중..." if run_delivery_calc else "궁합 풀이 중..."
-            with st.spinner(loading_msg):
-                gh_prompt = prompts.GUNGHAP_PROMPT.format(
-                    app_name=name, app_gender=gender, app_ilju="庚申",
-                    partner_name=f_name, partner_gender="여성", partner_ilju="乙卯",
-                    ilji_relation="원진", oheng_balance="상호 보완",
-                    gunghap_score=85, gunghap_grade="상생연분"
-                )
-                ai_result = get_ai_response(prompts.SYSTEM_ROLE, gh_prompt)
-                
-                st.markdown(prompts.HTML_LAYOUTS["section_title"].format(title=f"{name}님과 {f_name}님의 초연 궁합"), unsafe_allow_html=True)
-                st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
-                
-                if run_delivery_calc:
-                    st.markdown(prompts.HTML_LAYOUTS["section_title"].format(title=f"👶 {name} & {f_name} 부부의 최적 출산 길일"), unsafe_allow_html=True)
-                    st.success(f"탐색 기간({final_start_date} ~ {final_end_date}) 내의 길일 연산 엔진이 작동했습니다. (엔진 연동 대기중)")
+    # 사이드바 하단 실행 버튼
+    st.markdown("<br>", unsafe_allow_html=True)
+    btn_run = st.button("✨ [초연 시공명리 풀이]", key="btn_run", use_container_width=True)
 
-# ==============================================================================
-# ############ 5. PDF 인쇄 버튼 (사이드바 최하단 고정)
-# ==============================================================================
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    # 인쇄 컴포넌트
     components.html("""
-    <script>
-        function triggerPrint() { window.parent.print(); }
-    </script>
-    <button onclick='triggerPrint()' style='width:95%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer; font-size:15px; font-family:"Malgun Gothic", sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin:5px;'>
+    <script>function triggerPrint() { window.parent.print(); }</script>
+    <button onclick='triggerPrint()' style='width:95%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer;'>
         🖨️ 풀이 결과 인쇄 / PDF 저장
     </button>
     """, height=70)
+
+
+# ==============================================================================
+# 3. 메인 화면 (사이드바 외부 - 넓은 화면에 출력)
+# ==============================================================================
+if btn_run:
+    if u_product == "1. 개인사주 및 일진 분석":
+        st.header(f"🔮 {name}님의 초연명리 감명서")
+        st.markdown("---")
+        with st.spinner("개인사주 풀이 중..."):
+            ilgan, ilju = "甲", "甲寅" 
+            wolryeong = db.get("wolryeong", {}).get("甲寅", "정보 없음")
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                name=name, gender=gender, ilgan=ilgan, ilju=ilju, wolryeong=wolryeong,
+                jijanggan_info="寅(戊,丙,甲)", missing_and_gongmang="수(水) 부족 / 공망: 子, 丑",
+                shinsal_info="백호대살", vault_info="없음"
+            )
+            ai_result = get_ai_response(prompts.SYSTEM_ROLE, fact_sheet)
+            st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
+
+    elif u_product == "2. 타 감명서 비교":
+        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
+        st.markdown("---")
+        if not other_report:
+            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+        else:
+            with st.spinner("비교 분석 중..."):
+                compare_prompt = prompts.COMPARE_PROMPT.format(other_report=other_report, ilju="丙寅", wolryeong="기준 월령", saju_structure="격국 정보")
+                ai_result = get_ai_response(prompts.SYSTEM_ROLE, compare_prompt)
+                st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
+
+    elif u_product == "3. 궁합 및 출산 택일":
+        st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
+        st.markdown("---")
+        loading_msg = "궁합 및 출산 택일 길일 연산 중..." if run_delivery_calc else "궁합 풀이 중..."
+        with st.spinner(loading_msg):
+            gh_prompt = prompts.GUNGHAP_PROMPT.format(
+                app_name=name, app_gender=gender, app_ilju="庚申", partner_name=f_name, partner_gender="여성", partner_ilju="乙卯",
+                ilji_relation="원진", oheng_balance="상호 보완", gunghap_score=85, gunghap_grade="상생연분"
+            )
+            ai_result = get_ai_response(prompts.SYSTEM_ROLE, gh_prompt)
+            st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
+            
+            if run_delivery_calc:
+                st.markdown(f"### 👶 {name} & {f_name} 부부의 최적 출산 길일")
+                st.success(f"탐색 기간({final_start_date} ~ {final_end_date}) 내의 길일 연산 엔진이 성공적으로 가동되었습니다. (엔진 연동 대기중)")
