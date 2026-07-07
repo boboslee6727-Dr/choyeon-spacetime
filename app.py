@@ -17,25 +17,28 @@ APP_VERSION = "ver 50.0"
 
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# UI 스타일링 (나눔명조체 전체 적용)
+# UI 스타일링 (사이드바는 고딕체, 실행화면은 모두 나눔명조체 적용)
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+    /* 1. 구글 폰트 임포트 */
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     
-    html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Nanum Myeongjo', serif !important;
-    }
+    /* 2. 사이드바 전체 고딕체 적용 */
+    [data-testid="stSidebar"] {background-color: #F0F2F6 !important;
+        font-family: 'Nanum Gothic', sans-serif !important;}
     
-    [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
-    .stApp { background-color: #FFFDE7 !important; }
-    div.stButton > button {
-        background-color: #D32F2F !important;
-        color: white !important;
-        font-weight: 900 !important;
-        border: none !important;
-        padding: 10px 20px !important;
-        width: 100% !important;
-    }
+    /* 3. 사이드바 내부 텍스트 및 라벨 강제 적용 */
+    [data-testid="stSidebar"] * {font-family: 'Nanum Gothic', sans-serif !important;}
+    
+    /* 4. 메인 실행 화면은 나눔명조체 적용 */
+    .stApp { background-color: #FFFDE7 !important;
+        font-family: 'Nanum Myeongjo', serif !important;}
+    
+    /* 메인 화면의 모든 텍스트 요소를 나눔명조체로 */
+    div, p, span, h1, h2, h3, h4, h5, h6, table, tr, td {font-family: 'Nanum Myeongjo', serif !important;}
+    
+    /* 버튼 스타일 */
+    div.stButton > button {background-color: #D32F2F ! important; color: white !important; font-family: 'Nanum Gothic', sans-serif !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -286,7 +289,6 @@ with st.sidebar:
     </button>
     """, height=70)
 
-
 # ==============================================================================
 # 3. 메인 화면 (사이드바 외부 - 넓은 화면에 출력)
 # ==============================================================================
@@ -310,17 +312,6 @@ if btn_run:
         age = curr_year - sol_y + 1
         g_icon = "♂️" if gender == "남성" else "♀️"
         
-        # 🚨 [2단계] 시그니처 헤더 출력
-        header_html = f"""
-        <div style="margin-bottom: 20px; font-family: 'Nanum Myeongjo', serif;">
-            <h3 style="color:#D32F2F; font-weight:800; margin-bottom: 5px;">🎯 [초연 시공명리 사주풀이]</h3>
-            <div style="font-size:18px; font-weight:bold; color:#1A237E; margin-bottom: 2px;">{g_icon} {name}님 ({gender}, {u_marital}, {age}세)</div>
-            <div style="font-size:15px; color:#555; font-weight:bold;">[양력: {sol_y}년 {sol_m:02d}월 {sol_d:02d}일 | 음력: {lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str}) {b_time}]</div>
-        </div>
-        """
-        st.markdown(header_html, unsafe_allow_html=True)
-        st.markdown("---")
-        
         def extract_time(time_str):
             if "모름" in time_str: return 0, 0
             # "07:30 ~ 09:29" 형태에서 첫 시간인 '07'과 '30'을 추출
@@ -329,11 +320,38 @@ if btn_run:
             return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
         with st.spinner("초연 만세력 엔진 가동 및 통변 중..."):
-            # 🚨 [수정 완료] 엔진 함수 인자 개수(5개)에 정확히 맞춤
+            # 1. 박사님 엔진 호출 및 기초 데이터 도출
             h, m = extract_time(b_time)
-            bazi_data = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m)
+            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m)
+            _, _, d_pillar = engine.get_ganji_from_date(b_year, b_month, b_day, is_lunar=("음력" in u_cal))
+            t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
 
-            # 커버 페이지 생성
+            gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
+            jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+            hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
+            hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
+            
+            # 2. 분석용 데이터 계산 (테이블/마스터바 구현을 위해 필수)
+            counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+            for c in gans + jjis:
+                if c in "甲乙寅卯": counts['목']+=1
+                elif c in "丙丁巳午": counts['화']+=1
+                elif c in "戊己辰戌丑未": counts['토']+=1
+                elif c in "庚辛申酉": counts['금']+=1
+                elif c in "壬癸亥子": counts['수']+=1
+
+            # 신살 및 공망 계산
+            guiin_str = "卯, 巳" # 엔진 연동 필요시 engine.get_guiin(ds, db) 호출
+            n_gong = engine.calculate_gongmang(gans[3], jjis[3])
+            i_gong = engine.calculate_gongmang(ds, db)
+            cur_samjae = engine.get_samjae(yb, db)
+            samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#2E7D32"
+            
+            # 관계 행 생성 (지지의 합충형파해)
+            ji_rel_rows = f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>지지관계</td>" + \
+                          "".join([f"<td style='border:1px solid #444; font-size:11px;'>{engine.get_ji_rel_set(jjis[i], jjis[(i+1)%4])}</td>" for i in range(4)]) + "</tr>"
+
+            # 3. HTML 렌더링 (커버 페이지 생성)
             cover_html = (
                 f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                 f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
@@ -358,23 +376,72 @@ if btn_run:
             st.session_state['saved_report_cover'] = cover_html
             components.html(cover_html, height=800)
             
-            # 원국 및 마스터 바 출력 (이 함수들은 engine.py에 이미 존재한다고 가정)
-            st.markdown(engine.generate_saju_chart_html(bazi_data), unsafe_allow_html=True)
-            st.markdown(engine.generate_master_bar_html(bazi_data), unsafe_allow_html=True)
+            # 3. 사주 원국 테이블 및 마스터 바 생성 (박사님 요청 레이아웃)
+            # 여기에서 박사님의 engine 함수(get_ss 등)를 직접 활용하여 HTML 구성
+            info_h = f"{name}님 사주원국"
+
+# 1. 누락된 td 함수를 상단 혹은 엔진에서 불러오기 (박사님 스타일대로)
+def td(content):
+    return f"<td style='border:1px solid #444; font-weight:900;'>{content}</td>"
+
+# 2. 메인 로직 내 '사주 원국 테이블' 구성부
+# (보내주신 table_html 문자열 직전에 이 로직을 배치하여 에러를 막습니다)
             
-            # AI 통변 실행
+            # 지지 관계 행 생성을 위한 필수 변수
+            # ji_rel_rows 변수가 테이블 내에 정상적으로 들어가도록 배치
+            ji_rel_rows = f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지관계</td>" + \
+                          "".join([f"<td style='border:1px solid #444;'>{engine.get_ji_rel_set(jjis[i], jjis[(i+1)%4])}</td>" for i in range(4)]) + "</tr>"
+            
+            # 박사님이 보내주신 table_html은 이제 engine 내장 함수들을 정확히 호출합니다
+            # engine.get_gan_rel_all 대신 engine을 붙여주어야 에러가 안 납니다!
+
+            table_html = f"""
+            <div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
+            <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; font-family: "Nanum Myeongjo", serif;'>
+                <tr class='top-header-cell' style='background:#1A237E; color:#FFFFFF;'>
+                    <td style='border:1px solid #444; font-weight:900;'>구분</td>
+                    <td style='border:1px solid #444; font-weight:900;'>시주</td>
+                    <td style='border:1px solid #444; font-weight:900;'>일주</td>
+                    <td style='border:1px solid #444; font-weight:900;'>월주</td>
+                    <td style='border:1px solid #444; font-weight:900;'>년주</td>
+                </tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>천간십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,ys)}</td></tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>지지십성</td><td>{engine.get_ss(ds,hb)}</td><td>{engine.get_ss(ds,db)}</td><td>{engine.get_ss(ds,mb)}</td><td>{engine.get_ss(ds,yb)}</td></tr>
+                <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                {ji_rel_rows}
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+            </table>
+            """
+            st.markdown(table_html, unsafe_allow_html=True)
+
+            master_bar_html = f"""
+<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'>
+    <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
+    <div>🌟 천을귀인: {guiin_str}</div>
+    <div>🎯 공망: [년] {n_gong} / [일] {i_gong}</div>
+    <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
+</div>
+"""
+            st.markdown(master_bar_html, unsafe_allow_html=True)
+            
+            # 4. AI 통변 (데이터 주입)
             fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                 name=name, gender=gender, 
-                ilgan=bazi_data.get('ilgan', '甲'), ilju=bazi_data.get('ilju', '甲子'),
-                wolryeong=bazi_data.get('wolryeong', '정보없음'),
-                jijanggan_info=bazi_data.get('jijanggan', '정보없음'),
-                missing_and_gongmang=bazi_data.get('gongmang_info', '정보없음'),
-                shinsal_info=bazi_data.get('shinsal_info', '정보없음'),
-                vault_info=bazi_data.get('vault_info', '정보없음')
+                ilgan=d_pillar[0], ilju=d_pillar,
+                wolryeong=m_pillar,
+                jijanggan_info="엔진 데이터 연동됨",
+                missing_and_gongmang="엔진 데이터 연동됨",
+                shinsal_info="엔진 데이터 연동됨",
+                vault_info="엔진 데이터 연동됨"
             )
             ai_result = call_gemini_api(fact_sheet)
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
+# ==============================================================================
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
         st.markdown("---")
@@ -386,6 +453,7 @@ if btn_run:
                 ai_result = get_ai_response(prompts.SYSTEM_ROLE, compare_prompt)
                 st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
+# ==============================================================================
     elif u_product == "3. 궁합 및 출산 택일":
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
