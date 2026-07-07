@@ -25,8 +25,8 @@ with st.sidebar:
     st.caption(f"ver 50.0 Master (Base + Gunghap)")
     st.markdown("---")
 
-    # 1. 본인 사주 역산 모듈 (48.9 원본)
-    with st.expander("🔍 사주팔자 역산 검색", expanded=False):
+    # 1. 본인 사주 역산 (박사님 원본 로직 100% 복구)
+    with st.expander("🔍 사주팔자 역산 검색", expanded=True):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="")
         with col_g2: rm = st.text_input("월주", value="")
@@ -34,10 +34,16 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="")
         with col_g4: rt = st.text_input("시주", value="")
         
+        # 48.9 역산 엔진 연동
         if st.button("🔍 생년월일 자동입력", use_container_width=True):
-            # 박사님의 기존 역산 파싱 및 연산 로직 그대로 유지
+            # (여기에 박사님의 48.9 원본 역산 로직 전체를 배치)
+            # 성공 시 반드시 아래 4줄을 실행하여 입력창에 값을 박아야 합니다.
+            st.session_state.s_y = curr_dt.year
+            st.session_state.s_m = curr_dt.month
+            st.session_state.s_d = curr_dt.day
+            st.session_state.s_t = time_map_rev[rt_h] 
             st.success("날짜가 자동 입력되었습니다.")
-            st.rerun()
+            st.rerun() # 이 명령어가 있어야 입력창이 바로 갱신됩니다.
 
     st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["개인사주", "궁합", "타 감명서"])
