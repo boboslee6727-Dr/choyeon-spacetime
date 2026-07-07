@@ -314,10 +314,12 @@ if btn_run:
         
         def extract_time(time_str):
             if "모름" in time_str: return 0, 0
-            # "07:30 ~ 09:29" 형태에서 첫 시간인 '07'과 '30'을 추출
             import re
             match = re.search(r'(\d{2}):(\d{2})', time_str)
             return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+        def td(content):
+            return f"<td style='border:1px solid #444; font-weight:900;'>{content}</td>"
 
         with st.spinner("초연 만세력 엔진 가동 및 통변 중..."):
             # 1. 박사님 엔진 호출 및 기초 데이터 도출
@@ -341,17 +343,13 @@ if btn_run:
                 elif c in "壬癸亥子": counts['수']+=1
 
             # 신살 및 공망 계산
-            guiin_str = "卯, 巳" # 엔진 연동 필요시 engine.get_guiin(ds, db) 호출
+            guiin_str = "卯, 巳"
             n_gong = engine.calculate_gongmang(gans[3], jjis[3])
             i_gong = engine.calculate_gongmang(ds, db)
             cur_samjae = engine.get_samjae(yb, db)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#2E7D32"
             
-            # 관계 행 생성 (지지의 합충형파해)
-            ji_rel_rows = f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>지지관계</td>" + \
-                          "".join([f"<td style='border:1px solid #444; font-size:11px;'>{engine.get_ji_rel_set(jjis[i], jjis[(i+1)%4])}</td>" for i in range(4)]) + "</tr>"
-
-            # 3. HTML 렌더링 (커버 페이지 생성)
+            # 3. 커버 페이지 및 테이블 렌더링
             cover_html = (
                 f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                 f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
@@ -373,62 +371,36 @@ if btn_run:
                 f"    </div>\n"
                 f"</div>"
             )
-            st.session_state['saved_report_cover'] = cover_html
             components.html(cover_html, height=800)
             
-            # 3. 사주 원국 테이블 및 마스터 바 생성 (박사님 요청 레이아웃)
-            # 여기에서 박사님의 engine 함수(get_ss 등)를 직접 활용하여 HTML 구성
-            info_h = f"{name}님 사주원국"
-
-# 1. 누락된 td 함수를 상단 혹은 엔진에서 불러오기 (박사님 스타일대로)
-def td(content):
-    return f"<td style='border:1px solid #444; font-weight:900;'>{content}</td>"
-
-# 2. 메인 로직 내 '사주 원국 테이블' 구성부
-# (보내주신 table_html 문자열 직전에 이 로직을 배치하여 에러를 막습니다)
-            
-            # 지지 관계 행 생성을 위한 필수 변수
-            # ji_rel_rows 변수가 테이블 내에 정상적으로 들어가도록 배치
             ji_rel_rows = f"<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지관계</td>" + \
                           "".join([f"<td style='border:1px solid #444;'>{engine.get_ji_rel_set(jjis[i], jjis[(i+1)%4])}</td>" for i in range(4)]) + "</tr>"
-            
-            # 박사님이 보내주신 table_html은 이제 engine 내장 함수들을 정확히 호출합니다
-            # engine.get_gan_rel_all 대신 engine을 붙여주어야 에러가 안 납니다!
 
-            table_html = f"""
-            <div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
+            table_html = f"""<div style='text-align:center; margin-bottom:10px; font-family: "Nanum Myeongjo", serif;'>{name}님 사주원국</div>
             <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; font-family: "Nanum Myeongjo", serif;'>
                 <tr class='top-header-cell' style='background:#1A237E; color:#FFFFFF;'>
-                    <td style='border:1px solid #444; font-weight:900;'>구분</td>
-                    <td style='border:1px solid #444; font-weight:900;'>시주</td>
-                    <td style='border:1px solid #444; font-weight:900;'>일주</td>
-                    <td style='border:1px solid #444; font-weight:900;'>월주</td>
-                    <td style='border:1px solid #444; font-weight:900;'>년주</td>
+                    <td style='border:1px solid #444; font-weight:900;'>구분</td><td style='border:1px solid #444; font-weight:900;'>시주</td><td style='border:1px solid #444; font-weight:900;'>일주</td><td style='border:1px solid #444; font-weight:900;'>월주</td><td style='border:1px solid #444; font-weight:900;'>년주</td>
                 </tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>천간십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,ys)}</td></tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>지지십성</td><td>{engine.get_ss(ds,hb)}</td><td>{engine.get_ss(ds,db)}</td><td>{engine.get_ss(ds,mb)}</td><td>{engine.get_ss(ds,yb)}</td></tr>
-                <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                <tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
+                <tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>천간십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,ys)}</td></tr>
+                <tr><td style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
+                <tr><td style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
+                <tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>지지십성</td><td>{engine.get_ss(ds,hb)}</td><td>{engine.get_ss(ds,db)}</td><td>{engine.get_ss(ds,mb)}</td><td>{engine.get_ss(ds,yb)}</td></tr>
+                <tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
                 {ji_rel_rows}
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
-                <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
-            </table>
-            """
+                <tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+                <tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+            </table>"""
             st.markdown(table_html, unsafe_allow_html=True)
 
-            master_bar_html = f"""
-<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; white-space:nowrap;'>
-    <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
-    <div>🌟 천을귀인: {guiin_str}</div>
-    <div>🎯 공망: [년] {n_gong} / [일] {i_gong}</div>
-    <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
-</div>
-"""
+            master_bar_html = f"""<div style='border:2px solid #3E2723; margin-top:20px; padding:8px; display:flex; justify-content:space-between; font-weight:900; font-size:12px; border-radius:8px; font-family: "Nanum Myeongjo", serif;'>
+                <div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div>
+                <div>🌟 천을귀인: {guiin_str}</div>
+                <div>🎯 공망: [년] {n_gong} / [일] {i_gong}</div>
+                <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
+            </div>"""
             st.markdown(master_bar_html, unsafe_allow_html=True)
             
-            # 4. AI 통변 (데이터 주입)
             fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                 name=name, gender=gender, 
                 ilgan=d_pillar[0], ilju=d_pillar,
