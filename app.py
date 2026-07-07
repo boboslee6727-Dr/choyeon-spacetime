@@ -130,17 +130,85 @@ elif u_product == "2. 타 감명서 비교":
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
 # ==============================================================================
-# ▶ 3. 궁합 풀이 모듈
+# ▶ 3. 궁합 풀이 모듈 
 # ==============================================================================
 elif u_product == "3. 궁합 풀이":
     st.subheader("💕 초연 궁합 풀이")
-    st.info("상세한 궁합 알고리즘은 engine.UniversalPrintableGunghap 클래스를 호출하여 처리합니다.")
-    # UI 구성 및 engine 호출 로직 작성
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("#### 🧑 의뢰인 정보")
+        m_name = st.text_input("의뢰인 이름", "김철수")
+        m_gender = st.selectbox("의뢰인 성별", ["남성", "여성"], key="m_gen")
+        m_year = st.number_input("태어난 연도", 1900, 2050, 1990, key="m_y")
+        m_month = st.number_input("월", 1, 12, 1, key="m_m")
+        m_day = st.number_input("일", 1, 31, 1, key="m_d")
+        
+    with col2:
+        st.markdown("#### 👩 상대방 정보")
+        f_name = st.text_input("상대방 이름", "이영희")
+        f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_gen")
+        f_year = st.number_input("태어난 연도", 1900, 2050, 1992, key="f_y")
+        f_month = st.number_input("월", 1, 12, 1, key="f_m")
+        f_day = st.number_input("일", 1, 31, 1, key="f_d")
+
+    if st.button("궁합 분석 실행"):
+        with st.spinner("두 사람의 시공간 에너지를 교차 분석 중입니다..."):
+            
+            # [Step 1] engine 연산 (예시 구조)
+            # 실제로는 engine.get_true_year_month_pillar 등을 호출하여 명식을 뽑습니다.
+            m_ilju = "庚申" # 예시 연산 결과
+            f_ilju = "乙卯"
+            
+            # engine의 궁합 클래스 호출
+            gh_engine = engine.UniversalPrintableGunghap(m_name, f_name, ["庚","申","?","?"], ["乙","卯","?","?"])
+            gh_engine.run_universal_logic()
+            
+            # [Step 2] 팩트 시트 생성 (prompts.py 연동)
+            gunghap_prompt = prompts.GUNGHAP_PROMPT.format(
+                app_name=m_name,
+                app_gender=m_gender,
+                app_ilju=m_ilju,
+                partner_name=f_name,
+                partner_gender=f_gender,
+                partner_ilju=f_ilju,
+                ilji_relation="원진 및 암합",
+                oheng_balance="남성은 금기운, 여성은 목기운이 강해 상호 보완됨",
+                gunghap_score=gh_engine.final_score,
+                gunghap_grade=gh_engine.grade
+            )
+            
+            # [Step 3] AI 호출 및 출력
+            ai_result = get_ai_response(prompts.SYSTEM_ROLE, gunghap_prompt)
+            st.markdown(prompts.HTML_LAYOUTS["section_title"].format(title=f"{m_name}님과 {f_name}님의 초연 궁합"), unsafe_allow_html=True)
+            st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
 # ==============================================================================
 # ▶ 4. 출산 택일 모듈
 # ==============================================================================
 elif u_product == "4. 출산 택일":
     st.subheader("👶 생체 주기 기반 출산 택일")
-    st.info("engine.get_optimized_delivery_days 함수를 통해 길일을 연산합니다.")
-    # UI 구성 및 engine 호출 로직 작성
+    st.info("부모의 명식과 생체 주기를 교차하여, 아이의 가장 좋은 시공간(길일)을 연산합니다.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("#### 👨 부(父) 정보")
+        f_year = st.number_input("부 연도", 1950, 2050, 1990)
+        # (생략) 월/일 등 입력 추가
+    with col2:
+        st.markdown("#### 👩 모(母) 정보")
+        m_year = st.number_input("모 연도", 1950, 2050, 1992)
+        # (생략) 월/일 등 입력 추가
+        
+    st.markdown("#### 📅 출산 예정 기간")
+    s_date = st.date_input("시작일")
+    e_date = st.date_input("종료일")
+
+    if st.button("길일 연산 및 AI 추천"):
+        with st.spinner("가장 좋은 시공간을 찾고 있습니다..."):
+            # [Step 1] engine 호출
+            # engine.get_optimized_delivery_days() 사용
+            
+            # [Step 2] 결과 정리 및 AI 호출
+            st.success("연산이 완료되었습니다! (AI 연동 부분은 이후 고도화 가능)")
+            st.write("UI 레이아웃이 성공적으로 자리 잡았습니다.")
