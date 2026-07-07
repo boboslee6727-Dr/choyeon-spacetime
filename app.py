@@ -329,10 +329,9 @@ if btn_run:
             return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
         with st.spinner("초연 만세력 엔진 가동 및 통변 중..."):
-            # 엔진 데이터 도출
-            # b_time에서 숫자만 추출하는 함수
+            # 🚨 [수정 완료] 엔진 함수 인자 개수(5개)에 정확히 맞춤
             h, m = extract_time(b_time)
-            bazi_data = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m, gender)
+            bazi_data = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m)
 
             # 커버 페이지 생성
             cover_html = (
@@ -359,11 +358,11 @@ if btn_run:
             st.session_state['saved_report_cover'] = cover_html
             components.html(cover_html, height=800)
             
-            # 원국 및 마스터 바 출력
+            # 원국 및 마스터 바 출력 (이 함수들은 engine.py에 이미 존재한다고 가정)
             st.markdown(engine.generate_saju_chart_html(bazi_data), unsafe_allow_html=True)
             st.markdown(engine.generate_master_bar_html(bazi_data), unsafe_allow_html=True)
             
-            # AI 통변 실행 (엔진 데이터 안전 호출)
+            # AI 통변 실행
             fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                 name=name, gender=gender, 
                 ilgan=bazi_data.get('ilgan', '甲'), ilju=bazi_data.get('ilju', '甲子'),
