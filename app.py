@@ -323,9 +323,9 @@ if btn_run:
 
         with st.spinner("초연 만세력 엔진 가동 및 통변 중..."):
             # 1. 박사님 엔진 호출 및 기초 데이터 도출
-            h, m = extract_time(b_time)
-            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m)
-            _, _, d_pillar = engine.get_ganji_from_date(b_year, b_month, b_day, is_lunar=("음력" in u_cal))
+            is_lunar_val = ("음력" in u_cal)
+            is_leap_val = ("윤달" in u_cal)
+            _, _, d_pillar = engine.get_ganji_from_date(b_year, b_month, b_day, is_lunar=is_lunar_val, is_leap=is_leap_val)
             t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
 
             gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
