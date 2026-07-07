@@ -8,6 +8,7 @@ import re
 from google import genai
 import engine
 import prompts
+import time
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
@@ -48,22 +49,43 @@ def load_choyeon_db():
 
 db = load_choyeon_db()
 
-def get_ai_response(system_prompt, user_prompt):
-    try:
-        api_key = st.secrets.get("GEMINI_API_KEY", "API_키를_입력하세요")
-        client = genai.Client(api_key=api_key)
-        # ASCII 에러 방지를 위해 강제로 문자열 인코딩 처리 후 전달
-        safe_sys_prompt = str(system_prompt).encode('utf-8', 'ignore').decode('utf-8')
-        safe_usr_prompt = str(user_prompt).encode('utf-8', 'ignore').decode('utf-8')
+# ==============================================================================
+# 1.5. AI 및 명리 연산 엔진 (Ver 48.9 완벽 복구)
+# ==============================================================================
+try:
+    _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+except Exception as _api_e:
+    st.error(f"🚨 Gemini API 키 오류: {_api_e}")
+    _gemini_client = None
+
+@st.cache_data(show_spinner=False, ttl=3600*24) # ttl=3600*24초=86,400초 24시간 감명서 유효
+def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
+    if '1.5' in model_name:
+        model_name = 'gemini-2.5-flash'
         
-        response = client.models.generate_content(
-            model='gemini-2.5-pro',
-            contents=safe_usr_prompt,
-            config=genai.types.GenerateContentConfig(system_instruction=safe_sys_prompt, temperature=0.7),
-        )
-        return response.text
-    except Exception as e:
-        return f"AI 연산 중 오류가 발생했습니다: {str(e)}"
+    if _gemini_client is None:
+        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+    
+    max_retries = 2
+    for attempt in range(max_retries + 1):
+        try:
+            response = _gemini_client.models.generate_content(
+                model=model_name, 
+                contents=prompt_text,
+                config=genai.types.GenerateContentConfig(system_instruction=system_prompt, temperature=0.7)
+            )
+            return response.text.strip()
+        except Exception as e:
+            if attempt < max_retries:
+                time.sleep(1); continue
+            return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
+
+def call_gemini_api(prompt_text, max_tokens=6000):
+    # 기존 코드 호환성을 위해 prompts.SYSTEM_ROLE을 기본으로 넘김
+    return get_ai_response(prompts.SYSTEM_ROLE, prompt_text, model_name='gemini-2.5-flash')
+
+def call_light_api(prompt_text):
+    return get_ai_response(prompts.SYSTEM_ROLE, prompt_text, model_name='gemini-2.5-flash')
 
 # 한자(一-龥)와 한글(가-힣)을 모두 허용하는 안전한 필터링 함수
 def extract_ganji(text):
@@ -115,13 +137,19 @@ with st.sidebar:
                                     rt_h = K2H_JI.get(ji_char, ji_char)
                                     if rt_h in time_map_rev: st.session_state.s_t = time_map_rev[rt_h]
                                 found = True
-                                st.success(f"✅ {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 입력완료!")
+                                l_y, l_m, l_d = klc_find.lunarYear, klc_find.lunarMonth, klc_find.lunarDay
+                                leap = "윤" if klc_find.isIntercalation else ""
+                                st.session_state.rev_success_msg = f"✅ 양력 {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 (음력 {leap}{l_y}년 {l_m:02d}월 {l_d:02d}일) 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+            
+        # rerun() 이후에도 메시지가 고정되어 출력되도록 설정
+        if st.session_state.get('rev_success_msg'):
+            st.success(st.session_state.rev_success_msg)
 
     st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"])
