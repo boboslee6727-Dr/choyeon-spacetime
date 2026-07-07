@@ -321,9 +321,18 @@ if btn_run:
         st.markdown(header_html, unsafe_allow_html=True)
         st.markdown("---")
         
+        def extract_time(time_str):
+            if "모름" in time_str: return 0, 0
+            # "07:30 ~ 09:29" 형태에서 첫 시간인 '07'과 '30'을 추출
+            import re
+            match = re.search(r'(\d{2}):(\d{2})', time_str)
+            return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
         with st.spinner("초연 만세력 엔진 가동 및 통변 중..."):
             # 엔진 데이터 도출
-            bazi_data = engine.get_true_year_month_pillar(b_year, b_month, b_day, b_time, gender)
+            # b_time에서 숫자만 추출하는 함수
+            h, m = extract_time(b_time)
+            bazi_data = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m, gender)
 
             # 커버 페이지 생성
             cover_html = (
