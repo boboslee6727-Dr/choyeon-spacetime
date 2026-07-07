@@ -331,7 +331,7 @@ if btn_run:
             is_leap_val = ("윤달" in u_cal)
             
             # [수정 완료] 키워드 인자(is_lunar=...)를 제거하고 순서대로 전달하여 인터프리터 에러 원천 차단
-            _, _, d_pillar = engine.get_ganji_from_date(b_year, b_month, b_day, is_lunar_val, is_leap_val)
+            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
             
             t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
 
