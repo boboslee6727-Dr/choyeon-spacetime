@@ -17,9 +17,15 @@ APP_VERSION = "ver 50.0"
 
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# UI 스타일링
+# UI 스타일링 (나눔명조체 전체 적용)
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+    
+    html, body, [class*="css"], [class*="st-"] {
+        font-family: 'Nanum Myeongjo', serif !important;
+    }
+    
     [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
     .stApp { background-color: #FFFDE7 !important; }
     div.stButton > button {
@@ -158,6 +164,10 @@ with st.sidebar:
     name = st.text_input("이름", "홍길동", key="u_n")
     gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
     
+    # 🚨 [누락 복구] 혼인여부와 달력 셀렉트박스 추가
+    u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
+    u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
+    
     col_y, col_m, col_d = st.columns(3)
     with col_y: b_year = st.number_input("연도", 1900, 2050, key="s_y")
     with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
@@ -178,7 +188,73 @@ with st.sidebar:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
         
     elif u_product == "3. 궁합 및 출산 택일":
+        st.markdown("<div style='font-weight:900; color:#D50000; margin-bottom:5px; margin-top:15px;'>👥 상대방 정보</div>", unsafe_allow_html=True)
+        
+        # 🚨 [누락 복구] 상대방 사주 역산 모듈
+        with st.expander("🔍 상대방 사주팔자 역산 검색", expanded=False):
+            p_col_g1, p_col_g2 = st.columns(2)
+            with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
+            with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
+            p_col_g3, p_col_g4 = st.columns(2)
+            with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
+            with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
+            
+            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn"):
+                _pry, _prm, _prd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+                if len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
+                    p_ry_h = K2H_GAN.get(_pry[0], _pry[0]) + K2H_JI.get(_pry[1], _pry[1])
+                    p_rm_h = K2H_GAN.get(_prm[0], _prm[0]) + K2H_JI.get(_prm[1], _prm[1])
+                    p_rd_h = K2H_GAN.get(_prd[0], _prd[0]) + K2H_JI.get(_prd[1], _prd[1])
+                    p_klc_find = KoreanLunarCalendar(); p_found = False
+                    for y in range(2026, 1899, -1):
+                        p_klc_find.setSolarDate(y, 7, 1); p_gj_y = p_klc_find.getChineseGapJaString().split()
+                        if p_gj_y and p_gj_y[0][:2] == p_ry_h:
+                            p_curr_dt = dt_mod.date(y+1, 2, 28)
+                            while p_curr_dt >= dt_mod.date(y, 1, 1):
+                                p_klc_find.setSolarDate(p_curr_dt.year, p_curr_dt.month, p_curr_dt.day)
+                                p_gj = p_klc_find.getChineseGapJaString().split()
+                                if len(p_gj) >= 3 and p_gj[0][:2] == p_ry_h and p_gj[1][:2] == p_rm_h and p_gj[2][:2] == p_rd_h:
+                                    st.session_state.p_y_in = p_curr_dt.year
+                                    st.session_state.p_m_in = p_curr_dt.month
+                                    st.session_state.p_d_in = p_curr_dt.day
+                                    time_map_rev = {
+                                        '子':'00:30 ~ 01:29 (朝子)시', '丑':'01:30 ~ 03:29 (丑)시',
+                                        '寅':'03:30 ~ 05:29 (寅)시', '卯':'05:30 ~ 07:29 (卯)시',
+                                        '辰':'07:30 ~ 09:29 (辰)시', '巳':'09:30 ~ 11:29 (巳)시',
+                                        '午':'11:30 ~ 13:29 (午)시', '未':'13:30 ~ 15:29 (未)시',
+                                        '申':'15:30 ~ 17:29 (申)시', '酉':'17:30 ~ 19:29 (酉)시',
+                                        '戌':'19:30 ~ 21:29 (戌)시', '亥':'21:30 ~ 23:29 (亥)시'
+                                    }
+                                    if p_rt:
+                                        p_ji_char = extract_ganji(p_rt)[-1] if extract_ganji(p_rt) else ""
+                                        p_rt_h = K2H_JI.get(p_ji_char, p_ji_char)
+                                        if p_rt_h in time_map_rev: st.session_state.p_t_key = time_map_rev[p_rt_h]
+                                    p_found = True
+                                    p_l_y, p_l_m, p_l_d = p_klc_find.lunarYear, p_klc_find.lunarMonth, p_klc_find.lunarDay
+                                    p_leap = "윤" if p_klc_find.isIntercalation else ""
+                                    st.session_state.p_rev_success_msg = f"✅ 상대방 양력 {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 (음력 {p_leap}{p_l_y}년 {p_l_m:02d}월 {p_l_d:02d}일) 자동입력 완료!"
+                                    st.rerun()
+                                    break
+                                p_curr_dt -= dt_mod.timedelta(days=1)
+                        if p_found: break
+                    if not p_found: st.error("일치하는 날짜가 없습니다.")
+                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+            if st.session_state.get('p_rev_success_msg'):
+                st.success(st.session_state.p_rev_success_msg)
+
+        # 🚨 [누락 복구] 상대방 세부 정보 입력창
         f_name = st.text_input("상대방 이름", "이영희", key="f_n")
+        f_gender_options = ["여성", "남성"] if gender == "남성" else ["남성", "여성"]
+        f_gender = st.selectbox("상대방 성별", f_gender_options, key="f_g")
+        f_marital = st.selectbox("상대방 혼인여부", ["미혼", "기혼", "돌싱"], key="f_m_stat")
+        f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+        
+        p_col1, p_col2, p_col3 = st.columns(3)
+        f_y = p_col1.number_input("년 (상대)", 1900, 2050, key="p_y_in")
+        f_m = p_col2.number_input("월 (상대)", 1, 12, key="p_m_in")
+        f_d = p_col3.number_input("일 (상대)", 1, 31, key="p_d_in")
+        f_t = st.selectbox("태어난 시간 (상대)", idx_list, key="p_t_key")
+        
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
         if run_delivery_calc:
             st.markdown("<h5 style='color:#4A148C;'>🩸 산모 생체 리듬 간편 입력</h5>", unsafe_allow_html=True)
@@ -216,17 +292,79 @@ with st.sidebar:
 # ==============================================================================
 if btn_run:
     if u_product == "1. 개인사주 및 일진 분석":
-        st.header(f"🔮 {name}님의 초연명리 감명서")
+        # 🚨 [1단계] 양력/음력 변환 및 나이 계산 로직
+        klc = KoreanLunarCalendar()
+        if "음력" in u_cal:
+            is_leap = True if "윤달" in u_cal else False
+            klc.setLunarDate(b_year, b_month, b_day, is_leap)
+            sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
+            lun_y, lun_m, lun_d = b_year, b_month, b_day
+            leap_str = "윤달" if is_leap else "평달"
+        else:
+            klc.setSolarDate(b_year, b_month, b_day)
+            sol_y, sol_m, sol_d = b_year, b_month, b_day
+            lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
+            leap_str = "윤달" if klc.isIntercalation else "평달"
+            
+        curr_year = dt_mod.datetime.now().year
+        age = curr_year - sol_y + 1
+        g_icon = "♂️" if gender == "남성" else "♀️"
+        
+        # 🚨 [2단계] 시그니처 헤더 출력
+        header_html = f"""
+        <div style="margin-bottom: 20px; font-family: 'Nanum Myeongjo', serif;">
+            <h3 style="color:#D32F2F; font-weight:800; margin-bottom: 5px;">🎯 [초연 시공명리 사주풀이]</h3>
+            <div style="font-size:18px; font-weight:bold; color:#1A237E; margin-bottom: 2px;">{g_icon} {name}님 ({gender}, {u_marital}, {age}세)</div>
+            <div style="font-size:15px; color:#555; font-weight:bold;">[양력: {sol_y}년 {sol_m:02d}월 {sol_d:02d}일 | 음력: {lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str}) {b_time}]</div>
+        </div>
+        """
+        st.markdown(header_html, unsafe_allow_html=True)
         st.markdown("---")
-        with st.spinner("개인사주 풀이 중..."):
-            ilgan, ilju = "甲", "甲寅" 
-            wolryeong = db.get("wolryeong", {}).get("甲寅", "정보 없음")
-            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                name=name, gender=gender, ilgan=ilgan, ilju=ilju, wolryeong=wolryeong,
-                jijanggan_info="寅(戊,丙,甲)", missing_and_gongmang="수(水) 부족 / 공망: 子, 丑",
-                shinsal_info="백호대살", vault_info="없음"
+        
+        with st.spinner("초연 만세력 엔진 가동 및 통변 중..."):
+            # 엔진 데이터 도출
+            bazi_data = engine.get_true_year_month_pillar(b_year, b_month, b_day, b_time, gender)
+
+            # 커버 페이지 생성
+            cover_html = (
+                f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
+                f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
+                f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
+                f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
+                f"            <div style='text-align: right; margin-top: 10px;'>\n"
+                f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
+                f"            </div>\n"
+                f"        </div>\n"
+                f"        <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>\n"
+                f"            <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 20px;'>신청인 : {name} 님</h2>\n"
+                f"            <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>\n"
+                f"                <p style='margin: 0; white-space: nowrap;'>[양력] {sol_y}.{sol_m:02d}.{sol_d:02d} | [음력] {lun_y}.{lun_m:02d}.{lun_d:02d}</p>\n"
+                f"                <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{b_time}</p>\n"
+                f"            </div>\n"
+                f"        </div>\n"
+                f"        <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{dt_mod.datetime.now().strftime('%Y년 %m월 %d일')}</p>\n"
+                f"        <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
+                f"    </div>\n"
+                f"</div>"
             )
-            ai_result = get_ai_response(prompts.SYSTEM_ROLE, fact_sheet)
+            st.session_state['saved_report_cover'] = cover_html
+            components.html(cover_html, height=800)
+            
+            # 원국 및 마스터 바 출력
+            st.markdown(engine.generate_saju_chart_html(bazi_data), unsafe_allow_html=True)
+            st.markdown(engine.generate_master_bar_html(bazi_data), unsafe_allow_html=True)
+            
+            # AI 통변 실행 (엔진 데이터 안전 호출)
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                name=name, gender=gender, 
+                ilgan=bazi_data.get('ilgan', '甲'), ilju=bazi_data.get('ilju', '甲子'),
+                wolryeong=bazi_data.get('wolryeong', '정보없음'),
+                jijanggan_info=bazi_data.get('jijanggan', '정보없음'),
+                missing_and_gongmang=bazi_data.get('gongmang_info', '정보없음'),
+                shinsal_info=bazi_data.get('shinsal_info', '정보없음'),
+                vault_info=bazi_data.get('vault_info', '정보없음')
+            )
+            ai_result = call_gemini_api(fact_sheet)
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
