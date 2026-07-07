@@ -73,21 +73,35 @@ u_product = st.sidebar.radio(
 # ▶ 1. 개인사주 분석 모듈
 # ==============================================================================
 if u_product == "1. 개인사주 및 일진 분석":
-    st.subheader("👤 개인사주 기본 정보 입력")
+    # 1. 입력창을 다시 좌측 사이드바로 이동 및 '일/시간' 추가
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("👤 개인사주 정보 입력")
+    name = st.sidebar.text_input("이름", "홍길동")
+    gender = st.sidebar.selectbox("성별", ["남성", "여성"])
     
-    col1, col2, col3, col4 = st.columns(4)
-    with col1: name = st.text_input("이름", "홍길동")
-    with col2: gender = st.selectbox("성별", ["남성", "여성"])
-    with col3: b_year = st.number_input("태어난 연도", 1900, 2050, 1980)
-    with col4: b_month = st.number_input("월", 1, 12, 1)
+    col_y, col_m, col_d = st.sidebar.columns(3)
+    with col_y: b_year = st.number_input("연도", 1900, 2050, 1980)
+    with col_m: b_month = st.number_input("월", 1, 12, 1)
+    with col_d: b_day = st.number_input("일", 1, 31, 1)
     
-    if st.button("개인사주 분석 실행 (AI 자율 풀이)"):
+    b_time = st.sidebar.selectbox("태어난 시간", [
+        "시간 모름", "朝子(조자) 00:00~01:29", "丑(축) 01:30~03:29", 
+        "寅(인) 03:30~05:29", "卯(묘) 05:30~07:29", "辰(진) 07:30~09:29", 
+        "巳(사) 09:30~11:29", "午(오) 11:30~13:29", "未(미) 13:30~15:29", 
+        "申(신) 15:30~17:29", "酉(유) 17:30~19:29", "戌(술) 19:30~21:29", 
+        "亥(해) 21:30~23:29", "夜子(야자) 23:30~23:59"
+    ])
+    
+    # 2. 메인 화면은 출력 전용으로 깔끔하게 유지
+    st.subheader("👤 개인사주 및 일진 분석")
+    st.info("👈 좌측 사이드바에 사주 정보를 입력하고 '분석 실행' 버튼을 눌러주십시오.")
+
+    # 3. 실행 버튼도 사이드바에 배치
+    if st.sidebar.button("개인사주 분석 실행"):
         with st.spinner("주방장(engine)이 명리 연산을 수행하고 AI가 통변을 준비 중입니다..."):
             
-            # [Step 1] engine.py를 호출하여 명리 팩트 도출
-            # (예시: engine.py의 함수들을 사용하여 데이터를 가져옴)
-            # 실제로는 박사님의 사주 계산 로직에 따라 연산 결과를 변수에 담습니다.
-            ilgan = "甲" # 예시 데이터
+            # [Step 1] engine.py를 호출하여 명리 팩트 도출 (예시 구조)
+            ilgan = "甲" 
             ilju = "甲寅"
             wolryeong = db.get("wolryeong", {}).get("甲寅", "정보 없음")
             
@@ -98,7 +112,7 @@ if u_product == "1. 개인사주 및 일진 분석":
                 ilgan=ilgan,
                 ilju=ilju,
                 wolryeong=wolryeong,
-                jijanggan_info="寅(戊,丙,甲) - 비견/건록좌", # engine에서 도출한 결과
+                jijanggan_info="寅(戊,丙,甲) - 비견/건록좌",
                 missing_and_gongmang="수(水) 기운 부족 / 공망: 子, 丑",
                 shinsal_info="백호대살, 괴강살",
                 vault_info="특이사항 없음"
@@ -107,7 +121,7 @@ if u_product == "1. 개인사주 및 일진 분석":
             # [Step 3] AI 호출 (에러 없는 순수 텍스트 전달)
             ai_result = get_ai_response(prompts.SYSTEM_ROLE, fact_sheet_prompt)
             
-            # [Step 4] 화면 출력 (HTML 템플릿 사용)
+            # [Step 4] 화면 출력
             st.markdown(prompts.HTML_LAYOUTS["section_title"].format(title=f"{name}님의 초연명리 감명서"), unsafe_allow_html=True)
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
