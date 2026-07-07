@@ -326,12 +326,12 @@ if btn_run:
             h, m = extract_time(b_time)
             y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(b_year, b_month, b_day, h, m)
             
-            # [최종 수정] 인자를 명시적/순차적으로 전달하여 인터프리터 에러를 차단합니다.
+            # 음력/윤달 여부 계산
             is_lunar_val = ("음력" in u_cal)
             is_leap_val = ("윤달" in u_cal)
             
-            # 박사님의 engine.get_ganji_from_date 정의에 따른 정확한 인자 전달
-            _, _, d_pillar = engine.get_ganji_from_date(b_year, b_month, b_day, is_lunar=is_lunar_val, is_leap=is_leap_val)
+            # [수정 완료] 키워드 인자(is_lunar=...)를 제거하고 순서대로 전달하여 인터프리터 에러 원천 차단
+            _, _, d_pillar = engine.get_ganji_from_date(b_year, b_month, b_day, is_lunar_val, is_leap_val)
             
             t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
 
