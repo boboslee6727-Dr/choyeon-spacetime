@@ -224,7 +224,7 @@ with st.sidebar:
     elif u_product == "3. 궁합 및 출산 택일":
         st.markdown("---")
         
-        # 1. 상대방 기본 정보 박스
+        #-- 1. 상대방 기본 정보 박스
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", placeholder="이영희", key="f_n")
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
@@ -239,7 +239,7 @@ with st.sidebar:
             
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
             
-        # 2. 필요할 때만 펼쳐보는 역산 검색 도구
+        #-- 2. 필요할 때만 펼쳐보는 역산 검색 도구
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -284,21 +284,21 @@ with st.sidebar:
                     if not p_found: st.error("일치하는 날짜가 없습니다.")
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        # 3. 출산택일 체크박스 (역산 박스 아래로 이동 완료)
+        #-- 3. 출산택일 체크박스 (역산 박스 아래로 이동 완료)
         st.markdown("<br>", unsafe_allow_html=True) # 시각적 여백을 살짝 추가
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
 
-        # 4. 실행 버튼 (첫 번째 버튼)
-        st.markdown("<br>", unsafe_allow_html=True)
-        btn_run = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
+    # 5. 실행 버튼 (첫 번째 버튼)
+    st.markdown("<br>", unsafe_allow_html=True)
+    btn_run = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
-        # 5. 인쇄 버튼 (스트림릿 버튼을 사용하여 스타일 완벽 통일)
-        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
-            components.html("""
-            <script>
-                window.parent.print();
-            </script>
-            """, height=0)
+    # 6. 인쇄 버튼 (스트림릿 버튼을 사용하여 스타일 완벽 통일)
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+        components.html("""
+        <script>
+            window.parent.print();
+        </script>
+        """, height=0)
 
 # ==============================================================================
 # 3. 메인 화면 (1. 개인사주 및 일진 분석, 2. 타 감명서 비교 3. 궁합 및 출산 택일)
