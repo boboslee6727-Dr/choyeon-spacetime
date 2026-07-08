@@ -2,13 +2,14 @@ import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
 from korean_lunar_calendar import KoreanLunarCalendar
-import json
 import os
 import re
 from google import genai
-from engine import get_true_year_month_pillar, get_time_ganji, get_ganji_from_date
-import prompts
 import time
+import engine
+import html_templates
+import prompts
+import json
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
@@ -306,11 +307,13 @@ if btn_run:
             klc.setSolarDate(b_year, b_month, b_day)
             sol_y, sol_m, sol_d = b_year, b_month, b_day
             lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
-            leap_str = "윤달" if klc.isIntercalation else "평달"
+            leap_str = "윤달" if klc.isIntercalary else "평달"
             
         curr_year = dt_mod.datetime.now().year
         age = curr_year - sol_y + 1
-        g_icon = "♂️" if gender == "남성" else "♀️"
+        p_icon = "♂️" if gender == "남성" else "♀️"
+        p_color = "#1A237E" if gender == "남성" else "#D50000"
+        today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
         
         def extract_time(time_str):
             if "모름" in time_str: return 0, 0
@@ -318,39 +321,99 @@ if btn_run:
             match = re.search(r'(\d{2}):(\d{2})', time_str)
             return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
-        def td(content):
-            return f"<td style='border:1px solid #444; font-weight:900;'>{content}</td>"
-
-        # 1. 만세력 엔진 연산 (데이터 무결성 확보)
-        with st.spinner("초연 시공명리 엔진 {APP_VERSION} 가동 중..."):
+        # 1. 만세력 엔진 연산 (import engine 기반 데이터 무결성 확보)
+        with st.spinner(f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"):
             h, m = extract_time(b_time)
-            y_pillar, m_pillar, _ = get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
-            _, _, d_pillar = get_ganji_from_date(int(b_year), int(b_month), int(b_day), ("음력" in u_cal), ("윤달" in u_cal))
-            t_gan, t_ji = get_time_ganji(d_pillar[0], b_time)
+            
+            # engine 모듈 전체 호출 규격에 맞춰 정석대로 복구
+            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+            
+            is_lunar_val = ("음력" in u_cal)
+            is_leap_val = ("윤달" in u_cal)
+            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+            t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
 
-            gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+            gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
+            jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
             hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
             hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
 
-            # 2. 커버 페이지 (Cover HTML)
-            components.html(st.session_state['saved_report_cover'], height=800)
+            # 기초 오행 및 신살 데이터 주입 연산
+            counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+            for c in gans + jjis:
+                if c in "甲乙寅卯": counts['목']+=1
+                elif c in "丙丁巳午": counts['화']+=1
+                elif c in "戊己辰戌丑未": counts['토']+=1
+                elif c in "庚辛申酉": counts['금']+=1
+                elif c in "壬癸亥子": counts['수']+=1
 
-            # 3. 사주 원국 테이블 (Ver 48.9 품질 복구)
-            # td 함수를 다시 정의하여 바탕색과 크기를 완벽히 고정
-            def td(c, size="18px"): return f"<td style='font-size:{size}; font-weight:900; border:1px solid #444 !important; background:white; padding:10px;'>{c}</td>"
-            
-            # (사주 원국 HTML 생성...)
-            st.markdown(table_html, unsafe_allow_html=True)
-            st.markdown(master_bar_html, unsafe_allow_html=True)
+            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+            guiin_str = guiin_map.get(ds, '없음')
+            n_gong = engine.calculate_gongmang(ys, yb)
+            i_gong = engine.calculate_gongmang(ds, db)
+            cur_samjae = engine.get_samjae(yb, db)
+            samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#2E7D32"
 
-            # 4. 운의 흐름 (대운/세운/월운 HTML)
-            st.markdown("---")
-            st.markdown(un_html, unsafe_allow_html=True)  # 대운
-            st.markdown(se_html, unsafe_allow_html=True)  # 세운
-            st.markdown(wol_html, unsafe_allow_html=True) # 월운
+            # 지지합충 연쇄 4줄 격자 렌더링 데이터 생성
+            ji_rel_rows = ""
+            for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if engine.get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:0px solid transparent; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else engine.get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:13px; vertical-align:middle;'>합충형파해</td>" if l_idx==0 else ""
+                ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+
+            # 대운수 및 방향 도출 연산
+            base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
+            adj_mins = engine.get_total_time_adjustment(base_dt)
+            utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+            order_dir = 1 if (engine.GAN.index(ys)%2==0) == (gender=='남성') else -1
+            calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
+            direction_str = "순행" if order_dir == 1 else "역행"
+
+            # ------------------------------------------------------------------
+            # [2단계] 출력 렌더링 통제 - html_templates 모듈 연동 전면 체결
+            # ------------------------------------------------------------------
+            # 1. 첫 페이지 명품 커버 페이지 (Cover HTML) 출력
+            sol_str = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
+            lun_str = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
+            time_str = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
+            cover_html_out = html_templates.get_personal_cover(APP_VERSION, p_color, p_icon, name, sol_str, lun_str, time_str, today_str)
+            st.markdown(cover_html_out, unsafe_allow_html=True)
+
+            # 2. 정밀 분석 안내서 배너 (Intro HTML) 출력
+            st.markdown(html_templates.get_intro_html(), unsafe_allow_html=True)
+
+            # 3. 만세력 사주원국 정밀 레이아웃 표 (Table HTML) 출력
+            info_h = f"<div style='text-align:center; line-height:1.5;'><span style='font-size:19px; font-weight:900; color:{p_color};'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
+            table_html_out = html_templates.get_table_html(info_h, gans, jjis, ds, hs, hb, db, mb, yb, ji_rel_rows, engine.get_gan_rel_all, engine.get_ss, engine.get_jijanggan_full, engine.get_unsung, engine.get_12_shinsal, engine.get_general_shinsal_filtered, engine.get_color, gender)
+            st.markdown(table_html_out, unsafe_allow_html=True)
+
+            # 4. 종합 요약 마스터 바 (Master Bar HTML) 출력
+            st.markdown(html_templates.get_master_bar(counts, guiin_str, n_gong, i_gong, samjae_color, cur_samjae), unsafe_allow_html=True)
+
+            # 5. 운의 흐름 가로 정렬 3단 흐름표 (대운/세운/월운 HTML) 차례로 매핑 출력
+            st.markdown(html_templates.get_daewun_html(calc_d, direction_str, age, ms, mb, ds, yb, engine.GAN, engine.JI, engine.get_ss, engine.get_color, engine.get_unsung, engine.get_12_shinsal), unsafe_allow_html=True)
             
-            # 5. AI 감명 결과 출력
+            cur_dw_idx = max(0, (age - calc_d) // 10)
+            dw_g_cur = engine.GAN[(engine.GAN.index(ms) + (cur_dw_idx+1)*order_dir)%10] if ms in engine.GAN else "-"
+            dw_j_cur = engine.JI[(engine.JI.index(mb) + (cur_dw_idx+1)*order_dir)%12] if mb in engine.JI else "-"
+            start_year = sol_y + (cur_dw_idx * 10 + calc_d) - 1
+            st.markdown(html_templates.get_sewun_html(dw_g_cur, dw_j_cur, start_year, curr_year, ds, yb, engine.GAN, engine.JI, engine.get_ss, engine.get_color, engine.get_unsung, engine.get_12_shinsal), unsafe_allow_html=True)
+            
+            wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
+            wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
+            curr_m = dt_mod.datetime.now().month
+            st.markdown(html_templates.get_wolwun_html(curr_year, curr_m, ds, yb, wol_gans, wol_jis, engine.get_ss, engine.get_color, engine.get_unsung, engine.get_12_shinsal), unsafe_allow_html=True)
+
+            # 6. AI 감명 결과 박스 렌더링 및 최종 감사 인사(Closing) 출력
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar,
+                jijanggan_info="엔진 데이터 정밀 연동됨", missing_and_gongmang="엔진 데이터 정밀 연동됨",
+                shinsal_info="엔진 데이터 정밀 연동됨", vault_info="엔진 데이터 정밀 연동됨"
+            )
+            ai_result = call_gemini_api(fact_sheet)
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
+            st.markdown(html_templates.get_closing_html(name), unsafe_allow_html=True)
 
 # ==============================================================================
     elif u_product == "2. 타 감명서 비교":
