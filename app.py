@@ -367,7 +367,7 @@ if btn_run:
             <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                 <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                     <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                        <h1 class='title-gothic' style='font-size: 24px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮초연 시공명리 사주팔자 풀이</h1>
+                        <h1 class='title-gothic' style='font-size: 24px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮초연 시공명리 사주풀이</h1>
                         <div style='text-align: right; margin-top: 10px;'>
                             <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>
                         </div>
@@ -550,9 +550,6 @@ if btn_run:
                 </div>
             </div>
             """
-
-            # 🚀 [최종 렌더링]: 커버를 뺀 나머지 전체를 A4 용지 안의 '둥근 사각형'에 가둠 (지시 2, 9번 반영)
-            st.markdown(cover_html, unsafe_allow_html=True)
             
             # 👇 2) & 9) 테두리(border)와 둥근 모서리(border-radius)가 적용된 껍데기 박스
             combined_report_box = f"""
