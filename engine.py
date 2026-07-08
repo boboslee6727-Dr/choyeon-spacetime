@@ -85,6 +85,24 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
+def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
+    cal = KoreanLunarCalendar()
+    if is_lunar:
+        cal.setLunarDate(y, m, d, is_leap)
+    else:
+        cal.setSolarDate(y, m, d)
+    
+    # 만세력에서 간지 문자열을 가져와 공백 기준으로 나눔 (년, 월, 일)
+    gapja_str = cal.getChineseGapJaString() # 예: "甲子年 乙丑月 丙寅日"
+    parts = gapja_str.split()
+    
+    # 년주, 월주, 일주 추출 (각각 2글자씩)
+    year_ganji = parts[0][:2]
+    month_ganji = parts[1][:2]
+    day_ganji = parts[2][:2]
+    
+    return year_ganji, month_ganji, day_ganji
+
 def get_daeun_su_accurate(utc_dt, order):
     try:
         sun = ephem.Sun()
@@ -656,3 +674,5 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
+    
+   
