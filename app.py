@@ -21,15 +21,14 @@ st.markdown("""
 <style>
     /* 1. 구글 폰트 임포트 */
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
-    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     
-    /* 2. 전체 화면 폰트 강제 설정 (명조체 중심) */
-    html, body, [class*="st-"], .stApp, p, div, span, table, td, tr, h1, h2, h3, h4, h5, h6 { font-family: 'Nanum Myeongjo', serif !important; }
+    /* 2. 메인 화면 배경 및 나눔명조체 적용 (span, div 등 광범위 적용 배제하여 아이콘 보호) */
     .stApp { background-color: #FFFDE7 !important;}
+    p, h1, h2, h3, h4, h5, h6, table, tr, td, div.report-page { font-family: 'Nanum Myeongjo', serif !important; }
     
-    /* 3. 사이드바 전체 고딕체 적용 */
+    /* 3. 사이드바 텍스트 폰트 (아이콘 충돌 방지를 위해 * 대신 특정 태그만 지정 - 원본 복구) */
     [data-testid="stSidebar"] {background-color: #F0F2F6 !important;}
-    [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] {font-family: 'Nanum Gothic', sans-serif !important;}
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] {font-family: 'Nanum Gothic', sans-serif !important;}
     
     /* 4. 버튼 스타일 완벽 분리 (고딕체 유지) */
     div.stButton > button { font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important; }
@@ -37,11 +36,11 @@ st.markdown("""
     div.stButton > button[kind="secondary"] {background-color: #E8F5E9 !important; color: #2E7D32 !important; border: 1px solid #81C784 !important;}
     
     /* 5. 오행에 따른 자동 바탕색 (ver 48.9 기준 진한 색상) */
-    .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; } /* 진한 초록 */
-    .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; } /* 진한 빨강 */
-    .color-토 { background-color: #F9A825 !important; color: #000000 !important; } /* 진한 노랑 */
-    .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; } /* 진한 회색 */
-    .color-수 { background-color: #212121 !important; color: #FFFFFF !important; } /* 검정 */
+    .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; }
+    .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; }
+    .color-토 { background-color: #F9A825 !important; color: #000000 !important; }
+    .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; }
+    .color-수 { background-color: #212121 !important; color: #FFFFFF !important; }
     
     /* 6. 표 및 감명서 내부 정렬, 테두리 강제 설정 */
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; table-layout: fixed; }
@@ -51,13 +50,13 @@ st.markdown("""
     
     /* 7. 성명 및 주요 정보 텍스트 색상 수정 (예법 준수: 적색 배제) */
     .report-page, .report-page * { color: #000000 !important; }
-    .report-page h1, .report-page h3 { color: #1A237E !important; } /* 제목은 남색으로 유지 */
+    .report-page h1, .report-page h3 { color: #1A237E !important; } 
     
     /* 8. AI 통변 내용 박스 */
-    .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; }
+    .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; font-family: 'Nanum Myeongjo', serif !important; }
     
     /* 9. 스트림릿 시스템 아이콘 강제 복구 (안전장치) */
-    span.material-symbols-rounded, i {font-family: 'Material Symbols Rounded' !important;}
+    span.material-symbols-rounded, i, svg {font-family: 'Material Symbols Rounded' !important;}
     
     /* 10. 프린트 설정 */
     @media print { 
@@ -70,7 +69,6 @@ st.markdown("""
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
-        .vip-inset-frame { border: 2px solid #000; border-radius: 20px; padding: 15px; }
     }
 </style>
 """, unsafe_allow_html=True)
