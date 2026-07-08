@@ -281,16 +281,7 @@ with st.sidebar:
 # 3. 메인 화면 (1. 개인사주 및 일진 분석, 2. 타 감명서 비교 3. 궁합 및 출산 택일)
 # ==============================================================================
 if btn_run:
-    if btn_run:
-    oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
-
-    def td_bg(c):
-        col = engine.get_color(c)
-        bg = oheng_bg.get(col, '#FFFFFF')
-        return f"<td style='font-size:18px; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
-
-# ==============================================================================
-    if u_product == "1. 개인사주 및 일진 분석":
+     if u_product == "1. 개인사주 및 일진 분석":
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
             is_leap = True if "윤달" in u_cal else False
