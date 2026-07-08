@@ -142,7 +142,7 @@ def get_sewun_html(dw_g_cur, dw_j_cur, start_year, curr_y, ds, yb, GAN, JI, get_
             <div style='background-color:#0D47A1; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{ty}년</div>
             <div style='padding:2px; font-size:11px; color:#666;'>{get_ss(ds,tc)}</div>
             <div class='color-{get_color(tc)}' style='font-size:17px; font-weight:900;'>{tc}</div>
-            <div class='color-{get_color(tj)}' style='font-size:17px; font-weight:900;'>{j}</div>
+            <div class='color-{get_color(tj)}' style='font-size:17px; font-weight:900;'>{tj}</div>
             <div style='padding:2px; font-size:11px; color:#666;'>{get_ss(ds,tj)}</div>
             <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{get_unsung(ds,tj)}</div>
             <div style='font-size:11px; color:#C62828; font-weight:700;'>{get_12_shinsal(yb, tj)}</div>
