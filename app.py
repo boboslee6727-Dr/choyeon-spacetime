@@ -108,15 +108,17 @@ def extract_ganji(text):
 # 2. 사이드바 통제 센터 (입력 및 실행 버튼)
 # ==============================================================================
 with st.sidebar:
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="text-align: center;">
-            <h1 style="font-family: sans-serif; color: #000000; font-weight: 900; font-size: 28px; margin-bottom: 5px;">
-                🏮 초연 시공명리 연구소</h1>
+            <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin-bottom: 5px;">
+                🏮 초연 시공명리 연구소
+            </h1>
         </div>
         """, 
         unsafe_allow_html=True
     )
-    st.markdown(f"<p style='text-align: center; color: #555555;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #555555; font-family: sans-serif; font-size: 12px;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     # 1. 상품 선택
