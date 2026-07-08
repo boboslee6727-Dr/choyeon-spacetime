@@ -281,7 +281,7 @@ with st.sidebar:
 # 3. 메인 화면 (1. 개인사주 및 일진 분석, 2. 타 감명서 비교 3. 궁합 및 출산 택일)
 # ==============================================================================
 if btn_run:
-     if u_product == "1. 개인사주 및 일진 분석":
+    if u_product == "1. 개인사주 및 일진 분석":
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
             is_leap = True if "윤달" in u_cal else False
