@@ -245,19 +245,18 @@ with st.sidebar:
                     if not p_found: st.error("일치하는 날짜가 없습니다.")
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-    # 5. 실행 버튼 (use_container_width=True로 사이드바 너비만큼 확장)
+    # 5. 실행 버튼 (첫 번째 버튼)
     st.markdown("<br>", unsafe_allow_html=True)
     btn_run = st.button("✨ [초연 시공명리 풀이]", key="btn_run", use_container_width=True, type="primary")
 
-    # HTML 버튼을 사이드바 너비에 꽉 차게 (100%) 강제 설정
-    components.html("""
-    <script>function triggerPrint() { window.parent.print(); }</script>
-    <div style='width: 100%;'>
-        <button onclick='triggerPrint()' style='width: 100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:38px; border-radius:4px; cursor:pointer; font-size:14px; font-family: sans-serif;'>
-            🖨️ 풀이 결과 인쇄 / PDF 저장
-        </button>
-    </div>
-    """, height=50)
+    # 6. 인쇄 버튼 (스트림릿 버튼을 사용하여 스타일 완벽 통일)
+    # 인쇄 기능을 수행하는 자바스크립트를 버튼 클릭 시 호출
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+        components.html("""
+        <script>
+            window.parent.print();
+        </script>
+        """, height=0)
 
 # ==============================================================================
 # 3. 메인 화면 (1. 개인사주 및 일진 분석, 2. 타 감명서 비교 3. 궁합 및 출산 택일)
