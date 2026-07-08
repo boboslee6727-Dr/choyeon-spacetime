@@ -385,17 +385,17 @@ if btn_run:
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>본 초연 시공명리 사주풀이는 5년에 한 번 돌아오는 '60월령'과 '60일주'의 조합으로 3,600가지의 유형으로 보다 더 정밀한 분석이 가능합니다.</p>
 <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
 </div>"""
-            st.markdown(intro_html, unsafe_allow_html=True)
 
             # 3. 사주 원국 테이블 (Ver 48.9 원본 레이아웃 및 오행 바탕색 복원)
             info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
             oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
 
-        def td_bg(c):
-            col = engine.get_color(c)
-            bg = oheng_bg.get(col, '#FFFFFF')
-            return f"<td style='font-size:18px; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+            # 👇 함수 이름을 박사님 원본인 td로 완벽 복구
+            def td(c):
+                col = engine.get_color(c)
+                bg = oheng_bg.get(col, '#FFFFFF')
+                return f"<td style='font-size:18px; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
 <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
@@ -417,7 +417,6 @@ if btn_run:
 <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</td>" for i in range(4)])}</tr>
 </table>"""
-            st.markdown(table_html, unsafe_allow_html=True)
 
             # 4. 마스터 바
             master_bar_html = f"""<div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF;'>
@@ -426,9 +425,8 @@ if btn_run:
 <div>🎯 공망: [년] <span style='color:#C62828;'>{n_gong}</span> / [일] <span style='color:#C62828;'>{i_gong}</span></div>
 <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
 </div>"""
-            st.markdown(master_bar_html, unsafe_allow_html=True)
 
-            # 5. 3단 흐름표 렌더링 (바탕색 적용)
+            # 5. 3단 흐름표 렌더링 (👇 bg_map 오류 모두 oheng_bg로 교정)
             # 대운
             un_html = f"<div style='margin-top:25px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(10):
@@ -438,8 +436,8 @@ if btn_run:
                 is_active = val <= age < val + 10
                 bg_col = "#FFF9C4" if is_active else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
-                c_bg = bg_map.get(engine.get_color(c), 'transparent')
-                j_bg = bg_map.get(engine.get_color(j), 'transparent')
+                c_bg = oheng_bg.get(engine.get_color(c), 'transparent')
+                j_bg = oheng_bg.get(engine.get_color(j), 'transparent')
                 un_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,c)}</div>
@@ -450,7 +448,6 @@ if btn_run:
 <div style='font-size:11px; color:#C62828; font-weight:700;'>{engine.get_12_shinsal(yb, j)}</div>
 </div>"""
             un_html += "</div>"
-            st.markdown(un_html, unsafe_allow_html=True)
             
             # 세운
             cur_dw_idx = max(0, (age - calc_d) // 10)
@@ -466,8 +463,8 @@ if btn_run:
                 is_cur_yr = (ty == curr_year)
                 bg_col = "#E1F5FE" if is_cur_yr else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
-                tc_bg = bg_map.get(engine.get_color(tc), 'transparent')
-                tj_bg = bg_map.get(engine.get_color(tj), 'transparent')
+                tc_bg = oheng_bg.get(engine.get_color(tc), 'transparent')
+                tj_bg = oheng_bg.get(engine.get_color(tj), 'transparent')
                 se_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#0D47A1; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{ty}년</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tc)}</div>
@@ -478,7 +475,6 @@ if btn_run:
 <div style='font-size:11px; color:#C62828; font-weight:700;'>{engine.get_12_shinsal(yb, tj)}</div>
 </div>"""
             se_html += "</div>"
-            st.markdown(se_html, unsafe_allow_html=True)
             
             # 월운
             wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
@@ -491,8 +487,8 @@ if btn_run:
                 is_cur_m = (tm == curr_m)
                 bg_col = "#E8F5E9" if is_cur_m else "transparent"
                 b_left = "1px solid #ccc" if i != 11 else "none"
-                tc_bg = bg_map.get(engine.get_color(tc), 'transparent')
-                tj_bg = bg_map.get(engine.get_color(tj), 'transparent')
+                tc_bg = oheng_bg.get(engine.get_color(tc), 'transparent')
+                tj_bg = oheng_bg.get(engine.get_color(tj), 'transparent')
                 wol_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#2E7D32; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tc)}</div>
@@ -503,9 +499,9 @@ if btn_run:
 <div style='font-size:11px; color:#C62828; font-weight:700;'>{engine.get_12_shinsal(yb, tj)}</div>
 </div>"""
             wol_html += "</div>"
-            st.markdown(wol_html, unsafe_allow_html=True)
 
             # 6. AI 통변 및 클로징
+            ai_output_html = ""
             try:
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar,
@@ -513,7 +509,7 @@ if btn_run:
                     shinsal_info="엔진 데이터 정밀 연동됨", vault_info="엔진 데이터 정밀 연동됨"
                 )
                 ai_result = call_gemini_api(fact_sheet)
-                st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
+                ai_output_html = prompts.HTML_LAYOUTS["report_box"].format(content=ai_result)
             except Exception:
                 pass
             
@@ -526,7 +522,23 @@ if btn_run:
 <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
 </div>
 </div>"""
-            st.markdown(closing_html, unsafe_allow_html=True)
+
+            # 👇 핵심 조치: 커버는 단독 출력, 나머지는 하나의 A4 용지 스타일 박스로 묶어서 일괄 출력
+            st.markdown(cover_html, unsafe_allow_html=True)
+            
+            combined_report_box = f"""
+            <div style='background-color:#FFFFFF; padding:40px; margin:20px auto; border:1px solid #E0E0E0; border-radius:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
+                {intro_html}
+                {table_html}
+                {master_bar_html}
+                {un_html}
+                {se_html}
+                {wol_html}
+                {ai_output_html}
+                {closing_html}
+            </div>
+            """
+            st.markdown(combined_report_box, unsafe_allow_html=True)
 
     # ==============================================================================
     elif u_product == "2. 타 감명서 비교":
