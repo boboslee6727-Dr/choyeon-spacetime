@@ -267,9 +267,15 @@ Python
             with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
-            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn"):
+            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn", type="secondary"):
                 _pry, _prm, _prd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
-                if len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
+                
+                if not _pry and not _prm and not _prd:
+                    if 'p_rev_success_msg' in st.session_state:
+                        del st.session_state['p_rev_success_msg']
+                    st.rerun()
+                    
+                elif len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
                     p_ry_h = K2H_GAN.get(_pry[0], _pry[0]) + K2H_JI.get(_pry[1], _pry[1])
                     p_rm_h = K2H_GAN.get(_prm[0], _prm[0]) + K2H_JI.get(_prm[1], _prm[1])
                     p_rd_h = K2H_GAN.get(_prd[0], _prd[0]) + K2H_JI.get(_prd[1], _prd[1])
@@ -303,10 +309,14 @@ Python
                                     st.session_state.p_rev_success_msg = f"✅ 상대방 양력 {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 (음력 {p_leap}{p_l_y}년 {p_l_m:02d}월 {p_l_d:02d}일) 자동입력 완료!"
                                     st.rerun()
                                     break
-                            p_curr_dt -= dt_mod.timedelta(days=1)
-                        if p_found: break
+                                p_curr_dt -= dt_mod.timedelta(days=1)
+                            if p_found: break
                     if not p_found: st.error("일치하는 날짜가 없습니다.")
-                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                else: 
+                    if 'p_rev_success_msg' in st.session_state:
+                        del st.session_state['p_rev_success_msg']
+                    st.warning("간지를 2글자씩 정확히 입력하세요.")
+            
             if st.session_state.get('p_rev_success_msg'):
                 st.success(st.session_state.p_rev_success_msg)
 
