@@ -342,10 +342,11 @@ if btn_run:
             cur_samjae = engine.get_samjae(yb, db)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#2E7D32"
 
+            # 👇 5) 합충형파해 폰트 축소 및 1줄 표기 강제 (font-size: 11px, 자간 축소)
             ji_rel_rows = ""
             for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                 b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-                cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if engine.get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:0px solid transparent; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else engine.get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if engine.get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-size:11px; letter-spacing:-0.7px; line-height:1.2; word-break:keep-all; font-weight:900; border-top:0px solid transparent; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else engine.get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
                 lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:13px; vertical-align:middle;'>합충형파해</td>" if l_idx==0 else ""
                 ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
@@ -356,16 +357,17 @@ if btn_run:
             calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
             direction_str = "순행" if order_dir == 1 else "역행"
 
-            # 1. 커버 페이지 (타이틀 폰트 크기 축소 및 이모지 추가)
+            # 1. 커버 페이지
             sol_str = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
             
+            # 👇 1) 타이틀 폰트 축소(24px), 이모지 추가, max-width 800px로 확장 및 nowrap
             cover_html = f"""
             <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
-                <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+                <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                     <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                        <h1 class='title-gothic' style='font-size: 20px !important; margin:0 !important; font-weight: 900;'>🏮초연 시공명리 사주팔자 풀이</h1>
+                        <h1 class='title-gothic' style='font-size: 24px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮초연 시공명리 사주팔자 풀이</h1>
                         <div style='text-align: right; margin-top: 10px;'>
                             <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>
                         </div>
@@ -382,7 +384,7 @@ if btn_run:
                 </div>
             </div>
             """
-            
+
             # 2. 도입부 배너
             intro_html = f"""<div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 5px;'>
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 시작합니다만,</p>
@@ -393,31 +395,30 @@ if btn_run:
             # 3. 사주 원국 테이블
             info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
-            oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
+            # 지장간 스타일의 오행색
+            oheng_bg = {'목': '#A5D6A7', '화': '#EF9A9A', '토': '#FFF59D', '금': '#FAFAFA', '수': '#90CAF9'}
 
-            # 👇 5) 천간/지지 글자 크기(26px) 확대 및 칸 꽉차는 오행 바탕색 적용
+            # 👇 3) 폰트 20px, 높이 밀착, div를 활용해 스트림릿 간섭 없이 오행 배경 100% 꽉 채움
             def td_bg(c):
                 col = engine.get_color(c)
                 bg = oheng_bg.get(col, '#FFFFFF')
-                text_col = "#000000" if bg != '#000000' else "#FFFFFF" # 보색 처리 방어
-                return f"<td style='font-size:26px; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:{text_col}; padding:15px 0; width:21%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+                return f"<td style='padding:0; border:1px solid #444 !important; width:21%; height:38px;'><div style='background-color:{bg} !important; height:100%; width:100%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:#000000 !important; margin:0; padding:6px 0;'>{('?' if c in ['?',' ','-'] else c)}</div></td>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
 <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; table-layout:fixed;'>
 <tr class='top-header-cell' style='background-color:#1A237E;'>
-<!-- 👇 3) 최상단 글자색 흰색, 4) 구분난 16% 폭, 나머지 동등하게 21% 적용 -->
-<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; width:16%; white-space:nowrap;'>구분</td>
-<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; width:21%;'>시주</td>
-<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; width:21%;'>일주</td>
-<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; width:21%;'>월주</td>
-<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; width:21%;'>년주</td>
+<td style='border:1px solid #444; width:16%;'><span style='color:#FFFFFF; font-weight:900;'>구분</span></td>
+<td style='border:1px solid #444; width:21%;'><span style='color:#FFFFFF; font-weight:900;'>시주</span></td>
+<td style='border:1px solid #444; width:21%;'><span style='color:#FFFFFF; font-weight:900;'>일주</span></td>
+<td style='border:1px solid #444; width:21%;'><span style='color:#FFFFFF; font-weight:900;'>월주</span></td>
+<td style='border:1px solid #444; width:21%;'><span style='color:#FFFFFF; font-weight:900;'>년주</span></td>
 </tr>
 <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>천간십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,ys)}</td></tr>
 <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important; white-space:nowrap;'>천간</td>{td_bg(hs)}{td_bg(ds)}{td_bg(ms)}{td_bg(ys)}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important; white-space:nowrap;'>지지</td>{td_bg(hb)}{td_bg(db)}{td_bg(mb)}{td_bg(yb)}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>지지십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,db)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,yb)}</td></tr>
-<tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+<tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444; height:75px; vertical-align:middle;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
 {ji_rel_rows}
 <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
 <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
@@ -442,18 +443,17 @@ if btn_run:
                 is_active = val <= age < val + 10
                 bg_col = "#FFF9C4" if is_active else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
-                # 👇 6) 흐름표 간지 오행색 적용 및 폰트 22px 확대
+                # 👇 7) 흐름표 나눔명조체, 18px 폰트, 오행 바탕색 동기화
                 c_bg = oheng_bg.get(engine.get_color(c), 'transparent')
                 j_bg = oheng_bg.get(engine.get_color(j), 'transparent')
                 un_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,c)}</div>
-<div style='background-color:{c_bg}; color:#000000; font-size:22px; font-weight:900; padding:4px 0;'>{c}</div>
-<div style='background-color:{j_bg}; color:#000000; font-size:22px; font-weight:900; padding:4px 0;'>{j}</div>
+<div style='background-color:{c_bg}; color:#000000; font-family:"Nanum Myeongjo", serif; font-size:18px; font-weight:900; padding:4px 0;'>{c}</div>
+<div style='background-color:{j_bg}; color:#000000; font-family:"Nanum Myeongjo", serif; font-size:18px; font-weight:900; padding:4px 0;'>{j}</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,j)}</div>
 <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(ds,j)}</div>
-<!-- 👇 7) 12신살 부분 가로줄눈 (border-top) 추가 -->
-<div style='font-size:11px; color:#C62828; font-weight:700; border-top:1px dashed #aaa; margin-top:2px; padding-top:2px;'>{engine.get_12_shinsal(yb, j)}</div>
+<div style='font-size:11px; color:#C62828; font-weight:700; border-top:1px solid #eee; padding-top:2px;'>{engine.get_12_shinsal(yb, j)}</div>
 </div>"""
             un_html += "</div>"
             
@@ -476,11 +476,11 @@ if btn_run:
                 se_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#0D47A1; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{ty}년</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tc)}</div>
-<div style='background-color:{tc_bg}; color:#000000; font-size:22px; font-weight:900; padding:4px 0;'>{tc}</div>
-<div style='background-color:{tj_bg}; color:#000000; font-size:22px; font-weight:900; padding:4px 0;'>{tj}</div>
+<div style='background-color:{tc_bg}; color:#000000; font-family:"Nanum Myeongjo", serif; font-size:18px; font-weight:900; padding:4px 0;'>{tc}</div>
+<div style='background-color:{tj_bg}; color:#000000; font-family:"Nanum Myeongjo", serif; font-size:18px; font-weight:900; padding:4px 0;'>{tj}</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tj)}</div>
 <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(ds,tj)}</div>
-<div style='font-size:11px; color:#C62828; font-weight:700; border-top:1px dashed #aaa; margin-top:2px; padding-top:2px;'>{engine.get_12_shinsal(yb, tj)}</div>
+<div style='font-size:11px; color:#C62828; font-weight:700; border-top:1px solid #eee; padding-top:2px;'>{engine.get_12_shinsal(yb, tj)}</div>
 </div>"""
             se_html += "</div>"
             
@@ -500,30 +500,25 @@ if btn_run:
                 wol_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#2E7D32; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tc)}</div>
-<div style='background-color:{tc_bg}; color:#000000; font-size:22px; font-weight:900; padding:4px 0;'>{tc}</div>
-<div style='background-color:{tj_bg}; color:#000000; font-size:22px; font-weight:900; padding:4px 0;'>{tj}</div>
+<div style='background-color:{tc_bg}; color:#000000; font-family:"Nanum Myeongjo", serif; font-size:18px; font-weight:900; padding:4px 0;'>{tc}</div>
+<div style='background-color:{tj_bg}; color:#000000; font-family:"Nanum Myeongjo", serif; font-size:18px; font-weight:900; padding:4px 0;'>{tj}</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tj)}</div>
 <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(ds,tj)}</div>
-<div style='font-size:11px; color:#C62828; font-weight:700; border-top:1px dashed #aaa; margin-top:2px; padding-top:2px;'>{engine.get_12_shinsal(yb, tj)}</div>
+<div style='font-size:11px; color:#C62828; font-weight:700; border-top:1px solid #eee; padding-top:2px;'>{engine.get_12_shinsal(yb, tj)}</div>
 </div>"""
             wol_html += "</div>"
 
             # 6. AI 통변
             ai_output_html = ""
             try:
-                # 👇 8) AI에게 인사말을 절대 출력하지 말라고 강력히 지시
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar,
                     jijanggan_info="엔진 데이터 정밀 연동됨", missing_and_gongmang="엔진 데이터 정밀 연동됨",
                     shinsal_info="엔진 데이터 정밀 연동됨", vault_info="엔진 데이터 정밀 연동됨"
                 )
-                fact_sheet += "\n\n⚠️[중요 출력 지시사항]: '안녕하세요, OOO님...'과 같은 인삿말이나 도입부 문구는 절대 일절 작성하지 말고, 즉시 첫 번째 분석 본론부터 출력하세요."
-                
                 ai_result = call_gemini_api(fact_sheet)
-                
-                # 방어 로직: 혹시라도 인사말이 나오면 제거
+                # 👇 8) 귀찮은 AI 인사말(안녕하세요~ 부터 감사드립니다. 까지) 무조건 삭제 처리
                 ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                
                 ai_output_html = prompts.HTML_LAYOUTS["report_box"].format(content=ai_result)
             except Exception:
                 pass
@@ -537,6 +532,24 @@ if btn_run:
 <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
 </div>
 </div>"""
+
+            # 👇 9) 표지는 단독 출력, 나머지는 [둥근사각형 테두리 안]으로 통폐합
+            st.markdown(cover_html, unsafe_allow_html=True)
+            
+            combined_report_box = f"""
+            <div style='background-color:#FFFFFF; padding:40px; margin:20px auto; border:1px solid #E0E0E0; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width:1000px;'>
+                <div style='border: 2px solid #5D4037; border-radius: 12px; padding: 30px; background-color:#FAFAFA;'>
+                    {intro_html}
+                    {table_html}
+                    {master_bar_html}
+                    {un_html}
+                    {se_html}
+                    {wol_html}
+                    {ai_output_html}
+                    {closing_html}
+                </div>
+            </div>
+            """
 
             # 🚀 [최종 렌더링]: 커버를 뺀 나머지 전체를 A4 용지 안의 '둥근 사각형'에 가둠 (지시 2, 9번 반영)
             st.markdown(cover_html, unsafe_allow_html=True)
