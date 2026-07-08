@@ -278,9 +278,18 @@ with st.sidebar:
     """, height=70)
 
 # ==============================================================================
-# 3. 메인 화면 (화면에 출력)
+# 3. 메인 화면 (1. 개인사주 및 일진 분석, 2. 타 감명서 비교 3. 궁합 및 출산 택일)
 # ==============================================================================
 if btn_run:
+    if btn_run:
+    oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
+
+    def td_bg(c):
+        col = engine.get_color(c)
+        bg = oheng_bg.get(col, '#FFFFFF')
+        return f"<td style='font-size:18px; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+
+# ==============================================================================
     if u_product == "1. 개인사주 및 일진 분석":
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
@@ -351,9 +360,6 @@ if btn_run:
             calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
             direction_str = "순행" if order_dir == 1 else "역행"
 
-            # ------------------------------------------------------------------
-            # [2단계] 인라인(Inline) 명품 레이아웃 렌더링 - 외부 의존 완전 제거
-            # ------------------------------------------------------------------
             # 1. 커버 페이지
             sol_str = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
@@ -382,7 +388,9 @@ if btn_run:
             """
             st.markdown(cover_html, unsafe_allow_html=True)
 
-            # 2. 인트로 배너
+            st.markdown(f"<div style='background:white; padding:40px; border:1px solid #ccc; border-radius:10px; max-width:800px; margin:auto;'>", unsafe_allow_html=True)
+
+            # 2. 도입부 배너
             intro_html = f"""<div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 5px;'>
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 시작합니다만,</p>
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>본 초연 시공명리 사주풀이는 5년에 한 번 돌아오는 '60월령'과 '60일주'의 조합으로 3,600가지의 유형으로 보다 더 정밀한 분석이 가능합니다.</p>
