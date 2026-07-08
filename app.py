@@ -379,8 +379,6 @@ if btn_run:
             """
             st.markdown(cover_html, unsafe_allow_html=True)
 
-            st.markdown(f"<div style='background:white; padding:40px; border:1px solid #ccc; border-radius:10px; max-width:800px; margin:auto;'>", unsafe_allow_html=True)
-
             # 2. 도입부 배너
             intro_html = f"""<div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 5px;'>
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 시작합니다만,</p>
