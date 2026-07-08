@@ -39,6 +39,17 @@ st.markdown("""
     /* [초연 시공명리 풀이] 실행버튼 (Primary) - 빨간색 */
     div.stButton > button[kind="primary"] {background-color: #D32F2F !important; color: white !important; font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important;}
     
+    /* 6. 오행에 따른 자동 바탕색 (ver 50.1 사주 원국/운 흐름 표용) */
+    .color-목 { background-color: #E8F5E9 !important; color: #2E7D32 !important; } /* 연두색 계열 */
+    .color-화 { background-color: #FFEBEE !important; color: #C62828 !important; } /* 연분홍 계열 */
+    .color-토 { background-color: #FFFDE7 !important; color: #F9A825 !important; } /* 연노랑 계열 */
+    .color-금 { background-color: #F5F5F5 !important; color: #424242 !important; } /* 연회색 계열 */
+    .color-수 { background-color: #E3F2FD !important; color: #1565C0 !important; } /* 연하늘 계열 */
+    
+    /* 표 내부 정렬 및 테두리 강제 설정 (ver 50.1 대응) */
+    .result-table { width: 100%; border-collapse: collapse; border: 1px solid #444; }
+    .result-table td { border: 1px solid #444 !important; padding: 5px !important; }
+
     /* [자동입력] 서브버튼 (Secondary) - 연한 녹색 */
     div.stButton > button[kind="secondary"] {background-color: #E8F5E9 !important; color: #2E7D32 !important; border: 1px solid #81C784 !important; font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important;}
     
@@ -111,7 +122,7 @@ with st.sidebar:
     st.markdown(
         f"""
         <div style="text-align: center;">
-            <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 24px; margin-bottom: 5px;">
+            <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin-bottom: 5px;">
                 🏮 초연 시공명리 연구소
             </h1>
         </div>
