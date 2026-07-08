@@ -390,21 +390,21 @@ if btn_run:
 </div>"""
             st.markdown(intro_html, unsafe_allow_html=True)
 
-            # 3. 사주 원국 테이블 (Ver 48.9 고정 레이아웃 복원)
+            # 3. 사주 원국 테이블 (Ver 48.9 원본 레이아웃 및 오행 바탕색 복원)
             info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
-            # 파스텔톤 오행 바탕색 정의
-            oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
+            # 지장간과 동일한 파스텔톤 오행 바탕색 정의
+            oheng_bg = {'목': '#E8F5E9', '화': '#FFEBEE', '토': '#FFFDE7', '금': '#F5F5F5', '수': '#E1F5FE'}
             
             def td(c, size="18px"):
                 col = engine.get_color(c)
                 bg = oheng_bg.get(col, '#FFFFFF')
-                # 글자는 검은색, 배경칸에 오행색 적용
+                # 글자는 검은색 고정, 칸 바탕색에 오행색 꽉 채움 적용
                 return f"<td style='font-size:{size}; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
 <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-<tr class='top-header-cell'>
+<tr class='top-header-cell' style='background-color:#1A237E;'>
 <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
 <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
 <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
