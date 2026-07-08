@@ -24,21 +24,26 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     
     /* 2. 사이드바 전체 고딕체 적용 */
-    [data-testid="stSidebar"] {background-color: #F0F2F6 !important;
-        font-family: 'Nanum Gothic', sans-serif !important;}
+    [data-testid="stSidebar"] {background-color: #F0F2F6 !important;}
     
-    /* 3. 사이드바 내부 텍스트 및 라벨 강제 적용 */
-    [data-testid="stSidebar"] * {font-family: 'Nanum Gothic', sans-serif !important;}
+    /* 3. 사이드바 텍스트 폰트 (아이콘 충돌 방지를 위해 * 대신 특정 태그만 지정) */
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] {font-family: 'Nanum Gothic', sans-serif !important;}
     
-    /* 4. 메인 실행 화면은 나눔명조체 적용 */
-    .stApp { background-color: #FFFDE7 !important;
-        font-family: 'Nanum Myeongjo', serif !important;}
+    /* 4. 메인 화면 배경 및 나눔명조체 적용 */
+    .stApp { background-color: #FFFDE7 !important;}
     
-    /* 메인 화면의 모든 텍스트 요소를 나눔명조체로 */
-    div, p, span, h1, h2, h3, h4, h5, h6, table, tr, td {font-family: 'Nanum Myeongjo', serif !important;}
+    /* 텍스트 폰트 (span을 제외하여 아이콘 깨짐 원천 방지) */
+    p, h1, h2, h3, h4, h5, h6, table, tr, td, div.report-page {font-family: 'Nanum Myeongjo', serif !important;}
     
-    /* 버튼 스타일 */
-    div.stButton > button {background-color: #D32F2F ! important; color: white !important; font-family: 'Nanum Gothic', sans-serif !important;}
+    /* 5. 버튼 스타일 완벽 분리 */
+    /* [초연 시공명리 풀이] 실행버튼 (Primary) - 빨간색 */
+    div.stButton > button[kind="primary"] {background-color: #D32F2F !important; color: white !important; font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important;}
+    
+    /* [자동입력] 서브버튼 (Secondary) - 연한 녹색 */
+    div.stButton > button[kind="secondary"] {background-color: #E8F5E9 !important; color: #2E7D32 !important; border: 1px solid #81C784 !important; font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important;}
+    
+    /* 스트림릿 시스템 아이콘 강제 복구 (안전장치) */
+    span.material-symbols-rounded, i {font-family: 'Material Symbols Rounded' !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -268,7 +273,7 @@ with st.sidebar:
             with col_d2: final_end_date = st.date_input("탐색 종료일", value=auto_end_date, key="input_search_end")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    btn_run = st.button("✨ [초연 시공명리 풀이]", key="btn_run", use_container_width=True)
+    btn_run = st.button("✨ [초연 시공명리 풀이]", key="btn_run", use_container_width=True, type="primary")
 
     components.html("""
     <script>function triggerPrint() { window.parent.print(); }</script>
