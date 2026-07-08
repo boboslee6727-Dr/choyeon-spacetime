@@ -169,11 +169,12 @@ with st.sidebar:
                     if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-    # 4. 상품별 추가 입력
+    # 4. 상품별 추가 입력 로직 (이곳에서 변수 초기화)
     other_report = ""
-    f_name, p_ry, p_rm, p_rd, p_rt = "", "", "", "", ""
-    run_iljin_calc, run_delivery_calc = False, False
-    final_start_date, final_end_date = None, None
+    f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
+    f_y, f_m, f_d = 2000, 1, 1
+    f_t = idx_list[0]
+    run_delivery_calc = False
 
     if u_product == "1. 개인사주 및 일진 분석":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
@@ -183,6 +184,23 @@ with st.sidebar:
         
     elif u_product == "3. 궁합 및 출산 택일":
         st.markdown("---")
+        st.markdown("<div style='font-weight:900; color:#D50000; margin-bottom:10px; margin-top:15px;'>👥 상대방 기본 정보 입력</div>", unsafe_allow_html=True)
+        
+        # 1. 먼저 기본 정보를 입력하게 함
+        f_name = st.text_input("상대방 이름", "이영희", key="f_n")
+        f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+        f_marital = st.selectbox("상대방 혼인여부", ["미혼", "기혼", "돌싱"], key="f_m_stat")
+        f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+        
+        p_col1, p_col2, p_col3 = st.columns(3)
+        f_y = p_col1.number_input("년 (상대)", 1900, 2050, key="p_y_in")
+        f_m = p_col2.number_input("월 (상대)", 1, 12, key="p_m_in")
+        f_d = p_col3.number_input("일 (상대)", 1, 31, key="p_d_in")
+        f_t = st.selectbox("태어난 시간 (상대)", idx_list, key="p_t_key")
+        
+        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
+        
+        # 2. 필요할 때만 펼쳐보는 역산 검색 도구
         with st.expander("👥 상대방 사주 역산", expanded=True):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -226,20 +244,20 @@ with st.sidebar:
                         if p_found: break
                     if not p_found: st.error("일치하는 날짜가 없습니다.")
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
-        
-        f_name = st.text_input("상대방 이름", "이영희", key="f_n")
-        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
 
-    # 5. 실행 버튼 (최하단)
+    # 5. 실행 버튼 (use_container_width=True로 사이드바 너비만큼 확장)
     st.markdown("<br>", unsafe_allow_html=True)
     btn_run = st.button("✨ [초연 시공명리 풀이]", key="btn_run", use_container_width=True, type="primary")
 
+    # HTML 버튼을 사이드바 너비에 꽉 차게 (100%) 강제 설정
     components.html("""
     <script>function triggerPrint() { window.parent.print(); }</script>
-    <button onclick='triggerPrint()' style='width:95%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:45px; border-radius:8px; cursor:pointer;'>
-        🖨️ 풀이 결과 인쇄 / PDF 저장
-    </button>
-    """, height=70)
+    <div style='width: 100%;'>
+        <button onclick='triggerPrint()' style='width: 100%; background-color:#2E7D32; color:white; border:none; font-weight:900; height:38px; border-radius:4px; cursor:pointer; font-size:14px; font-family: sans-serif;'>
+            🖨️ 풀이 결과 인쇄 / PDF 저장
+        </button>
+    </div>
+    """, height=50)
 
 # ==============================================================================
 # 3. 메인 화면 (1. 개인사주 및 일진 분석, 2. 타 감명서 비교 3. 궁합 및 출산 택일)
