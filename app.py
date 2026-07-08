@@ -390,33 +390,37 @@ if btn_run:
 </div>"""
             st.markdown(intro_html, unsafe_allow_html=True)
 
-            # 3. 사주 원국 테이블 (오행 바탕색 적용)
-            info_h = f"<div style='text-align:center; line-height:1.5; margin-bottom:15px;'><span style='font-size:19px; font-weight:900; color:{p_color};'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
+            # 3. 사주 원국 테이블 (Ver 48.9 고정 레이아웃 복원)
+            info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
+
+            # 파스텔톤 오행 바탕색 정의
+            oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
             
-            # 오행 바탕색 매핑 (사주원국 및 대/세/월운 공통 사용)
-            bg_map = {'목': '#E8F5E9', '화': '#FFEBEE', '토': '#FFFDE7', '금': '#F5F5F5', '수': '#E1F5FE'}
-            
-            def td_color(c, size="18px"):
+            def td(c, size="18px"):
                 col = engine.get_color(c)
-                bg = bg_map.get(col, '#FFFFFF')
-                # 글자는 검은색(#000000), 배경칸에 오행색 적용
+                bg = oheng_bg.get(col, '#FFFFFF')
+                # 글자는 검은색, 배경칸에 오행색 적용
                 return f"<td style='font-size:{size}; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
-<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; table-layout: fixed; border: 2px solid #444;'>
-<tr class='top-header-cell' style='background:#1A237E; color:#FFFFFF; font-weight:900; height:40px;'>
-<td style='border:1px solid #444; width:12%; font-weight:900;'>구분</td><td style='border:1px solid #444;'>시주</td><td style='border:1px solid #444;'>일주</td><td style='border:1px solid #444;'>월주</td><td style='border:1px solid #444;'>년주</td>
+<table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+<tr class='top-header-cell'>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
+<td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
 </tr>
-<tr style='height:38px;'><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>천간합충</td>{"".join([f"<td style='border:1px solid #444; font-weight:700;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
-<tr style='height:38px;'><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>천간십성</td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,ys)}</td></tr>
-<tr><td style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:13px;'>천간</td>{td_color(hs)}{td_color(ds)}{td_color(ms)}{td_color(ys)}</tr>
-<tr><td style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:13px;'>지지</td>{td_color(hb)}{td_color(db)}{td_color(mb)}{td_color(yb)}</tr>
-<tr style='height:38px;'><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>지지십성</td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,hb)}</td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,db)}</td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,mb)}</td><td style='border:1px solid #444; font-weight:700;'>{engine.get_ss(ds,yb)}</td></tr>
-<tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444; vertical-align:middle;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{"".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,ys)}</td></tr>
+<tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{td(hs)}{td(ds)}{td(ms)}{td(ys)}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{td(hb)}{td(db)}{td(mb)}{td(yb)}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td><td style='border:1px solid #444;'>{engine.get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,db)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,yb)}</td></tr>
+<tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{"".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])}</tr>
 {ji_rel_rows}
-<tr style='height:38px;'><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444; font-weight:700;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
-<tr style='height:38px;'><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444; font-weight:700;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
-<tr><td style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:13px;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:6px; border:1px solid #444; font-size:12px; line-height:1.4;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</td>" for i in range(4)])}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>{"".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>{"".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])}</tr>
+<tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</td>" for i in range(4)])}</tr>
 </table>"""
             st.markdown(table_html, unsafe_allow_html=True)
 
