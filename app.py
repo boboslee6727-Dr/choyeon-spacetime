@@ -530,7 +530,7 @@ if btn_run:
 </div>"""
             st.markdown(closing_html, unsafe_allow_html=True)
 
-# ==============================================================================
+    # ==============================================================================
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
         st.markdown("---")
@@ -542,7 +542,7 @@ if btn_run:
                 ai_result = get_ai_response(prompts.SYSTEM_ROLE, compare_prompt)
                 st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
 
-# ==============================================================================
+    # ==============================================================================
     elif u_product == "3. 궁합 및 출산 택일":
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
