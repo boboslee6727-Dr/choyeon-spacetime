@@ -390,15 +390,17 @@ if btn_run:
 </div>"""
             st.markdown(intro_html, unsafe_allow_html=True)
 
-            # 3. 사주 원국 테이블
+            # 3. 사주 원국 테이블 (오행 바탕색 적용)
             info_h = f"<div style='text-align:center; line-height:1.5; margin-bottom:15px;'><span style='font-size:19px; font-weight:900; color:{p_color};'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
             
+            # 오행 바탕색 매핑 (사주원국 및 대/세/월운 공통 사용)
+            bg_map = {'목': '#E8F5E9', '화': '#FFEBEE', '토': '#FFFDE7', '금': '#F5F5F5', '수': '#E1F5FE'}
+            
             def td_color(c, size="18px"):
-                color_map = {'목': '#E8F5E9', '화': '#FFEBEE', '토': '#FFFDE7', '금': '#F5F5F5', '수': '#E1F5FE', '무': '#FFFFFF'}
                 col = engine.get_color(c)
-                bg = color_map.get(col, '#FFFFFF')
-                text_color = '#1A237E' if col == '수' else ('#2E7D32' if col == '목' else ('#C62828' if col == '화' else '#333333'))
-                return f"<td style='font-size:{size}; font-weight:900; border:1px solid #444 !important; background:{bg} !important; color:{text_color}; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+                bg = bg_map.get(col, '#FFFFFF')
+                # 글자는 검은색(#000000), 배경칸에 오행색 적용
+                return f"<td style='font-size:{size}; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
 <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; table-layout: fixed; border: 2px solid #444;'>
@@ -427,7 +429,7 @@ if btn_run:
 </div>"""
             st.markdown(master_bar_html, unsafe_allow_html=True)
 
-            # 5. 3단 흐름표 렌더링
+            # 5. 3단 흐름표 렌더링 (바탕색 적용)
             # 대운
             un_html = f"<div style='margin-top:25px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(10):
@@ -437,11 +439,13 @@ if btn_run:
                 is_active = val <= age < val + 10
                 bg_col = "#FFF9C4" if is_active else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
+                c_bg = bg_map.get(engine.get_color(c), 'transparent')
+                j_bg = bg_map.get(engine.get_color(j), 'transparent')
                 un_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,c)}</div>
-<div style='font-size:17px; font-weight:900;'>{c}</div>
-<div style='font-size:17px; font-weight:900;'>{j}</div>
+<div style='background-color:{c_bg}; font-size:17px; font-weight:900; padding:2px 0;'>{c}</div>
+<div style='background-color:{j_bg}; font-size:17px; font-weight:900; padding:2px 0;'>{j}</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,j)}</div>
 <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(ds,j)}</div>
 <div style='font-size:11px; color:#C62828; font-weight:700;'>{engine.get_12_shinsal(yb, j)}</div>
@@ -463,11 +467,13 @@ if btn_run:
                 is_cur_yr = (ty == curr_year)
                 bg_col = "#E1F5FE" if is_cur_yr else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
+                tc_bg = bg_map.get(engine.get_color(tc), 'transparent')
+                tj_bg = bg_map.get(engine.get_color(tj), 'transparent')
                 se_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#0D47A1; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{ty}년</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tc)}</div>
-<div style='font-size:17px; font-weight:900;'>{tc}</div>
-<div style='font-size:17px; font-weight:900;'>{tj}</div>
+<div style='background-color:{tc_bg}; font-size:17px; font-weight:900; padding:2px 0;'>{tc}</div>
+<div style='background-color:{tj_bg}; font-size:17px; font-weight:900; padding:2px 0;'>{tj}</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tj)}</div>
 <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(ds,tj)}</div>
 <div style='font-size:11px; color:#C62828; font-weight:700;'>{engine.get_12_shinsal(yb, tj)}</div>
@@ -486,11 +492,13 @@ if btn_run:
                 is_cur_m = (tm == curr_m)
                 bg_col = "#E8F5E9" if is_cur_m else "transparent"
                 b_left = "1px solid #ccc" if i != 11 else "none"
+                tc_bg = bg_map.get(engine.get_color(tc), 'transparent')
+                tj_bg = bg_map.get(engine.get_color(tj), 'transparent')
                 wol_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
 <div style='background-color:#2E7D32; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tc)}</div>
-<div style='font-size:17px; font-weight:900;'>{tc}</div>
-<div style='font-size:17px; font-weight:900;'>{tj}</div>
+<div style='background-color:{tc_bg}; font-size:17px; font-weight:900; padding:2px 0;'>{tc}</div>
+<div style='background-color:{tj_bg}; font-size:17px; font-weight:900; padding:2px 0;'>{tj}</div>
 <div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(ds,tj)}</div>
 <div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(ds,tj)}</div>
 <div style='font-size:11px; color:#C62828; font-weight:700;'>{engine.get_12_shinsal(yb, tj)}</div>
