@@ -13,7 +13,7 @@ import json
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 50.0"
+APP_VERSION = "ver 50.1"
 
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
@@ -293,7 +293,7 @@ if btn_run:
             klc.setSolarDate(int(b_year), int(b_month), int(b_day))
             sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
             lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
-            leap_str = "윤달" if klc.isIntercalary else "평달"
+            leap_str = "윤달" if klc.isIntercalation else "평달"
             
         curr_year = dt_mod.datetime.now().year
         age = curr_year - sol_y + 1
