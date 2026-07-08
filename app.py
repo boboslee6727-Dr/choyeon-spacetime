@@ -123,9 +123,16 @@ with st.sidebar:
         K2H_GAN = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
         K2H_JI = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
         
-        if st.button("🔍 생년월일 자동입력", use_container_width=True):
+        if st.button("🔍 생년월일 자동입력", use_container_width=True, type="secondary"):
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
-            if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
+            
+            # 👇 추가: 칸을 모두 비우고 버튼을 누르면 이전 성공 메시지 메모리 삭제
+            if not _ry and not _rm and not _rd:
+                if 'rev_success_msg' in st.session_state:
+                    del st.session_state['rev_success_msg']
+                st.rerun()
+                
+            elif len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
                 ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
                 rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
                 rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
@@ -155,10 +162,72 @@ with st.sidebar:
                             curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+            else: 
+                # 👇 추가: 1글자만 치는 등 잘못 입력했을 때도 기존 성공 메시지 삭제
+                if 'rev_success_msg' in st.session_state:
+                    del st.session_state['rev_success_msg']
+                st.warning("간지를 2글자씩 정확히 입력하세요.")
             
         if st.session_state.get('rev_success_msg'):
             st.success(st.session_state.rev_success_msg)
+2. 상대방 사주팔자 역산 검색 부분 교체 (궁합 상품)
+스크롤을 조금 더 내려서 궁합 메뉴 쪽에 있는 if st.button("🔍 상대방 생년월일 자동입력", ...): 부분도 동일한 논리로 덮어씌워 주십시오.
+
+Python
+            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="p_rev_btn", type="secondary"):
+                _pry, _prm, _prd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+                
+                # 👇 추가: 상대방 칸을 모두 비우고 버튼을 누르면 이전 성공 메시지 메모리 삭제
+                if not _pry and not _prm and not _prd:
+                    if 'p_rev_success_msg' in st.session_state:
+                        del st.session_state['p_rev_success_msg']
+                    st.rerun()
+                    
+                elif len(_pry)==2 and len(_prm)==2 and len(_prd)==2:
+                    p_ry_h = K2H_GAN.get(_pry[0], _pry[0]) + K2H_JI.get(_pry[1], _pry[1])
+                    p_rm_h = K2H_GAN.get(_prm[0], _prm[0]) + K2H_JI.get(_prm[1], _prm[1])
+                    p_rd_h = K2H_GAN.get(_prd[0], _prd[0]) + K2H_JI.get(_prd[1], _prd[1])
+                    p_klc_find = KoreanLunarCalendar(); p_found = False
+                    for y in range(2026, 1899, -1):
+                        p_klc_find.setSolarDate(y, 7, 1); p_gj_y = p_klc_find.getChineseGapJaString().split()
+                        if p_gj_y and p_gj_y[0][:2] == p_ry_h:
+                            p_curr_dt = dt_mod.date(y+1, 2, 28)
+                            while p_curr_dt >= dt_mod.date(y, 1, 1):
+                                p_klc_find.setSolarDate(p_curr_dt.year, p_curr_dt.month, p_curr_dt.day)
+                                p_gj = p_klc_find.getChineseGapJaString().split()
+                                if len(p_gj) >= 3 and p_gj[0][:2] == p_ry_h and p_gj[1][:2] == p_rm_h and p_gj[2][:2] == p_rd_h:
+                                    st.session_state.p_y_in = p_curr_dt.year
+                                    st.session_state.p_m_in = p_curr_dt.month
+                                    st.session_state.p_d_in = p_curr_dt.day
+                                    time_map_rev = {
+                                        '子':'00:30 ~ 01:29 (朝子)시', '丑':'01:30 ~ 03:29 (丑)시',
+                                        '寅':'03:30 ~ 05:29 (寅)시', '卯':'05:30 ~ 07:29 (卯)시',
+                                        '辰':'07:30 ~ 09:29 (辰)시', '巳':'09:30 ~ 11:29 (巳)시',
+                                        '午':'11:30 ~ 13:29 (午)시', '未':'13:30 ~ 15:29 (未)시',
+                                        '申':'15:30 ~ 17:29 (申)시', '酉':'17:30 ~ 19:29 (酉)시',
+                                        '戌':'19:30 ~ 21:29 (戌)시', '亥':'21:30 ~ 23:29 (亥)시'
+                                    }
+                                    if p_rt:
+                                        p_ji_char = extract_ganji(p_rt)[-1] if extract_ganji(p_rt) else ""
+                                        p_rt_h = K2H_JI.get(p_ji_char, p_ji_char)
+                                        if p_rt_h in time_map_rev: st.session_state.p_t_key = time_map_rev[p_rt_h]
+                                    p_found = True
+                                    p_l_y, p_l_m, p_l_d = p_klc_find.lunarYear, p_klc_find.lunarMonth, p_klc_find.lunarDay
+                                    p_leap = "윤" if p_klc_find.isIntercalation else ""
+                                    st.session_state.p_rev_success_msg = f"✅ 상대방 양력 {p_curr_dt.year}년 {p_curr_dt.month:02d}월 {p_curr_dt.day:02d}일 (음력 {p_leap}{p_l_y}년 {p_l_m:02d}월 {p_l_d:02d}일) 자동입력 완료!"
+                                    st.rerun()
+                                    break
+                                p_curr_dt -= dt_mod.timedelta(days=1)
+                            if p_found: break
+                    if not p_found: st.error("일치하는 날짜가 없습니다.")
+                else: 
+                    # 👇 추가: 잘못 입력 시 삭제
+                    if 'p_rev_success_msg' in st.session_state:
+                        del st.session_state['p_rev_success_msg']
+                    st.warning("간지를 2글자씩 정확히 입력하세요.")
+                    
+            if st.session_state.get('p_rev_success_msg'):
+                st.success(st.session_state.p_rev_success_msg)
 
     st.markdown("---")
     u_product = st.selectbox("📋 분석 상품 선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"])
