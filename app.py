@@ -383,7 +383,7 @@ if btn_run:
             st.markdown(cover_html, unsafe_allow_html=True)
 
             # 2. 인트로 배너
-            intro_html = """<div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 5px;'>
+            intro_html = f"""<div style='font-family: "Noto Serif KR", serif; font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 5px;'>
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 시작합니다만,</p>
 <p style='text-indent: 15px; margin: 0 0 5px 0;'>본 초연 시공명리 사주풀이는 5년에 한 번 돌아오는 '60월령'과 '60일주'의 조합으로 3,600가지의 유형으로 보다 더 정밀한 분석이 가능합니다.</p>
 <p style='text-indent: 15px; margin: 0;'>기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
@@ -393,14 +393,12 @@ if btn_run:
             # 3. 사주 원국 테이블 (Ver 48.9 원본 레이아웃 및 오행 바탕색 복원)
             info_h = f"<div style='text-align:center; font-family:\"Malgun Gothic\", sans-serif; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {u_marital}, {age}세)</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span></div>"
 
-            # 지장간과 동일한 파스텔톤 오행 바탕색 정의
-            oheng_bg = {'목': '#E8F5E9', '화': '#FFEBEE', '토': '#FFFDE7', '금': '#F5F5F5', '수': '#E1F5FE'}
-            
-            def td(c, size="18px"):
-                col = engine.get_color(c)
-                bg = oheng_bg.get(col, '#FFFFFF')
-                # 글자는 검은색 고정, 칸 바탕색에 오행색 꽉 채움 적용
-                return f"<td style='font-size:{size}; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
+            oheng_bg = {'목': '#C8E6C9', '화': '#FFCDD2', '토': '#FFF9C4', '금': '#EEEEEE', '수': '#BBDEFB'}
+
+        def td_bg(c):
+            col = engine.get_color(c)
+            bg = oheng_bg.get(col, '#FFFFFF')
+            return f"<td style='font-size:18px; font-weight:900; border:1px solid #444 !important; background-color:{bg} !important; color:#000000; padding:12px; width:22%;'>{('?' if c in ['?',' ','-'] else c)}</td>"
 
             table_html = f"""<div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
 <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
