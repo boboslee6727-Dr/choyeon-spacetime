@@ -70,6 +70,13 @@ st.markdown("""
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
     }
+    /* '📋 분석 상품 선택' 레이블 폰트 크기 및 굵기 수정 */
+    [data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
+        font-size: 16px !important;    /* 폰트 크기 확대 */
+        font-weight: 800 !important;   /* 굵은체 적용 */
+        color: #000000 !important;     /* 선명한 검은색 */
+        margin-bottom: 8px !important; /* 아래쪽 여백 살짝 확보 */
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -98,7 +105,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=1800*24) # ttl=3600*24초=86,400초 12시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=3600*24) # ttl=3600*24초=86,400초 12시간 감명서 유효
 def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
