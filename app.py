@@ -137,12 +137,14 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 자동입력", use_container_width=True, key="btn_user_rev"):
-            # (여기에 박사님의 기존 신청인 자동입력 로직 삽입)
-            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+                _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+                
                 if not _ry and not _rm and not _rd:
-                    if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
+                    if 'rev_success_msg' in st.session_state: 
+                        del st.session_state['rev_success_msg']
                     st.rerun()
                 elif len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
+                    # (신청인 역산 로직 수행)
                     ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
                     rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
                     rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
@@ -156,21 +158,16 @@ with st.sidebar:
                                 gj = klc_find.getChineseGapJaString().split()
                                 if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
                                     st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = curr_dt.year, curr_dt.month, curr_dt.day
-                                    time_map_rev = {'子':'00:30 ~ 01:29 (朝子)시','丑':'01:30 ~ 03:29 (丑)시','寅':'03:30 ~ 05:29 (寅)시','卯':'05:30 ~ 07:29 (卯)시','辰':'07:30 ~ 09:29 (辰)시','巳':'09:30 ~ 11:29 (巳)시','午':'11:30 ~ 13:29 (午)시','未':'13:30 ~ 15:29 (未)시','申':'15:30 ~ 17:29 (申)시','酉':'17:30 ~ 19:29 (酉)시','戌':'19:30 ~ 21:29 (戌)시','亥':'21:30 ~ 23:29 (亥)시'}
-                                    if rt:
-                                        ji_char = extract_ganji(rt)[-1] if extract_ganji(rt) else ""
-                                        rt_h = K2H_JI.get(ji_char, ji_char)
-                                        if rt_h in time_map_rev: st.session_state.s_t = time_map_rev[rt_h]
                                     found = True
-                                    l_y, l_m, l_d = klc_find.lunarYear, klc_find.lunarMonth, klc_find.lunarDay
-                                    leap = "윤" if klc_find.isIntercalation else ""
                                     st.session_state.rev_success_msg = f"✅ 양력 {curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일 자동입력 완료!"
                                     st.rerun()
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
                     if not found: st.error("일치하는 날짜가 없습니다.")
-                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                else:
+                    if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
+                    st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     # 4. 상품별 추가 입력
     other_report = ""
@@ -195,7 +192,6 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
             if st.button("🔍 상대방 자동입력", use_container_width=True, key="btn_partner_rev"):
-                # (여기에 박사님의 기존 상대방 자동입력 로직 삽입)
                 _pry, _prm, _prd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 if not _pry and not _prm and not _prd:
                     if 'p_rev_success_msg' in st.session_state: del st.session_state['p_rev_success_msg']
