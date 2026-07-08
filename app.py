@@ -111,7 +111,7 @@ with st.sidebar:
     st.markdown(
         f"""
         <div style="text-align: center;">
-            <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 25px; margin-bottom: 5px;">
+            <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 24px; margin-bottom: 5px;">
                 🏮 초연 시공명리 연구소
             </h1>
         </div>
