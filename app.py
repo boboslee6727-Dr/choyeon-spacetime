@@ -1063,7 +1063,7 @@ if btn_run:
                             <span style='font-size: 14px; letter-spacing: 1px; color: #555;'>{APP_VERSION}</span>
                         </div>
                     </div>
-                    <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ &#128144; 남녀 인연(궁합) 풀이 ]</h3>
+                    <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 남녀 인연(궁합) 풀이 ]</h3>
                     <div style='display: flex; justify-content: space-between; align-items: center; background:#F8F9FA; border: 1px solid #E8EAF6; padding: 35px 25px; border-radius: 15px; margin-bottom: 40px;'>
                         <div style='flex: 1; text-align: center; border-right: 1px dashed #CCC; padding-right: 10px;'>
                             <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{app_p_icon} {name} 님</span>
