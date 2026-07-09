@@ -439,6 +439,16 @@ if btn_run:
             ==============================================================================
             # 3. 사주 원국 테이블 본체 (ver 48.9 명품 격식 복원 + 신살 6개 압축 밀착본)
             # ==============================================================================
+            # 👇 CSS 클래스를 이용하여 48.9 오행색 적용 완료
+            def get_oh_class(ganji):
+                oh = '무'
+                if ganji in ['甲', '乙', '寅', '卯']: oh = '목'
+                elif ganji in ['丙', '丁', '巳', '午']: oh = '화'
+                elif ganji in ['戊', '己', '辰', '戌', '丑', '未']: oh = '토'
+                elif ganji in ['庚', '辛', '申', '酉']: oh = '금'
+                elif ganji in ['壬', '癸', '亥', '子']: oh = '수'
+                return f"color-{oh}" if oh != '무' else ""
+
             # 합충형파해 관계선 생성
             ji_rel_rows = ""
             for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -489,119 +499,129 @@ if btn_run:
             master_bar_html = f"<div style='border:2px solid #3E2723; margin-top:15px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; font-family:\"Noto Serif KR\", serif !important; font-weight:900; font-size:12.5px; border-radius:8px; white-space:nowrap; background:#FFFDE7; letter-spacing:-0.7px;'>"
             master_bar_html += f"<div>🔢 대운수: <span style='color:#1A237E;'>{calc_d}</span></div><div>💥 오행: 木({counts['목']}) 火({counts['화']}) 土({counts['토']}) 金({counts['금']}) 水({counts['수']})</div><div>🌟 귀인: <span style='color:#1A237E;'>{guiin_str}</span></div><div>🎯 공망: [년]<span style='color:#1A237E;'>{n_gong}</span> [일]<span style='color:#1A237E;'>{i_gong}</span></div><div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div></div>"
 
-
-            # 👇 5. 흐름표 (대운, 세운, 월운) - CSS 클래스를 이용하여 48.9 오행색 적용 완료
-            def get_oh_class(ganji):
-                oh = '무'
-                if ganji in ['甲', '乙', '寅', '卯']: oh = '목'
-                elif ganji in ['丙', '丁', '巳', '午']: oh = '화'
-                elif ganji in ['戊', '己', '辰', '戌', '丑', '未']: oh = '토'
-                elif ganji in ['庚', '辛', '申', '酉']: oh = '금'
-                elif ganji in ['壬', '癸', '亥', '子']: oh = '수'
-                return f"color-{oh}" if oh != '무' else ""
-
             # ==============================================================================
-            # 5. 초정밀 대운 / 세운 / 월운 흐름표 (글자 크기 축소 및 극한 밀착 버전)
-            # ==============================================================================
-            # [1단계] 대운의 흐름표 생성 (패딩 최소화 및 색상/두께 예법 정밀 조정)
-            daewun_info = []
-            un_html = f"""
-            <div style='margin-top:12px; margin-bottom:8px; font-family:"Noto Serif KR", serif !important; font-size:17px; font-weight:900; color:#1A237E;'>
-                [ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]
-            </div>
-            <div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:12px; font-family:"Noto Serif KR", serif !important;'>
-            """
-            for i in range(10):
-                val = i * 10 + calc_d
-                c = GAN[(GAN.index(ms) + (i + 1) * order) % 10] if ms in GAN else "-"
-                j = JI[(JI.index(mb) + (i + 1) * order) % 12] if mb in JI else "-"
-                daewun_info.append(f"{val}세:{c}{j}")
+                # 5. 초정밀 대운 / 세운 / 월운 흐름표 (글자 크기 축소, 극한 밀착 및 예법 적용)
+                # ==============================================================================
                 
-                is_active = val <= age < val + 10
-                bg_col = "#FFF9C4" if is_active else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none"
-                
-                un_html += f"""
-                <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px; background-color:{bg_col}; line-height:1.15;'>
-                    <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; border-bottom:1px solid #ccc;'>{val}세</div>
-                    <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{engine.get_ss(ds,c)}</div>
-                    <div class='color-{td_bg(c).split("color-")[1].split("'")[0] if "color-" in td_bg(c) else "무"}' style='font-size:15px; font-weight:900; padding:1px 0;'>{c}</div>
-                    <div class='color-{td_bg(j).split("color-")[1].split("'")[0] if "color-" in td_bg(j) else "무"}' style='font-size:15px; font-weight:900; padding:1px 0;'>{j}</div>
-                    <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{engine.get_ss(ds,j)}</div>
-                    <div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{engine.get_unsung(ds,j)}</div>
-                    <div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{engine.get_12_shinsal(yb, j)}</div>
-                </div>
-                """
-            un_html += "</div>"
+                # [1단계] 대운의 흐름표 생성
+                daewun_info = []
+                un_html = f"<div style='margin-top:5px; margin-bottom:8px; font-size:17px; font-weight:900; color:#1A237E; font-family:\"Noto Serif KR\", serif !important;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:12px; font-family:\"Noto Serif KR\", serif !important;'>"
+                for i in range(10):
+                    val, c, j = i*10+calc_d, GAN[(GAN.index(ms)+(i+1)*order)%10] if ms in GAN else "-", JI[(JI.index(mb)+(i+1)*order)%12] if mb in JI else "-"
+                    daewun_info.append(f"{val}세:{c}{j}")
+                    is_active = val <= u_age < val+10
+                    bg_col = "#FFF9C4" if is_active else "transparent"
+                    b_left = "1px solid #ccc" if i != 9 else "none"
+                    
+                    un_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px; background-color:{bg_col}; line-height:1.15;'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; border-bottom:1px solid #ccc;'>{val}세</div><div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{get_ss(ds,c)}</div><div class='color-{get_color(c)}' style='font-size:15px; font-weight:900; padding:1px 0;'>{c}</div><div class='color-{get_color(j)}' style='font-size:15px; font-weight:900; padding:1px 0;'>{j}</div><div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{get_ss(ds,j)}</div><div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{get_unsung(ds,j)}</div><div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{get_12_shinsal(yb, j)}</div></div>"
+                un_html += "</div>"
 
-            # [2단계] 현재 대운 지표 및 세운 흐름 연산 복원
-            cur_dw_idx = max(0, (age - calc_d) // 10)
-            dw_g_cur = GAN[(GAN.index(ms) + (cur_dw_idx + 1) * order) % 10] if ms in GAN else "-"
-            dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx + 1) * order) % 12] if mb in JI else "-"
-            current_daewun_age = cur_dw_idx * 10 + calc_d
-            
-            start_year = b_year + current_daewun_age - 1
-            sewun_info = []
-            se_html = f"""
-            <div style='margin-top:12px; margin-bottom:8px; font-family:"Noto Serif KR", serif !important; font-size:17px; font-weight:900; color:#1A237E;'>
-                [ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]
-            </div>
-            <div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:12px; font-family:"Noto Serif KR", serif !important;'>
-            """
-            for i in range(10):
-                ty = start_year + i
-                tage = current_daewun_age + i
-                base = (ty - 1984) % 60
-                tc, tj = GAN[base % 10], JI[base % 12]
-                sewun_info.append(f"{ty}년({tc}{tj})")
+                # [2단계] 세운의 흐름표 생성
+                cur_dw_idx = max(0, (u_age - calc_d) // 10)
+                dw_g_cur = GAN[(GAN.index(ms) + (cur_dw_idx+1)*order)%10] if ms in GAN else "-"
+                dw_j_cur = JI[(JI.index(mb) + (cur_dw_idx+1)*order)%12] if mb in JI else "-"
+                current_daewun_age = cur_dw_idx * 10 + calc_d
                 
-                is_cur_yr = (ty == current_year)
-                bg_col = "#E1F5FE" if is_cur_yr else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none"
-                
-                se_html += f"""
-                <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px; background-color:{bg_col}; line-height:1.15;'>
-                    <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div>
-                    <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{engine.get_ss(ds,tc)}</div>
-                    <div class='color-{td_bg(tc).split("color-")[1].split("'")[0] if "color-" in td_bg(tc) else "무"}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tc}</div>
-                    <div class='color-{td_bg(tj).split("color-")[1].split("'")[0] if "color-" in td_bg(tj) else "무"}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tj}</div>
-                    <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{engine.get_ss(ds,tj)}</div>
-                    <div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{engine.get_unsung(ds,tj)}</div>
-                    <div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{engine.get_12_shinsal(yb, tj)}</div>
-                </div>
-                """
-            se_html += "</div>"
+                start_year = u_y + current_daewun_age - 1
+                sewun_info = []
+                se_html = f"<div style='margin-top:10px; margin-bottom:8px; font-size:17px; font-weight:900; color:#1A237E; font-family:\"Noto Serif KR\", serif !important;'>[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:12px; font-family:\"Noto Serif KR\", serif !important;'>"
+                for i in range(10):
+                    ty = start_year + i
+                    tage = current_daewun_age + i
+                    base = (ty - 1984) % 60
+                    tc, tj = GAN[base % 10], JI[base % 12]
+                    sewun_info.append(f"{ty}년({tc}{tj})")
+                    is_cur_yr = (ty == curr_y)
+                    bg_col = "#E1F5FE" if is_cur_yr else "transparent"
+                    b_left = "1px solid #ccc" if i != 9 else "none"
+                    
+                    se_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px; background-color:{bg_col}; line-height:1.15;'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; line-height:1.2; border-bottom:1px solid #ccc;'>{ty}년<br>({tage}세)</div><div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tj}</div><div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{get_ss(ds,tj)}</div><div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{get_12_shinsal(yb, tj)}</div></div>"
+                se_html += "</div>"
 
-            # [3단계] 천문 과학 기반 월운 흐름 연산 복원
-            wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
-            wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
-            cur_wol_g = wol_gans[current_month - 1]
-            cur_wol_j = wol_jis[current_month - 1]
-            
-            wol_html = f"""
-            <div style='margin-top:12px; margin-bottom:8px; font-family:"Noto Serif KR", serif !important; font-size:17px; font-weight:900; color:#1A237E;'>
-                [ 월운의 흐름 ({current_year}년도 양력기준) ]
-            </div>
-            <div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px; font-family:"Noto Serif KR", serif !important;'>
-            """
-            for i in range(12):
-                tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
-                is_cur_m = (tm == current_month)
-                bg_col = "#E8F5E9" if is_cur_m else "transparent"
-                b_left = "1px solid #ccc" if i != 11 else "none"
+                # [3단계] 월운의 흐름표 생성
+                wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
+                wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
+                cur_wol_g = wol_gans[curr_m - 1]
+                cur_wol_j = wol_jis[curr_m - 1]
                 
-                wol_html += f"""
-                <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px; background-color:{bg_col}; line-height:1.15;'>
-                    <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; border-bottom:1px solid #ccc;'>{tm}월</div>
-                    <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{engine.get_ss(ds,tc)}</div>
-                    <div class='color-{td_bg(tc).split("color-")[1].split("'")[0] if "color-" in td_bg(tc) else "무"}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tc}</div>
-                    <div class='color-{td_bg(tj).split("color-")[1].split("'")[0] if "color-" in td_bg(tj) else "무"}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tj}</div>
-                    <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{engine.get_ss(ds,tj)}</div>
-                    <div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{engine.get_unsung(ds,tj)}</div>
-                    <div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{engine.get_12_shinsal(yb, tj)}</div>
-                </div>
-                """
-            wol_html += "</div>"
+                wol_html = f"<div style='margin-top:10px; margin-bottom:8px; font-size:17px; font-weight:900; color:#1A237E; font-family:\"Noto Serif KR\", serif !important;'>[ 월운의 흐름 ({curr_y}년도 양력기준) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:12px; font-family:\"Noto Serif KR\", serif !important;'>"
+                for i in range(12):
+                    tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
+                    is_cur_m = (tm == curr_m)
+                    bg_col = "#E8F5E9" if is_cur_m else "transparent"
+                    b_left = "1px solid #ccc" if i != 11 else "none"
+                    
+                    wol_html += f"<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:2px; background-color:{bg_col}; line-height:1.15;'><div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; border-bottom:1px solid #ccc;'>{tm}월</div><div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{get_ss(ds,tc)}</div><div class='color-{get_color(tc)}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tc}</div><div class='color-{get_color(tj)}' style='font-size:15px; font-weight:900; padding:1px 0;'>{tj}</div><div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{get_ss(ds,tj)}</div><div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{get_unsung(ds,tj)}</div><div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{get_12_shinsal(yb, tj)}</div></div>"
+                wol_html += "</div>"
+                
+                # [4단계] 과거 운세 데이터 및 절기/하지 정밀 연산 (ver 48.9 원본)
+                past_daewun_list = []
+                for idx in range(cur_dw_idx):
+                    val = idx * 10 + calc_d
+                    d_gan = GAN[(GAN.index(ms) + (idx + 1) * order) % 10] if ms in GAN else "-"
+                    d_ji = JI[(JI.index(mb) + (idx + 1) * order) % 12] if mb in JI else "-"
+                    past_daewun_list.append(f"• {val}세~{val+9}세 ({d_gan}{d_ji}대운): ")
+                past_daewun_html = "\n".join(past_daewun_list) if past_daewun_list else "• (첫 대운 시기이므로 이전 대운 생략)"
+
+                curr_dw_start_year = u_y + current_daewun_age - 1
+                sewun_start_calc = min(curr_dw_start_year, curr_y - 3)
+                past_sewun_list = []
+                for py in range(sewun_start_calc, curr_y):
+                    base = (py - 1984) % 60
+                    past_sewun_list.append(f"• {py}년({GAN[base%10]}{JI[base%12]}년): ")
+                past_sewun_html = "\n".join(past_sewun_list) if past_sewun_list else "• (분석할 과거 세운 없음)"
+
+                terms_name = {1:"소한", 2:"입춘", 3:"경칩", 4:"청명", 5:"입하", 6:"망종", 7:"소서", 8:"입추", 9:"백로", 10:"한로", 11:"입동", 12:"대설"}
+                
+                def get_term_day(y, m):
+                    _, p1, _ = get_true_year_month_pillar(y, m, 1, 12, 0)
+                    for d in range(2, 12):
+                        _, pd, _ = get_true_year_month_pillar(y, m, d, 12, 0)
+                        if pd != p1: return d, pd
+                    return 5, p1
+
+                past_wol_list = []
+                prev_y_idx = (curr_y - 1 - 1984) % 60
+                prev_y_ganji = GAN[prev_y_idx % 10] + JI[prev_y_idx % 12]
+                
+                for pm in range(1, curr_m):
+                    tc, tj = wol_gans[pm-1], wol_jis[pm-1]
+                    s_day, _ = get_term_day(curr_y, pm)
+                    next_m = pm + 1 if pm < 12 else 1
+                    next_y = curr_y if pm < 12 else curr_y + 1
+                    e_day, _ = get_term_day(next_y, next_m)
+                    t_start = terms_name[pm]
+                    t_end = terms_name[next_m]
+                    
+                    year_prefix = f"{prev_y_ganji}년 " if pm == 1 else ""
+                    past_wol_list.append(f"• {pm}월({tc}{tj}월): ({year_prefix}{pm}월 {s_day}일 {t_start} ~ {next_m}월 {e_day-1}일 {t_end} 전)")
+                
+                past_months_html = "\n".join(past_wol_list) if past_wol_list else "• (올해 첫 달이므로 작년 하반기 요약): "
+
+                curr_term_day, curr_wol_pillar = get_term_day(curr_y, curr_m)
+                next_m = curr_m + 1 if curr_m < 12 else 1
+                next_y = curr_y if curr_m < 12 else curr_y + 1
+                next_term_day, _ = get_term_day(next_y, next_m)
+                
+                curr_t_name = terms_name[curr_m]
+                next_t_name = terms_name[next_m]
+
+                if curr_m == 6:
+                    sun = ephem.Sun()
+                    haji_day = 21 
+                    for d in range(20, 24):
+                        dt_utc = dt_mod.datetime(curr_y, 6, d, 12, 0).astimezone(pytz.utc)
+                        sun.compute(dt_utc)
+                        if math.degrees(ephem.Ecliptic(sun).lon) % 360.0 >= 90.0:
+                            haji_day = d
+                            break
+                    
+                    prompt_first_half = f"▶ 이번 달 전반기 ({curr_m}월 {curr_term_day}일 {curr_t_name} ~ {curr_m}월 {haji_day-1}일 하지 전: {curr_wol_pillar})"
+                    prompt_second_half = f"▶ 이번 달 후반기 ({curr_m}월 {haji_day}일 하지 ~ {next_m}월 {next_term_day-1}일 {next_t_name} 전: {curr_wol_pillar})"
+                else:
+                    mid_day = curr_term_day + 15
+                    prompt_first_half = f"▶ 이번 달 전반기 ({curr_m}월 {curr_term_day}일 {curr_t_name} ~ {curr_m}월 {mid_day-1}일: {curr_wol_pillar})"
+                    prompt_second_half = f"▶ 이번 달 후반기 ({curr_m}월 {mid_day}일 ~ {next_m}월 {next_term_day-1}일 {next_t_name} 전: {curr_wol_pillar})"
 
             # 6. AI 통변
             ai_output_html = ""
