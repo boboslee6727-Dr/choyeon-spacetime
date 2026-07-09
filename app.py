@@ -1,4 +1,3 @@
-test용 버전 0.1 
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
@@ -14,7 +13,7 @@ import json
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수 (통합 CSS 적용)
 # ==============================================================================
-APP_VERSION = "ver 51.0"
+APP_VERSION = "ver 52.0"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 완벽 통합: 폰트(명조체), 예법(적색 배제), 오행 바탕색(ver 48.9)
@@ -99,7 +98,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=24) # ttl=3600*24초=86,400초 12시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=3600*24초) # ttl=3600*24초=86,400초 12시간 감명서 유효
 def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
