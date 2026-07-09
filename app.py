@@ -16,62 +16,50 @@ import json
 APP_VERSION = "ver 52.0"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# CSS 완벽 통합: 폰트(명조체), 예법(적색 배제), 오행 바탕색(ver 48.9)
-st.markdown("""
+# CSS를 따옴표 3개로 완벽하게 봉인합니다.
+css_code = """
 <style>
-    /* 1. 구글 폰트 임포트 */
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     
-    /* 2. 메인 화면 배경 및 나눔명조체 적용 (span, div 등 광범위 적용 배제하여 아이콘 보호) */
     .stApp { background-color: #FFFDE7 !important;}
     p, h1, h2, h3, h4, h5, h6, table, tr, td, div.report-page { font-family: 'Nanum Myeongjo', serif !important; }
     
-    /* 3. 사이드바 텍스트 폰트 (아이콘 충돌 방지를 위해 * 대신 특정 태그만 지정 - 원본 복구) */
     [data-testid="stSidebar"] {background-color: #F0F2F6 !important;}
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] {font-family: 'Nanum Gothic', sans-serif !important;}
     
-    /* 4. 버튼 스타일 완벽 분리 (고딕체 유지) */
     div.stButton > button { font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important; }
     div.stButton > button[kind="primary"] {background-color: #D32F2F !important; color: white !important;}
     div.stButton > button[kind="secondary"] {background-color: #E8F5E9 !important; color: #2E7D32 !important; border: 1px solid #81C784 !important;}
     
-    /* 5. 오행에 따른 자동 바탕색 (ver 48.9 기준 진한 색상) */
     .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; }
     .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; }
     .color-토 { background-color: #F9A825 !important; color: #000000 !important; }
     .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; }
     .color-수 { background-color: #212121 !important; color: #FFFFFF !important; }
     
-    /* 6. 표 및 감명서 내부 정렬, 테두리 강제 설정 */
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 5px !important; text-align: center; vertical-align: middle; }
     .top-header-cell { background-color: #1A237E !important; }
     .header-cell-main { background-color: #f5f5f5 !important; font-weight: 900; white-space: nowrap; }
     
-    /* 7. 성명 및 주요 정보 텍스트 색상 수정 (예법 준수: 적색 배제) */
     .report-page, .report-page * { color: #000000 !important; }
     .report-page h1, .report-page h3 { color: #1A237E !important; } 
     
-    /* 8. AI 통변 내용 박스 */
     .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; font-family: 'Nanum Myeongjo', serif !important; }
     
-    /* 9. 스트림릿 시스템 아이콘 강제 복구 (안전장치) */
     span.material-symbols-rounded, i, svg {font-family: 'Material Symbols Rounded' !important;}
     
-    /* 10. 프린트 설정 */
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         body, .stApp { background-color: white !important; }
-        .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
-        div[data-testid="stVerticalBlock"] { gap: 0 !important; }
-        .element-container, .stMarkdown { margin-bottom: 0 !important; }
-        .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
-        .report-page:last-of-type { page-break-after: auto; }
+        .block-container { padding: 0 !important; }
+        .report-page { box-shadow: none; margin: 0 auto; page-break-after: always; width: 100%; }
         .page-break-before { page-break-before: always; }
     }
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(css_code, unsafe_allow_html=True)
 
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
     "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
