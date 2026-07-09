@@ -892,7 +892,7 @@ if btn_run:
                 <span style='font-size: 14px; letter-spacing: 1px; color: #555;'>{APP_VERSION}</span>
             </div>
         </div>
-        <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 💐 남녀 인연(궁합) 풀이 ]</h3>
+        <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 남녀 인연(궁합) 풀이 ]</h3>
         <div style='display: flex; justify-content: space-between; align-items: center; background:#F8F9FA; border: 1px solid #E8EAF6; padding: 35px 25px; border-radius: 15px; margin-bottom: 40px;'>
             <div style='flex: 1; text-align: center; border-right: 1px dashed #CCC; padding-right: 10px;'>
                 <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{app_p_icon} {name} 님</span>
@@ -956,10 +956,10 @@ if btn_run:
                     </table>
                     
                     <div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF; margin-bottom:20px;'>
-                    <div>💥 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
-                    <div>🌟 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
-                    <div>🎯 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
-                    <div>🌪️ 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
+                    <div> 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
+                    <div> 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
+                    <div> 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
+                    <div> 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
                     </div>
                     {m_un_html}
                 </div>
