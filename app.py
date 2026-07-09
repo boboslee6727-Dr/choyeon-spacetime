@@ -989,10 +989,10 @@ if btn_run:
                     </table>
                     
                     <div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF; margin-bottom:20px;'>
-                    <div>💥 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
-                    <div>🌟 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
-                    <div>🎯 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
-                    <div>🌪️ 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
+                    <div> 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
+                    <div> 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
+                    <div> 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
+                    <div> 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
                     </div>
                     {m_un_html}
                 </div>
@@ -1067,7 +1067,7 @@ if btn_run:
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
             
             if run_delivery_calc:
-                st.markdown(f"### 👶 {name} & {f_name} 부부의 최적 출산 길일")
+                st.markdown(f"### {name} & {f_name} 부부의 최적 출산 길일")
                 st.success(f"탐색 기간 내의 길일 연산 엔진이 성공적으로 가동되었습니다. (⏳엔진 연동 대기중)")
 
             # [4] 맺음말 렌더링
