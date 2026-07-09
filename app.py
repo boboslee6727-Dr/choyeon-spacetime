@@ -878,7 +878,7 @@ if btn_run:
             # ------------------------------------------------------------------
             # 3. 통합 표지 및 남명/여명 사주 원국 렌더링
             # ------------------------------------------------------------------
-            # [통합 표지 출력]
+            # [1] 통합 표지 렌더링
             app_p_icon = "♂️" if gender == "남성" else "♀️"
             part_p_icon = "♂️" if f_gender == "남성" else "♀️"
             
@@ -891,7 +891,7 @@ if btn_run:
                 <span style='font-size: 14px; letter-spacing: 1px; color: #555;'>{APP_VERSION}</span>
             </div>
         </div>
-        <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 남녀 인연(궁합) 풀이 ]</h3>
+        <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 💐 남녀 인연(궁합) 풀이 ]</h3>
         <div style='display: flex; justify-content: space-between; align-items: center; background:#F8F9FA; border: 1px solid #E8EAF6; padding: 35px 25px; border-radius: 15px; margin-bottom: 40px;'>
             <div style='flex: 1; text-align: center; border-right: 1px dashed #CCC; padding-right: 10px;'>
                 <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{app_p_icon} {name} 님</span>
@@ -912,7 +912,7 @@ if btn_run:
 """
             st.markdown(gunghap_cover_html, unsafe_allow_html=True)
 
-            # [남명(乾命) 원국 및 대운표 렌더링]
+            # [남명 원국 및 대운표 렌더링]
             m_hs, m_ds, m_ms, m_ys = m_gans[0], m_gans[1], m_gans[2], m_gans[3]
             m_hb, m_db, m_mb, m_yb = m_jjis[0], m_jjis[1], m_jjis[2], m_jjis[3]
             m_guiin_str = guiin_map.get(m_ds, '없음')
@@ -955,10 +955,10 @@ if btn_run:
                     </table>
                     
                     <div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF; margin-bottom:20px;'>
-                    <div> 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
-                    <div> 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
-                    <div> 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
-                    <div> 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
+                    <div>💥 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
+                    <div>🌟 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
+                    <div>🎯 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
+                    <div>🌪️ 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
                     </div>
                     {m_un_html}
                 </div>
@@ -967,7 +967,7 @@ if btn_run:
             """
             st.markdown(male_table_html, unsafe_allow_html=True)
 
-            # [여명(坤命) 원국 및 대운표 렌더링]
+            # [여명 원국 및 대운표 렌더링]
             w_hs, w_ds, w_ms, w_ys = w_gans[0], w_gans[1], w_gans[2], w_gans[3]
             w_hb, w_db, w_mb, w_yb = w_jjis[0], w_jjis[1], w_jjis[2], w_jjis[3]
             w_guiin_str = guiin_map.get(w_ds, '없음')
@@ -1022,13 +1022,12 @@ if btn_run:
             """
             st.markdown(female_table_html, unsafe_allow_html=True)
             
-            # ------------------------------------------------------------------
-            # 4. 궁합 통변 풀이 및 출산택일 렌더링
-            # ------------------------------------------------------------------
+            # [3] AI 궁합 통변 풀이
             gh_prompt = prompts.GUNGHAP_PROMPT.format(
                 app_name=m_name, app_gender="남성", app_ilju=f"{m_ds}{m_db}", 
                 partner_name=w_name, partner_gender="여성", partner_ilju=f"{w_ds}{w_db}",
-                ilji_relation=engine.get_ji_rel_set(m_db, w_db), oheng_balance="엔진 데이터 정밀 연동됨", gunghap_score=85, gunghap_grade="상생연분"
+                ilji_relation=engine.get_ji_rel_set(m_db, w_db), 
+                oheng_balance="엔진 데이터 정밀 연동됨", gunghap_score=85, gunghap_grade="상생연분"
             )
             ai_result = get_ai_response(prompts.SYSTEM_ROLE, gh_prompt)
             st.markdown(prompts.HTML_LAYOUTS["report_box"].format(content=ai_result), unsafe_allow_html=True)
@@ -1037,50 +1036,15 @@ if btn_run:
                 st.markdown(f"### 👶 {name} & {f_name} 부부의 최적 출산 길일")
                 st.success(f"탐색 기간 내의 길일 연산 엔진이 성공적으로 가동되었습니다. (⏳엔진 연동 대기중)")
 
-            closing_del_html = f"""<div style='margin-top: 20px;'>
-<p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 하늘의 뜻과 부모님의 깊은 사랑이 한데 어우러져 귀한 인연이 이 세상에 찬란하게 빛을 발하며 나아가기를 진심으로 기원합니다.</p>
-<p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>두 분의 앞날에 건강과 행복이 가득하시기를 간절히 축원합니다.</p>
-<div style='text-align: right; margin-top: 25px;'>
-<span style='font-weight: 900; font-size: 18px; color: #1A237E;'>초연 시공명리 연구소</span>
+            # [4] 맺음말 렌더링
+            closing_del_html = f"""
+<div style='margin-top: 20px;'>
+    <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 하늘의 뜻과 부모님의 깊은 사랑이 한데 어우러져 귀한 인연이 이 세상에 찬란하게 빛을 발하며 나아가기를 진심으로 기원합니다.</p>
+    <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>두 분의 앞날에 건강과 행복이 가득하시기를 간절히 축원합니다.</p>
+    <div style='text-align: right; margin-top: 25px;'>
+        <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>초연 시공명리 연구소</span>
+    </div>
 </div>
-</div>"""
-            st.markdown(closing_del_html, unsafe_allow_html=True)    
+"""
+            st.markdown(closing_del_html, unsafe_allow_html=True)  
 
-            # ------------------------------------------------------------------
-            # 3. 통합 표지 및 남명/여명 사주 원국 렌더링
-            # ------------------------------------------------------------------
-            
-            # [통합 표지 출력]
-            app_p_icon = "♂️" if gender == "남성" else "♀️"
-            part_p_icon = "♂️" if f_gender == "남성" else "♀️"
-            
-            gunghap_cover_html = f"""
-            <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
-                <div style='border: 4px solid #1A237E; padding: 60px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-                    <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:50px;'>
-                        <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;'>&#127982; 초연 시공명리 궁합 감명서</h1>
-                        <div style='text-align: right; margin-top: 10px;'>
-                            <span style='font-size: 14px; letter-spacing: 1px; color: #555;'>{APP_VERSION}</span>
-                        </div>
-                    </div>
-                    <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 남녀 인연(궁합) 풀이 ]</h3>
-                    <div style='display: flex; justify-content: space-between; align-items: center; background:#F8F9FA; border: 1px solid #E8EAF6; padding: 35px 25px; border-radius: 15px; margin-bottom: 40px;'>
-                        <div style='flex: 1; text-align: center; border-right: 1px dashed #CCC; padding-right: 10px;'>
-                            <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{app_p_icon} {name} 님</span>
-                            <p style='font-size: 14px; color: #555; margin: 10px 0 0 0;'>{gender} / {u_marital}</p>
-                        </div>
-                        <div style='flex: 0.4; text-align: center; font-size: 24px; color: #1A237E; font-weight: 900;'>緣</div>
-                        <div style='flex: 1; text-align: center; border-left: 1px dashed #CCC; padding-left: 10px;'>
-                            <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{part_p_icon} {f_name} 님</span>
-                            <p style='font-size: 14px; color: #555; margin: 10px 0 0 0;'>{f_gender} / {f_marital}</p>
-                        </div>
-                    </div>
-                    <p style='font-size: 16px; font-weight: 700; color: #444; margin-top: 50px;'>위 두 분의 시공간적 에너지 흐름과 음양오행의 조화를 정밀 감명하였습니다.</p>
-                    <p style='font-size: 16px; margin-top: 60px; font-weight: 800; color: #000;'>{today_str}</p>
-                    <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
-                </div>
-            </div>
-            <div class="page-break-before"></div>
-            """
-
-            st.markdown(gunghap_cover_html, unsafe_allow_html=True)
