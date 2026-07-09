@@ -79,6 +79,13 @@ st.markdown("""
         margin-bottom: 8px !important; 
     }
 
+    /* 사이드바 기본 입력창 라벨 폰트 강제 원상복구 (백신 코드) */
+    [data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        color: rgba(49, 51, 63, 0.8) !important;
+        margin-bottom: 0px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
