@@ -851,7 +851,7 @@ if btn_run:
             <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
                 <div style='border: 4px solid #1A237E; padding: 60px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
                     <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:50px;'>
-                        <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;'>🏮 초연 시공명리 궁합 감명서</h1>
+                        <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;'>&#127982; 초연 시공명리 궁합 감명서</h1>
                         <div style='text-align: right; margin-top: 10px;'>
                             <span style='font-size: 14px; letter-spacing: 1px; color: #555;'>{APP_VERSION}</span>
                         </div>
