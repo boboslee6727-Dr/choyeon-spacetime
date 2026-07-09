@@ -70,13 +70,15 @@ st.markdown("""
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
     }
+
     /* '📋 분석 상품 선택' 레이블 폰트 크기 및 굵기 수정 */
     [data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
-        font-size: 16px !important;    /* 폰트 크기 확대 */
-        font-weight: 800 !important;   /* 굵은체 적용 */
-        color: #000000 !important;     /* 선명한 검은색 */
-        margin-bottom: 8px !important; /* 아래쪽 여백 살짝 확보 */
+        font-size: 16px !important;    
+        font-weight: 800 !important;   
+        color: #000000 !important;     
+        margin-bottom: 8px !important; 
     }
+
 </style>
 """, unsafe_allow_html=True)
 
