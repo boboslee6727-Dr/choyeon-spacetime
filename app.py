@@ -989,10 +989,10 @@ if btn_run:
                     </table>
                     
                     <div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF; margin-bottom:20px;'>
-                    <div> 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
-                    <div> 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
-                    <div> 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
-                    <div> 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
+                    <div>💥 오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
+                    <div>🌟 천을귀인: <span style='color:#1A237E;'>{m_guiin_str}</span></div>
+                    <div>🎯 공망: [년] <span style='color:#1A237E;'>{m_n_gong}</span> / [일] <span style='color:#1A237E;'>{m_i_gong}</span></div>
+                    <div>🌪️ 삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
                     </div>
                     {m_un_html}
                 </div>
@@ -1078,7 +1078,7 @@ if btn_run:
     <div style='text-align: right; margin-top: 25px;'>
         <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>초연 시공명리 연구소</span>
     </div>
-</div>
+<div class="page-break-before"></div>
 """
             st.markdown(closing_del_html, unsafe_allow_html=True)  
 
