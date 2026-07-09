@@ -98,7 +98,7 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=3600*24) # ttl=3600*24초=86,400초 12시간 감명서 유효
+@st.cache_data(show_spinner=False, ttl=24) # ttl=3600*24초=86,400초 12시간 감명서 유효
 def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
     if '1.5' in model_name:
         model_name = 'gemini-2.5-flash'
