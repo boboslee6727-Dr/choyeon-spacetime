@@ -70,22 +70,6 @@ st.markdown("""
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
     }
-
-    /* '📋 분석 상품 선택' 레이블 폰트 크기 및 굵기 수정 */
-    [data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
-        font-size: 16px !important;    
-        font-weight: 800 !important;   
-        color: #000000 !important;     
-        margin-bottom: 8px !important; 
-    }
-
-    /* 사이드바 기본 입력창 라벨 폰트 강제 원상복구 (백신 코드) */
-    [data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
-        font-size: 14px !important;
-        font-weight: 400 !important;
-        color: rgba(49, 51, 63, 0.8) !important;
-        margin-bottom: 0px !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -163,9 +147,12 @@ with st.sidebar:
     st.markdown(f"<p style='text-align: center; color: #555555; font-family: sans-serif; font-size: 12px;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    # 1. 상품 선택
-    u_product = st.selectbox("📋 분석 상품 선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"])
-    
+    # ==============================================================================
+    # 1. 상품 선택    
+    st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
+    u_product = st.selectbox("상품선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"], label_visibility="collapsed")
+    # ==============================================================================
+
     # 2. 신청인 기본 정보
     with st.expander("👤 신청인 기본 정보", expanded=True):
         # value를 비우고 placeholder를 사용하여 연한 회색 문구로 처리
@@ -174,7 +161,6 @@ with st.sidebar:
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         
-        # '연도' -> '년도'로 수정
         col_y, col_m, col_d = st.columns(3)
         with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="s_y")
         with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
