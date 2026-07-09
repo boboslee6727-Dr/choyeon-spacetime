@@ -595,6 +595,88 @@ if btn_run:
         loading_msg = "⏳궁합 및 출산 택일 길일 연산 중..." if run_delivery_calc else "⏳궁합 풀이 중..."
         
         with st.spinner(loading_msg):
+            # 오행 색상 클래스 판별용 공통 함수
+            def get_oh_class(ganji):
+                oh = '무'
+                if ganji in ['甲', '乙', '寅', '卯']: oh = '목'
+                elif ganji in ['丙', '丁', '巳', '午']: oh = '화'
+                elif ganji in ['戊', '己', '辰', '戌', '丑', '未']: oh = '토'
+                elif ganji in ['庚', '辛', '申', '酉']: oh = '금'
+                elif ganji in ['壬', '癸', '亥', '子']: oh = '수'
+                return f"color-{oh}" if oh != '무' else ""
+
+            # 현재 연도 공통 선언
+            curr_year = dt_mod.datetime.now().year
+            today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+
+            # ------------------------------------------------------------------
+            # 0. 신청인(Applicant) 사주 및 대운 동적 연산 (누락 복구)
+            # ------------------------------------------------------------------
+            klc = KoreanLunarCalendar()
+            if "음력" in u_cal:
+                is_leap = True if "윤달" in u_cal else False
+                klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
+                sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
+                lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
+                leap_str = "윤달" if is_leap else "평달"
+            else:
+                klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+                sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
+                lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
+                leap_str = "윤달" if klc.isIntercalation else "평달"
+                
+            age = curr_year - sol_y + 1
+            sol_str = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
+            lun_str = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
+            h, m = extract_time(b_time)
+            time_str = f"{b_time.split('(')[0].strip()}시" if b_time != "시간 모름" else ""
+
+            y_pillar, m_pillar, _ = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+            is_lunar_val = ("음력" in u_cal)
+            is_leap_val = ("윤달" in u_cal)
+            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+            t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
+
+            gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
+            jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+            
+            counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+            for c in gans + jjis:
+                if c in "甲乙寅卯": counts['목']+=1
+                elif c in "丙丁巳午": counts['화']+=1
+                elif c in "戊己辰戌丑未": counts['토']+=1
+                elif c in "庚辛申酉": counts['금']+=1
+                elif c in "壬癸亥子": counts['수']+=1
+                
+            base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
+            adj_mins = engine.get_total_time_adjustment(base_dt)
+            utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+            order_dir = 1 if (engine.GAN.index(y_pillar[0])%2==0) == (gender=='남성') else -1
+            calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
+            direction_str = "순행" if order_dir == 1 else "역행"
+            
+            # 신청인 대운표 HTML 생성
+            un_html = f"<div style='margin-top:25px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
+            for i in range(10):
+                val = i * 10 + calc_d
+                c = engine.GAN[(engine.GAN.index(m_pillar[0]) + (i + 1) * order_dir) % 10] if m_pillar[0] in engine.GAN else "-"
+                j = engine.JI[(engine.JI.index(m_pillar[1]) + (i + 1) * order_dir) % 12] if m_pillar[1] in engine.JI else "-"
+                is_active = val <= age < val + 10
+                bg_col = "#FFF9C4" if is_active else "transparent"
+                b_left = "1px solid #ccc" if i != 9 else "none"
+                c_cls, j_cls = get_oh_class(c), get_oh_class(j)
+                
+                un_html += f"""<div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col};'>
+<div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{val}세</div>
+<div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(d_pillar[0],c)}</div>
+<div class='{c_cls}' style='font-size:18px; font-weight:900; padding:4px 0;'>{c}</div>
+<div class='{j_cls}' style='font-size:18px; font-weight:900; padding:4px 0;'>{j}</div>
+<div style='padding:2px; font-size:11px; color:#666;'>{engine.get_ss(d_pillar[0],j)}</div>
+<div style='font-size:11px; border-top:1px solid #eee; padding-top:2px;'>{engine.get_unsung(d_pillar[0],j)}</div>
+<div style='font-size:11px; color:#1A237E; font-weight:700; border-top:1px solid #eee; padding-top:2px;'>{engine.get_12_shinsal(y_pillar[1], j)}</div>
+</div>"""
+            un_html += "</div>"
+
             # ------------------------------------------------------------------
             # 1. 상대방(Partner) 사주 및 대운 동적 연산
             # ------------------------------------------------------------------
@@ -641,16 +723,6 @@ if btn_run:
             p_calc_d = engine.get_daeun_su_accurate(p_utc_dt, p_order_dir)
             p_direction_str = "순행" if p_order_dir == 1 else "역행"
             
-            # 오행 색상 클래스 판별용
-            def get_oh_class(ganji):
-                oh = '무'
-                if ganji in ['甲', '乙', '寅', '卯']: oh = '목'
-                elif ganji in ['丙', '丁', '巳', '午']: oh = '화'
-                elif ganji in ['戊', '己', '辰', '戌', '丑', '未']: oh = '토'
-                elif ganji in ['庚', '辛', '申', '酉']: oh = '금'
-                elif ganji in ['壬', '癸', '亥', '子']: oh = '수'
-                return f"color-{oh}" if oh != '무' else ""
-            
             # 상대방 대운표 HTML 생성
             p_un_html = f"<div style='margin-top:25px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 대운의 흐름 (대운수: {p_calc_d}, {p_direction_str}) ]</div><div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>"
             for i in range(10):
@@ -674,7 +746,7 @@ if btn_run:
             p_un_html += "</div>"
 
             # ------------------------------------------------------------------
-            # 2. 신청인과 상대방의 남/녀 성별 할당 (동적 처리)
+            # 2. 신청인과 상대방의 남/녀 성별 할당 (동적 처리 완료)
             # ------------------------------------------------------------------
             if gender == "남성":
                 # 남명 = 신청인 / 여명 = 상대방
@@ -855,10 +927,10 @@ if btn_run:
                 st.success(f"탐색 기간 내의 길일 연산 엔진이 성공적으로 가동되었습니다. (⏳엔진 연동 대기중)")
 
         closing_del_html = f"""<div style='margin-top: 20px;'>
-<p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 이 출산 희망일은 독특하고 고귀한 기운을 담고 있습니다. 하늘의 뜻과 부모님의 깊은 사랑, 그리고 제가 바친 노력이 한데 어우러져 귀한 아기가 이 세상에 가장 찬란하게 빛을 발하며 첫걸음을 내딛기를 진심으로 기원합니다.</p>
-<p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>어떤 날을 선택하시든, 그 선택은 아기에게 최고의 축복이 될 것입니다. 아기의 탄생으로 가정이 더욱 행복하고 번창하시기를 간절히 축원합니다.</p>
+<p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 하늘의 뜻과 부모님의 깊은 사랑이 한데 어우러져 귀한 인연이 이 세상에 찬란하게 빛을 발하며 나아가기를 진심으로 기원합니다.</p>
+<p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>두 분의 앞날에 건강과 행복이 가득하시기를 간절히 축원합니다.</p>
 <div style='text-align: right; margin-top: 25px;'>
 <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>초연 시공명리 연구소</span>
 </div>
 </div>"""
-        st.markdown(closing_del_html, unsafe_allow_html=True)
+        st.markdown(closing_del_html, unsafe_allow_html=True)    
