@@ -947,7 +947,7 @@ if btn_run:
 """
             st.markdown(gunghap_cover_html, unsafe_allow_html=True)
             
-            # [2] 남명 원국 렌더링 준비
+            # [2] 남명 원국 렌더링
             m_hs, m_ds, m_ms, m_ys = m_gans[0], m_gans[1], m_gans[2], m_gans[3]
             m_hb, m_db, m_mb, m_yb = m_jjis[0], m_jjis[1], m_jjis[2], m_jjis[3]
             m_guiin_str = guiin_map.get(m_ds, '없음')
@@ -963,7 +963,7 @@ if btn_run:
                 lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:13px; vertical-align:middle;'>합충형파해</td>" if l_idx==0 else ""
                 m_ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
-            m_info_h = f"<div style='text-align:center; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>♂️ [男命] {m_name}님 사주원국</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {m_sol_str} | 음력: {m_lun_str} {m_time_str}]</span></div>"
+            m_info_h = f"<div style='text-align:center; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>&#9794; [男命] {m_name}님 사주원국</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {m_sol_str} | 음력: {m_lun_str} {m_time_str}]</span></div>"
             
             male_table_top = f"""
             <div style='background-color:#FFFFFF; padding:40px; margin:20px auto; border:1px solid #E0E0E0; border-radius:15px; max-width:1000px;'>
@@ -989,7 +989,6 @@ if btn_run:
                     <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, m_gans, m_jjis, '남성')) if engine.get_general_shinsal_filtered(i, m_gans, m_jjis, '남성') else '-'}</td>" for i in range(4)])}</tr>
                     </table>
             """
-
             m_master_bar_html = f"""
             <div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF;'>
                 <div>오행: 木({m_counts['목']}) 火({m_counts['화']}) 土({m_counts['토']}) 金({m_counts['금']}) 水({m_counts['수']})</div>
@@ -998,17 +997,14 @@ if btn_run:
                 <div>삼재: <span style='color:{m_samjae_color};'>{m_cur_samjae}</span></div>
             </div>
             """
-            
-            box_close_html = """
+            m_box_close_html = """
                 </div>
             </div>
+            <div class="page-break-before"></div>
             """
-            
-            # 남명 원국만 출력 (대운표 제외)
-            st.markdown(male_table_top + m_master_bar_html + box_close_html, unsafe_allow_html=True)
+            st.markdown(male_table_top + m_master_bar_html + m_box_close_html, unsafe_allow_html=True)
 
-
-            # [3] 여명 원국 렌더링 준비
+            # [3] 여명 원국 렌더링
             w_hs, w_ds, w_ms, w_ys = w_gans[0], w_gans[1], w_gans[2], w_gans[3]
             w_hb, w_db, w_mb, w_yb = w_jjis[0], w_jjis[1], w_jjis[2], w_jjis[3]
             w_guiin_str = guiin_map.get(w_ds, '없음')
@@ -1024,7 +1020,7 @@ if btn_run:
                 lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:13px; vertical-align:middle;'>합충형파해</td>" if l_idx==0 else ""
                 w_ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
 
-            w_info_h = f"<div style='text-align:center; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>♀️ [女命] {w_name}님 사주원국</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {w_sol_str} | 음력: {w_lun_str} {w_time_str}]</span></div>"
+            w_info_h = f"<div style='text-align:center; margin-bottom:15px; line-height:1.5;'><span style='font-size:18px; font-weight:900; color:#1A237E; white-space:nowrap;'>&#9792; [女命] {w_name}님 사주원국</span><br><span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {w_sol_str} | 음력: {w_lun_str} {w_time_str}]</span></div>"
             
             female_table_top = f"""
             <div style='background-color:#FFFFFF; padding:40px; margin:20px auto; border:1px solid #E0E0E0; border-radius:15px; max-width:1000px;'>
@@ -1050,7 +1046,6 @@ if btn_run:
                     <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important; white-space:nowrap;'>일반신살</td>{"".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, w_gans, w_jjis, '여성')) if engine.get_general_shinsal_filtered(i, w_gans, w_jjis, '여성') else '-'}</td>" for i in range(4)])}</tr>
                     </table>
             """
-
             w_master_bar_html = f"""
             <div style='border:2px solid #3E2723; margin-top:20px; padding:10px; display:flex; justify-content:space-between; font-weight:900; font-size:13px; border-radius:8px; white-space:nowrap; background:#FFF;'>
                 <div>오행: 木({w_counts['목']}) 火({w_counts['화']}) 土({w_counts['토']}) 金({w_counts['금']}) 水({w_counts['수']})</div>
@@ -1059,23 +1054,24 @@ if btn_run:
                 <div>삼재: <span style='color:{w_samjae_color};'>{w_cur_samjae}</span></div>
             </div>
             """
-            
-            # 여명 원국 출력 후 다음 페이지로 넘김
-            st.markdown(female_table_top + w_master_bar_html + box_close_html + '<div class="page-break-before"></div>', unsafe_allow_html=True)
+            w_box_close_html = """
+                </div>
+            </div>
+            <div class="page-break-before"></div>
+            """
+            st.markdown(female_table_top + w_master_bar_html + w_box_close_html, unsafe_allow_html=True)
 
-            # [4] 부부 대운 흐름 상하 비교표 출력 (새로운 레이아웃)
+            # [4] 부부 대운 흐름 상하 비교표 출력
             daewoon_compare_html = f"""
             <div style='background-color:#FFFFFF; padding:40px; margin:20px auto; border:1px solid #E0E0E0; border-radius:15px; max-width:1000px;'>
                 <div style='border: 2px solid #1A237E; border-radius: 12px; padding: 30px; background-color:#FAFAFA;'>
                     <h2 style='text-align:center; color:#1A237E; font-weight:900; margin-bottom: 30px;'>[ 부부 대운(大運) 흐름 비교 분석 ]</h2>
                     
-                    <!-- 남명 대운 출력 -->
                     <div style='margin-bottom: 40px;'>
                         <h4 style='color:#3E2723; font-weight:800;'>&#9794; 男命 ({m_name}님) 대운 흐름</h4>
                         {m_un_html}
                     </div>
                     
-                    <!-- 여명 대운 출력 -->
                     <div>
                         <h4 style='color:#3E2723; font-weight:800;'>&#9792; 女命 ({w_name}님) 대운 흐름</h4>
                         {w_un_html}
@@ -1100,8 +1096,8 @@ if btn_run:
                 st.markdown(f"### 👶 {name} & {f_name} 부부의 최적 출산 길일")
                 st.success(f"탐색 기간 내의 길일 연산 엔진이 성공적으로 가동되었습니다. (⏳엔진 연동 대기중)")
 
-             # [6] 맺음말 렌더링
-            closing_del_html = """
+            # [6] 맺음말 렌더링
+            closing_del_html = f"""
 <div style='margin-top: 20px;'>
     <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 하늘의 뜻과 부모님의 깊은 사랑이 한데 어우러져 귀한 인연이 이 세상에 찬란하게 빛을 발하며 나아가기를 진심으로 기원합니다.</p>
     <p style='font-size:15px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>두 분의 앞날에 건강과 행복이 가득하시기를 간절히 축원합니다.</p>
@@ -1112,3 +1108,4 @@ if btn_run:
 <div class="page-break-before"></div>
 """
             st.markdown(closing_del_html, unsafe_allow_html=True)
+
