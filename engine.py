@@ -467,9 +467,18 @@ def _get_person_data(y, m, d, t, gender, name, marital):
         _, _, d_pillar = get_ganji_from_date(y, m, d)
         t_gan, t_ji = get_time_ganji(d_pillar[0], t)
         
+        # [로그 추가] 변수가 제대로 들어오는지 확인
+        # print(f"DEBUG: y_pillar={y_pillar}, d_pillar={d_pillar}")
+        
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ds, ms, hs, ys = d_pillar[0], m_pillar[0], t_gan, y_pillar[0]
         db, mb, hb, yb = d_pillar[1], m_pillar[1], t_ji, y_pillar[1]
+        
+        # [방어 로직] 만약 ys, yb가 '?'라면 강제로 '갑', '자'라도 넣어서 에러 방지
+        if ys == "?": ys = "甲"
+        if yb == "?": yb = "子"
+        if ds == "?": ds = "甲"
+        if db == "?": db = "子"
         
         # 2. 분석용 연산
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
