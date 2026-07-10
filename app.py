@@ -334,7 +334,10 @@ if btn_run:
             base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
             adj_mins = engine.get_total_time_adjustment(base_dt)
             utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-            order_dir = 1 if (engine.GAN.index(ys)%2==0) == (gender=='남성') else -1
+            # [수정] 한글로 변환하여 조회하거나, 한자와 한글 모두 있는 리스트를 사용
+            # 박사님의 K2H_GAN 딕셔너리를 사용하여 한자를 한글로 변환 후 인덱스 확인
+            ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys) 
+            order_dir = 1 if (engine.GAN.index(ys_kor) % 2 == 0) == (gender == '남성') else -1
             calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
             direction_str = "순행" if order_dir == 1 else "역행"
 
