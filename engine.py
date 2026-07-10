@@ -437,11 +437,29 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     return fallback_ss + "격", f"월지 {mb}의 지장간(비겁 제외)이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {fallback_ss}격으로 정합니다."
 
 def calculate_gongmang(ilgan, ilji):
-    if ilgan in ["?"," ","-"] or ilji in ["?"," ","-"]: return "-"
+    # 입력받은 값이 한자라면 한글로 변환하는 사전 준비
+    h2k_gan = {v: k for k, v in K2H_GAN.items()} # 한자 -> 한글 매핑
+    h2k_ji = {v: k for k, v in K2H_JI.items()}   # 한자 -> 한글 매핑
+    
+    # 입력값을 한글로 정규화
+    g = h2k_gan.get(ilgan, ilgan)
+    j = h2k_ji.get(ilji, ilji)
+    
+    # 리스트에서 한글 인덱스만 찾기 (GAN, JI 리스트의 앞 10개/12개 사용)
+    gan_list = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
+    ji_list = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
+    
+    if g not in gan_list or j not in ji_list: return "-"
+    
     try:
-        base = (list(JI).index(ilji) - list(GAN).index(ilgan) - 2) % 12
-        return list(JI)[base] + "," + list(JI)[(base+1)%12]
-    except: return "-"
+        base = (ji_list.index(j) - gan_list.index(g)) % 12
+        # 공망 계산 공식: (지지인덱스 - 천간인덱스) % 12
+        # 그 결과와 그 다음 지지가 공망
+        gong1 = ji_list[base]
+        gong2 = ji_list[(base + 1) % 12]
+        return f"{gong1},{gong2}"
+    except:
+        return "-"
 
 def _get_person_data(y, m, d, t, gender, name, marital):
         # 1. 만세력 기본 산출
