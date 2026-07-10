@@ -128,9 +128,9 @@ with st.sidebar:
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
                 
                 if y:
-                    st.session_state['s_y'] = y
-                    st.session_state['s_m'] = m
-                    st.session_state['s_d'] = d
+                    st.session_state['s_y_val'] = y
+                    st.session_state['s_m_val'] = m
+                    st.session_state['s_d_val'] = d
                     
                     # 삼주육자 대응: rt(시주)가 입력되었을 때만 처리
                     if rt and len(extract_ganji(rt)) == 2:
@@ -143,9 +143,9 @@ with st.sidebar:
                             '유':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시'
                         }
                         if rt_h in time_map_rev:
-                            st.session_state['s_t'] = time_map_rev[rt_h]
+                            st.session_state['s_t_val'] = time_map_rev[rt_h]
                     else:
-                        st.session_state['s_t'] = "시간 모름" # 시주 없는 경우 처리
+                        st.session_state['s_t_val'] = "시간 모름" # 시주 없는 경우 처리
                     
                     st.session_state['rev_success_msg'] = f"✅ 성공: {y}년 {m}월 {d}일 입력 완료!"
                     st.rerun()
