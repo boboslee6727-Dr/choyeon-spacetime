@@ -108,36 +108,43 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
-            
-            if len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
-                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+                _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
                 
-                is_lunar = ("음력" in st.session_state.get("u_c", "양력"))
-                y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
-                
-                if y:
-                    st.session_state['s_y_val'], st.session_state['s_m_val'], st.session_state['s_d_val'] = y, m, d
-                    st.session_state['s_y_input'], st.session_state['s_m_input'], st.session_state['s_d_input'] = y, m, d
+                if len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
+                    ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
+                    rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
+                    rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
                     
-                    if rt and len(extract_ganji(rt)) == 2:
-                        rt_h = engine.K2H_JI.get(extract_ganji(rt)[-1], '')
-                        time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
-                        val = time_map.get(rt_h, "시간 모름")
-                        st.session_state['s_t_val'] = val
-                        st.session_state['s_t_idx'] = idx_list.index(val) if val in idx_list else 0
+                    is_lunar = ("음력" in st.session_state.get("u_c", "양력"))
+                    y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
+                    
+                    if y:
+                        # 생년월일 세션 업데이트
+                        st.session_state['s_y_input'] = y
+                        st.session_state['s_m_input'] = m
+                        st.session_state['s_d_input'] = d
+                        
+                        # 태어난 시간 처리 및 위젯 강제 업데이트
+                        if rt and len(extract_ganji(rt)) == 2:
+                            ji_char = extract_ganji(rt)[-1]
+                            rt_h = engine.K2H_JI.get(ji_char, ji_char)
+                            
+                            time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                            found_time = time_map.get(rt_h, "시간 모름")
+                            
+                            # [핵심] 인덱스와 함께 위젯 키(s_t_input)를 갱신
+                            st.session_state['s_t_idx'] = idx_list.index(found_time) if found_time in idx_list else 0
+                            st.session_state['s_t_input'] = found_time
+                        else:
+                            st.session_state['s_t_idx'] = 0
+                            st.session_state['s_t_input'] = idx_list[0] if idx_list else "시간 모름"
+                            
+                        st.session_state['rev_success_msg'] = f"✅ 양력: {y}년 {m}월 {d}일 입력 완료!"
+                        st.rerun()
                     else:
-                        st.session_state['s_t_val'] = "시간 모름"
-                        st.session_state['s_t_idx'] = 0
-                    
-                    st.session_state['rev_success_msg'] = f"✅ 양력: {y}년 {m}월 {d}일 입력 완료!"
-                    st.rerun()
+                        st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
                 else:
-                    st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
-            else:
-                st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
+                    st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
     if st.session_state.get('rev_success_msg'):
         st.success(st.session_state['rev_success_msg'])
@@ -159,12 +166,7 @@ with st.sidebar:
         b_day = col_d.number_input("일", 1, 31, value=st.session_state.get('s_d_input', 1), key="s_d_input")
         
         # [수정] selectbox 괄호 오류 수정 및 인덱스 강제 지정
-        b_time = st.selectbox(
-            "태어난 시간", 
-            options=idx_list, 
-            index=st.session_state.get('s_t_idx', 0), 
-            key="s_t_input"
-        )
+        b_time = st.selectbox("태어난 시간", options=idx_list, index=st.session_state.get('s_t_idx', 0), key="s_t_input")
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
