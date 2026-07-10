@@ -103,6 +103,26 @@ def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
     
     return year_ganji, month_ganji, day_ganji
 
+def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
+    from korean_lunar_calendar import KoreanLunarCalendar
+    klc = KoreanLunarCalendar()
+    for y in range(2035, 1899, -1):
+        for m in range(1, 13):
+            # 달별로 검색 (효율을 위해)
+            for d in range(1, 32):
+                try:
+                    if is_lunar: 
+                        klc.setLunarDate(y, m, d, False)
+                    else: 
+                        klc.setSolarDate(y, m, d)
+                    
+                    gj = klc.getChineseGapJaString().split()
+                    if len(gj) >= 3:
+                        if gj[0][:2] == y_ganji and gj[1][:2] == m_ganji and gj[2][:2] == d_ganji:
+                            return y, m, d
+                except: continue
+    return None, None, None
+
 def get_daeun_su_accurate(utc_dt, order):
     try:
         sun = ephem.Sun()
