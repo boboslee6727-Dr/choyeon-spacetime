@@ -272,6 +272,5 @@ def get_ai_report_box(content):
         <div class='content-box-loose'>
             {content}
         </div>
-        
     </div>
     """
