@@ -97,7 +97,7 @@ with st.sidebar:
     u_product = st.selectbox("상품선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"], label_visibility="collapsed")
 
     # ---------------------------------------------------------
-    # [순서 변경 1] 신청인 사주간지 역산 (위로 이동)
+    # 1. 신청인 사주간지 역산 (상단 배치)
     # ---------------------------------------------------------
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -115,7 +115,6 @@ with st.sidebar:
                 rm_h = engine.K2H_GAN.get(_rm[0], '') + engine.K2H_JI.get(_rm[1], '')
                 rd_h = engine.K2H_GAN.get(_rd[0], '') + engine.K2H_JI.get(_rd[1], '')
                 
-                # 순서 변경에 따른 변수 참조 에러 방지 (session_state 직접 조회)
                 is_lunar = ("음력" in st.session_state.get("u_c", "양력"))
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
                 
@@ -145,13 +144,12 @@ with st.sidebar:
             else:
                 st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
-    # 메시지 박스 표시 (버튼 연산 후 즉시 출력)
     if st.session_state.get('rev_success_msg'):
         st.success(st.session_state['rev_success_msg'])
         st.session_state['rev_success_msg'] = ""
 
     # ---------------------------------------------------------
-    # [순서 변경 2] 신청인 기본 정보 (아래로 이동, 중계 변수 연동)
+    # 2. 신청인 기본 정보 (하단 배치 및 시간 자동 연동 복구)
     # ---------------------------------------------------------
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -159,11 +157,17 @@ with st.sidebar:
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         col_y, col_m, col_d = st.columns(3)
-        # 에러 원천 차단: key를 제거하고 value로 중계 변수와 연결
         with col_y: b_year = st.number_input("년도", 1900, 2050, value=st.session_state.get('s_y_val', 1980))
         with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1))
         with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1))
-        b_time = st.text_input("태어난 시간", value=st.session_state.get('s_t_val', "시간 모름"))
+        
+        # 시간 자동 연동 및 14개 바 selectbox 복구 파트
+        current_time_val = st.session_state.get('s_t_val', "시간 모름")
+        try:
+            t_index = idx_list.index(current_time_val)
+        except ValueError:
+            t_index = 0
+        b_time = st.selectbox("태어난 시간", options=idx_list, index=t_index)
 
 
     other_report = ""
@@ -179,9 +183,6 @@ with st.sidebar:
     elif u_product == "3. 궁합 및 출산 택일":
         st.markdown("---")
         
-        # ---------------------------------------------------------
-        # 궁합 파트 일관성 유지: 상대방 역산 위로 이동
-        # ---------------------------------------------------------
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -198,11 +199,17 @@ with st.sidebar:
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
-            # 안전한 중계 변수 방식으로 통일
             f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=st.session_state.get('p_y_val', 1980))
             f_m = p_col2.number_input("월(상대)", 1, 12, value=st.session_state.get('p_m_val', 1))
             f_d = p_col3.number_input("일(상대)", 1, 31, value=st.session_state.get('p_d_val', 1))
-            f_t = st.text_input("태어난 시간(상대)", value=st.session_state.get('p_t_val', "시간 모름"))
+            
+            # 상대방 시간 선택 연동 준비
+            current_p_time_val = st.session_state.get('p_t_val', "시간 모름")
+            try:
+                p_t_index = idx_list.index(current_p_time_val)
+            except ValueError:
+                p_t_index = 0
+            f_t = st.selectbox("태어난 시간(상대)", options=idx_list, index=p_t_index)
             
         st.markdown("<br>", unsafe_allow_html=True)
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
