@@ -427,8 +427,9 @@ if st.session_state.get('app_running', False):
                 wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
-            gunghap_cover = html_views.get_gunghap_cover(
-            APP_VERSION, p_icon, name, gender, u_marital, part_icon, st.session_state["f_n"], st.session_state["f_g"], st.session_state["f_m_stat"], today_str
+            # [수정] 개인 사주용 커버 함수 호출로 변경 (궁합 커버 함수 아님!)
+            cover_html = html_views.get_personal_cover(
+                APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
             st.markdown(gunghap_cover, unsafe_allow_html=True)
 
@@ -456,9 +457,11 @@ if st.session_state.get('app_running', False):
             # 맺음말은 html_views.py에서 가져옴
             closing_html = html_views.get_closing_html(name)
             
-            # 최종 렌더링
+            # 최종 렌더링 (궁합용 변수들 대신 개인 사주용 변수들로 구성)
             st.markdown(cover_html, unsafe_allow_html=True)
-            st.markdown(html_views.get_combined_report_box(intro_html + table_html + master_bar_html + un_html + se_html + wol_html + ai_output_html + closing_html), unsafe_allow_html=True)
+            st.markdown(html_views.get_combined_report_box(
+                intro_html + table_html + master_bar_html + un_html + se_html + wol_html + ai_output_html + closing_html
+            ), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
