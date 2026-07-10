@@ -158,7 +158,7 @@ with st.sidebar:
         st.session_state['rev_success_msg'] = ""
 
     # ---------------------------------------------------------
-    # 2. 신청인 기본 정보 (14개 바 Selectbox 완벽 복구 및 연동)
+    # 2. 신청인 기본 정보 (위젯과 세션의 강제 연결)
     # ---------------------------------------------------------
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -167,23 +167,19 @@ with st.sidebar:
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         
         col_y, col_m, col_d = st.columns(3)
-        # 각 위젯에 key를 부여하여 session_state와 1:1 매칭
-        b_year = col_y.number_input("년도", 1900, 2050, value=st.session_state.get('s_y_val', 1980), key="s_y_input")
-        b_month = col_m.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1), key="s_m_input")
-        b_day = col_d.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1), key="s_d_input")
         
-        # 시간 선택 인덱스 연산 (기존 로직 유지)
+        # [핵심] st.session_state에 값이 있으면 그 값을, 없으면 기본값을 사용합니다.
+        b_year = col_y.number_input("년도", 1900, 2050, value=int(st.session_state.get('s_y_val', 1980)), key="s_y_input")
+        b_month = col_m.number_input("월", 1, 12, value=int(st.session_state.get('s_m_val', 1)), key="s_m_input")
+        b_day = col_d.number_input("일", 1, 31, value=int(st.session_state.get('s_d_val', 1)), key="s_d_input")
+        
+        # 시간값도 세션에서 즉시 불러옵니다.
         current_time_val = st.session_state.get('s_t_val', idx_list[0])
+        # idx_list 내에서 해당 인덱스를 찾아 지정합니다.
         try:
             t_index = idx_list.index(current_time_val)
-        except ValueError:
+        except:
             t_index = 0
-            for i, item in enumerate(idx_list):
-                if current_time_val in item or item in current_time_val:
-                    t_index = i
-                    break
-        
-        # selectbox에도 key 부여
         b_time = st.selectbox("태어난 시간", options=idx_list, index=t_index, key="s_t_input")
 
     other_report = ""
