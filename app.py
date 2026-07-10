@@ -255,12 +255,24 @@ with st.sidebar:
         st.markdown("<br>", unsafe_allow_html=True)
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    btn_run = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
+st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 1. 풀이 가동 버튼 (키를 동적으로 생성)
+    run_key = f"btn_run_{u_product.replace(' ', '_')}"
+    btn_run = st.button("✨ [초연 시공명리 풀이 가동]", key=run_key, use_container_width=True, type="primary")
 
-    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
-        components.html("<script>window.parent.print();</script>", height=0)
-
+    # 2. 인쇄 버튼 (여기도 키를 동적으로 생성하여 중복 방지)
+    print_key = f"btn_print_{u_product.replace(' ', '_')}"
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key=print_key, use_container_width=True):
+        # 자바스크립트를 보다 확실하게 실행하기 위한 구조
+        js_code = """
+        <script>
+            window.parent.print();
+        </script>
+        """
+        components.html(js_code, height=0)
+        # 인쇄 버튼이 눌렸음을 사용자에게 알림
+        st.info("인쇄 창을 호출했습니다. PDF 저장 옵션을 선택해 주세요.")
 # ==============================================================================
 # 3. 메인 화면 출력부
 # ==============================================================================
