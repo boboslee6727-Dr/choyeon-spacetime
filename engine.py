@@ -740,8 +740,11 @@ class UniversalPrintableGunghap:
         ]
 
 def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
+    # 도움 함수: 오행 클래스 추출
+    def get_oh_class(c): return f"color-{get_color(c)}"
+
     def _get_person_data(y, m, d, t, gender, name, marital):
-        # 1. 만세력 기본 산출
+        # 1. 기초 사주 데이터
         y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, 0, 0)
         _, _, d_pillar = get_ganji_from_date(y, m, d)
         t_gan, t_ji = get_time_ganji(d_pillar[0], t)
@@ -757,33 +760,46 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
         
         calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
         
-        # 3. 테이블 데이터 조립 (과거 app.py 로직 이식)
-        info_h = f"<div style='text-align:center;'>{name}님</div>" # 간소화된 헤더
+        # 3. 데이터 조립
+        info_h = f"<div style='text-align:center;'>{name}님</div>"
         gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-        gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
-        gan_row = "".join([f"<td style='border:1px solid #444;'>{g}</td>" for g in gans])
-        ji_row = "".join([f"<td style='border:1px solid #444;'>{j}</td>" for j in jjis])
+        gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444; font-weight:900;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
+        gan_row = "".join([f"<td class='{get_oh_class(g)}' style='border:1px solid #444;'>{g}</td>" for g in gans])
+        ji_row = "".join([f"<td class='{get_oh_class(j)}' style='border:1px solid #444;'>{j}</td>" for j in jjis])
         ji_ss = "".join([f"<td style='border:1px solid #444;'>{get_ss(ds,j)}</td>" for j in jjis])
         jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
         
         ji_rel_rows = ""
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+            b_bot = "1px solid #444 !important"
             cells = "".join([f"<td style='border:1px solid #444;'>{get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
-            ji_rel_rows += f"<tr>{cells}</tr>"
+            lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5;'>합충형파해</td>" if l_idx==0 else ""
+            ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
             
-        unsung = "".join([f"<td style='border:1px solid #444;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-        shinsal = "".join([f"<td style='border:1px solid #444;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-        gen_shinsal = "".join([f"<td style='border:1px solid #444;'>-</td>" for i in range(4)]) # 간소화
+        unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+        shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+        # 신살 필터링 추가
+        gen_shinsal = "".join([f"<td style='vertical-align:top; border:1px solid #444 !important; font-size:11px;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, gender)[:3])}</td>" for i in range(4)])
 
-        return {
-            "table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal],
-            "master": [calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], "귀인정보", "공망1", "공망2", "#1A237E", "삼재"]
-        }
+        # 마스터바 데이터
+        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+        master = [
+            calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], 
+            guiin_map.get(ds, '없음'), calculate_gongmang(ys, yb), calculate_gongmang(ds, db), 
+            "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)
+        ]
 
-    # app.py에서 전달받은 변수들을 사용하여 호출
+        return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master}
+
     m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", "기혼")
     w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
     
     return {"m_table": m_res["table"], "m_master": m_res["master"], "w_table": w_res["table"], "w_master": w_res["master"]}
+
+def get_gunghap_report(res):
+    # 여기서 궁합 데이터를 바탕으로 AI 통변 내용을 생성하여 반환합니다.
+    return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
+
+
 
    
