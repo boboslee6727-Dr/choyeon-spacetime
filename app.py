@@ -255,7 +255,7 @@ with st.sidebar:
         st.markdown("<br>", unsafe_allow_html=True)
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
 
-st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # 1. 풀이 가동 버튼 (키를 동적으로 생성)
     run_key = f"btn_run_{u_product.replace(' ', '_')}"
