@@ -257,9 +257,13 @@ with st.sidebar:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 1. 풀이 가동 버튼 (키를 동적으로 생성)
-    run_key = f"btn_run_{u_product.replace(' ', '_')}"
-    btn_run = st.button("✨ [초연 시공명리 풀이 가동]", key=run_key, use_container_width=True, type="primary")
+    # [삭제/수정] 기존의 상품별 run_key, btn_run 생성 코드를 모두 지우고 아래로 대체
+    with st.sidebar:
+        st.markdown("---")
+        # 버튼 하나로 통합
+        if st.button("✨ [초연 시공명리 풀이 가동]", use_container_width=True, type="primary"):
+            st.session_state['app_running'] = True # 가동 상태 기록
+            st.rerun() # 전체 코드 재실행
 
     # 2. 인쇄 버튼 (여기도 키를 동적으로 생성하여 중복 방지)
     print_key = f"btn_print_{u_product.replace(' ', '_')}"
@@ -273,10 +277,19 @@ with st.sidebar:
         components.html(js_code, height=0)
         # 인쇄 버튼이 눌렸음을 사용자에게 알림
         st.info("인쇄 창을 호출했습니다. PDF 저장 옵션을 선택해 주세요.")
+
 # ==============================================================================
 # 3. 메인 화면 출력부
 # ==============================================================================
-if btn_run:
+# [수정] 3. 메인 화면 출력부 시작 부분을 아래처럼 변경
+if st.session_state.get('app_running', False):
+    # 풀이가 시작되면 하단에 [풀이 종료/초기화] 버튼을 배치하여 다음 분석을 준비
+    if st.sidebar.button("🔄 초기화"):
+        st.session_state['app_running'] = False
+        st.rerun()
+
+    # 아래는 기존의 if u_product == "1. 개인사주...": 블록들이 들어가는 곳입니다.
+    # 들여쓰기를 맞춰서 기존 코드(개인사주, 비교, 궁합 등)를 그대로 넣으시면 됩니다.
     if u_product == "1. 개인사주 및 일진 분석":
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
