@@ -414,7 +414,9 @@ if btn_run:
                 wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
-            gunghap_cover = html_views.get_gunghap_cover(APP_VERSION, p_icon, name, gender, u_marital, part_icon, f_name, f_gender, f_marital, today_str)
+            gunghap_cover = html_views.get_gunghap_cover(
+            APP_VERSION, p_icon, name, gender, u_marital, part_icon, st.session_state["f_n"], st.session_state["f_g"], st.session_state["f_m_stat"], today_str
+            )
             st.markdown(gunghap_cover, unsafe_allow_html=True)
 
             # AI 통변
