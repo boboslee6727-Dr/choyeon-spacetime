@@ -452,18 +452,27 @@ if st.session_state.get('app_running', False):
                     shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
                 )
                 ai_result = call_gemini_api(fact_sheet)
+                ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+
+                # 4. 함수 호출 결과를 변수에 담음
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 오류: {e}</div>"
+                # 에러 발생 시에도 변수는 빈 문자열 혹은 에러 메시지로 유지됨
+                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
 
-            # 3. [최종 점검] 모든 HTML 합치기
-            # 변수가 다 준비되었는지 로그로 확인
-            print(f"DEBUG: intro={bool(intro_html)}, ai={bool(ai_output_html)}, closing={bool(closing_html)}")
+            # 5. 이제 안전하게 합치기 (이제 ai_output_html은 무조건 존재함)
+            final_report = (
+                intro_html + 
+                table_html + 
+                master_bar_html + 
+                un_html + 
+                se_html + 
+                wol_html + 
+                ai_output_html + 
+                closing_html
+            )
             
-            final_content = intro_html + table_html + master_bar_html + un_html + se_html + wol_html + ai_output_html + closing_html
-            
-            # 4. 렌더링
-            st.markdown(html_views.get_combined_report_box(final_content), unsafe_allow_html=True)
+            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
