@@ -453,10 +453,10 @@ if st.session_state.get('app_running', False):
             st.write(f"ai_output_html 확인: {ai_output_html[:50]}...") # 내용 일부만 출력
             
             # 4. [변수 통합]
-            st.write("변수 내용 확인:", final_report[:100]) # 앞부분 100글자만 출력해보기
+
             
             # 5. 최종 렌더링
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+            st.write("변수 내용 확인:", final_report[:100]) # 앞부분 100글자만 출력해보기
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
