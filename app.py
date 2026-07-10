@@ -170,13 +170,11 @@ with st.sidebar:
         with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1))
         with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1))
         
-        # 14개 바 인덱스 자동 추적 파트
         current_time_val = st.session_state.get('s_t_val', "시간 모름")
         try:
             t_index = idx_list.index(current_time_val)
         except ValueError:
             t_index = 0
-            # 만약 텍스트가 미세하게 다를 경우 글자 포함 여부로 한 번 더 찾아내는 안전장치
             for i, item in enumerate(idx_list):
                 if current_time_val in item or item in current_time_val:
                     t_index = i
@@ -204,8 +202,55 @@ with st.sidebar:
             p_col_g3, p_col_g4 = st.columns(2)
             with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
+            
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
-                st.info("역산 로직은 정상적으로 유지됩니다.")
+                _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+                
+                if len(_p_ry) == 2 and len(_p_rm) == 2 and len(_p_rd) == 2:
+                    p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
+                    p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
+                    p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
+                    
+                    is_lunar_p = ("음력" in st.session_state.get("f_c", "양력"))
+                    y_p, m_p, d_p = engine.find_solar_date_from_ganji(p_ry_h, p_rm_h, p_rd_h, is_lunar=is_lunar_p)
+                    
+                    if y_p:
+                        st.session_state['p_y_val'] = y_p
+                        st.session_state['p_m_val'] = m_p
+                        st.session_state['p_d_val'] = d_p
+                        
+                        if p_rt and len(extract_ganji(p_rt)) == 2:
+                            ji_char_p = extract_ganji(p_rt)[-1]
+                            p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
+                            time_map_rev = {
+                                '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
+                                '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
+                                '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
+                                '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
+                                '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
+                                '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
+                                '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
+                                '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
+                                '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
+                                '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
+                                '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
+                                '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
+                            }
+                            if p_rt_h in time_map_rev:
+                                st.session_state['p_t_val'] = time_map_rev[p_rt_h]
+                        else:
+                            st.session_state['p_t_val'] = "시간 모름"
+                        
+                        st.session_state['rev_partner_success_msg'] = f"✅ 상대방 성공: {y_p}년 {m_p}월 {d_p}일 입력 완료!"
+                        st.rerun()
+                    else:
+                        st.error("일치하는 상대방 간지 날짜를 찾을 수 없습니다.")
+                else:
+                    st.warning("상대방 년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
+
+            if st.session_state.get('rev_partner_success_msg'):
+                st.success(st.session_state['rev_partner_success_msg'])
+                st.session_state['rev_partner_success_msg'] = ""
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", placeholder="이영희", key="f_n")
