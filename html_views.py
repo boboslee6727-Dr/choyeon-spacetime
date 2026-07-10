@@ -264,3 +264,14 @@ def get_gunghap_closing():
     </div>
     <div class='page-break-before'></div>
     """
+
+def get_ai_report_box(content):
+    return f"""
+    <div style='margin-top:20px; padding:20px; border: 2px solid #1A237E; border-radius:10px; background-color:#F9F9F9;'>
+        <h3 style='color:#1A237E; margin-bottom:15px;'>🔍 초연 시공명리 AI 정밀 통변</h3>
+        <div class='content-box-loose'>
+            {content}
+        </div>
+        
+    </div>
+    """
