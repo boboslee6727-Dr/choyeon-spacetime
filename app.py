@@ -442,32 +442,20 @@ if st.session_state.get('app_running', False):
             # AI 통변
             ai_output_html = ""
             try:
-                # 인사말을 원천 봉쇄하는 프롬프트 지시사항 추가
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
-                    jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
-                )
-                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
-                
                 ai_result = call_gemini_api(fact_sheet)
-                
-                # 혹시 모를 인사말 잔재 제거 (보조 수단)
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
-                
-                # html_views.py의 함수 호출로 변경
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류가 발생했습니다: {e}</div>"
 
-            # 맺음말은 html_views.py에서 가져옴
+            # 맺음말 생성
             closing_html = html_views.get_closing_html(name)
+
+            # [핵심] 여기서 렌더링합니다 (변수가 모두 생성된 후!)
+            final_report = (intro_html + table_html + master_bar_html + 
+                            un_html + se_html + wol_html + ai_output_html + closing_html)
             
-            # 최종 렌더링 (궁합용 변수들 대신 개인 사주용 변수들로 구성)
-            st.markdown(cover_html, unsafe_allow_html=True)
-            st.markdown(html_views.get_combined_report_box(
-                intro_html + table_html + master_bar_html + un_html + se_html + wol_html + ai_output_html + closing_html
-            ), unsafe_allow_html=True)
+            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
