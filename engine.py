@@ -128,6 +128,30 @@ def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
         
     return parts[0][:2], parts[1][:2], parts[2][:2]
 
+def get_time_ganji(day_gan, b_time):
+    # 1. 일간(day_gan)으로 시작 시간의 천간을 구하는 로직 (시두법)
+    # 딕셔너리 K2H_GAN을 활용하여 안전하게 한자 추출
+    target_gan = K2H_GAN.get(day_gan, '甲')
+    
+    # 2. b_time 문자열에서 시지 한자 추출
+    # 예: '01:30 ~ 03:29 (丑)시' -> 丑 추출
+    import re
+    match = re.search(r'\(([^)]+)\)', b_time)
+    ji_char = match.group(1) if match else '子'
+    
+    # 3. 시천간 계산 (시두법)
+    hanja_gan_list = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+    hanja_ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    
+    day_gan_idx = hanja_gan_list.index(target_gan) if target_gan in hanja_gan_list else 0
+    ji_idx = hanja_ji_list.index(ji_char) if ji_char in hanja_ji_list else 0
+    
+    # 시두법 공식: (일간%5)*2 + 2
+    start_gan_idx = ((day_gan_idx % 5) * 2 + 2) % 10
+    t_gan_idx = (start_gan_idx + ji_idx) % 10
+    
+    return hanja_gan_list[t_gan_idx], ji_char
+
 def get_daeun_su_accurate(utc_dt, order):
     try:
         sun = ephem.Sun()
