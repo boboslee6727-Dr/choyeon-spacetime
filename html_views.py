@@ -184,7 +184,7 @@ def get_closing_html(name):
     </div>
     """
 
-def get_combined_report_box(content_html):
+def get_final_report_box(content_html):
     return f"""
     <div style='background-color:#FFFFFF; padding:40px; margin:20px auto; border:1px solid #E0E0E0; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width:1000px;'>
         <div style='border: 2px solid #5D4037; border-radius: 12px; padding: 30px; background-color:#FAFAFA;'>
