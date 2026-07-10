@@ -83,30 +83,21 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
 def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
     from korean_lunar_calendar import KoreanLunarCalendar
     klc = KoreanLunarCalendar()
-    
-    for y in range(1920, 2031):
-        for m in range(1, 13):
-            for d in range(1, 32):
+    # [수정] 2036년부터 1920년까지 역순 탐색 (최근 날짜 우선)
+    for y in range(2036, 1919, -1):
+        for m in range(12, 0, -1):
+            for d in range(31, 0, -1):
                 try:
-                    if is_lunar: 
-                        # 음력 설정 (평달 고정)
-                        if not klc.setLunarDate(y, m, d, False):
-                            continue
-                    else: 
-                        # 양력 설정
-                        if not klc.setSolarDate(y, m, d):
-                            continue
+                    if is_lunar:
+                        if not klc.setLunarDate(y, m, d, False): continue
+                    else:
+                        if not klc.setSolarDate(y, m, d): continue
                     
-                    # 만세력 문자열 가져오기
-                    gapja_str = klc.getChineseGapJaString()
-                    gj = gapja_str.split()
-                    
+                    gj = klc.getChineseGapJaString().split()
                     if len(gj) >= 3:
-                        # 간지 비교 (슬라이싱으로 정확하게 년/월/일주 추출)
                         if gj[0][:2] == y_ganji and gj[1][:2] == m_ganji and gj[2][:2] == d_ganji:
                             return klc.solarYear, klc.solarMonth, klc.solarDay
-                except Exception:
-                    continue
+                except: continue
     return None, None, None
 
 def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
