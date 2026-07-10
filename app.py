@@ -432,7 +432,7 @@ if st.session_state.get('app_running', False):
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
             st.markdown(cover_html, unsafe_allow_html=True)
-            st.markdown(html_views.get_combined_report_box(combined_report), unsafe_allow_html=True)
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             # AI 통변
             # 1. 맺음말 생성
@@ -455,7 +455,7 @@ if st.session_state.get('app_running', False):
             )
             
             # 4. [렌더링] 여기에서 출력합니다
-            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True)
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
