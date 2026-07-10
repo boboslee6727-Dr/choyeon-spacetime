@@ -138,20 +138,19 @@ with st.sidebar:
                         }
                         if rt_h in time_map_rev:
                             st.session_state['s_t_val'] = time_map_rev[rt_h]
-                    else:
-                        st.session_state['s_t_val'] = "시간 모름"
+                        else:
+                            st.session_state['s_t_val'] = "시간 모름"
                     
                     st.session_state['rev_success_msg'] = f"✅ 양력: {y}년 {m}월 {d}일 입력 완료!"
                     st.rerun()
-                else:
-                    st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
-            else:
-                st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
+                    else:
+                        st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
+        else:
+            st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
-    if st.session_state.get('rev_success_msg'):
-        st.success(st.session_state['rev_success_msg'])
-        st.session_state['rev_success_msg'] = ""
-
+        if st.session_state.get('rev_success_msg'):
+            st.success(st.session_state['rev_success_msg'])
+            st.session_state['rev_success_msg'] = ""
     # ---------------------------------------------------------
     # 2. 신청인 기본 정보 (위젯과 세션의 강제 연결)
     # ---------------------------------------------------------
