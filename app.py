@@ -119,28 +119,27 @@ with st.sidebar:
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             
             if len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
-                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+                # 수정된 엔진 사전을 통해 정확히 변환
+                ry_h = engine.K2H_GAN.get(_ry[0], '') + engine.K2H_JI.get(_ry[1], '')
+                rm_h = engine.K2H_GAN.get(_rm[0], '') + engine.K2H_JI.get(_rm[1], '')
+                rd_h = engine.K2H_GAN.get(_rd[0], '') + engine.K2H_JI.get(_rd[1], '')
                 
                 is_lunar = ("음력" in u_cal)
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
                 
                 if y:
-                    # 사이드바 입력창과 세션 상태 연동
                     st.session_state.s_y = y
                     st.session_state.s_m = m
                     st.session_state.s_d = d
                     
-                    # 태어난 시간 처리
                     if rt:
                         ji_char = extract_ganji(rt)[-1]
-                        rt_h = engine.K2H_JI.get(ji_char, ji_char)
+                        rt_h = engine.K2H_JI.get(ji_char, '')
                         time_map_rev = {
-                            '자':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시',
-                            '묘':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시',
-                            '오':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시',
-                            '유':'17:30 ~ 19:29 (酉)시', '戌':'19:30 ~ 21:29 (戌)시', '亥':'21:30 ~ 23:29 (亥)시'
+                            '子':'00:30 ~ 01:29 (朝子)시', '丑':'01:30 ~ 03:29 (丑)시', '寅':'03:30 ~ 05:29 (寅)시',
+                            '卯':'05:30 ~ 07:29 (卯)시', '辰':'07:30 ~ 09:29 (辰)시', '巳':'09:30 ~ 11:29 (巳)시',
+                            '午':'11:30 ~ 13:29 (午)시', '未':'13:30 ~ 15:29 (未)시', '申':'15:30 ~ 17:29 (申)시',
+                            '酉':'17:30 ~ 19:29 (酉)시', '戌':'19:30 ~ 21:29 (戌)시', '亥':'21:30 ~ 23:29 (亥)시'
                         }
                         if rt_h in time_map_rev:
                             st.session_state.s_t = time_map_rev[rt_h]
@@ -148,7 +147,7 @@ with st.sidebar:
                     st.session_state.rev_success_msg = f"✅ 성공: {y}년 {m}월 {d}일 입력 완료!"
                     st.rerun()
                 else:
-                    st.error("일치하는 날짜를 찾을 수 없습니다.")
+                    st.error("일치하는 날짜를 찾을 수 없습니다. 간지를 확인하세요.")
             else:
                 st.warning("간지를 2글자씩 정확히 입력하세요.")
 
