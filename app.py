@@ -466,35 +466,48 @@ if st.session_state.get('app_running', False):
         if not other_report: st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: st.info("타 감명서 비교 로직이 작동합니다.")
 
-    elif u_product == "3. 궁합 및 출산 택일":
-        st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
+elif u_product == "3. 궁합 및 출산 택일":
+        st.header(f"💕 {st.session_state.get('u_n', '신청인')}님과 {st.session_state.get('f_n', '상대방')}님의 초연 궁합")
         st.markdown("---")
-        with st.spinner("⏳궁합 풀이 데이터 연산 중..."):
-            
-            app_p_icon, part_p_icon = ("♂️" if gender == "남성" else "♀️"), ("♂️" if f_gender == "남성" else "♀️")
-            today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-          
-        # ---------------------------------------------------------
-        # 3. 궁합/출산택일 풀이 가동 (책임지고 수정한 전체 블록)
-        # ---------------------------------------------------------
-        if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
-            
-            # 1. 엔진 데이터 연산
-            results = engine.calculate_gunghap(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t)
-            
-            # 데이터 개수 검증 (최소 22개 항목 확보)
-            if results and len(results) >= 22:
+        
+        # 1. 가동 상태 확인
+        if st.session_state.get('app_running'):
+            with st.spinner("⏳궁합 풀이 데이터 연산 중..."):
+                # 입력 변수 안전하게 할당
+                s_y = st.session_state.get('s_y_input', 1980)
+                s_m = st.session_state.get('s_m_input', 1)
+                s_d = st.session_state.get('s_d_input', 1)
+                s_t = st.session_state.get('s_t_input', "시간 모름")
                 
-                # 2. 표지 출력 (아이콘 변수 적용)
-                cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
-                st.markdown(cover_html, unsafe_allow_html=True)
+                f_y = st.session_state.get('p_y_input', 1980)
+                f_m = st.session_state.get('p_m_input', 1)
+                f_d = st.session_state.get('p_d_input', 1)
+                f_t = st.session_state.get('p_t_input', "시간 모름")
                 
-                # 3. 데이터 분리 (박사님 작성 코드 유지)
-                (m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
-                 jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m) = results[0:11]
+                name = st.session_state.get('u_n', '신청인')
+                gender = st.session_state.get('u_g', '남성')
+                u_marital = st.session_state.get('u_m_stat', '선택')
                 
-                (w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
-                 jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w) = results[11:22]
+                f_name = st.session_state.get('f_n', '상대방')
+                f_gender = st.session_state.get('f_g', '여성')
+                f_marital = st.session_state.get('f_m_stat', '선택')
+                
+                app_p_icon = "♂️" if gender == "남성" else "♀️"
+                part_p_icon = "♂️" if f_gender == "남성" else "♀️"
+                today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+            
+                # 2. 엔진 데이터 연산
+                results = engine.calculate_gunghap(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t)
+                
+                # 3. 데이터 검증 및 출력
+                if results and len(results) >= 22:
+                    # 표지 출력
+                    cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
+                    st.markdown(cover_html, unsafe_allow_html=True)
+                    
+                    # 데이터 분리 및 렌더링 (박사님 원본 로직)
+                    (m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m) = results[0:11]
+                    (w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w) = results[11:22]
 
                 # 4. 남명 테이블 및 마스터바
                 m_table_html = html_views.get_saju_table(
@@ -522,7 +535,9 @@ if st.session_state.get('app_running', False):
 
                 # 6. AI 통변 및 맺음말
                 ai_content = engine.get_gunghap_report(results)
-                st.markdown(html_views.get_ai_report_box(ai_content), unsafe_allow_html=True)
-                st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
-            else:
-                st.error("데이터 연산 중 오류가 발생했습니다. 입력 정보를 확인해 주십시오.")
+                    st.markdown(html_views.get_ai_report_box(ai_content), unsafe_allow_html=True)
+                    st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+                else:
+                    st.error("데이터 연산 중 오류가 발생했습니다. 입력 정보를 확인해 주십시오.")
+        else:
+            st.info("👈 사이드바에서 정보를 입력하신 후, [초연 시공명리 풀이 가동] 버튼을 눌러주세요.")
