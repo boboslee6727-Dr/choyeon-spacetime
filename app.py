@@ -505,36 +505,36 @@ if st.session_state.get('app_running', False):
                     cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
                     st.markdown(cover_html, unsafe_allow_html=True)
                     
-                    # 데이터 분리 및 렌더링 (박사님 원본 로직)
+                    # 데이터 분리 및 렌더링
                     (m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m) = results[0:11]
                     (w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w) = results[11:22]
 
-                # 4. 남명 테이블 및 마스터바
-                m_table_html = html_views.get_saju_table(
-                    m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
-                    jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
-                )
-                m_master_html = html_views.get_master_bar(
-                    calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
-                    m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
-                    engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
-                )
-                st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
-                    
-                # 5. 여명 테이블 및 마스터바
-                w_table_html = html_views.get_saju_table(
-                    w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
-                    jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
-                )
-                w_master_html = html_views.get_master_bar(
-                    calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
-                    w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
-                    engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
-                )
-                st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
+                    # 4. 남명 테이블 및 마스터바
+                    m_table_html = html_views.get_saju_table(
+                        m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
+                        jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
+                    )
+                    m_master_html = html_views.get_master_bar(
+                        calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
+                        m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
+                        engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
+                    )
+                    st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
+                        
+                    # 5. 여명 테이블 및 마스터바
+                    w_table_html = html_views.get_saju_table(
+                        w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
+                        jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
+                    )
+                    w_master_html = html_views.get_master_bar(
+                        calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
+                        w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
+                        engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
+                    )
+                    st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
 
-                # 6. AI 통변 및 맺음말
-                ai_content = engine.get_gunghap_report(results)
+                    # 6. AI 통변 및 맺음말
+                    ai_content = engine.get_gunghap_report(results)
                     st.markdown(html_views.get_ai_report_box(ai_content), unsafe_allow_html=True)
                     st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
                 else:
