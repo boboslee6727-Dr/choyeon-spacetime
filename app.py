@@ -432,46 +432,29 @@ if st.session_state.get('app_running', False):
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
             st.markdown(cover_html, unsafe_allow_html=True)
-            
-            # 사주 풀이 박스 합치기
-            combined_report = (intro_html + table_html + master_bar_html + 
-                               un_html + se_html + wol_html + ai_output_html + closing_html)
-            
             st.markdown(html_views.get_combined_report_box(combined_report), unsafe_allow_html=True)
 
             # AI 통변
             # 1. 맺음말 생성
             closing_html = html_views.get_closing_html(name)
             
-            # 2. AI 통변 생성 (에러 방지용 초기화)
-            ai_output_html = ""
+            # 2. AI 통변 생성
+            ai_output_html = "" 
             try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
-                    jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
-                )
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(...) # (기존내용)
                 ai_result = call_gemini_api(fact_sheet)
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
-
-                # 4. 함수 호출 결과를 변수에 담음
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
-                # 에러 발생 시에도 변수는 빈 문자열 혹은 에러 메시지로 유지됨
-                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
+                ai_output_html = f"<div style='color:red;'>🚨 오류: {e}</div>"
 
-            # 5. 이제 안전하게 합치기 (이제 ai_output_html은 무조건 존재함)
+            # 3. [최종 합치기] 1번 위치에 있던 코드를 여기로 가져오십시오
             final_report = (
-                intro_html + 
-                table_html + 
-                master_bar_html + 
-                un_html + 
-                se_html + 
-                wol_html + 
-                ai_output_html + 
-                closing_html
+                intro_html + table_html + master_bar_html + 
+                un_html + se_html + wol_html + ai_output_html + closing_html
             )
             
+            # 4. [렌더링] 여기에서 출력합니다
             st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
