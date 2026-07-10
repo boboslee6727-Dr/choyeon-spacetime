@@ -242,10 +242,30 @@ def get_unsung(dg, ji):
     return ["장생","목욕","관대","건록","제왕","쇠","병","사","묘","절","태","양"][idx] if idx != -1 else "-"
 
 def get_12_shinsal(year_ji, target_ji):
-    if target_ji in ["?", " ", "-"] or not year_ji or year_ji == "?": return "-"
-    s_map = {"申":"巳","子":"巳","辰":"巳", "寅":"亥","午":"亥","戌":"亥", "巳":"寅","酉":"寅","丑":"寅", "亥":"申","卯":"申","未":"申"}
-    s_idx = (list(JI).index(target_ji) - list(JI).index(s_map.get(year_ji, "巳")) + 12) % 12
-    return ["겁살","재살","천살","지살","년살","월살","망신살","장성살","반안살","역마살","육해살","화개살"][s_idx]
+    # 입력값이 정상적이지 않으면 바로 리턴
+    if target_ji in ["?", " ", "-"] or not year_ji: return "-"
+    
+    # 한글 지지를 한자로 통일 (모든 지지를 한자로 변환)
+    h2k_ji = {v: k for k, v in K2H_JI.items()} # 한글->한자
+    
+    # target_ji와 year_ji를 한자로 변환 (이미 한자면 그대로 유지)
+    t_ji_hanja = K2H_JI.get(target_ji, target_ji)
+    y_ji_hanja = K2H_JI.get(year_ji, year_ji)
+    
+    # 한자 지지 리스트
+    ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    
+    try:
+        t_idx = ji_list.index(t_ji_hanja)
+        # s_map은 기준점(삼합의 시작점)을 정하는 로직
+        s_map = {"申":"巳","子":"巳","辰":"巳", "寅":"亥","午":"亥","戌":"亥", "巳":"寅","酉":"寅","丑":"寅", "亥":"申","卯":"申","未":"申"}
+        s_start = s_map.get(y_ji_hanja, "巳")
+        s_start_idx = ji_list.index(s_start)
+        
+        s_idx = (t_idx - s_start_idx + 12) % 12
+        return ["겁살","재살","천살","지살","년살","월살","망신살","장성살","반안살","역마살","육해살","화개살"][s_idx]
+    except:
+        return "-"
 
 def get_samjae(year_ji, target_ji):
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
