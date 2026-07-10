@@ -108,49 +108,49 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if y:
-                    # session_state에 저장
-                    st.session_state['s_y_val'] = y
-                    st.session_state['s_m_val'] = m
-                    st.session_state['s_d_val'] = d
-                    
-                    # [핵심] 위젯 자체의 상태를 강제로 업데이트합니다.
-                    st.session_state['s_y_input'] = y
-                    st.session_state['s_m_input'] = m
-                    st.session_state['s_d_input'] = d
-                    
-                    if rt and len(extract_ganji(rt)) == 2:
-                        ji_char = extract_ganji(rt)[-1]
-                        rt_h = engine.K2H_JI.get(ji_char, ji_char)
-                        
-                        time_map_rev = {
-                            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
-                            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
-                            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
-                            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
-                            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
-                            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
-                            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
-                            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
-                            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
-                            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
-                            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
-                            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
-                        }
-                        if rt_h in time_map_rev:
-                            st.session_state['s_t_val'] = time_map_rev[rt_h]
-                        else:
-                            st.session_state['s_t_val'] = "시간 모름"
-                    
-                    st.session_state['rev_success_msg'] = f"✅ 양력: {y}년 {m}월 {d}일 입력 완료!"
-                    st.rerun()
-                    else:
-                        st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
+            # session_state에 저장
+            st.session_state['s_y_val'] = y
+            st.session_state['s_m_val'] = m
+            st.session_state['s_d_val'] = d
+            
+            # [핵심] 위젯 자체의 상태를 강제로 업데이트합니다.
+            st.session_state['s_y_input'] = y
+            st.session_state['s_m_input'] = m
+            st.session_state['s_d_input'] = d
+            
+            if rt and len(extract_ganji(rt)) == 2:
+                ji_char = extract_ganji(rt)[-1]
+                rt_h = engine.K2H_JI.get(ji_char, ji_char)
+                
+                time_map_rev = {
+                    '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
+                    '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
+                    '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
+                    '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
+                    '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
+                    '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
+                    '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
+                    '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
+                    '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
+                    '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
+                    '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
+                    '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
+                }
+                if rt_h in time_map_rev:
+                    st.session_state['s_t_val'] = time_map_rev[rt_h]
+                else:
+                    st.session_state['s_t_val'] = "시간 모름"
+            
+            st.session_state['rev_success_msg'] = f"✅ 양력: {y}년 {m}월 {d}일 입력 완료!"
+            st.rerun()
         else:
-            st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
+            st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
+    else:
+        st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
-        if st.session_state.get('rev_success_msg'):
-            st.success(st.session_state['rev_success_msg'])
-            st.session_state['rev_success_msg'] = ""
+    if st.session_state.get('rev_success_msg'):
+        st.success(st.session_state['rev_success_msg'])
+        st.session_state['rev_success_msg'] = ""
     # ---------------------------------------------------------
     # 2. 신청인 기본 정보 (위젯과 세션의 강제 연결)
     # ---------------------------------------------------------
