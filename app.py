@@ -165,12 +165,15 @@ with st.sidebar:
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
-        col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, value=st.session_state.get('s_y_val', 1980))
-        with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1))
-        with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1))
         
-        current_time_val = st.session_state.get('s_t_val', "시간 모름")
+        col_y, col_m, col_d = st.columns(3)
+        # 각 위젯에 key를 부여하여 session_state와 1:1 매칭
+        b_year = col_y.number_input("년도", 1900, 2050, value=st.session_state.get('s_y_val', 1980), key="s_y_input")
+        b_month = col_m.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1), key="s_m_input")
+        b_day = col_d.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1), key="s_d_input")
+        
+        # 시간 선택 인덱스 연산 (기존 로직 유지)
+        current_time_val = st.session_state.get('s_t_val', idx_list[0])
         try:
             t_index = idx_list.index(current_time_val)
         except ValueError:
@@ -179,8 +182,9 @@ with st.sidebar:
                 if current_time_val in item or item in current_time_val:
                     t_index = i
                     break
-                    
-        b_time = st.selectbox("태어난 시간", options=idx_list, index=t_index)
+        
+        # selectbox에도 key 부여
+        b_time = st.selectbox("태어난 시간", options=idx_list, index=t_index, key="s_t_input")
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
@@ -417,6 +421,9 @@ if btn_run:
                 wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
+            gunghap_cover = html_views.get_gunghap_cover(APP_VERSION, p_icon, name, gender, u_marital, part_icon, f_name, f_gender, f_marital, today_str)
+            st.markdown(gunghap_cover, unsafe_allow_html=True)
+
             # AI 통변
             ai_output_html = ""
             try:
@@ -459,35 +466,55 @@ if btn_run:
             app_p_icon, part_p_icon = ("♂️" if gender == "남성" else "♀️"), ("♂️" if f_gender == "남성" else "♀️")
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
           
-            st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
+        # ---------------------------------------------------------
+        # 3. 궁합/출산택일 풀이 가동 (책임지고 수정한 전체 블록)
+        # ---------------------------------------------------------
+        if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
+            
+            # 1. 엔진 데이터 연산
+            results = engine.calculate_gunghap(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t)
+            
+            # 데이터 개수 검증 (최소 22개 항목 확보)
+            if results and len(results) >= 22:
+                
+                # 2. 표지 출력 (아이콘 변수 적용)
+                cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
+                st.markdown(cover_html, unsafe_allow_html=True)
+                
+                # 3. 데이터 분리 (박사님 작성 코드 유지)
+                (m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
+                 jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m) = results[0:11]
+                
+                (w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
+                 jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w) = results[11:22]
 
-            # 남명 테이블 및 마스터바 생성
-            m_table_html = html_views.get_saju_table(
-                m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
-                jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
-            )
-            m_master_html = html_views.get_master_bar(
-                calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
-                m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
-                engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
-            )
-            st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
-                
-            # 여명 테이블 및 마스터바 생성
-            w_table_html = html_views.get_saju_table(
-                w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
-                jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
-            )
-            w_master_html = html_views.get_master_bar(
-                calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
-                w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
-                engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
-            )
-            st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
-                
-            # 부부 대운 비교표 출력
-            st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
-                
-            # 맺음말
-            st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+                # 4. 남명 테이블 및 마스터바
+                m_table_html = html_views.get_saju_table(
+                    m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
+                    jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
+                )
+                m_master_html = html_views.get_master_bar(
+                    calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
+                    m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
+                    engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
+                )
+                st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
+                    
+                # 5. 여명 테이블 및 마스터바
+                w_table_html = html_views.get_saju_table(
+                    w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
+                    jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
+                )
+                w_master_html = html_views.get_master_bar(
+                    calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
+                    w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
+                    engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
+                )
+                st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
 
+                # 6. AI 통변 및 맺음말
+                ai_content = engine.get_gunghap_report(results)
+                st.markdown(html_views.get_ai_report_box(ai_content), unsafe_allow_html=True)
+                st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+            else:
+                st.error("데이터 연산 중 오류가 발생했습니다. 입력 정보를 확인해 주십시오.")
