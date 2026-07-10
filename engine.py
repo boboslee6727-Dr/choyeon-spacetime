@@ -106,7 +106,7 @@ def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
 def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
     from korean_lunar_calendar import KoreanLunarCalendar
     klc = KoreanLunarCalendar()
-    for y in range(2035, 1899, -1):
+    for y in range(2026, 1899, -1):
         for m in range(1, 13):
             # 달별로 검색 (효율을 위해)
             for d in range(1, 32):
