@@ -455,7 +455,7 @@ if st.session_state.get('app_running', False):
             final_report = (intro_html + table_html + master_bar_html + 
                             un_html + se_html + wol_html + ai_output_html + closing_html)
             
-            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True
+            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
