@@ -96,17 +96,9 @@ with st.sidebar:
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
     u_product = st.selectbox("상품선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"], label_visibility="collapsed")
 
-    with st.expander("👤 신청인 기본 정보", expanded=True):
-        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
-        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
-        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
-        col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="s_y")
-        with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
-        with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
-        b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
-
+    # ---------------------------------------------------------
+    # [순서 변경 1] 신청인 사주간지 역산 (위로 이동)
+    # ---------------------------------------------------------
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
@@ -118,22 +110,20 @@ with st.sidebar:
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             
-            # 핵심: 시주(rt)는 필수가 아님을 반영하여 조건문 변경
             if len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
                 ry_h = engine.K2H_GAN.get(_ry[0], '') + engine.K2H_JI.get(_ry[1], '')
                 rm_h = engine.K2H_GAN.get(_rm[0], '') + engine.K2H_JI.get(_rm[1], '')
                 rd_h = engine.K2H_GAN.get(_rd[0], '') + engine.K2H_JI.get(_rd[1], '')
                 
-                is_lunar = ("음력" in u_cal)
+                # 순서 변경에 따른 변수 참조 에러 방지 (session_state 직접 조회)
+                is_lunar = ("음력" in st.session_state.get("u_c", "양력"))
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
                 
                 if y:
-                    # 위젯 키 충돌 방지를 위해 중계 변수(_val) 사용
                     st.session_state['s_y_val'] = y
                     st.session_state['s_m_val'] = m
                     st.session_state['s_d_val'] = d
                     
-                    # 삼주육자 대응: rt(시주)가 입력되었을 때만 처리
                     if rt and len(extract_ganji(rt)) == 2:
                         ji_char = extract_ganji(rt)[-1]
                         rt_h = engine.K2H_JI.get(ji_char, ji_char)
@@ -146,7 +136,7 @@ with st.sidebar:
                         if rt_h in time_map_rev:
                             st.session_state['s_t_val'] = time_map_rev[rt_h]
                     else:
-                        st.session_state['s_t_val'] = "시간 모름" # 시주 없는 경우 처리
+                        st.session_state['s_t_val'] = "시간 모름"
                     
                     st.session_state['rev_success_msg'] = f"✅ 성공: {y}년 {m}월 {d}일 입력 완료!"
                     st.rerun()
@@ -155,10 +145,31 @@ with st.sidebar:
             else:
                 st.warning("년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
+    # 메시지 박스 표시 (버튼 연산 후 즉시 출력)
+    if st.session_state.get('rev_success_msg'):
+        st.success(st.session_state['rev_success_msg'])
+        st.session_state['rev_success_msg'] = ""
+
+    # ---------------------------------------------------------
+    # [순서 변경 2] 신청인 기본 정보 (아래로 이동, 중계 변수 연동)
+    # ---------------------------------------------------------
+    with st.expander("👤 신청인 기본 정보", expanded=True):
+        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
+        gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
+        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
+        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
+        col_y, col_m, col_d = st.columns(3)
+        # 에러 원천 차단: key를 제거하고 value로 중계 변수와 연결
+        with col_y: b_year = st.number_input("년도", 1900, 2050, value=st.session_state.get('s_y_val', 1980))
+        with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1))
+        with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1))
+        b_time = st.text_input("태어난 시간", value=st.session_state.get('s_t_val', "시간 모름"))
+
+
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
     f_y, f_m, f_d = 2000, 1, 1
-    f_t = idx_list[0]
+    f_t = "시간 모름"
     run_delivery_calc = False
 
     if u_product == "1. 개인사주 및 일진 분석":
@@ -167,17 +178,10 @@ with st.sidebar:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
     elif u_product == "3. 궁합 및 출산 택일":
         st.markdown("---")
-        with st.expander("👥 상대방 기본 정보", expanded=True):
-            f_name = st.text_input("상대방 이름", value="", placeholder="이영희", key="f_n")
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
-            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
-            f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
-            p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
-            f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
-            f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
-            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
-            
+        
+        # ---------------------------------------------------------
+        # 궁합 파트 일관성 유지: 상대방 역산 위로 이동
+        # ---------------------------------------------------------
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -186,9 +190,20 @@ with st.sidebar:
             with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
-                # 역산 로직 생략 (기존과 동일하게 작동)
                 st.info("역산 로직은 정상적으로 유지됩니다.")
 
+        with st.expander("👥 상대방 기본 정보", expanded=True):
+            f_name = st.text_input("상대방 이름", value="", placeholder="이영희", key="f_n")
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
+            f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+            p_col1, p_col2, p_col3 = st.columns(3)
+            # 안전한 중계 변수 방식으로 통일
+            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=st.session_state.get('p_y_val', 1980))
+            f_m = p_col2.number_input("월(상대)", 1, 12, value=st.session_state.get('p_m_val', 1))
+            f_d = p_col3.number_input("일(상대)", 1, 31, value=st.session_state.get('p_d_val', 1))
+            f_t = st.text_input("태어난 시간(상대)", value=st.session_state.get('p_t_val', "시간 모름"))
+            
         st.markdown("<br>", unsafe_allow_html=True)
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
 
