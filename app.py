@@ -443,29 +443,27 @@ if st.session_state.get('app_running', False):
             # 1. 맺음말 생성
             closing_html = html_views.get_closing_html(name)
             
-            # 2. [핵심] 변수 미리 초기화
-            ai_output_html = "" 
-            
-            # 3. AI 통변 생성 (try-except 블록)
+            # 2. AI 통변 생성 (에러 방지용 초기화)
+            ai_output_html = ""
             try:
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
                     jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
                     shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
                 )
-                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
-                
                 ai_result = call_gemini_api(fact_sheet)
-                ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류가 발생했습니다: {e}</div>"
+                ai_output_html = f"<div style='color:red;'>🚨 오류: {e}</div>"
 
-            # 4. 이제 안전하게 합치기
-            final_report = (intro_html + table_html + master_bar_html + 
-                            un_html + se_html + wol_html + ai_output_html + closing_html)
+            # 3. [최종 점검] 모든 HTML 합치기
+            # 변수가 다 준비되었는지 로그로 확인
+            print(f"DEBUG: intro={bool(intro_html)}, ai={bool(ai_output_html)}, closing={bool(closing_html)}")
             
-            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True)
+            final_content = intro_html + table_html + master_bar_html + un_html + se_html + wol_html + ai_output_html + closing_html
+            
+            # 4. 렌더링
+            st.markdown(html_views.get_combined_report_box(final_content), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
