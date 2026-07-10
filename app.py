@@ -467,18 +467,21 @@ if st.session_state.get('app_running', False):
         else: st.info("타 감명서 비교 로직이 작동합니다.")
 
     elif u_product == "3. 궁합 및 출산 택일":
-        # 0. 필수 변수 정의 (사이드바 입력값을 가져옵니다)
-        # 만약 박사님 코드의 변수명이 다르다면 (예: s_year) 이 부분을 수정하세요!
-        s_y, s_m, s_d = int(s_birth_y), int(s_birth_m), int(s_birth_d)
-        s_t = s_birth_time
-        f_y, f_m, f_d = int(f_birth_y), int(f_birth_m), int(f_birth_d)
-        f_t = f_birth_time
+        # [수정] 사이드바 위젯의 key(s_y_input 등)로부터 직접 값을 가져옵니다.
+        s_y = st.session_state.get('s_y_input', 1980)
+        s_m = st.session_state.get('s_m_input', 1)
+        s_d = st.session_state.get('s_d_input', 1)
+        s_t = st.session_state.get('s_t_input', "시간 모름")
+        
+        f_y = st.session_state.get('p_y_input', 1980)
+        f_m = st.session_state.get('p_m_input', 1)
+        f_d = st.session_state.get('p_d_input', 1)
+        f_t = st.session_state.get('p_t_input', "시간 모름")
 
         if st.session_state.get('app_running'):
             with st.spinner("⏳궁합 풀이 데이터 연산 중..."):
-                # 1. 이제 s_y 등이 정의되었으므로 엔진 호출 가능
-                res = engine.get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t)
-
+                # 이제 변수가 확실히 정의되었으므로 엔진 호출
+                res = engine.get_gunghap_data(int(s_y), int(s_m), int(s_d), s_t, int(f_y), int(f_m), int(f_d), f_t)
                 # 3. 표지 출력
                 st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
                 
