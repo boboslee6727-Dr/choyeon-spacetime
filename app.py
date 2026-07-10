@@ -96,7 +96,7 @@ with st.sidebar:
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
     u_product = st.selectbox("상품선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"], label_visibility="collapsed")
 
-# ---------------------------------------------------------
+    # ---------------------------------------------------------
     # 1. 신청인 사주간지 역산 (최종 검수본)
     # ---------------------------------------------------------
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -210,7 +210,10 @@ with st.sidebar:
                             p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
                             time_map = {'축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
                             found_time = time_map.get(p_rt_h, "시간 모름")
+                            
+                            # [추가/수정] 인덱스 저장 및 위젯 키와 연결
                             st.session_state['p_t_idx'] = idx_list.index(found_time) if found_time in idx_list else 0
+                            st.session_state['p_t_input'] = found_time 
                         else:
                             st.session_state['p_t_idx'] = 0
                             
@@ -244,7 +247,8 @@ with st.sidebar:
                 p_t_index = idx_list.index(current_p_time_val)
             except ValueError:
                 p_t_index = 0
-            f_t = st.selectbox("태어난 시간(상대)", options=idx_list, index=p_t_index)
+            f_t = st.selectbox("태어난 시간(상대)", options=idx_list, index=st.session_state.get('p_t_idx', 0), 
+                key="p_t_input")
             
         st.markdown("<br>", unsafe_allow_html=True)
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=False)
