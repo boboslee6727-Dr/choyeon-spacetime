@@ -369,31 +369,32 @@ if btn_run:
             st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
 
             # 남명 테이블 및 마스터바 생성
-                m_table_html = html_views.get_saju_table(
-                    m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
-                    jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
-                )
-                m_master_html = html_views.get_master_bar(
-                    calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
-                    m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
-                    engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
-                )
-                st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
+            m_table_html = html_views.get_saju_table(
+                m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
+                jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
+            )
+            m_master_html = html_views.get_master_bar(
+                calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
+                m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
+                engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
+            )
+            st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
                 
-                # 여명 테이블 및 마스터바 생성
-                w_table_html = html_views.get_saju_table(
-                    w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
-                    jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
-                )
-                w_master_html = html_views.get_master_bar(
-                    calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
-                    w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
-                    engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
-                )
-                st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
+            # 여명 테이블 및 마스터바 생성
+            w_table_html = html_views.get_saju_table(
+                w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
+                jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
+            )
+            w_master_html = html_views.get_master_bar(
+                calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
+                w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
+                engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
+            )
+            st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
                 
-                # 부부 대운 비교표 출력
-                st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
+            # 부부 대운 비교표 출력
+            st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
                 
-                # 맺음말
-                st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+            # 맺음말
+            st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+
