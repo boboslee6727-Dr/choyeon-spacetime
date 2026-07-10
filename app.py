@@ -453,11 +453,7 @@ if st.session_state.get('app_running', False):
             st.write(f"ai_output_html 확인: {ai_output_html[:50]}...") # 내용 일부만 출력
             
             # 4. [변수 통합]
-            final_report = (
-                str(intro_html) + str(table_html) + str(master_bar_html) + 
-                str(un_html) + str(se_html) + str(wol_html) + 
-                str(ai_output_html) + str(closing_html)
-            )
+            st.write("변수 내용 확인:", final_report[:100]) # 앞부분 100글자만 출력해보기
             
             # 5. 최종 렌더링
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
