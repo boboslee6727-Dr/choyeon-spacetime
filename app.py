@@ -119,9 +119,15 @@ with st.sidebar:
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
                 
                 if y:
+                    # session_state에 저장
                     st.session_state['s_y_val'] = y
                     st.session_state['s_m_val'] = m
                     st.session_state['s_d_val'] = d
+                    
+                    # [핵심] 위젯 자체의 상태를 강제로 업데이트합니다.
+                    st.session_state['s_y_input'] = y
+                    st.session_state['s_m_input'] = m
+                    st.session_state['s_d_input'] = d
                     
                     if rt and len(extract_ganji(rt)) == 2:
                         ji_char = extract_ganji(rt)[-1]
@@ -146,7 +152,7 @@ with st.sidebar:
                     else:
                         st.session_state['s_t_val'] = "시간 모름"
                     
-                    st.session_state['rev_success_msg'] = f"✅ 성공: {y}년 {m}월 {d}일 입력 완료!"
+                    st.session_state['rev_success_msg'] = f"✅ 양력: {y}년 {m}월 {d}일 입력 완료!"
                     st.rerun()
                 else:
                     st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
