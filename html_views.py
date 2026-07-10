@@ -204,17 +204,23 @@ def get_gunghap_cover(version, app_icon, name, gender, marital, part_icon, f_nam
                 </div>
             </div>
             <h3 style='font-size: 20px; font-weight: 800; color: #333; margin-bottom: 40px;'>[ 남녀 인연(궁합) 풀이 ]</h3>
-            <div style='display: flex; justify-content: space-between; align-items: center; background:#F8F9FA; border: 1px solid #E8EAF6; padding: 35px 25px; border-radius: 15px; margin-bottom: 40px;'>
-                <div style='flex: 1; text-align: center; border-right: 1px dashed #CCC; padding-right: 10px;'>
-                    <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{app_icon} {name} 님</span>
-                    <p style='font-size: 14px; color: #555; margin: 10px 0 0 0;'>{gender} / {marital}</p>
+            
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 40px 20px; border-radius: 15px; margin-bottom: 40px;'>
+                <div style='text-align: center;'>
+                    <span style='font-size: 22px; font-weight: 800; color: #1A237E;'>{app_icon} {name} 님</span>
+                    <p style='font-size: 15px; color: #555; margin: 8px 0 0 0;'>{gender} / {marital}</p>
                 </div>
-                <div style='flex: 0.4; text-align: center; font-size: 24px; color: #1A237E; font-weight: 900;'>緣</div>
-                <div style='flex: 1; text-align: center; border-left: 1px dashed #CCC; padding-left: 10px;'>
-                    <span style='font-size: 20px; font-weight: 800; color: #1A237E;'>{part_icon} {f_name} 님</span>
-                    <p style='font-size: 14px; color: #555; margin: 10px 0 0 0;'>{f_gender} / {f_marital}</p>
+                
+                <div style='text-align: center; margin: 30px 0;'>
+                    <span style='font-size: 24px; color: #1A237E; font-weight: 900; border-top: 1px dashed #CCC; border-bottom: 1px dashed #CCC; padding: 10px 40px;'>緣</span>
+                </div>
+                
+                <div style='text-align: center;'>
+                    <span style='font-size: 22px; font-weight: 800; color: #1A237E;'>{part_icon} {f_name} 님</span>
+                    <p style='font-size: 15px; color: #555; margin: 8px 0 0 0;'>{f_gender} / {f_marital}</p>
                 </div>
             </div>
+            
             <p style='font-size: 16px; font-weight: 700; color: #444; margin-top: 50px;'>위 두 분의 시공간적 에너지 흐름과 음양오행의 조화를 정밀 감명하였습니다.</p>
             <p style='font-size: 16px; margin-top: 60px; font-weight: 800; color: #000;'>{today_str}</p>
             <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
