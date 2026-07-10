@@ -107,18 +107,7 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="", key="u_rd")
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
-        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
-            
-            if len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
-                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
-                
-                is_lunar = ("음력" in st.session_state.get("u_c", "양력"))
-                y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
-                
-                if y:
+        if y:
                     # session_state에 저장
                     st.session_state['s_y_val'] = y
                     st.session_state['s_m_val'] = m
@@ -174,19 +163,18 @@ with st.sidebar:
         
         col_y, col_m, col_d = st.columns(3)
         
-        # [핵심] st.session_state에 값이 있으면 그 값을, 없으면 기본값을 사용합니다.
-        b_year = col_y.number_input("년도", 1900, 2050, value=int(st.session_state.get('s_y_val', 1980)), key="s_y_input")
-        b_month = col_m.number_input("월", 1, 12, value=int(st.session_state.get('s_m_val', 1)), key="s_m_input")
-        b_day = col_d.number_input("일", 1, 31, value=int(st.session_state.get('s_d_val', 1)), key="s_d_input")
+        # [수정] value에 session_state 값을 강제 주입하여 위젯 갱신
+        b_year = col_y.number_input("년도", 1900, 2050, value=st.session_state.get('s_y_input', 1980), key="s_y_input")
+        b_month = col_m.number_input("월", 1, 12, value=st.session_state.get('s_m_input', 1), key="s_m_input")
+        b_day = col_d.number_input("일", 1, 31, value=st.session_state.get('s_d_input', 1), key="s_d_input")
         
-        # 시간값도 세션에서 즉시 불러옵니다.
-        current_time_val = st.session_state.get('s_t_val', idx_list[0])
-        # idx_list 내에서 해당 인덱스를 찾아 지정합니다.
-        try:
-            t_index = idx_list.index(current_time_val)
-        except:
-            t_index = 0
-        b_time = st.selectbox("태어난 시간", options=idx_list, index=t_index, key="s_t_input")
+        # [수정] selectbox 괄호 오류 수정 및 인덱스 강제 지정
+        b_time = st.selectbox(
+            "태어난 시간", 
+            options=idx_list, 
+            index=st.session_state.get('s_t_idx', 0), 
+            key="s_t_input"
+        )
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
@@ -196,8 +184,10 @@ with st.sidebar:
 
     if u_product == "1. 개인사주 및 일진 분석":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
+
     elif u_product == "2. 타 감명서 비교":
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
+
     elif u_product == "3. 궁합 및 출산 택일":
         st.markdown("---")
         
@@ -221,13 +211,16 @@ with st.sidebar:
                     y_p, m_p, d_p = engine.find_solar_date_from_ganji(p_ry_h, p_rm_h, p_rd_h, is_lunar=is_lunar_p)
                     
                     if y_p:
-                        st.session_state['p_y_val'] = y_p
-                        st.session_state['p_m_val'] = m_p
-                        st.session_state['p_d_val'] = d_p
+                        # 1. 신청인 기본정보 위젯의 key와 세션값을 강제로 일치시킵니다.
+                        st.session_state['p_y_input'] = y_p
+                        st.session_state['p_m_input'] = m_p
+                        st.session_state['p_d_input'] = d_p
                         
+                        # 2. 시간 처리 (박사님 코드 그대로 유지)
                         if p_rt and len(extract_ganji(p_rt)) == 2:
                             ji_char_p = extract_ganji(p_rt)[-1]
                             p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
+
                             time_map_rev = {
                                 '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
                                 '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
@@ -242,11 +235,22 @@ with st.sidebar:
                                 '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
                                 '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
                             }
-                            if p_rt_h in time_map_rev:
-                                st.session_state['p_t_val'] = time_map_rev[p_rt_h]
-                        else:
-                            st.session_state['p_t_val'] = "시간 모름"
+
+                            # [수정] 1. 시간값 매핑 및 인덱스 저장
+                            found_time = time_map_rev.get(p_rt_h, "시간 모름")
+                            st.session_state['p_t_val'] = found_time
+                            st.session_state['p_t_idx'] = idx_list.index(found_time) if found_time in idx_list else 0
                         
+                            # [수정] 2. 위젯과 세션의 강제 연결 (key 매핑)
+                            st.session_state['p_y_input'] = y_p
+                            st.session_state['p_m_input'] = m_p
+                            st.session_state['p_d_input'] = d_p
+                        
+                            st.session_state['rev_partner_success_msg'] = f"✅ 양력: {y_p}년 {m_p}월 {d_p}일 입력 완료!"
+                            st.rerun()
+                    else:
+                        st.session_state['p_t_val'] = "시간 모름"
+                        st.session_state['p_t_idx'] = 0
                         st.session_state['rev_partner_success_msg'] = f"✅ 상대방 성공: {y_p}년 {m_p}월 {d_p}일 입력 완료!"
                         st.rerun()
                     else:
@@ -263,10 +267,13 @@ with st.sidebar:
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+            
             p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=st.session_state.get('p_y_val', 1980))
-            f_m = p_col2.number_input("월(상대)", 1, 12, value=st.session_state.get('p_m_val', 1))
-            f_d = p_col3.number_input("일(상대)", 1, 31, value=st.session_state.get('p_d_val', 1))
+            
+            # [수정] 위젯의 key를 세션 저장 키와 일치시키고 value를 강제 지정
+            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=st.session_state.get('p_y_input', 1980), key="p_y_input")
+            f_m = p_col2.number_input("월(상대)", 1, 12, value=st.session_state.get('p_m_input', 1), key="p_m_input")
+            f_d = p_col3.number_input("일(상대)", 1, 31, value=st.session_state.get('p_d_input', 1), key="p_d_input")
             
             # 상대방 시간 선택 연동 준비
             current_p_time_val = st.session_state.get('p_t_val', "시간 모름")
