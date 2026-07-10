@@ -20,6 +20,10 @@ K2H_JI = {
     '오':'午', '午':'午', '미':'未', '未':'未', '신':'申', '申':'申', 
     '유':'酉', '酉':'酉', '술':'戌', '戌':'戌', '해':'亥', '亥':'亥'
 }
+
+GAN = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
+JI  = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
+
 JIJANGGAN = {
     '子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], 
     '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], 
@@ -57,8 +61,10 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
         actual_year -= 1
         
     year_idx = (actual_year - 1984) % 60
-    y_gan = GAN[year_idx % 10]
-    y_ji = JI[year_idx % 12]
+    
+    # [수정] 한글 간지 확보
+    y_gan_kor = GAN[year_idx % 10]
+    y_ji_kor = JI[year_idx % 12]
     
     if 315 <= lon < 345: m_ji_idx = 2    # 寅(인)월
     elif 345 <= lon or lon < 15: m_ji_idx = 3  # 卯(묘)월
@@ -76,9 +82,14 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     y_gan_idx = year_idx % 10
     start_month_gan_idx = ((y_gan_idx % 5) * 2 + 2) % 10
     m_offset = (m_ji_idx - 2) % 12
-    m_gan = GAN[(start_month_gan_idx + m_offset) % 10]
+    m_gan_kor = GAN[(start_month_gan_idx + m_offset) % 10]
+    m_ji_kor = JI[m_ji_idx]
     
-    return f"{y_gan}{y_ji}", f"{m_gan}{JI[m_ji_idx]}", lon
+    # [수정] 딕셔너리를 사용하여 한자로 최종 변환하여 리턴
+    y_pillar = K2H_GAN[y_gan_kor] + K2H_JI[y_ji_kor]
+    m_pillar = K2H_GAN[m_gan_kor] + K2H_JI[m_ji_kor]
+    
+    return y_pillar, m_pillar, lon
 
 def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
     from korean_lunar_calendar import KoreanLunarCalendar
