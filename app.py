@@ -435,27 +435,30 @@ if st.session_state.get('app_running', False):
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             # AI 통변
-            # 1. 맺음말 생성
             closing_html = html_views.get_closing_html(name)
-            
-            # 2. AI 통변 생성
-            ai_output_html = "" 
-            try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(...) # (기존내용)
-                ai_result = call_gemini_api(fact_sheet)
-                ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
-                ai_output_html = html_views.get_ai_report_box(ai_result)
-            except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 오류: {e}</div>"
+        ai_output_html = "" 
+        
+        try:
+            # (AI 생성 로직...)
+            ai_result = call_gemini_api(fact_sheet)
+            ai_output_html = html_views.get_ai_report_box(ai_result)
+        except Exception as e:
+            ai_output_html = f"통변 오류: {e}"
 
-            # 3. [최종 합치기] 1번 위치에 있던 코드를 여기로 가져오십시오
-            final_report = (
-                intro_html + table_html + master_bar_html + 
-                un_html + se_html + wol_html + ai_output_html + closing_html
-            )
-            
-            # 4. [렌더링] 여기에서 출력합니다
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+        # [필수] 렌더링 전 반드시 변수 정의
+        final_report = (
+            intro_html + 
+            table_html + 
+            master_bar_html + 
+            un_html + 
+            se_html + 
+            wol_html + 
+            ai_output_html + 
+            closing_html
+        )
+        
+        # [최종 출력] 렌더링
+        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
