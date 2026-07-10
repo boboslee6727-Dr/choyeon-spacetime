@@ -327,12 +327,25 @@ if btn_run:
             # AI 통변
             ai_output_html = ""
             try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동")
+                # 인사말을 원천 봉쇄하는 프롬프트 지시사항 추가
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                    name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
+                    jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
+                    shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
+                )
+                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
+                
                 ai_result = call_gemini_api(fact_sheet)
-                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                ai_output_html = prompts.HTML_LAYOUTS["report_box"].format(content=ai_result)
-            except Exception: pass
+                
+                # 혹시 모를 인사말 잔재 제거 (보조 수단)
+                ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+                
+                # html_views.py의 함수 호출로 변경
+                ai_output_html = html_views.get_ai_report_box(ai_result)
+            except Exception as e:
+                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류가 발생했습니다: {e}</div>"
 
+            # 맺음말은 html_views.py에서 가져옴
             closing_html = html_views.get_closing_html(name)
             
             # 최종 렌더링
@@ -348,27 +361,39 @@ if btn_run:
     elif u_product == "3. 궁합 및 출산 택일":
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
-        with st.spinner("⏳궁합 풀이 중..."):
+        with st.spinner("⏳궁합 풀이 데이터 연산 중..."):
             
             app_p_icon, part_p_icon = ("♂️" if gender == "남성" else "♀️"), ("♂️" if f_gender == "남성" else "♀️")
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-            
+          
             st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
 
-            # (중략) 남명/여명 사주 데이터 추출 로직은 개인사주 파트와 완벽히 동일하므로, 데이터 추출 후 아래와 같이 호출합니다.
-            
-            # 렌더링 예시 (남명)
-            # m_table_html = html_views.get_saju_table(...)
-            # m_master_html = html_views.get_master_bar(...)
-            # st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
-            
-            # 렌더링 예시 (여명)
-            # w_table_html = html_views.get_saju_table(...)
-            # w_master_html = html_views.get_master_bar(...)
-            # st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
-            
-            # 렌더링 예시 (대운 비교표)
-            # st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
-            
-            # 맺음말
-            st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+            # 남명 테이블 및 마스터바 생성
+                m_table_html = html_views.get_saju_table(
+                    m_info_h, gan_rel_m, gan_ss_m, gan_row_m, ji_row_m, ji_ss_m, 
+                    jijanggan_m, m_ji_rel_rows, unsung_m, shinsal_m, gen_shinsal_m
+                )
+                m_master_html = html_views.get_master_bar(
+                    calc_d_m, m_counts['목'], m_counts['화'], m_counts['토'], m_counts['금'], 
+                    m_counts['수'], guiin_map.get(m_ds, '없음'), engine.calculate_gongmang(m_ys, m_yb), 
+                    engine.calculate_gongmang(m_ds, m_db), m_samjae_color, engine.get_samjae(m_yb, m_db)
+                )
+                st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
+                
+                # 여명 테이블 및 마스터바 생성
+                w_table_html = html_views.get_saju_table(
+                    w_info_h, gan_rel_w, gan_ss_w, gan_row_w, ji_row_w, ji_ss_w, 
+                    jijanggan_w, w_ji_rel_rows, unsung_w, shinsal_w, gen_shinsal_w
+                )
+                w_master_html = html_views.get_master_bar(
+                    calc_d_w, w_counts['목'], w_counts['화'], w_counts['토'], w_counts['금'], 
+                    w_counts['수'], guiin_map.get(w_ds, '없음'), engine.calculate_gongmang(w_ys, w_yb), 
+                    engine.calculate_gongmang(w_ds, w_db), w_samjae_color, engine.get_samjae(w_yb, w_db)
+                )
+                st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
+                
+                # 부부 대운 비교표 출력
+                st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
+                
+                # 맺음말
+                st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
