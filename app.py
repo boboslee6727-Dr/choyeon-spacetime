@@ -434,29 +434,51 @@ if st.session_state.get('app_running', False):
             st.markdown(cover_html, unsafe_allow_html=True)
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-            # AI 통변
             # 1. 맺음말 생성
             closing_html = html_views.get_closing_html(name)
             
             # 2. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             try:
-                # ... (생략) ...
+                # 사주 데이터가 포함된 프롬프트 생성
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                    name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
+                    jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
+                    shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
+                )
+                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
+                
+                # Gemini API 호출
+                ai_result = call_gemini_api(fact_sheet)
+                
+                # 통변 결과 정제
+                ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+                
+                # HTML 박스 생성
                 ai_output_html = html_views.get_ai_report_box(ai_result)
+                
             except Exception as e:
-                ai_output_html = f"🚨 통변 오류: {e}"
+                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류가 발생했습니다: {e}</div>"
 
-            # 3. [디버깅] 각 변수 상태를 화면에 출력하여 확인
-            st.write("--- 디버깅 로그 ---")
-            st.write(f"intro_html 타입: {type(intro_html)}")
-            st.write(f"table_html 타입: {type(table_html)}")
-            st.write(f"ai_output_html 확인: {ai_output_html[:50]}...") # 내용 일부만 출력
+            # 3. [디버깅] 각 변수 상태 확인
+            st.write("--- [홍집사의 디버깅 로그] ---")
+            st.write(f"현재 렌더링 단계: 변수 통합 직전")
+            st.write(f"AI 통변 결과 상태: {'정상' if len(ai_output_html) > 50 else '오류 혹은 짧음'}")
             
             # 4. [변수 통합]
-
+            final_report = (
+                str(intro_html) + 
+                str(table_html) + 
+                str(master_bar_html) + 
+                str(un_html) + 
+                str(se_html) + 
+                str(wol_html) + 
+                str(ai_output_html) + 
+                str(closing_html)
+            )
             
             # 5. 최종 렌더링
-            st.write("변수 내용 확인:", final_report[:100]) # 앞부분 100글자만 출력해보기
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
