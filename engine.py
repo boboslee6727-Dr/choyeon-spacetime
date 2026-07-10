@@ -80,59 +80,51 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     
     return f"{y_gan}{y_ji}", f"{m_gan}{JI[m_ji_idx]}", lon
 
-def get_time_ganji(day_gan, time_str, dt_obj=None):
-    if "시간 모름" in time_str: return "?", "?"
-    if dt_obj:
-        adj_mins = get_total_time_adjustment(dt_obj)
-        dt_obj += dt_mod.timedelta(minutes=adj_mins)
-    
-    target_ji, t_idx = "子", 0
-    if "朝子" in time_str or "夜子" in time_str: target_ji, t_idx = "子", 0
-    else:
-        for j in list(JI):
-            if j in time_str: target_ji, t_idx = j, list(JI).index(j); break
-    start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
-    return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
-
-def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
-    cal = KoreanLunarCalendar()
-    if is_lunar:
-        cal.setLunarDate(y, m, d, is_leap)
-    else:
-        cal.setSolarDate(y, m, d)
-    
-    # 만세력에서 간지 문자열을 가져와 공백 기준으로 나눔 (년, 월, 일)
-    gapja_str = cal.getChineseGapJaString() # 예: "甲子年 乙丑月 丙寅日"
-    parts = gapja_str.split()
-    
-    # 년주, 월주, 일주 추출 (각각 2글자씩)
-    year_ganji = parts[0][:2]
-    month_ganji = parts[1][:2]
-    day_ganji = parts[2][:2]
-    
-    return year_ganji, month_ganji, day_ganji
-
 def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
     from korean_lunar_calendar import KoreanLunarCalendar
     klc = KoreanLunarCalendar()
-    # 1900년~2026년 탐색
-    for y in range(1960, 1970): # 1963년 근처로 범위를 좁혀 테스트하십시오
+    
+    for y in range(1920, 2031):
         for m in range(1, 13):
             for d in range(1, 32):
                 try:
                     if is_lunar: 
-                        # 음력일 경우 (평달)
-                        klc.setLunarDate(y, m, d, False)
+                        # 음력 설정 (평달 고정)
+                        if not klc.setLunarDate(y, m, d, False):
+                            continue
                     else: 
-                        klc.setSolarDate(y, m, d)
+                        # 양력 설정
+                        if not klc.setSolarDate(y, m, d):
+                            continue
                     
-                    gj = klc.getChineseGapJaString().split()
+                    # 만세력 문자열 가져오기
+                    gapja_str = klc.getChineseGapJaString()
+                    gj = gapja_str.split()
+                    
                     if len(gj) >= 3:
+                        # 간지 비교 (슬라이싱으로 정확하게 년/월/일주 추출)
                         if gj[0][:2] == y_ganji and gj[1][:2] == m_ganji and gj[2][:2] == d_ganji:
-                            # 찾았을 때의 양력 날짜를 반환
                             return klc.solarYear, klc.solarMonth, klc.solarDay
-                except: continue
+                except Exception:
+                    continue
     return None, None, None
+
+def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
+    klc = KoreanLunarCalendar()
+    if is_lunar:
+        if not klc.setLunarDate(y, m, d, is_leap):
+            return "?", "?", "?"
+    else:
+        if not klc.setSolarDate(y, m, d):
+            return "?", "?", "?"
+    
+    gapja_str = klc.getChineseGapJaString()
+    parts = gapja_str.split()
+    
+    if len(parts) < 3:
+        return "?", "?", "?"
+        
+    return parts[0][:2], parts[1][:2], parts[2][:2]
 
 def get_daeun_su_accurate(utc_dt, order):
     try:
