@@ -97,7 +97,7 @@ with st.sidebar:
     u_product = st.selectbox("상품선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"], label_visibility="collapsed")
 
     # ---------------------------------------------------------
-    # 1. 신청인 사주간지 역산 (상단 배치)
+    # 1. 신청인 사주간지 역산 (한글/한자 완벽 대응 버전)
     # ---------------------------------------------------------
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -111,9 +111,9 @@ with st.sidebar:
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             
             if len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
-                ry_h = engine.K2H_GAN.get(_ry[0], '') + engine.K2H_JI.get(_ry[1], '')
-                rm_h = engine.K2H_GAN.get(_rm[0], '') + engine.K2H_JI.get(_rm[1], '')
-                rd_h = engine.K2H_GAN.get(_rd[0], '') + engine.K2H_JI.get(_rd[1], '')
+                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
+                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
+                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
                 
                 is_lunar = ("음력" in st.session_state.get("u_c", "양력"))
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
@@ -126,11 +126,20 @@ with st.sidebar:
                     if rt and len(extract_ganji(rt)) == 2:
                         ji_char = extract_ganji(rt)[-1]
                         rt_h = engine.K2H_JI.get(ji_char, ji_char)
+                        
                         time_map_rev = {
-                            '자':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시',
-                            '묘':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시',
-                            '오':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시',
-                            '유':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시'
+                            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
+                            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
+                            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
+                            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
+                            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
+                            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
+                            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
+                            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
+                            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
+                            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
+                            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
+                            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
                         }
                         if rt_h in time_map_rev:
                             st.session_state['s_t_val'] = time_map_rev[rt_h]
@@ -149,7 +158,7 @@ with st.sidebar:
         st.session_state['rev_success_msg'] = ""
 
     # ---------------------------------------------------------
-    # 2. 신청인 기본 정보 (하단 배치 및 시간 자동 연동 복구)
+    # 2. 신청인 기본 정보 (14개 바 Selectbox 완벽 복구 및 연동)
     # ---------------------------------------------------------
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -161,14 +170,19 @@ with st.sidebar:
         with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get('s_m_val', 1))
         with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get('s_d_val', 1))
         
-        # 시간 자동 연동 및 14개 바 selectbox 복구 파트
+        # 14개 바 인덱스 자동 추적 파트
         current_time_val = st.session_state.get('s_t_val', "시간 모름")
         try:
             t_index = idx_list.index(current_time_val)
         except ValueError:
             t_index = 0
+            # 만약 텍스트가 미세하게 다를 경우 글자 포함 여부로 한 번 더 찾아내는 안전장치
+            for i, item in enumerate(idx_list):
+                if current_time_val in item or item in current_time_val:
+                    t_index = i
+                    break
+                    
         b_time = st.selectbox("태어난 시간", options=idx_list, index=t_index)
-
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
