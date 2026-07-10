@@ -467,21 +467,27 @@ if st.session_state.get('app_running', False):
         else: st.info("타 감명서 비교 로직이 작동합니다.")
 
     elif u_product == "3. 궁합 및 출산 택일":
+        # 0. 필수 변수 정의 (사이드바 입력값을 가져옵니다)
+        # 만약 박사님 코드의 변수명이 다르다면 (예: s_year) 이 부분을 수정하세요!
+        s_y, s_m, s_d = int(s_birth_y), int(s_birth_m), int(s_birth_d)
+        s_t = s_birth_time
+        f_y, f_m, f_d = int(f_birth_y), int(f_birth_m), int(f_birth_d)
+        f_t = f_birth_time
+
         if st.session_state.get('app_running'):
             with st.spinner("⏳궁합 풀이 데이터 연산 중..."):
-                # 1. 엔진에서 모든 데이터를 계산해서 딕셔너리로 받아옴
-                # (이제 엔진이 알아서 모든 변수를 계산하여 딕셔너리로 줍니다)
+                # 1. 이제 s_y 등이 정의되었으므로 엔진 호출 가능
                 res = engine.get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t)
-                
-                # 2. 표지 출력
+
+                # 3. 표지 출력
                 st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
                 
-                # 3. 남명/여명 박스 출력
+                # 4. 남명/여명 박스 출력
                 # 엔진에서 받은 m_table(11개 데이터)과 m_master 데이터를 그대로 뷰에 던집니다.
                 st.markdown(html_views.get_gunghap_person_box(html_views.get_saju_table(*res['m_table']), html_views.get_master_bar(*res['m_master'])), unsafe_allow_html=True)
                 st.markdown(html_views.get_gunghap_person_box(html_views.get_saju_table(*res['w_table']), html_views.get_master_bar(*res['w_master']), add_page_break=True), unsafe_allow_html=True)
 
-                # 4. 통변 및 맺음말
+                # 5. 통변 및 맺음말
                 st.markdown(html_views.get_ai_report_box(engine.get_gunghap_report(res)), unsafe_allow_html=True)
                 st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
         else:
