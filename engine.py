@@ -203,6 +203,22 @@ def get_color(c):
     if c in "壬癸亥子": return "수"
     return "무"
 
+def get_saju_table_data(y, m, d, t, gender):
+    # 만세력 기초
+    y_p, m_p, _ = get_true_year_month_pillar(y, m, d, 0, 0)
+    _, _, d_p = get_ganji_from_date(y, m, d)
+    t_gan, t_ji = get_time_ganji(d_p[0], t)
+    gans = [t_gan, d_p[0], m_p[0], y_p[0]]
+    jjis = [t_ji, d_p[1], m_p[1], y_p[1]]
+    
+    # 테이블용 데이터 11조각
+    # (이곳에 기존 app.py 380~410라인의 복잡한 로직을 모두 넣습니다)
+    return {
+        "gans": gans, "jjis": jjis, "ds": d_p[0], "ys": y_p[0], "yb": y_p[1], "db": d_p[1],
+        "calc_d": get_daeun_su_accurate(datetime(y, m, d), 1),
+        "counts": {'목':0, '화':0, '토':0, '금':0, '수':0}, # 오행 카운트 로직 추가
+    }
+
 def get_ss(dg, tc):
     if tc in ["?", " ", "-"]: return "-"
     rels = {
@@ -723,27 +739,51 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
-def calculate_gunghap(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
-    # 1. 박사님의 기존 만세력 엔진 함수들을 사용하여 사주 정보 추출
-    # 신청인(s) 정보 연산
-    h_s, m_s = 0, 0 # 필요 시 시간 변환 로직 추가 가능
-    y_p_s, m_p_s, _ = get_true_year_month_pillar(s_y, s_m, s_d, h_s, m_s)
-    _, _, d_p_s = get_ganji_from_date(s_y, s_m, s_d)
-    t_gan_s, t_ji_s = get_time_ganji(d_p_s[0], s_t)
-    
-    # 상대방(f) 정보 연산
-    y_p_f, m_p_f, _ = get_true_year_month_pillar(f_y, f_m, f_d, h_s, m_s)
-    _, _, d_p_f = get_ganji_from_date(f_y, f_m, f_d)
-    t_gan_f, t_ji_f = get_time_ganji(d_p_f[0], f_t)
+def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
+    def _get_person_data(y, m, d, t, gender, name, marital):
+        # 1. 만세력 기본 산출
+        y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, 0, 0)
+        _, _, d_pillar = get_ganji_from_date(y, m, d)
+        t_gan, t_ji = get_time_ganji(d_pillar[0], t)
+        
+        gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+        ds, ms, yb, db = d_pillar[0], m_pillar[0], y_pillar[1], d_pillar[1]
+        
+        # 2. 분석용 연산
+        counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+        for c in gans + jjis:
+            oh = get_color(c)
+            if oh in counts: counts[oh] += 1
+        
+        calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
+        
+        # 3. 테이블 데이터 조립 (과거 app.py 로직 이식)
+        info_h = f"<div style='text-align:center;'>{name}님</div>" # 간소화된 헤더
+        gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
+        gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
+        gan_row = "".join([f"<td style='border:1px solid #444;'>{g}</td>" for g in gans])
+        ji_row = "".join([f"<td style='border:1px solid #444;'>{j}</td>" for j in jjis])
+        ji_ss = "".join([f"<td style='border:1px solid #444;'>{get_ss(ds,j)}</td>" for j in jjis])
+        jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+        
+        ji_rel_rows = ""
+        for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+            cells = "".join([f"<td style='border:1px solid #444;'>{get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
+            ji_rel_rows += f"<tr>{cells}</tr>"
+            
+        unsung = "".join([f"<td style='border:1px solid #444;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+        shinsal = "".join([f"<td style='border:1px solid #444;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+        gen_shinsal = "".join([f"<td style='border:1px solid #444;'>-</td>" for i in range(4)]) # 간소화
 
-    # 2. 결과 리스트 구성 (박사님이 app.py에서 기대하는 22개 항목)
-    # [설명: 각 칸에 들어갈 HTML 테이블 데이터 조립]
-    # 아래는 구조적 예시이며, 실제 앱에서 사용하는 html_views 호출 결과 형태와 맞추어야 합니다.
-    results = [
-        "남성 정보 헤더", "간관계", "십성", "간", "지", "십성", "지장간", "합충", "12운성", "12신살", "일반신살", # 남성 11개
-        "여성 정보 헤더", "간관계", "십성", "간", "지", "십성", "지장간", "합충", "12운성", "12신살", "일반신살"  # 여성 11개
-    ]
+        return {
+            "table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal],
+            "master": [calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], "귀인정보", "공망1", "공망2", "#1A237E", "삼재"]
+        }
+
+    # app.py에서 전달받은 변수들을 사용하여 호출
+    m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", "기혼")
+    w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
     
-    return results
+    return {"m_table": m_res["table"], "m_master": m_res["master"], "w_table": w_res["table"], "w_master": w_res["master"]}
 
    
