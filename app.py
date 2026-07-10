@@ -128,6 +128,7 @@ with st.sidebar:
                 y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=is_lunar)
                 
                 if y:
+                    # 위젯 키 충돌 방지를 위해 중계 변수(_val) 사용
                     st.session_state['s_y_val'] = y
                     st.session_state['s_m_val'] = m
                     st.session_state['s_d_val'] = d
