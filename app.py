@@ -116,23 +116,21 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True):
-    _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
-    if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
-        ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
-        rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
-        rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
+            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+            if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
+                ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
+                rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
+                rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
         
-        # 새로 만든 엔진 함수 호출 (음력 여부 자동 반영)
-        y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=("음력" in u_cal))
+            # 새로 만든 엔진 함수 호출 (음력 여부 자동 반영)
+            y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=("음력" in u_cal))
         
-        if y:
-            st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = y, m, d
-            st.success(f"✅ {y}년 {m}월 {d}일 입력 완료!")
-            st.rerun()
+            if y:
+                st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = y, m, d
+                st.success(f"✅ {y}년 {m}월 {d}일 입력 완료!")
+                st.rerun()
         else:
             st.error("일치하는 날짜를 찾을 수 없습니다. 간지를 확인해 주세요.")
-    else:
-        st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
