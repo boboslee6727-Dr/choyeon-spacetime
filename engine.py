@@ -443,6 +443,47 @@ def calculate_gongmang(ilgan, ilji):
         return list(JI)[base] + "," + list(JI)[(base+1)%12]
     except: return "-"
 
+def _get_person_data(y, m, d, t, gender, name, marital):
+        # 1. 만세력 기본 산출
+        y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, 0, 0)
+        _, _, d_pillar = get_ganji_from_date(y, m, d)
+        t_gan, t_ji = get_time_ganji(d_pillar[0], t)
+        
+        gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+        ds, ms, hs, ys = d_pillar[0], m_pillar[0], t_gan, y_pillar[0]
+        db, mb, hb, yb = d_pillar[1], m_pillar[1], t_ji, y_pillar[1]
+        
+        # 2. 분석용 연산
+        counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+        for c in gans + jjis:
+            oh = get_color(c)
+            if oh in counts: counts[oh] += 1
+        
+        calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
+        
+        # 3. 데이터 조립 (테이블 11개 조각)
+        info_h = f"<div style='text-align:center;'>{name}님</div>"
+        gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
+        gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444; font-weight:900;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
+        gan_row = "".join([f"<td style='border:1px solid #444;'>{g}</td>" for g in gans])
+        ji_row = "".join([f"<td style='border:1px solid #444;'>{j}</td>" for j in jjis])
+        ji_ss = "".join([f"<td style='border:1px solid #444;'>{get_ss(ds,j)}</td>" for j in jjis])
+        jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+        
+        ji_rel_rows = ""
+        for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+            cells = "".join([f"<td style='border:1px solid #444;'>{get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
+            ji_rel_rows += f"<tr>{cells}</tr>"
+        unsung = "".join([f"<td style='border:1px solid #444;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+        shinsal = "".join([f"<td style='border:1px solid #444;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+        gen_shinsal = "".join([f"<td style='border:1px solid #444;'>{'-'}</td>" for i in range(4)])
+
+        # 4. 마스터바 데이터 조립
+        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+        master = [calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_map.get(ds, '없음'), calculate_gongmang(ys, yb), calculate_gongmang(ds, db), "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)]
+
+        return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master}
+
 def get_universal_analysis(ds, mb, db, gans, jjis):
     jg_list = JIJANGGAN.get(mb, [])
     
