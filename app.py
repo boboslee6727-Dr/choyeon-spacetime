@@ -201,50 +201,23 @@ with st.sidebar:
                     y_p, m_p, d_p = engine.find_solar_date_from_ganji(p_ry_h, p_rm_h, p_rd_h, is_lunar=is_lunar_p)
                     
                     if y_p:
-                        # 1. 신청인 기본정보 위젯의 key와 세션값을 강제로 일치시킵니다.
                         st.session_state['p_y_input'] = y_p
                         st.session_state['p_m_input'] = m_p
                         st.session_state['p_d_input'] = d_p
                         
-                        # 2. 시간 처리 (박사님 코드 그대로 유지)
                         if p_rt and len(extract_ganji(p_rt)) == 2:
                             ji_char_p = extract_ganji(p_rt)[-1]
                             p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
-
-                            time_map_rev = {
-                                '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
-                                '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
-                                '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
-                                '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
-                                '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
-                                '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
-                                '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
-                                '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
-                                '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
-                                '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
-                                '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
-                                '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
-                            }
-
-                            # [수정] 1. 시간값 매핑 및 인덱스 저장
-                            found_time = time_map_rev.get(p_rt_h, "시간 모름")
-                            st.session_state['p_t_val'] = found_time
+                            time_map = {'축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                            found_time = time_map.get(p_rt_h, "시간 모름")
                             st.session_state['p_t_idx'] = idx_list.index(found_time) if found_time in idx_list else 0
-                        
-                            # [수정] 2. 위젯과 세션의 강제 연결 (key 매핑)
-                            st.session_state['p_y_input'] = y_p
-                            st.session_state['p_m_input'] = m_p
-                            st.session_state['p_d_input'] = d_p
-                        
-                            st.session_state['rev_partner_success_msg'] = f"✅ 양력: {y_p}년 {m_p}월 {d_p}일 입력 완료!"
-                            st.rerun()
-                    else:
-                        st.session_state['p_t_val'] = "시간 모름"
-                        st.session_state['p_t_idx'] = 0
-                        st.session_state['rev_partner_success_msg'] = f"✅ 상대방 성공: {y_p}년 {m_p}월 {d_p}일 입력 완료!"
+                        else:
+                            st.session_state['p_t_idx'] = 0
+                            
+                        st.session_state['rev_partner_success_msg'] = f"✅ 상대방 양력: {y_p}년 {m_p}월 {d_p}일 입력 완료!"
                         st.rerun()
                     else:
-                        st.error("일치하는 상대방 간지 날짜를 찾을 수 없습니다.")
+                        st.error("일치하는 간지 날짜를 찾을 수 없습니다.")
                 else:
                     st.warning("상대방 년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
