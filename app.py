@@ -435,30 +435,32 @@ if st.session_state.get('app_running', False):
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             # AI 통변
+            # 1. 맺음말 생성
             closing_html = html_views.get_closing_html(name)
-        ai_output_html = "" 
-        
-        try:
-            # (AI 생성 로직...)
-            ai_result = call_gemini_api(fact_sheet)
-            ai_output_html = html_views.get_ai_report_box(ai_result)
-        except Exception as e:
-            ai_output_html = f"통변 오류: {e}"
+            
+            # 2. AI 통변 생성
+            ai_output_html = "AI 데이터 없음"
+            try:
+                # ... (생략) ...
+                ai_output_html = html_views.get_ai_report_box(ai_result)
+            except Exception as e:
+                ai_output_html = f"🚨 통변 오류: {e}"
 
-        # [필수] 렌더링 전 반드시 변수 정의
-        final_report = (
-            intro_html + 
-            table_html + 
-            master_bar_html + 
-            un_html + 
-            se_html + 
-            wol_html + 
-            ai_output_html + 
-            closing_html
-        )
-        
-        # [최종 출력] 렌더링
-        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+            # 3. [디버깅] 각 변수 상태를 화면에 출력하여 확인
+            st.write("--- 디버깅 로그 ---")
+            st.write(f"intro_html 타입: {type(intro_html)}")
+            st.write(f"table_html 타입: {type(table_html)}")
+            st.write(f"ai_output_html 확인: {ai_output_html[:50]}...") # 내용 일부만 출력
+            
+            # 4. [변수 통합]
+            final_report = (
+                str(intro_html) + str(table_html) + str(master_bar_html) + 
+                str(un_html) + str(se_html) + str(wol_html) + 
+                str(ai_output_html) + str(closing_html)
+            )
+            
+            # 5. 최종 렌더링
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
