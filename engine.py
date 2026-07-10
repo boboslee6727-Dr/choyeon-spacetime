@@ -723,5 +723,27 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
+def calculate_gunghap(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
+    # 1. 박사님의 기존 만세력 엔진 함수들을 사용하여 사주 정보 추출
+    # 신청인(s) 정보 연산
+    h_s, m_s = 0, 0 # 필요 시 시간 변환 로직 추가 가능
+    y_p_s, m_p_s, _ = get_true_year_month_pillar(s_y, s_m, s_d, h_s, m_s)
+    _, _, d_p_s = get_ganji_from_date(s_y, s_m, s_d)
+    t_gan_s, t_ji_s = get_time_ganji(d_p_s[0], s_t)
+    
+    # 상대방(f) 정보 연산
+    y_p_f, m_p_f, _ = get_true_year_month_pillar(f_y, f_m, f_d, h_s, m_s)
+    _, _, d_p_f = get_ganji_from_date(f_y, f_m, f_d)
+    t_gan_f, t_ji_f = get_time_ganji(d_p_f[0], f_t)
+
+    # 2. 결과 리스트 구성 (박사님이 app.py에서 기대하는 22개 항목)
+    # [설명: 각 칸에 들어갈 HTML 테이블 데이터 조립]
+    # 아래는 구조적 예시이며, 실제 앱에서 사용하는 html_views 호출 결과 형태와 맞추어야 합니다.
+    results = [
+        "남성 정보 헤더", "간관계", "십성", "간", "지", "십성", "지장간", "합충", "12운성", "12신살", "일반신살", # 남성 11개
+        "여성 정보 헤더", "간관계", "십성", "간", "지", "십성", "지장간", "합충", "12운성", "12신살", "일반신살"  # 여성 11개
+    ]
+    
+    return results
 
    
