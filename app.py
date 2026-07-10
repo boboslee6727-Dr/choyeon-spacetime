@@ -466,7 +466,7 @@ if st.session_state.get('app_running', False):
         if not other_report: st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: st.info("타 감명서 비교 로직이 작동합니다.")
 
-elif u_product == "3. 궁합 및 출산 택일":
+    elif u_product == "3. 궁합 및 출산 택일":
         st.header(f"💕 {st.session_state.get('u_n', '신청인')}님과 {st.session_state.get('f_n', '상대방')}님의 초연 궁합")
         st.markdown("---")
         
