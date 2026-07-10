@@ -115,25 +115,48 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="", key="u_rd")
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
-        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True):
+        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="auto_fill_btn"):
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+            
             if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
+                # K2H_GAN, K2H_JI는 engine 모듈의 것을 사용합니다.
                 ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
                 rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
                 rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
-        
-            y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=("음력" in u_cal))
-        
-            if y:
-                st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = y, m, d
-                    
-                cal_type = "음력" if ("음력" in u_cal) else "양력"
-                st.session_state.rev_success_msg = f"✅ 결과: {y}년 {m}월 {d}일 ({cal_type}) 입력 완료!"
-                st.rerun()
 
-            if 'rev_success_msg' in st.session_state and st.session_state.rev_success_msg:
-                st.success(st.session_state.rev_success_msg)
-                st.session_state.rev_success_msg = None
+                klc_find = KoreanLunarCalendar()
+                found = False
+                
+                # 역산 로직
+                for y in range(2026, 1899, -1):
+                    klc_find.setSolarDate(y, 7, 1)
+                    gj_y = klc_find.getChineseGapJaString().split()
+                    if gj_y and gj_y[0][:2] == ry_h:
+                        curr_dt = dt_mod.date(y+1, 2, 28)
+                        while curr_dt >= dt_mod.date(y, 1, 1):
+                            klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                            gj = klc_find.getChineseGapJaString().split()
+                            if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                                # 세션 상태 업데이트 (사이드바 반영)
+                                st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = curr_dt.year, curr_dt.month, curr_dt.day
+                                
+                                # 시간 역산 및 세션 저장
+                                time_map_rev = {'子':'00:30 ~ 01:29','丑':'01:30 ~ 03:29','寅':'03:30 ~ 05:29','卯':'05:30 ~ 07:29','辰':'07:30 ~ 09:29','巳':'09:30 ~ 11:29','午':'11:30 ~ 13:29','未':'13:30 ~ 15:29','申':'15:30 ~ 17:29','酉':'17:30 ~ 19:29','戌':'19:30 ~ 21:29','亥':'21:30 ~ 23:29'}
+                                if rt:
+                                    ji_char = extract_ganji(rt)[-1]
+                                    rt_h = engine.K2H_JI.get(ji_char, ji_char)
+                                    if rt_h in time_map_rev:
+                                        st.session_state.s_t = time_map_rev[rt_h]
+                                
+                                st.session_state.rev_success_msg = f"✅ {curr_dt.year}년 {curr_dt.month}월 {curr_dt.day}일 입력 완료!"
+                                found = True
+                                st.rerun() # 즉시 반영
+                                break
+                            curr_dt -= dt_mod.timedelta(days=1)
+                    if found: break
+                if not found: st.error("일치하는 날짜를 찾을 수 없습니다.")
+            else:
+                st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
