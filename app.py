@@ -431,7 +431,13 @@ if st.session_state.get('app_running', False):
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
-            st.markdown(gunghap_cover, unsafe_allow_html=True)
+            st.markdown(cover_html, unsafe_allow_html=True)
+            
+            # 사주 풀이 박스 합치기
+            combined_report = (intro_html + table_html + master_bar_html + 
+                               un_html + se_html + wol_html + ai_output_html + closing_html)
+            
+            st.markdown(html_views.get_combined_report_box(combined_report), unsafe_allow_html=True)
 
             # AI 통변
             ai_output_html = ""
