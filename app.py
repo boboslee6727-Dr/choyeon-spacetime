@@ -115,33 +115,24 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="", key="u_rd")
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
-        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
-            if not _ry and not _rm and not _rd:
-                if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
-                st.rerun()
-            elif len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
-                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
-                klc_find = KoreanLunarCalendar(); found = False
-                for y in range(2026, 1899, -1):
-                    klc_find.setSolarDate(y, 7, 1); gj_y = klc_find.getChineseGapJaString().split()
-                    if gj_y and gj_y[0][:2] == ry_h:
-                        curr_dt = dt_mod.date(y+1, 2, 28)
-                        while curr_dt >= dt_mod.date(y, 1, 1):
-                            klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                            gj = klc_find.getChineseGapJaString().split()
-                            if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                                st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = curr_dt.year, curr_dt.month, curr_dt.day
-                                found = True
-                                st.session_state.rev_success_msg = f"✅ 자동입력 완료!"
-                                st.rerun()
-                                break
-                        curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
-                if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True):
+    _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+    if len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
+        ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
+        rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
+        rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
+        
+        # 새로 만든 엔진 함수 호출 (음력 여부 자동 반영)
+        y, m, d = engine.find_solar_date_from_ganji(ry_h, rm_h, rd_h, is_lunar=("음력" in u_cal))
+        
+        if y:
+            st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = y, m, d
+            st.success(f"✅ {y}년 {m}월 {d}일 입력 완료!")
+            st.rerun()
+        else:
+            st.error("일치하는 날짜를 찾을 수 없습니다. 간지를 확인해 주세요.")
+    else:
+        st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     other_report = ""
     f_name, f_gender, f_marital, f_cal = "", "여성", "미혼", "양력"
