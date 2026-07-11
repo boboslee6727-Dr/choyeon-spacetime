@@ -511,8 +511,14 @@ if st.session_state.get('app_running', False):
                 # Gemini 엔진 호출
                 ai_result = call_gemini_api(fact_sheet)
                 
+                # 🧹 [홍집사의 청소기] AI가 멋대로 덧붙인 코드 블록 기호(```)를 강제로 뜯어냅니다.
+                ai_result = ai_result.replace("```html", "").replace("```", "").strip()
+                
                 # 결과 정제 (서두의 불필요한 인사말 제거)
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+                
+                # 🧹 [홍집사의 줄바꿈] 엔터(줄바꿈) 기호를 HTML용 줄바꿈 태그(<br>)로 바꿔줍니다.
+                ai_result = ai_result.replace("\n", "<br>")
                 
                 # HTML 박스 생성
                 ai_output_html = html_views.get_ai_report_box(ai_result)
