@@ -465,11 +465,15 @@ if st.session_state.get('app_running', False):
             # 2. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             try:
-                # 사주 데이터가 포함된 프롬프트 생성
+                # 사주 데이터가 포함된 프롬프트 생성 (u_age 추가)
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, 
-                    disp_name=name, # 👈 [추가] 이 줄을 반드시 넣어주십시오!
-                    gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
+                    disp_name=name, 
+                    gender=gender, 
+                    u_age=age,          # 👈 [추가] 이 줄을 추가해 주십시오!
+                    ilgan=d_pillar[0], 
+                    ilju=d_pillar, 
+                    wolryeong=m_pillar, 
                     curr_y=dt_mod.datetime.now().year, 
                     curr_m=dt_mod.datetime.now().month, 
                     jijanggan_info="엔진 데이터 연동", 
@@ -477,7 +481,6 @@ if st.session_state.get('app_running', False):
                     shinsal_info="엔진 데이터 연동", 
                     vault_info="엔진 데이터 연동"
                 )
-
                 fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
                 
                 ai_result = call_gemini_api(fact_sheet)
@@ -485,18 +488,6 @@ if st.session_state.get('app_running', False):
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
-
-            # 3. 변수 통합 (안전하게 기존 변수들을 str로 감싸기)
-            # 박사님의 기존 변수(intro, table 등)가 이미 위에서 정의되어 있다고 가정합니다.
-            final_report = (
-                str(intro_html) + str(table_html) + str(master_bar_html) + 
-                str(un_html) + str(se_html) + str(wol_html) + 
-                str(ai_output_html) + str(closing_html)
-            )
-            
-            # 4. 최종 렌더링 (여기서 전체를 박스에 담아 한 번에 출력)
-            importlib.reload(html_views)
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
