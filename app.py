@@ -74,7 +74,9 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_gemini_api(prompt_text, max_tokens=6000):
-    return get_ai_response(prompts.SYSTEM_ROLE, prompt_text, model_name='gemini-2.5-flash')
+    # prompts.SYSTEM_ROLE이 없는 경우를 대비해 직접 텍스트로 주입합니다.
+    system_role = "당신은 명리심리상담사 1급 자격을 갖춘 '초연 박사'입니다."
+    return get_ai_response(system_role, prompt_text, model_name='gemini-2.5-flash')
 
 def extract_ganji(text):
     if not text: return ""
