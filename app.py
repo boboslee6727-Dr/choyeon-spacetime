@@ -437,14 +437,18 @@ if st.session_state.get('app_running', False):
             # 2. 모든 데이터 준비 (기존 변수들을 그대로 활용)
             closing_html = html_views.get_closing_html(name)
             
-            # AI 통변 생성 (curr_y 오류 해결)
+            # 2. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             try:
+                # 사주 데이터가 포함된 프롬프트 생성 (curr_y와 curr_m을 모두 포함)
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
                     curr_y=dt_mod.datetime.now().year, 
-                    jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
+                    curr_m=dt_mod.datetime.now().month, # 추가된 부분
+                    jijanggan_info="엔진 데이터 연동", 
+                    missing_and_gongmang="엔진 데이터 연동", 
+                    shinsal_info="엔진 데이터 연동", 
+                    vault_info="엔진 데이터 연동"
                 )
                 fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
                 
