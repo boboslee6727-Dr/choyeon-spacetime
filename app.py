@@ -470,9 +470,10 @@ if st.session_state.get('app_running', False):
             try:
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, 
-                    disp_name=name,     # 추가된 부분
-                    gender=gender, 
-                    u_age=age,          # 추가된 부분
+                    disp_name=name,     
+                    gender=gender,      
+                    u_gender=gender,    # 👈 [추가] 템플릿이 요구하는 'u_gender'를 추가했습니다!
+                    u_age=age,          
                     ilgan=d_pillar[0], 
                     ilju=d_pillar, 
                     wolryeong=m_pillar, 
