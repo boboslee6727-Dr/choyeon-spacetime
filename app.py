@@ -427,22 +427,22 @@ if st.session_state.get('app_running', False):
                 b_left = "1px solid #ccc" if i != 11 else "none"
                 wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
-# 1. 먼저 모든 데이터를 준비합니다 (순서 중요!)
-            
-            # [커버 데이터 준비]
+
+            # 1. 커버 출력 (이건 한 번만 출력되도록 유지)
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
+            st.markdown(cover_html, unsafe_allow_html=True)
 
-            # [맺음말 생성]
+            # 2. 모든 데이터 준비 (기존 변수들을 그대로 활용)
             closing_html = html_views.get_closing_html(name)
             
-            # [AI 통변 생성]
+            # AI 통변 생성 (curr_y 오류 해결)
             ai_output_html = "AI 데이터 없음"
             try:
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
-                    curr_y=dt_mod.datetime.now().year, # datetime 대신 dt_mod.datetime 사용
+                    curr_y=dt_mod.datetime.now().year, 
                     jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
                     shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
                 )
@@ -452,28 +452,19 @@ if st.session_state.get('app_running', False):
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류가 발생했습니다: {e}</div>"
+                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
 
-            # 2. 모든 변수가 준비되었으니 이제 합칩니다.
-            # (변수 누락 방지 처리)
-            final_content = (
-                str(intro_html) if 'intro_html' in locals() else "" +
-                str(table_html) if 'table_html' in locals() else "" +
-                str(master_bar_html) if 'master_bar_html' in locals() else "" +
-                str(un_html) if 'un_html' in locals() else "" +
-                str(se_html) if 'se_html' in locals() else "" +
-                str(wol_html) if 'wol_html' in locals() else "" +
-                str(ai_output_html) + 
-                str(closing_html)
+            # 3. 변수 통합 (안전하게 기존 변수들을 str로 감싸기)
+            # 박사님의 기존 변수(intro, table 등)가 이미 위에서 정의되어 있다고 가정합니다.
+            final_report = (
+                str(intro_html) + str(table_html) + str(master_bar_html) + 
+                str(un_html) + str(se_html) + str(wol_html) + 
+                str(ai_output_html) + str(closing_html)
             )
             
-            # 3. 마지막에 단 한 번만 렌더링합니다.
+            # 4. 최종 렌더링 (여기서 전체를 박스에 담아 한 번에 출력)
             importlib.reload(html_views)
-            
-            # 표지 출력
-            st.markdown(cover_html, unsafe_allow_html=True)
-            # 본문 출력
-            st.markdown(html_views.get_final_report_box(final_content), unsafe_allow_html=True)
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
