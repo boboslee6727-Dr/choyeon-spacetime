@@ -12,6 +12,7 @@ import json
 import math
 import pytz
 import html_views  # 👈 HTML 보관소 불러오기
+import importlib   # 👈 이것을 삽입하십시오
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
@@ -431,6 +432,9 @@ if st.session_state.get('app_running', False):
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
+
+            importlib.reload(html_views) # 추가로 삽인
+
             st.markdown(cover_html, unsafe_allow_html=True)
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
