@@ -468,30 +468,55 @@ if st.session_state.get('app_running', False):
             # 3. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, 
-                    disp_name=name,     
-                    gender=gender,      
-                    u_gender=gender,    
-                    u_age=age,          
-                    u_marital=u_marital, # 👈 [추가] 혼인 여부(u_marital)를 추가했습니다!
-                    ilgan=d_pillar[0], 
-                    ilju=d_pillar, 
-                    wolryeong=m_pillar, 
-                    curr_y=dt_mod.datetime.now().year, 
-                    curr_m=dt_mod.datetime.now().month, 
-                    jijanggan_info="엔진 데이터 연동", 
-                    missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", 
-                    vault_info="엔진 데이터 연동"
-                )
-                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
+                # [홍집사의 방패] 템플릿에 누락된 변수가 있어도 에러를 막아주는 특수 딕셔너리
+                class SafeDict(dict):
+                    def __missing__(self, key):
+                        return f"(데이터 연동 중: {key})" 
+
+                # 프롬프트에 들어갈 변수들을 최대한 앱의 실제 데이터와 매칭합니다.
+                safe_data = SafeDict({
+                    # 시스템 헤더
+                    'curr_y': curr_year,
+                    'curr_m': curr_m,
+                    'disp_name': name,
+                    'u_age': age,
+                    'u_gender': gender,
+                    'u_marital': u_marital,
+                    'age_prompt': f"{age}세",
+                    'gender_prompt': gender,
+                    'yukchin_rule': "기본 육친 적용", 
+                    
+                    # 사주 원국 팩트
+                    'ys': ys, 'yb': yb,
+                    'ms': ms, 'mb': mb,
+                    'ds': ds, 'db': db,
+                    'hs': hs, 'hb': hb,
+                    
+                    # 디테일 분석 팩트
+                    'gyukgook_detail': "엔진 데이터 연동", # (추후 엔진에 격국 함수가 있다면 연결하십시오)
+                    'gongmang_actual': f"년지기준: {n_gong}, 일지기준: {i_gong}",
+                    'shinsal_str': "엔진 데이터 연동", 
+                    's12_str': "엔진 데이터 연동", 
+                    'won_guk_vaults_str': "엔진 데이터 연동"
+                })
                 
+                # 방패(SafeDict)를 적용하여 프롬프트를 포맷팅합니다.
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format_map(safe_data)
+                
+                # HTML 생성 방지 지시어 추가
+                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오. 🚨 HTML 태그는 일절 사용하지 말고 순수 텍스트와 줄바꿈 기호로만 서술하십시오."
+                
+                # Gemini 엔진 호출
                 ai_result = call_gemini_api(fact_sheet)
+                
+                # 결과 정제 (서두의 불필요한 인사말 제거)
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+                
+                # HTML 박스 생성
                 ai_output_html = html_views.get_ai_report_box(ai_result)
+                
             except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
+                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>
 
             # 4. 변수 통합 (위에서 계산된 모든 HTML 조각들을 하나로 합칩니다)
             final_report = (
@@ -512,11 +537,34 @@ if st.session_state.get('app_running', False):
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
         st.markdown("---")
-        if not other_report: st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: st.info("타 감명서 비교 로직이 작동합니다.")
+        if not other_report: 
+            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+        else: 
+            with st.spinner("⏳ [타 감명서 비교 분석 중....]"):
+                try:
+                    # [홍집사의 방패] 적용
+                    class SafeDict(dict):
+                        def __missing__(self, key):
+                            return f"(데이터 연동: {key})"
+                            
+                    safe_data = SafeDict({
+                        'other_report': other_report,
+                        'ilju': st.session_state.get('u_rd', '일주 확인 불가'),
+                        'wolryeong': st.session_state.get('u_rm', '월령 확인 불가'),
+                        'saju_structure': "사이드바 입력 생년월일 기준"
+                    })
+                    
+                    fact_sheet = prompts.COMPARE_PROMPT.format_map(safe_data)
+                    ai_result = call_gemini_api(fact_sheet)
+                    ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+                    
+                    # 렌더링
+                    st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"🚨 타 감명서 비교 분석 중 오류 발생: {e}")
 
     elif u_product == "3. 궁합 및 출산 택일":
-        # [수정] 사이드바 위젯의 key(s_y_input 등)로부터 직접 값을 가져옵니다.
+        # 사이드바 위젯의 key로부터 직접 값을 가져옵니다.
         s_y = st.session_state.get('s_y_input', 1980)
         s_m = st.session_state.get('s_m_input', 1)
         s_d = st.session_state.get('s_d_input', 1)
@@ -528,19 +576,59 @@ if st.session_state.get('app_running', False):
         f_t = st.session_state.get('p_t_input', "시간 모름")
 
         if st.session_state.get('app_running'):
-            with st.spinner("⏳궁합 풀이 데이터 연산 중..."):
-                # 이제 변수가 확실히 정의되었으므로 엔진 호출
+            with st.spinner("⏳ [궁합 풀이 데이터 연산 중...]"):
                 res = engine.get_gunghap_data(int(s_y), int(s_m), int(s_d), s_t, int(f_y), int(f_m), int(f_d), f_t)
-                # 3. 표지 출력
-                st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
                 
-                # 4. 남명/여명 박스 출력
-                # 엔진에서 받은 m_table(11개 데이터)과 m_master 데이터를 그대로 뷰에 던집니다.
+                # 표지 출력 (앱 아이콘 변수가 없으므로 기본값 👤 사용)
+                today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                st.markdown(html_views.get_gunghap_cover(APP_VERSION, "👤", name, gender, u_marital, "👤", f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
+                
+                # 남명/여명 사주 원국 박스 출력
                 st.markdown(html_views.get_gunghap_person_box(html_views.get_saju_table(*res['m_table']), html_views.get_master_bar(*res['m_master'])), unsafe_allow_html=True)
                 st.markdown(html_views.get_gunghap_person_box(html_views.get_saju_table(*res['w_table']), html_views.get_master_bar(*res['w_master']), add_page_break=True), unsafe_allow_html=True)
 
-                # 5. 통변 및 맺음말
-                st.markdown(html_views.get_ai_report_box(engine.get_gunghap_report(res)), unsafe_allow_html=True)
+                # 5. 통변 및 맺음말 (SafeDict 방패 적용)
+                try:
+                    class SafeDict(dict):
+                        def __missing__(self, key):
+                            return f"(엔진 데이터 연동 중: {key})"
+                            
+                    # 남녀 구분 나이 계산 로직
+                    curr_year = dt_mod.datetime.now().year
+                    if gender == '남성':
+                        m_n, m_a = name, curr_year - int(s_y) + 1
+                        f_n, f_a = f_name, curr_year - int(f_y) + 1
+                    else:
+                        m_n, m_a = f_name, curr_year - int(f_y) + 1
+                        f_n, f_a = name, curr_year - int(s_y) + 1
+
+                    # 엔진 데이터(res)를 기본으로 넣고, 부족한 팩트들을 덮어씌웁니다.
+                    safe_data = SafeDict(res if isinstance(res, dict) else {})
+                    safe_data.update({
+                        'm_name': m_n, 'm_age': m_a,
+                        'f_name': f_n, 'f_age': f_a,
+                        'db_header': "[초연 시공명리 궁합 정밀 데이터]",
+                        'ai_saju_mapping': "사주 구조 연동 완료",
+                        'yukchin_rule': "초연 명리 육친법 적용",
+                        'curr_y': curr_year,
+                        'curr_m': dt_mod.datetime.now().month,
+                    })
+                    
+                    # 궁합 프롬프트 호출
+                    fact_sheet = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_data)
+                    ai_result = call_gemini_api(fact_sheet)
+                    
+                    # 시스템 마커([MALE_START] 등)를 화면에서 숨기기 위해 지웁니다.
+                    markers_to_remove = ["[MALE_START]", "[MALE_END]", "[FEMALE_START]", "[FEMALE_END]", "[GUNGHAP_START]", "[GUNGHAP_END]", "[COUPLE_DAEWUN_TABLES_HERE]"]
+                    for marker in markers_to_remove:
+                        ai_result = ai_result.replace(marker, "")
+                    
+                    # 결과 렌더링
+                    st.markdown(html_views.get_ai_report_box(ai_result.strip()), unsafe_allow_html=True)
+                except Exception as e:
+                    st.markdown(f"<div style='color:red; text-align:center;'>🚨 궁합 통변 중 오류: {e}</div>", unsafe_allow_html=True)
+                
+                # 맺음말
                 st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
         else:
             st.info("👈 사이드바에서 정보를 입력하신 후, [초연 시공명리 풀이 가동] 버튼을 눌러주세요.")
