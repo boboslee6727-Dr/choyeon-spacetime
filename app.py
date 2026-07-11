@@ -20,17 +20,36 @@ import importlib   # 👈 이것을 삽입하십시오
 APP_VERSION = "ver 60.0"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# CSS 적용 (html_views에서 호출)
-st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
-
-# 👇 [수정] 나눔명조체 강제 적용 CSS 추가
+# 👇 [수정] 나눔고딕(사이드바) & 나눔명조(메인화면) 분리 및 아이콘 깨짐 방지 CSS
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
-* { font-family: 'Nanum Myeongjo', serif !important; }
+
+/* 1. 사이드바는 나눔고딕으로 지정 (글자 겹침 방지) */
+div[data-testid="stSidebar"] div, 
+div[data-testid="stSidebar"] span, 
+div[data-testid="stSidebar"] label,
+div[data-testid="stSidebar"] input,
+div[data-testid="stSidebar"] select {
+    font-family: 'Nanum Gothic', sans-serif !important;
+}
+
+/* 2. 메인 화면(결과 출력부)은 나눔명조로 지정 */
+div[data-testid="stMainBlockContainer"] div, 
+div[data-testid="stMainBlockContainer"] span, 
+div[data-testid="stMainBlockContainer"] p,
+div[data-testid="stMainBlockContainer"] td,
+div[data-testid="stMainBlockContainer"] th {
+    font-family: 'Nanum Myeongjo', serif;
+}
+
+/* 3. Streamlit 고유 아이콘 보호 (>> 깨짐 방지) */
+svg, .st-icon, material-icons {
+    font-family: inherit !important;
+}
 </style>
 """, unsafe_allow_html=True)
-
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
     "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
     "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", 
@@ -466,6 +485,7 @@ if st.session_state.get('app_running', False):
 
             # 2. 맺음말 준비
             closing_html = html_views.get_closing_html(name)
+            closing_html = closing_html.replace("</div>", "")
             
             # 3. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
