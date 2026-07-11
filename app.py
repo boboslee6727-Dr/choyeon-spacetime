@@ -472,8 +472,9 @@ if st.session_state.get('app_running', False):
                     name=name, 
                     disp_name=name,     
                     gender=gender,      
-                    u_gender=gender,    # 👈 [추가] 템플릿이 요구하는 'u_gender'를 추가했습니다!
+                    u_gender=gender,    
                     u_age=age,          
+                    u_marital=u_marital, # 👈 [추가] 혼인 여부(u_marital)를 추가했습니다!
                     ilgan=d_pillar[0], 
                     ilju=d_pillar, 
                     wolryeong=m_pillar, 
