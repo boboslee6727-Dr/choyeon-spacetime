@@ -516,7 +516,7 @@ if st.session_state.get('app_running', False):
                 ai_output_html = html_views.get_ai_report_box(ai_result)
                 
             except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>
+                ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
 
             # 4. 변수 통합 (위에서 계산된 모든 HTML 조각들을 하나로 합칩니다)
             final_report = (
