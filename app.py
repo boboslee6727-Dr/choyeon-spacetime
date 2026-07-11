@@ -443,7 +443,7 @@ if st.session_state.get('app_running', False):
                 se_content += html_views.get_un_cell(f"{ty}년<br>({tage}세)", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             se_html = html_views.get_un_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
 
-            # ---------------- [월운 연산 (복구됨)] ----------------
+            # ---------------- [월운 연산] ----------------
             wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
             wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
             wol_content = ""
@@ -453,24 +453,26 @@ if st.session_state.get('app_running', False):
                 b_left = "1px solid #ccc" if i != 11 else "none"
                 wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
-            # 1. 커버 출력 (이건 한 번만 출력되도록 유지)
+
+            # ---------------- [화면 렌더링 및 AI 생성] ----------------
+            
+            # 1. 커버 출력 (가장 먼저 딱 한 번만 출력)
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
             st.markdown(cover_html, unsafe_allow_html=True)
 
-            # 2. 모든 데이터 준비 (기존 변수들을 그대로 활용)
+            # 2. 맺음말 준비
             closing_html = html_views.get_closing_html(name)
             
-            # 2. AI 통변 생성
+            # 3. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             try:
-                # 사주 데이터가 포함된 프롬프트 생성 (u_age 추가)
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, 
-                    disp_name=name, 
+                    disp_name=name,     # 추가된 부분
                     gender=gender, 
-                    u_age=age,          # 👈 [추가] 이 줄을 추가해 주십시오!
+                    u_age=age,          # 추가된 부분
                     ilgan=d_pillar[0], 
                     ilju=d_pillar, 
                     wolryeong=m_pillar, 
@@ -488,6 +490,22 @@ if st.session_state.get('app_running', False):
                 ai_output_html = html_views.get_ai_report_box(ai_result)
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
+
+            # 4. 변수 통합 (위에서 계산된 모든 HTML 조각들을 하나로 합칩니다)
+            final_report = (
+                str(intro_html) + 
+                str(table_html) + 
+                str(master_bar_html) + 
+                str(un_html) + 
+                str(se_html) + 
+                str(wol_html) + 
+                str(ai_output_html) + 
+                str(closing_html)
+            )
+            
+            # 5. 최종 렌더링 (합쳐진 박스를 화면에 출력)
+            importlib.reload(html_views)
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
