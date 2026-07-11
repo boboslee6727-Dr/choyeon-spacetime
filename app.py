@@ -436,8 +436,28 @@ if st.session_state.get('app_running', False):
             importlib.reload(html_views) # 추가로 삽인
 
             st.markdown(cover_html, unsafe_allow_html=True)
+            # 4. [변수 통합] - 변수가 정의되지 않았을 경우를 대비해 None을 방어합니다.
+            if 'intro_html' not in locals(): intro_html = ""
+            if 'table_html' not in locals(): table_html = ""
+            if 'master_bar_html' not in locals(): master_bar_html = ""
+            if 'un_html' not in locals(): un_html = ""
+            if 'se_html' not in locals(): se_html = ""
+            if 'wol_html' not in locals(): wol_html = ""
+            if 'ai_output_html' not in locals(): ai_output_html = "AI 데이터 생성 안됨"
+            if 'closing_html' not in locals(): closing_html = ""
+            
+            final_report = (
+                str(intro_html) + str(table_html) + str(master_bar_html) + 
+                str(un_html) + str(se_html) + str(wol_html) + 
+                str(ai_output_html) + str(closing_html)
+            )
+            
+            # [디버깅] final_report에 값이 들어있는지 확인
+            st.write(f"디버깅: final_report 길이={len(final_report)}") 
+            
+            # 5. 최종 렌더링
+            importlib.reload(html_views)
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
             # 1. 맺음말 생성
             closing_html = html_views.get_closing_html(name)
             
