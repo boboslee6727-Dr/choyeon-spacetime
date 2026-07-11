@@ -23,6 +23,14 @@ st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", la
 # CSS 적용 (html_views에서 호출)
 st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
 
+# 👇 [수정] 나눔명조체 강제 적용 CSS 추가
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+* { font-family: 'Nanum Myeongjo', serif !important; }
+</style>
+""", unsafe_allow_html=True)
+
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
     "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
     "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", 
@@ -391,10 +399,20 @@ if st.session_state.get('app_running', False):
 
             # 대운 연산
             un_content = ""
+            ms_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ms, ms)
+            mb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(mb, mb)
+            c_idx = engine.GAN.index(ms_kor) if ms_kor in engine.GAN else 0
+            j_idx = engine.JI.index(mb_kor) if mb_kor in engine.JI else 0
+
             for i in range(10):
                 val = i*10+calc_d
-                c = engine.GAN[(engine.GAN.index(ms)+(i+1)*order_dir)%10] if ms in engine.GAN else "-"
-                j = engine.JI[(engine.JI.index(mb)+(i+1)*order_dir)%12] if mb in engine.JI else "-"
+                c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
+                j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
+                
+                # 한자로 변환
+                c = engine.K2H_GAN.get(c_hangul, c_hangul)
+                j = engine.K2H_JI.get(j_hangul, j_hangul)
+                
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
                 un_content += html_views.get_un_cell(f"{val}세", engine.get_ss(ds,c), c, get_oh_class(c), j, get_oh_class(j), engine.get_ss(ds,j), engine.get_unsung(ds,j), engine.get_12_shinsal(yb, j), bg_col, b_left)
@@ -402,8 +420,11 @@ if st.session_state.get('app_running', False):
 
             # 세운 연산
             cur_dw_idx = max(0, (age - calc_d) // 10)
-            dw_g_cur = engine.GAN[(engine.GAN.index(ms) + (cur_dw_idx+1)*order_dir)%10] if ms in engine.GAN else "-"
-            dw_j_cur = engine.JI[(engine.JI.index(mb) + (cur_dw_idx+1)*order_dir)%12] if mb in engine.JI else "-"
+            dw_g_cur_hangul = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
+            dw_j_cur_hangul = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
+            dw_g_cur = engine.K2H_GAN.get(dw_g_cur_hangul, dw_g_cur_hangul)
+            dw_j_cur = engine.K2H_JI.get(dw_j_cur_hangul, dw_j_cur_hangul)
+            
             current_daewun_age = cur_dw_idx * 10 + calc_d
             start_year = sol_y + current_daewun_age - 1
             se_content = ""
@@ -411,22 +432,16 @@ if st.session_state.get('app_running', False):
                 ty = start_year + i
                 tage = current_daewun_age + i
                 base = (ty - 1984) % 60
-                tc, tj = engine.GAN[base % 10], engine.JI[base % 12]
+                tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
+                
+                # 한자로 변환
+                tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
+                tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
+                
                 bg_col = "#E1F5FE" if ty == curr_year else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
                 se_content += html_views.get_un_cell(f"{ty}년<br>({tage}세)", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             se_html = html_views.get_un_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
-
-            # 월운 연산
-            wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
-            wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
-            wol_content = ""
-            for i in range(12):
-                tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
-                bg_col = "#E8F5E9" if tm == curr_m else "transparent"
-                b_left = "1px solid #ccc" if i != 11 else "none"
-                wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
-            wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
             # 1. 커버 출력 (이건 한 번만 출력되도록 유지)
             cover_html = html_views.get_personal_cover(
@@ -440,16 +455,19 @@ if st.session_state.get('app_running', False):
             # 2. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             try:
-                # 사주 데이터가 포함된 프롬프트 생성 (curr_y와 curr_m을 모두 포함)
+                # 사주 데이터가 포함된 프롬프트 생성
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
+                    name=name, 
+                    disp_name=name, # 👈 [추가] 이 줄을 반드시 넣어주십시오!
+                    gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
                     curr_y=dt_mod.datetime.now().year, 
-                    curr_m=dt_mod.datetime.now().month, # 추가된 부분
+                    curr_m=dt_mod.datetime.now().month, 
                     jijanggan_info="엔진 데이터 연동", 
                     missing_and_gongmang="엔진 데이터 연동", 
                     shinsal_info="엔진 데이터 연동", 
                     vault_info="엔진 데이터 연동"
                 )
+
                 fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
                 
                 ai_result = call_gemini_api(fact_sheet)
