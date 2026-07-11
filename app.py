@@ -427,82 +427,53 @@ if st.session_state.get('app_running', False):
                 b_left = "1px solid #ccc" if i != 11 else "none"
                 wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
-
-            # [수정] 개인 사주용 커버 함수 호출로 변경 (궁합 커버 함수 아님!)
+# 1. 먼저 모든 데이터를 준비합니다 (순서 중요!)
+            
+            # [커버 데이터 준비]
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
 
-            importlib.reload(html_views) # 추가로 삽인
-
-            st.markdown(cover_html, unsafe_allow_html=True)
-            # 4. [변수 통합] - 변수가 정의되지 않았을 경우를 대비해 None을 방어합니다.
-            if 'intro_html' not in locals(): intro_html = ""
-            if 'table_html' not in locals(): table_html = ""
-            if 'master_bar_html' not in locals(): master_bar_html = ""
-            if 'un_html' not in locals(): un_html = ""
-            if 'se_html' not in locals(): se_html = ""
-            if 'wol_html' not in locals(): wol_html = ""
-            if 'ai_output_html' not in locals(): ai_output_html = "AI 데이터 생성 안됨"
-            if 'closing_html' not in locals(): closing_html = ""
-            
-            final_report = (
-                str(intro_html) + str(table_html) + str(master_bar_html) + 
-                str(un_html) + str(se_html) + str(wol_html) + 
-                str(ai_output_html) + str(closing_html)
-            )
-            
-            # [디버깅] final_report에 값이 들어있는지 확인
-            st.write(f"디버깅: final_report 길이={len(final_report)}") 
-            
-            # 5. 최종 렌더링
-            importlib.reload(html_views)
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-            # 1. 맺음말 생성
+            # [맺음말 생성]
             closing_html = html_views.get_closing_html(name)
             
-            # 2. AI 통변 생성
+            # [AI 통변 생성]
             ai_output_html = "AI 데이터 없음"
             try:
-                # 사주 데이터가 포함된 프롬프트 생성
                 fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
                     name=name, gender=gender, ilgan=d_pillar[0], ilju=d_pillar, wolryeong=m_pillar, 
+                    curr_y=dt_mod.datetime.now().year, # datetime 대신 dt_mod.datetime 사용
                     jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", 
                     shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
                 )
                 fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
                 
-                # Gemini API 호출
                 ai_result = call_gemini_api(fact_sheet)
-                
-                # 통변 결과 정제
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
-                
-                # HTML 박스 생성
                 ai_output_html = html_views.get_ai_report_box(ai_result)
-                
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류가 발생했습니다: {e}</div>"
 
-            # 3. [디버깅] 각 변수 상태 확인
-            st.write("--- [홍집사의 디버깅 로그] ---")
-            st.write(f"현재 렌더링 단계: 변수 통합 직전")
-            st.write(f"AI 통변 결과 상태: {'정상' if len(ai_output_html) > 50 else '오류 혹은 짧음'}")
-            
-            # 4. [변수 통합]
-            final_report = (
-                str(intro_html) + 
-                str(table_html) + 
-                str(master_bar_html) + 
-                str(un_html) + 
-                str(se_html) + 
-                str(wol_html) + 
+            # 2. 모든 변수가 준비되었으니 이제 합칩니다.
+            # (변수 누락 방지 처리)
+            final_content = (
+                str(intro_html) if 'intro_html' in locals() else "" +
+                str(table_html) if 'table_html' in locals() else "" +
+                str(master_bar_html) if 'master_bar_html' in locals() else "" +
+                str(un_html) if 'un_html' in locals() else "" +
+                str(se_html) if 'se_html' in locals() else "" +
+                str(wol_html) if 'wol_html' in locals() else "" +
                 str(ai_output_html) + 
                 str(closing_html)
             )
             
-            # 5. 최종 렌더링
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+            # 3. 마지막에 단 한 번만 렌더링합니다.
+            importlib.reload(html_views)
+            
+            # 표지 출력
+            st.markdown(cover_html, unsafe_allow_html=True)
+            # 본문 출력
+            st.markdown(html_views.get_final_report_box(final_content), unsafe_allow_html=True)
 
     elif u_product == "2. 타 감명서 비교":
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
