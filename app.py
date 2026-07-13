@@ -48,6 +48,25 @@ div[data-testid="stMainBlockContainer"] th {
 svg, .st-icon, material-icons {
     font-family: inherit !important;
 }
+
+/* 4. 오행 바탕색 절대 방어 */
+.color-목 { background-color: #E8F5E9 !important; }
+.color-화 { background-color: #FFEBEE !important; }
+.color-토 { background-color: #FFF9C4 !important; }
+.color-금 { background-color: #FAFAFA !important; }
+.color-수 { background-color: #ECEFF1 !important; }
+
+/* 5. 사주 원국 표 최상단 짙은 남색 바탕색 복구 */
+.top-header-cell, .top-header-cell td {
+    background-color: #1A237E !important;
+    color: #FFFFFF !important;
+}
+
+/* 6. 사주 원국 표 전체 밀착 최적화 (인쇄 페이지 절단 방지) */
+div[data-testid="stMainBlockContainer"] table td {
+    padding: 2px 0px !important;
+    line-height: 1.2 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
@@ -410,7 +429,7 @@ if st.session_state.get('app_running', False):
             gan_row = f"{td_bg(hs)}{hs}</td>{td_bg(ds)}{ds}</td>{td_bg(ms)}{ms}</td>{td_bg(ys)}{ys}</td>"
             ji_row = f"{td_bg(hb)}{hb}</td>{td_bg(db)}{db}</td>{td_bg(mb)}{mb}</td>{td_bg(yb)}{yb}</td>"
             ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,db)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,yb)}</td>"
-            jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+            jijanggan = "".join([f"<td style='padding:5px 0; border:1px solid #444; vertical-align:top; line-height:1.5;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
             unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
             shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
             gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
