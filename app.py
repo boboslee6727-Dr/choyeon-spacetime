@@ -256,10 +256,12 @@ with st.sidebar:
     # 실행 및 인쇄 버튼
     # ---------------------------------------------------------
     st.markdown("---")
-    btn_run = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
+    if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
+        # 버튼을 누르면 '실행 중'이라는 상태를 시스템에 각인시킵니다.
+        st.session_state['app_running'] = True
+        
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
-
 # ==============================================================================
 # 3. 메인 화면 출력부
 # ==============================================================================
