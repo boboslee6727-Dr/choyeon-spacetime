@@ -603,52 +603,33 @@ if st.session_state.get('app_running', False):
                 # Gemini 엔진 호출
                 ai_result = call_gemini_api(fact_sheet)
                 
-                # 🧹 [홍집사의 청소기] AI가 멋대로 덧붙인 코드 블록 기호(```)를 강제로 뜯어냅니다.
-                ai_result = ai_result.replace("```html", "").replace("```", "").strip()
-                
-                # 👇 [수정완료] DB 연동 시 에러(str object has no attribute get) 원천 차단
-                w_key, i_key = ms + mb, ds + db
-                
-                # 월령 값 안전 추출 로직
-                w_val = f"{w_key}월의 기운"
-                if isinstance(db, dict):
-                    if "월령" in db and isinstance(db["월령"], dict):
-                        w_val = db["월령"].get(w_key, w_val)
-                    elif "월주" in db and isinstance(db["월주"], dict):
-                        w_val = db["월주"].get(w_key, w_val)
-                    else:
-                        # 평면 구조일 경우를 대비한 2차 방어망
-                        w_val = db.get(f"{w_key}월", db.get(w_key, w_val))
-                
-                # 일주 값 안전 추출 로직
-                i_val = f"{i_key}일주의 성품"
-                if isinstance(db, dict):
-                    if "일주" in db and isinstance(db["일주"], dict):
-                        i_val = db["일주"].get(i_key, i_val)
-                    else:
-                        i_val = db.get(f"{i_key}일", db.get(i_key, i_val))
-                
-                # 골든 텍스트(자의형상) HTML 조립
+                # 🧹 [기존 로직 복구] 불필요한 공백 제거 후 DB에서 값을 정확히 호출
+                w_key = f"{ms}{mb}".strip()
+                i_key = f"{ds}{db}".strip()
+
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+
+                # 박사님의 Ver 48.7 순정 골든 텍스트
                 choyeon_golden_text = f"""
-<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top:0;'>1. 사주팔자 구조 분석</h3>
-<div class='content-box-loose' style='margin-bottom: 20px;'>
-    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>
-        <p style='text-indent: 15px; margin-bottom: 5px;'>
-            <b>{name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
-        </p>
-    </div>
+<div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+    <p style='text-indent: 15px; margin-bottom: 5px;'>
+        <b>{name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
+    </p>
 </div>
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
+<div class='content-box-loose'>
 """
-                # 프롬프트 마커를 완성된 HTML로 치환
+                # [CHOYEON_GOLDEN_TEXT_HERE] 마커 치환 또는 순차 결합
                 if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_result:
                     ai_result = ai_result.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                 else:
                     ai_result = choyeon_golden_text + ai_result
 
-                # 결과 정제 (서두의 불필요한 인사말 제거)
+                # 결과 정제
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
-                
-                # 🧹 [홍집사의 줄바꿈] 엔터(줄바꿈) 기호를 HTML용 줄바꿈 태그(<br>)로 바꿔줍니다.
                 ai_result = ai_result.replace("\n", "<br>")
                 
                 # HTML 박스 생성
@@ -657,7 +638,7 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
 
-            # 4. 변수 통합 (위에서 계산된 모든 HTML 조각들을 하나로 합칩니다)
+            # 4. 변수 통합
             final_report = (
                 str(intro_html) + 
                 str(table_html) + 
@@ -669,7 +650,7 @@ if st.session_state.get('app_running', False):
                 str(closing_html)
             )
             
-            # 5. 최종 렌더링 (합쳐진 박스를 화면에 출력)
+            # 5. 최종 렌더링
             importlib.reload(html_views)
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
