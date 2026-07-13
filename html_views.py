@@ -74,26 +74,27 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
+    # CSS: padding을 0~2px로 줄여 밀착시킵니다.
     return f"""
-    <div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
-    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-        <tr class='top-header-cell'>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
+    <div style='text-align:center; margin-bottom:5px;'>{info_h}</div>
+    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; font-size:13px;'>
+        <tr class='top-header-cell' style='background-color:#1A237E !important;'>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; padding:2px;'>구분</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; padding:2px;'>시주</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; padding:2px;'>일주</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; padding:2px;'>월주</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900; padding:2px;'>년주</td>
         </tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{gan_rel}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td>{gan_ss}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{gan_row}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{ji_row}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td>{ji_ss}</tr>
-        <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{jijanggan}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>합충</td>{gan_rel}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>십성</td>{gan_ss}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; padding:2px;'>천간</td>{gan_row}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; padding:2px;'>지지</td>{ji_row}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>십성</td>{ji_ss}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>장간</td>{jijanggan}</tr>
         {ji_rel_rows}
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>{unsung}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>{shinsal}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{gen_shinsal}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>운성</td>{unsung}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>신살</td>{shinsal}</tr>
+        <tr style='line-height:1.1;'><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; padding:2px;'>일반</td>{gen_shinsal}</tr>
     </table>
     """
 
