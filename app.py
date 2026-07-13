@@ -606,11 +606,29 @@ if st.session_state.get('app_running', False):
                 # 🧹 [홍집사의 청소기] AI가 멋대로 덧붙인 코드 블록 기호(```)를 강제로 뜯어냅니다.
                 ai_result = ai_result.replace("```html", "").replace("```", "").strip()
                 
-                # 👇 [수정완료] DB에서 자의형상 추출 및 GOLDEN TEXT 생성 후 치환
+                # 👇 [수정완료] DB 연동 시 에러(str object has no attribute get) 원천 차단
                 w_key, i_key = ms + mb, ds + db
-                w_val = db.get("월주", {}).get(w_key, db.get("월령", {}).get(w_key, f"{w_key}월의 기운"))
-                i_val = db.get("일주", {}).get(i_key, f"{i_key}일주의 성품")
                 
+                # 월령 값 안전 추출 로직
+                w_val = f"{w_key}월의 기운"
+                if isinstance(db, dict):
+                    if "월령" in db and isinstance(db["월령"], dict):
+                        w_val = db["월령"].get(w_key, w_val)
+                    elif "월주" in db and isinstance(db["월주"], dict):
+                        w_val = db["월주"].get(w_key, w_val)
+                    else:
+                        # 평면 구조일 경우를 대비한 2차 방어망
+                        w_val = db.get(f"{w_key}월", db.get(w_key, w_val))
+                
+                # 일주 값 안전 추출 로직
+                i_val = f"{i_key}일주의 성품"
+                if isinstance(db, dict):
+                    if "일주" in db and isinstance(db["일주"], dict):
+                        i_val = db["일주"].get(i_key, i_val)
+                    else:
+                        i_val = db.get(f"{i_key}일", db.get(i_key, i_val))
+                
+                # 골든 텍스트(자의형상) HTML 조립
                 choyeon_golden_text = f"""
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top:0;'>1. 사주팔자 구조 분석</h3>
 <div class='content-box-loose' style='margin-bottom: 20px;'>
@@ -625,7 +643,6 @@ if st.session_state.get('app_running', False):
                 if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_result:
                     ai_result = ai_result.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
                 else:
-                    # AI가 마커를 빼먹었을 경우를 대비한 안전망
                     ai_result = choyeon_golden_text + ai_result
 
                 # 결과 정제 (서두의 불필요한 인사말 제거)
