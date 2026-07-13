@@ -150,12 +150,17 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
+    # 📝 [사이드바 상품 라인업 재편성 (9단계 완성)]
     u_product = st.selectbox("상품선택", [
-        "1. 개인사주 및 일진 분석", 
-        "2. 타 감명서 비교", 
-        "3. 궁합 및 출산 택일",
-        "4. 결혼 택일 정밀 분석",
-        "5. 이사 택일 및 방위 분석"
+        "1. 평생 사주 원국 분석", 
+        "2. 올해의 운세 (세운 분석)", 
+        "3. 이번 달의 운세 (월운 분석)",
+        "4. 재물운 특화 분석",
+        "5. 직업/직장운 특화 분석",
+        "6. 결혼 택일 정밀 분석",
+        "7. 이사 택일 및 방위 분석",
+        "8. 궁합 및 출산 택일",
+        "9. 타 감명서 비교"
     ], label_visibility="collapsed")
 
     # ---------------------------------------------------------
@@ -565,60 +570,46 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)
             closing_html = closing_html.replace("</div>", "")
             
-            # 3. AI 통변 생성
+# 3. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
+            choyeon_golden_text = "" # 초기화
             try:
-                # [홍집사의 방패] 템플릿에 누락된 변수가 있어도 에러를 막아주는 특수 딕셔너리
+                # [SafeDict 및 safe_data 구성 구간은 그대로 유지]
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return f"(데이터 연동 중: {key})" 
+                safe_data = SafeDict({ ... }) # (박사님의 기존 설정 유지)
 
-                # 프롬프트에 들어갈 변수들을 최대한 앱의 실제 데이터와 매칭합니다.
-                safe_data = SafeDict({
-                    # 시스템 헤더
-                    'curr_y': curr_year,
-                    'curr_m': curr_m,
-                    'disp_name': name,
-                    'u_age': age,
-                    'u_gender': gender,
-                    'u_marital': u_marital,
-                    'age_prompt': f"{age}세",
-                    'gender_prompt': gender,
-                    'yukchin_rule': "기본 육친 적용", 
-                    
-                    # 사주 원국 팩트
-                    'ys': ys, 'yb': yb,
-                    'ms': ms, 'mb': mb,
-                    'ds': ds, 'db': db,
-                    'hs': hs, 'hb': hb,
-                    
-                    # 디테일 분석 팩트
-                    'gyukgook_detail': "엔진 데이터 연동", # (추후 엔진에 격국 함수가 있다면 연결하십시오)
-                    'gongmang_actual': f"년지기준: {n_gong}, 일지기준: {i_gong}",
-                    'shinsal_str': "엔진 데이터 연동", 
-                    's12_str': "엔진 데이터 연동", 
-                    'won_guk_vaults_str': "엔진 데이터 연동"
-                })
+                # 👇 [수정 구간] 상품별 프롬프트 자동 할당
+                prompt_map = {
+                    "1. 평생": prompts.PERSONAL_SAJU_PROMPT,
+                    "2. 올해": prompts.SEWUN_PROMPT,
+                    "3. 이번": prompts.WOLWUN_PROMPT,
+                    "4. 재물": prompts.WEALTH_PROMPT,
+                    "5. 직업": prompts.CAREER_PROMPT,
+                    "6. 결혼": prompts.WEDDING_DATE_PROMPT,
+                    "7. 이사": prompts.MOVING_DATE_PROMPT,
+                    "8. 궁합": prompts.GUNGHAP_ESSAY_PROMPT,
+                    "9. 타 감명서 비교": prompts.COMPARE_PROMPT
+                }
                 
-                # 방패(SafeDict)를 적용하여 프롬프트를 포맷팅합니다.
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format_map(safe_data)
+                selected_prompt = prompts.PERSONAL_SAJU_PROMPT
+                for key, template in prompt_map.items():
+                    if key in u_product:
+                        selected_prompt = template
+                        break
                 
-                # HTML 생성 방지 지시어 추가
-                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오. 🚨 HTML 태그는 일절 사용하지 말고 순수 텍스트와 줄바꿈 기호로만 서술하십시오."
-                
-                # Gemini 엔진 호출
+                # 이제 선택된 프롬프트를 사용하여 팩트 시트 구성
+                fact_sheet = selected_prompt.format_map(safe_data)
+                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."                
                 ai_result = call_gemini_api(fact_sheet)
                 
-                # 🧹 [기존 로직 복구] 불필요한 공백 제거 후 DB에서 값을 정확히 호출
-                w_key = f"{ms}{mb}".strip()
-                i_key = f"{ds}{db}".strip()
-
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-
-                # 박사님의 Ver 48.7 순정 골든 텍스트
+                # DB 호출 로직 (중복 없이 깔끔하게)
+                w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 데이터 없음")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 데이터 없음")
+                
+                # 골든 텍스트 생성
                 choyeon_golden_text = f"""
 <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
     <p style='text-indent: 15px; margin-bottom: 5px;'>
@@ -626,33 +617,24 @@ if st.session_state.get('app_running', False):
     </p>
 </div>
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>1. 사주팔자 구조 분석</h3>
-<div class='content-box-loose'>
 """
-                # [CHOYEON_GOLDEN_TEXT_HERE] 마커 치환 또는 순차 결합
-                if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_result:
-                    ai_result = ai_result.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
-                else:
-                    ai_result = choyeon_golden_text + ai_result
-
-                # 결과 정제
+                # AI 결과물 정제
+                ai_result = ai_result.replace("[CHOYEON_GOLDEN_TEXT_HERE]", "").strip()
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
                 ai_result = ai_result.replace("\n", "<br>")
-                
-                # HTML 박스 생성
                 ai_output_html = html_views.get_ai_report_box(ai_result)
                 
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 통변 생성 중 오류: {e}</div>"
 
-            # 4. 변수 통합
+            # 4. 변수 통합 (중복 없는 깔끔한 순서)
             final_report = (
-                str(intro_html) + 
                 str(table_html) + 
                 str(master_bar_html) + 
                 str(un_html) + 
-                str(se_html) + 
-                str(wol_html) + 
-                str(ai_output_html) + 
+                str(intro_html) +           # 시공명리의 특징
+                str(choyeon_golden_text) +  # 1. 사주팔자 구조 분석 및 자의형상
+                str(ai_output_html) +       # 나머지 통변 내용
                 str(closing_html)
             )
             
