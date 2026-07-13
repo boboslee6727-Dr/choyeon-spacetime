@@ -680,20 +680,18 @@ if st.session_state.get('app_running', False):
                 db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
 
                 # 4. 공망 및 삼재 연산
-                try:
-                    n_gong_str = engine.calculate_gongmang(ys_kor, yb_kor)
-                    i_gong_str = engine.calculate_gongmang(ds_kor, db_kor)
-                except TypeError:
-                    n_gong_str = engine.calculate_gongmang(ys_kor + yb_kor)
-                    i_gong_str = engine.calculate_gongmang(ds_kor + db_kor)
-                    
-                n_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (n_gong_str if n_gong_str else "")])
-                i_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (i_gong_str if i_gong_str else "")])
-                if not n_gong: n_gong = "-"
-                if not i_gong: i_gong = "-"
+                n_gong = engine.calculate_gongmang(ys, yb)
+                i_gong = engine.calculate_gongmang(ds, db)
 
-                curr_base = (dt_mod.datetime.now().year - 1984) % 60
-                cur_samjae = engine.get_samjae(yb_kor, engine.JI[curr_base % 12])
+                if not n_gong or n_gong == "-": n_gong = "-"
+                if not i_gong or i_gong == "-": i_gong = "-"
+
+                # 삼재 연산 (현재 연도 지지를 한자로 변환하여 엔진에 전달)
+                curr_base = (curr_year - 1984) % 60
+                curr_y_ji_kor = engine.JI[curr_base % 12]
+                curr_y_ji_han = engine.K2H_JI.get(curr_y_ji_kor, curr_y_ji_kor)
+            
+                cur_samjae = engine.get_samjae(yb, curr_y_ji_han)
                 samjae_color = "#1A237E" if cur_samjae != "해당 없음" else "#2E7D32"
 
                 # 5. 대운수 계산
