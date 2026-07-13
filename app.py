@@ -303,7 +303,29 @@ if st.session_state.get('app_running', False):
             is_lunar_val = ("음력" in u_cal)
             is_leap_val = ("윤달" in u_cal)
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
-            t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
+            
+            # 👇 [수정완료] 엔진 배제 및 오서둔(五鼠遁) 직접 연산 로직 가동
+            ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0]) 
+            
+            if "모름" in b_time:
+                t_gan, t_ji = "", ""
+            else:
+                # 1. 시지(Hour Branch) 정확히 추출
+                match = re.search(r'\((.*?)\)', b_time)
+                raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
+                t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
+                
+                # 2. 오서둔 공식으로 시간(Hour Stem) 100% 산출
+                gan_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+                ji_arr = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                
+                if ds_hanja in gan_arr and t_ji in ji_arr:
+                    d_idx = gan_arr.index(ds_hanja)
+                    j_idx = ji_arr.index(t_ji)
+                    base_gan = (d_idx % 5) * 2  # 자(子)시의 천간 기준점
+                    t_gan = gan_arr[(base_gan + j_idx) % 10]
+                else:
+                    t_gan = ""
 
             gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
             jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
@@ -318,23 +340,16 @@ if st.session_state.get('app_running', False):
                 elif c in "庚辛申酉": counts['금']+=1
                 elif c in "壬癸亥子": counts['수']+=1
 
-            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 해','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(ds, '없음')
-            n_gong = engine.calculate_gongmang(ys, yb)
-            i_gong = engine.calculate_gongmang(ds, db)
-            cur_samjae = engine.get_samjae(yb, db)
-            samjae_color = "#1A237E" if cur_samjae != "해당 없음" else "#2E7D32"
-
-            base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
-            adj_mins = engine.get_total_time_adjustment(base_dt)
-            utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-            order_dir = 1 if (engine.GAN.index(ys)%2==0) == (gender=='남성') else -1
-            calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
-            direction_str = "순행" if order_dir == 1 else "역행"
-
-            sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
-            lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
-            time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
+            
+            # 👇 [수정완료 2] 공망 연산: 년주/일주를 한글로 변환 후 대입, 결과값을 한자(戌亥 등)로 치환
+            ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys)
+            yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(yb, yb)
+            
+            # 🚨 [여기가 누락되어 에러 발생! 아래 한 줄이 부활했습니다]
+            ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ds, ds)
+            db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
 
             # ---------------------------------------------------------
             # HTML 렌더링 호출부 (html_views.py 이용)
