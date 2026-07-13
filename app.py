@@ -50,11 +50,12 @@ svg, .st-icon, material-icons {
 }
 
 /* 4. 오행 바탕색 절대 방어 */
-.color-목 { background-color: #E8F5E9 !important; }
-.color-화 { background-color: #FFEBEE !important; }
-.color-토 { background-color: #FFF9C4 !important; }
-.color-금 { background-color: #FAFAFA !important; }
-.color-수 { background-color: #ECEFF1 !important; }
+.color-목 { background-color: #2E7D32 !important; color: white !important; }
+.color-화 { background-color: #C62828 !important; color: white !important; }
+.color-토 { background-color: #F9A825 !important; color: black !important; }
+.color-금 { background-color: #9E9E9E !important; color: white !important; }
+.color-수 { background-color: #212121 !important; color: white !important; }
+.color-무 { background-color: white !important; }
 
 /* 5. 사주 원국 표 최상단 짙은 남색 바탕색 복구 */
 .top-header-cell, .top-header-cell td {
