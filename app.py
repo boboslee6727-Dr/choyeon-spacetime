@@ -262,10 +262,12 @@ with st.sidebar:
         
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
+
 # ==============================================================================
 # 3. 메인 화면 출력부
 # ==============================================================================
-if btn_run:
+if st.session_state.get('app_running', False):
+    # (이하 기존 엔진 가동 로직)
     if u_product == "1. 개인사주 및 일진 분석":
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
