@@ -421,6 +421,10 @@ if st.session_state.get('app_running', False):
             # 👇 [수정완료 2] 공망 연산: 년주/일주를 한글로 변환 후 대입, 결과값을 한자(戌亥 등)로 치환
             ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys)
             yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(yb, yb)
+            
+            # 🚨 [여기가 누락되어 에러 발생! 아래 한 줄이 부활했습니다]
+            ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ds, ds)
+            
             db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
             
             try:
