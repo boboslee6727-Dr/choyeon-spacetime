@@ -438,41 +438,36 @@ if st.session_state.get('app_running', False):
                 
 
     # ---------------------------------------------------------
-    # [7번 상품] 연애 및 궁합운 특화 분석 
+    # [7번 상품] 연애 및 궁합운 특화 분석 (강제 렌더링 버전)
     # ---------------------------------------------------------
     elif "7. 연애" in u_product:
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 궁합 풀이 중..."):
             
-            app_p_icon, part_p_icon = ("♂️" if gender == "남성" else "♀️"), ("♂️" if f_gender == "남성" else "♀️")
+            # (1) 표지 강제 렌더링
+            app_p_icon = "♂️" if gender == "남성" else "♀️"
+            part_p_icon = "♂️" if f_gender == "남성" else "♀️"
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
             
-            # 1. 표지 (원본 방식대로 단독 렌더링)
-            st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
+            cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
+            st.markdown(cover_html, unsafe_allow_html=True)
 
             # ==========================================================
             # 🚨 [박사님 필수 작업 구간] 🚨
-            # 박사님께서 이전에 완성해 두셨던 '남명/여명 사주 연산 로직(100줄 가량)'을
-            # 반드시 이곳에 붙여넣어 주십시오! (m_table_html, w_table_html 등이 만들어지는 코드)
+            # 기존에 만드셨던 연산 코드(남명 m_..., 여명 w_...)를 여기에 넣으십시오
             # ==========================================================
             
-            # 2. 남명 / 여명 / 대운비교 / 맺음말 (원본 방식대로 각각 분리하여 렌더링)
-            
-            # (1) 남명 사주표 출력
-            if 'm_table_html' in locals() and 'm_master_html' in locals():
+            # (2) 남명/여명 박스 렌더링 (값이 존재할 때만 출력)
+            if 'm_table_html' in locals() and m_table_html:
                 st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
             
-            # (2) 여명 사주표 출력 (add_page_break 적용)
-            if 'w_table_html' in locals() and 'w_master_html' in locals():
+            if 'w_table_html' in locals() and w_table_html:
                 st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
             
-            # (3) 대운 흐름 비교표 출력
+            # (3) 대운 비교 및 클로징 렌더링
             if 'm_un_html' in locals() and 'w_un_html' in locals():
                 st.markdown(html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html), unsafe_allow_html=True)
-            
-            # (4) 궁합 맺음말 출력
-            st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [8~10번 상품] 결혼, 출산, 이사 택일
