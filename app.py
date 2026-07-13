@@ -243,7 +243,7 @@ with st.sidebar:
     f_t = "시간 모름"
     run_delivery_calc = False
 
-    i# 1. 개인사주 및 일진 분석 (기존 유지)
+    # 1. 개인사주 및 일진 분석 (기존 유지)
     if u_product == "1. 사주원국 및 대운 분석":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
 
