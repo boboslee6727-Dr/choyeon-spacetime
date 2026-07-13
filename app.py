@@ -372,7 +372,12 @@ if st.session_state.get('app_running', False):
             is_lunar_val = ("음력" in u_cal)
             is_leap_val = ("윤달" in u_cal)
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
-            t_gan, t_ji = engine.get_time_ganji(d_pillar[0], b_time)
+            
+            # 👇 [수정완료 1] 시주 연산: 일간을 한글로 변환하여 엔진에 대입 후, 결과를 다시 한자로 변환
+            ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(d_pillar[0], d_pillar[0])
+            t_gan_kor, t_ji_kor = engine.get_time_ganji(ds_kor, b_time)
+            t_gan = engine.K2H_GAN.get(t_gan_kor, t_gan_kor)
+            t_ji = engine.K2H_JI.get(t_ji_kor, t_ji_kor)
 
             gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
             jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
@@ -387,11 +392,31 @@ if st.session_state.get('app_running', False):
                 elif c in "庚辛申酉": counts['금']+=1
                 elif c in "壬癸亥子": counts['수']+=1
 
-            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 해','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(ds, '없음')
-            n_gong = engine.calculate_gongmang(ys, yb)
-            i_gong = engine.calculate_gongmang(ds, db)
-            cur_samjae = engine.get_samjae(yb, db)
+            
+            # 👇 [수정완료 2] 공망 연산: 년주/일주를 한글로 변환 후 대입, 결과값을 한자(戌亥 등)로 치환
+            ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys)
+            yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(yb, yb)
+            db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
+            
+            try:
+                n_gong_str = engine.calculate_gongmang(ys_kor, yb_kor)
+                i_gong_str = engine.calculate_gongmang(ds_kor, db_kor)
+            except TypeError:
+                n_gong_str = engine.calculate_gongmang(ys_kor + yb_kor)
+                i_gong_str = engine.calculate_gongmang(ds_kor + db_kor)
+                
+            n_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (n_gong_str if n_gong_str else "")])
+            i_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (i_gong_str if i_gong_str else "")])
+            if not n_gong: n_gong = "-"
+            if not i_gong: i_gong = "-"
+
+            # 👇 [수정완료 3] 삼재 연산: 현재 세운(올해)의 지지를 구해 삼재 엔진에 대입
+            curr_base = (curr_year - 1984) % 60
+            curr_y_ji_kor = engine.JI[curr_base % 12]
+            
+            cur_samjae = engine.get_samjae(yb_kor, curr_y_ji_kor)
             samjae_color = "#1A237E" if cur_samjae != "해당 없음" else "#2E7D32"
 
             base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
