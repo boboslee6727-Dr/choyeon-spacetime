@@ -606,6 +606,28 @@ if st.session_state.get('app_running', False):
                 # 🧹 [홍집사의 청소기] AI가 멋대로 덧붙인 코드 블록 기호(```)를 강제로 뜯어냅니다.
                 ai_result = ai_result.replace("```html", "").replace("```", "").strip()
                 
+                # 👇 [수정완료] DB에서 자의형상 추출 및 GOLDEN TEXT 생성 후 치환
+                w_key, i_key = ms + mb, ds + db
+                w_val = db.get("월주", {}).get(w_key, db.get("월령", {}).get(w_key, f"{w_key}월의 기운"))
+                i_val = db.get("일주", {}).get(i_key, f"{i_key}일주의 성품")
+                
+                choyeon_golden_text = f"""
+<h3 style='color:#1A237E; font-size: 24px; font-weight: 900; margin-top:0;'>1. 사주팔자 구조 분석</h3>
+<div class='content-box-loose' style='margin-bottom: 20px;'>
+    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>
+        <p style='text-indent: 15px; margin-bottom: 5px;'>
+            <b>{name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
+        </p>
+    </div>
+</div>
+"""
+                # 프롬프트 마커를 완성된 HTML로 치환
+                if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_result:
+                    ai_result = ai_result.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
+                else:
+                    # AI가 마커를 빼먹었을 경우를 대비한 안전망
+                    ai_result = choyeon_golden_text + ai_result
+
                 # 결과 정제 (서두의 불필요한 인사말 제거)
                 ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
                 
