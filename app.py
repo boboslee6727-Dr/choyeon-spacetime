@@ -611,7 +611,7 @@ if st.session_state.get('app_running', False):
             st.markdown(cover_html, unsafe_allow_html=True)
 
             # ==========================================================
-            # 🚨 [박사님 필수 작업 구간 완료: 60.0 버전 완벽 캡슐화] 🚨
+            # 🚨 [60.0 버전 완벽 캡슐화 및 들여쓰기/변수 오류 수정 완료] 🚨
             # ==========================================================
             def extract_time(time_str):
                 if "모름" in time_str: return 0, 0
@@ -672,6 +672,7 @@ if st.session_state.get('app_running', False):
                 guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 亥','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
                 guiin_str = guiin_map.get(ds, '없음')
 
+                # --- [사전 작업] 연산용 한글 기준점 명확화 (들여쓰기 완벽 복구) ---
                 ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys)
                 yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(yb, yb)
                 ms_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ms, ms)
@@ -679,22 +680,28 @@ if st.session_state.get('app_running', False):
                 ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ds, ds)
                 db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
 
-                # 4. 공망 및 삼재 연산
-                n_gong = engine.calculate_gongmang(ys, yb)
-                i_gong = engine.calculate_gongmang(ds, db)
+                yb_han = engine.K2H_JI.get(yb_kor, yb_kor)
+
+                # ---------------------------------------------------------
+                # 3. 공망 및 삼재 연산
+                # ---------------------------------------------------------
+                n_gong_raw = engine.calculate_gongmang(ys_kor, yb_kor)
+                i_gong_raw = engine.calculate_gongmang(ds_kor, db_kor)
+
+                n_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (n_gong_raw if n_gong_raw else "-") if ch not in [',', ' ']])
+                i_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (i_gong_raw if i_gong_raw else "-") if ch not in [',', ' ']])
 
                 if not n_gong or n_gong == "-": n_gong = "-"
                 if not i_gong or i_gong == "-": i_gong = "-"
 
-                # 삼재 연산 (현재 연도 지지를 한자로 변환하여 엔진에 전달)
                 curr_base = (curr_year - 1984) % 60
                 curr_y_ji_kor = engine.JI[curr_base % 12]
                 curr_y_ji_han = engine.K2H_JI.get(curr_y_ji_kor, curr_y_ji_kor)
-            
-                cur_samjae = engine.get_samjae(yb, curr_y_ji_han)
+                
+                cur_samjae = engine.get_samjae(yb_han, curr_y_ji_han)
                 samjae_color = "#1A237E" if cur_samjae != "해당 없음" else "#2E7D32"
 
-                # 5. 대운수 계산
+                # 4. 대운수 계산
                 base_dt = dt_mod.datetime(int(p_year), int(p_month), int(p_day), 12, 0)
                 adj_mins = engine.get_total_time_adjustment(base_dt)
                 utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
@@ -732,13 +739,16 @@ if st.session_state.get('app_running', False):
                 t_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
                 mb_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
-                # 8. 대운 조립
-                u_content = ""
+                # ---------------------------------------------------------
+                # [대운 연산] 
+                # ---------------------------------------------------------
+                un_content = ""
                 c_idx = engine.GAN.index(ms_kor) if ms_kor in engine.GAN else 0
                 j_idx = engine.JI.index(mb_kor) if mb_kor in engine.JI else 0
 
                 for i in range(10):
                     val = i*10+calc_d
+                    
                     c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
                     j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
                     
@@ -752,14 +762,18 @@ if st.session_state.get('app_running', False):
                     
                     bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                     b_left = "1px solid #ccc" if i != 9 else "none"
-                    u_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
-                u_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", u_content)
+                    
+                    un_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
+                    
+                un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-                return t_html, mb_html, u_html
+                # [수정포인트 2] u_html 오타를 un_html로 수정하여 정상 반환되도록 조치
+                return t_html, mb_html, un_html
 
             # --- 남명(m_)과 여명(w_) 변수 할당 로직 ---
+            # [수정포인트 1] 파트너 데이터에 존재하지 않는 f_year 대신 UI에 정의된 f_y, f_m, f_d, f_t 사용
             user_data = (name, gender, b_year, b_month, b_day, b_time, u_cal, u_marital, app_p_icon)
-            partner_data = (f_name, f_gender, f_year, f_month, f_day, f_time, f_cal, f_marital, part_p_icon)
+            partner_data = (f_name, f_gender, f_y, f_m, f_d, f_t, f_cal, f_marital, part_p_icon)
 
             # 성별에 따라 남명(m) / 여명(w) 올바르게 매칭
             if gender == "남성" and f_gender == "여성":
@@ -769,7 +783,6 @@ if st.session_state.get('app_running', False):
                 w_table_html, w_master_html, w_un_html = generate_person_saju(*user_data)
                 m_table_html, m_master_html, m_un_html = generate_person_saju(*partner_data)
             else:
-                # 동성 궁합일 경우 신청인을 선(m), 상대방을 후(w)로 배치하여 강제 에러 방지
                 m_table_html, m_master_html, m_un_html = generate_person_saju(*user_data)
                 w_table_html, w_master_html, w_un_html = generate_person_saju(*partner_data)
 
