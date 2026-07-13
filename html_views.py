@@ -98,17 +98,17 @@ def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, j
     """
 
 def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color, cur_samjae):
+    # 폰트를 12px로 축소하고 간격을 좁혀 한 줄에 배치합니다.
     return f"""
-    <div style="background:#f8f9fa; padding:15px; border-radius:10px; margin:15px 0; border:1px solid #ddd; font-family: 'Nanum Myeongjo', '나눔명조', serif;">
-        <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;">
-            <div style="text-align:center;"><b>🔢 대운수</b><br><span style="color:#1A237E; font-size:1.1em;">{calc_d}</span></div>
-            <div style="text-align:center;"><b>💥 오행</b><br>木({m}) 火({f}) 土({e}) 金({mtl}) 水({w})</div>
-            <div style="text-align:center;"><b>🌟 천을귀인</b><br><span style="color:#B71C1C;">{guiin}</span></div>
-            <div style="text-align:center;"><b>🎯 공망</b><br>[년] {n_gong} [일] {i_gong}</div>
-            <div style="text-align:center;"><b>🌪️ 삼재</b><br><span style="color:{samjae_color}; font-weight:bold;">{cur_samjae}</span></div>
+    <div style="background:#f8f9fa; padding:8px; border-radius:5px; margin:10px 0; border:1px solid #ddd; font-family: 'Nanum Myeongjo', serif; font-size: 12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span><b>🔢 대운:</b> {calc_d}</span>
+            <span><b>💥 오행:</b> 木{m}火{f}土{e}金{mtl}水{w}</span>
+            <span><b>🌟 천을귀인:</b> {guiin}</span>
+            <span><b>🎯 공망:</b> {n_gong}/{i_gong}</span>
+            <span><b>🌪️ 삼재:</b> <span style="color:{samjae_color}; font-weight:bold;">{cur_samjae}</span></span>
         </div>
     </div>
-    """
 
 def get_un_layout(title, content):
     return f"""
