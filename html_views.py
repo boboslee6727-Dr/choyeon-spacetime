@@ -109,6 +109,7 @@ def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color,
             <span><b>🌪️ 삼재:</b> <span style="color:{samjae_color}; font-weight:bold;">{cur_samjae}</span></span>
         </div>
     </div>
+    """
 
 def get_un_layout(title, content):
     return f"""
