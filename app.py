@@ -258,7 +258,7 @@ with st.sidebar:
 
     elif any(x in u_product for x in ["6. 연애", "7. 결혼", "8. 출산"]):
         st.markdown("---")
-        with st.exander("👥 상대방 사주간지 역산", expanded=False):
+        with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
             with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
