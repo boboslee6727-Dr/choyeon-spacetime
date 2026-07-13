@@ -383,7 +383,7 @@ with st.sidebar:
         moving_date = st.date_input("이사 희망일")
         moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
 
-    elif "10. 타 감명서 비교": in u_product:
+    elif "10. 타 감명서 비교" in u_product:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
     # ---------------------------------------------------------
