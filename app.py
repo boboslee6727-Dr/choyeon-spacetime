@@ -418,8 +418,18 @@ if st.session_state.get('app_running', False):
             
             # 최종 렌더링
             st.markdown(cover_html, unsafe_allow_html=True)
-            st.markdown(html_views.get_combined_report_box(intro_html + table_html + master_bar_html + un_html + se_html + wol_html + ai_output_html + closing_html), unsafe_allow_html=True)
-
+            # [수정된 최종 렌더링] 각 조각을 str()로 감싸서 None이 있어도 에러 방지
+            final_report = (
+                str(intro_html or "") + 
+                str(table_html or "") + 
+                str(master_bar_html or "") + 
+                str(un_html or "") + 
+                str(se_html or "") + 
+                str(wol_html or "") + 
+                str(ai_output_html or "") + 
+                str(closing_html or "")
+            )
+            st.markdown(html_views.get_combined_report_box(final_report), unsafe_allow_html=True)
     
     # ---------------------------------------------------------
     # [2~6번 상품] 운세 및 특화 분석 (재물, 직업, 건강 등)
