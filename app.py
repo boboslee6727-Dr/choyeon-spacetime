@@ -329,7 +329,7 @@ with st.sidebar:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
 
-            if st.session_state.get('rev_partner_success_msg'):
+        if st.session_state.get('rev_partner_success_msg'):
                 st.success(st.session_state['rev_partner_success_msg'])
                 st.session_state['rev_partner_success_msg'] = ""
 
