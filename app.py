@@ -130,9 +130,22 @@ with st.sidebar:
                             klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                             gj = klc_find.getChineseGapJaString().split()
                             if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                                st.session_state.s_y, st.session_state.s_m, st.session_state.s_d = curr_dt.year, curr_dt.month, curr_dt.day
+                                # [강제 업데이트] 년, 월, 일
+                                st.session_state['s_y'] = curr_dt.year
+                                st.session_state['s_m'] = curr_dt.month
+                                st.session_state['s_d'] = curr_dt.day
+                                
+                                # [강제 업데이트] 태어난 시간 (위젯 key="s_t")
+                                if rt:
+                                    ji_char = rt[-1]
+                                    rt_h = engine.K2H_JI.get(ji_char, ji_char)
+                                    time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                                    st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
+                                else:
+                                    st.session_state['s_t'] = "시간 모름"
+
                                 found = True
-                                st.session_state.rev_success_msg = f"✅ 자동입력 완료!"
+                                st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -191,9 +204,22 @@ with st.sidebar:
                                 klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                                 gj = klc_find.getChineseGapJaString().split()
                                 if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                                    st.session_state.p_y_in, st.session_state.p_m_in, st.session_state.p_d_in = curr_dt.year, curr_dt.month, curr_dt.day
+                                    # [강제 업데이트] 년, 월, 일
+                                    st.session_state['p_y_in'] = curr_dt.year
+                                    st.session_state['p_m_in'] = curr_dt.month
+                                    st.session_state['p_d_in'] = curr_dt.day
+                                    
+                                    # [강제 업데이트] 태어난 시간 (위젯 key="p_t_key")
+                                    if p_rt:
+                                        ji_char_p = p_rt[-1]
+                                        p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
+                                        time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                                        st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                                    else:
+                                        st.session_state['p_t_key'] = "시간 모름"
+
                                     found = True
-                                    st.session_state.rev_p_success_msg = f"✅ 상대방 자동입력 완료!"
+                                    st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
