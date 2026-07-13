@@ -351,6 +351,11 @@ if st.session_state.get('app_running', False):
             ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ds, ds)
             db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
 
+            # [최종 데이터 포맷 정의] - 렌더링 호출 직전에 확실히 정의합니다.
+            sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
+            lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
+            time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
+
             # ---------------------------------------------------------
             # HTML 렌더링 호출부 (html_views.py 이용)
             # ---------------------------------------------------------
