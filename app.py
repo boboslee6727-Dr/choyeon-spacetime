@@ -1,3 +1,10 @@
+import sys
+import os
+
+# 현재 app.py가 실행되는 위치를 파이썬 시스템 경로의 0번 인덱스(최우선 순위)에 추가
+current_path = os.path.dirname(os.path.abspath(__file__))
+if current_path not in sys.path:
+    sys.path.insert(0, current_path)
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
@@ -11,12 +18,6 @@ import prompts
 import json
 import math
 import pytz
-import sys
-# 현재 app.py가 위치한 폴더를 시스템 경로로 강제 추가
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.append(current_dir)
-
 import html_views  # 이제 이 코드는 어떤 환경에서도 파일을 정확히 찾아냅니다
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
