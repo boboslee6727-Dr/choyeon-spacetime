@@ -366,7 +366,7 @@ if st.session_state.get('app_running', False):
             table_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
-            # 대운 연산
+            # [대운] 연산 (12운성 및 12신살 포함)
             un_content = ""
             for i in range(10):
                 val = i*10+calc_d
@@ -374,15 +374,11 @@ if st.session_state.get('app_running', False):
                 j = engine.JI[(engine.JI.index(mb)+(i+1)*order_dir)%12] if mb in engine.JI else "-"
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
+                # 인자 순서: 나이, 천간십성, 천간, 천간색상, 지지, 지지색상, 지지십성, 12운성, 12신살, 배경색, 좌측선
                 un_content += html_views.get_un_cell(f"{val}세", engine.get_ss(ds,c), c, get_oh_class(c), j, get_oh_class(j), engine.get_ss(ds,j), engine.get_unsung(ds,j), engine.get_12_shinsal(yb, j), bg_col, b_left)
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-            # 세운 연산
-            cur_dw_idx = max(0, (age - calc_d) // 10)
-            dw_g_cur = engine.GAN[(engine.GAN.index(ms) + (cur_dw_idx+1)*order_dir)%10] if ms in engine.GAN else "-"
-            dw_j_cur = engine.JI[(engine.JI.index(mb) + (cur_dw_idx+1)*order_dir)%12] if mb in engine.JI else "-"
-            current_daewun_age = cur_dw_idx * 10 + calc_d
-            start_year = sol_y + current_daewun_age - 1
+            # [세운] 연산 (12운성 및 12신살 포함)
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -394,7 +390,7 @@ if st.session_state.get('app_running', False):
                 se_content += html_views.get_un_cell(f"{ty}년<br>({tage}세)", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
             se_html = html_views.get_un_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
 
-            # 월운 연산
+            # [월운] 연산 (12운성 및 12신살 포함)
             wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
             wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
             wol_content = ""
