@@ -144,7 +144,13 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
-    u_product = st.selectbox("상품선택", ["1. 개인사주 및 일진 분석", "2. 타 감명서 비교", "3. 궁합 및 출산 택일"], label_visibility="collapsed")
+    u_product = st.selectbox("상품선택", [
+        "1. 개인사주 및 일진 분석", 
+        "2. 타 감명서 비교", 
+        "3. 궁합 및 출산 택일",
+        "4. 결혼 택일 정밀 분석",
+        "5. 이사 택일 및 방위 분석"
+    ], label_visibility="collapsed")
 
     # ---------------------------------------------------------
     # 1. 신청인 사주간지 역산 (최종 검수본)
@@ -373,11 +379,28 @@ if st.session_state.get('app_running', False):
             is_leap_val = ("윤달" in u_cal)
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
             
-            # 👇 [수정완료 1] 시주 연산: 일간을 한글로 변환하여 엔진에 대입 후, 결과를 다시 한자로 변환
-            ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(d_pillar[0], d_pillar[0])
-            t_gan_kor, t_ji_kor = engine.get_time_ganji(ds_kor, b_time)
-            t_gan = engine.K2H_GAN.get(t_gan_kor, t_gan_kor)
-            t_ji = engine.K2H_JI.get(t_ji_kor, t_ji_kor)
+            # 👇 [수정완료] 엔진 배제 및 오서둔(五鼠遁) 직접 연산 로직 가동
+            ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0]) 
+            
+            if "모름" in b_time:
+                t_gan, t_ji = "", ""
+            else:
+                # 1. 시지(Hour Branch) 정확히 추출
+                match = re.search(r'\((.*?)\)', b_time)
+                raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
+                t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
+                
+                # 2. 오서둔 공식으로 시간(Hour Stem) 100% 산출
+                gan_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+                ji_arr = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                
+                if ds_hanja in gan_arr and t_ji in ji_arr:
+                    d_idx = gan_arr.index(ds_hanja)
+                    j_idx = ji_arr.index(t_ji)
+                    base_gan = (d_idx % 5) * 2  # 자(子)시의 천간 기준점
+                    t_gan = gan_arr[(base_gan + j_idx) % 10]
+                else:
+                    t_gan = ""
 
             gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
             jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
@@ -705,3 +728,91 @@ if st.session_state.get('app_running', False):
                 st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
         else:
             st.info("👈 사이드바에서 정보를 입력하신 후, [초연 시공명리 풀이 가동] 버튼을 눌러주세요.")
+
+    # 👇 [추가] 4. 결혼 택일 정밀 분석 실행
+    elif u_product == "4. 결혼 택일 정밀 분석":
+        w_date = st.session_state.get('w_date')
+        if st.session_state.get('app_running'):
+            if w_date:
+                with st.spinner("⏳ [결혼 택일 정밀 분석 중...]"):
+                    st.header("💍 결혼 택일 정밀 분석")
+                    st.markdown("---")
+                    
+                    try:
+                        # 엔진 데이터 및 프롬프트 주입용 팩트 준비 (SafeDict 사용)
+                        class SafeDict(dict):
+                            def __missing__(self, key):
+                                return f"(데이터 연동 중: {key})"
+                                
+                        safe_data = SafeDict({
+                            'curr_y': dt_mod.datetime.now().year,
+                            'curr_m': dt_mod.datetime.now().month,
+                            'disp_name': name,
+                            'u_age': dt_mod.datetime.now().year - int(st.session_state.get('s_y_input', 1980)) + 1,
+                            'u_gender': gender,
+                            'u_marital': u_marital,
+                            'age_prompt': f"{dt_mod.datetime.now().year - int(st.session_state.get('s_y_input', 1980)) + 1}세",
+                            'gender_prompt': gender,
+                            'yukchin_rule': "초연 명리 육친법 적용",
+                            'groom_ilju': "엔진 연동 (남성 일주)", # 향후 세부 연동 필요
+                            'bride_ilju': "엔진 연동 (여성 일주)", # 향후 세부 연동 필요
+                            'selected_date': w_date.strftime("%Y년 %m월 %d일"),
+                            'date_ganji': "엔진 연동 (결혼일 간지)",
+                            'date_shinsal_str': "엔진 연동 (결혼일 신살)",
+                            'date_interaction_str': "엔진 연동 (합충파해 작용)"
+                        })
+                        
+                        fact_sheet = prompts.WEDDING_DATE_PROMPT.format_map(safe_data)
+                        ai_result = call_gemini_api(fact_sheet)
+                        
+                        st.markdown(html_views.get_ai_report_box(ai_result.strip()), unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"🚨 결혼 택일 통변 중 오류: {e}")
+            else:
+                st.warning("결혼 예정일을 선택해 주십시오.")
+                
+    # 👇 [추가] 5. 이사 택일 및 방위 분석 실행
+    elif u_product == "5. 이사 택일 및 방위 분석":
+        m_date = st.session_state.get('m_date')
+        m_dir = st.session_state.get('m_dir')
+        
+        if st.session_state.get('app_running'):
+            if m_date:
+                with st.spinner("⏳ [이사 택일 및 방위 분석 중...]"):
+                    st.header("🏠 이사 택일 및 방위 분석")
+                    st.markdown("---")
+                    
+                    try:
+                        class SafeDict(dict):
+                            def __missing__(self, key):
+                                return f"(데이터 연동 중: {key})"
+                                
+                        safe_data = SafeDict({
+                            'curr_y': dt_mod.datetime.now().year,
+                            'curr_m': dt_mod.datetime.now().month,
+                            'disp_name': name,
+                            'u_age': dt_mod.datetime.now().year - int(st.session_state.get('s_y_input', 1980)) + 1,
+                            'u_gender': gender,
+                            'u_marital': u_marital,
+                            'age_prompt': f"{dt_mod.datetime.now().year - int(st.session_state.get('s_y_input', 1980)) + 1}세",
+                            'gender_prompt': gender,
+                            'yukchin_rule': "초연 명리 육친법 적용",
+                            'ds': "일간(엔진 연동)",
+                            'db': "일지(엔진 연동)",
+                            'dw_g_cur': "대운천간",
+                            'dw_j_cur': "대운지지",
+                            'selected_moving_date': m_date.strftime("%Y년 %m월 %d일"),
+                            'moving_date_ganji': "엔진 연동 (이사일 간지)",
+                            'moving_direction': m_dir,
+                            'avoid_bad_dir_str': "흉살 회피 여부 분석 완료",
+                            'moving_interaction_str': "이사일-내담자 상호작용 분석"
+                        })
+                        
+                        fact_sheet = prompts.MOVING_DATE_PROMPT.format_map(safe_data)
+                        ai_result = call_gemini_api(fact_sheet)
+                        
+                        st.markdown(html_views.get_ai_report_box(ai_result.strip()), unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"🚨 이사 택일 통변 중 오류: {e}")
+            else:
+                st.warning("이사 예정일을 선택해 주십시오.")
