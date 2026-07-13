@@ -378,10 +378,21 @@ if st.session_state.get('app_running', False):
                 un_content += html_views.get_un_cell(f"{val}세", engine.get_ss(ds,c), c, get_oh_class(c), j, get_oh_class(j), engine.get_ss(ds,j), engine.get_unsung(ds,j), engine.get_12_shinsal(yb, j), bg_col, b_left)
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-            # [세운] 연산 (12운성 및 12신살 포함)
+            # [세운] 연산 (안전 장치 추가)
+            cur_dw_idx = max(0, (age - calc_d) // 10)
+            dw_g_cur = engine.GAN[(engine.GAN.index(ms) + (cur_dw_idx+1)*order_dir)%10] if ms in engine.GAN else "-"
+            dw_j_cur = engine.JI[(engine.JI.index(mb) + (cur_dw_idx+1)*order_dir)%12] if mb in engine.JI else "-"
+            
+            # [안전 장치] 계산값이 없으면 현재 연도 기준으로 강제 초기화
+            try:
+                current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
+                start_year = int(sol_y) + current_daewun_age - 1
+            except:
+                start_year = curr_year # 계산 실패 시 현재 연도로 대체
+            
             se_content = ""
             for i in range(10):
-                ty = start_year + i
+                ty = int(start_year) + i # 강제 정수화
                 tage = current_daewun_age + i
                 base = (ty - 1984) % 60
                 tc, tj = engine.GAN[base % 10], engine.JI[base % 12]
