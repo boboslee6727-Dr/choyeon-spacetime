@@ -407,20 +407,31 @@ if st.session_state.get('app_running', False):
 
             for i in range(10):
                 val = i*10+calc_d
+                
+                # 1. 연산용 한글 100% 추출
                 c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
                 j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
                 
+                # 2. 출력용 한자 변환
                 c = engine.K2H_GAN.get(c_hangul, c_hangul)
                 j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
-                ss_gan = engine.get_ss(ds_kor, c_hangul)
-                ss_ji = engine.get_ss(ds_kor, j_hangul)
-                un_sung = engine.get_unsung(ds_kor, j_hangul)
-                shin_sal = engine.get_12_shinsal(yb_kor, j_hangul)
+                # 3. 십성/운성 계산 (결과 없으면 "-" 강제 삽입)
+                ss_gan = engine.get_ss(ds_kor, c_hangul) or "-"
+                ss_ji = engine.get_ss(ds_kor, j_hangul) or "-"
+                un_sung = engine.get_unsung(ds_kor, j_hangul) or "-"
+                shin_sal = engine.get_12_shinsal(yb_kor, j_hangul) or "-"
                 
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none"
-                un_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
+                b_left = "1px solid #ccc" if i != 0 else "none"
+                
+                # 4. 반복문 안쪽 (들여쓰기 16칸 기준)
+                un_content += html_views.get_un_cell(
+                    f"{val}세", ss_gan, c, get_oh_class(c), 
+                    j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left
+                )
+
+            # 5. 반복문 밖 (들여쓰기 12칸 기준)
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
             # AI 통변
@@ -447,7 +458,7 @@ if st.session_state.get('app_running', False):
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
 
-    # ---------------------------------------------------------
+# ---------------------------------------------------------
     # [2번 상품] 올 해 (세운 전용 출력)
     # ---------------------------------------------------------
     elif "2. 올 해" in u_product:
@@ -499,6 +510,7 @@ if st.session_state.get('app_running', False):
             dw_g_cur = engine.K2H_GAN.get(dw_g_cur_hangul, dw_g_cur_hangul)
             dw_j_cur = engine.K2H_JI.get(dw_j_cur_hangul, dw_j_cur_hangul)
             
+            # [오류 방지] 루프 시작 전 변수 명확히 정의
             try:
                 current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
                 start_year = int(sol_y) + current_daewun_age - 1
@@ -520,17 +532,22 @@ if st.session_state.get('app_running', False):
                 ss_ji = engine.get_ss(ds_kor, tj_hangul)
                 un_sung = engine.get_unsung(ds_kor, tj_hangul)
                 shin_sal = engine.get_12_shinsal(yb_kor, tj_hangul)
-                
+
+                # 변수 선언 후 호출
                 bg_col = "#E1F5FE" if ty == curr_year else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none"
-                se_content += html_views.get_un_cell(f"{ty}년<br>({tage}세)", ss_gan, tc, get_oh_class(tc), tj, get_oh_class(tj), ss_ji, un_sung, shin_sal, bg_col, b_left)
+                b_left = "1px solid #ccc" if i != 0 else "none"
+
+                se_content += html_views.get_sewun_cell(
+                    f"{ty}년", tage, ss_gan, tc, get_oh_class(tc), 
+                    tj, get_oh_class(tj), ss_ji, un_sung, shin_sal, bg_col, b_left
+                )
+
+            se_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
             
-            se_html = html_views.get_un_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
-            
-            # 최종 렌더링 출력
+            # 최종 렌더링
             st.markdown(html_views.get_final_report_box(se_html), unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
+# ---------------------------------------------------------
     # [3번 상품] 이번 달 (월운 전용 출력)
     # ---------------------------------------------------------
     elif "3. 이번 달" in u_product:
@@ -566,16 +583,23 @@ if st.session_state.get('app_running', False):
                 wc = engine.K2H_GAN.get(wc_kor, wc_kor)
                 wj = engine.K2H_JI.get(wj_kor, wj_kor)
                 
-                ss_gan = engine.get_ss(ds_kor, wc_kor)
-                ss_ji = engine.get_ss(ds_kor, wj_kor)
-                un_sung = engine.get_unsung(ds_kor, wj_kor)
-                shin_sal = engine.get_12_shinsal(yb_kor, wj_kor)
+                # 십성 및 운성 연산 (빈값일 경우 "-" 처리)
+                ss_gan = engine.get_ss(ds_kor, wc_kor) or "-"
+                ss_ji = engine.get_ss(ds_kor, wj_kor) or "-"
+                un_sung = engine.get_unsung(ds_kor, wj_kor) or "-"
+                shin_sal = engine.get_12_shinsal(yb_kor, wj_kor) or "-"
                 
                 bg_col = "#E8F5E9" if tm == curr_m else "transparent"
-                b_left = "1px solid #ccc" if i != 11 else "none"
-                wol_content += html_views.get_un_cell(f"{tm}월", ss_gan, wc, get_oh_class(wc), wj, get_oh_class(wj), ss_ji, un_sung, shin_sal, bg_col, b_left)
+                b_left = "1px solid #ccc" if i != 0 else "none" # i=0이 아닐 때만 좌측선
+                
+                # 월운 전용 셀 호출
+                wol_content += html_views.get_wolun_cell(
+                    tm, ss_gan, wc, get_oh_class(wc), 
+                    wj, get_oh_class(wj), ss_ji, un_sung, shin_sal, bg_col, b_left
+                )
             
-            wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+            # 월운 전용 레이아웃 호출
+            wol_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
             
             # 최종 렌더링 출력
             st.markdown(html_views.get_final_report_box(wol_html), unsafe_allow_html=True)
@@ -764,7 +788,7 @@ if st.session_state.get('app_running', False):
                     b_left = "1px solid #ccc" if i != 9 else "none"
                     
                     un_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
-                    
+                   
                 un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
                 # [수정포인트 2] u_html 오타를 un_html로 수정하여 정상 반환되도록 조치
