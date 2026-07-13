@@ -150,21 +150,23 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
-    # 📝 [사이드바 상품 라인업 재편성 (9단계 완성)]
+    
+    # 10단계 라인업 적용
     u_product = st.selectbox("상품선택", [
-        "1. 평생 사주 원국 분석", 
-        "2. 올해의 운세 (세운 분석)", 
+        "1. 사주원국 및 대운 분석", 
+        "2. 올 해의 운세 (세운 분석)", 
         "3. 이번 달의 운세 (월운 분석)",
         "4. 재물운 특화 분석",
         "5. 직업/직장운 특화 분석",
-        "6. 결혼 택일 정밀 분석",
-        "7. 이사 택일 및 방위 분석",
-        "8. 궁합 및 출산 택일",
-        "9. 타 감명서 비교"
+        "6. 연애 및 궁합운 특화 분석",
+        "7. 결혼 택일 정밀 분석",
+        "8. 출산 택일",
+        "9. 이사 택일 및 방위 분석",
+        "10. 타 감명서 비교"
     ], label_visibility="collapsed")
 
     # ---------------------------------------------------------
-    # 1. 신청인 사주간지 역산 (최종 검수본)
+    # 1. 사주원국 및 대운 분석
     # ---------------------------------------------------------
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -241,16 +243,22 @@ with st.sidebar:
     f_t = "시간 모름"
     run_delivery_calc = False
 
-    if u_product == "1. 개인사주 및 일진 분석":
+    i# 1. 개인사주 및 일진 분석 (기존 유지)
+    if u_product == "1. 사주원국 및 대운 분석":
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
 
-    elif u_product == "2. 타 감명서 비교":
-        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
+    # 2, 3, 4, 5번 (운세 및 특화 분석)
+    elif any(x in u_product for x in ["2. 올 해", "3. 이번 달", "4. 재물", "5. 직업"]):
+        if "4. 재물" in u_product:
+            wealth_goal = st.text_input("현재 가장 고민되는 금전 문제는?", key="wealth_goal")
+        elif "5. 직업" in u_product:
+            career_goal = st.text_input("현재 고민되는 직업 분야는?", key="career_goal")
 
-    elif u_product == "3. 궁합 및 출산 택일":
+    # 6, 7, 8번 (궁합, 결혼, 출산 - 연계성이 중요)
+
+    elif any(x in u_product for x in ["6. 연애", "7. 결혼", "8. 출산"]):
         st.markdown("---")
-        
-        with st.expander("👥 상대방 사주간지 역산", expanded=False):
+        with st.exander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
             with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
@@ -293,6 +301,34 @@ with st.sidebar:
                 else:
                     st.warning("상대방 년, 월, 일 간지는 반드시 2글자씩 입력해야 합니다.")
 
+        with st.expander("👥 상대방 기본 정보", expanded=True):
+            # ... (기존 상대방 기본 정보 로직 그대로 유지) ...
+            pass # (박사님의 기존 로직 삽입)
+
+        if "7. 결혼" in u_product:
+            st.subheader("💍 결혼 택일 정보")
+            date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
+            if date_mode == "기간 선택":
+                start_date = st.date_input("결혼 희망 시작일")
+                end_date = st.date_input("결혼 희망 종료일")
+            else:
+                wedding_date = st.date_input("결혼 예정일")
+        
+        elif "8. 출산" in u_product:
+            run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 추가 가동", value=True)
+
+    # 9번 이사 택일
+    elif "9. 이사" in u_product:
+        st.markdown("---")
+        st.subheader("🏠 이사 택일 정보")
+        moving_date = st.date_input("이사 희망일")
+        moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
+
+    # 10번 타 감명서 비교
+    elif "10. 타 감" in u_product:
+        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
+
+
             if st.session_state.get('rev_partner_success_msg'):
                 st.success(st.session_state['rev_partner_success_msg'])
                 st.session_state['rev_partner_success_msg'] = ""
@@ -324,26 +360,45 @@ with st.sidebar:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # [삭제/수정] 기존의 상품별 run_key, btn_run 생성 코드를 모두 지우고 아래로 대체
-    with st.sidebar:
-        st.markdown("---")
-        # 버튼 하나로 통합
-        if st.button("✨ [초연 시공명리 풀이 가동]", use_container_width=True, type="primary"):
-            st.session_state['app_running'] = True # 가동 상태 기록
-            st.rerun() # 전체 코드 재실행
+    # 📝 [상품별 특화 입력창 분기]
+    if "6. 연애" in u_product or "8. 출산" in u_product:
+        # 기존의 궁합/출산 입력부 (상대방 사주 역산 등) 호출
+        # ... (기존 "3. 궁합 및 출산 택일"에 있던 로직을 여기에 배치) ...
+        pass 
 
-    # 2. 인쇄 버튼 (여기도 키를 동적으로 생성하여 중복 방지)
-    print_key = f"btn_print_{u_product.replace(' ', '_')}"
-    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key=print_key, use_container_width=True):
-        # 자바스크립트를 보다 확실하게 실행하기 위한 구조
-        js_code = """
-        <script>
-            window.parent.print();
-        </script>
-        """
+    elif "7. 결혼" in u_product:
+        st.markdown("---")
+        st.subheader("💍 결혼 택일 상세 정보")
+        partner_birth = st.text_input("상대방 생년월일 (예: 19950101)", key="partner_bday")
+        date_mode = st.radio("택일 방식", ["희망 기간 선택", "특정 날짜 지정"])
+        if date_mode == "희망 기간 선택":
+            start_date = st.date_input("시작일")
+            end_date = st.date_input("종료일")
+        else:
+            wedding_date = st.date_input("결혼 예정일")
+
+    elif "9. 이사" in u_product:
+        st.markdown("---")
+        st.subheader("🏠 이사 택일 상세 정보")
+        moving_date = st.date_input("이사 희망일")
+        moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
+
+    elif "10. 타 감명서 비교": in u_product:
+        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
+
+    # ---------------------------------------------------------
+    # 3. 통합 실행 및 인쇄 버튼
+    # ---------------------------------------------------------
+    # 📝 [통합 실행 및 인쇄 버튼]
+    st.markdown("---")
+    if st.button("✨ [초연 시공명리 풀이 가동]", use_container_width=True, type="primary"):
+        st.session_state['app_running'] = True
+        st.rerun()
+
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", use_container_width=True):
+        js_code = "<script>window.parent.print();</script>"
         components.html(js_code, height=0)
-        # 인쇄 버튼이 눌렸음을 사용자에게 알림
-        st.info("인쇄 창을 호출했습니다. PDF 저장 옵션을 선택해 주세요.")
+        st.info("인쇄 창을 호출했습니다.")
 
 # ==============================================================================
 # 3. 메인 화면 출력부
@@ -570,7 +625,7 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)
             closing_html = closing_html.replace("</div>", "")
             
-# 3. AI 통변 생성
+            # 3. AI 통변 생성
             ai_output_html = "AI 데이터 없음"
             choyeon_golden_text = "" # 초기화
             try:
@@ -582,27 +637,28 @@ if st.session_state.get('app_running', False):
 
                 # 👇 [수정 구간] 상품별 프롬프트 자동 할당
                 prompt_map = {
-                    "1. 평생": prompts.PERSONAL_SAJU_PROMPT,
-                    "2. 올해": prompts.SEWUN_PROMPT,
-                    "3. 이번": prompts.WOLWUN_PROMPT,
+                    "1. 사주": prompts.PERSONAL_SAJU_PROMPT,
+                    "2. 올 해": prompts.SEWUN_PROMPT,
+                    "3. 이번 달": prompts.WOLWUN_PROMPT,
                     "4. 재물": prompts.WEALTH_PROMPT,
                     "5. 직업": prompts.CAREER_PROMPT,
-                    "6. 결혼": prompts.WEDDING_DATE_PROMPT,
-                    "7. 이사": prompts.MOVING_DATE_PROMPT,
-                    "8. 궁합": prompts.GUNGHAP_ESSAY_PROMPT,
-                    "9. 타 감명서 비교": prompts.COMPARE_PROMPT
+                    "6. 연애": prompts.GUNGHAP_ESSAY_PROMPT,  # 연애/궁합 프롬프트 연결
+                    "7. 결혼": prompts.WEDDING_DATE_PROMPT,
+                    "8. 출산": prompts.DELIVERY_LOOP_PROMPT,  # 출산 택일 프롬프트 연결
+                    "9. 이사": prompts.MOVING_DATE_PROMPT,
+                    "10. 타 감": prompts.COMPARE_PROMPT
                 }
                 
+                # 선택된 상품에 맞는 프롬프트 자동 선택
                 selected_prompt = prompts.PERSONAL_SAJU_PROMPT
                 for key, template in prompt_map.items():
                     if key in u_product:
                         selected_prompt = template
                         break
                 
-                # 이제 선택된 프롬프트를 사용하여 팩트 시트 구성
+                # 팩트 시트 구성
                 fact_sheet = selected_prompt.format_map(safe_data)
-                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."                
-                ai_result = call_gemini_api(fact_sheet)
+                fact_sheet += "\n\n[지시사항] 서두의 인사말이나 맺음말은 절대 작성하지 말고, 오직 사주 분석 내용만 바로 작성해 주십시오."
                 
                 # DB 호출 로직 (중복 없이 깔끔하게)
                 w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
@@ -642,34 +698,6 @@ if st.session_state.get('app_running', False):
             importlib.reload(html_views)
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-    elif u_product == "2. 타 감명서 비교":
-        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
-        st.markdown("---")
-        if not other_report: 
-            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: 
-            with st.spinner("⏳ [타 감명서 비교 분석 중....]"):
-                try:
-                    # [홍집사의 방패] 적용
-                    class SafeDict(dict):
-                        def __missing__(self, key):
-                            return f"(데이터 연동: {key})"
-                            
-                    safe_data = SafeDict({
-                        'other_report': other_report,
-                        'ilju': st.session_state.get('u_rd', '일주 확인 불가'),
-                        'wolryeong': st.session_state.get('u_rm', '월령 확인 불가'),
-                        'saju_structure': "사이드바 입력 생년월일 기준"
-                    })
-                    
-                    fact_sheet = prompts.COMPARE_PROMPT.format_map(safe_data)
-                    ai_result = call_gemini_api(fact_sheet)
-                    ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
-                    
-                    # 렌더링
-                    st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 타 감명서 비교 분석 중 오류 발생: {e}")
 
     elif u_product == "3. 궁합 및 출산 택일":
         # 사이드바 위젯의 key로부터 직접 값을 가져옵니다.
@@ -741,7 +769,7 @@ if st.session_state.get('app_running', False):
         else:
             st.info("👈 사이드바에서 정보를 입력하신 후, [초연 시공명리 풀이 가동] 버튼을 눌러주세요.")
 
-    # 👇 [추가] 4. 결혼 택일 정밀 분석 실행
+    # 7. 결혼 택일 정밀 분석 실행
     elif u_product == "4. 결혼 택일 정밀 분석":
         w_date = st.session_state.get('w_date')
         if st.session_state.get('app_running'):
@@ -783,7 +811,7 @@ if st.session_state.get('app_running', False):
             else:
                 st.warning("결혼 예정일을 선택해 주십시오.")
                 
-    # 👇 [추가] 5. 이사 택일 및 방위 분석 실행
+    # 9. 이사 택일 및 방위 분석 실행
     elif u_product == "5. 이사 택일 및 방위 분석":
         m_date = st.session_state.get('m_date')
         m_dir = st.session_state.get('m_dir')
@@ -828,3 +856,33 @@ if st.session_state.get('app_running', False):
                         st.error(f"🚨 이사 택일 통변 중 오류: {e}")
             else:
                 st.warning("이사 예정일을 선택해 주십시오.")
+
+    elif u_product == "10. 타 감명서 비교":
+        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
+        st.markdown("---")
+        if not other_report: 
+            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+        else: 
+            with st.spinner("⏳ [타 감명서 비교 분석 중....]"):
+                try:
+                    # [홍집사의 방패] 적용
+                    class SafeDict(dict):
+                        def __missing__(self, key):
+                            return f"(데이터 연동: {key})"
+                            
+                    safe_data = SafeDict({
+                        'other_report': other_report,
+                        'ilju': st.session_state.get('u_rd', '일주 확인 불가'),
+                        'wolryeong': st.session_state.get('u_rm', '월령 확인 불가'),
+                        'saju_structure': "사이드바 입력 생년월일 기준"
+                    })
+                    
+                    fact_sheet = prompts.COMPARE_PROMPT.format_map(safe_data)
+                    ai_result = call_gemini_api(fact_sheet)
+                    ai_result = re.sub(r"^(안녕하세요|반갑습니다|감사합니다).+?\.", "", ai_result, flags=re.MULTILINE).strip()
+                    
+                    # 렌더링
+                    st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"🚨 타 감명서 비교 분석 중 오류 발생: {e}")
+
