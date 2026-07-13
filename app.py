@@ -13,6 +13,12 @@ import math
 import pytz
 import html_views  # 👈 HTML 보관소 불러오기
 import importlib   # 👈 이것을 삽입하십시오
+choyeon_db = {}
+if os.path.exists('choyeon_db.json'):
+    with open('choyeon_db.json', 'r', encoding='utf-8') as f:
+        choyeon_db = json.load(f)
+else:
+    st.error("🚨 choyeon_db.json 파일을 찾을 수 없습니다.")
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
