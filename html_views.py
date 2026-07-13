@@ -166,7 +166,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:2px 0; font-size:11.5px; border-bottom:1px solid #ccc;'>{tm}월</div>
         <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:15px; font-weight:900; padding:1px 0;'>{gan}</div>
-        <div class='{j_cls}' style='font-size:15px; font-weight:900; padding:1px 0;'>{ji}</div>
+        <div class='{ji_cls}' style='font-size:15px; font-weight:900; padding:1px 0;'>{ji}</div>
         <div style='padding:1px 0; font-size:11.5px; font-weight:900; color:#000000;'>{ss_ji}</div>
         <div style='font-size:11px; font-weight:normal; color:#0D47A1; border-top:1px solid #ccc; padding-top:1px;'>{unsung}</div>
         <div style='font-size:11px; font-weight:normal; color:#C62828; border-top:1px solid #ccc; padding-top:1px;'>{shinsal}</div>
