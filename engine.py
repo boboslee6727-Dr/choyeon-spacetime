@@ -128,35 +128,19 @@ def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
         
     return parts[0][:2], parts[1][:2], parts[2][:2]
 
-def get_time_ganji(day_gan, b_time):
-    # 1. 시간 모름 예외 처리 (Ver 48.7 복원)
-    if "모름" in b_time: return "?", "?"
+def get_time_ganji(day_gan, time_str, dt_obj=None):
+    if "시간 모름" in time_str: return "?", "?"
+    if dt_obj:
+        adj_mins = get_total_time_adjustment(dt_obj)
+        dt_obj += dt_mod.timedelta(minutes=adj_mins)
     
-    # 일간(day_gan)을 한자로 안전하게 통일
-    target_gan = K2H_GAN.get(day_gan, '甲')
-    
-    # 2. 지지 추출 (Ver 48.7의 완벽한 조자/야자 예외 처리 로직 적용)
     target_ji, t_idx = "子", 0
-    if "朝子" in b_time or "夜子" in b_time:
-        target_ji, t_idx = "子", 0
+    if "朝子" in time_str or "夜子" in time_str: target_ji, t_idx = "子", 0
     else:
-        hanja_ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        # b_time 문자열 안에서 지지 한자를 직접 탐색
-        for i, j in enumerate(hanja_ji_list):
-            if j in b_time:
-                target_ji, t_idx = j, i
-                break
-                
-    # 3. 오서둔(시두법) 공식 적용 (Ver 48.7 매핑 방식 복원)
-    start_gan_idx = {"甲":0, "己":0, "乙":2, "庚":2, "丙":4, "辛":4, "丁":6, "壬":6, "戊":8, "癸":8}.get(target_gan, 0)
-    
-    hanja_gan_list = ['甲', '乙', '丙', '丁', '戊', '己', '庚', ' 단', '辛', '壬', '癸']
-    # 오타 교정용 리스트 재선언
-    hanja_gan_list = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-    
-    t_gan = hanja_gan_list[(start_gan_idx + t_idx) % 10]
-    
-    return t_gan, target_ji
+        for j in list(JI):
+            if j in time_str: target_ji, t_idx = j, list(JI).index(j); break
+    start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
+    return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
 def get_daeun_su_accurate(utc_dt, order):
     try:
