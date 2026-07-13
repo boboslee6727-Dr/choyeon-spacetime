@@ -130,24 +130,20 @@ def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
 
 def get_time_ganji(day_gan, b_time):
     # 1. 일간(day_gan)으로 시작 시간의 천간을 구하는 로직 (시두법)
-    # 딕셔너리 K2H_GAN을 활용하여 안전하게 한자 추출
     target_gan = K2H_GAN.get(day_gan, '甲')
     
-    # 2. b_time 문자열에서 시지 한자 추출
-    # 예: '01:30 ~ 03:29 (丑)시' -> 丑 추출
     import re
     match = re.search(r'\(([^)]+)\)', b_time)
     ji_char = match.group(1) if match else '子'
     
-    # 3. 시천간 계산 (시두법)
     hanja_gan_list = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
     hanja_ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
     
     day_gan_idx = hanja_gan_list.index(target_gan) if target_gan in hanja_gan_list else 0
     ji_idx = hanja_ji_list.index(ji_char) if ji_char in hanja_ji_list else 0
     
-    # 시두법 공식: (일간%5)*2 + 2
-    start_gan_idx = ((day_gan_idx % 5) * 2 + 2) % 10
+    # 👇 [수정] 시두법 공식: (일간%5)*2 (기존의 +2는 월두법이므로 제거)
+    start_gan_idx = ((day_gan_idx % 5) * 2) % 10
     t_gan_idx = (start_gan_idx + ji_idx) % 10
     
     return hanja_gan_list[t_gan_idx], ji_char
@@ -457,19 +453,25 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     return fallback_ss + "격", f"월지 {mb}의 지장간(비겁 제외)이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {fallback_ss}격으로 정합니다."
 
 def calculate_gongmang(ilgan, ilji):
-    # 입력받은 값이 한자라면 한글로 변환하는 사전 준비
-    h2k_gan = {v: k for k, v in K2H_GAN.items()} # 한자 -> 한글 매핑
-    h2k_ji = {v: k for k, v in K2H_JI.items()}   # 한자 -> 한글 매핑
+    h2k_gan = {v: k for k, v in K2H_GAN.items()} 
+    h2k_ji = {v: k for k, v in K2H_JI.items()}   
     
-    # 입력값을 한글로 정규화
     g = h2k_gan.get(ilgan, ilgan)
     j = h2k_ji.get(ilji, ilji)
     
-    # 리스트에서 한글 인덱스만 찾기 (GAN, JI 리스트의 앞 10개/12개 사용)
     gan_list = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
     ji_list = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
     
     if g not in gan_list or j not in ji_list: return "-"
+    
+    try:
+        # 👇 [수정] 공망 공식 (- 2 추가) 및 한자로 치환하여 반환
+        base = (ji_list.index(j) - gan_list.index(g) - 2) % 12
+        gong1 = ji_list[base]
+        gong2 = ji_list[(base + 1) % 12]
+        return f"{K2H_JI.get(gong1)}{K2H_JI.get(gong2)}"
+    except:
+        return "-"
     
     try:
         base = (ji_list.index(j) - gan_list.index(g)) % 12
@@ -527,7 +529,16 @@ def _get_person_data(y, m, d, t, gender, name, marital):
 
         # 4. 마스터바 데이터 조립
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
-        master = [calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_map.get(ds, '없음'), calculate_gongmang(ys, yb), calculate_gongmang(ds, db), "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)]
+        
+        # 👇 [수정] 삼재 연산을 위해 '올해의 세운 지지'를 정확히 산출하여 대입
+        curr_year = dt_mod.datetime.now().year
+        curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
+        
+        master = [
+            calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], 
+            guiin_map.get(ds, '없음'), calculate_gongmang(ys, yb), calculate_gongmang(ds, db), 
+            "#2E7D32" if get_samjae(yb, curr_y_ji) == "해당 없음" else "#1A237E", get_samjae(yb, curr_y_ji)
+        ]
 
         return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master}
 
