@@ -248,11 +248,11 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
         <div style='border: 2px solid #1A237E; border-radius: 12px; padding: 30px; background-color:#FAFAFA;'>
             <h2 style='text-align:center; color:#1A237E; font-weight:900; margin-bottom: 30px;'>[ 부부 대운(大運) 흐름 비교 분석 ]</h2>
             <div style='margin-bottom: 40px;'>
-                <h4 style='color:#3E2723; font-weight:800;'>&#9794; 男命 ({m_name}님) 대운 흐름</h4>
+                <h4 style='color:#3E2723; font-weight:800;'>&#9794; 남명 ({m_name}님) 대운 흐름</h4>
                 {m_un_html}
             </div>
             <div>
-                <h4 style='color:#3E2723; font-weight:800;'>&#9792; 女命 ({w_name}님) 대운 흐름</h4>
+                <h4 style='color:#3E2723; font-weight:800;'>&#9792; 여명 ({w_name}님) 대운 흐름</h4>
                 {w_un_html}
             </div>
         </div>
