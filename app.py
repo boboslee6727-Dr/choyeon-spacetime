@@ -102,19 +102,8 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     # ---------------------------------------------------------
-    # 신청인 정보 및 역산
+    # [수정 완료] 신청인 정보: 역산(계산) 먼저 -> 기본정보(출력) 나중
     # ---------------------------------------------------------
-    with st.expander("👤 신청인 기본 정보", expanded=True):
-        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
-        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
-        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
-        col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="s_y")
-        with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
-        with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
-        b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
-
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
@@ -151,10 +140,20 @@ with st.sidebar:
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
+    with st.expander("👤 신청인 기본 정보", expanded=True):
+        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
+        gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
+        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
+        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
+        col_y, col_m, col_d = st.columns(3)
+        with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="s_y")
+        with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
+        with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
+        b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
+
     # ---------------------------------------------------------
-    # 상품별 동적 입력창 (6~8번 상대방 사주 연동 포함)
+    # 상품별 동적 입력창
     # ---------------------------------------------------------
-    
     if "1. 개인사주" in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
     
@@ -165,17 +164,7 @@ with st.sidebar:
 
     elif any(x in u_product for x in ["7. 연애", "8. 결혼", "9. 출산"]):
         st.markdown("---")
-        with st.expander("👥 상대방 기본 정보", expanded=True):
-            f_name = st.text_input("상대방 이름", value="", key="f_n")
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
-            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
-            f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
-            p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
-            f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
-            f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
-            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
-            
+        # [수정 완료] 상대방 정보: 역산(계산) 먼저 -> 기본정보(출력) 나중
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -211,6 +200,17 @@ with st.sidebar:
                         if found: break
                     if not found: st.error("일치하는 날짜가 없습니다.")
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+
+        with st.expander("👥 상대방 기본 정보", expanded=True):
+            f_name = st.text_input("상대방 이름", value="", key="f_n")
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
+            f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+            p_col1, p_col2, p_col3 = st.columns(3)
+            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
+            f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
+            f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
+            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
 
         if "8. 결혼" in u_product:
             date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
