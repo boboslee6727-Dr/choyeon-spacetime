@@ -15,9 +15,26 @@ def get_global_css():
     .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; }
     .color-수 { background-color: #212121 !important; color: #FFFFFF !important; }
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; table-layout: fixed; }
-    .result-table td { border: 1px solid #444 !important; padding: 5px !important; text-align: center; vertical-align: middle; }
-    .top-header-cell { background-color: #1A237E !important; }
+    /* 서체 강화 */
+    .result-table td { 
+        font-family: 'Noto Serif KR', serif !important; 
+        font-weight: 900 !important; /* 굵기 극대화 */
+        font-size: 14px !important; /* 약간 키움 */
+        color: #000 !important;
+        padding: 4px !important; 
+    }
+    .top-header-cell td { font-size: 15px !important; }
     .header-cell-main { background-color: #f5f5f5 !important; font-weight: 900; white-space: nowrap; }
+    .master-bar {
+        border: 2px solid #3E2723 !important;
+        background: #FFF8E1 !important;
+        padding: 10px 15px !important;
+        font-weight: 900 !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+        color: #1A237E !important;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
     .report-page, .report-page * { color: #000000 !important; }
     .report-page h1, .report-page h3 { color: #1A237E !important; } 
     .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; font-family: 'Nanum Myeongjo', serif !important; }
