@@ -269,7 +269,7 @@ with st.sidebar:
 if st.session_state.get('app_running', False):
     
     # ---------------------------------------------------------
-    # [1번 상품] 개인사주 및 일진 분석 (박사님 원본 로직 100% 보존)
+    # [1번 상품] 개인사주 및 일진 분석
     # ---------------------------------------------------------
     if "1. 개인사주" in u_product:
         klc = KoreanLunarCalendar()
@@ -330,18 +330,29 @@ if st.session_state.get('app_running', False):
                 elif c in "庚辛申酉": counts['금']+=1
                 elif c in "壬癸亥子": counts['수']+=1
 
-            # 무토 귀인 오타(해->亥) 교정
             guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 亥','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(ds, '없음')
-            
-            # 3. 공망 및 삼재 연산 (박사님 ver 60.0 로직)
+
+            # --- [사전 작업] 연산용 한글 기준점 명확화 ---
             ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys)
             yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(yb, yb)
+            ms_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ms, ms)
+            mb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(mb, mb)
             ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ds, ds)
             db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
-            
-            n_gong = engine.calculate_gongmang(ys_kor, yb_kor)
-            i_gong = engine.calculate_gongmang(ds_kor, db_kor)
+
+            # 3. 공망 및 삼재 연산
+            try:
+                n_gong_str = engine.calculate_gongmang(ys_kor, yb_kor)
+                i_gong_str = engine.calculate_gongmang(ds_kor, db_kor)
+            except TypeError:
+                n_gong_str = engine.calculate_gongmang(ys_kor + yb_kor)
+                i_gong_str = engine.calculate_gongmang(ds_kor + db_kor)
+                
+            n_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (n_gong_str if n_gong_str else "")])
+            i_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (i_gong_str if i_gong_str else "")])
+            if not n_gong: n_gong = "-"
+            if not i_gong: i_gong = "-"
 
             curr_base = (dt_mod.datetime.now().year - 1984) % 60
             cur_samjae = engine.get_samjae(yb_kor, engine.JI[curr_base % 12])
@@ -361,13 +372,12 @@ if st.session_state.get('app_running', False):
             time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
 
             # ---------------------------------------------------------
-            # HTML 렌더링 호출부 (html_views.py 이용)
+            # HTML 렌더링 조립
             # ---------------------------------------------------------
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
             intro_html = html_views.get_intro_html()
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
 
-            # 사주 테이블 행(Rows) 문자열 조립
             ji_rel_rows = ""
             for l_idx, r_idx in enumerate([1, 2, 0, 3]):
                 b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -378,22 +388,20 @@ if st.session_state.get('app_running', False):
             filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
             
             gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-            gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds,hs)}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds,ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,ys)}</td>"
+            gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds_kor, {v: k for k, v in engine.K2H_GAN.items()}.get(hs, hs))}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, ms_kor)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, ys_kor)}</td>"
             gan_row = f"{td_bg(hs)}{hs}</td>{td_bg(ds)}{ds}</td>{td_bg(ms)}{ms}</td>{td_bg(ys)}{ys}</td>"
             ji_row = f"{td_bg(hb)}{hb}</td>{td_bg(db)}{db}</td>{td_bg(mb)}{mb}</td>{td_bg(yb)}{yb}</td>"
-            ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds,hb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,db)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,mb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds,yb)}</td>"
-            jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
-            unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-            shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+            ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds_kor, {v: k for k, v in engine.K2H_JI.items()}.get(hb, hb))}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, db_kor)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, mb_kor)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, yb_kor)}</td>"
+            jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds_kor, {v: k for k, v in engine.K2H_JI.items()}.get(jjis[i], jjis[i]))}</td>" for i in range(4)])
+            unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds_kor, {v: k for k, v in engine.K2H_JI.items()}.get(jjis[i], jjis[i]))}</td>" for i in range(4)])
+            shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb_kor, {v: k for k, v in engine.K2H_JI.items()}.get(jjis[i], jjis[i]))}</td>" for i in range(4)])
             gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
+
             table_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
-            
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
             # ---------------- [대운 연산] ----------------
             un_content = ""
-            ms_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ms, ms)
-            mb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(mb, mb)
             c_idx = engine.GAN.index(ms_kor) if ms_kor in engine.GAN else 0
             j_idx = engine.JI.index(mb_kor) if mb_kor in engine.JI else 0
 
@@ -402,50 +410,18 @@ if st.session_state.get('app_running', False):
                 c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
                 j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
                 
-                # 한자로 변환
                 c = engine.K2H_GAN.get(c_hangul, c_hangul)
                 j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
+                ss_gan = engine.get_ss(ds_kor, c_hangul)
+                ss_ji = engine.get_ss(ds_kor, j_hangul)
+                un_sung = engine.get_unsung(ds_kor, j_hangul)
+                shin_sal = engine.get_12_shinsal(yb_kor, j_hangul)
+                
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                 b_left = "1px solid #ccc" if i != 9 else "none"
-                un_content += html_views.get_un_cell(f"{val}세", engine.get_ss(ds,c), c, get_oh_class(c), j, get_oh_class(j), engine.get_ss(ds,j), engine.get_unsung(ds,j), engine.get_12_shinsal(yb, j), bg_col, b_left)
+                un_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
-
-            # ---------------- [세운 연산] ----------------
-            cur_dw_idx = max(0, (age - calc_d) // 10)
-            dw_g_cur_hangul = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
-            dw_j_cur_hangul = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
-            dw_g_cur = engine.K2H_GAN.get(dw_g_cur_hangul, dw_g_cur_hangul)
-            dw_j_cur = engine.K2H_JI.get(dw_j_cur_hangul, dw_j_cur_hangul)
-            
-            current_daewun_age = cur_dw_idx * 10 + calc_d
-            start_year = sol_y + current_daewun_age - 1
-            se_content = ""
-            for i in range(10):
-                ty = start_year + i
-                tage = current_daewun_age + i
-                base = (ty - 1984) % 60
-                tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
-                
-                # 한자로 변환
-                tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
-                tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
-                
-                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none"
-                se_content += html_views.get_un_cell(f"{ty}년<br>({tage}세)", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
-            se_html = html_views.get_un_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
-
-            # ---------------- [월운 연산] ----------------
-            wol_gans = ["己", "庚", "辛", "壬", "癸", "甲", "乙", "丙", "丁", "戊", "己", "庚"]
-            wol_jis = ["丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子"]
-            wol_content = ""
-            for i in range(12):
-                tm, tc, tj = i + 1, wol_gans[i], wol_jis[i]
-                bg_col = "#E8F5E9" if tm == curr_m else "transparent"
-                b_left = "1px solid #ccc" if i != 11 else "none"
-                wol_content += html_views.get_un_cell(f"{tm}월", engine.get_ss(ds,tc), tc, get_oh_class(tc), tj, get_oh_class(tj), engine.get_ss(ds,tj), engine.get_unsung(ds,tj), engine.get_12_shinsal(yb, tj), bg_col, b_left)
-            wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
             # AI 통변
             ai_output_html = ""
@@ -458,26 +434,156 @@ if st.session_state.get('app_running', False):
 
             closing_html = html_views.get_closing_html(name)
             
-            # 최종 렌더링
+            # 최종 렌더링 출력 (박사님 지시 순서 적용)
             st.markdown(cover_html, unsafe_allow_html=True)
-            
             final_report = (
-                str(intro_html or "") + 
                 str(table_html or "") + 
                 str(master_bar_html or "") + 
+                str(intro_html or "") + 
                 str(un_html or "") + 
-                str(se_html or "") + 
-                str(wol_html or "") + 
                 str(ai_output_html or "") + 
                 str(closing_html or "")
             )
-            
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-    
+
+
     # ---------------------------------------------------------
-    # [2~6번 상품] 운세 및 특화 분석 (재물, 직업, 건강 등)
+    # [2번 상품] 올 해 (세운 전용 출력)
     # ---------------------------------------------------------
-    elif any(x in u_product for x in ["2. 올 해", "3. 이번 달", "4. 재물", "5. 직업", "6. 건강"]):
+    elif "2. 올 해" in u_product:
+        st.header(f"🔮 {name}님의 올해(세운) 분석")
+        st.markdown("---")
+        with st.spinner("⏳ 세운 정밀 분석 중...."):
+            # 독립적 구동을 위한 최소 기초 연산
+            klc = KoreanLunarCalendar()
+            if "음력" in u_cal:
+                is_leap = True if "윤달" in u_cal else False
+                klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
+                sol_y = klc.solarYear
+            else:
+                klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+                sol_y = int(b_year)
+                
+            curr_year = dt_mod.datetime.now().year
+            age = curr_year - sol_y + 1
+
+            def extract_time(time_str):
+                if "모름" in time_str: return 0, 0
+                match = re.search(r'(\d{2}):(\d{2})', time_str)
+                return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+            h, m = extract_time(b_time)
+            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+            is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
+            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+
+            ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(y_pillar[0], y_pillar[0])
+            yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(y_pillar[1], y_pillar[1])
+            ms_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(m_pillar[0], m_pillar[0])
+            mb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(m_pillar[1], m_pillar[1])
+            ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(d_pillar[0], d_pillar[0])
+
+            base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
+            adj_mins = engine.get_total_time_adjustment(base_dt)
+            utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+            order_dir = 1 if (engine.GAN.index(ys_kor) % 2 == 0) == (gender == '남성') else -1
+            calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
+
+            c_idx = engine.GAN.index(ms_kor) if ms_kor in engine.GAN else 0
+            j_idx = engine.JI.index(mb_kor) if mb_kor in engine.JI else 0
+            
+            # [세운 연산]
+            cur_dw_idx = max(0, (age - calc_d) // 10)
+            dw_g_cur_hangul = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
+            dw_j_cur_hangul = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
+            dw_g_cur = engine.K2H_GAN.get(dw_g_cur_hangul, dw_g_cur_hangul)
+            dw_j_cur = engine.K2H_JI.get(dw_j_cur_hangul, dw_j_cur_hangul)
+            
+            try:
+                current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
+                start_year = int(sol_y) + current_daewun_age - 1
+            except:
+                current_daewun_age = max(0, int(age))
+                start_year = curr_year
+                
+            se_content = ""
+            for i in range(10):
+                ty = start_year + i
+                tage = current_daewun_age + i
+                base = (ty - 1984) % 60
+                tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
+                
+                tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
+                tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
+                
+                ss_gan = engine.get_ss(ds_kor, tc_hangul)
+                ss_ji = engine.get_ss(ds_kor, tj_hangul)
+                un_sung = engine.get_unsung(ds_kor, tj_hangul)
+                shin_sal = engine.get_12_shinsal(yb_kor, tj_hangul)
+                
+                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
+                b_left = "1px solid #ccc" if i != 9 else "none"
+                se_content += html_views.get_un_cell(f"{ty}년<br>({tage}세)", ss_gan, tc, get_oh_class(tc), tj, get_oh_class(tj), ss_ji, un_sung, shin_sal, bg_col, b_left)
+            
+            se_html = html_views.get_un_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
+            
+            # 최종 렌더링 출력
+            st.markdown(html_views.get_final_report_box(se_html), unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # [3번 상품] 이번 달 (월운 전용 출력)
+    # ---------------------------------------------------------
+    elif "3. 이번 달" in u_product:
+        st.header(f"🔮 {name}님의 이번 달(월운) 분석")
+        st.markdown("---")
+        with st.spinner("⏳ 월운 정밀 분석 중...."):
+            # 독립적 구동을 위한 최소 기초 연산
+            curr_year = dt_mod.datetime.now().year
+            curr_m = dt_mod.datetime.now().month
+
+            def extract_time(time_str):
+                if "모름" in time_str: return 0, 0
+                match = re.search(r'(\d{2}):(\d{2})', time_str)
+                return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+            h, m = extract_time(b_time)
+            y_pillar, _, _ = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+            is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
+            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+
+            yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(y_pillar[1], y_pillar[1])
+            ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(d_pillar[0], d_pillar[0])
+
+            # [월운 연산]
+            wol_gans_kor = ["기", "경", "신", "임", "계", "갑", "을", "병", "정", "무", "기", "경"]
+            wol_jis_kor = ["축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자"]
+            wol_content = ""
+            
+            for i in range(12):
+                tm = i + 1
+                wc_kor, wj_kor = wol_gans_kor[i], wol_jis_kor[i]
+                
+                wc = engine.K2H_GAN.get(wc_kor, wc_kor)
+                wj = engine.K2H_JI.get(wj_kor, wj_kor)
+                
+                ss_gan = engine.get_ss(ds_kor, wc_kor)
+                ss_ji = engine.get_ss(ds_kor, wj_kor)
+                un_sung = engine.get_unsung(ds_kor, wj_kor)
+                shin_sal = engine.get_12_shinsal(yb_kor, wj_kor)
+                
+                bg_col = "#E8F5E9" if tm == curr_m else "transparent"
+                b_left = "1px solid #ccc" if i != 11 else "none"
+                wol_content += html_views.get_un_cell(f"{tm}월", ss_gan, wc, get_oh_class(wc), wj, get_oh_class(wj), ss_ji, un_sung, shin_sal, bg_col, b_left)
+            
+            wol_html = html_views.get_un_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+            
+            # 최종 렌더링 출력
+            st.markdown(html_views.get_final_report_box(wol_html), unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # [4~6번 상품] 재물, 직업, 건강 등
+    # ---------------------------------------------------------
+    elif any(x in u_product for x in ["4. 재물", "5. 직업", "6. 건강"]):
         st.header(f"🔮 {name}님의 {u_product.split('.')[1].strip()} 분석")
         st.markdown("---")
         with st.spinner(f"⏳ [{u_product.split('.')[1].strip()}] 정밀 분석 중...."):
@@ -489,43 +595,200 @@ if st.session_state.get('app_running', False):
             elif "6. 건강" in u_product:
                 st.success(f"입력하신 건강 고민: {health_goal}")
                 
-
     # ---------------------------------------------------------
-    # [7번 상품] 연애 및 궁합운 특화 분석 (강제 렌더링 버전)
+    # [7번 상품] 연애 및 궁합운 특화 분석
     # ---------------------------------------------------------
     elif "7. 연애" in u_product:
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
-        with st.spinner("⏳ 궁합 풀이 중..."):
-            
-            # (1) 표지 강제 렌더링
+        with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             app_p_icon = "♂️" if gender == "남성" else "♀️"
             part_p_icon = "♂️" if f_gender == "남성" else "♀️"
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
             
+            # (1) 표지 강제 렌더링
             cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
             st.markdown(cover_html, unsafe_allow_html=True)
 
             # ==========================================================
-            # 🚨 [박사님 필수 작업 구간] 🚨
-            # 기존에 만드셨던 연산 코드(남명 m_..., 여명 w_...)를 여기에 넣으십시오
-            # 1번 상품의 60.0 버전 연산 로직을 남/여 각각 두 번 수행하는 코드입니다.
+            # 🚨 [박사님 필수 작업 구간 완료: 60.0 버전 완벽 캡슐화] 🚨
             # ==========================================================
-            
-            # (2) 남명/여명 박스 렌더링 (값이 존재할 때만 출력되도록 방어 로직 적용)
+            def extract_time(time_str):
+                if "모름" in time_str: return 0, 0
+                match = re.search(r'(\d{2}):(\d{2})', time_str)
+                return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+            def generate_person_saju(p_name, p_gender, p_year, p_month, p_day, p_time, p_cal, p_marital, p_icon):
+                # 1. 양음력 변환 및 나이 계산
+                klc = KoreanLunarCalendar()
+                if "음력" in p_cal:
+                    is_leap = True if "윤달" in p_cal else False
+                    klc.setLunarDate(int(p_year), int(p_month), int(p_day), is_leap)
+                    sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
+                    lun_y, lun_m, lun_d = int(p_year), int(p_month), int(p_day)
+                    leap_str = "윤달" if is_leap else "평달"
+                else:
+                    klc.setSolarDate(int(p_year), int(p_month), int(p_day))
+                    sol_y, sol_m, sol_d = int(p_year), int(p_month), int(p_day)
+                    lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
+                    leap_str = "윤달" if klc.isIntercalation else "평달"
+
+                curr_year = dt_mod.datetime.now().year
+                age = curr_year - sol_y + 1
+
+                # 2. 기초 연산
+                h, m = extract_time(p_time)
+                y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(p_year), int(p_month), int(p_day), h, m)
+                is_lunar_val, is_leap_val = ("음력" in p_cal), ("윤달" in p_cal)
+                _, _, d_pillar = engine.get_ganji_from_date(int(p_year), int(p_month), int(p_day), is_lunar_val, is_leap_val)
+
+                # 3. 오서둔 직접 연산
+                ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0])
+                if "모름" in p_time:
+                    t_gan, t_ji = "", ""
+                else:
+                    match = re.search(r'\((.*?)\)', p_time)
+                    raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
+                    t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
+                    gan_arr, ji_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'], ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                    if ds_hanja in gan_arr and t_ji in ji_arr:
+                        d_idx, j_idx = gan_arr.index(ds_hanja), ji_arr.index(t_ji)
+                        t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
+                    else:
+                        t_gan = ""
+
+                gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+                hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
+                hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
+
+                counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+                for c in gans + jjis:
+                    if c in "甲乙寅卯": counts['목']+=1
+                    elif c in "丙丁巳午": counts['화']+=1
+                    elif c in "戊己辰戌丑未": counts['토']+=1
+                    elif c in "庚辛申酉": counts['금']+=1
+                    elif c in "壬癸亥子": counts['수']+=1
+
+                guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 亥','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                guiin_str = guiin_map.get(ds, '없음')
+
+                ys_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ys, ys)
+                yb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(yb, yb)
+                ms_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ms, ms)
+                mb_kor = {v: k for k, v in engine.K2H_JI.items()}.get(mb, mb)
+                ds_kor = {v: k for k, v in engine.K2H_GAN.items()}.get(ds, ds)
+                db_kor = {v: k for k, v in engine.K2H_JI.items()}.get(db, db)
+
+                # 4. 공망 및 삼재 연산
+                try:
+                    n_gong_str = engine.calculate_gongmang(ys_kor, yb_kor)
+                    i_gong_str = engine.calculate_gongmang(ds_kor, db_kor)
+                except TypeError:
+                    n_gong_str = engine.calculate_gongmang(ys_kor + yb_kor)
+                    i_gong_str = engine.calculate_gongmang(ds_kor + db_kor)
+                    
+                n_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (n_gong_str if n_gong_str else "")])
+                i_gong = "".join([engine.K2H_JI.get(ch, ch) for ch in (i_gong_str if i_gong_str else "")])
+                if not n_gong: n_gong = "-"
+                if not i_gong: i_gong = "-"
+
+                curr_base = (dt_mod.datetime.now().year - 1984) % 60
+                cur_samjae = engine.get_samjae(yb_kor, engine.JI[curr_base % 12])
+                samjae_color = "#1A237E" if cur_samjae != "해당 없음" else "#2E7D32"
+
+                # 5. 대운수 계산
+                base_dt = dt_mod.datetime(int(p_year), int(p_month), int(p_day), 12, 0)
+                adj_mins = engine.get_total_time_adjustment(base_dt)
+                utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+                order_dir = 1 if (engine.GAN.index(ys_kor) % 2 == 0) == (p_gender == '남성') else -1
+                calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
+                direction_str = "순행" if order_dir == 1 else "역행"
+
+                # 6. UI 데이터 준비
+                sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
+                lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
+                time_str_fmt = f"{p_time.split('(')[0].strip()} ({hb})시" if p_time != "시간 모름" else ""
+
+                info_h = html_views.get_info_header(p_icon, p_name, p_gender, p_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
+
+                # 7. 사주 테이블 HTML 조립
+                ji_rel_rows = ""
+                for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+                    b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+                    cells = "".join([f"<td style='color:{('#1A237E' if ci==r_idx else ('#000' if engine.get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else engine.get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" for ci in range(4)])
+                    lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
+                    ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
+
+                filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, p_gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, p_gender) else "-" for i in range(4)]
+                
+                gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
+                gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds_kor, {v: k for k, v in engine.K2H_GAN.items()}.get(hs, hs))}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, ms_kor)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, ys_kor)}</td>"
+                gan_row = f"{td_bg(hs)}{hs}</td>{td_bg(ds)}{ds}</td>{td_bg(ms)}{ms}</td>{td_bg(ys)}{ys}</td>"
+                ji_row = f"{td_bg(hb)}{hb}</td>{td_bg(db)}{db}</td>{td_bg(mb)}{mb}</td>{td_bg(yb)}{yb}</td>"
+                ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds_kor, {v: k for k, v in engine.K2H_JI.items()}.get(hb, hb))}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, db_kor)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, mb_kor)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds_kor, yb_kor)}</td>"
+                jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds_kor, {v: k for k, v in engine.K2H_JI.items()}.get(jjis[i], jjis[i]))}</td>" for i in range(4)])
+                unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds_kor, {v: k for k, v in engine.K2H_JI.items()}.get(jjis[i], jjis[i]))}</td>" for i in range(4)])
+                shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb_kor, {v: k for k, v in engine.K2H_JI.items()}.get(jjis[i], jjis[i]))}</td>" for i in range(4)])
+                gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
+
+                t_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
+                mb_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
+
+                # 8. 대운 조립
+                u_content = ""
+                c_idx = engine.GAN.index(ms_kor) if ms_kor in engine.GAN else 0
+                j_idx = engine.JI.index(mb_kor) if mb_kor in engine.JI else 0
+
+                for i in range(10):
+                    val = i*10+calc_d
+                    c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
+                    j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
+                    
+                    c = engine.K2H_GAN.get(c_hangul, c_hangul)
+                    j = engine.K2H_JI.get(j_hangul, j_hangul)
+                    
+                    ss_gan = engine.get_ss(ds_kor, c_hangul)
+                    ss_ji = engine.get_ss(ds_kor, j_hangul)
+                    un_sung = engine.get_unsung(ds_kor, j_hangul)
+                    shin_sal = engine.get_12_shinsal(yb_kor, j_hangul)
+                    
+                    bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
+                    b_left = "1px solid #ccc" if i != 9 else "none"
+                    u_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
+                u_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", u_content)
+
+                return t_html, mb_html, u_html
+
+            # --- 남명(m_)과 여명(w_) 변수 할당 로직 ---
+            user_data = (name, gender, b_year, b_month, b_day, b_time, u_cal, u_marital, app_p_icon)
+            partner_data = (f_name, f_gender, f_year, f_month, f_day, f_time, f_cal, f_marital, part_p_icon)
+
+            # 성별에 따라 남명(m) / 여명(w) 올바르게 매칭
+            if gender == "남성" and f_gender == "여성":
+                m_table_html, m_master_html, m_un_html = generate_person_saju(*user_data)
+                w_table_html, w_master_html, w_un_html = generate_person_saju(*partner_data)
+            elif gender == "여성" and f_gender == "남성":
+                w_table_html, w_master_html, w_un_html = generate_person_saju(*user_data)
+                m_table_html, m_master_html, m_un_html = generate_person_saju(*partner_data)
+            else:
+                # 동성 궁합일 경우 신청인을 선(m), 상대방을 후(w)로 배치하여 강제 에러 방지
+                m_table_html, m_master_html, m_un_html = generate_person_saju(*user_data)
+                w_table_html, w_master_html, w_un_html = generate_person_saju(*partner_data)
+
+            # (2) 남명/여명 박스 렌더링
             if 'm_table_html' in locals() and m_table_html:
                 st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
-            
             if 'w_table_html' in locals() and w_table_html:
                 st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
             
             # (3) 대운 비교 렌더링
             if 'm_un_html' in locals() and 'w_un_html' in locals():
-                st.markdown(html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html), unsafe_allow_html=True)
+                m_name = name if gender == "남성" else f_name
+                w_name = f_name if gender == "남성" else name
+                st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
 
-            # (4) 맺음말 렌더링 (※ 누락되었던 부분 복구 완료!)
+            # (4) 클로징 렌더링
             st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
-
 
     # ---------------------------------------------------------
     # [8~10번 상품] 결혼, 출산, 이사 택일
@@ -536,9 +799,8 @@ if st.session_state.get('app_running', False):
         with st.spinner("⏳ 길일 및 시공간 분석 중..."):
             st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
 
-
     # ---------------------------------------------------------
-    # [11번 상품] 타 감명서 비교 (기존 2번 로직 100% 이관)
+    # [11번 상품] 타 감명서 비교
     # ---------------------------------------------------------
     elif "11. 타 감" in u_product:
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
