@@ -438,7 +438,7 @@ if st.session_state.get('app_running', False):
                 
 
     # ---------------------------------------------------------
-    # [7번 상품] 연애 및 궁합운 특화 분석 (기존 3번 로직 100% 이관)
+    # [7번 상품] 연애 및 궁합운 특화 분석 
     # ---------------------------------------------------------
     elif "7. 연애" in u_product:
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
@@ -448,27 +448,38 @@ if st.session_state.get('app_running', False):
             app_p_icon, part_p_icon = ("♂️" if gender == "남성" else "♀️"), ("♂️" if f_gender == "남성" else "♀️")
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
             
-            st.markdown(html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str), unsafe_allow_html=True)
+            # 1. 표지 (바로 출력하지 않고 변수에 저장만 합니다)
+            cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
 
-            # (중략) 남명/여명 사주 데이터 추출 로직은 개인사주 파트와 완벽히 동일하므로, 데이터 추출 후 아래와 같이 호출합니다.
+            # ==========================================================
+            # 🚨 [박사님 필수 작업 구간] 🚨
+            # 박사님께서 예전에 완성해 두셨던 '궁합(남명/여명) 사주 연산 및 HTML 생성 로직'을
+            # 반드시 바로 이 자리에 통째로 복사해서 붙여넣어 주셔야 합니다!
+            # (m_table_html, m_master_html, w_table_html 등이 계산되는 100줄 가량의 코드입니다)
+            # ==========================================================
             
-            # 렌더링 예시 (남명)
-            # m_table_html = html_views.get_saju_table(...)
-            # m_master_html = html_views.get_master_bar(...)
-            # st.markdown(html_views.get_gunghap_person_box(m_table_html, m_master_html), unsafe_allow_html=True)
-            
-            # 렌더링 예시 (여명)
-            # w_table_html = html_views.get_saju_table(...)
-            # w_master_html = html_views.get_master_bar(...)
-            # st.markdown(html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True), unsafe_allow_html=True)
-            
-            # 렌더링 예시 (대운 비교표)
-            # st.markdown(html_views.get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html), unsafe_allow_html=True)
-            
-            # 맺음말
-            st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+            # [오류 방지용 임시 텍스트 - 원본 코드를 넣으시면 아래 변수들은 자동으로 덮어씌워집니다]
+            m_table_html = m_table_html if 'm_table_html' in locals() else "<div style='text-align:center; padding:20px;'>남명 사주표 (원본 코드 연동 필요)</div>"
+            m_master_html = m_master_html if 'm_master_html' in locals() else ""
+            w_table_html = w_table_html if 'w_table_html' in locals() else "<div style='text-align:center; padding:20px;'>여명 사주표 (원본 코드 연동 필요)</div>"
+            w_master_html = w_master_html if 'w_master_html' in locals() else ""
+            m_un_html = m_un_html if 'm_un_html' in locals() else ""
+            w_un_html = w_un_html if 'w_un_html' in locals() else ""
+            ai_output_html = ai_output_html if 'ai_output_html' in locals() else ""
 
+            # 2. 남명 / 여명 / 대운비교 박스 생성
+            m_box = html_views.get_gunghap_person_box(m_table_html, m_master_html)
+            w_box = html_views.get_gunghap_person_box(w_table_html, w_master_html, add_page_break=True)
+            compare_box = html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html)
+            
+            # 3. 맺음말 생성
+            closing_html = html_views.get_gunghap_closing()
 
+            # 4. [핵심 해결책] 흩어진 모든 HTML을 순서대로 하나로 합칩니다.
+            final_gunghap_html = cover_html + m_box + w_box + compare_box + ai_output_html + closing_html
+            
+            # 5. 합쳐진 하나의 HTML을 A4 용지 박스(get_combined_report_box)에 담아서 최종 출력!
+            st.markdown(html_views.get_combined_report_box(final_gunghap_html), unsafe_allow_html=True)
     # ---------------------------------------------------------
     # [8~10번 상품] 결혼, 출산, 이사 택일
     # ---------------------------------------------------------
