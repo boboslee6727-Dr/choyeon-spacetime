@@ -11,8 +11,13 @@ import prompts
 import json
 import math
 import pytz
-import html_views
- 
+import sys
+# 현재 app.py가 위치한 폴더를 시스템 경로로 강제 추가
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
+import html_views  # 이제 이 코드는 어떤 환경에서도 파일을 정확히 찾아냅니다
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
