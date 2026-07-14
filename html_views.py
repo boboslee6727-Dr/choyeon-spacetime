@@ -110,16 +110,16 @@ def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, j
             <td>월주</td>
             <td>년주</td>
         </tr>
-        <tr style='line-height:1.2;'><td class='header-cell-main'>합충</td>{gan_rel}</tr>
-        <tr style='line-height:1.2;'><td class='header-cell-main'>십성</td>{gan_ss}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main'>천간합충</td>{gan_rel}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main'>천간십성</td>{gan_ss}</tr>
         <tr style='line-height:1.2;'><td class='header-cell-main' style='background:#E8EAF6 !important;'>천간</td>{gan_row}</tr>
         <tr style='line-height:1.2;'><td class='header-cell-main' style='background:#E8EAF6 !important;'>지지</td>{ji_row}</tr>
-        <tr style='line-height:1.2;'><td class='header-cell-main'>십성</td>{ji_ss}</tr>
-        <tr style='line-height:1.2;'><td class='header-cell-main' style='padding:0;'>장간</td>{jijanggan}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main'>지지십성</td>{ji_ss}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main' style='padding:0;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
-        <tr style='line-height:1.2;'><td class='header-cell-main'>운성</td>{unsung}</tr>
-        <tr style='line-height:1.2;'><td class='header-cell-main'>신살</td>{shinsal}</tr>
-        <tr style='line-height:1.2;'><td class='header-cell-main'>일반</td>{gen_shinsal}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main'>십이운성</td>{unsung}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main'>십이신살</td>{shinsal}</tr>
+        <tr style='line-height:1.2;'><td class='header-cell-main'>일반신살</td>{gen_shinsal}</tr>
     </table>
     """
 
