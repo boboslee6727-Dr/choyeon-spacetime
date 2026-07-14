@@ -359,38 +359,35 @@ if st.session_state.get('app_running', False):
             for i in range(10):
                 val = i * 10 + calc_d
                 
-                # 인덱스 계산 최적화
+                # [강화] 인덱스 연산 시 10과 12로 나눈 나머지를 엄격히 적용
                 c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
                 j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
                 
                 c_hangul = engine.GAN[c_idx_calc]
                 j_hangul = engine.JI[j_idx_calc]
                 
-
-                # 2. 엔진 통역 및 연산 (51세 누락 방지 방어 코드)
-                c_hanja = engine._to_hanja(c_hangul)
-                j_hanja = engine._to_hanja(j_hangul)
-
-                ss_gan = engine.get_ss(ds, c_hanja) or "-"
-                ss_ji = engine.get_ss(ds, j_hanja) or "-"
-
-                # 🚨 [핵심] 운성/신살 계산 시 엔진의 통역값 활용
-                if j_hanja and j_hanja not in ["?", " ", "-"]:
-                    un_sung = engine.get_unsung(ds, j_hanja) or "-"
-                    shin_sal = engine.get_12_shinsal(yb, j_hanja) or "-"
-                else:
-                    un_sung, shin_sal = "-", "-"
-                
                 c = engine.K2H_GAN.get(c_hangul, c_hangul)
                 j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
-                bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
+                # [방어] 데이터가 없으면 "-" 처리하여 로직 멈춤 방지
+                ss_gan = engine.get_ss(ds, c_hangul) or "-"
+                ss_ji = engine.get_ss(ds, j_hangul) or "-"
+                
+                # [결정적 해결] 엔진 통역기를 거친 유효 지지로만 운성/신살 계산
+                valid_j = engine._to_hanja(j_hangul)
+                if valid_j and valid_j not in ["?", " ", "-"]:
+                    un_sung = engine.get_unsung(ds, j_hangul) or "-"
+                    shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
+                else:
+                    un_sung, shin_sal = "-", "-"
+                
+                bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
                 
-                # 4. UI 렌더링 호출
+                # 색상 클래스도 유효한 글자에만 적용
                 un_content += html_views.get_un_cell(
-                    f"{val}세", ss_gan, c, get_oh_class(c_hanja), 
-                    j, get_oh_class(j_hanja), ss_ji, un_sung, shin_sal, bg_col, b_left
+                    f"{val}세", ss_gan, c, get_oh_class(c_hangul), 
+                    j, get_oh_class(j_hangul), ss_ji, un_sung, shin_sal, bg_col, b_left
                 )
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
