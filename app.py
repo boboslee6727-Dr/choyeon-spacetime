@@ -15,6 +15,9 @@ with open('choyeon_db.json', 'r', encoding='utf-8') as f:
 import math
 import pytz
 import html_views
+class SafeDict(dict):
+    def __missing__(self, key):
+        return f"{{{key}}}"
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
@@ -298,7 +301,7 @@ if st.session_state.get('app_running', False):
                     t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
                 else:
                     t_gan = ""
-
+            
             gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
             hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
             hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
@@ -332,135 +335,72 @@ if st.session_state.get('app_running', False):
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
-
+ 
             # 1. 렌더링 데이터 준비 (순수 데이터 및 HTML 파편 생성)
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
             intro_html = html_views.get_intro_html()
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
 
-            # 2. 사주원국(Table) 생성 호출
-            gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-            gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
-            gan_row = "".join([td_bg(g)+f"{g}</td>" for g in gans])
-            ji_row = "".join([td_bg(j)+f"{j}</td>" for j in jjis])
-            ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, db)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, mb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, yb)}</td>"
-            jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
-            unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-            shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-            filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
-            gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
-            ji_rel_rows = engine.get_ji_rel_rows_html(jjis)
-            table_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
+            # 1. 테이블 생성
+            table_html = html_views.generate_saju_table_data(info_h, gans, jjis, ds, gender, engine)
 
-            # 3. 종합정보(Master Bar) 생성 호출
+            # 2. 종합정보(Master Bar) 생성
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
+            # 3. 육친 규칙 가져오기
             yukchin_rule = engine.get_yukchin_rule(u_gender, u_marital)
 
-            # [수정된 대운 연산 루프: 12운성/12신살 누락 방지]
-            un_content = ""
-            c_idx = engine.GAN.index(ms) % 10 if ms in engine.GAN else 0
-            j_idx = engine.JI.index(mb) % 12 if mb in engine.JI else 0
+            # [대운 연산 및 렌더링 호출 - 완벽 분리 적용]
+            daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
-            for i in range(10):
-                val = i * 10 + calc_d
-                
-                # 1. 인덱스 계산 (나머지 연산으로 순환 보장)
-                c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
-                j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
-                
-                c_hangul = engine.GAN[c_idx_calc]
-                j_hangul = engine.JI[j_idx_calc]
-                
-                # 2. 엔진 통역 및 데이터 조회 (c, j는 한자 변환값)
-                c = engine.K2H_GAN.get(c_hangul, c_hangul)
-                j = engine.K2H_JI.get(j_hangul, j_hangul)
-                
-                ss_gan = engine.get_ss(ds, c_hangul) or "-"
-                ss_ji = engine.get_ss(ds, j_hangul) or "-"
-                
-                # 3. 🚨 12운성 및 12신살 안전 조회 (한자 'j'를 인자로 전달하여 누락 해결)
-                try:
-                    un_sung = engine.get_unsung(ds, j)
-                    if not un_sung: un_sung = "-"
-                    
-                    shin_sal = engine.get_12_shinsal(yb, j)
-                    if not shin_sal: shin_sal = "-"
-                except Exception:
-                    un_sung, shin_sal = "-", "-"
-                
-                bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
-                b_left = "1px solid #ccc" if i != 0 else "none"
+            golden_text_html = html_views.get_golden_text(name, w_val, i_val)
 
-                un_content += html_views.get_un_cell(
-                    f"{val}~{val+9}세", ss_gan, c, get_oh_class(c_hangul), 
-                    j, get_oh_class(j_hangul), ss_ji, un_sung, shin_sal, bg_col, b_left
+            # ---------------- [AI 통변: 데이터 주입 및 최종 렌더링 최적화] ----------------
+            ai_output_html = ""
+            try:
+                # 1. engine.py로부터 팩트 데이터 생성 및 안전하게 주입
+                saju_facts = engine.get_saju_fact_sheet(
+                    ys, yb, ms, mb, ds, db, hs, hb, 
+                    name=name, age=age, gender=gender, marital=u_marital
                 )
+                
+                # 안전한 변수 주입 (데이터가 없어도 에러 대신 {key} 출력으로 시스템 보호)
+                safe_facts = SafeDict(saju_facts)
+                final_prompt_text = selected_prompt_template.format_map(safe_facts)
+                
+                # 2. AI 통변 호출 및 결과 정제
+                ai_result = call_gemini_api(final_prompt_text)
+                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            
+                # 3. 가독성 스타일링 (### 제거 및 줄간격 통일)
+                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+            
+                ai_output_html = html_views.get_ai_report_box(ai_result)
+            
+            except Exception as e:
+                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
-        un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
-
-        # 🚨 [골든 텍스트 연계 로직: 100% 정상 작동]
-        w_key = ms + mb
-        i_key = ds + db
+            # 4. 보고서 조립 (전체 순서 유지)
+            closing_html = html_views.get_closing_html(name)
         
-        w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-        i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+            st.markdown(cover_html, unsafe_allow_html=True)
+            
+            final_report = (
+                str(table_html or "") + 
+                str(master_bar_html or "") + 
+                str(un_html or "") +
+                str(intro_html or "") +
+                str(golden_text_html or "") +
+                str(ai_output_html or "") + 
+                str(closing_html or "")
+            )
         
-        golden_text_html = html_views.get_golden_text(name, w_val, i_val)
-
-        # ---------------- [AI 통변: 스타일링 및 가독성 최종 최적화] ----------------
-        ai_output_html = ""
-        try:
-            # 1. 딕셔너리로 변수 명확히 관리
-            context_data = {
-                "{name}": str(name),
-                "{disp_name}": str(name),  # 👈 name으로 완벽 치환
-                "{ds}": str(ds), "{db}": str(db),
-                "{ms}": str(ms), "{mb}": str(mb),
-                "{curr_y}": str(curr_year), "{curr_m}": str(curr_month)
-                "{yukchin_rule}": yukchin_rule,
-            }
-            
-            prompt_str = prompts.PERSONAL_SAJU_PROMPT
-            for key, value in context_data.items():
-                prompt_str = prompt_str.replace(key, value)
-            
-            ai_result = call_gemini_api(prompt_str)
-            
-            # 2. 코드블록 제거
-            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            
-            # 3. ### 제거 및 폰트 스타일 적용 (강조/확대)
-            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-            # 줄간격 통일:
-            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-            
-            ai_output_html = html_views.get_ai_report_box(ai_result)
-            
-        except Exception as e:
-            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
-
-        # 🚨 들여쓰기 수정 (except 밖으로 빼내어 정상 렌더링 보장)
-        closing_html = html_views.get_closing_html(name)
-        
-        st.markdown(cover_html, unsafe_allow_html=True)
-        final_report = (
-            str(table_html or "") + 
-            str(master_bar_html or "") + 
-            str(un_html or "") +
-            str(intro_html or "") +
-            str(golden_text_html or "") +
-            str(ai_output_html or "") + 
-            str(closing_html or "")
-        )
-        
-        # 🚨 [핵심 조치] Streamlit이 HTML 들여쓰기를 '코드블록'으로 오해하지 못하도록
-        # 줄바꿈과 연속된 공백을 1칸의 여백으로 완벽하게 진공 압축합니다.
-        full_html = html_views.get_final_report_box(final_report)
-        full_html_clean = re.sub(r'\n\s+', ' ', full_html)
-        
-        # 압축된 순수 HTML을 화면에 송출 (이제 속살은 절대 나오지 않습니다)
-        st.markdown(full_html_clean, unsafe_allow_html=True)
+            # 5. 최종 렌더링 압축 및 송출
+            full_html = html_views.get_final_report_box(final_report)
+            full_html_clean = re.sub(r'\n\s+', ' ', full_html)
+            st.markdown(full_html_clean, unsafe_allow_html=True)
 
     elif "2. 올 해" in u_product:
         st.header(f"🔮 {name}님의 올해(세운) 분석")
