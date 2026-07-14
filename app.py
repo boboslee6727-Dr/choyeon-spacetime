@@ -355,6 +355,8 @@ if st.session_state.get('app_running', False):
             # 3. 종합정보(Master Bar) 생성 호출
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
+            yukchin_rule = engine.get_yukchin_rule(u_gender, u_marital)
+
             # [수정된 대운 연산 루프: 12운성/12신살 누락 방지]
             un_content = ""
             c_idx = engine.GAN.index(ms) % 10 if ms in engine.GAN else 0
@@ -416,6 +418,7 @@ if st.session_state.get('app_running', False):
                 "{ds}": str(ds), "{db}": str(db),
                 "{ms}": str(ms), "{mb}": str(mb),
                 "{curr_y}": str(curr_year), "{curr_m}": str(curr_month)
+                "{yukchin_rule}": yukchin_rule,
             }
             
             prompt_str = prompts.PERSONAL_SAJU_PROMPT
