@@ -66,7 +66,9 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_gemini_api(prompt_text, max_tokens=6000):
-    return get_ai_response(prompts.SYSTEM_ROLE, prompt_text, model_name='gemini-2.5-flash')
+    # prompts.py에 SYSTEM_ROLE이 없으면 기본값을 강제로 주입하여 시스템 중단을 막습니다.
+    sys_role = getattr(prompts, 'SYSTEM_ROLE', "당신은 초연 시공명리 연구소의 수석 명리학자 AI입니다. 제공된 사주 원국과 데이터를 바탕으로 내담자에게 정확하고 따뜻한 명리학적 통변을 제공하십시오.")
+    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
 def extract_ganji(text):
     if not text: return ""
