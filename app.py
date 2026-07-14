@@ -415,8 +415,15 @@ if st.session_state.get('app_running', False):
             # 3. 정제된 프롬프트로 AI 호출
             ai_result = call_gemini_api(prompt_str)
             
-            # 4. 출력 필터링 (속살 제거)
+            # 4. 출력 필터링 및 가독성 개선 (속살 제거 및 줄바꿈 복원)
             ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            
+            # 🚨 [핵심 수정] 
+            # 1. '### ' 패턴을 찾아서 그 앞에 줄바꿈 태그 추가
+            # 2. '\n'을 HTML의 <br>로 강제 치환하여 문단 띄어쓰기 복구
+            ai_result = re.sub(r'### ', '<br><br>### ', ai_result)
+            ai_result = ai_result.replace('\n', '<br>')
+            
             ai_output_html = html_views.get_ai_report_box(ai_result)
             
         except Exception as e:
