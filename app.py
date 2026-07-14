@@ -393,19 +393,24 @@ if st.session_state.get('app_running', False):
 
         un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-        # ---------------- [AI 통변: 에러 원인 격리] ----------------
+        # ---------------- [AI 통변: 에러 원인 격리 및 완벽 해결] ----------------
         ai_output_html = ""
         try:
-            # 🚨 curr_y와 함께 curr_m=curr_month 도 반드시 추가해야 합니다!
-            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                name=name, gender=gender, ilgan=ds, ilju=ds+db, 
-                wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
-                missing_and_gongmang="엔진 데이터 연동", 
-                shinsal_info="엔진 데이터 연동", 
-                vault_info="엔진 데이터 연동",
-                curr_y=curr_year,  # 아까 추가한 년도
-                curr_m=curr_month  # 👈 새롭게 추가하는 월 (이것이 진범입니다)
-            )
+            # 파이썬 .format()의 연쇄 에러를 완벽히 차단하는 .replace() 방식
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT
+            fact_sheet = fact_sheet.replace("{name}", str(name))
+            fact_sheet = fact_sheet.replace("{disp_name}", str(name))  # 🚨 새로 발견된 빈칸 채우기
+            fact_sheet = fact_sheet.replace("{gender}", str(gender))
+            fact_sheet = fact_sheet.replace("{ilgan}", str(ds))
+            fact_sheet = fact_sheet.replace("{ilju}", str(ds+db))
+            fact_sheet = fact_sheet.replace("{wolryeong}", str(ms+mb))
+            fact_sheet = fact_sheet.replace("{jijanggan_info}", "엔진 데이터 연동")
+            fact_sheet = fact_sheet.replace("{missing_and_gongmang}", "엔진 데이터 연동")
+            fact_sheet = fact_sheet.replace("{shinsal_info}", "엔진 데이터 연동")
+            fact_sheet = fact_sheet.replace("{vault_info}", "엔진 데이터 연동")
+            fact_sheet = fact_sheet.replace("{curr_y}", str(curr_year))
+            fact_sheet = fact_sheet.replace("{curr_m}", str(curr_month))
+            
             ai_result = call_gemini_api(fact_sheet)
             if "🚨" in ai_result:
                 ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
