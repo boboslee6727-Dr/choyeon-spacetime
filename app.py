@@ -77,8 +77,8 @@ def get_oh_class(ganji):
 
 def td_bg(ganji):
     cls = get_oh_class(ganji)
-    # CSS 클래스가 오행별 색상을 알아서 처리합니다.
-    return f"<td class='{cls}'>"
+    # CSS 클래스가 오행별 색상을 알아서 처리하며, ganji-cell로 글자 크기와 입체감을 줍니다.
+    return f"<td class='{cls} ganji-cell'>"
 
 # ==============================================================================
 # 2. 사이드바 통제 센터
