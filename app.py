@@ -241,7 +241,7 @@ with st.sidebar:
         moving_date = st.date_input("이사 희망일")
         moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
 
-    elif "11. 타 감" in u_product:
+    elif "11. 타 감명서 비교 " in u_product:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
     st.markdown("---")
@@ -348,7 +348,7 @@ if st.session_state.get('app_running', False):
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
             # 3. 육친 규칙 가져오기
-            yukchin_rule = engine.get_yukchin_rule(u_gender, u_marital)
+            yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
 
             # [대운 연산 및 렌더링 호출 - 완벽 분리 적용]
             daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
