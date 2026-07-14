@@ -395,6 +395,17 @@ if st.session_state.get('app_running', False):
 
         un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
+        # 🚨 [골든 텍스트 연계 로직]
+        w_key = ms + mb # 월령 키
+        i_key = ds + db # 일주 키
+        
+        # db에서 데이터 인출
+        w_val = db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+        i_val = db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+        
+        # 골든 텍스트 생성 (html_views를 통해 가져옴)
+        golden_text_html = html_views.get_golden_text(name, w_val, i_val)
+
         # ---------------- [AI 통변: 스타일링 및 가독성 최종 최적화] ----------------
         ai_output_html = ""
         try:
@@ -417,11 +428,9 @@ if st.session_state.get('app_running', False):
             ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
             
             # 3. ### 제거 및 폰트 스타일 적용 (강조/확대)
-            # ### 제목 -> <div style='font-size:24px; font-weight:900; margin:15px 0 10px 0;'>제목</div>
-            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:24px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-            
-            # 4. 문단 간격 조정 (간격을 너무 넓지 않게 <p> 태그 사용)
-            ai_result = ai_result.replace('\n', '<p style="margin:5px 0; line-height:1.5;">')
+            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+            # 줄간격 통일:
+            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
             
             ai_output_html = html_views.get_ai_report_box(ai_result)
             
