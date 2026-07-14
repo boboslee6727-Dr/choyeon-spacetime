@@ -376,8 +376,8 @@ if st.session_state.get('app_running', False):
                 un_sung = engine.get_unsung(ds, j_hangul) if j_hangul in engine.JI else "-"
                 shin_sal = engine.get_12_shinsal(yb, j_hangul) if j_hangul in engine.JI else "-"
                 
-                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none" # 🚨 마지막 인덱스(9)에서만 border 없음
+                bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
+                b_left = "1px solid #ccc" if i != 9 else "none"
 
                 un_content += html_views.get_un_cell(
                     f"{val}세", ss_gan, c, get_oh_class(c_hangul), 
