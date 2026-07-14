@@ -395,39 +395,32 @@ if st.session_state.get('app_running', False):
 
         un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-        # ---------------- [AI 통변: 에러 원인 격리 및 완벽 해결] ----------------
+        # ---------------- [AI 통변: 데이터 매핑 및 출력] ----------------
         ai_output_html = ""
         try:
-            # 파이썬 .format()의 연쇄 에러를 완벽히 차단하는 .replace() 방식
-            fact_sheet = prompts.PERSONAL_SAJU_PROMPT
-            fact_sheet = fact_sheet.replace("{name}", str(name))
-            fact_sheet = fact_sheet.replace("{disp_name}", str(name))  # 🚨 새로 발견된 빈칸 채우기
-            fact_sheet = fact_sheet.replace("{gender}", str(gender))
-            fact_sheet = fact_sheet.replace("{ilgan}", str(ds))
-            fact_sheet = fact_sheet.replace("{ilju}", str(ds+db))
-            fact_sheet = fact_sheet.replace("{wolryeong}", str(ms+mb))
-            fact_sheet = fact_sheet.replace("{jijanggan_info}", "엔진 데이터 연동")
-            fact_sheet = fact_sheet.replace("{missing_and_gongmang}", "엔진 데이터 연동")
-            fact_sheet = fact_sheet.replace("{shinsal_info}", "엔진 데이터 연동")
-            fact_sheet = fact_sheet.replace("{vault_info}", "엔진 데이터 연동")
-            fact_sheet = fact_sheet.replace("{curr_y}", str(curr_year))
-            fact_sheet = fact_sheet.replace("{curr_m}", str(curr_month))
+            # 1. 실제 데이터 변수들을 정의
+            context_data = {
+                "{name}": str(name),
+                "{ds}": str(ds), "{db}": str(db),
+                "{ms}": str(ms), "{mb}": str(mb),
+                "{curr_y}": str(curr_year), "{curr_m}": str(curr_month),
+                "{gyukgook_detail}": "격국 분석 완료" # 여기는 엔진 데이터 연동 예정
+            }
             
-            ai_result = call_gemini_api(fact_sheet)
-            if "🚨" in ai_result:
-                ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
-            else:
-                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                
-                # 🚨 [추가된 로직] AI가 몰래 붙인 코드블록 기호(```html, ```) 완벽 제거
-                ai_result = ai_result.replace("```html", "")
-                ai_result = ai_result.replace("```markdown", "")
-                ai_result = ai_result.replace("```", "")
-                ai_result = ai_result.strip()
-                
-                ai_output_html = html_views.get_ai_report_box(ai_result)
+            # 2. 프롬프트를 가져와서 변수를 실제 값으로 교체 (안전한 치환)
+            prompt_str = prompts.PERSONAL_SAJU_PROMPT
+            for key, value in context_data.items():
+                prompt_str = prompt_str.replace(key, value)
+            
+            # 3. 정제된 프롬프트로 AI 호출
+            ai_result = call_gemini_api(prompt_str)
+            
+            # 4. 출력 필터링 (속살 제거)
+            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            ai_output_html = html_views.get_ai_report_box(ai_result)
+            
         except Exception as e:
-            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+            ai_output_html = f"<div style='color:red;'>🚨 AI 통변 처리 에러: {str(e)}</div>"
 
         # 🚨 들여쓰기 수정 (except 밖으로 빼내어 정상 렌더링 보장)
         closing_html = html_views.get_closing_html(name)
