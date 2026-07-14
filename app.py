@@ -247,6 +247,8 @@ with st.sidebar:
 # 3. 메인 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
+    curr_y = dt_mod.datetime.now().year  # 🚨 여기에 확실하게 정의
+    curr_m = dt_mod.datetime.now().month
     
     if "1. 개인사주" in u_product:
         klc = KoreanLunarCalendar()
@@ -262,9 +264,9 @@ if st.session_state.get('app_running', False):
             lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
             leap_str = "윤달" if klc.isIntercalation else "평달"
             
-        curr_year = dt_mod.datetime.now().year
+        curr_y = dt_mod.datetime.now().year
         curr_m = dt_mod.datetime.now().month
-        age = curr_year - sol_y + 1
+        age = curr_y - sol_y + 1
         p_icon = "♂️" if gender == "남성" else "♀️"
         today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
         
@@ -313,7 +315,7 @@ if st.session_state.get('app_running', False):
             guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(engine.K2H_GAN.get(ds, ds), '없음')
             
-            curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
+            curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_y - 1984) % 12]
             
             n_gong = engine.calculate_gongmang(ys, yb)
             i_gong = engine.calculate_gongmang(ds, db)
@@ -441,8 +443,8 @@ if st.session_state.get('app_running', False):
                 klc.setSolarDate(int(b_year), int(b_month), int(b_day))
                 sol_y = int(b_year)
                 
-            curr_year = dt_mod.datetime.now().year
-            age = curr_year - sol_y + 1
+            curr_y = dt_mod.datetime.now().year
+            age = curr_y - sol_y + 1
 
             def extract_time(time_str):
                 if "모름" in time_str: return 0, 0
@@ -472,14 +474,14 @@ if st.session_state.get('app_running', False):
             dw_j_cur_hangul = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             dw_g_cur = engine.K2H_GAN.get(dw_g_cur_hangul, dw_g_cur_hangul)
             dw_j_cur = engine.K2H_JI.get(dw_j_cur_hangul, dw_j_cur_hangul)
-            
+     
             try:
                 current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
                 start_year = int(sol_y) + current_daewun_age - 1
             except:
                 current_daewun_age = max(0, int(age))
-                start_year = curr_year
-                
+                start_year = curr_y
+
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -495,7 +497,7 @@ if st.session_state.get('app_running', False):
                 un_sung = engine.get_unsung(ds, tj_hangul)
                 shin_sal = engine.get_12_shinsal(yb, tj_hangul)
 
-                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
+                bg_col = "#E1F5FE" if ty == curr_y else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
 
                 se_content += html_views.get_sewun_cell(
@@ -510,7 +512,7 @@ if st.session_state.get('app_running', False):
         st.header(f"🔮 {name}님의 이번 달(월운) 분석")
         st.markdown("---")
         with st.spinner("⏳ 월운 정밀 분석 중...."):
-            curr_year = dt_mod.datetime.now().year
+            curr_y = dt_mod.datetime.now().year
             curr_m = dt_mod.datetime.now().month
 
             def extract_time(time_str):
@@ -550,7 +552,7 @@ if st.session_state.get('app_running', False):
                     wj, get_oh_class(wj), ss_ji, un_sung, shin_sal, bg_col, b_left
                 )
             
-            wol_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+            wol_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_y}년도 양력기준) ]", wol_content)
             st.markdown(html_views.get_final_report_box(wol_html), unsafe_allow_html=True)
 
     elif any(x in u_product for x in ["4. 재물", "5. 직업", "6. 건강"]):
