@@ -7,6 +7,7 @@ import re
 from google import genai
 import time
 import importlib
+importlib.reload(engine) # 이 한 줄을 추가하면 파일을 수정할 때마다 즉시 반영됩니다.
 import engine
 import prompts
 import json
@@ -350,8 +351,14 @@ if st.session_state.get('app_running', False):
             # 3. 육친 규칙 가져오기
             yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
 
-            # [대운 연산 및 렌더링 호출 - 완벽 분리 적용]
-            daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+            # ------------------------------
+            # 에러 발생 라인 직전(354라인)에 아래 코드를 복사해서 붙여넣으십시오.
+            st.write("--- 디버그 정보 ---")
+            st.write(f"Engine 모듈 위치: {engine.__file__}")
+            st.write(f"사용 가능한 함수 목록: {dir(engine)}")
+            # ------------------------------
+
+            daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
             golden_text_html = html_views.get_golden_text(name, w_val, i_val)
