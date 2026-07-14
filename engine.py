@@ -293,6 +293,18 @@ def get_12_shinsal(year_ji, target_ji):
     except:
         return "-"
 
+def get_all_12_shinsal(yb, mb, db, hb):
+    """
+    년지(yb)를 기준으로 월지, 일지, 시지의 12신살을 한 번에 계산하여 문자열로 반환합니다.
+    """
+    results = [
+        get_12_shinsal(yb, yb), # 년지 신살
+        get_12_shinsal(yb, mb), # 월지 신살
+        get_12_shinsal(yb, db), # 일지 신살
+        get_12_shinsal(yb, hb)  # 시지 신살
+    ]
+    return ", ".join(results)
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
