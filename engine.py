@@ -293,9 +293,9 @@ def get_12_shinsal(year_ji, target_ji):
     except:
         return "-"
 
-def get_all_12_shinsal(yb, mb, db, hb):
+def get_all_12_shinsal(yb_unused, yb, mb, db, hb):
     """
-    년지(yb)를 기준으로 월지, 일지, 시지의 12신살을 한 번에 계산하여 문자열로 반환합니다.
+    인자를 5개 받도록 수정했습니다. 첫 번째 인자는 무시(unused)합니다.
     """
     results = [
         get_12_shinsal(yb, yb), # 년지 신살
