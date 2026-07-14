@@ -405,7 +405,6 @@ if st.session_state.get('app_running', False):
         i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         
         golden_text_html = html_views.get_golden_text(name, w_val, i_val)
-        st.markdown(golden_text_html, unsafe_allow_html=True)
 
         # ---------------- [AI 통변: 스타일링 및 가독성 최종 최적화] ----------------
         ai_output_html = ""
@@ -446,7 +445,8 @@ if st.session_state.get('app_running', False):
             str(table_html or "") + 
             str(master_bar_html or "") + 
             str(un_html or "") +
-            str(intro_html or "") +    
+            str(intro_html or "") +
+            str(golden_text_html or "") +
             str(ai_output_html or "") + 
             str(closing_html or "")
         )
