@@ -247,10 +247,11 @@ with st.sidebar:
 # 3. 메인 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
+    curr_dt = dt_mod.datetime.now()
     curr_year = dt_mod.datetime.now().year
     curr_month = dt_mod.datetime.now().month
     
-    if "1. 개인사주" in u_product:
+    if "1. 개인사주" in u_product:curr_dt = dt_mod.datetime.now()
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
             is_leap = True if "윤달" in u_cal else False
@@ -355,56 +356,46 @@ if st.session_state.get('app_running', False):
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
 
             for i in range(10):
-                # i=9일 때도 정상 연산되도록 루프 범위를 확인
-                val = i * 10 + calc_d
-                
-                # 인덱스 계산을 확실하게 10/12로 나눈 나머지로 고정
-                c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
-                j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
-                
-                c_hangul = engine.GAN[c_idx_calc]
-                j_hangul = engine.JI[j_idx_calc]
-                
-                # 데이터 유효성 검증 (엔진 통역기 활용)
-                c = engine.K2H_GAN.get(c_hangul, c_hangul)
-                j = engine.K2H_JI.get(j_hangul, j_hangul)
-                
-                ss_gan = engine.get_ss(ds, c_hangul) or "-"
-                ss_ji = engine.get_ss(ds, j_hangul) or "-"
-                
-                # 🚨 엔진에서 안전하게 데이터를 가져옴
-                un_sung = engine.get_unsung(ds, j_hangul) if j_hangul in engine.JI else "-"
-                shin_sal = engine.get_12_shinsal(yb, j_hangul) if j_hangul in engine.JI else "-"
-                
-                bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
-                b_left = "1px solid #ccc" if i != 9 else "none"
+            val = i * 10 + calc_d
+            # 루프 내에서 인덱스 계산을 확실하게 수행
+            c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
+            j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
+            
+            c_h = engine.GAN[c_idx_calc]
+            j_h = engine.JI[j_idx_calc]
+            
+            c = engine.K2H_GAN.get(c_h, c_h)
+            j = engine.K2H_JI.get(j_h, j_h)
+            
+            # 엔진 데이터 조회 시 안전 장치
+            ss_gan = engine.get_ss(ds, c_h) or "-"
+            ss_ji = engine.get_ss(ds, j_h) or "-"
+            un_sung = engine.get_unsung(ds, j_h) if j_h in engine.JI else "-"
+            shin_sal = engine.get_12_shinsal(yb, j_h) if j_h in engine.JI else "-"
+            
+            # 나이 비교 로직 (ty 사용 금지, val 사용)
+            bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
+            b_left = "1px solid #ccc" if i != 0 else "none"
 
-                un_content += html_views.get_un_cell(
-                    f"{val}세", ss_gan, c, get_oh_class(c_hangul), 
-                    j, get_oh_class(j_hangul), ss_ji, un_sung, shin_sal, bg_col, b_left
-                )
+            un_content += html_views.get_un_cell(
+                f"{val}세", ss_gan, c, get_oh_class(c_h), 
+                j, get_oh_class(j_h), ss_ji, un_sung, shin_sal, bg_col, b_left
+            )
 
-            un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
+        un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-            # [AI 통변 호출부 안전하게 수정]
-            ai_output_html = ""
-            try:
-                # ds(일간), db(일지), ms(월간), mb(월지)를 명확히 전달
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=ds, ilju=ds+db, 
-                    wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
-                    missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", 
-                    vault_info="엔진 데이터 연동"
-                )
-                ai_result = call_gemini_api(fact_sheet)
-                if "🚨" in ai_result: # AI 에러 메시지가 반환된 경우
-                    ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
-                else:
-                    ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                    ai_output_html = html_views.get_ai_report_box(ai_result)
-            except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+        # ---------------- [AI 통변: 에러 원인 격리] ----------------
+        ai_output_html = ""
+        try:
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(name=name, ...)
+            ai_result = call_gemini_api(fact_sheet)
+            if "🚨" in ai_result:
+                ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
+            else:
+                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+                ai_output_html = html_views.get_ai_report_box(ai_result)
+        except Exception as e:
+            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
             closing_html = html_views.get_closing_html(name)
             
