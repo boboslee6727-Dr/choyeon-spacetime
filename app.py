@@ -395,39 +395,38 @@ if st.session_state.get('app_running', False):
 
         un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-        # ---------------- [AI 통변: 데이터 매핑 및 출력] ----------------
+        # ---------------- [AI 통변: 스타일링 및 가독성 최종 최적화] ----------------
         ai_output_html = ""
         try:
-            # 1. 실제 데이터 변수들을 정의
+            # 1. 딕셔너리로 변수 명확히 관리
             context_data = {
                 "{name}": str(name),
+                "{disp_name}": str(name),  # 👈 name으로 완벽 치환
                 "{ds}": str(ds), "{db}": str(db),
                 "{ms}": str(ms), "{mb}": str(mb),
-                "{curr_y}": str(curr_year), "{curr_m}": str(curr_month),
-                "{gyukgook_detail}": "격국 분석 완료" # 여기는 엔진 데이터 연동 예정
+                "{curr_y}": str(curr_year), "{curr_m}": str(curr_month)
             }
             
-            # 2. 프롬프트를 가져와서 변수를 실제 값으로 교체 (안전한 치환)
             prompt_str = prompts.PERSONAL_SAJU_PROMPT
             for key, value in context_data.items():
                 prompt_str = prompt_str.replace(key, value)
             
-            # 3. 정제된 프롬프트로 AI 호출
             ai_result = call_gemini_api(prompt_str)
             
-            # 4. 출력 필터링 및 가독성 개선 (속살 제거 및 줄바꿈 복원)
+            # 2. 코드블록 제거
             ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
             
-            # 🚨 [핵심 수정] 
-            # 1. '### ' 패턴을 찾아서 그 앞에 줄바꿈 태그 추가
-            # 2. '\n'을 HTML의 <br>로 강제 치환하여 문단 띄어쓰기 복구
-            ai_result = re.sub(r'### ', '<br><br>### ', ai_result)
-            ai_result = ai_result.replace('\n', '<br>')
+            # 3. ### 제거 및 폰트 스타일 적용 (강조/확대)
+            # ### 제목 -> <div style='font-size:24px; font-weight:900; margin:15px 0 10px 0;'>제목</div>
+            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:24px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+            
+            # 4. 문단 간격 조정 (간격을 너무 넓지 않게 <p> 태그 사용)
+            ai_result = ai_result.replace('\n', '<p style="margin:5px 0; line-height:1.5;">')
             
             ai_output_html = html_views.get_ai_report_box(ai_result)
             
         except Exception as e:
-            ai_output_html = f"<div style='color:red;'>🚨 AI 통변 처리 에러: {str(e)}</div>"
+            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
         # 🚨 들여쓰기 수정 (except 밖으로 빼내어 정상 렌더링 보장)
         closing_html = html_views.get_closing_html(name)
