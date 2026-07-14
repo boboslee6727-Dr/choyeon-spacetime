@@ -349,33 +349,49 @@ if st.session_state.get('app_running', False):
             # 3. 종합정보(Master Bar) 생성 호출
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
+            # ---------------- [대운 연산] ----------------
             un_content = ""
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
 
-            # [대운 연산부 수정]
             for i in range(10):
-                val = i*10+calc_d
-                # 인덱스 순환을 100% 안전하게 보장
-                c_idx_calc = (c_idx + (i+1) * order_dir) % 10
-                j_idx_calc = (j_idx + (i+1) * order_dir) % 12
+                val = i*10 + calc_d
+                
+                # 1. 간지 추출 (인덱스 보정)
+                c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
+                j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
                 
                 c_hangul = engine.GAN[c_idx_calc]
                 j_hangul = engine.JI[j_idx_calc]
                 
-                # [수정] 엔진 함수로 전달하기 전에 강제로 한자 통역을 거칩니다.
-                c_hanja = engine._to_hanja(c_hangul)
-                j_hanja = engine._to_hanja(j_hangul)
+                # 2. 엔진 통역 및 연산 (51세 누락 방지 방어 코드)
+                c = engine.K2H_GAN.get(c_hangul, c_hangul)
+                j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
-                ss_gan = engine.get_ss(ds, c_hanja) or "-"
-                ss_ji = engine.get_ss(ds, j_hanja) or "-"
-                un_sung = engine.get_unsung(ds, j_hanja) or "-"
-                shin_sal = engine.get_12_shinsal(yb, j_hanja) or "-"
+                # 지지가 유효할 때만 운성/신살 계산
+                valid_j = engine._to_hanja(j_hangul)
+                
+                ss_gan = engine.get_ss(ds, c_hangul) or "-"
+                ss_ji = engine.get_ss(ds, j_hangul) or "-"
+                
+                if valid_j and valid_j not in ["?", " ", "-"]:
+                    un_sung = engine.get_unsung(ds, j_hangul) or "-"
+                    shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
+                else:
+                    un_sung, shin_sal = "-", "-"
+                
+                # 3. 안전한 색상 클래스 호출 (함수 내에서 예외 처리)
+                c_class = get_oh_class(c_hangul)
+                j_class = get_oh_class(j_hangul)
                 
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
                 
-                un_content += html_views.get_un_cell(f"{val}세", ss_gan, c, get_oh_class(c), j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left)
+                # 4. UI 렌더링 호출
+                un_content += html_views.get_un_cell(
+                    f"{val}세", ss_gan, c, c_class, 
+                    j, j_class, ss_ji, un_sung, shin_sal, bg_col, b_left
+                )
 
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
