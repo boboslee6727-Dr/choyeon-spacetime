@@ -395,22 +395,22 @@ if st.session_state.get('app_running', False):
 
         # ---------------- [AI 통변: 에러 원인 격리] ----------------
         ai_output_html = ""
-            try:
-                # 🚨 마지막에 curr_y=curr_year 를 추가하여 프롬프트의 빈칸을 채워줍니다.
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=ds, ilju=ds+db, 
-                    wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
-                    missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", 
-                    vault_info="엔진 데이터 연동",
-                    curr_y=curr_year  # <--- 이 부분이 반드시 들어가야 합니다.
-                )
-                ai_result = call_gemini_api(fact_sheet)
-            if "🚨" in ai_result:
-                ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
-            else:
-                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                ai_output_html = html_views.get_ai_report_box(ai_result)
+        try:
+            # 🚨 마지막에 curr_y=curr_year 를 추가하여 프롬프트의 빈칸을 채워줍니다.
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                name=name, gender=gender, ilgan=ds, ilju=ds+db, 
+                wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
+                missing_and_gongmang="엔진 데이터 연동", 
+                shinsal_info="엔진 데이터 연동", 
+                vault_info="엔진 데이터 연동",
+                curr_y=curr_year  # <--- 이 부분이 반드시 들어가야 합니다.
+            )
+            ai_result = call_gemini_api(fact_sheet)
+        if "🚨" in ai_result:
+            ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
+        else:
+            ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+            ai_output_html = html_views.get_ai_report_box(ai_result)
         except Exception as e:
             ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
