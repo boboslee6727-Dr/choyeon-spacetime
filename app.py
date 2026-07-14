@@ -8,7 +8,6 @@ from google import genai
 import time
 import importlib
 import engine
-importlib.reload(engine) # 🚨 엔진을 강제로 재로드하여 함수 동기화
 import prompts
 import json
 import math
@@ -250,10 +249,10 @@ with st.sidebar:
 # ==============================================================================
 if st.session_state.get('app_running', False):
     curr_dt = dt_mod.datetime.now()
-    curr_year = dt_mod.datetime.now().year
-    curr_month = dt_mod.datetime.now().month
+    curr_year = curr_dt.year
+    curr_month = curr_dt.month
     
-    if "1. 개인사주" in u_product:curr_dt = dt_mod.datetime.now()
+    if "1. 개인사주" in u_product:
         klc = KoreanLunarCalendar()
         if "음력" in u_cal:
             is_leap = True if "윤달" in u_cal else False
@@ -367,20 +366,19 @@ if st.session_state.get('app_running', False):
                 c_hangul = engine.GAN[c_idx_calc]
                 j_hangul = engine.JI[j_idx_calc]
                 
-                # 2. 엔진 통역 및 데이터 조회
+                # 2. 엔진 통역 및 데이터 조회 (c, j는 한자 변환값)
                 c = engine.K2H_GAN.get(c_hangul, c_hangul)
                 j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
                 ss_gan = engine.get_ss(ds, c_hangul) or "-"
                 ss_ji = engine.get_ss(ds, j_hangul) or "-"
                 
-                # 3. 🚨 12운성 및 12신살 안전 조회 (핵심 수정)
+                # 3. 🚨 12운성 및 12신살 안전 조회 (한자 'j'를 인자로 전달하여 누락 해결)
                 try:
-                    # j_hangul이 engine의 데이터 구조와 정확히 일치하는지 확인 후 조회
-                    un_sung = engine.get_unsung(ds, j_hangul)
+                    un_sung = engine.get_unsung(ds, j)
                     if not un_sung: un_sung = "-"
                     
-                    shin_sal = engine.get_12_shinsal(yb, j_hangul)
+                    shin_sal = engine.get_12_shinsal(yb, j)
                     if not shin_sal: shin_sal = "-"
                 except Exception:
                     un_sung, shin_sal = "-", "-"
@@ -396,18 +394,25 @@ if st.session_state.get('app_running', False):
         un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
         # ---------------- [AI 통변: 에러 원인 격리] ----------------
-        ai_output_html = ""
-        try:
-            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(name=name, ...)
-            ai_result = call_gemini_api(fact_sheet)
-            if "🚨" in ai_result:
-                ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
-            else:
-                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                ai_output_html = html_views.get_ai_report_box(ai_result)
-        except Exception as e:
-            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+            ai_output_html = ""
+            try:
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                    name=name, gender=gender, ilgan=ds, ilju=ds+db, 
+                    wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
+                    missing_and_gongmang="엔진 데이터 연동", 
+                    shinsal_info="엔진 데이터 연동", 
+                    vault_info="엔진 데이터 연동"
+                )
+                ai_result = call_gemini_api(fact_sheet)
+                if "🚨" in ai_result:
+                    ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
+                else:
+                    ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+                    ai_output_html = html_views.get_ai_report_box(ai_result)
+            except Exception as e:
+                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
+            # 🚨 들여쓰기 수정 (except 밖으로 빼내어 정상 렌더링 보장)
             closing_html = html_views.get_closing_html(name)
             
             st.markdown(cover_html, unsafe_allow_html=True)
