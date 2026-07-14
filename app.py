@@ -479,6 +479,8 @@ if st.session_state.get('app_running', False):
                 current_daewun_age = max(0, int(age))
                 start_year = curr_y
 
+            curr_y = dt_mod.datetime.now().year 
+            
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -494,6 +496,7 @@ if st.session_state.get('app_running', False):
                 un_sung = engine.get_unsung(ds, tj_hangul)
                 shin_sal = engine.get_12_shinsal(yb, tj_hangul)
 
+                # 이제 curr_y를 안전하게 참조합니다
                 bg_col = "#E1F5FE" if ty == curr_y else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
 
