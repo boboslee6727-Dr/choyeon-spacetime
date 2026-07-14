@@ -32,6 +32,14 @@ JIJANGGAN = {
 }
 
 # ==============================================================================
+# [핵심 추가] 전역 자동 한자 통역기
+# ==============================================================================
+def _to_hanja(char):
+    """한글 간지가 들어오면 한자로 통역하고, 이미 한자거나 알 수 없는 값이면 그대로 반환합니다."""
+    if not char: return char
+    return K2H_GAN.get(char, K2H_JI.get(char, char))
+
+# ==============================================================================
 # 2. 핵심 사주 역산 및 만세력 로직
 # ==============================================================================
 def get_total_time_adjustment(dt):
@@ -62,7 +70,6 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
         
     year_idx = (actual_year - 1984) % 60
     
-    # [수정] 한글 간지 확보
     y_gan_kor = GAN[year_idx % 10]
     y_ji_kor = JI[year_idx % 12]
     
@@ -85,7 +92,6 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     m_gan_kor = GAN[(start_month_gan_idx + m_offset) % 10]
     m_ji_kor = JI[m_ji_idx]
     
-    # [수정] 딕셔너리를 사용하여 한자로 최종 변환하여 리턴
     y_pillar = K2H_GAN[y_gan_kor] + K2H_JI[y_ji_kor]
     m_pillar = K2H_GAN[m_gan_kor] + K2H_JI[m_ji_kor]
     
@@ -94,7 +100,6 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
 def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
     from korean_lunar_calendar import KoreanLunarCalendar
     klc = KoreanLunarCalendar()
-    # [수정] 2036년부터 1920년까지 역순 탐색 (최근 날짜 우선)
     for y in range(2036, 1919, -1):
         for m in range(12, 0, -1):
             for d in range(31, 0, -1):
@@ -186,6 +191,7 @@ def get_daeun_su_accurate(utc_dt, order):
 # 3. 명리 이론 연산 로직 (십성, 12운성, 신살, 공망, 격국 등)
 # ==============================================================================
 def get_color(c):
+    c = _to_hanja(c)
     if c in "甲乙寅卯": return "목"
     if c in "丙丁巳午": return "화"
     if c in "戊己辰戌丑未": return "토"
@@ -194,22 +200,20 @@ def get_color(c):
     return "무"
 
 def get_saju_table_data(y, m, d, t, gender):
-    # 만세력 기초
     y_p, m_p, _ = get_true_year_month_pillar(y, m, d, 0, 0)
     _, _, d_p = get_ganji_from_date(y, m, d)
     t_gan, t_ji = get_time_ganji(d_p[0], t)
     gans = [t_gan, d_p[0], m_p[0], y_p[0]]
     jjis = [t_ji, d_p[1], m_p[1], y_p[1]]
     
-    # 테이블용 데이터 11조각
-    # (이곳에 기존 app.py 380~410라인의 복잡한 로직을 모두 넣습니다)
     return {
         "gans": gans, "jjis": jjis, "ds": d_p[0], "ys": y_p[0], "yb": y_p[1], "db": d_p[1],
         "calc_d": get_daeun_su_accurate(datetime(y, m, d), 1),
-        "counts": {'목':0, '화':0, '토':0, '금':0, '수':0}, # 오행 카운트 로직 추가
+        "counts": {'목':0, '화':0, '토':0, '금':0, '수':0},
     }
 
 def get_ss(dg, tc):
+    dg, tc = _to_hanja(dg), _to_hanja(tc)
     if tc in ["?", " ", "-"]: return "-"
     rels = {
         '甲':{'甲':'비견','乙':'겁재','丙':'식신','丁':'상관','戊':'편재','己':'정재','庚':'편관','辛':'정관','壬':'편인','癸':'정인','寅':'비견','卯':'겁재','巳':'식신','午':'상관','辰':'편재','戌':'편재','丑':'정재','未':'정재','申':'편관','酉':'정관','亥':'편인','子':'정인'},
@@ -226,30 +230,21 @@ def get_ss(dg, tc):
     return rels.get(dg, {}).get(tc, "-")
 
 def get_unsung(dg, ji):
+    dg, ji = _to_hanja(dg), _to_hanja(ji)
     if ji in ["?", " ", "-"]: return "-"
     table = {'甲':"亥子丑寅卯辰巳午未申酉戌",'丙':"寅卯辰巳午未申酉戌亥子丑",'戊':"寅卯辰巳午未申酉戌亥子丑",'庚':"巳午未申酉戌亥子丑寅卯辰",'壬':"申酉戌亥子丑寅卯辰巳午未",'乙':"午巳辰卯寅丑子亥戌酉申未",'丁':"酉申未午巳辰卯寅丑子亥戌",'己':"酉申未午巳辰卯寅丑子亥戌",'辛':"子亥戌酉申未午巳辰卯寅丑",'癸':"卯寅丑子亥戌酉申未午巳辰"}
     idx = table.get(dg, "").find(ji)
     return ["장생","목욕","관대","건록","제왕","쇠","병","사","묘","절","태","양"][idx] if idx != -1 else "-"
 
 def get_12_shinsal(year_ji, target_ji):
-    # 입력값이 정상적이지 않으면 바로 리턴
+    year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if target_ji in ["?", " ", "-"] or not year_ji: return "-"
     
-    # 한글 지지를 한자로 통일 (모든 지지를 한자로 변환)
-    h2k_ji = {v: k for k, v in K2H_JI.items()} # 한글->한자
-    
-    # target_ji와 year_ji를 한자로 변환 (이미 한자면 그대로 유지)
-    t_ji_hanja = K2H_JI.get(target_ji, target_ji)
-    y_ji_hanja = K2H_JI.get(year_ji, year_ji)
-    
-    # 한자 지지 리스트
     ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-    
     try:
-        t_idx = ji_list.index(t_ji_hanja)
-        # s_map은 기준점(삼합의 시작점)을 정하는 로직
+        t_idx = ji_list.index(target_ji)
         s_map = {"申":"巳","子":"巳","辰":"巳", "寅":"亥","午":"亥","戌":"亥", "巳":"寅","酉":"寅","丑":"寅", "亥":"申","卯":"申","未":"申"}
-        s_start = s_map.get(y_ji_hanja, "巳")
+        s_start = s_map.get(year_ji, "巳")
         s_start_idx = ji_list.index(s_start)
         
         s_idx = (t_idx - s_start_idx + 12) % 12
@@ -258,6 +253,7 @@ def get_12_shinsal(year_ji, target_ji):
         return "-"
 
 def get_samjae(year_ji, target_ji):
+    year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
     s_map = {
         '申': ['寅','卯','辰'], '子': ['寅','卯','辰'], '辰': ['寅','卯','辰'],
@@ -273,6 +269,7 @@ def get_samjae(year_ji, target_ji):
     return "해당 없음"
 
 def get_gan_rel_all(idx, gans):
+    gans = [_to_hanja(g) for g in gans]
     me = gans[idx]; res = []
     if me in ["-", "?", " "]: return "-"
     for i, other in enumerate(gans):
@@ -283,6 +280,7 @@ def get_gan_rel_all(idx, gans):
     return "".join(list(set(res))) if res else "-"
 
 def get_ji_rel_set(me, target):
+    me, target = _to_hanja(me), _to_hanja(target)
     if not me or not target or me == "?" or target == "?" or me == target: return "자형" if me == target and me in "辰午酉亥" else "-"
     s, r = {me, target}, []
     if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: r.append("방합")
@@ -301,6 +299,8 @@ def get_ji_rel_set(me, target):
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
 def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
+    gans = [_to_hanja(g) for g in gans]
+    jjis = [_to_hanja(j) for j in jjis]
     dc, mc, yc = gans[1], gans[2], gans[3]
     dj, mj, yj = jjis[1], jjis[2], jjis[3]
     cur_g, cur_j = gans[idx], jjis[idx]
@@ -372,6 +372,7 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     return result
 
 def get_jijanggan_full(dg, ji):
+    dg, ji = _to_hanja(dg), _to_hanja(ji)
     if ji in ["?", "-", " "]: return "-"
     raw = JIJANGGAN.get(ji, ['-','-','-'])
     res = "<div style='display:flex; flex-direction:column; height:100%; min-height:65px; gap:2px; padding:2px 0; margin:0;'>"
@@ -387,6 +388,10 @@ def get_jijanggan_full(dg, ji):
     return res + "</div>"
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
+    base_gans = [_to_hanja(g) for g in base_gans]
+    base_jjis = [_to_hanja(j) for j in base_jjis]
+    attacker_ji = _to_hanja(attacker_ji)
+    
     vaults = ['辰', '戌', '丑', '未']
     clash_map = {'辰':'戌', '戌':'辰', '丑':'未', '未':'丑'}
     hyung_sets = [{'丑','戌'}, {'戌','未'}, {'丑','未'}]
@@ -406,6 +411,7 @@ def check_vault_status(base_gans, base_jjis, attacker_ji):
     return results
 
 def get_gyukgook_detailed(ds, ys, ms, hs, mb):
+    ds, ys, ms, hs, mb = _to_hanja(ds), _to_hanja(ys), _to_hanja(ms), _to_hanja(hs), _to_hanja(mb)
     jg = JIJANGGAN.get(mb, [])
     if not jg: return "알수없음격", "지장간 정보가 없습니다."
 
@@ -447,33 +453,19 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     return fallback_ss + "격", f"월지 {mb}의 지장간(비겁 제외)이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {fallback_ss}격으로 정합니다."
 
 def calculate_gongmang(ilgan, ilji):
-    h2k_gan = {v: k for k, v in K2H_GAN.items()} 
-    h2k_ji = {v: k for k, v in K2H_JI.items()}   
+    g = _to_hanja(ilgan)
+    j = _to_hanja(ilji)
     
-    g = h2k_gan.get(ilgan, ilgan)
-    j = h2k_ji.get(ilji, ilji)
-    
-    gan_list = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
-    ji_list = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
+    gan_list = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+    ji_list = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
     
     if g not in gan_list or j not in ji_list: return "-"
     
     try:
-        # 👇 [수정] 공망 공식 (- 2 추가) 및 한자로 치환하여 반환
         base = (ji_list.index(j) - gan_list.index(g) - 2) % 12
         gong1 = ji_list[base]
         gong2 = ji_list[(base + 1) % 12]
-        return f"{K2H_JI.get(gong1)}{K2H_JI.get(gong2)}"
-    except:
-        return "-"
-    
-    try:
-        base = (ji_list.index(j) - gan_list.index(g)) % 12
-        # 공망 계산 공식: (지지인덱스 - 천간인덱스) % 12
-        # 그 결과와 그 다음 지지가 공망
-        gong1 = ji_list[base]
-        gong2 = ji_list[(base + 1) % 12]
-        return f"{gong1},{gong2}"
+        return f"{gong1}{gong2}"
     except:
         return "-"
 
@@ -483,14 +475,10 @@ def _get_person_data(y, m, d, t, gender, name, marital):
         _, _, d_pillar = get_ganji_from_date(y, m, d)
         t_gan, t_ji = get_time_ganji(d_pillar[0], t)
         
-        # [로그 추가] 변수가 제대로 들어오는지 확인
-        # print(f"DEBUG: y_pillar={y_pillar}, d_pillar={d_pillar}")
-        
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ds, ms, hs, ys = d_pillar[0], m_pillar[0], t_gan, y_pillar[0]
         db, mb, hb, yb = d_pillar[1], m_pillar[1], t_ji, y_pillar[1]
         
-        # [방어 로직] 만약 ys, yb가 '?'라면 강제로 '갑', '자'라도 넣어서 에러 방지
         if ys == "?": ys = "甲"
         if yb == "?": yb = "子"
         if ds == "?": ds = "甲"
@@ -524,7 +512,6 @@ def _get_person_data(y, m, d, t, gender, name, marital):
         # 4. 마스터바 데이터 조립
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         
-        # 👇 [수정] 삼재 연산을 위해 '올해의 세운 지지'를 정확히 산출하여 대입
         curr_year = dt_mod.datetime.now().year
         curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
         
@@ -724,6 +711,7 @@ class UniversalPrintableGunghap:
         self.logic_flags, self.details = {}, []
 
     def get_ji_rel(self, j1, j2):
+        j1, j2 = _to_hanja(j1), _to_hanja(j2)
         if not j1 or not j2 or j1=="?" or j2=="?": return "무"
         s = {j1, j2}
         if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
@@ -738,7 +726,8 @@ class UniversalPrintableGunghap:
 
     def count_elements(self, gans, jjis):
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
-        for c in gans + jjis:
+        for char in gans + jjis:
+            c = _to_hanja(char)
             if c in "甲乙寅卯": counts['목'] += 1
             elif c in "丙丁巳午": counts['화'] += 1
             elif c in "戊己辰戌丑未": counts['토'] += 1
@@ -833,11 +822,9 @@ class UniversalPrintableGunghap:
         ]
 
 def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
-    # 도움 함수: 오행 클래스 추출
     def get_oh_class(c): return f"color-{get_color(c)}"
 
     def _get_person_data(y, m, d, t, gender, name, marital):
-        # 1. 기초 사주 데이터
         y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, 0, 0)
         _, _, d_pillar = get_ganji_from_date(y, m, d)
         t_gan, t_ji = get_time_ganji(d_pillar[0], t)
@@ -845,7 +832,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ds, ms, yb, db = d_pillar[0], m_pillar[0], y_pillar[1], d_pillar[1]
         
-        # 2. 분석용 연산
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
         for c in gans + jjis:
             oh = get_color(c)
@@ -853,7 +839,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
         
         calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
         
-        # 3. 데이터 조립
         info_h = f"<div style='text-align:center;'>{name}님</div>"
         gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
         gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444; font-weight:900;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
@@ -871,14 +856,12 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
             
         unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
         shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-        # 신살 필터링 추가
         gen_shinsal = "".join([f"<td style='vertical-align:top; border:1px solid #444 !important; font-size:11px;'>{'<br>'.join(get_general_shinsal_filtered(i, gans, jjis, gender)[:3])}</td>" for i in range(4)])
 
-        # 마스터바 데이터
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         master = [
             calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], 
-            guiin_map.get(ds, '없음'), calculate_gongmang(ys, yb), calculate_gongmang(ds, db), 
+            guiin_map.get(_to_hanja(ds), '없음'), calculate_gongmang(ys, yb), calculate_gongmang(ds, db), 
             "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)
         ]
 
@@ -890,9 +873,4 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
     return {"m_table": m_res["table"], "m_master": m_res["master"], "w_table": w_res["table"], "w_master": w_res["master"]}
 
 def get_gunghap_report(res):
-    # 여기서 궁합 데이터를 바탕으로 AI 통변 내용을 생성하여 반환합니다.
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
-
-
-
-   
