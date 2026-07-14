@@ -137,6 +137,28 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
+def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb):
+    return {
+        "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
+        "ss_unsung_str": ...,  # 여기에 십성/운성 요약 로직
+        "gyukgook_detail": ..., # 여기에 격국 산출 로직
+        "gongmang_actual": ..., # 공망 로직
+        "shinsal_str": ...,     # 신살 로직
+        "s12_str": ...,         # 12신살 로직
+        "won_guk_vaults_str": ..., # 묘고 로직
+        "oheng_counts_str": ...,   # 오행 분포 로직
+        "samjae_str": ...,         # 삼재 로직
+        "cheon_eul": ...,          # 천을귀인 로직
+        "curr_y": curr_year,       # 현재 연도
+        "curr_m": curr_month,      # 현재 월
+        "disp_name": name,         # 이름
+        "u_age": age,              # 나이
+        "u_gender": gender,        # 성별
+        "u_marital": u_marital,    # 혼인상태
+        "yukchin_rule": engine.get_yukchin_rule(gender, u_marital), # 위에서 만든 육친 규칙
+        # ... 프롬프트에 필요한 모든 {키값}들을 정의하십시오.
+    }
+
 def get_daeun_su_accurate(utc_dt, order):
     try:
         sun = ephem.Sun()
@@ -453,6 +475,34 @@ def calculate_gongmang(ilgan, ilji):
         return f"{gong1}{gong2}"
     except:
         return "-"
+
+def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
+    daewun_list = []
+    c_idx = GAN.index(ms) % 10 if ms in GAN else 0
+    j_idx = JI.index(mb) % 12 if mb in JI else 0
+
+    for i in range(10):
+        val = i * 10 + calc_d
+        c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
+        j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
+        
+        c_hangul = GAN[c_idx_calc]
+        j_hangul = JI[j_idx_calc]
+        c, j = K2H_GAN.get(c_hangul, c_hangul), K2H_JI.get(j_hangul, j_hangul)
+        
+        ss_gan, ss_ji = get_ss(ds, c_hangul) or "-", get_ss(ds, j_hangul) or "-"
+        try:
+            un_sung = get_unsung(ds, j) or "-"
+            shin_sal = get_12_shinsal(yb, j) or "-"
+        except:
+            un_sung, shin_sal = "-", "-"
+            
+        daewun_list.append({
+            "age_range": f"{val}~{val+9}세", "ss_gan": ss_gan, "c_hanja": c, "c_hangul": c_hangul,
+            "j_hanja": j, "j_hangul": j_hangul, "ss_ji": ss_ji, "un_sung": un_sung, 
+            "shin_sal": shin_sal, "is_current": (val <= age < val + 10), "is_first": (i == 0)
+        })
+    return daewun_list
 
 def get_universal_analysis(ds, mb, db, gans, jjis):
     jg_list = JIJANGGAN.get(mb, [])
