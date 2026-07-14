@@ -252,6 +252,24 @@ with st.sidebar:
         components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
+# 2.5 프롬프트 사전 로딩 (메인 화면 출력부 바로 위에 배치)
+# ==============================================================================
+PRODUCT_PROMPT_MAP = {
+    "1. 개인사주 및 일진 분석": prompts.PERSONAL_SAJU_PROMPT,
+    "2. 올 해의 운세 (세운)": prompts.SEWUN_PROMPT,
+    "3. 이번 달의 운세 (월운)": prompts.WOLWUN_PROMPT,
+    "4. 재물운 특화 분석": prompts.WEALTH_PROMPT,
+    "5. 직업/직장운 특화 분석": prompts.CAREER_PROMPT,
+    "6. 건강운 특화 분석": prompts.HEALTH_PROMPT,
+    "7. 연애 및 궁합운 특화 분석": prompts.GUNGHAP_ESSAY_PROMPT,
+    "8. 결혼 택일 정밀 분석": prompts.WEDDING_DATE_PROMPT,
+    "9. 출산 택일": prompts.DELIVERY_LOOP_PROMPT,
+    "10. 이사 및 방위": prompts.MOVING_DATE_PROMPT,
+    "11. 타 감명서 비교": prompts.COMPARE_PROMPT
+}
+selected_prompt_template = PRODUCT_PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMPT)
+
+# ==============================================================================
 # 3. 메인 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
