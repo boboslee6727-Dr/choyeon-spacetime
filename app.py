@@ -441,7 +441,14 @@ if st.session_state.get('app_running', False):
             str(ai_output_html or "") + 
             str(closing_html or "")
         )
-        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+        
+        # 🚨 [핵심 조치] Streamlit이 HTML 들여쓰기를 '코드블록'으로 오해하지 못하도록
+        # 줄바꿈과 연속된 공백을 1칸의 여백으로 완벽하게 진공 압축합니다.
+        full_html = html_views.get_final_report_box(final_report)
+        full_html_clean = re.sub(r'\n\s+', ' ', full_html)
+        
+        # 압축된 순수 HTML을 화면에 송출 (이제 속살은 절대 나오지 않습니다)
+        st.markdown(full_html_clean, unsafe_allow_html=True)
 
     elif "2. 올 해" in u_product:
         st.header(f"🔮 {name}님의 올해(세운) 분석")
