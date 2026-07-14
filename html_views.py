@@ -131,6 +131,25 @@ def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, j
     </table>
     """
 
+def generate_saju_table_data(info_h, gans, jjis, ds, gender, engine):
+    """모든 테이블 HTML 조각을 조립하여 최종 테이블을 반환하는 함수"""
+    
+    # 여기서 각 행을 생성하는 로직을 html_views가 직접 처리
+    gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
+    gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, gans[0])}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds, gans[2])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, gans[3])}</td>"
+    gan_row = "".join([get_styled_td(g, f"color-{engine.get_color(g)}") for g in gans]) # get_styled_td 활용
+    ji_row = "".join([f"<td class='color-{engine.get_color(j)} ganji-cell'>{j}</td>" for j in jjis])
+    ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[0])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[1])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[2])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[3])}</td>"
+    jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+    unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+    shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(gans[3], jjis[i])}</td>" for i in range(4)])
+    
+    filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
+    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
+    ji_rel_rows = engine.get_ji_rel_rows_html(jjis)
+
+    return get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
+
 def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color, cur_samjae):
     return f"""
     <div style="background:#FFF8E1; padding:10px 15px; border-radius:8px; margin:15px 0; border:1px solid #3E2723; font-weight: 700; font-size: 13px; color: #1A237E; display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
@@ -142,11 +161,16 @@ def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color,
     </div>
     """
 
+def get_styled_td(ganji, oh_class):
+    return f"<td class='{oh_class} ganji-cell'>{ganji}</td>"
+
 def get_golden_text(name, w_val, i_val):
     return f"""
-    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 15px;'>
-        <p style='text-indent: 15px; margin-bottom: 5px;'>
-            <b>{name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
+    <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #000000; 
+                margin: 25px 0; border-top: 2px solid #1A237E; border-bottom: 2px solid #1A237E; 
+                padding: 20px; background-color: #FAFAFA;'>
+        <p style='text-indent: 0px; margin: 0;'>
+            <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨습니다.
         </p>
     </div>
     """
@@ -158,6 +182,37 @@ def get_un_layout(title, content):
         {content}
     </div>
     """
+
+def generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class_func):
+    """engine.py에서 계산해 준 데이터를 바탕으로 대운 HTML 레이아웃을 조립합니다."""
+    un_content = ""
+    
+    for i, data in enumerate(daewun_data_list):
+        # 활성/비활성 배경색 및 경계선 스타일링
+        bg_col = "#FFF9C4" if data["is_current"] else "transparent"
+        b_left = "none" if data["is_first"] else "1px solid #ccc"
+        
+        # 오행 CSS 클래스명 획득
+        c_cls = get_oh_class_func(data["c_hangul"])
+        j_cls = get_oh_class_func(data["j_hangul"])
+        
+        # 셀 결합
+        un_content += get_un_cell(
+            data["age_range"], 
+            data["ss_gan"], 
+            data["c_hanja"], 
+            c_cls, 
+            data["j_hanja"], 
+            j_cls, 
+            data["ss_ji"], 
+            data["un_sung"], 
+            data["shin_sal"], 
+            bg_col, 
+            b_left
+        )
+        
+    title = f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]"
+    return get_un_layout(title, un_content)
 
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
     return f"""
@@ -171,7 +226,6 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
         <div class='color-shinsal' style='font-size:12px; border-top:1px solid #ccc; padding-top:3px;'>{shinsal}</div>
     </div>
     """
-
 
 def get_sewun_layout(title, content):
     return f"""
