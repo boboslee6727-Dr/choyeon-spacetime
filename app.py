@@ -379,13 +379,25 @@ if st.session_state.get('app_running', False):
 
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
+            # [AI 통변 호출부 안전하게 수정]
             ai_output_html = ""
             try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(name=name, gender=gender, ilgan=ds, ilju=ds+db, wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동")
+                # ds(일간), db(일지), ms(월간), mb(월지)를 명확히 전달
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                    name=name, gender=gender, ilgan=ds, ilju=ds+db, 
+                    wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
+                    missing_and_gongmang="엔진 데이터 연동", 
+                    shinsal_info="엔진 데이터 연동", 
+                    vault_info="엔진 데이터 연동"
+                )
                 ai_result = call_gemini_api(fact_sheet)
-                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                ai_output_html = html_views.get_ai_report_box(ai_result)
-            except Exception: pass
+                if "🚨" in ai_result: # AI 에러 메시지가 반환된 경우
+                    ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
+                else:
+                    ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+                    ai_output_html = html_views.get_ai_report_box(ai_result)
+            except Exception as e:
+                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
             closing_html = html_views.get_closing_html(name)
             
