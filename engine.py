@@ -137,26 +137,68 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
-def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb):
+def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None):
+    """
+    모든 명리적 팩트와 체용 매트릭스 분석 결과를 딕셔너리로 통합 반환합니다.
+    """
+    
+    # 1. 기본 팩트 산출
+    ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
+    gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
+    counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+    for c in [ys, yb, ms, mb, ds, db, hs, hb]: counts[get_color(c)] += 1
+    oheng_str = f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}"
+
+    # 2. 체용 매트릭스(폭포수) 연산
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    
+    # 대운 키워드
+    dw_fact_str = "대운 정보 없음"
+    if dw_g_cur and dw_j_cur:
+        dw_che = get_group_ss(get_ss(ds, dw_g_cur))
+        dw_yong = get_execution_yong(get_group_ss(get_ss(dw_g_cur, dw_j_cur)), ilju_lower_group)
+        dw_fact_str = f"체운(무대): {dw_che} / 용운(사건): {dw_yong} ➔ 도출 키워드: {get_matrix_keyword(dw_che, dw_yong)}"
+
+    # 세운 키워드
+    sewun_fact_str = "세운 정보 없음"
+    if curr_y_ganji:
+        s_gan, s_ji = curr_y_ganji[1][0], curr_y_ganji[1][1]
+        s_upper = get_group_ss(get_ss(s_gan, s_ji))
+        s_yong = get_execution_yong(s_upper, ilju_lower_group)
+        sewun_che = get_group_ss(get_ss(ds, dw_g_cur)) if dw_g_cur else "비겁"
+        sewun_fact_str = f"체운(무대): {sewun_che} / 용운(사건): {s_yong} ➔ 도출 키워드: {get_matrix_keyword(sewun_che, s_yong)}"
+
+    # 월운 키워드
+    wol_fact_str = "월운 정보 없음"
+    if cur_wol_g and cur_wol_j:
+        w_upper = get_group_ss(get_ss(cur_wol_g, cur_wol_j))
+        w_yong = get_execution_yong(w_upper, ilju_lower_group)
+        w_che = get_group_ss(get_ss(ds, curr_y_ganji[1][0])) if curr_y_ganji else "비겁"
+        wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
+
+    # 3. 팩트 시트 통합
     return {
         "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
-        "ss_unsung_str": ...,  # 여기에 십성/운성 요약 로직
-        "gyukgook_detail": ..., # 여기에 격국 산출 로직
-        "gongmang_actual": ..., # 공망 로직
-        "shinsal_str": ...,     # 신살 로직
-        "s12_str": ...,         # 12신살 로직
-        "won_guk_vaults_str": ..., # 묘고 로직
-        "oheng_counts_str": ...,   # 오행 분포 로직
-        "samjae_str": ...,         # 삼재 로직
-        "cheon_eul": ...,          # 천을귀인 로직
-        "curr_y": curr_year,       # 현재 연도
-        "curr_m": curr_month,      # 현재 월
-        "disp_name": name,         # 이름
-        "u_age": age,              # 나이
-        "u_gender": gender,        # 성별
-        "u_marital": u_marital,    # 혼인상태
-        "yukchin_rule": engine.get_yukchin_rule(gender, u_marital), # 위에서 만든 육친 규칙
-        # ... 프롬프트에 필요한 모든 {키값}들을 정의하십시오.
+        "ss_unsung_str": ss_unsung_str,
+        "gyukgook_detail": gyukgook_detail,
+        "gongmang_actual": calculate_gongmang(ds, db),
+        "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
+        "s12_str": get_all_12_shinsal(yb, yb, mb, db, hb),
+        "won_guk_vaults_str": " ".join(check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)),
+        "oheng_counts_str": oheng_str,
+        "samjae_str": get_samjae(yb, "현재년지"), # 필요시 curr_year_ji 주입
+        "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
+        "curr_y": dt_mod.datetime.now().year,
+        "curr_m": dt_mod.datetime.now().month,
+        "disp_name": name,
+        "u_age": age,
+        "u_gender": gender,
+        "u_marital": marital,
+        "yukchin_rule": get_yukchin_rule(gender, marital),
+        # 폭포수 키워드 주입
+        "dw_fact_str": dw_fact_str,
+        "sewun_fact_str": sewun_fact_str,
+        "wol_fact_str": wol_fact_str
     }
 
 def get_daeun_su_accurate(utc_dt, order):
@@ -557,6 +599,33 @@ def get_yukchin_rule(gender, marital):
 3. 🏠 [시댁 및 자매]: 시어머니 = 재성 / 자매 = 비견 / 형제 = 겁재
 4. 🚨 [상태별 타겟팅]: 내담자 상태({marital})에 따라 인연(남편/재혼운 등)으로 카운슬링할 것.
 """
+def get_group_ss(ss_name):
+    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
+    if "비" in ss_name or "겁" in ss_name: return "비겁"
+    if "식" in ss_name or "상" in ss_name: return "식상"
+    if "재" in ss_name: return "재성"
+    if "관" in ss_name: return "관성"
+    if "인" in ss_name: return "인성"
+    return "비겁"
+
+def get_execution_yong(upper_group, lower_group):
+    matrix = {
+        '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
+        '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
+        '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'},
+        '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'},
+        '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'}
+    }
+    return matrix.get(upper_group, {}).get(lower_group, '비겁')
+
+def get_matrix_keyword(che_group, yong_group):
+    # che_yong_matrix_text는 engine.py 상단에 상수로 정의하거나 이 함수 내부에서 관리
+    target_str = f"- 체({che_group})+용({yong_group}):"
+    for line in CHE_YONG_MATRIX_TEXT.splitlines():
+        if line.startswith(target_str):
+            return line.split(":", 1)[1].strip()
+    return "변화 감지"
+
 # ==============================================================================
 # 4. 출산택일 및 궁합 연산 로직
 # ==============================================================================
