@@ -247,8 +247,8 @@ with st.sidebar:
 # 3. 메인 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
-    curr_y = dt_mod.datetime.now().year  # 🚨 여기에 확실하게 정의
-    curr_m = dt_mod.datetime.now().month
+    curr_year = dt_mod.datetime.now().year
+    curr_month = dt_mod.datetime.now().month
     
     if "1. 개인사주" in u_product:
         klc = KoreanLunarCalendar()
@@ -264,9 +264,7 @@ if st.session_state.get('app_running', False):
             lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
             leap_str = "윤달" if klc.isIntercalation else "평달"
             
-        curr_y = dt_mod.datetime.now().year
-        curr_m = dt_mod.datetime.now().month
-        age = curr_y - sol_y + 1
+        age = curr_year - sol_y + 1
         p_icon = "♂️" if gender == "남성" else "♀️"
         today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
         
@@ -315,14 +313,14 @@ if st.session_state.get('app_running', False):
             guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(engine.K2H_GAN.get(ds, ds), '없음')
             
-            curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_y - 1984) % 12]
+            curr_year_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
             
             n_gong = engine.calculate_gongmang(ys, yb)
             i_gong = engine.calculate_gongmang(ds, db)
             n_gong = n_gong if n_gong else "-"
             i_gong = i_gong if i_gong else "-"
             
-            cur_samjae = engine.get_samjae(yb, curr_y_ji)
+            cur_samjae = engine.get_samjae(yb, curr_year_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
 
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
@@ -357,38 +355,35 @@ if st.session_state.get('app_running', False):
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
 
             for i in range(10):
+                # i=9일 때도 정상 연산되도록 루프 범위를 확인
                 val = i * 10 + calc_d
                 
-                # [강화] 인덱스 연산 시 10과 12로 나눈 나머지를 엄격히 적용
+                # 인덱스 계산을 확실하게 10/12로 나눈 나머지로 고정
                 c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
                 j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
                 
                 c_hangul = engine.GAN[c_idx_calc]
                 j_hangul = engine.JI[j_idx_calc]
                 
+                # 데이터 유효성 검증 (엔진 통역기 활용)
                 c = engine.K2H_GAN.get(c_hangul, c_hangul)
                 j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
-                # [방어] 데이터가 없으면 "-" 처리하여 로직 멈춤 방지
                 ss_gan = engine.get_ss(ds, c_hangul) or "-"
                 ss_ji = engine.get_ss(ds, j_hangul) or "-"
                 
-                # [결정적 해결] 엔진 통역기를 거친 유효 지지로만 운성/신살 계산
-                valid_j = engine._to_hanja(j_hangul)
-                if valid_j and valid_j not in ["?", " ", "-"]:
-                    un_sung = engine.get_unsung(ds, j_hangul) or "-"
-                    shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
-                else:
-                    un_sung, shin_sal = "-", "-"
+                # 🚨 엔진에서 안전하게 데이터를 가져옴
+                un_sung = engine.get_unsung(ds, j_hangul) if j_hangul in engine.JI else "-"
+                shin_sal = engine.get_12_shinsal(yb, j_hangul) if j_hangul in engine.JI else "-"
                 
-                bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
-                b_left = "1px solid #ccc" if i != 0 else "none"
-                
-                # 색상 클래스도 유효한 글자에만 적용
+                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
+                b_left = "1px solid #ccc" if i != 9 else "none" # 🚨 마지막 인덱스(9)에서만 border 없음
+
                 un_content += html_views.get_un_cell(
                     f"{val}세", ss_gan, c, get_oh_class(c_hangul), 
                     j, get_oh_class(j_hangul), ss_ji, un_sung, shin_sal, bg_col, b_left
                 )
+
             un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
             # [AI 통변 호출부 안전하게 수정]
@@ -437,8 +432,8 @@ if st.session_state.get('app_running', False):
                 klc.setSolarDate(int(b_year), int(b_month), int(b_day))
                 sol_y = int(b_year)
                 
-            curr_y = dt_mod.datetime.now().year
-            age = curr_y - sol_y + 1
+            curr_year = dt_mod.datetime.now().year
+            age = curr_year - sol_y + 1
 
             def extract_time(time_str):
                 if "모름" in time_str: return 0, 0
@@ -474,9 +469,9 @@ if st.session_state.get('app_running', False):
                 start_year = int(sol_y) + current_daewun_age - 1
             except:
                 current_daewun_age = max(0, int(age))
-                start_year = curr_y
+                start_year = curr_year
 
-            curr_y = dt_mod.datetime.now().year 
+            curr_year = dt_mod.datetime.now().year 
             
             se_content = ""
             for i in range(10):
@@ -493,8 +488,8 @@ if st.session_state.get('app_running', False):
                 un_sung = engine.get_unsung(ds, tj_hangul)
                 shin_sal = engine.get_12_shinsal(yb, tj_hangul)
 
-                # 이제 curr_y를 안전하게 참조합니다
-                bg_col = "#E1F5FE" if ty == curr_y else "transparent"
+                # 이제 curr_year를 안전하게 참조합니다
+                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
 
                 se_content += html_views.get_sewun_cell(
@@ -509,7 +504,7 @@ if st.session_state.get('app_running', False):
         st.header(f"🔮 {name}님의 이번 달(월운) 분석")
         st.markdown("---")
         with st.spinner("⏳ 월운 정밀 분석 중...."):
-            curr_y = dt_mod.datetime.now().year
+            curr_year = dt_mod.datetime.now().year
             curr_m = dt_mod.datetime.now().month
 
             def extract_time(time_str):
@@ -549,7 +544,7 @@ if st.session_state.get('app_running', False):
                     wj, get_oh_class(wj), ss_ji, un_sung, shin_sal, bg_col, b_left
                 )
             
-            wol_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_y}년도 양력기준) ]", wol_content)
+            wol_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
             st.markdown(html_views.get_final_report_box(wol_html), unsafe_allow_html=True)
 
     elif any(x in u_product for x in ["4. 재물", "5. 직업", "6. 건강"]):
