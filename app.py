@@ -435,8 +435,8 @@ if st.session_state.get('app_running', False):
         final_report = (
             str(table_html or "") + 
             str(master_bar_html or "") + 
-            str(intro_html or "") + 
-            str(un_html or "") + 
+            str(un_html or "") +
+            str(intro_html or "") +    
             str(ai_output_html or "") + 
             str(closing_html or "")
         )
