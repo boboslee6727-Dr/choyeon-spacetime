@@ -399,12 +399,15 @@ if st.session_state.get('app_running', False):
         w_key = ms + mb # 월령 키
         i_key = ds + db # 일주 키
         
-        # db에서 데이터 인출
+        # 1. db (기존 로드된 변수명)를 사용하여 데이터 추출
         w_val = db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
         i_val = db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         
-        # 골든 텍스트 생성 (html_views를 통해 가져옴)
+        # 2. 골든 텍스트 생성 (html_views의 함수 호출)
         golden_text_html = html_views.get_golden_text(name, w_val, i_val)
+        
+        # 3. 화면 출력 (커버 출력 바로 아래에 배치)
+        st.markdown(golden_text_html, unsafe_allow_html=True)
 
         # ---------------- [AI 통변: 스타일링 및 가독성 최종 최적화] ----------------
         ai_output_html = ""
