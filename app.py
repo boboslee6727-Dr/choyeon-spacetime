@@ -358,6 +358,12 @@ if st.session_state.get('app_running', False):
 
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
+            # 1. 먼저 DB에서 값을 꺼내옵니다.
+            w_key = ms + mb
+            i_key = ds + db
+            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+
             golden_text_html = html_views.get_golden_text(name, w_val, i_val)
 
             # ---------------- [AI 통변: 데이터 주입 및 최종 렌더링 최적화] ----------------
