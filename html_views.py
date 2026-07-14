@@ -183,36 +183,17 @@ def get_un_layout(title, content):
     </div>
     """
 
-def generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class_func):
-    """engine.py에서 계산해 준 데이터를 바탕으로 대운 HTML 레이아웃을 조립합니다."""
+def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
     un_content = ""
-    
-    for i, data in enumerate(daewun_data_list):
-        # 활성/비활성 배경색 및 경계선 스타일링
+    for data in daewun_list:
         bg_col = "#FFF9C4" if data["is_current"] else "transparent"
         b_left = "none" if data["is_first"] else "1px solid #ccc"
-        
-        # 오행 CSS 클래스명 획득
-        c_cls = get_oh_class_func(data["c_hangul"])
-        j_cls = get_oh_class_func(data["j_hangul"])
-        
-        # 셀 결합
         un_content += get_un_cell(
-            data["age_range"], 
-            data["ss_gan"], 
-            data["c_hanja"], 
-            c_cls, 
-            data["j_hanja"], 
-            j_cls, 
-            data["ss_ji"], 
-            data["un_sung"], 
-            data["shin_sal"], 
-            bg_col, 
-            b_left
+            data["age_range"], data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
+            data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
+            data["un_sung"], data["shin_sal"], bg_col, b_left
         )
-        
-    title = f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]"
-    return get_un_layout(title, un_content)
+    return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
     return f"""
