@@ -133,14 +133,21 @@ def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, j
 
 def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color, cur_samjae):
     return f"""
-    <div style="background:#FFF8E1; padding:12px 15px; border-radius:8px; margin:15px 0; border:2px solid #3E2723; font-weight: 900; font-size: 14px; color: #1A237E; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">
-        <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:10px;">
-            <span style="white-space:nowrap;">🔢 대운: {calc_d}</span>
-            <span style="white-space:nowrap;">💥 오행: 木{m} 火{f} 土{e} 金{mtl} 水{w}</span>
-            <span style="white-space:nowrap;">🌟 천을귀인: {guiin}</span>
-            <span style="white-space:nowrap;">🎯 공망: {n_gong}/{i_gong}</span>
-            <span style="white-space:nowrap;">🌪️ 삼재: <span style="color:{samjae_color};">{cur_samjae}</span></span>
-        </div>
+    <div style="background:#FFF8E1; padding:10px 15px; border-radius:8px; margin:15px 0; border:1px solid #3E2723; font-weight: 700; font-size: 13px; color: #1A237E; display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+        <span style="flex: 1; text-align: center;">🔢 대운수: {calc_d}</span>
+        <span style="flex: 1; text-align: center;">💥 오행: 木{m} 火{f} 土{e} 金{mtl} 水{w}</span>
+        <span style="flex: 1; text-align: center;">🌟 천을귀인: {guiin}</span>
+        <span style="flex: 1; text-align: center;">🎯 공망: [년]{n_gong} [일]{i_gong}</span>
+        <span style="flex: 1; text-align: center;">🌪️ 삼재: <span style="color:{samjae_color};">{cur_samjae}</span></span>
+    </div>
+    """
+
+def get_golden_text(name, w_val, i_val):
+    return f"""
+    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 15px;'>
+        <p style='text-indent: 15px; margin-bottom: 5px;'>
+            <b>{name}님</b>은 '{w_val}'의 시공간에서, '{i_val}'의 성품을 가지고 태어나셨습니다.
+        </p>
     </div>
     """
 
@@ -164,6 +171,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
         <div class='color-shinsal' style='font-size:12px; border-top:1px solid #ccc; padding-top:3px;'>{shinsal}</div>
     </div>
     """
+
 
 def get_sewun_layout(title, content):
     return f"""
