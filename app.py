@@ -327,52 +327,50 @@ if st.session_state.get('app_running', False):
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
 
-            # [UI 렌더링 호출]
+            # 1. 렌더링 데이터 준비 (순수 데이터 및 HTML 파편 생성)
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
             intro_html = html_views.get_intro_html()
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
 
-            ji_rel_rows = ""
-            for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-                cells = "".join([f"<td style='border:1px solid #444;'>{engine.get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
-                lbl = f"<td rowspan='4' class='header-cell-main'>지합충</td>" if l_idx==0 else ""
-                ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
-
+            # 2. 사주원국(Table) 생성 호출
             gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-            
-            gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td><td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
-            
-            # [오행 색상 적용됨] td_bg가 클래스를 반환하므로 색상 완벽 적용
+            gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
             gan_row = "".join([td_bg(g)+f"{g}</td>" for g in gans])
             ji_row = "".join([td_bg(j)+f"{j}</td>" for j in jjis])
-            
             ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, db)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, mb)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, yb)}</td>"
             jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
             unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
             shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-            
             filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
             gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
-
+            ji_rel_rows = engine.get_ji_rel_rows_html(jjis)
             table_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
+
+            # 3. 종합정보(Master Bar) 생성 호출
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
             un_content = ""
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
 
+            # [대운 연산부 수정]
             for i in range(10):
                 val = i*10+calc_d
-                c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
-                j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
+                # 인덱스 순환을 100% 안전하게 보장
+                c_idx_calc = (c_idx + (i+1) * order_dir) % 10
+                j_idx_calc = (j_idx + (i+1) * order_dir) % 12
                 
-                c = engine.K2H_GAN.get(c_hangul, c_hangul)
-                j = engine.K2H_JI.get(j_hangul, j_hangul)
+                c_hangul = engine.GAN[c_idx_calc]
+                j_hangul = engine.JI[j_idx_calc]
                 
-                ss_gan = engine.get_ss(ds, c_hangul) or "-"
-                ss_ji = engine.get_ss(ds, j_hangul) or "-"
-                un_sung = engine.get_unsung(ds, j_hangul) or "-"
-                shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
+                # [수정] 엔진 함수로 전달하기 전에 강제로 한자 통역을 거칩니다.
+                c_hanja = engine._to_hanja(c_hangul)
+                j_hanja = engine._to_hanja(j_hangul)
+                
+                ss_gan = engine.get_ss(ds, c_hanja) or "-"
+                ss_ji = engine.get_ss(ds, j_hanja) or "-"
+                un_sung = engine.get_unsung(ds, j_hanja) or "-"
+                shin_sal = engine.get_12_shinsal(yb, j_hanja) or "-"
                 
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
