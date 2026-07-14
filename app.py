@@ -418,6 +418,13 @@ if st.session_state.get('app_running', False):
                 ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
             else:
                 ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+                
+                # 🚨 [추가된 로직] AI가 몰래 붙인 코드블록 기호(```html, ```) 완벽 제거
+                ai_result = ai_result.replace("```html", "")
+                ai_result = ai_result.replace("```markdown", "")
+                ai_result = ai_result.replace("```", "")
+                ai_result = ai_result.strip()
+                
                 ai_output_html = html_views.get_ai_report_box(ai_result)
         except Exception as e:
             ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
