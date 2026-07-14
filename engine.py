@@ -469,6 +469,15 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
 
+def get_ji_rel_rows_html(jjis):
+    ji_rel_rows = ""
+    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+        cells = "".join([f"<td style='border:1px solid #444;'>{get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
+        # 여기서 지시하신 "합충형해파" 라벨을 적용합니다.
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5;'>합충형해파</td>" if l_idx==0 else ""
+        ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+    return ji_rel_rows
+
 def _get_person_data(y, m, d, t, gender, name, marital):
         # 1. 만세력 기본 산출
         y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, 0, 0)
@@ -874,3 +883,13 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
 
 def get_gunghap_report(res):
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
+
+# 🚨 engine.py의 맨 마지막에 아래 함수를 추가하십시오
+def get_ji_rel_rows_html(jjis):
+    ji_rel_rows = ""
+    # 박사님 지시대로 '합충형해파' 라벨을 적용한 원본 로직입니다.
+    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+        cells = "".join([f"<td style='border:1px solid #444;'>{get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5;'>합충형해파</td>" if l_idx==0 else ""
+        ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+    return ji_rel_rows
