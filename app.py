@@ -406,8 +406,8 @@ if st.session_state.get('app_running', False):
                 curr_y=curr_year  # <--- 이 부분이 반드시 들어가야 합니다.
             )
             ai_result = call_gemini_api(fact_sheet)
-        if "🚨" in ai_result:
-            ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
+            if "🚨" in ai_result:
+                ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
         else:
             ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
             ai_output_html = html_views.get_ai_report_box(ai_result)
