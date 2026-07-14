@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.1"
+APP_VERSION = "ver 60.2"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -71,9 +71,8 @@ def extract_ganji(text):
     if not text: return ""
     return re.sub(r'[^가-힣一-龥]', '', text)
 
-# 👇 전역 공통 함수: 오행 판별 및 배경색 지정 (DRY 원칙 적용)
 def get_oh_class(ganji):
-    oh = engine.get_color(ganji) # engine의 범용 오행 판별기를 활용하여 동기화
+    oh = engine.get_color(ganji)
     return f"color-{oh}" if oh != '무' else ""
 
 def td_bg(ganji):
@@ -138,8 +137,8 @@ with st.sidebar:
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                        curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
+                            curr_dt -= dt_mod.timedelta(days=1) # [수정] while 문 안으로 올바르게 들여쓰기
+                    if found: break # [수정] for 문 안으로 올바르게 들여쓰기
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
@@ -209,9 +208,10 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                            curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
-                else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                                curr_dt -= dt_mod.timedelta(days=1) # [수정] while 문 안으로 올바르게 들여쓰기
+                        if found: break # [수정] for 문 안으로 올바르게 들여쓰기
+                if not found: st.error("일치하는 날짜가 없습니다.")
+            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
