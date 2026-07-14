@@ -394,37 +394,37 @@ if st.session_state.get('app_running', False):
         un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
         # ---------------- [AI 통변: 에러 원인 격리] ----------------
-            ai_output_html = ""
-            try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=ds, ilju=ds+db, 
-                    wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
-                    missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", 
-                    vault_info="엔진 데이터 연동"
-                )
-                ai_result = call_gemini_api(fact_sheet)
-                if "🚨" in ai_result:
-                    ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
-                else:
-                    ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                    ai_output_html = html_views.get_ai_report_box(ai_result)
-            except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
-
-            # 🚨 들여쓰기 수정 (except 밖으로 빼내어 정상 렌더링 보장)
-            closing_html = html_views.get_closing_html(name)
-            
-            st.markdown(cover_html, unsafe_allow_html=True)
-            final_report = (
-                str(table_html or "") + 
-                str(master_bar_html or "") + 
-                str(intro_html or "") + 
-                str(un_html or "") + 
-                str(ai_output_html or "") + 
-                str(closing_html or "")
+        ai_output_html = ""
+        try:
+            fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
+                name=name, gender=gender, ilgan=ds, ilju=ds+db, 
+                wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
+                missing_and_gongmang="엔진 데이터 연동", 
+                shinsal_info="엔진 데이터 연동", 
+                vault_info="엔진 데이터 연동"
             )
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+            ai_result = call_gemini_api(fact_sheet)
+            if "🚨" in ai_result:
+                ai_output_html = f"<div style='color:red;'>{ai_result}</div>"
+            else:
+                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+                ai_output_html = html_views.get_ai_report_box(ai_result)
+        except Exception as e:
+            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+
+        # 🚨 들여쓰기 수정 (except 밖으로 빼내어 정상 렌더링 보장)
+        closing_html = html_views.get_closing_html(name)
+            
+        st.markdown(cover_html, unsafe_allow_html=True)
+        final_report = (
+            str(table_html or "") + 
+            str(master_bar_html or "") + 
+            str(intro_html or "") + 
+            str(un_html or "") + 
+            str(ai_output_html or "") + 
+            str(closing_html or "")
+        )
+        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif "2. 올 해" in u_product:
         st.header(f"🔮 {name}님의 올해(세운) 분석")
