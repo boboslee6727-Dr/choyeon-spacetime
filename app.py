@@ -239,9 +239,15 @@ with st.sidebar:
         st.markdown("---")
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
+    # ---------------------------------------------------------
+    # 실행 및 인쇄 버튼
+    # ---------------------------------------------------------
     st.markdown("---")
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
+        
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+        components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
 # 2.5 프롬프트 사전 로딩
