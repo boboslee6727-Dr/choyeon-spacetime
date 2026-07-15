@@ -284,7 +284,7 @@ if st.session_state.get('app_running', False):
         with st.spinner(f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"):
             # 1. 기초 연산
             h, m = extract_time(b_time)
-            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+            y_pillar, m_pillar, lon = get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
             is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
             
