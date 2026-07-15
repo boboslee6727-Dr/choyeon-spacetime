@@ -265,7 +265,7 @@ with st.sidebar:
 # ==============================================================================
 # 2.5 프롬프트 사전 로딩 (메인 화면 출력부 바로 위에 배치)
 # ==============================================================================
-PRODUCT_PROMPT_MAP = {
+PROMPT_MAP = {
     "1. 개인사주 및 일진 분석": prompts.PERSONAL_SAJU_PROMPT,
     "2. 올 해의 운세 (세운)": prompts.SEWUN_PROMPT,
     "3. 이번 달의 운세 (월운)": prompts.WOLWUN_PROMPT,
@@ -279,7 +279,9 @@ PRODUCT_PROMPT_MAP = {
     "11. 타 감명서 비교 (개인)": prompts.COMPARE_PROMPT,
     "12. 타 감명서 비교 (궁합)": prompts.COMPARE_PROMPT
 }
-selected_prompt_template = PRODUCT_PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMPT)
+
+# u_product를 기준으로 템플릿을 선택합니다.
+selected_prompt_template = PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMPT)
 
 # ==============================================================================
 # 3. 메인 화면 출력부
