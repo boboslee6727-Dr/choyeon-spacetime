@@ -387,23 +387,23 @@ if st.session_state.get('app_running', False):
 
             # AI 통변
             ai_output_html = ""
-        try:
-            saju_facts = engine.get_saju_fact_sheet(
-                ys, yb, ms, mb, ds, db, hs, hb, 
-                name=name, age=age, gender=gender, marital=u_marital
-            )
+            try:
+                saju_facts = engine.get_saju_fact_sheet(
+                    ys, yb, ms, mb, ds, db, hs, hb, 
+                    name=name, age=age, gender=gender, marital=u_marital
+                )
                
-            ai_result = call_gemini_api(final_prompt_text)
-            st.session_state['ai_full_text'] = ai_result
-            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                ai_result = call_gemini_api(final_prompt_text)
+                st.session_state['ai_full_text'] = ai_result
+                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
             
-            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
             
-            ai_output_html = html_views.get_ai_report_box(ai_result)
+                ai_output_html = html_views.get_ai_report_box(ai_result)
             
-        except Exception as e:
-            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+            except Exception as e:
+                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
 
             closing_html = html_views.get_closing_html(name)
