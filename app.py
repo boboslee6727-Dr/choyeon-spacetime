@@ -6,17 +6,16 @@ import os
 import re
 from google import genai
 import time
-import importlib
 import engine
+import importlib
+importlib.reload(engine)
 import json
-
 with open('choyeon_db.json', 'r', encoding='utf-8') as f:
     choyeon_db = json.load(f)
 import math
 import pytz
 import html_views
 import prompts
-
 class SafeDict(dict):
     def __missing__(self, key):
         return f"{{{key}}}"
