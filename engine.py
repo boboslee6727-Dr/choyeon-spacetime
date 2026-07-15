@@ -137,29 +137,27 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
-def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None):
+def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, **kwargs):
     """
     모든 명리적 팩트와 체용 매트릭스 분석 결과를 딕셔너리로 통합 반환합니다.
     """
     
-    # 1. 기본 팩트 산출
+    # 1. 기본 팩트 산출 (기존 로직 유지)
     ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
     gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
     counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
     for c in [ys, yb, ms, mb, ds, db, hs, hb]: counts[get_color(c)] += 1
     oheng_str = f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}"
 
-    # 2. 체용 매트릭스(폭포수) 연산
+    # 2. 체용 매트릭스 연산
     ilju_lower_group = get_group_ss(get_ss(ds, db))
     
-    # 대운 키워드
     dw_fact_str = "대운 정보 없음"
     if dw_g_cur and dw_j_cur:
         dw_che = get_group_ss(get_ss(ds, dw_g_cur))
         dw_yong = get_execution_yong(get_group_ss(get_ss(dw_g_cur, dw_j_cur)), ilju_lower_group)
         dw_fact_str = f"체운(무대): {dw_che} / 용운(사건): {dw_yong} ➔ 도출 키워드: {get_matrix_keyword(dw_che, dw_yong)}"
 
-    # 세운 키워드
     sewun_fact_str = "세운 정보 없음"
     if curr_y_ganji:
         s_gan, s_ji = curr_y_ganji[1][0], curr_y_ganji[1][1]
@@ -168,7 +166,6 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         sewun_che = get_group_ss(get_ss(ds, dw_g_cur)) if dw_g_cur else "비겁"
         sewun_fact_str = f"체운(무대): {sewun_che} / 용운(사건): {s_yong} ➔ 도출 키워드: {get_matrix_keyword(sewun_che, s_yong)}"
 
-    # 월운 키워드
     wol_fact_str = "월운 정보 없음"
     if cur_wol_g and cur_wol_j:
         w_upper = get_group_ss(get_ss(cur_wol_g, cur_wol_j))
@@ -177,29 +174,27 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
 
     # 3. 팩트 시트 통합
-    return {
+    fact_data = {
         "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
-        "ss_unsung_str": ss_unsung_str,
-        "gyukgook_detail": gyukgook_detail,
+        "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
         "gongmang_actual": calculate_gongmang(ds, db),
         "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
         "s12_str": get_all_12_shinsal(yb, yb, mb, db, hb),
         "won_guk_vaults_str": " ".join(check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)),
         "oheng_counts_str": oheng_str,
-        "samjae_str": get_samjae(yb, "현재년지"), # 필요시 curr_year_ji 주입
+        "samjae_str": get_samjae(yb, "현재년지"), 
         "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
         "curr_y": dt_mod.datetime.now().year,
         "curr_m": dt_mod.datetime.now().month,
-        "disp_name": name,
-        "u_age": age,
-        "u_gender": gender,
-        "u_marital": marital,
+        "disp_name": name, "u_age": age, "u_gender": gender, "u_marital": marital,
         "yukchin_rule": get_yukchin_rule(gender, marital),
-        # 폭포수 키워드 주입
-        "dw_fact_str": dw_fact_str,
-        "sewun_fact_str": sewun_fact_str,
-        "wol_fact_str": wol_fact_str
+        "dw_fact_str": dw_fact_str, "sewun_fact_str": sewun_fact_str, "wol_fact_str": wol_fact_str
     }
+    
+    # [비결] kwargs를 통해 넘어온 데이터(other_report, ilju, wolryeong 등)를 팩트 시트에 병합
+    fact_data.update(kwargs)
+    
+    return fact_data
 
 def get_daeun_su_accurate(utc_dt, order):
     try:
@@ -951,3 +946,4 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
 
 def get_gunghap_report(res):
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
+
