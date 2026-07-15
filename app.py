@@ -378,62 +378,37 @@ if st.session_state.get('app_running', False):
             table_html = html_views.get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
-            # ---------------- [대운 연산] ----------------
-            un_content = ""
-            c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
-            j_idx = engine.JI.index(mb) if mb in engine.JI else 0
+            yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
+            try:
+                daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+            except AttributeError:
+                # 만약 함수명이 바뀌었다면 엔진을 다시 체크해야 합니다.
+                st.error("분석 엔진에서 daewun 함수를 찾을 수 없습니다. engine.py를 확인하세요.")
+                daewun_data_list = []
+            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
-            for i in range(10):
-                val = i * 10 + calc_d
-                    
-                # 1. 엔진의 연산 로직을 그대로 호출 (60.3 방식)
-                c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10]
-                j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12]
-                    
-                c = engine.K2H_GAN.get(c_hangul, c_hangul)
-                j = engine.K2H_JI.get(j_hangul, j_hangul)
-                    
-                # 2. 엔진의 get_ss, get_unsung, get_12_shinsal을 확실하게 호출
-                ss_gan = engine.get_ss(ds, c_hangul) or "-"
-                ss_ji = engine.get_ss(ds, j_hangul) or "-"
-                    
-                # [핵심 수정] 12운성과 12신살 누락 방지 (엔진 전달값 보정)
-                # j_hangul(한글지지)을 전달해야 엔진이 정확히 계산합니다.
-                un_sung = engine.get_unsung(ds, j_hangul) or "-" 
-                shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
-                    
-                bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
-                b_left = "1px solid #ccc" if i != 0 else "none"
-                    
-                un_content += html_views.get_un_cell(
-                    f"{val}세", ss_gan, c, get_oh_class(c), 
-                    j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left
-                )
+            # AI 통변
+            ai_output_html = ""
+            try:
+                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(name=name, gender=gender, ilgan=ds, ilju=ds+db, wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동")
+                ai_result = call_gemini_api(fact_sheet)
+                ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
+                ai_output_html = prompts.HTML_LAYOUTS["report_box"].format(content=ai_result)
+            except Exception: pass
 
-                un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
-
-                # AI 통변
-                ai_output_html = ""
-                try:
-                    fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(name=name, gender=gender, ilgan=ds, ilju=ds+db, wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", missing_and_gongmang="엔진 데이터 연동", shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동")
-                    ai_result = call_gemini_api(fact_sheet)
-                    ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                    ai_output_html = prompts.HTML_LAYOUTS["report_box"].format(content=ai_result)
-                except Exception: pass
-
-                closing_html = html_views.get_closing_html(name)
+            closing_html = html_views.get_closing_html(name)
             
-                # 최종 렌더링 출력
-                st.markdown(cover_html, unsafe_allow_html=True)
-                final_report = (
-                    str(table_html or "") + 
-                    str(master_bar_html or "") + 
-                    str(intro_html or "") + 
-                    str(un_html or "") + 
-                    str(ai_output_html or "") + 
-                    str(closing_html or "")
-                )
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+            # 최종 렌더링 출력
+            st.markdown(cover_html, unsafe_allow_html=True)
+            final_report = (
+                str(table_html or "") + 
+                str(master_bar_html or "") + 
+                str(intro_html or "") + 
+                str(un_html or "") + 
+                str(ai_output_html or "") + 
+                str(closing_html or "")
+            )
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [2번 상품] 올 해 (세운 전용 출력)
