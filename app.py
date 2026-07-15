@@ -414,18 +414,21 @@ if st.session_state.get('app_running', False):
                 prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts)
                 
                 # 3. API 호출
-                ai_result = call_gemini_api(prompt_content)
+                ai_result = call_gemini_api(prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts))
                 st.session_state['ai_full_text'] = ai_result
                 
-                # 4. 출력 정제
-                if ai_result:
-                    ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                    ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-                    ai_output_html = html_views.get_ai_report_box(ai_result)
+                # 3. 출력 정제
+                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                
+                ai_output_html = html_views.get_ai_report_box(ai_result)
             
             except KeyError as e:
-                ai_output_html = f"<div style='color:red;'>🚨 프롬프트에 필요한 변수가 없습니다: {str(e)}를(을) engine.py의 fact_data 키에 추가하세요.</div>"
+                # 만약 여기서도 에러가 난다면, 'e'에 박사님의 프롬프트에 있는데 
+                # engine 딕셔너리에는 없는 변수명이 찍힙니다. 
+                # 그 변수를 engine.py의 fact_data에 추가하면 끝납니다.
+                ai_output_html = f"<div style='color:red;'>🚨 프롬프트 변수 누락 오류: {str(e)}를 프롬프트에서 확인하십시오.</div>"
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
