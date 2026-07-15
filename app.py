@@ -387,23 +387,26 @@ if st.session_state.get('app_running', False):
 
             # AI 통변
             ai_output_html = ""
-            try:
-                fact_sheet = prompts.PERSONAL_SAJU_PROMPT.format(
-                    name=name, gender=gender, ilgan=ds, ilju=ds+db, 
-                    wolryeong=ms+mb, jijanggan_info="엔진 데이터 연동", 
-                    missing_and_gongmang="엔진 데이터 연동", 
-                    shinsal_info="엔진 데이터 연동", vault_info="엔진 데이터 연동"
-                )
-                ai_result = call_gemini_api(fact_sheet)
+        try:
+            saju_facts = engine.get_saju_fact_sheet(
+                ys, yb, ms, mb, ds, db, hs, hb, 
+                name=name, age=age, gender=gender, marital=u_marital
+            )
+            safe_facts = SafeDict(saju_facts)
+            final_prompt_text = selected_prompt_template.format_map(safe_facts)
                 
-                if ai_result and "🚨" not in ai_result:
-                    ai_result = re.sub(r"안녕하세요, .*?감사드립니다\.", "", ai_result).strip()
-                    ai_output_html = prompts.HTML_LAYOUTS["report_box"].format(content=ai_result)
-                else:
-                    ai_output_html = f"<div style='color:red;'>AI 답변 오류: {ai_result}</div>"
-                    
-            except Exception as e:
-                ai_output_html = f"<div style='color:red;'>통변 처리 중 오류 발생: {str(e)}</div>"
+            ai_result = call_gemini_api(final_prompt_text)
+            st.session_state['ai_full_text'] = ai_result
+            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            
+            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+            
+            ai_output_html = html_views.get_ai_report_box(ai_result)
+            
+        except Exception as e:
+            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+
 
             closing_html = html_views.get_closing_html(name)
             
