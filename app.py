@@ -557,10 +557,8 @@ if st.session_state.get('app_running', False):
         with st.spinner("⏳ 길일 및 시공간 분석 중..."):
             st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
 
-
     # --------------------------------------------------------------------------
-    # 🌟 [제3단계: 타 감명서 비교 추가 출력부]
-    # (선행된 개인사주/궁합 출력 뒤에 원문과 R&D 리포트를 덧붙여 출력합니다.)
+    # 🌟 [제3단계: 타 감명서 비교 추가 출력부] (최종 검수본)
     # --------------------------------------------------------------------------
     if is_compare_mode:
         other_report = st.session_state.get('other_reading', "")
@@ -569,44 +567,38 @@ if st.session_state.get('app_running', False):
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
             with st.spinner("⚖️ 타 감명서 정밀 분석 및 R&D 리포트 생성 중..."):
-                # 1. 팩트 조립 (개인사주/궁합 유형 식별)
-                if compare_type == "궁합":
-                    # f_y, f_m 등의 파라미터는 이미 사이드바에서 확정되어 존재함
-                    fact_ref = f"- 신청인 사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 상대방 생년월일: {f_y}년 {f_m}월 {f_d}일\n- 궁합 분석 핵심: 체용 조화 및 기운 매트릭스 대조"
-                else:
-                    fact_ref = f"- 신청인: {name} ({gender})\n- 사주 구성: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 일주/월령: {ds}{db} / {ms}{mb}"
+                try:
+                    # 1. 팩트 조립
+                    if compare_type == "궁합":
+                        fact_ref = f"- 신청인 사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 상대방 생년월일: {f_y}년 {f_m}월 {f_d}일\n- 궁합 분석 핵심: 체용 조화 및 기운 매트릭스 대조"
+                    else:
+                        fact_ref = f"- 신청인: {name} ({gender})\n- 사주 구성: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 일주/월령: {ds}{db} / {ms}{mb}"
 
-                saju_facts = engine.get_saju_fact_sheet(
-                    ys, yb, ms, mb, ds, db, hs, hb, 
-                    name=name, age=age, gender=gender, marital=u_marital,
-                    other_report=other_report,
-                    fact_reference=fact_ref
-                )
-                
-                # 1번 개인사주 로직에서 생성/저장된 ai_full_text를 가져옴 (궁합 시엔 없을 수도 있으므로 기본값 설정)
-                saju_facts['full_content_clean'] = st.session_state.get('ai_full_text', '초연 사주풀이 선행 데이터')
-                
-                # 2. 프롬프트 로딩 (prompts.COMPARE_PROMPT 사용)
-                final_prompt_text = prompts.COMPARE_PROMPT.format_map(SafeDict(saju_facts))
-                
-                # 3. AI 통변 호출 및 렌더링
-                c_res = call_gemini_api(final_prompt_text)
-                c_res = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                
-                # HTML 스타일링
-                c_res = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", c_res)
-                c_res = c_res.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-                
-                # 원문 HTML 생성
-                report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 감명서 원문</h2><div style='font-size: 15px; line-height: 1.8;'>{other_report.replace(chr(10), '<br>')}</div></div></div>"
-                
-                # 상세비교 HTML 생성
-                detail_report_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32;'>⚖️ 1:1 상세비교 및 R&D 총평 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
-                
-                # [최종 출력] 선행 풀이(st.markdown으로 이미 찍힘) 바로 밑에 덧붙여서 출력
-                st.markdown(report_2_html + detail_report_html, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"🚨 타 감명서 비교 분석 중 오류가 발생했습니다: {e}")
-
+                    saju_facts = engine.get_saju_fact_sheet(
+                        ys, yb, ms, mb, ds, db, hs, hb, 
+                        name=name, age=age, gender=gender, marital=u_marital,
+                        other_report=other_report,
+                        fact_reference=fact_ref
+                    )
+                    
+                    saju_facts['full_content_clean'] = st.session_state.get('ai_full_text', '초연 사주풀이 선행 데이터')
+                    final_prompt_text = prompts.COMPARE_PROMPT.format_map(SafeDict(saju_facts))
+                    
+                    # 2. AI 통변 및 정제
+                    c_res = call_gemini_api(final_prompt_text)
+                    c_res = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                    
+                    # HTML 스타일링
+                    c_res = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", c_res)
+                    c_res = c_res.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                    
+                    # 3. 결과 출력
+                    report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 감명서 원문</h2><div style='font-size: 15px; line-height: 1.8;'>{other_report.replace(chr(10), '<br>')}</div></div></div>"
+                    detail_report_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32;'>⚖️ 1:1 상세비교 및 R&D 총평 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                    
+                    st.markdown(report_2_html + detail_report_html, unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"🚨 타 감명서 비교 분석 중 오류가 발생했습니다: {e}")
 
 
