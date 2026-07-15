@@ -493,10 +493,9 @@ if st.session_state.get('app_running', False):
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
-    # [7번 상품] 연애 및 궁합운 특화 분석
+    # [7번 상품] 연애 및 궁합운 특화 분석 (최종 수정본)
     # ---------------------------------------------------------
     elif "7. 연애" in u_product:
-        # (기존 궁합 로직 유지)
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
@@ -504,26 +503,41 @@ if st.session_state.get('app_running', False):
             part_p_icon = "♂️" if f_gender == "남성" else "♀️"
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
             
+            # 1. 데이터 연산
             cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
-            st.markdown(cover_html, unsafe_allow_html=True)
-
             gh_data = engine.get_gunghap_data(b_year, b_month, b_day, b_time, f_y, f_m, f_d, f_t)
             
+            # 2. 표 및 마스터바 구성
             def build_master_bar(m_data):
-                return html_views.get_master_bar(
-                    m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5], 
-                    m_data[6], m_data[7], m_data[8], m_data[9], m_data[10]
-                )
+                return html_views.get_master_bar(*m_data)
 
-            m_master_html = build_master_bar(gh_data["m_master"])
-            w_master_html = build_master_bar(gh_data["w_master"])
+            m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), build_master_bar(gh_data["m_master"]))
+            w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), build_master_bar(gh_data["w_master"]), add_page_break=True)
+            closing = html_views.get_gunghap_closing(f_name) # 상대방 이름 반영
+
+            # 3. [핵심] 모든 HTML을 하나의 변수로 합친 뒤 단 한 번만 st.markdown으로 출력
+            # 소스코드 노출 방지를 위해 HTML 앞에 공백을 절대 넣지 않습니다.
+            final_gunghap_report = (
+                str(cover_html or "").strip() + 
+                str(m_box or "").strip() + 
+                str(w_box or "").strip() + 
+                str(closing or "").strip()
+            )
             
-            m_table = html_views.get_saju_table(*gh_data["m_table"])
-            w_table = html_views.get_saju_table(*gh_data["w_table"])
+            # 4. AI 통변 (궁합 전용 프롬프트가 있다면 적용)
+            # 여기서는 궁합 데이터(gh_data)를 팩트로 구성하여 AI를 호출합니다.
+            try:
+                # 간단한 궁합 요약 데이터를 팩트로 구성
+                gunghap_facts = {"applicant": name, "partner": f_name}
+                prompt_content = prompts.GUNGHAP_PROMPT.format(**gunghap_facts)
+                ai_result = call_gemini_api(prompt_content)
+                ai_html = html_views.get_ai_report_box(ai_result.replace('\n', '<p>'))
+                final_gunghap_report += str(ai_html or "").strip()
+            except:
+                pass
 
-            st.markdown(html_views.get_gunghap_person_box(m_table, m_master_html), unsafe_allow_html=True)
-            st.markdown(html_views.get_gunghap_person_box(w_table, w_master_html, add_page_break=True), unsafe_allow_html=True)
-            st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
+            # 5. 최종 렌더링 (가장 바깥 박스로 감싸서 밖으로 튀어나가지 않게 함)
+            st.markdown(html_views.get_final_report_box(final_gunghap_report), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [8~12번 상품] 유지
