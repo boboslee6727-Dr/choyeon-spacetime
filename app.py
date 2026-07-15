@@ -598,27 +598,44 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         
         other_report = st.session_state.get('other_reading', "")
+        
         if not other_report: 
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
-            # 이제 ys, yb, ms, mb, ds, db, hs, hb가 상단 공통 영역에서 만들어졌으므로 에러가 나지 않습니다!
+            # 1. 팩트 조립 (개인사주/궁합 유형 식별)
+            if "궁합" in u_product:
+                fact_ref = f"- 남명 사주: {m_gans}{m_jjis}\n- 여명 사주: {w_gans}{w_jjis}\n- 궁합 분석 핵심: 체용 조화 및 기운 매트릭스 대조"
+            else:
+                fact_ref = f"- 신청인: {name} ({gender})\n- 사주 구성: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 일주/월령: {ds}{db} / {ms}{mb}"
+
             saju_facts = engine.get_saju_fact_sheet(
                 ys, yb, ms, mb, ds, db, hs, hb, 
                 name=name, age=age, gender=gender, marital=u_marital,
                 other_report=other_report,
-                ilju=f"{ds}{db}",
-                wolryeong=f"{ms}{mb}",
-                saju_structure=f"{ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
+                fact_reference=fact_ref
             )
-
-            safe_facts = SafeDict(saju_facts)
-            final_prompt_text = selected_prompt_template.format_map(safe_facts)
+            saju_facts['full_content_clean'] = st.session_state.get('ai_full_text', '상세분석 데이터')
             
-            with st.spinner("⚖️ 타 감명서 분석 및 1:1 비교 검증 중..."):
-                ai_result = call_gemini_api(final_prompt_text)
-                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            # 2. 프롬프트 로딩 (prompts.COMPARE_PROMPT 사용)
+            final_prompt_text = prompts.COMPARE_PROMPT.format_map(SafeDict(saju_facts))
+            
+            # 3. 데이터 렌더링 및 출력 (3단계 구성)
+            with st.spinner("⚖️ 타 감명서 정밀 분석 및 R&D 리포트 생성 중..."):
+                # AI 통변 호출
+                c_res = call_gemini_api(final_prompt_text)
+                c_res = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                 
-                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                # HTML 스타일링
+                c_res = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", c_res)
+                c_res = c_res.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
                 
-                st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
+                # 원문 HTML 생성
+                report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 감명서 원문</h2><div style='font-size: 15px; line-height: 1.8;'>{other_report.replace(chr(10), '<br>')}</div></div></div>"
+                
+                # 상세비교 HTML 생성
+                detail_report_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32;'>⚖️ 1:1 상세비교 및 총평 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                
+                # [출력 순서] 기존 초연 분석(saved_report_html) -> 원문 -> 상세비교/총평
+                final_output = st.session_state.get('saved_report_html', '') + report_2_html + detail_report_html
+                st.markdown(final_output, unsafe_allow_html=True)
+
