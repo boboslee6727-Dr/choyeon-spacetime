@@ -410,8 +410,7 @@ if st.session_state.get('app_running', False):
                 
             ai_result = call_gemini_api(final_prompt_text)
             st.session_state['ai_full_text'] = ai_result # R&D 비교 리포트를 위해 세션에 저장
-            ai_result = ai_result.replace("
-```html", "").replace("```markdown", "").replace("```", "").strip()
+            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
             
             ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
             ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
@@ -640,8 +639,7 @@ if st.session_state.get('app_running', False):
                 
                 # 3. AI 통변 호출 및 렌더링
                 c_res = call_gemini_api(final_prompt_text)
-                c_res = c_res.replace("
-```html", "").replace("```markdown", "").replace("```", "").strip()
+                c_res = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                 
                 # HTML 스타일링
                 c_res = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", c_res)
@@ -655,4 +653,5 @@ if st.session_state.get('app_running', False):
                 
                 # [최종 출력] 선행 풀이(st.markdown으로 이미 찍힘) 바로 밑에 덧붙여서 출력
                 st.markdown(report_2_html + detail_report_html, unsafe_allow_html=True)
+
 
