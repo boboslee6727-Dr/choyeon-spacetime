@@ -17,8 +17,8 @@ PRODUCT_PROMPT_MAP = {
     "8. 결혼 택일 정밀 분석": prompts.WEDDING_DATE_PROMPT,
     "9. 출산 택일": prompts.DELIVERY_LOOP_PROMPT,
     "10. 이사 및 방위": prompts.MOVING_DATE_PROMPT,
-    "11. 타 감명서 비교(개인)": prompts.COMPARE_PROMPT
-    "12. 타 감명서 비교(궁합)": prompts.COMPARE_PROMPT
+    "11. 타 감명서 비교 (개인)": prompts.COMPARE_PROMPT
+    "12. 타 감명서 비교 (궁합)": prompts.COMPARE_PROMPT
 }
         
 # 선택된 상품에 맞는 프롬프트 할당
