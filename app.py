@@ -165,6 +165,8 @@ with st.sidebar:
 
     elif any(x in u_product for x in ["7. 연애", "8. 결혼", "9. 출산"]):
         st.markdown("---")
+        
+        # 1. 상대방 사주간지 역산
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -175,16 +177,23 @@ with st.sidebar:
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+                
+                # 들여쓰기 완벽 수정 완료
                 if not _p_ry and not _p_rm and not _p_rd:
-                    if 'rev_p_success_msg' in st.session_state: del st.session_state['rev_p_success_msg']
+                    if 'rev_p_success_msg' in st.session_state: 
+                        del st.session_state['rev_p_success_msg']
                     st.rerun()
+                    
                 elif len(_p_ry)==2 and len(_p_rm)==2 and len(_p_rd)==2:
                     p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
                     p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
                     p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
-                    klc_find = KoreanLunarCalendar(); found = False
+                    klc_find = KoreanLunarCalendar()
+                    found = False
+                    
                     for y in range(2026, 1899, -1):
-                        klc_find.setSolarDate(y, 7, 1); gj_y = klc_find.getChineseGapJaString().split()
+                        klc_find.setSolarDate(y, 7, 1)
+                        gj_y = klc_find.getChineseGapJaString().split()
                         if gj_y and gj_y[0][:2] == p_ry_h:
                             curr_dt = dt_mod.date(y+1, 2, 28)
                             while curr_dt >= dt_mod.date(y, 1, 1):
@@ -209,26 +218,32 @@ with st.sidebar:
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
-                if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                    if not found: 
+                        st.error("일치하는 날짜가 없습니다.")
+                        
+                else: 
+                    st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-            with st.expander("👥 상대방 기본 정보", expanded=True):
-                f_name = st.text_input("상대방 이름", value="", key="f_n")
-                f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
-                f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
-                f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
-                p_col1, p_col2, p_col3 = st.columns(3)
-                f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
-                f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
-                f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
-                f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
+        # 2. 상대방 기본 정보 (복구 완료!)
+        with st.expander("👥 상대방 기본 정보", expanded=True):
+            f_name = st.text_input("상대방 이름", value="", key="f_n")
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
+            f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+            p_col1, p_col2, p_col3 = st.columns(3)
+            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
+            f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
+            f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
+            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
 
-            if "8. 결혼" in u_product:
-                date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
-                if date_mode == "기간 선택":
-                    start_date = st.date_input("시작일"); end_date = st.date_input("종료일")
-            elif "9. 출산" in u_product:
-                run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True)
+        # 3. 추가 옵션
+        if "8. 결혼" in u_product:
+            date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
+            if date_mode == "기간 선택":
+                start_date = st.date_input("시작일")
+                end_date = st.date_input("종료일")
+        elif "9. 출산" in u_product:
+            run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True)
 
     elif "10. 이사" in u_product:
         moving_date = st.date_input("이사 희망일")
