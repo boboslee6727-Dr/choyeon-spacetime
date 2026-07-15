@@ -276,21 +276,35 @@ PRODUCT_PROMPT_MAP = {
     "8. 결혼 택일 정밀 분석": prompts.WEDDING_DATE_PROMPT,
     "9. 출산 택일": prompts.DELIVERY_LOOP_PROMPT,
     "10. 이사 및 방위": prompts.MOVING_DATE_PROMPT,
-    "11. 타 감명서 비교": prompts.COMPARE_PROMPT
+    "11. 타 감명서 비교 (개인)": prompts.COMPARE_PROMPT,
+    "12. 타 감명서 비교 (궁합)": prompts.COMPARE_PROMPT
 }
 selected_prompt_template = PRODUCT_PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMPT)
 
 # ==============================================================================
-# 3. 메인 화면 출력부 (수정 반영본)
+# 3. 메인 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
     curr_dt = dt_mod.datetime.now()
     curr_year = curr_dt.year
     curr_month = curr_dt.month
 
+    # 🚨 [핵심 우회 장치] 11번, 12번을 선택해도 1번, 7번 풀이를 먼저 타도록 내부 목표(Target)를 변경합니다.
+    base_product = u_product
+    is_compare_mode = False
+    compare_type = ""
+
+    if "11. 타 감명서 비교 (개인)" in u_product:
+        base_product = "1. 개인사주"
+        is_compare_mode = True
+        compare_type = "개인"
+    elif "12. 타 감명서 비교 (궁합)" in u_product:
+        base_product = "7. 연애"
+        is_compare_mode = True
+        compare_type = "궁합"
+
     # --------------------------------------------------------------------------
     # 🌟 [제1단계: 공통 데이터 추출부]
-    # 어떤 상품을 선택하더라도, 신청인의 사주 8글자와 기본 정보는 무조건 여기서 산출됩니다.
     # --------------------------------------------------------------------------
     klc = KoreanLunarCalendar()
     if "음력" in u_cal:
@@ -322,7 +336,7 @@ if st.session_state.get('app_running', False):
         
         ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0])
         if "모름" in b_time:
-            t_gan, t_ji = "", ""
+            t_gan, t_ji = "" , ""
         else:
             match = re.search(r'\((.*?)\)', b_time)
             raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
@@ -338,17 +352,14 @@ if st.session_state.get('app_running', False):
         hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
         hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
 
-        # 대운 방향 및 대운수 계산 (공통 활용)
         order_dir = 1 if (engine.GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
         calc_d = engine.get_daeun_su_accurate(dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0) - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=engine.get_total_time_adjustment(dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0))), order_dir)
         direction_str = "순행" if order_dir == 1 else "역행"
 
     # --------------------------------------------------------------------------
-    # 🌟 [제2단계: 상품별 분기부]
-    # 위에서 추출한 공통 변수(ys, yb, ms, mb 등)를 바탕으로 각 상품이 가동됩니다.
+    # 🌟 [제2단계: 상품별 분기부] u_product 대신 base_product 변수 적용
     # --------------------------------------------------------------------------
-    if "1. 개인사주" in u_product:
-        # (개인사주 전용 렌더링 변수들만 남겨둡니다)
+    if "1. 개인사주" in base_product:
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
         for c in gans + jjis:
             oh = engine.get_color(c)
@@ -382,31 +393,26 @@ if st.session_state.get('app_running', False):
         daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
-        # DB 조회 및 골든 텍스트 생성
         w_key = ms + mb
         i_key = ds + db
         w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
         i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         golden_text_html = html_views.get_golden_text(name, w_val, i_val)
 
-        # ---------------- [AI 통변: 데이터 주입 및 최종 렌더링 최적화] ----------------
         ai_output_html = ""
         try:
-            # 1. engine.py로부터 팩트 데이터 생성 및 안전하게 주입
             saju_facts = engine.get_saju_fact_sheet(
                 ys, yb, ms, mb, ds, db, hs, hb, 
                 name=name, age=age, gender=gender, marital=u_marital
             )
-                
-            # 안전한 변수 주입 (데이터가 없어도 에러 대신 {key} 출력으로 시스템 보호)
             safe_facts = SafeDict(saju_facts)
             final_prompt_text = selected_prompt_template.format_map(safe_facts)
                 
-            # 2. AI 통변 호출 및 결과 정제
             ai_result = call_gemini_api(final_prompt_text)
-            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            st.session_state['ai_full_text'] = ai_result # R&D 비교 리포트를 위해 세션에 저장
+            ai_result = ai_result.replace("
+```html", "").replace("```markdown", "").replace("```", "").strip()
             
-            # 3. 가독성 스타일링 (### 제거 및 줄간격 통일)
             ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
             ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
             
@@ -415,9 +421,7 @@ if st.session_state.get('app_running', False):
         except Exception as e:
             ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
-        # 4. 보고서 조립 (전체 순서 유지)
         closing_html = html_views.get_closing_html(name)
-        
         st.markdown(cover_html, unsafe_allow_html=True)
             
         final_report = (
@@ -430,12 +434,11 @@ if st.session_state.get('app_running', False):
             str(closing_html or "")
         )
         
-        # 5. 최종 렌더링 압축 및 송출
         full_html = html_views.get_final_report_box(final_report)
         full_html_clean = re.sub(r'\n\s+', ' ', full_html)
         st.markdown(full_html_clean, unsafe_allow_html=True)
 
-    elif "2. 올 해" in u_product:
+    elif "2. 올 해" in base_product:
         st.header(f"🔮 {name}님의 올해(세운) 분석")
         st.markdown("---")
         with st.spinner("⏳ 세운 정밀 분석 중...."):
@@ -504,7 +507,6 @@ if st.session_state.get('app_running', False):
                 un_sung = engine.get_unsung(ds, tj_hangul)
                 shin_sal = engine.get_12_shinsal(yb, tj_hangul)
 
-                # 이제 curr_year를 안전하게 참조합니다
                 bg_col = "#E1F5FE" if ty == curr_year else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
 
@@ -516,7 +518,7 @@ if st.session_state.get('app_running', False):
             se_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
             st.markdown(html_views.get_final_report_box(se_html), unsafe_allow_html=True)
 
-    elif "3. 이번 달" in u_product:
+    elif "3. 이번 달" in base_product:
         st.header(f"🔮 {name}님의 이번 달(월운) 분석")
         st.markdown("---")
         with st.spinner("⏳ 월운 정밀 분석 중...."):
@@ -563,13 +565,13 @@ if st.session_state.get('app_running', False):
             wol_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
             st.markdown(html_views.get_final_report_box(wol_html), unsafe_allow_html=True)
 
-    elif any(x in u_product for x in ["4. 재물", "5. 직업", "6. 건강"]):
-        st.header(f"🔮 {name}님의 {u_product.split('.')[1].strip()} 분석")
+    elif any(x in base_product for x in ["4. 재물", "5. 직업", "6. 건강"]):
+        st.header(f"🔮 {name}님의 {base_product.split('.')[1].strip()} 분석")
         st.markdown("---")
-        with st.spinner(f"⏳ [{u_product.split('.')[1].strip()}] 정밀 분석 중...."):
+        with st.spinner(f"⏳ [{base_product.split('.')[1].strip()}] 정밀 분석 중...."):
             st.info("데이터 연동 및 AI 분석 대기 중입니다. (향후 1번 상품의 연산 로직을 기반으로 확장될 공간입니다.)")
 
-    elif "7. 연애" in u_product:
+    elif "7. 연애" in base_product:
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
@@ -598,43 +600,48 @@ if st.session_state.get('app_running', False):
             st.markdown(html_views.get_gunghap_person_box(w_table, w_master_html, add_page_break=True), unsafe_allow_html=True)
             st.markdown(html_views.get_gunghap_closing(), unsafe_allow_html=True)
 
-    elif any(x in u_product for x in ["8. 결혼", "9. 출산", "10. 이사"]):
-        st.header(f"🗓️ {name}님의 {u_product.split('.')[1].strip()}")
+    elif any(x in base_product for x in ["8. 결혼", "9. 출산", "10. 이사"]):
+        st.header(f"🗓️ {name}님의 {base_product.split('.')[1].strip()}")
         st.markdown("---")
         with st.spinner("⏳ 길일 및 시공간 분석 중..."):
             st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
 
-    elif "11. 타 감명서 비교" in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
-        st.markdown("---")
-        
+
+    # --------------------------------------------------------------------------
+    # 🌟 [제3단계: 타 감명서 비교 추가 출력부]
+    # (선행된 개인사주/궁합 출력 뒤에 원문과 R&D 리포트를 덧붙여 출력합니다.)
+    # --------------------------------------------------------------------------
+    if is_compare_mode:
         other_report = st.session_state.get('other_reading', "")
         
         if not other_report: 
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
-            # 1. 팩트 조립 (개인사주/궁합 유형 식별)
-            if "궁합" in u_product:
-                fact_ref = f"- 남명 사주: {m_gans}{m_jjis}\n- 여명 사주: {w_gans}{w_jjis}\n- 궁합 분석 핵심: 체용 조화 및 기운 매트릭스 대조"
-            else:
-                fact_ref = f"- 신청인: {name} ({gender})\n- 사주 구성: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 일주/월령: {ds}{db} / {ms}{mb}"
-
-            saju_facts = engine.get_saju_fact_sheet(
-                ys, yb, ms, mb, ds, db, hs, hb, 
-                name=name, age=age, gender=gender, marital=u_marital,
-                other_report=other_report,
-                fact_reference=fact_ref
-            )
-            saju_facts['full_content_clean'] = st.session_state.get('ai_full_text', '상세분석 데이터')
-            
-            # 2. 프롬프트 로딩 (prompts.COMPARE_PROMPT 사용)
-            final_prompt_text = prompts.COMPARE_PROMPT.format_map(SafeDict(saju_facts))
-            
-            # 3. 데이터 렌더링 및 출력 (3단계 구성)
             with st.spinner("⚖️ 타 감명서 정밀 분석 및 R&D 리포트 생성 중..."):
-                # AI 통변 호출
+                # 1. 팩트 조립 (개인사주/궁합 유형 식별)
+                if compare_type == "궁합":
+                    # f_y, f_m 등의 파라미터는 이미 사이드바에서 확정되어 존재함
+                    fact_ref = f"- 신청인 사주: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 상대방 생년월일: {f_y}년 {f_m}월 {f_d}일\n- 궁합 분석 핵심: 체용 조화 및 기운 매트릭스 대조"
+                else:
+                    fact_ref = f"- 신청인: {name} ({gender})\n- 사주 구성: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시\n- 일주/월령: {ds}{db} / {ms}{mb}"
+
+                saju_facts = engine.get_saju_fact_sheet(
+                    ys, yb, ms, mb, ds, db, hs, hb, 
+                    name=name, age=age, gender=gender, marital=u_marital,
+                    other_report=other_report,
+                    fact_reference=fact_ref
+                )
+                
+                # 1번 개인사주 로직에서 생성/저장된 ai_full_text를 가져옴 (궁합 시엔 없을 수도 있으므로 기본값 설정)
+                saju_facts['full_content_clean'] = st.session_state.get('ai_full_text', '초연 사주풀이 선행 데이터')
+                
+                # 2. 프롬프트 로딩 (prompts.COMPARE_PROMPT 사용)
+                final_prompt_text = prompts.COMPARE_PROMPT.format_map(SafeDict(saju_facts))
+                
+                # 3. AI 통변 호출 및 렌더링
                 c_res = call_gemini_api(final_prompt_text)
-                c_res = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                c_res = c_res.replace("
+```html", "").replace("```markdown", "").replace("```", "").strip()
                 
                 # HTML 스타일링
                 c_res = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", c_res)
@@ -644,9 +651,8 @@ if st.session_state.get('app_running', False):
                 report_2_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#555;'><h2 style='text-align:center; color:#555;'>📜 타 감명서 원문</h2><div style='font-size: 15px; line-height: 1.8;'>{other_report.replace(chr(10), '<br>')}</div></div></div>"
                 
                 # 상세비교 HTML 생성
-                detail_report_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32;'>⚖️ 1:1 상세비교 및 총평 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
+                detail_report_html = f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32;'>⚖️ 1:1 상세비교 및 R&D 총평 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
                 
-                # [출력 순서] 기존 초연 분석(saved_report_html) -> 원문 -> 상세비교/총평
-                final_output = st.session_state.get('saved_report_html', '') + report_2_html + detail_report_html
-                st.markdown(final_output, unsafe_allow_html=True)
+                # [최종 출력] 선행 풀이(st.markdown으로 이미 찍힘) 바로 밑에 덧붙여서 출력
+                st.markdown(report_2_html + detail_report_html, unsafe_allow_html=True)
 
