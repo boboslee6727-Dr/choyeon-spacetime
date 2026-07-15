@@ -399,11 +399,25 @@ if st.session_state.get('app_running', False):
                 # 만약 {saju_data}가 아니라 다른 이름(예: {facts})이라면 해당 이름으로 바꾸세요.
                 prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(saju_data=saju_facts)
                 
+                # AI 통변 (변수명 일치 오류 원천 차단)
+            # AI 통변 호출부 (최종 최적화)
+            ai_output_html = ""
+            try:
+                # 1. 팩트시트 딕셔너리 생성
+                saju_facts = engine.get_saju_fact_sheet(
+                    ys, yb, ms, mb, ds, db, hs, hb, 
+                    name=name, age=age, gender=gender, marital=u_marital
+                )
+                
+                # 2. 프롬프트 생성 (딕셔너리 언패킹 **)
+                # saju_facts 안의 모든 키(ys, yb 등)가 프롬프트의 {ys}, {yb}와 자동 매칭됩니다.
+                prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts)
+                
                 # 3. API 호출
                 ai_result = call_gemini_api(prompt_content)
                 st.session_state['ai_full_text'] = ai_result
                 
-                # 4. 결과 정제 및 렌더링
+                # 4. 출력 정제
                 if ai_result:
                     ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                     ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
@@ -411,7 +425,7 @@ if st.session_state.get('app_running', False):
                     ai_output_html = html_views.get_ai_report_box(ai_result)
             
             except KeyError as e:
-                ai_output_html = f"<div style='color:red;'>🚨 프롬프트 포맷 오류 (변수명 불일치): {str(e)}</div>"
+                ai_output_html = f"<div style='color:red;'>🚨 프롬프트에 필요한 변수가 없습니다: {str(e)}를(을) engine.py의 fact_data 키에 추가하세요.</div>"
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
