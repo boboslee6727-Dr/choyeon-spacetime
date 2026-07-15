@@ -122,14 +122,19 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="", key="u_rd")
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
-        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
+if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
+            # 🚨 자동입력 버튼을 누르면 AI 가동 상태를 무조건 강제 종료시킴
+            st.session_state['app_running'] = False
+            
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+            
             if not _ry and not _rm and not _rd:
                 st.rerun()
             elif len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
                 ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
                 rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
                 rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+                
                 klc_find = KoreanLunarCalendar(); found = False
                 for y in range(2026, 1899, -1):
                     klc_find.setSolarDate(y, 7, 1); gj_y = klc_find.getChineseGapJaString().split()
@@ -142,6 +147,7 @@ with st.sidebar:
                                 st.session_state['s_y'] = curr_dt.year
                                 st.session_state['s_m'] = curr_dt.month
                                 st.session_state['s_d'] = curr_dt.day
+                                
                                 if rt:
                                     ji_char = rt[-1]
                                     rt_h = engine.K2H_JI.get(ji_char, ji_char)
@@ -149,8 +155,9 @@ with st.sidebar:
                                     st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
                                 else:
                                     st.session_state['s_t'] = "시간 모름"
+                                
                                 found = True
-                                st.rerun()
+                                st.rerun() # 여기서 리런할 때 app_running은 False인 상태
                                 break
                         curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
