@@ -122,7 +122,7 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="", key="u_rd")
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
-if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
+    if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             # 🚨 자동입력 버튼을 누르면 AI 가동 상태를 무조건 강제 종료시킴
             st.session_state['app_running'] = False
             
