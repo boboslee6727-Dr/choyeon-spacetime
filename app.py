@@ -101,7 +101,8 @@ with st.sidebar:
     u_product = st.selectbox("상품선택", [
         "1. 개인사주 및 일진 분석", "2. 올 해의 운세 (세운)", "3. 이번 달의 운세 (월운)",
         "4. 재물운 특화 분석", "5. 직업/직장운 특화 분석", "6. 건강운 특화 분석",
-        "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교"
+        "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", 
+        "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
     ], label_visibility="collapsed")
 
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -146,10 +147,10 @@ with st.sidebar:
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                            curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
-                if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                        curr_dt -= dt_mod.timedelta(days=1)
+                if found: break
+            if not found: st.error("일치하는 날짜가 없습니다.")
+        else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -162,15 +163,18 @@ with st.sidebar:
         with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
 
+    # --------------------------------------------------------------------------
+    # 조건별 추가 입력창 (독립된 if문으로 구성하여 동시 다발적 오픈 가능)
+    # --------------------------------------------------------------------------
     if "1. 개인사주" in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
     
-    elif any(x in u_product for x in ["2. 올 해", "3. 이번 달", "4. 재물", "5. 직업", "6. 건강"]):
+    if any(x in u_product for x in ["2. 올 해", "3. 이번 달", "4. 재물", "5. 직업", "6. 건강"]):
         if "4. 재물" in u_product: wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "5. 직업" in u_product: career_goal = st.text_input("고민되는 직업 분야는?", key="career_goal")
         elif "6. 건강" in u_product: health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
 
-    elif any(x in u_product for x in ["7. 연애", "8. 결혼", "9. 출산"]):
+    if any(x in u_product for x in ["7. 연애", "8. 결혼", "9. 출산", "12. 타 감명서 비교 (궁합)"]):
         st.markdown("---")
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
@@ -214,10 +218,10 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                                curr_dt -= dt_mod.timedelta(days=1)
-                        if found: break
-                if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                            curr_dt -= dt_mod.timedelta(days=1)
+                    if found: break
+            if not found: st.error("일치하는 날짜가 없습니다.")
+        else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
@@ -237,11 +241,12 @@ with st.sidebar:
         elif "9. 출산" in u_product:
             run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True)
 
-    elif "10. 이사" in u_product:
+    if "10. 이사" in u_product:
         moving_date = st.date_input("이사 희망일")
         moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
 
-    elif "11. 타 감명서 비교" in u_product:
+    if "타 감명서 비교" in u_product:
+        st.markdown("---")
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
     st.markdown("---")
