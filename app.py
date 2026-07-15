@@ -241,7 +241,7 @@ with st.sidebar:
         moving_date = st.date_input("이사 희망일")
         moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
 
-    elif "11. 타 감명서 비교 " in u_product:
+    elif "11. 타 감명서 비교" in u_product:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
     st.markdown("---")
@@ -599,10 +599,36 @@ if st.session_state.get('app_running', False):
         with st.spinner("⏳ 길일 및 시공간 분석 중..."):
             st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
 
-    elif "11. 타 감" in u_product:
+    elif "11. 타 감명서 비교" in u_product:
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
         st.markdown("---")
+        
+        # 1. 입력 확인
+        other_report = st.session_state.get('other_reading', "")
+        
         if not other_report: 
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
-            st.info("타 감명서 비교 로직이 작동합니다.")
+            # 2. 엔진을 통해 팩트 시트 생성 (확장된 kwargs 활용)
+            saju_facts = engine.get_saju_fact_sheet(
+                ys, yb, ms, mb, ds, db, hs, hb, 
+                name=name, age=age, gender=gender, marital=u_marital,
+                other_report=other_report,
+                ilju=f"{ds}{db}",
+                wolryeong=f"{ms}{mb}",
+                saju_structure=f"{ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
+            )
+
+            # 3. 안전한 팩트 주입 및 AI 통변 호출
+            safe_facts = SafeDict(saju_facts)
+            final_prompt_text = selected_prompt_template.format_map(safe_facts)
+            
+            # 4. 결과 출력
+            ai_result = call_gemini_api(final_prompt_text)
+            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            
+            # 스타일링 적용 후 렌더링
+            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+            
+            st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
