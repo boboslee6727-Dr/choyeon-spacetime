@@ -1,28 +1,10 @@
+# ==============================================================================
+# 공통 시스템 헤더 정의 (가장 상단 배치)
+# ==============================================================================
 COMMON_SYSTEM_HEADER = """
 당신은 최고의 명리학자 초연 박사를 보조하는 수석 연구원입니다.
 초연 시공명리의 명리 이론을 바탕으로 상담을 수행하십시오.
 """
-
-# ==============================================================================
-# 상품별 프롬프트 선택 매핑 테이블
-# ==============================================================================
-PRODUCT_PROMPT_MAP = {
-    "1. 개인사주 및 일진 분석": prompts.PERSONAL_SAJU_PROMPT,
-    "2. 올 해의 운세 (세운)": prompts.SEWUN_PROMPT,
-    "3. 이번 달의 운세 (월운)": prompts.WOLWUN_PROMPT,
-    "4. 재물운 특화 분석": prompts.WEALTH_PROMPT,
-    "5. 직업/직장운 특화 분석": prompts.CAREER_PROMPT,
-    "6. 건강운 특화 분석": prompts.HEALTH_PROMPT,
-    "7. 연애 및 궁합운 특화 분석": prompts.GUNGHAP_ESSAY_PROMPT,
-    "8. 결혼 택일 정밀 분석": prompts.WEDDING_DATE_PROMPT,
-    "9. 출산 택일": prompts.DELIVERY_LOOP_PROMPT,
-    "10. 이사 및 방위": prompts.MOVING_DATE_PROMPT,
-    "11. 타 감명서 비교 (개인)": prompts.COMPARE_PROMPT,
-    "12. 타 감명서 비교 (궁합)": prompts.COMPARE_PROMPT
-}
-        
-# 선택된 상품에 맞는 프롬프트 할당
-selected_prompt_template = PRODUCT_PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMPT)
 
 # ==============================================================================
 # 1. 개인 사주 및 일진(일운) 분석 프롬프트 (기본 상품용)
