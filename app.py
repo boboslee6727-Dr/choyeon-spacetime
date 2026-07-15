@@ -92,7 +92,7 @@ with st.sidebar:
     u_product = st.selectbox("상품선택", [
         "1. 개인사주 및 일진 분석", "2. 올 해의 운세 (세운)", "3. 이번 달의 운세 (월운)",
         "4. 재물운 특화 분석", "5. 직업/직장운 특화 분석", "6. 건강운 특화 분석",
-        "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교"
+        "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
     ], label_visibility="collapsed")
 
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -385,20 +385,17 @@ if st.session_state.get('app_running', False):
 
             for i in range(10):
                 val = i*10+calc_d
-                
-                # 1. 연산용 간지 추출
                 c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
                 j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
                 
-                # 2. 출력용 한자 변환 (화면 표시용)
                 c = engine.K2H_GAN.get(c_hangul, c_hangul)
                 j = engine.K2H_JI.get(j_hangul, j_hangul)
                 
-                # 3. 십성/운성 계산 (엔진이 알아서 통역하므로 그대로 던짐)
+                # [수정] 엔진 호출 시 한글 지지(j_hangul)를 명확히 전달
                 ss_gan = engine.get_ss(ds, c_hangul) or "-"
                 ss_ji = engine.get_ss(ds, j_hangul) or "-"
-                un_sung = engine.get_unsung(ds, j_hangul) or "-"
-                shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
+                un_sung = engine.get_unsung(ds, j_hangul) or "-" # 지지 한글 전달
+                shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-" # 년지(yb)와 대운지지(j_hangul) 전달
                 
                 bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
                 b_left = "1px solid #ccc" if i != 0 else "none"
@@ -622,7 +619,7 @@ if st.session_state.get('app_running', False):
             st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
 
     # ---------------------------------------------------------
-    # [11번 상품] 타 감명서 비교
+    # [11번 상품] 타 감명서 비교 (개인)
     # ---------------------------------------------------------
     elif "11. 타 감" in u_product:
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
@@ -631,3 +628,11 @@ if st.session_state.get('app_running', False):
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
             st.info("타 감명서 비교 로직이 작동합니다.")
+
+    # ---------------------------------------------------------
+    # [12번 상품] 타 감명서 비교 (궁합)
+    # ---------------------------------------------------------
+    elif "12. 타 감명서 비교 (궁합)" in u_product:
+        st.header("⚖️ 초연 시공명리 타 감명서 비교 (궁합)")
+        # 궁합비교를 위한 상대방 정보 입력란을 띄우고
+        # 기존 7번 궁합 로직 + 비교 로직을 결합합니다.
