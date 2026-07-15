@@ -148,9 +148,12 @@ with st.sidebar:
                                 st.rerun()
                                 break
                         curr_dt -= dt_mod.timedelta(days=1)
-                if found: break
-            if not found: st.error("일치하는 날짜가 없습니다.")
-        else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                    if found:
+                        break
+                if not found:
+                    st.error("일치하는 날짜가 없습니다.")
+            else:
+                st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -219,9 +222,12 @@ with st.sidebar:
                                     st.rerun()
                                     break
                             curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
-            if not found: st.error("일치하는 날짜가 없습니다.")
-        else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                        if found:
+                            break
+                    if not found:
+                        st.error("일치하는 날짜가 없습니다.")
+                else:
+                    st.warning("간지를 2글자씩 정확히 입력하세요.")
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
