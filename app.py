@@ -503,42 +503,69 @@ if st.session_state.get('app_running', False):
             part_p_icon = "♂️" if f_gender == "남성" else "♀️"
             today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
             
-            # 1. 데이터 연산
+            # 1. 데이터 가져오기
             cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
             gh_data = engine.get_gunghap_data(b_year, b_month, b_day, b_time, f_y, f_m, f_d, f_t)
             
-            # 2. 표 및 마스터바 구성
-            def build_master_bar(m_data):
-                return html_views.get_master_bar(*m_data)
-
-            m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), build_master_bar(gh_data["m_master"]))
-            w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), build_master_bar(gh_data["w_master"]), add_page_break=True)
-            # 순서대로 [신청인 이름], [상대방 이름] 순으로 전달하면 됩니다.
+            # 2. 표 조립
+            m_master = html_views.get_master_bar(*gh_data["m_master"])
+            w_master = html_views.get_master_bar(*gh_data["w_master"])
+            m_table = html_views.get_saju_table(*gh_data["m_table"])
+            w_table = html_views.get_saju_table(*gh_data["w_table"])
+            
+            m_box = html_views.get_gunghap_person_box(m_table, m_master)
+            w_box = html_views.get_gunghap_person_box(w_table, w_master, add_page_break=True)
             closing = html_views.get_gunghap_closing(name, f_name)
 
-            # 3. [핵심] 모든 HTML을 하나의 변수로 합친 뒤 단 한 번만 st.markdown으로 출력
-            # 소스코드 노출 방지를 위해 HTML 앞에 공백을 절대 넣지 않습니다.
-            final_gunghap_report = (
+            # 3. [중요] 모든 HTML을 줄바꿈이나 공백 없이 하나의 문자열로 결합
+            # 문자열을 합칠 때 .strip()을 사용하여 불필요한 앞뒤 공백(소스코드 노출 원인)을 제거합니다.
+            full_report_html = (
                 str(cover_html or "").strip() + 
                 str(m_box or "").strip() + 
                 str(w_box or "").strip() + 
                 str(closing or "").strip()
             )
             
-            # 4. AI 통변 (궁합 전용 프롬프트가 있다면 적용)
-            # 여기서는 궁합 데이터(gh_data)를 팩트로 구성하여 AI를 호출합니다.
+           # 4. AI 통변 (궁합 전용 프롬프트 적용)
+            ai_output_html = ""
             try:
-                # 간단한 궁합 요약 데이터를 팩트로 구성
-                gunghap_facts = {"applicant": name, "partner": f_name}
-                prompt_content = prompts.GUNGHAP_PROMPT.format(**gunghap_facts)
+                # 팩트 데이터 생성 (이름뿐만 아니라 gh_data 전체를 넘겨야 AI가 분석합니다)
+                gunghap_facts = {
+                    "applicant": name, 
+                    "partner": f_name,
+                    "m_saju": str(gh_data["m_table"]), # 신청인 데이터
+                    "w_saju": str(gh_data["w_table"])  # 상대방 데이터
+                }
+                
+                # 프롬프트 설정 (GUNGHAP_PROMPT가 없으면 PERSONAL_SAJU_PROMPT를 사용)
+                target_prompt = getattr(prompts, 'GUNGHAP_PROMPT', None)
+                if target_prompt is None:
+                    target_prompt = prompts.PERSONAL_SAJU_PROMPT
+                
+                # 프롬프트 구성 및 API 호출
+                prompt_content = target_prompt.format(**gunghap_facts)
                 ai_result = call_gemini_api(prompt_content)
-                ai_html = html_views.get_ai_report_box(ai_result.replace('\n', '<p>'))
-                final_gunghap_report += str(ai_html or "").strip()
-            except:
-                pass
+                
+                if ai_result:
+                    ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                    ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                    ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                    ai_output_html = html_views.get_ai_report_box(ai_result)
+            
+            except Exception as e:
+                # 이제 에러가 나면 화면에 무엇이 문제인지 정확히 빨간색으로 보여줍니다.
+                ai_output_html = f"<div style='color:red;'>🚨 AI 통변 오류: {str(e)}</div>"
 
-            # 5. 최종 렌더링 (가장 바깥 박스로 감싸서 밖으로 튀어나가지 않게 함)
-            st.markdown(html_views.get_final_report_box(final_gunghap_report), unsafe_allow_html=True)
+            # 5. 최종 결합 (AI 출력까지 포함)
+            final_gunghap_report = (
+                str(cover_html or "").strip() + 
+                str(m_box or "").strip() + 
+                str(w_box or "").strip() + 
+                str(ai_output_html or "").strip() + # AI 통변 추가
+                str(closing or "").strip()
+            )
+            # 6. 최종 렌더링 (가장 바깥 박스로 감싸서 밖으로 튀어나가지 않게 함)
+            st.markdown(html_views.get_final_report_box(full_report_html), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [8~12번 상품] 유지
