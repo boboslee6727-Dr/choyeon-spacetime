@@ -17,7 +17,7 @@ PRODUCT_PROMPT_MAP = {
     "8. 결혼 택일 정밀 분석": prompts.WEDDING_DATE_PROMPT,
     "9. 출산 택일": prompts.DELIVERY_LOOP_PROMPT,
     "10. 이사 및 방위": prompts.MOVING_DATE_PROMPT,
-    "11. 타 감명서 비교 (개인)": prompts.COMPARE_PROMPT
+    "11. 타 감명서 비교 (개인)": prompts.COMPARE_PROMPT,
     "12. 타 감명서 비교 (궁합)": prompts.COMPARE_PROMPT
 }
         
@@ -36,7 +36,6 @@ PERSONAL_SAJU_PROMPT = COMMON_SYSTEM_HEADER + """
 - 오행 분포: {oheng_counts_str}
 - 공망: {gongmang_actual}
 - 삼재: {samjae_str}
-- 삼형살: {}
 
 [분석 지시 사항]
 위 데이터를 바탕으로 명리학 전문가의 관점에서 다음 항목들을 상세히 분석해 주십시오.
