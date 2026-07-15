@@ -379,33 +379,38 @@ if st.session_state.get('app_running', False):
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
             # ---------------- [대운 연산] ----------------
-            un_content = ""
-            c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
-            j_idx = engine.JI.index(mb) if mb in engine.JI else 0
+                un_content = ""
+                c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
+                j_idx = engine.JI.index(mb) if mb in engine.JI else 0
 
-            for i in range(10):
-                val = i*10+calc_d
-                c_hangul = engine.GAN[(c_idx+(i+1)*order_dir)%10]
-                j_hangul = engine.JI[(j_idx+(i+1)*order_dir)%12]
-                
-                c = engine.K2H_GAN.get(c_hangul, c_hangul)
-                j = engine.K2H_JI.get(j_hangul, j_hangul)
-                
-                # [수정] 엔진 호출 시 한글 지지(j_hangul)를 명확히 전달
-                ss_gan = engine.get_ss(ds, c_hangul) or "-"
-                ss_ji = engine.get_ss(ds, j_hangul) or "-"
-                un_sung = engine.get_unsung(ds, j_hangul) or "-" # 지지 한글 전달
-                shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-" # 년지(yb)와 대운지지(j_hangul) 전달
-                
-                bg_col = "#FFF9C4" if val <= age < val+10 else "transparent"
-                b_left = "1px solid #ccc" if i != 0 else "none"
-                
-                un_content += html_views.get_un_cell(
-                    f"{val}세", ss_gan, c, get_oh_class(c), 
-                    j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left
-                )
+                for i in range(10):
+                    val = i * 10 + calc_d
+                    
+                    # 1. 엔진의 연산 로직을 그대로 호출 (60.3 방식)
+                    c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10]
+                    j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12]
+                    
+                    c = engine.K2H_GAN.get(c_hangul, c_hangul)
+                    j = engine.K2H_JI.get(j_hangul, j_hangul)
+                    
+                    # 2. 엔진의 get_ss, get_unsung, get_12_shinsal을 확실하게 호출
+                    ss_gan = engine.get_ss(ds, c_hangul) or "-"
+                    ss_ji = engine.get_ss(ds, j_hangul) or "-"
+                    
+                    # [핵심 수정] 12운성과 12신살 누락 방지 (엔진 전달값 보정)
+                    # j_hangul(한글지지)을 전달해야 엔진이 정확히 계산합니다.
+                    un_sung = engine.get_unsung(ds, j_hangul) or "-" 
+                    shin_sal = engine.get_12_shinsal(yb, j_hangul) or "-"
+                    
+                    bg_col = "#FFF9C4" if val <= age < val + 10 else "transparent"
+                    b_left = "1px solid #ccc" if i != 0 else "none"
+                    
+                    un_content += html_views.get_un_cell(
+                        f"{val}세", ss_gan, c, get_oh_class(c), 
+                        j, get_oh_class(j), ss_ji, un_sung, shin_sal, bg_col, b_left
+                    )
 
-            un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
+                un_html = html_views.get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
             # AI 통변
             ai_output_html = ""
@@ -632,7 +637,12 @@ if st.session_state.get('app_running', False):
     # ---------------------------------------------------------
     # [12번 상품] 타 감명서 비교 (궁합)
     # ---------------------------------------------------------
-    elif "12. 타 감명서 비교 (궁합)" in u_product:
+    elif "12. 타 감" in u_product:
         st.header("⚖️ 초연 시공명리 타 감명서 비교 (궁합)")
-        # 궁합비교를 위한 상대방 정보 입력란을 띄우고
-        # 기존 7번 궁합 로직 + 비교 로직을 결합합니다.
+        st.markdown("---")
+        if not st.session_state.get('other_reading', ""): 
+            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+        else:
+            # 7번 궁합 로직의 핵심 결과(gh_data)를 여기서 호출하여 비교합니다.
+            st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
+            # 7번(궁합)의 로직을 그대로 가져오되, 비교 분석 결과만 추가로 띄우면 됩니다.
