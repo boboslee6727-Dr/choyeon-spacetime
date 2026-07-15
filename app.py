@@ -400,7 +400,12 @@ if st.session_state.get('app_running', False):
         master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
         yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
-        daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+        try:
+            daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+        except AttributeError:
+            # 만약 함수명이 바뀌었다면 엔진을 다시 체크해야 합니다.
+            st.error("분석 엔진에서 daewun 함수를 찾을 수 없습니다. engine.py를 확인하세요.")
+            daewun_data_list = []
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
         w_key = ms + mb
