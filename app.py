@@ -280,6 +280,26 @@ if st.session_state.get('app_running', False):
     is_compare_mode = False
     compare_type = ""
 
+    # 신청인 데이터도 마찬가지로 확실히 확보
+    name = st.session_state.get('u_n', '신청인')
+    gender = st.session_state.get('u_g', '남성')
+    u_marital = st.session_state.get('u_m_stat', '선택')
+    u_cal = st.session_state.get('u_c', '양력')
+    b_year = st.session_state.get('s_y', 1980)
+    b_month = st.session_state.get('s_m', 1)
+    b_day = st.session_state.get('s_d', 1)
+    b_time = st.session_state.get('s_t', '시간 모름')
+
+    # 신청인 데이터도 마찬가지로 확실히 확보
+    name = st.session_state.get('u_n', '신청인')
+    gender = st.session_state.get('u_g', '남성')
+    u_marital = st.session_state.get('u_m_stat', '선택')
+    u_cal = st.session_state.get('u_c', '양력')
+    b_year = st.session_state.get('s_y', 1980)
+    b_month = st.session_state.get('s_m', 1)
+    b_day = st.session_state.get('s_d', 1)
+    b_time = st.session_state.get('s_t', '시간 모름')
+
     if "11. 타 감명서 비교 (개인)" in u_product:
         base_product = "1. 개인사주"
         is_compare_mode = True
