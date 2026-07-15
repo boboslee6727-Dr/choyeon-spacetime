@@ -212,23 +212,23 @@ with st.sidebar:
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        with st.expander("👥 상대방 기본 정보", expanded=True):
-            f_name = st.text_input("상대방 이름", value="", key="f_n")
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
-            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
-            f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
-            p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
-            f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
-            f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
-            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
+            with st.expander("👥 상대방 기본 정보", expanded=True):
+                f_name = st.text_input("상대방 이름", value="", key="f_n")
+                f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+                f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
+                f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+                p_col1, p_col2, p_col3 = st.columns(3)
+                f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
+                f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
+                f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
+                f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
 
-        if "8. 결혼" in u_product:
-            date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
-            if date_mode == "기간 선택":
-                start_date = st.date_input("시작일"); end_date = st.date_input("종료일")
-        elif "9. 출산" in u_product:
-            run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True)
+            if "8. 결혼" in u_product:
+                date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
+                if date_mode == "기간 선택":
+                    start_date = st.date_input("시작일"); end_date = st.date_input("종료일")
+            elif "9. 출산" in u_product:
+                run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True)
 
     elif "10. 이사" in u_product:
         moving_date = st.date_input("이사 희망일")
