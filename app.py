@@ -499,62 +499,43 @@ if st.session_state.get('app_running', False):
         st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
-            app_p_icon = "♂️" if gender == "남성" else "♀️"
-            part_p_icon = "♂️" if f_gender == "남성" else "♀️"
-            today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-            
-            # 1. 데이터 가져오기
-            cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
-            gh_data = engine.get_gunghap_data(b_year, b_month, b_day, b_time, f_y, f_m, f_d, f_t)
-            
-            # 2. 표 조립
-            m_master = html_views.get_master_bar(*gh_data["m_master"])
-            w_master = html_views.get_master_bar(*gh_data["w_master"])
-            m_table = html_views.get_saju_table(*gh_data["m_table"])
-            w_table = html_views.get_saju_table(*gh_data["w_table"])
-            
-            m_box = html_views.get_gunghap_person_box(m_table, m_master)
-            w_box = html_views.get_gunghap_person_box(w_table, w_master, add_page_break=True)
-            closing = html_views.get_gunghap_closing(name, f_name)
-
-            # 3. [중요] 모든 HTML을 줄바꿈이나 공백 없이 하나의 문자열로 결합
-            # 문자열을 합칠 때 .strip()을 사용하여 불필요한 앞뒤 공백(소스코드 노출 원인)을 제거합니다.
-            full_report_html = (
-                str(cover_html or "").strip() + 
-                str(m_box or "").strip() + 
-                str(w_box or "").strip() + 
-                str(closing or "").strip()
-            )
-            
-           # 4. AI 통변 (궁합 전용 프롬프트 적용)
-            ai_output_html = ""
             try:
-                # 팩트 데이터 생성 (이름뿐만 아니라 gh_data 전체를 넘겨야 AI가 분석합니다)
-                gunghap_facts = {
-                    "applicant": name, 
-                    "partner": f_name,
-                    "m_saju": str(gh_data["m_table"]), # 신청인 데이터
-                    "w_saju": str(gh_data["w_table"])  # 상대방 데이터
-                }
-                
-                # 프롬프트 설정 (GUNGHAP_PROMPT가 없으면 PERSONAL_SAJU_PROMPT를 사용)
-                target_prompt = getattr(prompts, 'GUNGHAP_PROMPT', None)
-                if target_prompt is None:
-                    target_prompt = prompts.PERSONAL_SAJU_PROMPT
-                
-                # 프롬프트 구성 및 API 호출
-                prompt_content = target_prompt.format(**gunghap_facts)
-                ai_result = call_gemini_api(prompt_content)
-                
-                if ai_result:
-                    ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                    ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-                    ai_output_html = html_views.get_ai_report_box(ai_result)
+                # 1. 데이터 준비
+                app_p_icon = "♂️" if gender == "남성" else "♀️"
+                part_p_icon = "♂️" if f_gender == "남성" else "♀️"
+                today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
             
+                # 표지 및 데이터 호출
+                cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
+                gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
+            
+                # 표지 및 데이터 호출
+                cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
+                gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
+                
+                # 2. 본문 박스 생성
+                m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), html_views.get_master_bar(*gh_data["m_master"]))
+                w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), html_views.get_master_bar(*gh_data["w_master"]), add_page_break=True)
+                closing = html_views.get_gunghap_closing(name, f_name)
+                
+                # 3. AI 통변 (강제 시도)
+                ai_html = ""
+                try:
+                    prompt_content = f"{name}과 {f_name}의 궁합을 분석하라." # 안전한 기본 프롬프트
+                    ai_result = call_gemini_api(prompt_content)
+                    if ai_result:
+                        ai_html = html_views.get_ai_report_box(ai_result.replace('\n', '<p>'))
+                except Exception as e:
+                    ai_html = f"<div style='color:red;'>AI 오류: {e}</div>"
+
+                # 4. [중요] 렌더링: 모든 조각을 한 줄에 공백 없이 합침
+                full_content = cover_html + m_box + w_box + ai_html + closing
+                
+                # 5. A4 사이즈 박스에 담아 렌더링
+                st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
+                
             except Exception as e:
-                # 이제 에러가 나면 화면에 무엇이 문제인지 정확히 빨간색으로 보여줍니다.
-                ai_output_html = f"<div style='color:red;'>🚨 AI 통변 오류: {str(e)}</div>"
+                st.error(f"🚨 시스템 치명적 오류: {e}")
 
             # 5. 최종 결합 (AI 출력까지 포함)
             final_gunghap_report = (
