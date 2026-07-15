@@ -400,51 +400,51 @@ if st.session_state.get('app_running', False):
                 prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(saju_data=saju_facts)
                 
                 # AI 통변 (변수명 일치 오류 원천 차단)
-            # AI 통변 호출부 (최종 최적화)
-            ai_output_html = ""
-            try:
-                # 1. 팩트시트 딕셔너리 생성
-                saju_facts = engine.get_saju_fact_sheet(
-                    ys, yb, ms, mb, ds, db, hs, hb, 
-                    name=name, age=age, gender=gender, marital=u_marital
-                )
+                # AI 통변 호출부 (최종 최적화)
+                ai_output_html = ""
+                try:
+                    # 1. 팩트시트 딕셔너리 생성
+                    saju_facts = engine.get_saju_fact_sheet(
+                        ys, yb, ms, mb, ds, db, hs, hb, 
+                        name=name, age=age, gender=gender, marital=u_marital
+                    )
                 
-                # 2. 프롬프트 생성 (딕셔너리 언패킹 **)
-                # saju_facts 안의 모든 키(ys, yb 등)가 프롬프트의 {ys}, {yb}와 자동 매칭됩니다.
-                prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts)
+                    # 2. 프롬프트 생성 (딕셔너리 언패킹 **)
+                    # saju_facts 안의 모든 키(ys, yb 등)가 프롬프트의 {ys}, {yb}와 자동 매칭됩니다.
+                    prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts)
                 
-                # 3. API 호출
-                ai_result = call_gemini_api(prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts))
-                st.session_state['ai_full_text'] = ai_result
+                    # 3. API 호출
+                    ai_result = call_gemini_api(prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts))
+                    st.session_state['ai_full_text'] = ai_result
                 
-                # 3. 출력 정제
-                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                    # 3. 출력 정제
+                    ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                    ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                    ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
                 
-                ai_output_html = html_views.get_ai_report_box(ai_result)
+                    ai_output_html = html_views.get_ai_report_box(ai_result)
             
-            except KeyError as e:
-                # 만약 여기서도 에러가 난다면, 'e'에 박사님의 프롬프트에 있는데 
-                # engine 딕셔너리에는 없는 변수명이 찍힙니다. 
-                # 그 변수를 engine.py의 fact_data에 추가하면 끝납니다.
-                ai_output_html = f"<div style='color:red;'>🚨 프롬프트 변수 누락 오류: {str(e)}를 프롬프트에서 확인하십시오.</div>"
-            except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+                except KeyError as e:
+                    # 만약 여기서도 에러가 난다면, 'e'에 박사님의 프롬프트에 있는데 
+                    # engine 딕셔너리에는 없는 변수명이 찍힙니다. 
+                    # 그 변수를 engine.py의 fact_data에 추가하면 끝납니다.
+                    ai_output_html = f"<div style='color:red;'>🚨 프롬프트 변수 누락 오류: {str(e)}를 프롬프트에서 확인하십시오.</div>"
+                except Exception as e:
+                    ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
-            closing_html = html_views.get_closing_html(name)
+                closing_html = html_views.get_closing_html(name)
             
-            # 최종 렌더링 출력
-            st.markdown(cover_html, unsafe_allow_html=True)
-            final_report = (
-                str(table_html or "") + 
-                str(master_bar_html or "") + 
-                str(intro_html or "") + 
-                str(un_html or "") + 
-                str(ai_output_html or "") + 
-                str(closing_html or "")
-            )
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                # 최종 렌더링 출력
+                st.markdown(cover_html, unsafe_allow_html=True)
+                final_report = (
+                    str(table_html or "") + 
+                    str(master_bar_html or "") + 
+                    str(intro_html or "") + 
+                    str(un_html or "") + 
+                    str(ai_output_html or "") + 
+                    str(closing_html or "")
+                )
+                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [2번 상품] 올 해 (세운 전용 출력)
