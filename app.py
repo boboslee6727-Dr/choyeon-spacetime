@@ -513,7 +513,8 @@ if st.session_state.get('app_running', False):
 
             m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), build_master_bar(gh_data["m_master"]))
             w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), build_master_bar(gh_data["w_master"]), add_page_break=True)
-            closing = html_views.get_gunghap_closing(f_name) # 상대방 이름 반영
+            # 순서대로 [신청인 이름], [상대방 이름] 순으로 전달하면 됩니다.
+            closing = html_views.get_gunghap_closing(name, f_name)
 
             # 3. [핵심] 모든 HTML을 하나의 변수로 합친 뒤 단 한 번만 st.markdown으로 출력
             # 소스코드 노출 방지를 위해 HTML 앞에 공백을 절대 넣지 않습니다.
