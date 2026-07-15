@@ -904,13 +904,18 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
         
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ds, ms, yb, db = d_pillar[0], m_pillar[0], y_pillar[1], d_pillar[1]
-        
+
+        # (엔진 내부에 간지 추출 코드가 실행된 직후에 아래 변수를 선언해야 합니다)
+        ys, yb = y_pillar[0], y_pillar[1]
+        ms, mb = m_pillar[0], m_pillar[1]
+        ds, db = d_pillar[0], d_pillar[1]       
+
+        calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
+
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
         for c in gans + jjis:
             oh = get_color(c)
             if oh in counts: counts[oh] += 1
-        
-        calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
         
         info_h = f"<div style='text-align:center;'>{name}님</div>"
         gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
