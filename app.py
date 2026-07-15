@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.2"
+APP_VERSION = "ver 60.4"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -174,7 +174,43 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
-                pass # 로직 생략 (기존과 동일)
+                _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+                if not _p_ry and not _p_rm and not _p_rd:
+                    if 'rev_p_success_msg' in st.session_state: del st.session_state['rev_p_success_msg']
+                    st.rerun()
+                elif len(_p_ry)==2 and len(_p_rm)==2 and len(_p_rd)==2:
+                    p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
+                    p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
+                    p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
+                    klc_find = KoreanLunarCalendar(); found = False
+                    for y in range(2026, 1899, -1):
+                        klc_find.setSolarDate(y, 7, 1); gj_y = klc_find.getChineseGapJaString().split()
+                        if gj_y and gj_y[0][:2] == p_ry_h:
+                            curr_dt = dt_mod.date(y+1, 2, 28)
+                            while curr_dt >= dt_mod.date(y, 1, 1):
+                                klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                                gj = klc_find.getChineseGapJaString().split()
+                                if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
+                                    st.session_state['p_y_in'] = curr_dt.year
+                                    st.session_state['p_m_in'] = curr_dt.month
+                                    st.session_state['p_d_in'] = curr_dt.day
+                                    
+                                    if p_rt:
+                                        ji_char_p = p_rt[-1]
+                                        p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
+                                        time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                                        st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                                    else:
+                                        st.session_state['p_t_key'] = "시간 모름"
+
+                                    found = True
+                                    st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
+                                    st.rerun()
+                                    break
+                                curr_dt -= dt_mod.timedelta(days=1)
+                        if found: break
+                if not found: st.error("일치하는 날짜가 없습니다.")
+            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
