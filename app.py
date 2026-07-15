@@ -270,165 +270,159 @@ PRODUCT_PROMPT_MAP = {
 selected_prompt_template = PRODUCT_PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMPT)
 
 # ==============================================================================
-# 3. 메인 화면 출력부
+# 3. 메인 화면 출력부 (수정 반영본)
 # ==============================================================================
 if st.session_state.get('app_running', False):
     curr_dt = dt_mod.datetime.now()
     curr_year = curr_dt.year
     curr_month = curr_dt.month
+
+    # --------------------------------------------------------------------------
+    # 🌟 [제1단계: 공통 데이터 추출부]
+    # 어떤 상품을 선택하더라도, 신청인의 사주 8글자와 기본 정보는 무조건 여기서 산출됩니다.
+    # --------------------------------------------------------------------------
+    klc = KoreanLunarCalendar()
+    if "음력" in u_cal:
+        is_leap = True if "윤달" in u_cal else False
+        klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
+        sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
+        lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
+        leap_str = "윤달" if is_leap else "평달"
+    else:
+        klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+        sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
+        lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
+        leap_str = "윤달" if klc.isIntercalation else "평달"
+        
+    age = curr_year - sol_y + 1
+    p_icon = "♂️" if gender == "남성" else "♀️"
+    today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
     
-    if "1. 개인사주" in u_product:
-        klc = KoreanLunarCalendar()
-        if "음력" in u_cal:
-            is_leap = True if "윤달" in u_cal else False
-            klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
-            sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
-            lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
-            leap_str = "윤달" if is_leap else "평달"
+    def extract_time(time_str):
+        if "모름" in time_str: return 0, 0
+        match = re.search(r'(\d{2}):(\d{2})', time_str)
+        return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+    with st.spinner("⏳ [초연 시공명리 우주 기운 분석 중....]"):
+        h, m = extract_time(b_time)
+        y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+        is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
+        _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+        
+        ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0])
+        if "모름" in b_time:
+            t_gan, t_ji = "", ""
         else:
-            klc.setSolarDate(int(b_year), int(b_month), int(b_day))
-            sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
-            lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
-            leap_str = "윤달" if klc.isIntercalation else "평달"
-            
-        age = curr_year - sol_y + 1
-        p_icon = "♂️" if gender == "남성" else "♀️"
-        today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-        
-        def extract_time(time_str):
-            if "모름" in time_str: return 0, 0
-            match = re.search(r'(\d{2}):(\d{2})', time_str)
-            return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
-
-        with st.spinner(f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"):
-            h, m = extract_time(b_time)
-            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
-            is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
-            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
-            
-            ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0])
-            if "모름" in b_time:
-                t_gan, t_ji = "", ""
+            match = re.search(r'\((.*?)\)', b_time)
+            raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
+            t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
+            gan_arr, ji_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'], ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+            if ds_hanja in gan_arr and t_ji in ji_arr:
+                d_idx, j_idx = gan_arr.index(ds_hanja), ji_arr.index(t_ji)
+                t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
             else:
-                match = re.search(r'\((.*?)\)', b_time)
-                raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
-                t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
-                gan_arr, ji_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'], ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-                if ds_hanja in gan_arr and t_ji in ji_arr:
-                    d_idx, j_idx = gan_arr.index(ds_hanja), ji_arr.index(t_ji)
-                    t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
-                else:
-                    t_gan = ""
-            
-            gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
-            hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
-            hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
-
-            base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
-            adj_mins = engine.get_total_time_adjustment(base_dt)
-            utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-            
-            order_dir = 1 if (engine.GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
-            calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
-            direction_str = "순행" if order_dir == 1 else "역행"
-
-            counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
-            for c in gans + jjis:
-                oh = engine.get_color(c)
-                if oh in counts: counts[oh] += 1
-
-            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
-            guiin_str = guiin_map.get(engine.K2H_GAN.get(ds, ds), '없음')
-            
-            curr_year_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
-            
-            n_gong = engine.calculate_gongmang(ys, yb)
-            i_gong = engine.calculate_gongmang(ds, db)
-            n_gong = n_gong if n_gong else "-"
-            i_gong = i_gong if i_gong else "-"
-            
-            cur_samjae = engine.get_samjae(yb, curr_year_ji)
-            samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
-
-            sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
-            lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
-            time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
- 
-            # 1. 렌더링 데이터 준비 (순수 데이터 및 HTML 파편 생성)
-            cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
-            intro_html = html_views.get_intro_html()
-            info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-
-            # 1. 테이블 생성
-            table_html = html_views.generate_saju_table_data(info_h, gans, jjis, ds, gender, engine)
-
-            # 2. 종합정보(Master Bar) 생성
-            master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
-
-            # 3. 육친 규칙 가져오기
-            yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
-
-            try:
-                daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
-            except AttributeError:
-                st.error("🚨 에러: engine.py에 'get_daeun_data_list' 함수가 없습니다. 파일을 저장했는지 확인하세요.")
-                st.stop()
-
-            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
-
-            # 1. 먼저 DB에서 값을 꺼내옵니다.
-            w_key = ms + mb
-            i_key = ds + db
-            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-
-            golden_text_html = html_views.get_golden_text(name, w_val, i_val)
-
-            # ---------------- [AI 통변: 데이터 주입 및 최종 렌더링 최적화] ----------------
-            ai_output_html = ""
-            try:
-                # 1. engine.py로부터 팩트 데이터 생성 및 안전하게 주입
-                saju_facts = engine.get_saju_fact_sheet(
-                    ys, yb, ms, mb, ds, db, hs, hb, 
-                    name=name, age=age, gender=gender, marital=u_marital
-                )
-                
-                # 안전한 변수 주입 (데이터가 없어도 에러 대신 {key} 출력으로 시스템 보호)
-                safe_facts = SafeDict(saju_facts)
-                final_prompt_text = selected_prompt_template.format_map(safe_facts)
-                
-                # 2. AI 통변 호출 및 결과 정제
-                ai_result = call_gemini_api(final_prompt_text)
-                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            
-                # 3. 가독성 스타일링 (### 제거 및 줄간격 통일)
-                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-            
-                ai_output_html = html_views.get_ai_report_box(ai_result)
-            
-            except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
-
-            # 4. 보고서 조립 (전체 순서 유지)
-            closing_html = html_views.get_closing_html(name)
+                t_gan = ""
         
-            st.markdown(cover_html, unsafe_allow_html=True)
-            
-            final_report = (
-                str(table_html or "") + 
-                str(master_bar_html or "") + 
-                str(un_html or "") +
-                str(intro_html or "") +
-                str(golden_text_html or "") +
-                str(ai_output_html or "") + 
-                str(closing_html or "")
+        gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
+        hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
+        hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
+
+        # 대운 방향 및 대운수 계산 (공통 활용)
+        order_dir = 1 if (engine.GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
+        calc_d = engine.get_daeun_su_accurate(dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0) - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=engine.get_total_time_adjustment(dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0))), order_dir)
+        direction_str = "순행" if order_dir == 1 else "역행"
+
+    # --------------------------------------------------------------------------
+    # 🌟 [제2단계: 상품별 분기부]
+    # 위에서 추출한 공통 변수(ys, yb, ms, mb 등)를 바탕으로 각 상품이 가동됩니다.
+    # --------------------------------------------------------------------------
+    if "1. 개인사주" in u_product:
+        # (개인사주 전용 렌더링 변수들만 남겨둡니다)
+        counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+        for c in gans + jjis:
+            oh = engine.get_color(c)
+            if oh in counts: counts[oh] += 1
+
+        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+        guiin_str = guiin_map.get(engine.K2H_GAN.get(ds, ds), '없음')
+        
+        curr_year_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
+        
+        n_gong = engine.calculate_gongmang(ys, yb)
+        i_gong = engine.calculate_gongmang(ds, db)
+        n_gong = n_gong if n_gong else "-"
+        i_gong = i_gong if i_gong else "-"
+        
+        cur_samjae = engine.get_samjae(yb, curr_year_ji)
+        samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
+
+        sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
+        lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
+        time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
+
+        cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
+        intro_html = html_views.get_intro_html()
+        info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
+
+        table_html = html_views.generate_saju_table_data(info_h, gans, jjis, ds, gender, engine)
+        master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
+
+        yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
+        daewun_data_list = engine.get_daewun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+        un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+
+        # DB 조회 및 골든 텍스트 생성
+        w_key = ms + mb
+        i_key = ds + db
+        w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+        i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+        golden_text_html = html_views.get_golden_text(name, w_val, i_val)
+
+        # ---------------- [AI 통변: 데이터 주입 및 최종 렌더링 최적화] ----------------
+        ai_output_html = ""
+        try:
+            # 1. engine.py로부터 팩트 데이터 생성 및 안전하게 주입
+            saju_facts = engine.get_saju_fact_sheet(
+                ys, yb, ms, mb, ds, db, hs, hb, 
+                name=name, age=age, gender=gender, marital=u_marital
             )
+                
+            # 안전한 변수 주입 (데이터가 없어도 에러 대신 {key} 출력으로 시스템 보호)
+            safe_facts = SafeDict(saju_facts)
+            final_prompt_text = selected_prompt_template.format_map(safe_facts)
+                
+            # 2. AI 통변 호출 및 결과 정제
+            ai_result = call_gemini_api(final_prompt_text)
+            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            
+            # 3. 가독성 스타일링 (### 제거 및 줄간격 통일)
+            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+            
+            ai_output_html = html_views.get_ai_report_box(ai_result)
+            
+        except Exception as e:
+            ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+
+        # 4. 보고서 조립 (전체 순서 유지)
+        closing_html = html_views.get_closing_html(name)
         
-            # 5. 최종 렌더링 압축 및 송출
-            full_html = html_views.get_final_report_box(final_report)
-            full_html_clean = re.sub(r'\n\s+', ' ', full_html)
-            st.markdown(full_html_clean, unsafe_allow_html=True)
+        st.markdown(cover_html, unsafe_allow_html=True)
+            
+        final_report = (
+            str(table_html or "") + 
+            str(master_bar_html or "") + 
+            str(un_html or "") +
+            str(intro_html or "") +
+            str(golden_text_html or "") +
+            str(ai_output_html or "") + 
+            str(closing_html or "")
+        )
+        
+        # 5. 최종 렌더링 압축 및 송출
+        full_html = html_views.get_final_report_box(final_report)
+        full_html_clean = re.sub(r'\n\s+', ' ', full_html)
+        st.markdown(full_html_clean, unsafe_allow_html=True)
 
     elif "2. 올 해" in u_product:
         st.header(f"🔮 {name}님의 올해(세운) 분석")
@@ -603,13 +597,11 @@ if st.session_state.get('app_running', False):
         st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
         st.markdown("---")
         
-        # 1. 입력 확인
         other_report = st.session_state.get('other_reading', "")
-        
         if not other_report: 
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
-            # 2. 엔진을 통해 팩트 시트 생성 (확장된 kwargs 활용)
+            # 이제 ys, yb, ms, mb, ds, db, hs, hb가 상단 공통 영역에서 만들어졌으므로 에러가 나지 않습니다!
             saju_facts = engine.get_saju_fact_sheet(
                 ys, yb, ms, mb, ds, db, hs, hb, 
                 name=name, age=age, gender=gender, marital=u_marital,
@@ -619,16 +611,14 @@ if st.session_state.get('app_running', False):
                 saju_structure=f"{ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
             )
 
-            # 3. 안전한 팩트 주입 및 AI 통변 호출
             safe_facts = SafeDict(saju_facts)
             final_prompt_text = selected_prompt_template.format_map(safe_facts)
             
-            # 4. 결과 출력
-            ai_result = call_gemini_api(final_prompt_text)
-            ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            
-            # 스타일링 적용 후 렌더링
-            ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-            ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-            
-            st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
+            with st.spinner("⚖️ 타 감명서 분석 및 1:1 비교 검증 중..."):
+                ai_result = call_gemini_api(final_prompt_text)
+                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                
+                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                
+                st.markdown(html_views.get_ai_report_box(ai_result), unsafe_allow_html=True)
