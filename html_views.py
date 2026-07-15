@@ -337,10 +337,11 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     <div class="page-break-before"></div>
     """
 
-def get_gunghap_closing():
-    return """
+def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
+    return f"""
     <div style='margin-top: 20px;'>
-        <p style='font-size:16px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>사랑하는 부부님, 하늘의 뜻과 부모님의 깊은 사랑이 한데 어우러져 귀한 인연이 이 세상에 찬란하게 빛을 발하며 나아가기를 진심으로 기원합니다.</p>
+        <p style='font-size:16px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>
+        {name1}님과 {name2}님의 소중한 인연이 하늘의 뜻과 부모님의 깊은 사랑 속에서 찬란하게 빛을 발하기를 진심으로 기원합니다.</p>
         <p style='font-size:16px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>두 분의 앞날에 건강과 행복이 가득하시기를 간절히 축원합니다.</p>
         <div style='text-align: right; margin-top: 25px;'>
             <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>초연 시공명리 연구소</span>
