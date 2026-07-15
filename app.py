@@ -243,8 +243,10 @@ with st.sidebar:
     # 실행 및 인쇄 버튼
     # ---------------------------------------------------------
     st.markdown("---")
-    if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
+    # 버튼을 누르면 상태를 True로 바꾸고 페이지 전체를 새로고침(rerun) 합니다.
+    if st.button("✨ [초연 시공명리 풀이 가동]", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
+        st.rerun()
         
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
@@ -271,7 +273,10 @@ selected_prompt_template = PROMPT_MAP.get(u_product, prompts.PERSONAL_SAJU_PROMP
 # ==============================================================================
 # 3. 메인 화면 출력부 (로직 분기)
 # ==============================================================================
+st.write("로직 체크 중...")
 if st.session_state.get('app_running', False):
+    # 🚨 강제 확인용 메시지 (분석이 시작되는지 눈으로 확인)
+    st.success("✅ 가동 명령 확인! 분석 로직을 시작합니다.")  
     curr_dt = dt_mod.datetime.now()
     curr_year = curr_dt.year
     curr_month = curr_dt.month
