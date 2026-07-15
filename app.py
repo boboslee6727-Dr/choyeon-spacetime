@@ -97,8 +97,7 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
-    
-    u_product = st.selectbox("상품선택", [
+        u_product = st.selectbox("상품선택", [
         "1. 개인사주 (대운) 및 일진 분석", 
         "2. 올 해의 운세 (세운)", 
         "3. 이번 달의 운세 (월운)",
@@ -123,7 +122,6 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            st.session_state['app_running'] = False
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             
             if not _ry and not _rm and not _rd:
