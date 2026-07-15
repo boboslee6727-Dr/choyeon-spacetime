@@ -392,9 +392,7 @@ if st.session_state.get('app_running', False):
                 ys, yb, ms, mb, ds, db, hs, hb, 
                 name=name, age=age, gender=gender, marital=u_marital
             )
-            safe_facts = SafeDict(saju_facts)
-            final_prompt_text = selected_prompt_template.format_map(safe_facts)
-                
+               
             ai_result = call_gemini_api(final_prompt_text)
             st.session_state['ai_full_text'] = ai_result
             ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
