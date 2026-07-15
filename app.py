@@ -137,8 +137,8 @@ with st.sidebar:
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                            curr_dt -= dt_mod.timedelta(days=1) # [수정] while 문 안으로 올바르게 들여쓰기
-                    if found: break # [수정] for 문 안으로 올바르게 들여쓰기
+                            curr_dt -= dt_mod.timedelta(days=1)
+                    if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
@@ -208,8 +208,8 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                                curr_dt -= dt_mod.timedelta(days=1) # [수정] while 문 안으로 올바르게 들여쓰기
-                        if found: break # [수정] for 문 안으로 올바르게 들여쓰기
+                                curr_dt -= dt_mod.timedelta(days=1)
+                        if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
@@ -282,9 +282,8 @@ if st.session_state.get('app_running', False):
             return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
         with st.spinner(f"⏳ [초연 시공명리 분석({APP_VERSION}) 중....]"):
-            # 1. 기초 연산 (여기가 핵심입니다!)
+            # 1. 기초 연산
             h, m = extract_time(b_time)
-            # 아래와 같이 앞에 engine. 을 꼭 붙여야 합니다.
             y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
             
             is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
@@ -305,7 +304,7 @@ if st.session_state.get('app_running', False):
                 else:
                     t_gan = ""
 
-            # [핵심] 모든 변수를 추출된 그대로 사용합니다 (engine에서 처리하므로)
+            # 변수 추출
             gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
             hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
             hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
@@ -316,7 +315,6 @@ if st.session_state.get('app_running', False):
             adj_mins = engine.get_total_time_adjustment(base_dt)
             utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
             
-            # [수정 적용] ys를 직접 사용하여 index 도출
             order_dir = 1 if (engine.GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
             calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
             direction_str = "순행" if order_dir == 1 else "역행"
@@ -335,8 +333,8 @@ if st.session_state.get('app_running', False):
             curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
             
             # --4. 공망 계산
-            n_gong = engine.calculate_gongmang(ys, yb)  # 년 공망
-            i_gong = engine.calculate_gongmang(ds, db)  # 일 공망
+            n_gong = engine.calculate_gongmang(ys, yb)
+            i_gong = engine.calculate_gongmang(ds, db)
             n_gong = n_gong if n_gong else "-"
             i_gong = i_gong if i_gong else "-"
             
@@ -365,7 +363,6 @@ if st.session_state.get('app_running', False):
 
             gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
             
-            # [수정 적용] 엔진이 통역을 완벽히 하므로 직관적으로 값 전달
             gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
             gan_row = "".join([td_bg(g)+f"{g}</td>" for g in gans])
             ji_row = "".join([td_bg(j)+f"{j}</td>" for j in jjis])
@@ -381,70 +378,59 @@ if st.session_state.get('app_running', False):
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
 
             yukchin_rule = engine.get_yukchin_rule(gender, u_marital)
-            # 대운 데이터 호출 시에도
             daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
-            # AI 통변
+            # ==================================================================
+            # AI 통변 호출부 (KeyError 완벽 방어형 SafeDict 적용)
+            # ==================================================================
             ai_output_html = ""
             try:
-                # 1. 사실 관계 데이터 생성 (engine에서 가져오기)
+                # 1. 팩트시트 딕셔너리 생성
                 saju_facts = engine.get_saju_fact_sheet(
                     ys, yb, ms, mb, ds, db, hs, hb, 
                     name=name, age=age, gender=gender, marital=u_marital
                 )
                 
-                # 2. 프롬프트를 구성할 때, 박사님의 기존 시스템 프롬프트 포맷을 확실하게 따름
-                # ※ 중요: prompts.PERSONAL_SAJU_PROMPT 파일 내에 {saju_data} 항목이 있어야 합니다.
-                # 만약 {saju_data}가 아니라 다른 이름(예: {facts})이라면 해당 이름으로 바꾸세요.
-                prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(saju_data=saju_facts)
+                # 2. [핵심] 프롬프트의 괄호 {변수} 중, 딕셔너리에 없는 값이 있어도 
+                # 에러를 내지 않고 그대로 문자열을 반환하는 안전한 클래스 선언
+                class SafeDict(dict):
+                    def __missing__(self, key):
+                        return "{" + key + "}" # 변수가 누락되어도 시스템이 멈추지 않음
+
+                # 3. 안전한 매핑 딕셔너리로 변환 후 포맷팅
+                safe_facts = SafeDict(**saju_facts)
+                prompt_content = prompts.PERSONAL_SAJU_PROMPT.format_map(safe_facts)
                 
-                # AI 통변 (변수명 일치 오류 원천 차단)
-                # AI 통변 호출부 (최종 최적화)
-                ai_output_html = ""
-                try:
-                    # 1. 팩트시트 딕셔너리 생성
-                    saju_facts = engine.get_saju_fact_sheet(
-                        ys, yb, ms, mb, ds, db, hs, hb, 
-                        name=name, age=age, gender=gender, marital=u_marital
-                    )
+                # 4. API 호출
+                ai_result = call_gemini_api(prompt_content)
+                st.session_state['ai_full_text'] = ai_result
                 
-                    # 2. 프롬프트 생성 (딕셔너리 언패킹 **)
-                    # saju_facts 안의 모든 키(ys, yb 등)가 프롬프트의 {ys}, {yb}와 자동 매칭됩니다.
-                    prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts)
-                
-                    # 3. API 호출
-                    ai_result = call_gemini_api(prompts.PERSONAL_SAJU_PROMPT.format(**saju_facts))
-                    st.session_state['ai_full_text'] = ai_result
-                
-                    # 3. 출력 정제
+                # 5. 출력 정제
+                if ai_result:
                     ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                     ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
                     ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-                
+                    
                     ai_output_html = html_views.get_ai_report_box(ai_result)
             
-                except KeyError as e:
-                    # 만약 여기서도 에러가 난다면, 'e'에 박사님의 프롬프트에 있는데 
-                    # engine 딕셔너리에는 없는 변수명이 찍힙니다. 
-                    # 그 변수를 engine.py의 fact_data에 추가하면 끝납니다.
-                    ai_output_html = f"<div style='color:red;'>🚨 프롬프트 변수 누락 오류: {str(e)}를 프롬프트에서 확인하십시오.</div>"
-                except Exception as e:
-                    ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+            except Exception as e:
+                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+            # ==================================================================
 
-                closing_html = html_views.get_closing_html(name)
+            closing_html = html_views.get_closing_html(name)
             
-                # 최종 렌더링 출력
-                st.markdown(cover_html, unsafe_allow_html=True)
-                final_report = (
-                    str(table_html or "") + 
-                    str(master_bar_html or "") + 
-                    str(intro_html or "") + 
-                    str(un_html or "") + 
-                    str(ai_output_html or "") + 
-                    str(closing_html or "")
-                )
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+            # 최종 렌더링 출력
+            st.markdown(cover_html, unsafe_allow_html=True)
+            final_report = (
+                str(table_html or "") + 
+                str(master_bar_html or "") + 
+                str(intro_html or "") + 
+                str(un_html or "") + 
+                str(ai_output_html or "") + 
+                str(closing_html or "")
+            )
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [2번 상품] 올 해 (세운 전용 출력)
