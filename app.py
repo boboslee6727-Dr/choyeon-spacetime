@@ -492,42 +492,6 @@ if st.session_state.get('app_running', False):
             )
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
-    # [7번 상품] 연애 및 궁합운 특화 분석 (최종 수정본)
-    # ---------------------------------------------------------
-    elif "7. 연애" in u_product:
-        st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
-        st.markdown("---")
-        with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
-            try:
-                # 1. 데이터 준비
-                app_p_icon = "♂️" if gender == "남성" else "♀️"
-                part_p_icon = "♂️" if f_gender == "남성" else "♀️"
-                today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-            
-                # 표지 및 데이터 호출
-                cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
-                gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
-            
-                # 표지 및 데이터 호출
-                cover_html = html_views.get_gunghap_cover(APP_VERSION, app_p_icon, name, gender, u_marital, part_p_icon, f_name, f_gender, f_marital, today_str)
-                gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
-                
-                # 2. 본문 박스 생성
-                m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), html_views.get_master_bar(*gh_data["m_master"]))
-                w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), html_views.get_master_bar(*gh_data["w_master"]), add_page_break=True)
-                closing = html_views.get_gunghap_closing(name, f_name)
-                
-                # 3. AI 통변 (강제 시도)
-                ai_html = ""
-                try:
-                    prompt_content = f"{name}과 {f_name}의 궁합을 분석하라." # 안전한 기본 프롬프트
-                    ai_result = call_gemini_api(prompt_content)
-                    if ai_result:
-                        ai_html = html_views.get_ai_report_box(ai_result.replace('\n', '<p>'))
-                except Exception as e:
-                    ai_html = f"<div style='color:red;'>AI 오류: {e}</div>"
-
                 # 4. [중요] 렌더링: 모든 조각을 한 줄에 공백 없이 합침
                 full_content = cover_html + m_box + w_box + ai_html + closing
                 
@@ -548,21 +512,55 @@ if st.session_state.get('app_running', False):
             # 6. 최종 렌더링 (가장 바깥 박스로 감싸서 밖으로 튀어나가지 않게 함)
             st.markdown(html_views.get_final_report_box(full_report_html), unsafe_allow_html=True)
 
+            # [7번 상품] 연애/궁합 
+            elif "7. 연애" in u_product:
+                st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
+                st.markdown("---")
+                with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
+            try:
+                # 1. 데이터 호출 (오류 방지를 위해 int 변환)
+                gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
+                
+                # 2. UI 조립
+                cover_html = html_views.get_gunghap_cover(APP_VERSION, "♂️" if gender == "남성" else "♀️", name, gender, u_marital, "♂️" if f_gender == "남성" else "♀️", f_name, f_gender, f_marital, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
+                m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["table"]), html_views.get_master_bar(*gh_data["master"]))
+                w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["p_table"]), html_views.get_master_bar(*gh_data["p_master"]), add_page_break=True)
+                closing = html_views.get_gunghap_closing(name, f_name)
+                
+                # 3. AI 통변 (변수명 ai_html로 통일)
+                ai_html = ""
+                try:
+                    prompt_content = f"신청인 {name}과 상대방 {f_name}의 궁합을 초연 시공명리 관점에서 분석하라."
+                    ai_result = call_gemini_api(prompt_content)
+                    if ai_result:
+                        ai_html = html_views.get_ai_report_box(ai_result.replace('\n', '<p>'))
+                except Exception as e:
+                    ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
+
+                # 4. 결합 및 출력
+                full_content = cover_html + m_box + w_box + ai_html + closing
+                st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+
     # ---------------------------------------------------------
     # [8~12번 상품] 유지
     # ---------------------------------------------------------
-    elif any(x in u_product for x in ["8. 결혼", "9. 출산", "10. 이사"]):
-        st.header(f"🗓️ {name}님의 {u_product.split('.')[1].strip()}")
-        st.markdown("---")
-        with st.spinner("⏳ 길일 및 시공간 분석 중..."):
-            st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
-    elif "11. 타 감" in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
-        st.markdown("---")
-        if not other_report: st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: st.info("타 감명서 비교 로직이 작동합니다.")
-    elif "12. 타 감" in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 비교 (궁합)")
-        st.markdown("---")
-        if not st.session_state.get('other_reading', ""): st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
+             elif any(x in u_product for x in ["8. 결혼", "9. 출산", "10. 이사"]):
+                 st.header(f"🗓️ {name}님의 {u_product.split('.')[1].strip()}")
+                 st.markdown("---")
+                with st.spinner("⏳ 길일 및 시공간 분석 중..."):
+                    st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
+
+            elif "11. 타 감" in u_product:
+                st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
+                st.markdown("---")
+                if not other_report: st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+                else: st.info("타 감명서 비교 로직이 작동합니다.")
+
+            elif "12. 타 감" in u_product:
+                st.header("⚖️ 초연 시공명리 타 감명서 비교 (궁합)")
+                st.markdown("---")
+                if not st.session_state.get('other_reading', ""): st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+                else: st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
