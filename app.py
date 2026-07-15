@@ -388,23 +388,32 @@ if st.session_state.get('app_running', False):
             # AI 통변
             ai_output_html = ""
             try:
+                # 1. 사실 관계 데이터 생성 (engine에서 가져오기)
                 saju_facts = engine.get_saju_fact_sheet(
                     ys, yb, ms, mb, ds, db, hs, hb, 
                     name=name, age=age, gender=gender, marital=u_marital
                 )
-               
-                ai_result = call_gemini_api(final_prompt_text)
+                
+                # 2. 프롬프트를 구성할 때, 박사님의 기존 시스템 프롬프트 포맷을 확실하게 따름
+                # ※ 중요: prompts.PERSONAL_SAJU_PROMPT 파일 내에 {saju_data} 항목이 있어야 합니다.
+                # 만약 {saju_data}가 아니라 다른 이름(예: {facts})이라면 해당 이름으로 바꾸세요.
+                prompt_content = prompts.PERSONAL_SAJU_PROMPT.format(saju_data=saju_facts)
+                
+                # 3. API 호출
+                ai_result = call_gemini_api(prompt_content)
                 st.session_state['ai_full_text'] = ai_result
-                ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                
+                # 4. 결과 정제 및 렌더링
+                if ai_result:
+                    ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                    ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
+                    ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
+                    ai_output_html = html_views.get_ai_report_box(ai_result)
             
-                ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-            
-                ai_output_html = html_views.get_ai_report_box(ai_result)
-            
+            except KeyError as e:
+                ai_output_html = f"<div style='color:red;'>🚨 프롬프트 포맷 오류 (변수명 불일치): {str(e)}</div>"
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
-
 
             closing_html = html_views.get_closing_html(name)
             
