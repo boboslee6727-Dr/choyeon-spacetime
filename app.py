@@ -533,7 +533,7 @@ if st.session_state.get('app_running', False):
                 # 2. 표지 출력
                 cover_html = html_views.get_gunghap_cover(
                     APP_VERSION, 
-                    name, m_age, m_sol, m_lun, f"{b_time}시",  # 남명 시간 추가
+                    name, m_age, m_sol, m_lun, f"{b_time}",  # 남명 시간 추가
                     f_name, f_age, f_sol, f_lun, f_t,         # 여명 시간 추가
                     dt_mod.datetime.now().strftime("%Y년 %m월 %d일") # 분석일 추가
                 )
