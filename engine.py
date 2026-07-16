@@ -3,6 +3,7 @@ import datetime as dt_mod
 from datetime import datetime
 import pytz
 import ephem
+import re
 from korean_lunar_calendar import KoreanLunarCalendar
 
 # ==============================================================================
