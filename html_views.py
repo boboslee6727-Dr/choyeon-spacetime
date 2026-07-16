@@ -26,16 +26,11 @@ def get_global_css():
     .color-unsung, td[style*="0D47A1"], div[style*="0D47A1"] { color: #0D47A1 !important; font-weight: 900 !important; }
     .color-shinsal, td[style*="C62828"], div[style*="C62828"] { color: #C62828 !important; font-weight: 900 !important; }
 
-    .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723; table-layout: fixed; margin-bottom: 15px; }
-    .result-table td { 
-        font-family: 'Noto Serif KR', serif !important; 
-        font-weight: 900 !important; 
-        font-size: 14px !important; 
-        padding: 4px !important; 
-        border: 1px solid #444 !important;
-        text-align: center;
-        vertical-align: middle;
-    }
+    /* 🚨 사주원국 천간/지지 행 전체 24px 확대 및 입체감 강화 */
+    .result-table tr:has(.ganji-cell) td { font-size: 24px !important; font-weight: 900 !important; padding: 10px 4px !important; -webkit-text-stroke: 0.5px rgba(0,0,0,0.3); }
+
+    /* 대운 흐름표의 간지 설정 (이미 정의된 클래스 활용) */
+    .ganji-cell { font-size: 18px !important; font-weight: 900 !important; }
     
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { font-size: 15px !important; color: #FFFFFF !important; border: 1px solid #444 !important; font-weight: 900 !important;}
