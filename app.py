@@ -558,23 +558,35 @@ if st.session_state.get('app_running', False):
                 # ==========================================================
                 # [추가] 신청인 성별에 따른 남명/여명 데이터 동적 매핑
                 # ==========================================================
+                # 1. 성별에 관계없이 남성 데이터(M)와 여성 데이터(F)를 분리하여 담습니다.
                 if gender == "여성":
-                    # 신청인이 여성이면, 남명(Male)은 상대방(f_), 여명(Female)은 신청인 데이터 사용
-                    male_name, male_age, male_sol, male_lun, male_time = f_name, f_age, f_sol, f_lun, f_t
-                    male_marital = f_marital
-                    female_name, female_age, female_sol, female_lun, female_time = name, m_age, m_sol, m_lun, b_time
-                    female_marital = u_marital
+                    # 신청인(여성) -> Female, 상대방(남성) -> Male
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
+    
+                    # 엔진 결과물 매핑 (신청인=User, 상대방=Part)
+                    # 신청인이 여성이므로, 남성 데이터는 w_table에서, 여성 데이터는 m_table에서 가져옴
+                    m_data, f_data = gh_data["w_table"], gh_data["m_table"]
+                    m_master, f_master = gh_data["w_master"], gh_data["m_master"]
+                    m_daewun, f_daewun = gh_data["w_daewun"], gh_data["m_daewun"]
                 else:
-                    # 신청인이 남성이면 기본값 그대로 사용
-                    male_name, male_age, male_sol, male_lun, male_time = name, m_age, m_sol, m_lun, b_time
-                    male_marital = u_marital
-                    female_name, female_age, female_sol, female_lun, female_time = f_name, f_age, f_sol, f_lun, f_t
-                    female_marital = f_marital
+                    # 신청인(남성) -> Male, 상대방(여성) -> Female
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
+    
+                    # 엔진 결과물 매핑
+                    m_data, f_data = gh_data["m_table"], gh_data["w_table"]
+                    m_master, f_master = gh_data["m_master"], gh_data["w_master"]
+                    m_daewun, f_daewun = gh_data["m_daewun"], gh_data["w_daewun"]
+
+                # [이제 m_data, f_data를 사용해 테이블을 조립하십시오]
+                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
+                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
+                # (이하 master, daewun도 동일하게 m_master, f_master 사용)
 
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
                 
-
                 # 2. 표지 출력 (변수명 변경)
                 cover_html = html_views.get_gunghap_cover(
                     APP_VERSION, 
@@ -584,29 +596,19 @@ if st.session_state.get('app_running', False):
                 )
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (궁합 전용 함수로 수정 완료)
+                # [3. 본문 조립] 데이터 매핑 후 바로 테이블 생성 (중복 로직 제거)
                 intro_h = html_views.get_intro_html() 
                 closing = html_views.get_gunghap_closing(name, f_name)
 
-                # [남명] 궁합 전용 테이블 함수(get_gunghap_saju_table) 사용
-                m_table = html_views.get_gunghap_saju_table(
-                    gh_data["m_table"][1], gh_data["m_table"][2], gh_data["m_table"][3], 
-                    gh_data["m_table"][4], gh_data["m_table"][5], gh_data["m_table"][6], 
-                    gh_data["m_table"][7], gh_data["m_table"][8], gh_data["m_table"][9], 
-                    gh_data["m_table"][10]
-                )
-                m_master = html_views.get_master_bar(*gh_data["m_master"])
-                m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
+                # 데이터 조립 (m_data, f_data를 사용하여 1회만 생성)
+                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
+                m_master = html_views.get_master_bar(*m_master)
+                m_un = html_views.generate_daewun_layout(*m_daewun)
 
-                # [여명] 궁합 전용 테이블 함수(get_gunghap_saju_table) 사용
-                w_table = html_views.get_gunghap_saju_table(
-                    gh_data["w_table"][1], gh_data["w_table"][2], gh_data["w_table"][3], 
-                    gh_data["w_table"][4], gh_data["w_table"][5], gh_data["w_table"][6], 
-                    gh_data["w_table"][7], gh_data["w_table"][8], gh_data["w_table"][9], 
-                    gh_data["w_table"][10]
-                )
-                w_master = html_views.get_master_bar(*gh_data["w_master"])
-                w_un = html_views.generate_daewun_layout(*gh_data["w_daewun"])
+                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
+                w_master = html_views.get_master_bar(*f_master)
+                w_un = html_views.generate_daewun_layout(*f_daewun)
+
                 # 4. AI 통변 
                 ai_output_html = ""
                 
@@ -654,7 +656,7 @@ if st.session_state.get('app_running', False):
                     closing
                 )
                 st.markdown(html_views.get_final_report_box(full_report), unsafe_allow_html=True)
-                
+               
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
     # ---------------------------------------------------------
