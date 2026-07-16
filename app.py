@@ -596,11 +596,11 @@ if st.session_state.get('app_running', False):
                                         .replace('[COUPLE_DAEWUN_TABLES_HERE]', '') \
                                         .strip()
 
-                    # [수정] 바깥 테두리 없음, 안쪽은 짙은 갈색(#4E342E) 둥근 테두리 + 나눔명조체
+                    # [최종 수정] 짙은 갈색의 가는 선(1px)으로 개인사주 코드와 동일한 굵기 적용
                     formatted_ai = clean_ai.replace('\n', '<br>')
                     ai_html = f"""
-                    <div style='border: none !important; box-shadow: none !important; background: transparent;'>
-                        <div style='border: 2px solid #4E342E; border-radius: 15px; padding: 35px; background-color: #ffffff; font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #222; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);'>
+                    <div style='background: transparent; border: none; box-shadow: none; padding: 0;'>
+                        <div style='border: 1px solid #4E342E; border-radius: 15px; padding: 40px; background-color: #ffffff; font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #222;'>
                             {formatted_ai}
                         </div>
                     </div>
