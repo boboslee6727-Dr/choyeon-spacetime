@@ -188,7 +188,6 @@ with st.sidebar:
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
-                # 들여쓰기 완벽 수정 완료
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -227,20 +226,17 @@ with st.sidebar:
                                     st.rerun()
                                     break
                             curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
+                        if found: break
                 if not found: 
                     st.error("일치하는 날짜가 없습니다.")
                     
             else: 
                 st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        # 2. 상대방 기본 정보 (복구 완료!)
+        # 2. 상대방 기본 정보
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
-            
-            # [수정] index 속성을 지우고 아주 단순하게 원상 복구합니다.
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
-            
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
