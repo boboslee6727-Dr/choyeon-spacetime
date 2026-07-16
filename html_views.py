@@ -29,6 +29,13 @@ def get_global_css():
     /* 🚨 사주원국 천간/지지 행 전체 24px 확대 및 입체감 강화 */
     .result-table tr:has(.ganji-cell) td { font-size: 24px !important; font-weight: 900 !important; padding: 10px 4px !important; -webkit-text-stroke: 0.5px rgba(0,0,0,0.3); }
 
+    /* 테이블 테두리 및 내부 선 통일 */
+    .result-table { width: 100%; border-collapse: collapse; border: 2px solid #444 !important; }
+    .result-table td { border: 1px solid #444 !important; padding: 2px !important; text-align: center; vertical-align: middle; font-weight: 900 !important; }
+
+    /* 십이운성, 십이신살, 일반신살 굵기 강화 (기존 색상 유지) */
+    .result-table td:has(.unsung), .result-table td:has(.shinsal), .result-table td:has(.gen-shinsal) { font-weight: 900 !important; }
+
     /* 대운 흐름표의 간지 설정 (이미 정의된 클래스 활용) */
     .ganji-cell { font-size: 18px !important; font-weight: 900 !important; }
     
