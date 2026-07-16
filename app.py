@@ -98,6 +98,16 @@ with st.sidebar:
         "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
     ], label_visibility="collapsed")
 
+    # [추가] 성별 자동 동기화를 위한 콜백 함수
+    if "u_g" not in st.session_state: st.session_state.u_g = "남성"
+    if "f_g" not in st.session_state: st.session_state.f_g = "여성"
+
+    def sync_partner_gender():
+        if st.session_state.u_g == "여성":
+            st.session_state.f_g = "남성"
+        else:
+            st.session_state.f_g = "여성"
+
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
@@ -147,7 +157,7 @@ with st.sidebar:
 
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
+        gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         col_y, col_m, col_d = st.columns(3)
@@ -228,9 +238,8 @@ with st.sidebar:
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
             
-            # [수정된 부분] 신청인 성별(gender)에 따라 상대방 성별 기본값 자동 지정
-            p_gender_idx = 1 if gender == "여성" else 0
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], index=p_gender_idx, key="f_g")
+            # [수정] index 속성을 지우고 아주 단순하게 원상 복구합니다.
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
             
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
