@@ -591,33 +591,29 @@ if st.session_state.get('app_running', False):
 
                     # 2. 대운표 마커를 기준으로 샌드위치처럼 박스 3개로 분리 결합
                     if "[COUPLE_DAEWUN_TABLES_HERE]" in clean_ai:
-                        # 마커를 기준으로 위/아래 텍스트 분리
                         ai_parts = clean_ai.split("[COUPLE_DAEWUN_TABLES_HERE]")
                         part1 = ai_parts[0].strip().replace('\n', '<br>')
                         part2 = ai_parts[1].strip().replace('\n', '<br>')
                         
-                        # (상단) 남명/여명 사주 요약 박스
                         ai_html = html_views.get_ai_report_box(part1)
-                        # (중단) 부부 대운 비교 박스 (자체 박스 그대로 삽입, 중첩 없음)
                         ai_html += daewun_compare_html
-                        # (하단) 백년해로 조언 박스
                         if part2:
                             ai_html += html_views.get_ai_report_box(part2)
                     else:
-                        # 혹시 AI가 대운표 마커를 누락했을 경우를 대비한 안전장치
                         ai_html = html_views.get_ai_report_box(clean_ai.replace('\n', '<br>'))
                         ai_html += daewun_compare_html
 
-                # 6. 최종 출력 (중첩 방지를 위해 철저히 독립적으로 출력)
-                    st.markdown(m_content, unsafe_allow_html=True)
-                    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                    st.markdown(w_content, unsafe_allow_html=True)
-                    st.markdown(ai_html, unsafe_allow_html=True)
-                    st.markdown(closing, unsafe_allow_html=True)
-                    
-                # [여기가 중요합니다] try와 같은 라인(세로줄)에 except가 있어야 합니다.
-                except Exception as e:
-                    st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+                # 6. 최종 출력 (if 문과 같은 세로줄에 위치해야 합니다)
+                st.markdown(m_content, unsafe_allow_html=True)
+                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+                st.markdown(w_content, unsafe_allow_html=True)
+                st.markdown(ai_html, unsafe_allow_html=True)
+                st.markdown(closing, unsafe_allow_html=True)
+                
+            # [핵심] try와 정확히 같은 세로줄에 위치해야 합니다.
+            except Exception as e:
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+
     # ---------------------------------------------------------
     # [8~12번 상품] 
     # ---------------------------------------------------------
