@@ -956,9 +956,8 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
         info_h = f"<div style='text-align:center;'>{name}님</div>"
         gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
         gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444; font-weight:900;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
-        gan_row = "".join([f"<td class='{get_oh_class(g)}' style='border:1px solid #444;'>{g}</td>" for g in gans])
-        ji_row = "".join([f"<td class='{get_oh_class(j)}' style='border:1px solid #444;'>{j}</td>" for j in jjis])
-        ji_ss = "".join([f"<td style='border:1px solid #444;'>{get_ss(ds,j)}</td>" for j in jjis])
+        gan_row = "".join([f"<td class='{get_oh_class(g)} ganji-cell' style='border:1px solid #444;'>{g}</td>" for g in gans])
+        ji_row = "".join([f"<td class='{get_oh_class(j)} ganji-cell' style='border:1px solid #444;'>{j}</td>" for j in jjis])        ji_ss = "".join([f"<td style='border:1px solid #444;'>{get_ss(ds,j)}</td>" for j in jjis])
         jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
         
         ji_rel_rows = ""
