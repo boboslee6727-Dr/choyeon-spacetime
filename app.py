@@ -513,7 +513,7 @@ if st.session_state.get('app_running', False):
     # [7번 상품] 연애/궁합 
     # ---------------------------------------------------------
     elif "7. 연애" in u_product:
-        st.header(f"💕 {name}님과 {f_name}님의 초연 궁합")
+        st.header(f"💕 {name} & {f_name} 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
@@ -534,53 +534,59 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (헤더 포함 - get_saju_table 인자 10개로 수정)
-                # 신청인(남명) 정보 조립
+                # 3. 본문 조립 (사주 원국 박스 처리)
+                # 신청인(남명) 정보 및 사주 박스
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
-                m_content = (
-                    m_info + 
-                    html_views.get_saju_table(*gh_data["m_table"]) + 
-                    html_views.get_master_bar(*gh_data["m_master"]) +
-                    html_views.get_daewun_table(*gh_data["m_daewun"]) # 대운표 결합
+                m_person_box = html_views.get_gunghap_person_box(
+                    html_views.get_saju_table(*gh_data["m_table"]), 
+                    html_views.get_master_bar(*gh_data["m_master"]), 
+                    add_page_break=False
                 )
+                m_content = m_info + m_person_box
                 
-                # 상대방(여명) 정보 조립 (녹색 표기)
+                # 상대방(여명) 정보 및 사주 박스 (녹색 표기)
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
-                w_content = (
-                    w_info + 
-                    html_views.get_saju_table(*gh_data["w_table"]) + 
-                    html_views.get_master_bar(*gh_data["w_master"]) +
-                    html_views.get_daewun_table(*gh_data["w_daewun"]) # 대운표 결합
+                w_person_box = html_views.get_gunghap_person_box(
+                    html_views.get_saju_table(*gh_data["w_table"]), 
+                    html_views.get_master_bar(*gh_data["w_master"]), 
+                    add_page_break=False
+                )
+                w_content = w_info + w_person_box
+                
+                # 4. 부부 대운 비교 박스 생성
+                # 엔진의 키값 호환성을 위해 get 메서드로 안전하게 가져옵니다.
+                m_un_html = gh_data.get("m_un_html", gh_data.get("m_daewun", ""))
+                w_un_html = gh_data.get("w_un_html", gh_data.get("w_daewun", ""))
+                daewun_compare_html = html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html)
+                
+                # 5. 맺음말 및 AI 통변 조립
+                closing = html_views.get_gunghap_closing(name, f_name)
+                ai_html = ""
+                
+                # prompts.py의 GUNGHAP_ESSAY_PROMPT 호출 및 데이터 주입
+                prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
+                    m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
+                    db_header=gh_data.get("db_header", ""),
+                    ai_saju_mapping=gh_data.get("ai_saju_mapping", ""),
+                    yukchin_rule=gh_data.get("yukchin_rule", ""),
+                    m_golden=gh_data.get("m_golden", ""), m_ds=gh_data.get("m_ds", ""), m_db=gh_data.get("m_db", ""), 
+                    m_gongmang_actual=gh_data.get("m_gongmang_actual", ""),
+                    f_golden=gh_data.get("f_golden", ""), f_ds=gh_data.get("f_ds", ""), f_db=gh_data.get("f_db", ""), 
+                    f_gongmang_actual=gh_data.get("f_gongmang_actual", ""),
+                    calc_gyukgook=gh_data.get("calc_gyukgook", "") 
                 )
                 
-                # 4. 맺음말 및 AI 통변 조립
-                closing = html_views.get_gunghap_closing(name, f_name)
-                # 3. AI 통변 조립 (prompts.py 사용)
-                ai_html = ""
-                try:
-                    # 박사님의 프롬프트 템플릿 호출 및 데이터 주입
-                    prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
-                        m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
-                        db_header=gh_data["db_header"],
-                        ai_saju_mapping=gh_data["ai_saju_mapping"],
-                        yukchin_rule=gh_data["yukchin_rule"],
-                        m_golden=gh_data["m_golden"], m_ds=gh_data["m_ds"], m_db=gh_data["m_db"], 
-                        m_gongmang_actual=gh_data["m_gongmang_actual"],
-                        f_golden=gh_data["f_golden"], f_ds=gh_data["f_ds"], f_db=gh_data["f_db"], 
-                        f_gongmang_actual=gh_data["f_gongmang_actual"],
-                        calc_gyukgook=gh_data["calc_gyukgook"] # engine 데이터 확인 필요
-                    )
-                    
-                    ai_result = call_gemini_api(prompt_text)
-                    
-                    if ai_result:
-                        # [핵심] 파싱 엔진에서 [COUPLE_DAEWUN_TABLES_HERE] 마커를 
-                        # gh_data["couple_daewun_tables"] 내용으로 치환하도록 로직 연결
-                        parsed_content = parse_and_format_gunghap(ai_result, gh_data.get("couple_daewun_tables", ""))
-                        ai_html = html_views.get_ai_report_box(parsed_content)
-                except Exception as e:
-                    ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
+                ai_result = call_gemini_api(prompt_text)
+                
+                if ai_result:
+                    # [핵심] 생성해둔 부부 대운 비교 박스(daewun_compare_html)를 마커 치환 인자로 전달
+                    parsed_content = parse_and_format_gunghap(ai_result, daewun_compare_html)
+                    ai_html = html_views.get_ai_report_box(parsed_content)
 
+                # 6. 최종 출력
+                full_body_content = m_content + "<br>" + w_content + ai_html + closing
+                st.markdown(html_views.get_final_report_box(full_body_content), unsafe_allow_html=True)
+                
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
