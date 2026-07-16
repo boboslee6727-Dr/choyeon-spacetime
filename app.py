@@ -541,7 +541,7 @@ if st.session_state.get('app_running', False):
                 gh_data = engine.get_gunghap_data(
                     int(b_year), int(b_month), int(b_day), b_time, u_marital,
                     int(f_y), int(f_m), int(f_d), f_t, f_marital,
-                    marital_status # 이 값을 엔진으로 전달
+                    marital_status
                 )
                 
                 # 1. 커버 데이터 계산
@@ -556,12 +556,12 @@ if st.session_state.get('app_running', False):
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
                 # ==========================================================
-                # [수정] 1. 성별에 따른 데이터 매핑 (오류 방지: 변수 미리 선언)
+                # [수정] 1. 성별에 따른 데이터 매핑 (변수명 분리 적용)
                 # ==========================================================
                 if gender == "여성":
                     # 신청인(여성) -> f_data, 상대방(남성) -> m_data
                     m_data, f_data = gh_data["w_table"], gh_data["m_table"]
-                    m_master, f_master = gh_data["w_master"], gh_data["m_master"]
+                    m_master_list, f_master_list = gh_data["w_master"], gh_data["m_master"] # 이름 분리
                     m_daewun, f_daewun = gh_data["w_daewun"], gh_data["m_daewun"]
                     
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
@@ -569,56 +569,42 @@ if st.session_state.get('app_running', False):
                 else:
                     # 신청인(남성) -> m_data, 상대방(여성) -> f_data
                     m_data, f_data = gh_data["m_table"], gh_data["w_table"]
-                    m_master, f_master = gh_data["m_master"], gh_data["w_master"]
+                    m_master_list, f_master_list = gh_data["m_master"], gh_data["w_master"] # 이름 분리
                     m_daewun, f_daewun = gh_data["m_daewun"], gh_data["w_daewun"]
                     
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
 
-                # ==========================================================
-                # [수정] 2. 이제 확실히 선언된 변수를 사용하여 조립
-                # ==========================================================
-                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
-                m_master = html_views.get_master_bar(*m_master)
-                m_un = html_views.generate_daewun_layout(*m_daewun)
-
-                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                w_master = html_views.get_master_bar(*f_master)
-                w_un = html_views.generate_daewun_layout(*f_daewun)
-
+                # [정보 헤더 생성]
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
                 
-                # 2. 표지 출력 (변수명 변경)
+                # 2. 표지 출력
                 cover_html = html_views.get_gunghap_cover(
                     APP_VERSION, 
-                    male_name, male_age, male_sol, male_lun, f"{male_time}",  # 남명 자리에 male_ 변수 투입
-                    female_name, female_age, female_sol, female_lun, f"{female_time}", # 여명 자리에 female_ 변수 투입
+                    male_name, male_age, male_sol, male_lun, f"{male_time}",  
+                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
                     dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                 )
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (중복 제거 및 변수 통일)
+                # 3. 본문 조립 (중복 코드 완벽 제거, 올바른 인자 전달)
                 intro_h = html_views.get_intro_html() 
                 closing = html_views.get_gunghap_closing(name, f_name)
 
-                # 3. 본문 조립 (11개 인자를 개별적으로 명확히 전달)
-                intro_h = html_views.get_intro_html() 
-                closing = html_views.get_gunghap_closing(name, f_name)
-
-                # [남명] 11개 인자를 명시적으로 나열하여 전달
+                # [남명 조립]
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
-                m_master = html_views.get_master_bar(
-                    m_master[0], m_master[1], m_master[2], m_master[3], m_master[4], 
-                    m_master[5], m_master[6], m_master[7], m_master[8], m_master[9], m_master[10]
+                m_master_html = html_views.get_master_bar(
+                    m_master_list[0], m_master_list[1], m_master_list[2], m_master_list[3], m_master_list[4], 
+                    m_master_list[5], m_master_list[6], m_master_list[7], m_master_list[8], m_master_list[9], m_master_list[10]
                 )
                 m_un = html_views.generate_daewun_layout(*m_daewun)
 
-                # [여명] 11개 인자를 명시적으로 나열하여 전달
+                # [여명 조립]
                 w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                w_master = html_views.get_master_bar(
-                    f_master[0], f_master[1], f_master[2], f_master[3], f_master[4], 
-                    f_master[5], f_master[6], f_master[7], f_master[8], f_master[9], f_master[10]
+                w_master_html = html_views.get_master_bar(
+                    f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], 
+                    f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10]
                 )
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
@@ -627,27 +613,18 @@ if st.session_state.get('app_running', False):
                 
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
                     m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
-                    # 엔진에서 확실히 반환하는 키값들로 매핑
                     db_header=gh_data.get("db_header", "초연 궁합 분석 리포트"),
                     ai_saju_mapping=gh_data.get("ai_saju_mapping", ""),
                     yukchin_rule=gh_data.get("yukchin_rule", ""),
-                    
-                    # 남명 데이터 매핑
                     m_golden=gh_data.get("m_golden", ""), 
                     m_ds=gh_data.get("m_ds", ""), 
                     m_db=gh_data.get("m_db", ""), 
                     m_gongmang_actual=gh_data.get("m_gongmang_actual", ""),
-                    
-                    # 여명 데이터 매핑
                     f_golden=gh_data.get("f_golden", ""), 
                     f_ds=gh_data.get("f_ds", ""), 
                     f_db=gh_data.get("f_db", ""), 
                     f_gongmang_actual=gh_data.get("f_gongmang_actual", ""),
-                    
-                    # 기타 분석 지표
                     calc_gyukgook=gh_data.get("calc_gyukgook", "알 수 없음"),
-                    
-                    # [추가] 혼인 상태 조합 정보 전달 (프롬프트에서 활용)
                     marital_info=f"{u_marital}-{f_marital}"
                 )
                 prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
@@ -660,15 +637,13 @@ if st.session_state.get('app_running', False):
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # [5. 최종 통합 출력]
-                # 각 조각들이 모두 HTML 문자열인지 확인하고 하나로 합칩니다.
+                # 5. 최종 통합 출력 (깨짐 방지용 변수명 적용)
                 full_report = (
-                    m_info + m_table + m_master + m_un + 
-                    w_info + w_table + w_master + w_un + 
+                    m_info + m_table + m_master_html + m_un + 
+                    w_info + w_table + w_master_html + w_un + 
                     intro_h + ai_output_html + closing
                 )
                 
-                # 박스 내부에 강제로 렌더링
                 report_box = html_views.get_final_report_box(full_report)
                 st.markdown(report_box, unsafe_allow_html=True)
                
