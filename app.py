@@ -580,8 +580,9 @@ if st.session_state.get('app_running', False):
                         ai_html = html_views.get_ai_report_box(parsed_content)
                 except Exception as e:
                     ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
+
             except Exception as e:
-                ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
     # ---------------------------------------------------------
     # [8~12번 상품] 
