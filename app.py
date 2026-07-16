@@ -148,7 +148,7 @@ with st.sidebar:
                                     st.session_state['s_t'] = "시간 모름"
 
                                 found = True
-                                st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
+                                st.session_state['rev_success_msg'] = f"✅ 신청인 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
