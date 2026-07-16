@@ -535,31 +535,51 @@ if st.session_state.get('app_running', False):
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
                 # 3. 본문 조립 (헤더 포함 - get_saju_table 인자 10개로 수정)
-                # 신청인(남명) 정보
+                # 신청인(남명) 정보 조립
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
-                m_content = m_info + html_views.get_saju_table(*gh_data["m_table"]) + html_views.get_master_bar(*gh_data["m_master"])
+                m_content = (
+                    m_info + 
+                    html_views.get_saju_table(*gh_data["m_table"]) + 
+                    html_views.get_master_bar(*gh_data["m_master"]) +
+                    html_views.get_daewun_table(*gh_data["m_daewun"]) # 대운표 결합
+                )
                 
-                # 상대방(여명) 정보 (녹색 표기)
+                # 상대방(여명) 정보 조립 (녹색 표기)
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
-                w_content = w_info + html_views.get_saju_table(*gh_data["w_table"]) + html_views.get_master_bar(*gh_data["w_master"])
+                w_content = (
+                    w_info + 
+                    html_views.get_saju_table(*gh_data["w_table"]) + 
+                    html_views.get_master_bar(*gh_data["w_master"]) +
+                    html_views.get_daewun_table(*gh_data["w_daewun"]) # 대운표 결합
+                )
                 
                 # 4. 맺음말 및 AI 통변 조립
                 closing = html_views.get_gunghap_closing(name, f_name)
+                # 3. AI 통변 조립 (prompts.py 사용)
                 ai_html = ""
                 try:
-                    prompt_content = f"신청인 {name}, 상대방 {f_name}의 궁합을 초연 시공명리 관점에서 분석하라."
-                    ai_result = call_gemini_api(prompt_content)
+                    # 박사님의 프롬프트 템플릿 호출 및 데이터 주입
+                    prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
+                        m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
+                        db_header=gh_data["db_header"],
+                        ai_saju_mapping=gh_data["ai_saju_mapping"],
+                        yukchin_rule=gh_data["yukchin_rule"],
+                        m_golden=gh_data["m_golden"], m_ds=gh_data["m_ds"], m_db=gh_data["m_db"], 
+                        m_gongmang_actual=gh_data["m_gongmang_actual"],
+                        f_golden=gh_data["f_golden"], f_ds=gh_data["f_ds"], f_db=gh_data["f_db"], 
+                        f_gongmang_actual=gh_data["f_gongmang_actual"],
+                        calc_gyukgook=gh_data["calc_gyukgook"] # engine 데이터 확인 필요
+                    )
+                    
+                    ai_result = call_gemini_api(prompt_text)
+                    
                     if ai_result:
-                        ai_html = html_views.get_ai_report_box(ai_result.replace('\n', '<p>'))
+                        # [핵심] 파싱 엔진에서 [COUPLE_DAEWUN_TABLES_HERE] 마커를 
+                        # gh_data["couple_daewun_tables"] 내용으로 치환하도록 로직 연결
+                        parsed_content = parse_and_format_gunghap(ai_result, gh_data.get("couple_daewun_tables", ""))
+                        ai_html = html_views.get_ai_report_box(parsed_content)
                 except Exception as e:
                     ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
-
-                # 5. 최종 출력
-                full_body_content = m_content + "<br>" + w_content + ai_html + closing
-                st.markdown(html_views.get_final_report_box(full_body_content), unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
     # ---------------------------------------------------------
     # [8~12번 상품] 
