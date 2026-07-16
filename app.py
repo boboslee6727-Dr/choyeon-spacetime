@@ -542,7 +542,6 @@ if st.session_state.get('app_running', False):
                 m_master_html = html_views.get_master_bar(*gh_data["m_master"])
                 m_un_html = html_views.generate_daewun_layout(*gh_data["m_daewun"])
                 
-                # 마스터바 HTML 뒤에 대운표 HTML을 붙여서 하나의 get_gunghap_person_box 안에 넣습니다.
                 m_content = html_views.get_gunghap_person_box(
                     m_info + m_table_html, 
                     m_master_html + "<div style='margin-top: 15px;'></div>" + m_un_html, 
@@ -555,7 +554,6 @@ if st.session_state.get('app_running', False):
                 w_master_html = html_views.get_master_bar(*gh_data["w_master"])
                 w_un_html = html_views.generate_daewun_layout(*gh_data["w_daewun"])
                 
-                # 여명도 동일하게 하나의 박스 안에 일체형으로 넣습니다.
                 w_content = html_views.get_gunghap_person_box(
                     w_info + w_table_html, 
                     w_master_html + "<div style='margin-top: 15px;'></div>" + w_un_html, 
@@ -598,17 +596,17 @@ if st.session_state.get('app_running', False):
                                         .replace('[COUPLE_DAEWUN_TABLES_HERE]', '') \
                                         .strip()
 
-                    # [수정] 바깥 테두리는 투명하게, 안쪽은 둥근 테두리에 나눔명조체 적용
+                    # [수정] 바깥 테두리 없음, 안쪽은 짙은 갈색(#4E342E) 둥근 테두리 + 나눔명조체
                     formatted_ai = clean_ai.replace('\n', '<br>')
                     ai_html = f"""
-                    <div class='report-page' style='border: none !important; box-shadow: none !important; background: transparent;'>
-                        <div style='border: 2px solid #e0e0e0; border-radius: 15px; padding: 35px; background-color: #ffffff; font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #222; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);'>
+                    <div style='border: none !important; box-shadow: none !important; background: transparent;'>
+                        <div style='border: 2px solid #4E342E; border-radius: 15px; padding: 35px; background-color: #ffffff; font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #222; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);'>
                             {formatted_ai}
                         </div>
                     </div>
                     """
 
-                # 5. 최종 출력 (남명 전체 -> 여명 전체 -> 통합 AI 통변)
+                # 5. 최종 출력
                 st.markdown(m_content, unsafe_allow_html=True)
                 st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
                 st.markdown(w_content, unsafe_allow_html=True)
