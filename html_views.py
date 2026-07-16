@@ -22,13 +22,6 @@ def get_global_css():
     .color-수 { background-color: #212121 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
     .color-무 { background-color: transparent !important; color: #000000 !important; }
 
-    /* 🚨 천간/지지 핵심 글자 크기 확대 및 입체감 강화 */
-    .ganji-cell {
-        font-size: 24px !important; 
-        font-weight: 900 !important;
-        -webkit-text-stroke: 0.5px rgba(0,0,0,0.3);
-    }
-
     /* 🚨 십이운성(파란색), 십이신살(빨간색) 전역 통일 강제 */
     .color-unsung, td[style*="0D47A1"], div[style*="0D47A1"] { color: #0D47A1 !important; font-weight: 900 !important; }
     .color-shinsal, td[style*="C62828"], div[style*="C62828"] { color: #C62828 !important; font-weight: 900 !important; }
@@ -125,6 +118,8 @@ def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, j
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td>{gan_ss}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>천간</td>{gan_row}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900;'>지지</td>{ji_row}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>천간</td>{gan_row}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:14px !important;'>지지</td>{ji_row}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td>{ji_ss}</tr>
         <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
