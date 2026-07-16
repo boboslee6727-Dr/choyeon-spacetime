@@ -939,11 +939,16 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         ms, mb = m_pillar[0], m_pillar[1]
         ds, db = d_pillar[0], d_pillar[1]        
         
+        # 1. 먼저 order_dir을 결정합니다.
+        order_dir = 1 if (GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
+        
+        # 2. 결정된 order_dir을 사용하여 calc_d를 계산합니다.
         calc_d = get_daeun_su_accurate(datetime(y, m, d), order_dir)
 
         curr_year = datetime.now().year
         age = curr_year - y + 1
-        order_dir = 1 if (GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
+
+        # 3. 이후 대운 리스트를 생성합니다.
         direction_str = "순행" if order_dir == 1 else "역행"
         daewun_data_list = get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
         daewun = (daewun_data_list, direction_str, calc_d, get_oh_class)
