@@ -903,13 +903,19 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
         t_gan, t_ji = get_time_ganji(d_pillar[0], t)
         
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
-        ds, ms, yb, db = d_pillar[0], m_pillar[0], y_pillar[1], d_pillar[1]
-
-        # (엔진 내부에 간지 추출 코드가 실행된 직후에 아래 변수를 선언해야 합니다)
         ys, yb = y_pillar[0], y_pillar[1]
         ms, mb = m_pillar[0], m_pillar[1]
         ds, db = d_pillar[0], d_pillar[1]       
+        
         calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
+
+        # [추가됨] 대운 연산 로직
+        curr_year = datetime.now().year
+        age = curr_year - y + 1
+        order_dir = 1 if (GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
+        direction_str = "순행" if order_dir == 1 else "역행"
+        daewun_data_list = get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+        daewun = (daewun_data_list, direction_str, calc_d, get_oh_class)
 
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
         for c in gans + jjis:
@@ -941,12 +947,17 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
             "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)
         ]
 
-        return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master}
+        # [수정됨] return에 daewun 추가
+        return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master, "daewun": daewun}
 
     m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", "기혼")
     w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
     
-    return {"m_table": m_res["table"], "m_master": m_res["master"], "w_table": w_res["table"], "w_master": w_res["master"]}
+    # [수정됨] 최종 return에 m_daewun, w_daewun 추가
+    return {
+        "m_table": m_res["table"], "m_master": m_res["master"], "m_daewun": m_res["daewun"],
+        "w_table": w_res["table"], "w_master": w_res["master"], "w_daewun": w_res["daewun"]
+    }
 
 def get_gunghap_report(res):
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
