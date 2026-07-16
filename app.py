@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.5"
+APP_VERSION = "ver 60.4"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -107,7 +107,6 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            st.session_state['app_running'] = False  # ✅ 신청인 자동입력 오류 방지 브레이크
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
@@ -141,7 +140,7 @@ with st.sidebar:
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                        curr_dt -= dt_mod.timedelta(days=1)
+                            curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
@@ -177,9 +176,9 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
-                st.session_state['app_running'] = False  # ✅ 상대방 자동입력 오류 방지 브레이크
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
+                # 들여쓰기 완벽 수정 완료
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -217,7 +216,7 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                            curr_dt -= dt_mod.timedelta(days=1)
+                                curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
                     if not found: 
                         st.error("일치하는 날짜가 없습니다.")
@@ -493,6 +492,23 @@ if st.session_state.get('app_running', False):
             )
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
+            # ---------------------------------------------------------
+            # 🚨 아래 코드는 SyntaxError를 유발하는 중복/고립된 코드입니다. 
+            # 들여쓰기 원칙에 맞추어 주석 처리 하였습니다.
+            # ---------------------------------------------------------
+            # full_content = cover_html + m_box + w_box + ai_html + closing
+            # st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
+            # except Exception as e:
+            #     st.error(f"🚨 시스템 치명적 오류: {e}")
+            # final_gunghap_report = (
+            #     str(cover_html or "").strip() + 
+            #     str(m_box or "").strip() + 
+            #     str(w_box or "").strip() + 
+            #     str(ai_output_html or "").strip() + 
+            #     str(closing or "").strip()
+            # )
+            # st.markdown(html_views.get_final_report_box(full_report_html), unsafe_allow_html=True)
+
     # ---------------------------------------------------------
     # [7번 상품] 연애/궁합 
     # ---------------------------------------------------------
@@ -505,14 +521,14 @@ if st.session_state.get('app_running', False):
                 gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
                 
                 # 2. UI 조립
-                    cover_html = html_views.get_gunghap_cover(APP_VERSION, "♂️" if gender == "남성" else "♀️", name, gender, u_marital, "♂️" if f_gender == "남성" else "♀️", f_name, f_gender, f_marital, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
+                cover_html = html_views.get_gunghap_cover(APP_VERSION, "♂️" if gender == "남성" else "♀️", name, gender, u_marital, "♂️" if f_gender == "남성" else "♀️", f_name, f_gender, f_marital, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                     
-                    # gh_data["m_table"]와 gh_data["w_table"]을 정확히 호출하도록 수정합니다.
-                    m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), html_views.get_master_bar(*gh_data["m_master"]))
-                    w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), html_views.get_master_bar(*gh_data["w_master"]), add_page_break=True)
-                    closing = html_views.get_gunghap_closing(name, f_name)
-
-                # 3. AI 통변
+                # gh_data["m_table"]와 gh_data["w_table"]을 정확히 호출하도록 수정합니다.
+                m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), html_views.get_master_bar(*gh_data["m_master"]))
+                w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), html_views.get_master_bar(*gh_data["w_master"]), add_page_break=True)
+                closing = html_views.get_gunghap_closing(name, f_name)
+                
+                # 3. AI 통변 (변수명 ai_html로 통일)
                 ai_html = ""
                 try:
                     prompt_content = f"신청인 {name}과 상대방 {f_name}의 궁합을 초연 시공명리 관점에서 분석하라."
