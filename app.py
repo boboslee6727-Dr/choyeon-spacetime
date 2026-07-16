@@ -535,16 +535,12 @@ if st.session_state.get('app_running', False):
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
                 # 3. 본문 조립 (헤더 포함)
-                # 신청인(남명) 정보 헤더
-                m_info = html_views.get_info_header(
-                    "♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E"
-                )
+                # 신청인(남명) 정보 (파란색 계열)
+                m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
                 m_content = m_info + html_views.get_saju_table(*gh_data["m_table"]) + html_views.get_master_bar(*gh_data["m_master"])
                 
-                # 상대방(여명) 정보 헤더
-                w_info = html_views.get_info_header(
-                    "♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#D50000"
-                )
+                # 상대방(여명) 정보 (적색을 배제하고 품격 있는 진녹색 계열로 수정)
+                w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
                 w_content = w_info + html_views.get_saju_table(*gh_data["w_table"]) + html_views.get_master_bar(*gh_data["w_master"])
                 
                 closing = html_views.get_gunghap_closing(name, f_name)
