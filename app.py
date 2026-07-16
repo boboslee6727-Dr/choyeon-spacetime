@@ -581,19 +581,39 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    formatted_ai = ai_result.replace('\n', '<br>')
-                    parsed_content = formatted_ai.replace("[COUPLE_DAEWUN_TABLES_HERE]", daewun_compare_html)
-                    ai_html = html_views.get_ai_report_box(parsed_content)
+                    # 1. 시스템 마커들 강제 삭제 (화면에 노출되지 않도록 청소)
+                    clean_ai = ai_result.replace('[MALE_START]', '') \
+                                        .replace('[MALE_END]', '') \
+                                        .replace('[FEMALE_START]', '') \
+                                        .replace('[FEMALE_END]', '') \
+                                        .replace('[GUNGHAP_START]', '') \
+                                        .replace('[GUNGHAP_END]', '')
 
-                # 6. 최종 출력 (HTML 중첩 원천 차단을 위해 st.markdown 개별 실행)
+                    # 2. 대운표 마커를 기준으로 샌드위치처럼 박스 3개로 분리 결합
+                    if "[COUPLE_DAEWUN_TABLES_HERE]" in clean_ai:
+                        # 마커를 기준으로 위/아래 텍스트 분리
+                        ai_parts = clean_ai.split("[COUPLE_DAEWUN_TABLES_HERE]")
+                        part1 = ai_parts[0].strip().replace('\n', '<br>')
+                        part2 = ai_parts[1].strip().replace('\n', '<br>')
+                        
+                        # (상단) 남명/여명 사주 요약 박스
+                        ai_html = html_views.get_ai_report_box(part1)
+                        # (중단) 부부 대운 비교 박스 (자체 박스 그대로 삽입, 중첩 없음)
+                        ai_html += daewun_compare_html
+                        # (하단) 백년해로 조언 박스
+                        if part2:
+                            ai_html += html_views.get_ai_report_box(part2)
+                    else:
+                        # 혹시 AI가 대운표 마커를 누락했을 경우를 대비한 안전장치
+                        ai_html = html_views.get_ai_report_box(clean_ai.replace('\n', '<br>'))
+                        ai_html += daewun_compare_html
+
+                # 6. 최종 출력 (중첩 방지를 위해 철저히 독립적으로 출력)
                 st.markdown(m_content, unsafe_allow_html=True)
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # 남명 여명 사이 여백
+                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
                 st.markdown(w_content, unsafe_allow_html=True)
                 st.markdown(ai_html, unsafe_allow_html=True)
                 st.markdown(closing, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
     # ---------------------------------------------------------
     # [8~12번 상품] 
