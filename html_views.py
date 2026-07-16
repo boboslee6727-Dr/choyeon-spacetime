@@ -107,10 +107,9 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     </div>
     """
 
-def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
+def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
     return f"""
-    <div style='text-align:center; margin-bottom:10px;'>{info_h}</div>
-    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; margin-top:10px;'>
         <tr class='top-header-cell'>
             <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
             <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
