@@ -32,26 +32,28 @@ def get_global_css():
     /* 테이블 테두리 및 내부 선 통일 */
     .result-table { width: 100%; border-collapse: collapse; border: 2px solid #444 !important; }
     .result-table td { border: 1px solid #444 !important; padding: 2px !important; text-align: center; vertical-align: middle; font-weight: 900 !important; }
-    /* 🚨 A4 한 장 출력을 위한 사주원국 밀착 스타일 */
-    .result-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        border: 2px solid #444 !important; 
-        table-layout: fixed; 
-        margin-bottom: 5px !important; /* 하단 여백 축소 */
+
+    /* 1. 사주원국표: 원본보다 20%만 상하 밀착 (기존 패딩을 줄여 공간 확보) */
+    .result-table td {
+        padding: 4px 2px !important; /* 패딩을 기존보다 줄여 20% 정도 밀착 */
+        line-height: 1.3 !important; 
     }
 
-    .result-table td { 
-        border: 1px solid #444 !important; 
-        padding: 0px !important;        /* 패딩 제거 */
-        line-height: 0.9 !important;    /* 줄 간격 극한 축소 */
-        font-weight: 900 !important; 
-        font-size: 13px !important;
+    /* 2. 마스터바: 10% 상하 밀착 */
+    .master-bar {
+        padding: 1px 0 !important; 
+        margin: 1px 0 !important; 
     }
 
-    /* 마스터 바와 대운표 간격도 최소화 */
-    .master-bar { margin: 2px 0 !important; padding: 2px !important; }
-    .un-table { margin: 2px 0 !important; }
+    /* 3. 대운의 흐름표: 30% 상하 밀착 (가장 많이 줄임) */
+    .un-table td {
+        padding: 1px 0 !important; 
+        line-height: 1.0 !important;
+    }
+
+    /* 4. 표 사이의 여백 제거 (전체 페이지 수 축소 핵심) */
+    .result-table { margin-bottom: 5px !important; }
+    .master-bar { margin-bottom: 2px !important; }
 
     /* 십이운성, 십이신살, 일반신살 굵기 강화 (기존 색상 유지) */
     .result-table td:has(.unsung), .result-table td:has(.shinsal), .result-table td:has(.gen-shinsal) { font-weight: 900 !important; }
