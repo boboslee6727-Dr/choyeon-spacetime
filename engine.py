@@ -897,19 +897,26 @@ class UniversalPrintableGunghap:
 def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
     def get_oh_class(c): return f"color-{get_color(c)}"
 
+    # [수정] 시간 문자열에서 숫자(시, 분)를 정확히 추출하는 로직을 엔진에 포함합니다.
+    def extract_time(time_str):
+        if "모름" in time_str or not time_str: return 0, 0
+        match = re.search(r'(\d{2}):(\d{2})', time_str)
+        return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
     def _get_person_data(y, m, d, t, gender, name, marital):
-        y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, 0, 0)
+        # [수정] t 대신 파싱된 h, m_val을 전달하여 오류를 방지합니다.
+        h, m_val = extract_time(t)
+        y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, h, m_val)
         _, _, d_pillar = get_ganji_from_date(y, m, d)
         t_gan, t_ji = get_time_ganji(d_pillar[0], t)
         
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ys, yb = y_pillar[0], y_pillar[1]
         ms, mb = m_pillar[0], m_pillar[1]
-        ds, db = d_pillar[0], d_pillar[1]       
+        ds, db = d_pillar[0], d_pillar[1]        
         
         calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
 
-        # [추가됨] 대운 연산 로직
         curr_year = datetime.now().year
         age = curr_year - y + 1
         order_dir = 1 if (GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
@@ -947,13 +954,11 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
             "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)
         ]
 
-        # [수정됨] return에 daewun 추가
         return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master, "daewun": daewun}
 
     m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", "기혼")
     w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
     
-    # [수정됨] 최종 return에 m_daewun, w_daewun 추가
     return {
         "m_table": m_res["table"], "m_master": m_res["master"], "m_daewun": m_res["daewun"],
         "w_table": w_res["table"], "w_master": w_res["master"], "w_daewun": w_res["daewun"]
