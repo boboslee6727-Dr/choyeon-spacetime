@@ -580,14 +580,16 @@ if st.session_state.get('app_running', False):
                 # [남명] 헤더 + 테이블 + 마스터바 + 대운표
                 intro_h = html_views.get_intro_html() 
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
-                m_table = html_views.get_saju_table(*gh_data["m_table"][1:])
+                m_table_data = gh_data["m_table"][1:] 
+                m_table = html_views.get_saju_table(*m_table_data)
                 m_master = html_views.get_master_bar(*gh_data["m_master"])
                 m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
 
                 
                 # [여명] 헤더 + 테이블 + 마스터바 + 대운표
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
-                w_table = html_views.get_saju_table(*gh_data["w_table"][1:])
+                w_table_data = gh_data["w_table"][1:]
+                w_table = html_views.get_saju_table(*w_table_data)
                 w_master = html_views.get_master_bar(*gh_data["w_master"])
                 w_un = html_views.generate_daewun_layout(*gh_data["w_daewun"])
 
