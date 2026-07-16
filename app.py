@@ -534,37 +534,23 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-               # 3. 본문 조립 (사주 + 마스터바 + 대운표를 하나의 박스 안에 일체형으로 조립)
-                
-                # [남명 조립]
+                # 3. 본문 조립 (get_gunghap_person_box를 제거하여 3중 테두리 해결)
+                # [남명] 헤더 + 테이블 + 마스터바 + 대운표
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
-                m_table_html = html_views.get_saju_table(*gh_data["m_table"])
-                m_master_html = html_views.get_master_bar(*gh_data["m_master"])
-                m_un_html = html_views.generate_daewun_layout(*gh_data["m_daewun"])
+                m_table = html_views.get_saju_table(*gh_data["m_table"])
+                m_master = html_views.get_master_bar(*gh_data["m_master"])
+                m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
                 
-                m_content = html_views.get_gunghap_person_box(
-                    m_info + m_table_html, 
-                    m_master_html + "<div style='margin-top: 15px;'></div>" + m_un_html, 
-                    add_page_break=False
-                )
-                
-                # [여명 조립]
+                # [여명] 헤더 + 테이블 + 마스터바 + 대운표
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
-                w_table_html = html_views.get_saju_table(*gh_data["w_table"])
-                w_master_html = html_views.get_master_bar(*gh_data["w_master"])
-                w_un_html = html_views.generate_daewun_layout(*gh_data["w_daewun"])
-                
-                w_content = html_views.get_gunghap_person_box(
-                    w_info + w_table_html, 
-                    w_master_html + "<div style='margin-top: 15px;'></div>" + w_un_html, 
-                    add_page_break=False
-                )
+                w_table = html_views.get_saju_table(*gh_data["w_table"])
+                w_master = html_views.get_master_bar(*gh_data["w_master"])
+                w_un = html_views.generate_daewun_layout(*gh_data["w_daewun"])
 
                 # 4. AI 통변 
                 closing = html_views.get_gunghap_closing(name, f_name)
                 ai_output_html = ""
                 
-                # 프롬프트 포맷팅 수정
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
                     m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
                     db_header=gh_data.get("db_header", ""),
@@ -576,29 +562,26 @@ if st.session_state.get('app_running', False):
                     f_gongmang_actual=gh_data.get("f_gongmang_actual", ""),
                     calc_gyukgook=gh_data.get("calc_gyukgook", "") 
                 )
-                
                 prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
                 
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
                     clean_ai = ai_result.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
-                    
-                    # 개인사주와 동일한 포맷팅 적용
                     ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", clean_ai)
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 5. 최종 출력 (모든 것을 하나의 박스로 통합)
-                final_report = (
-                    str(m_content or "") + 
+                # 5. 최종 통합 출력 (모든 조각을 순서대로 배치 후 마지막에 테두리 박스 하나만 입힘)
+                full_report = (
+                    m_info + m_table + m_master + m_un + 
                     "<div style='height: 40px;'></div>" +
-                    str(w_content or "") + 
+                    w_info + w_table + w_master + w_un + 
                     "<div style='height: 40px;'></div>" +
-                    str(ai_output_html or "") + 
-                    str(closing or "")
+                    ai_output_html + 
+                    closing
                 )
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                st.markdown(html_views.get_final_report_box(full_report), unsafe_allow_html=True)
                 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
