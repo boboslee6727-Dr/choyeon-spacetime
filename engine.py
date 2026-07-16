@@ -967,24 +967,23 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         jijanggan = "".join([f"<td>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
         
         ji_rel_rows = ""
-        # 순서: [1, 2, 0, 3]은 월, 일, 년, 시 순서로 행렬을 구성합니다.
+        # 순서: 월(1), 일(2), 년(0), 시(3)
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-            # 각 행의 하단 테두리 설정 (마지막 행에만 굵게 표시)
             b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-            b_top = "0px solid transparent !important"
             
-            # [복구] 각 셀의 상태 및 표시 로직
+            # [수정] 박사님 지시대로 각 지지별 방향 표시를 명확히 정의합니다.
+            # 0:년지, 1:월지, 2:일지, 3:시지
+            dir_map = {0: "←년지", 1: "←월지", 2: "←일지", 3: "시지→"}
+            
             cells = "".join([
                 f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; "
-                f"font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; "
+                f"font-weight:900; border-top:0px solid transparent !important; border-bottom:{b_bot}; "
                 f"border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>"
-                f"{('←('+jjis[r_idx]+')→' if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci]))}</td>" 
+                f"{dir_map.get(r_idx, '') if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" 
                 for ci in range(4)
             ])
             
-            # [복구] 헤더 라벨 (합충형파해)
             lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx==0 else ""
-            
             ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
             
         unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{get_unsung(ds, jjis[i])}</td>" for i in range(4)])
