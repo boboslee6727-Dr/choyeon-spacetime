@@ -588,7 +588,7 @@ if st.session_state.get('app_running', False):
 
                 # 6. 최종 출력
                 full_body_content = m_content + "<br>" + w_content + ai_html + closing
-                st.markdown(html_views.get_final_report_box(full_body_content), unsafe_allow_html=True)
+                st.markdown(full_body_content, unsafe_allow_html=True)
                 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
