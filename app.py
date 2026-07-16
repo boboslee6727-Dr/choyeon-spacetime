@@ -534,24 +534,29 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (사주 원국 박스 처리)
-                # 신청인(남명) 정보 및 사주 박스
+                # 3. 본문 조립 (정보 헤더를 박스 안으로 삽입)
+                
+                # [남명 조립]
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
-                m_person_box = html_views.get_gunghap_person_box(
-                    html_views.get_saju_table(*gh_data["m_table"]), 
+                m_table_html = html_views.get_saju_table(*gh_data["m_table"])
+                m_combined_table = m_info + m_table_html  # 정보와 테이블을 먼저 합칩니다 (48.7 원리)
+                
+                m_content = html_views.get_gunghap_person_box(
+                    m_combined_table, 
                     html_views.get_master_bar(*gh_data["m_master"]), 
                     add_page_break=False
                 )
-                m_content = m_info + m_person_box
                 
-                # 상대방(여명) 정보 및 사주 박스 (녹색 표기)
+                # [여명 조립]
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
-                w_person_box = html_views.get_gunghap_person_box(
-                    html_views.get_saju_table(*gh_data["w_table"]), 
+                w_table_html = html_views.get_saju_table(*gh_data["w_table"])
+                w_combined_table = w_info + w_table_html  # 정보와 테이블을 먼저 합칩니다
+                
+                w_content = html_views.get_gunghap_person_box(
+                    w_combined_table, 
                     html_views.get_master_bar(*gh_data["w_master"]), 
                     add_page_break=False
                 )
-                w_content = w_info + w_person_box
                 
                 # 4. 부부 대운 비교 박스 생성
                 # 엔진의 키값 호환성을 위해 get 메서드로 안전하게 가져옵니다.
