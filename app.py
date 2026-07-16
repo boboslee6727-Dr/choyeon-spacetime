@@ -539,36 +539,24 @@ if st.session_state.get('app_running', False):
                 # [남명 조립]
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
                 m_table_html = html_views.get_saju_table(*gh_data["m_table"])
-                m_combined_table = m_info + m_table_html  # 정보와 테이블을 먼저 합칩니다 (48.7 원리)
-                
-                m_content = html_views.get_gunghap_person_box(
-                    m_combined_table, 
-                    html_views.get_master_bar(*gh_data["m_master"]), 
-                    add_page_break=False
-                )
+                m_combined_table = m_info + m_table_html  
+                m_content = html_views.get_gunghap_person_box(m_combined_table, html_views.get_master_bar(*gh_data["m_master"]), add_page_break=False)
                 
                 # [여명 조립]
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
                 w_table_html = html_views.get_saju_table(*gh_data["w_table"])
-                w_combined_table = w_info + w_table_html  # 정보와 테이블을 먼저 합칩니다
-                
-                w_content = html_views.get_gunghap_person_box(
-                    w_combined_table, 
-                    html_views.get_master_bar(*gh_data["w_master"]), 
-                    add_page_break=False
-                )
-                
+                w_combined_table = w_info + w_table_html  
+                w_content = html_views.get_gunghap_person_box(w_combined_table, html_views.get_master_bar(*gh_data["w_master"]), add_page_break=False)
+
                 # 4. 부부 대운 비교 박스 생성
-                # 엔진의 키값 호환성을 위해 get 메서드로 안전하게 가져옵니다.
                 m_un_html = gh_data.get("m_un_html", gh_data.get("m_daewun", ""))
                 w_un_html = gh_data.get("w_un_html", gh_data.get("w_daewun", ""))
                 daewun_compare_html = html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html)
-                
-                # 5. 맺음말 및 AI 통변 조립
+
+                # 5. AI 통변 (강력한 중복 방지 프롬프트 추가)
                 closing = html_views.get_gunghap_closing(name, f_name)
                 ai_html = ""
                 
-                # prompts.py의 GUNGHAP_ESSAY_PROMPT 호출 및 데이터 주입
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
                     m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
                     db_header=gh_data.get("db_header", ""),
@@ -581,19 +569,28 @@ if st.session_state.get('app_running', False):
                     calc_gyukgook=gh_data.get("calc_gyukgook", "") 
                 )
                 
+                # [핵심] AI 게으름 원천 차단 철퇴 지시문
+                prompt_text += f"""
+                \n\n🚨 [최고 수준 시스템 경고: 내용 복사 절대 금지] 
+                현재 여명의 통변 내용이 남명과 똑같이 출력되는 치명적인 오류가 발생 중입니다.
+                - 남명 사주({gh_data.get("m_golden", "")})와 여명 사주({gh_data.get("f_golden", "")})는 100% 완전히 다른 데이터입니다.
+                - [FEMALE_START] 파트 작성 시, 절대 남명의 텍스트, 문장 구조, 내용을 복사하거나 재사용하지 마십시오. 
+                - 반드시 여명의 원국 데이터만을 독립적으로 새롭게 분석하여 남명과 완벽히 차별화된 통변을 작성하십시오.
+                """
+                
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    # 1. 먼저 AI 텍스트의 줄바꿈을 HTML 태그로 변환합니다.
                     formatted_ai = ai_result.replace('\n', '<br>')
-                    # 2. 프롬프트 마커를 실제 대운표 HTML(daewun_compare_html)로 치환합니다.
                     parsed_content = formatted_ai.replace("[COUPLE_DAEWUN_TABLES_HERE]", daewun_compare_html)
-                    
                     ai_html = html_views.get_ai_report_box(parsed_content)
 
-                # 6. 최종 출력
-                full_body_content = m_content + "<br>" + w_content + ai_html + closing
-                st.markdown(full_body_content, unsafe_allow_html=True)
+                # 6. 최종 출력 (HTML 중첩 원천 차단을 위해 st.markdown 개별 실행)
+                st.markdown(m_content, unsafe_allow_html=True)
+                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # 남명 여명 사이 여백
+                st.markdown(w_content, unsafe_allow_html=True)
+                st.markdown(ai_html, unsafe_allow_html=True)
+                st.markdown(closing, unsafe_allow_html=True)
                 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
