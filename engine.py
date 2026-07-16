@@ -973,10 +973,10 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
             
             # [최종] 각 지지별 실제 한자를 가져와 박사님께서 지시하신 방향 포맷에 삽입합니다.
             current_ji = jjis[r_idx]
-            if r_idx == 0: dir_label = f"←({current_ji})"
+            if r_idx == 0: dir_label = f"({current_ji})→"
             elif r_idx == 1: dir_label = f"←({current_ji})→"
             elif r_idx == 2: dir_label = f"←({current_ji})→"
-            else: dir_label = f"({current_ji})→"
+            else: dir_label = f"←({current_ji})"
             
             cells = "".join([
                 f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; "
