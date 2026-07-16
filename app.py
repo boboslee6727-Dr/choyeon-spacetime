@@ -537,13 +537,6 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                marital_status = f"{u_marital}-{f_marital}" # 예: "기혼-미혼"
-                gh_data = engine.get_gunghap_data(
-                    int(b_year), int(b_month), int(b_day), b_time, u_marital,
-                    int(f_y), int(f_m), int(f_d), f_t, f_marital,
-                    marital_status
-                )
-                
                 # 1. 커버 데이터 계산
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
@@ -556,24 +549,35 @@ if st.session_state.get('app_running', False):
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
                 # ==========================================================
-                # [수정] 1. 성별에 따른 데이터 매핑 (변수명 분리 적용)
+                # [핵심 수정] 엔진의 자리에 맞춰 남/녀 순서를 고정하여 호출 (대운 꼬임 원천 차단)
                 # ==========================================================
                 if gender == "여성":
-                    # 신청인(여성) -> f_data, 상대방(남성) -> m_data
-                    m_data, f_data = gh_data["w_table"], gh_data["m_table"]
-                    m_master_list, f_master_list = gh_data["w_master"], gh_data["m_master"] # 이름 분리
-                    m_daewun, f_daewun = gh_data["w_daewun"], gh_data["m_daewun"]
-                    
+                    # 신청인이 여성이면, 엔진의 '남성석(첫번째)'에 상대방 데이터를, '여성석(두번째)'에 신청인 데이터를 넣음
+                    marital_status = f"{f_marital}-{u_marital}" 
+                    gh_data = engine.get_gunghap_data(
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,             # [남성석] 상대방(남성)
+                        int(b_year), int(b_month), int(b_day), b_time, u_marital, # [여성석] 신청인(여성)
+                        marital_status
+                    )
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
                 else:
-                    # 신청인(남성) -> m_data, 상대방(여성) -> f_data
-                    m_data, f_data = gh_data["m_table"], gh_data["w_table"]
-                    m_master_list, f_master_list = gh_data["m_master"], gh_data["w_master"] # 이름 분리
-                    m_daewun, f_daewun = gh_data["m_daewun"], gh_data["w_daewun"]
-                    
+                    # 신청인이 남성이면, 엔진의 '남성석(첫번째)'에 신청인 데이터를 그대로 넣음
+                    marital_status = f"{u_marital}-{f_marital}" 
+                    gh_data = engine.get_gunghap_data(
+                        int(b_year), int(b_month), int(b_day), b_time, u_marital, # [남성석] 신청인(남성)
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,             # [여성석] 상대방(여성)
+                        marital_status
+                    )
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
+
+                # ==========================================================
+                # 이제 엔진에서 나온 결과는 절대 뒤섞이지 않은 '진짜' 남/녀 데이터입니다.
+                # 변수를 꼬아서 할당할 필요 없이 직관적으로 받아옵니다.
+                # ==========================================================
+                m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
+                f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
                 # [정보 헤더 생성]
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
