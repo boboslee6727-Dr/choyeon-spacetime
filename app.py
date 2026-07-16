@@ -107,6 +107,7 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
+            st.session_state['app_running'] = False  # 🛑 AI 자동 구동 방지 코드 추가
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
@@ -176,10 +177,11 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
+                st.session_state['app_running'] = False  # 🛑 AI 자동 구동 방지 코드 추가
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
                 # 들여쓰기 완벽 수정 완료
-                if not _p_ry and not _p_rm and not _p_rd:
+                if not _p_ry and not _p_rm and not _p_rd
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
                     st.rerun()
