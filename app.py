@@ -537,9 +537,6 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
-                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
-
                 gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
                 
                 # 1. 커버 데이터 계산
@@ -569,6 +566,9 @@ if st.session_state.get('app_running', False):
                     female_name, female_age, female_sol, female_lun, female_time = f_name, f_age, f_sol, f_lun, f_t
                     female_marital = f_marital
 
+                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
+                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
+                
                 # 2. 표지 출력 (변수명 변경)
                 cover_html = html_views.get_gunghap_cover(
                     APP_VERSION, 
