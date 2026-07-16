@@ -580,11 +580,11 @@ if st.session_state.get('app_running', False):
                 
                 # [남명] 헤더 + 테이블 + 마스터바 + 대운표
                 # 3. 본문 조립 (intro_html 정의 추가)
-                intro_html = html_views.get_intro_html() 
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 m_table = html_views.get_saju_table(*gh_data["m_table"][1:])
                 m_master = html_views.get_master_bar(*gh_data["m_master"])
                 m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
+                intro_h = html_views.get_intro_html() 
                 
                 # [여명] 헤더 + 테이블 + 마스터바 + 대운표
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
@@ -621,7 +621,7 @@ if st.session_state.get('app_running', False):
                 full_report = (
                     m_info + m_table + m_master + m_un + 
                     w_info + w_table + w_master + w_un + 
-                    intro_html +
+                    intro_h +
                     ai_output_html + 
                     closing
                 )
