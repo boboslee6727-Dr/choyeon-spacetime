@@ -660,21 +660,17 @@ if st.session_state.get('app_running', False):
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 5. 최종 통합 출력 (함수 호출 제거하고 직접 합치기)
-                # full_report를 변수로 만들지 말고, st.markdown에 리스트 형태로 넘기거나 직접 전달
-                st.markdown(m_info, unsafe_allow_html=True)
-                st.markdown(m_table, unsafe_allow_html=True)
-                st.markdown(m_master, unsafe_allow_html=True)
-                st.markdown(m_un, unsafe_allow_html=True)
+                # [5. 최종 통합 출력]
+                # 각 조각들이 모두 HTML 문자열인지 확인하고 하나로 합칩니다.
+                full_report = (
+                    m_info + m_table + m_master + m_un + 
+                    w_info + w_table + w_master + w_un + 
+                    intro_h + ai_output_html + closing
+                )
                 
-                st.markdown(w_info, unsafe_allow_html=True)
-                st.markdown(w_table, unsafe_allow_html=True)
-                st.markdown(w_master, unsafe_allow_html=True)
-                st.markdown(w_un, unsafe_allow_html=True)
-                
-                st.markdown(intro_h, unsafe_allow_html=True)
-                st.markdown(ai_output_html, unsafe_allow_html=True)
-                st.markdown(closing, unsafe_allow_html=True)
+                # 박스 내부에 강제로 렌더링
+                report_box = html_views.get_final_report_box(full_report)
+                st.markdown(report_box, unsafe_allow_html=True)
                
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
