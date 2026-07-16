@@ -534,29 +534,33 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-               # 3. 본문 조립 (사주 + 마스터바 + 개별 대운표 순차 결합)
+               # 3. 본문 조립 (사주 + 마스터바 + 대운표를 하나의 박스 안에 일체형으로 조립)
                 
                 # [남명 조립]
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
                 m_table_html = html_views.get_saju_table(*gh_data["m_table"])
-                m_person_box = html_views.get_gunghap_person_box(m_info + m_table_html, html_views.get_master_bar(*gh_data["m_master"]), add_page_break=False)
-                
-                # replace('\n', '')를 제거하고 예쁜 타이틀 박스로 한 번 감쌉니다.
+                m_master_html = html_views.get_master_bar(*gh_data["m_master"])
                 m_un_html = html_views.generate_daewun_layout(*gh_data["m_daewun"])
-                m_daewun_wrapper = f"<div class='report-page'><div style='padding: 10px 20px; margin-bottom: 20px;'><h4 style='color:#1A237E; font-weight:900;'>[ ♂️ 신청인({name}님) 대운 흐름 ]</h4>{m_un_html}</div></div>"
                 
-                m_content = m_person_box + m_daewun_wrapper
+                # 마스터바 HTML 뒤에 대운표 HTML을 붙여서 하나의 get_gunghap_person_box 안에 넣습니다.
+                m_content = html_views.get_gunghap_person_box(
+                    m_info + m_table_html, 
+                    m_master_html + "<div style='margin-top: 15px;'></div>" + m_un_html, 
+                    add_page_break=False
+                )
                 
                 # [여명 조립]
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
                 w_table_html = html_views.get_saju_table(*gh_data["w_table"])
-                w_person_box = html_views.get_gunghap_person_box(w_info + w_table_html, html_views.get_master_bar(*gh_data["w_master"]), add_page_break=False)
-                
-                # replace('\n', '')를 제거하고 예쁜 타이틀 박스로 한 번 감쌉니다.
+                w_master_html = html_views.get_master_bar(*gh_data["w_master"])
                 w_un_html = html_views.generate_daewun_layout(*gh_data["w_daewun"])
-                w_daewun_wrapper = f"<div class='report-page'><div style='padding: 10px 20px; margin-bottom: 20px;'><h4 style='color:#2E7D32; font-weight:900;'>[ ♀️ 상대방({f_name}님) 대운 흐름 ]</h4>{w_un_html}</div></div>"
                 
-                w_content = w_person_box + w_daewun_wrapper
+                # 여명도 동일하게 하나의 박스 안에 일체형으로 넣습니다.
+                w_content = html_views.get_gunghap_person_box(
+                    w_info + w_table_html, 
+                    w_master_html + "<div style='margin-top: 15px;'></div>" + w_un_html, 
+                    add_page_break=False
+                )
 
                 # 4. AI 통변 
                 closing = html_views.get_gunghap_closing(name, f_name)
