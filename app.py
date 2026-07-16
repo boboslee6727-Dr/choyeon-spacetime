@@ -192,7 +192,9 @@ with st.sidebar:
                 # [복구] 박사님의 원본 추출 로직 100% 사수
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
-                # 들여쓰기 완벽 수정 완료
+                # ---------------------------------------------------------
+                # [수정] 아래의 if, elif, else 3개가 정확히 같은 세로줄(들여쓰기)에 있어야 합니다.
+                # ---------------------------------------------------------
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -235,8 +237,8 @@ with st.sidebar:
                 if not found: 
                     st.error("일치하는 날짜가 없습니다.")
                     
-            else: 
-                st.warning("간지를 2글자씩 정확히 입력하세요.")
+                else:  # <--- [해결] 이제 if, elif와 완벽하게 줄이 맞습니다!
+                    st.warning("간지를 2글자씩 정확히 입력하세요.")
 
         # 2. 상대방 기본 정보 (복구 완료!)
         with st.expander("👥 상대방 기본 정보", expanded=True):
