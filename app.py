@@ -517,18 +517,25 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                # 1. 데이터 호출 (오류 방지를 위해 int 변환)
+                # 1. 데이터 호출
                 gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
                 
                 # 2. UI 조립
-                cover_html = html_views.get_gunghap_cover(APP_VERSION, "♂️" if gender == "남성" else "♀️", name, gender, u_marital, "♂️" if f_gender == "남성" else "♀️", f_name, f_gender, f_marital, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
-                    
-                # gh_data["m_table"]와 gh_data["w_table"]을 정확히 호출하도록 수정합니다.
+                birth_str = f"{b_year}년 {b_month}월 {b_day}일"
+                f_birth_str = f"{f_y}년 {f_m}월 {f_d}일"
+                
+                cover_html = html_views.get_gunghap_cover(
+                    APP_VERSION, 
+                    "♂️" if gender == "남성" else "♀️", name, gender, u_marital, birth_str,
+                    "♂️" if f_gender == "남성" else "♀️", f_name, f_gender, f_marital, f_birth_str,
+                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                )
+                
                 m_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["m_table"]), html_views.get_master_bar(*gh_data["m_master"]))
                 w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["w_table"]), html_views.get_master_bar(*gh_data["w_master"]), add_page_break=True)
                 closing = html_views.get_gunghap_closing(name, f_name)
                 
-                # 3. AI 통변 (변수명 ai_html로 통일)
+                # 3. AI 통변
                 ai_html = ""
                 try:
                     prompt_content = f"신청인 {name}과 상대방 {f_name}의 궁합을 초연 시공명리 관점에서 분석하라."
@@ -538,7 +545,7 @@ if st.session_state.get('app_running', False):
                 except Exception as e:
                     ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
 
-                # 4. 결합 및 출력
+                # 4. 최종 결합 및 렌더링
                 full_content = cover_html + m_box + w_box + ai_html + closing
                 st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
                 
