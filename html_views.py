@@ -272,39 +272,32 @@ def get_final_report_box(content_html):
     </div>
     """
 
-def get_gunghap_cover(version, app_icon, name, gender, marital, birth_str, part_icon, f_name, f_gender, f_marital, f_birth_str, today_str):
+def get_gunghap_cover(version, m_name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, today_str):
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 60px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:50px;'>
-                <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;'>&#127982; 초연 시공명리 궁합 감명서</h1>
+        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+                <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 궁합풀이</h1>
                 <div style='text-align: right; margin-top: 10px;'>
-                    <span style='font-size: 14px; letter-spacing: 1px; color: #555;'>{version}</span>
+                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
-            
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 40px 20px; border-radius: 15px; margin-bottom: 40px;'>
-                <div style='text-align: center;'>
-                    <span style='font-size: 22px; font-weight: 900; color: #1A237E;'>{app_icon} {name} 님</span>
-                    <p style='font-size: 15px; color: #555; margin: 8px 0 0 0; font-weight:600;'>{gender} / {marital} / {birth_str}</p>
-                </div>
-                
-                <div style='text-align: center; margin: 30px 0;'>
-                    <span style='font-size: 24px; color: #1A237E; font-weight: 900; border-top: 1px dashed #CCC; border-bottom: 1px dashed #CCC; padding: 10px 40px;'>緣</span>
-                </div>
-                
-                <div style='text-align: center;'>
-                    <span style='font-size: 20px; font-weight: 900; color: #1A237E;'>{part_icon} {f_name} 님</span>
-                    <p style='font-size: 15px; color: #555; margin: 8px 0 0 0; font-weight:600;'>{f_gender} / {f_marital} / {f_birth_str}</p>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>
+                <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 15px;'>♂️ 남명 : {m_name} 님 <span style='font-size:16px; color:#555;'>( {m_age}세 )</span></h2>
+                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun}</p>
                 </div>
             </div>
-            
-            <p style='font-size: 16px; font-weight: 700; color: #444; margin-top: 50px;'>위 두 분의 인연을 시공간적 에너지 흐름과 음양오행의 조화로 정밀하게 풀이했습니다.</p>
-            <p style='font-size: 16px; margin-top: 60px; font-weight: 900; color: #000;'>{today_str}</p>
-            <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>
+                <h2 style='font-size: 24px; font-weight: 800; color: #D50000; margin-bottom: 15px;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>
+                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun}</p>
+                </div>
+            </div>
+            <p style='font-size: 18px; margin-top: 30px; font-weight: 800;'>{today_str}</p>
+            <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
         </div>
     </div>
-    <div class="page-break-before"></div>
     """
 
 def get_gunghap_person_box(table_html, master_bar_html, add_page_break=False):
