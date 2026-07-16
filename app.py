@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.4"
+APP_VERSION = "ver 60.5"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -534,9 +534,19 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립
-                m_content = html_views.get_saju_table(*gh_data["m_table"]) + html_views.get_master_bar(*gh_data["m_master"])
-                w_content = html_views.get_saju_table(*gh_data["w_table"]) + html_views.get_master_bar(*gh_data["w_master"])
+                # 3. 본문 조립 (헤더 포함)
+                # 신청인(남명) 정보 헤더
+                m_info = html_views.get_info_header(
+                    "♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E"
+                )
+                m_content = m_info + html_views.get_saju_table(*gh_data["m_table"]) + html_views.get_master_bar(*gh_data["m_master"])
+                
+                # 상대방(여명) 정보 헤더
+                w_info = html_views.get_info_header(
+                    "♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#D50000"
+                )
+                w_content = w_info + html_views.get_saju_table(*gh_data["w_table"]) + html_views.get_master_bar(*gh_data["w_master"])
+                
                 closing = html_views.get_gunghap_closing(name, f_name)
                 
                 # 4. AI 통변 (데이터 구조 확인 후 적용)
