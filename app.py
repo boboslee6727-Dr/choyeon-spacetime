@@ -537,9 +537,12 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, int(f_y), int(f_m), int(f_d), f_t)
+                gh_data = engine.get_gunghap_data(
+                    int(b_year), int(b_month), int(b_day), b_time, u_marital,  # 신청인 혼인 상태 전달
+                    int(f_y), int(f_m), int(f_d), f_t, f_marital               # 상대방 혼인 상태 전달
+                )
                 
-                # 1. 커버 데이터 계산
+# 1. 커버 데이터 계산
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
                 f_age = curr_y - int(f_y) + 1
