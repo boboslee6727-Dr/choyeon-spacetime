@@ -548,9 +548,10 @@ if st.session_state.get('app_running', False):
                 w_combined_table = w_info + w_table_html  
                 w_content = html_views.get_gunghap_person_box(w_combined_table, html_views.get_master_bar(*gh_data["w_master"]), add_page_break=False)
 
-                # 4. 부부 대운 비교 박스 생성
-                m_un_html = gh_data.get("m_un_html", gh_data.get("m_daewun", ""))
-                w_un_html = gh_data.get("w_un_html", gh_data.get("w_daewun", ""))
+                # 4. 부부 대운 비교 박스 생성 (진짜 함수 적용)
+                m_un_html = html_views.generate_daewun_layout(*gh_data["m_daewun"])
+                w_un_html = html_views.generate_daewun_layout(*gh_data["w_daewun"])
+                
                 daewun_compare_html = html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html)
 
                 # 5. AI 통변 (강력한 중복 방지 프롬프트 추가)
