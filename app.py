@@ -556,33 +556,35 @@ if st.session_state.get('app_running', False):
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
                 # ==========================================================
-                # [추가] 신청인 성별에 따른 남명/여명 데이터 동적 매핑
+                # [수정] 1. 성별에 따른 데이터 매핑 (오류 방지: 변수 미리 선언)
                 # ==========================================================
-                # 1. 성별에 관계없이 남성 데이터(M)와 여성 데이터(F)를 분리하여 담습니다.
                 if gender == "여성":
-                    # 신청인(여성) -> Female, 상대방(남성) -> Male
-                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
-                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
-    
-                    # 엔진 결과물 매핑 (신청인=User, 상대방=Part)
-                    # 신청인이 여성이므로, 남성 데이터는 w_table에서, 여성 데이터는 m_table에서 가져옴
+                    # 신청인(여성) -> f_data, 상대방(남성) -> m_data
                     m_data, f_data = gh_data["w_table"], gh_data["m_table"]
                     m_master, f_master = gh_data["w_master"], gh_data["m_master"]
-                    m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
+                    m_daewun, f_daewun = gh_data["w_daewun"], gh_data["m_daewun"]
+                    
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
                 else:
-                    # 신청인(남성) -> Male, 상대방(여성) -> Female
-                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
-                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
-    
-                    # 엔진 결과물 매핑
+                    # 신청인(남성) -> m_data, 상대방(여성) -> f_data
                     m_data, f_data = gh_data["m_table"], gh_data["w_table"]
                     m_master, f_master = gh_data["m_master"], gh_data["w_master"]
                     m_daewun, f_daewun = gh_data["m_daewun"], gh_data["w_daewun"]
+                    
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
 
-                # [이제 m_data, f_data를 사용해 테이블을 조립하십시오]
+                # ==========================================================
+                # [수정] 2. 이제 확실히 선언된 변수를 사용하여 조립
+                # ==========================================================
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
+                m_master = html_views.get_master_bar(*m_master)
+                m_un = html_views.generate_daewun_layout(*m_daewun)
+
                 w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                # (이하 master, daewun도 동일하게 m_master, f_master 사용)
+                w_master = html_views.get_master_bar(*f_master)
+                w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
