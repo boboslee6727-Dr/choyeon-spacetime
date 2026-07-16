@@ -138,7 +138,7 @@ def generate_saju_table_data(info_h, gans, jjis, ds, gender, engine):
     gan_row = "".join([get_styled_td(g, f"color-{engine.get_color(g)}") for g in gans]) # get_styled_td 활용
     ji_row = "".join([f"<td class='color-{engine.get_color(j)} ganji-cell'>{j}</td>" for j in jjis])
     ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[0])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[1])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[2])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[3])}</td>"
-    jijanggan = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+    jijanggan = "".join([f"<td style='padding:0 !important; border:1px solid #444 !important; height:45px; vertical-align:middle;'><div style='display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; font-size:13px; font-weight:900; line-height:1.0;'>{get_jijanggan_full(ds, jjis[i])}</div></td>" for i in range(4)])
     unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
     shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(gans[3], jjis[i])}</td>" for i in range(4)])
     
