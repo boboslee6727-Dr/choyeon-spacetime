@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.5"
+APP_VERSION = "ver 60.6"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -98,7 +98,7 @@ with st.sidebar:
         "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
     ], label_visibility="collapsed")
 
-    # [수정] 성별 자동 동기화를 위한 콜백 함수 (오류 방지용 안전한 딕셔너리 방식)
+    # [추가] 성별 자동 동기화를 위한 콜백 함수
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
 
@@ -117,7 +117,7 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            st.session_state['app_running'] = False  # [수정] 역산 버튼 클릭 시 AI 오작동 완벽 차단
+            st.session_state['app_running'] = False  # 역산 시 AI 가동 차단
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
@@ -151,7 +151,7 @@ with st.sidebar:
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                        curr_dt -= dt_mod.timedelta(days=1)
+                            curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
@@ -187,10 +187,9 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
-                st.session_state['app_running'] = False  # [수정] 역산 버튼 클릭 시 AI 오작동 완벽 차단
+                st.session_state['app_running'] = False  # 역산 시 AI 가동 차단
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
-                # 들여쓰기 완벽 수정 완료
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -228,7 +227,7 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                            curr_dt -= dt_mod.timedelta(days=1)
+                                curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
                 if not found: 
                     st.error("일치하는 날짜가 없습니다.")
@@ -236,13 +235,10 @@ with st.sidebar:
             else: 
                 st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        # 2. 상대방 기본 정보 (복구 완료!)
+        # 2. 상대방 기본 정보
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
-            
-            # [수정] index 속성을 지우고 아주 단순하게 원상 복구합니다.
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
-            
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
