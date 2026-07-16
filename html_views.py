@@ -289,7 +289,7 @@ def get_gunghap_cover(version, m_name, m_age, m_sol, m_lun, f_name, f_age, f_sol
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>
-                <h2 style='font-size: 24px; font-weight: 800; color: #D50000; margin-bottom: 15px;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>
+                <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 15px;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>
                 <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun}</p>
                 </div>
