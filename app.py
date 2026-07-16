@@ -534,18 +534,17 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (헤더 포함)
-                # 신청인(남명) 정보 (파란색 계열)
+                # 3. 본문 조립 (헤더 포함 - get_saju_table 인자 10개로 수정)
+                # 신청인(남명) 정보
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
                 m_content = m_info + html_views.get_saju_table(*gh_data["m_table"]) + html_views.get_master_bar(*gh_data["m_master"])
                 
-                # 상대방(여명) 정보 (적색을 배제하고 품격 있는 진녹색 계열로 수정)
+                # 상대방(여명) 정보 (녹색 표기)
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
                 w_content = w_info + html_views.get_saju_table(*gh_data["w_table"]) + html_views.get_master_bar(*gh_data["w_master"])
                 
+                # 4. 맺음말 및 AI 통변 조립
                 closing = html_views.get_gunghap_closing(name, f_name)
-                
-                # 4. AI 통변 (데이터 구조 확인 후 적용)
                 ai_html = ""
                 try:
                     prompt_content = f"신청인 {name}, 상대방 {f_name}의 궁합을 초연 시공명리 관점에서 분석하라."
@@ -555,11 +554,12 @@ if st.session_state.get('app_running', False):
                 except Exception as e:
                     ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
 
+                # 5. 최종 출력
                 full_body_content = m_content + "<br>" + w_content + ai_html + closing
                 st.markdown(html_views.get_final_report_box(full_body_content), unsafe_allow_html=True)
                 
             except Exception as e:
-                st.error(f"🚨 시스템 오류: {e}")
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
     # ---------------------------------------------------------
     # [8~12번 상품] 
