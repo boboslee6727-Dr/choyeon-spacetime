@@ -150,7 +150,7 @@ def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_ro
     </table>
     """
 
-def generate_saju_table_data(info_h, gans, jjis, ds, gender, engine):
+def generate_saju_table_data(gans, jjis, ds, gender, engine):
     """모든 테이블 HTML 조각을 조립하여 최종 테이블을 반환하는 함수"""
     
     # 여기서 각 행을 생성하는 로직을 html_views가 직접 처리
