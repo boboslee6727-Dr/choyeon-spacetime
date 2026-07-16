@@ -612,14 +612,28 @@ if st.session_state.get('app_running', False):
                 
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
                     m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
-                    db_header=gh_data.get("db_header", ""),
+                    # 엔진에서 확실히 반환하는 키값들로 매핑
+                    db_header=gh_data.get("db_header", "초연 궁합 분석 리포트"),
                     ai_saju_mapping=gh_data.get("ai_saju_mapping", ""),
                     yukchin_rule=gh_data.get("yukchin_rule", ""),
-                    m_golden=gh_data.get("m_golden", ""), m_ds=gh_data.get("m_ds", ""), m_db=gh_data.get("m_db", ""), 
+                    
+                    # 남명 데이터 매핑
+                    m_golden=gh_data.get("m_golden", ""), 
+                    m_ds=gh_data.get("m_ds", ""), 
+                    m_db=gh_data.get("m_db", ""), 
                     m_gongmang_actual=gh_data.get("m_gongmang_actual", ""),
-                    f_golden=gh_data.get("f_golden", ""), f_ds=gh_data.get("f_ds", ""), f_db=gh_data.get("f_db", ""), 
+                    
+                    # 여명 데이터 매핑
+                    f_golden=gh_data.get("f_golden", ""), 
+                    f_ds=gh_data.get("f_ds", ""), 
+                    f_db=gh_data.get("f_db", ""), 
                     f_gongmang_actual=gh_data.get("f_gongmang_actual", ""),
-                    calc_gyukgook=gh_data.get("calc_gyukgook", "") 
+                    
+                    # 기타 분석 지표
+                    calc_gyukgook=gh_data.get("calc_gyukgook", "알 수 없음"),
+                    
+                    # [추가] 혼인 상태 조합 정보 전달 (프롬프트에서 활용)
+                    marital_info=f"{u_marital}-{f_marital}"
                 )
                 prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
                 
