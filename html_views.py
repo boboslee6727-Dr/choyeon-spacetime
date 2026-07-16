@@ -129,6 +129,7 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
     # '구분' 난 20% 축소(15%로 조정), 나머지 4열 21.25%씩 균등 배분
     return f"""
+    {info_h}
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; margin-top:10px; table-layout:fixed;'>
         <tr class='top-header-cell'>
             <td style='width:15%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
