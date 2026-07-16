@@ -583,12 +583,23 @@ if st.session_state.get('app_running', False):
                 intro_h = html_views.get_intro_html() 
                 closing = html_views.get_gunghap_closing(name, f_name)
 
-                # [남명] [여명] - 각 테이블 데이터의 [1:] 슬라이싱을 명확히 수행
-                m_table = html_views.get_saju_table(*gh_data["m_table"][1:])
+                # [남명] 데이터 조립 (인덱스 7번이 ji_rel_rows입니다)
+                m_table = html_views.get_saju_table(
+                    gh_data["m_table"][1], gh_data["m_table"][2], gh_data["m_table"][3], 
+                    gh_data["m_table"][4], gh_data["m_table"][5], gh_data["m_table"][6], 
+                    gh_data["m_table"][7], # 이것이 바로 ji_rel_rows 입니다.
+                    gh_data["m_table"][8], gh_data["m_table"][9], gh_data["m_table"][10]
+                )
                 m_master = html_views.get_master_bar(*gh_data["m_master"])
                 m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
 
-                w_table = html_views.get_saju_table(*gh_data["w_table"][1:])
+                # [여명] 데이터 조립
+                w_table = html_views.get_saju_table(
+                    gh_data["w_table"][1], gh_data["w_table"][2], gh_data["w_table"][3], 
+                    gh_data["w_table"][4], gh_data["w_table"][5], gh_data["w_table"][6], 
+                    gh_data["w_table"][7], # 이것이 바로 ji_rel_rows 입니다.
+                    gh_data["w_table"][8], gh_data["w_table"][9], gh_data["w_table"][10]
+                )
                 w_master = html_views.get_master_bar(*gh_data["w_master"])
                 w_un = html_views.generate_daewun_layout(*gh_data["w_daewun"])
 
