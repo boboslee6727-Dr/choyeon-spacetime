@@ -534,24 +534,40 @@ if st.session_state.get('app_running', False):
                 klc.setSolarDate(int(f_y), int(f_m), int(f_d))
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
-                # 2. 표지 출력
+                # ==========================================================
+                # [추가] 신청인 성별에 따른 남명/여명 데이터 동적 매핑
+                # ==========================================================
+                if gender == "여성":
+                    # 신청인이 여성이면, 남명(Male)은 상대방(f_), 여명(Female)은 신청인 데이터 사용
+                    male_name, male_age, male_sol, male_lun, male_time = f_name, f_age, f_sol, f_lun, f_t
+                    male_marital = f_marital
+                    female_name, female_age, female_sol, female_lun, female_time = name, m_age, m_sol, m_lun, b_time
+                    female_marital = u_marital
+                else:
+                    # 신청인이 남성이면 기본값 그대로 사용
+                    male_name, male_age, male_sol, male_lun, male_time = name, m_age, m_sol, m_lun, b_time
+                    male_marital = u_marital
+                    female_name, female_age, female_sol, female_lun, female_time = f_name, f_age, f_sol, f_lun, f_t
+                    female_marital = f_marital
+
+                # 2. 표지 출력 (변수명 변경)
                 cover_html = html_views.get_gunghap_cover(
                     APP_VERSION, 
-                    name, m_age, m_sol, m_lun, f"{b_time}",  # 남명 시간 추가
-                    f_name, f_age, f_sol, f_lun, f_t,         # 여명 시간 추가
-                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일") # 분석일 추가
+                    male_name, male_age, male_sol, male_lun, f"{male_time}",  # 남명 자리에 male_ 변수 투입
+                    female_name, female_age, female_sol, female_lun, f"{female_time}", # 여명 자리에 female_ 변수 투입
+                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                 )
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (get_gunghap_person_box를 제거하여 3중 테두리 해결)
+                # 3. 본문 조립 (헤더 변수명도 변경)
                 # [남명] 헤더 + 테이블 + 마스터바 + 대운표
-                m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
+                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 m_table = html_views.get_saju_table(*gh_data["m_table"])
                 m_master = html_views.get_master_bar(*gh_data["m_master"])
                 m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
                 
                 # [여명] 헤더 + 테이블 + 마스터바 + 대운표
-                w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
+                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
                 w_table = html_views.get_saju_table(*gh_data["w_table"])
                 w_master = html_views.get_master_bar(*gh_data["w_master"])
                 w_un = html_views.generate_daewun_layout(*gh_data["w_daewun"])
