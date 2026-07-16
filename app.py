@@ -582,7 +582,6 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    # 1. 시스템 마커들 강제 삭제 (화면에 노출되지 않도록 청소)
                     clean_ai = ai_result.replace('[MALE_START]', '') \
                                         .replace('[MALE_END]', '') \
                                         .replace('[FEMALE_START]', '') \
@@ -604,12 +603,23 @@ if st.session_state.get('app_running', False):
                         ai_html = html_views.get_ai_report_box(clean_ai.replace('\n', '<br>'))
                         ai_html += daewun_compare_html
 
-                # 6. 최종 출력 (if 문과 같은 세로줄에 위치해야 합니다)
-                st.markdown(m_content, unsafe_allow_html=True)
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                st.markdown(w_content, unsafe_allow_html=True)
-                st.markdown(ai_html, unsafe_allow_html=True)
-                st.markdown(closing, unsafe_allow_html=True)
+                # 6. 최종 출력 (HTML 태그 깨짐 방지를 위해 개별 출력 및 줄바꿈 강제 제거)
+                    st.markdown(m_content, unsafe_allow_html=True)
+                    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+                    st.markdown(w_content, unsafe_allow_html=True)
+
+                    if "[COUPLE_DAEWUN_TABLES_HERE]" in clean_ai:
+                        ai_parts = clean_ai.split("[COUPLE_DAEWUN_TABLES_HERE]")
+                        st.markdown(html_views.get_ai_report_box(ai_parts[0].strip().replace('\n', '<br>')), unsafe_allow_html=True)
+                        
+                        # [핵심] 대운표 HTML 내부의 줄바꿈을 없애서 텍스트 노출 쓰레기값을 원천 차단합니다.
+                        st.markdown(daewun_compare_html.replace('\n', ''), unsafe_allow_html=True)
+                        
+                        if len(ai_parts) > 1 and ai_parts[1].strip():
+                            st.markdown(html_views.get_ai_report_box(ai_parts[1].strip().replace('\n', '<br>')), unsafe_allow_html=True)
+                    else:
+                        st.markdown(html_views.get_ai_report_box(clean_ai.replace('\n', '<br>')), unsafe_allow_html=True)
+                        st.markdown(daewun_compare_html.replace('\n', ''), unsafe_allow_html=True)
                 
             # [핵심] try와 정확히 같은 세로줄에 위치해야 합니다.
             except Exception as e:
