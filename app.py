@@ -98,15 +98,21 @@ with st.sidebar:
         "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
     ], label_visibility="collapsed")
 
-    # [추가] 성별 자동 동기화를 위한 콜백 함수 (정상 작동 확인됨)
+    # [수정] 성별 양방향 자동 동기화를 위한 콜백 함수
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
 
     def sync_partner_gender():
-        if st.session_state.get("u_g", "남성") == "여성":
+        if st.session_state["u_g"] == "여성":
             st.session_state["f_g"] = "남성"
         else:
             st.session_state["f_g"] = "여성"
+
+    def sync_user_gender():
+        if st.session_state["f_g"] == "남성":
+            st.session_state["u_g"] = "여성"
+        else:
+            st.session_state["u_g"] = "남성"
 
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -148,7 +154,7 @@ with st.sidebar:
                                     st.session_state['s_t'] = "시간 모름"
 
                                 found = True
-                                st.session_state['rev_success_msg'] = f"✅ 신청인 자동입력 완료!"
+                                st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -192,9 +198,6 @@ with st.sidebar:
                 # [복구] 박사님의 원본 추출 로직 100% 사수
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
-                # ---------------------------------------------------------
-                # [수정] 아래의 if, elif, else 3개가 정확히 같은 세로줄(들여쓰기)에 있어야 합니다.
-                # ---------------------------------------------------------
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -237,13 +240,14 @@ with st.sidebar:
                 if not found: 
                     st.error("일치하는 날짜가 없습니다.")
                     
-                else:  # <--- [해결] 이제 if, elif와 완벽하게 줄이 맞습니다!
+                else: 
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        # 2. 상대방 기본 정보 (복구 완료!)
+        # 2. 상대방 기본 정보 
+        # [수정] 상대방 성별에도 on_change=sync_user_gender 양방향 콜백 추가
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
