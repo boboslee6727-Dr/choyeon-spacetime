@@ -545,8 +545,16 @@ if st.session_state.get('app_running', False):
                 except Exception as e:
                     ai_html = f"<div style='color:red;'>AI 통변 오류: {e}</div>"
 
-                # 4. 최종 결합 및 렌더링
-                full_content = cover_html + m_box + w_box + ai_html + closing
+                # 4. 결합 및 출력 (기존의 person_box를 걷어내고 직접 결합)
+                # cover_html은 이미 전체 페이지를 감싸고 있으므로 그대로 사용
+                # 내부 박스 중복 제거: m_box, w_box 정의를 직접 테이블+마스터바로 수정
+                m_content = html_views.get_saju_table(*gh_data["m_table"]) + html_views.get_master_bar(*gh_data["m_master"])
+                w_content = html_views.get_saju_table(*gh_data["w_table"]) + html_views.get_master_bar(*gh_data["w_master"])
+                
+                # 표지 + 신청인내용 + 상대방내용 + AI + 맺음말
+                full_content = cover_html + m_content + "<div style='page-break-after:always;'></div>" + w_content + ai_html + closing
+                
+                # 최종적으로 A4 박스에 한 번만 담음
                 st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
                 
             except Exception as e:
