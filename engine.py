@@ -939,7 +939,7 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         ms, mb = m_pillar[0], m_pillar[1]
         ds, db = d_pillar[0], d_pillar[1]        
         
-        calc_d = get_daeun_su_accurate(datetime(y, m, d), 1)
+        calc_d = get_daeun_su_accurate(datetime(y, m, d), order_dir)
 
         curr_year = datetime.now().year
         age = curr_year - y + 1
