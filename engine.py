@@ -987,24 +987,11 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
     w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
 
     return {
-        "m_table": m_res["table"], "m_master": m_res["master"], "m_daewun": m_res["daewun"],
-        "w_table": w_res["table"], "w_master": w_res["master"], "w_daewun": w_res["daewun"],
-        
-        # [추가] 프롬프트가 갈구하던 핵심 데이터들입니다.
-        "m_ds": m_res["ds"], "m_db": m_res["db"],
-        "f_ds": w_res["ds"], "f_db": w_res["db"],
-        
-        # [추가] 성격/성향 분석에 필수적인 항목들
-        "m_golden": "남성 분석 완료", # 실제 통변 데이터로 교체 가능
-        "f_golden": "여성 분석 완료",
-        "m_gongmang_actual": m_res["master"][7], # 공망 데이터
-        "f_gongmang_actual": w_res["master"][7],
-        "calc_gyukgook": "정격", # 필요시 계산 로직 연결
-        
-        # [추가] 프롬프트 템플릿의 {db_header} 등 필수 마커
-        "db_header": "초연 시공명리 심층 궁합 분석 리포트",
-        "ai_saju_mapping": "",
-        "yukchin_rule": "육친의 상생과 상극을 고려한 분석입니다."
+        "table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], 
+        "master": master, 
+        "daewun": daewun,
+        "ds": ds,  # 일간 추가
+        "db": db   # 일지 추가
     }
 
 def get_gunghap_report(res):
