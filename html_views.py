@@ -129,7 +129,6 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
 def get_saju_table(info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
     # 수정: 테이블 바로 위에 info_h(이름/생년월일/시간 헤더)를 위치시킵니다.
     return f"""
-    {info_h}
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; margin-top:10px;'>
         <tr class='top-header-cell'>
             <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
