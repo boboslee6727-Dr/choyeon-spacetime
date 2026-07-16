@@ -80,8 +80,10 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                 <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                    <p style='margin: 5px 0 0 0; color: #1A237E; white-space: nowrap; font-weight:900;'>{time_str}</p>
+                    <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
+                        <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                        <p style='margin: 5px 0 0 0; white-space: nowrap;'>{time_str}</p>
+                    </div>
                 </div>
             </div>
             <p style='font-size: 18px; margin-top: 50px; font-weight: 900;'>{today_str}</p>
