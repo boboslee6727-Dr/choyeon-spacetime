@@ -579,7 +579,7 @@ if st.session_state.get('app_running', False):
 
                 # 5. 최종 통합 출력 수정
                 full_report = (
-                    m_info + m_table + m_master + m_un + 
+                    m_info + m_table + m_master + m_un = "대운표가 들어갈 자리" + 
                     "<div style='height: 10px;'></div>" + # 간격 조절
                     intro_html +                          # (수정됨) 변수명을 정확히 기입
                     ai_output_html + 
