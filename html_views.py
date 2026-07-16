@@ -32,6 +32,26 @@ def get_global_css():
     /* 테이블 테두리 및 내부 선 통일 */
     .result-table { width: 100%; border-collapse: collapse; border: 2px solid #444 !important; }
     .result-table td { border: 1px solid #444 !important; padding: 2px !important; text-align: center; vertical-align: middle; font-weight: 900 !important; }
+    /* 🚨 A4 한 장 출력을 위한 사주원국 밀착 스타일 */
+    .result-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        border: 2px solid #444 !important; 
+        table-layout: fixed; 
+        margin-bottom: 5px !important; /* 하단 여백 축소 */
+    }
+
+    .result-table td { 
+        border: 1px solid #444 !important; 
+        padding: 0px !important;        /* 패딩 제거 */
+        line-height: 0.9 !important;    /* 줄 간격 극한 축소 */
+        font-weight: 900 !important; 
+        font-size: 13px !important;
+    }
+
+    /* 마스터 바와 대운표 간격도 최소화 */
+    .master-bar { margin: 2px 0 !important; padding: 2px !important; }
+    .un-table { margin: 2px 0 !important; }
 
     /* 십이운성, 십이신살, 일반신살 굵기 강화 (기존 색상 유지) */
     .result-table td:has(.unsung), .result-table td:has(.shinsal), .result-table td:has(.gen-shinsal) { font-weight: 900 !important; }
