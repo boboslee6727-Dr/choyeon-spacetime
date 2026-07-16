@@ -971,14 +971,18 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
             b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
             
-            # [박사님 최종 지시 반영] 년지부터 시지까지의 완벽한 방향 표시
-            dir_map = {0: "←년지", 1: "←월지→", 2: "←일지→", 3: "시지→"}
+            # [최종] 각 지지별 실제 한자를 가져와 박사님께서 지시하신 방향 포맷에 삽입합니다.
+            current_ji = jjis[r_idx]
+            if r_idx == 0: dir_label = f"←({current_ji})"
+            elif r_idx == 1: dir_label = f"←({current_ji})→"
+            elif r_idx == 2: dir_label = f"←({current_ji})→"
+            else: dir_label = f"({current_ji})→"
             
             cells = "".join([
                 f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; "
                 f"font-weight:900; border-top:0px solid transparent !important; border-bottom:{b_bot}; "
                 f"border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>"
-                f"{dir_map.get(r_idx, '') if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" 
+                f"{dir_label if ci==r_idx else get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" 
                 for ci in range(4)
             ])
             
