@@ -181,7 +181,7 @@ with st.sidebar:
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
                 # 들여쓰기 완벽 수정 완료
-                if not _p_ry and not _p_rm and not _p_rd
+                if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
                     st.rerun()
