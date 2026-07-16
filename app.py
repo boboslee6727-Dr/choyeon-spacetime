@@ -602,16 +602,25 @@ if st.session_state.get('app_running', False):
                 intro_h = html_views.get_intro_html() 
                 closing = html_views.get_gunghap_closing(name, f_name)
 
-                # 3. 본문 조립 (오류 수정: * 언패킹을 제거하거나, 리스트를 직접 전달)
-                # m_master가 이미 리스트 형태이므로, *를 빼고 전달해 보십시오.
+                # 3. 본문 조립 (11개 인자를 개별적으로 명확히 전달)
+                intro_h = html_views.get_intro_html() 
+                closing = html_views.get_gunghap_closing(name, f_name)
+
+                # [남명] 11개 인자를 명시적으로 나열하여 전달
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
-                m_master = html_views.get_master_bar(m_master) # * 제거
+                m_master = html_views.get_master_bar(
+                    m_master[0], m_master[1], m_master[2], m_master[3], m_master[4], 
+                    m_master[5], m_master[6], m_master[7], m_master[8], m_master[9], m_master[10]
+                )
                 m_un = html_views.generate_daewun_layout(*m_daewun)
 
+                # [여명] 11개 인자를 명시적으로 나열하여 전달
                 w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                w_master = html_views.get_master_bar(f_master) # * 제거
+                w_master = html_views.get_master_bar(
+                    f_master[0], f_master[1], f_master[2], f_master[3], f_master[4], 
+                    f_master[5], f_master[6], f_master[7], f_master[8], f_master[9], f_master[10]
+                )
                 w_un = html_views.generate_daewun_layout(*f_daewun)
-
                 # 4. AI 통변 
                 ai_output_html = ""
                 
