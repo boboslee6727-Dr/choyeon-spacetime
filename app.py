@@ -568,7 +568,7 @@ if st.session_state.get('app_running', False):
                     # 신청인이 여성이므로, 남성 데이터는 w_table에서, 여성 데이터는 m_table에서 가져옴
                     m_data, f_data = gh_data["w_table"], gh_data["m_table"]
                     m_master, f_master = gh_data["w_master"], gh_data["m_master"]
-                    m_daewun, f_daewun = gh_data["w_daewun"], gh_data["m_daewun"]
+                    m_un = html_views.generate_daewun_layout(*gh_data["m_daewun"])
                 else:
                     # 신청인(남성) -> Male, 상대방(여성) -> Female
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
@@ -596,15 +596,16 @@ if st.session_state.get('app_running', False):
                 )
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # [3. 본문 조립] 데이터 매핑 후 바로 테이블 생성 (중복 로직 제거)
+                # 3. 본문 조립 (중복 제거 및 변수 통일)
                 intro_h = html_views.get_intro_html() 
                 closing = html_views.get_gunghap_closing(name, f_name)
 
-                # 데이터 조립 (m_data, f_data를 사용하여 1회만 생성)
+                # [남명] m_data, m_master, m_daewun 변수 사용
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
                 m_master = html_views.get_master_bar(*m_master)
                 m_un = html_views.generate_daewun_layout(*m_daewun)
 
+                # [여명] f_data, f_master, f_daewun 변수 사용 (중복 호출 없음)
                 w_table = html_views.get_gunghap_saju_table(*f_data[1:])
                 w_master = html_views.get_master_bar(*f_master)
                 w_un = html_views.generate_daewun_layout(*f_daewun)
