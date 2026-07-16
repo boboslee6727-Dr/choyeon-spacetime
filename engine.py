@@ -895,7 +895,7 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
-def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
+def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marital, marital_status):
     def get_oh_class(c): return f"color-{get_color(c)}"
 
     # [수정] 한글 시간 문자열(예: 진시)을 파싱하여 숫자와 한자로 분리하는 로직
@@ -978,20 +978,32 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
             "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)
         ]
 
-        return {"table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master, "daewun": daewun}
+        return {"table": [None, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master, "daewun": daewun}
 
-    m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", "기혼")
-    w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
+    m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", m_marital)
+    w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", f_marital)
     
-    m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", "기혼")
-    w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", "기혼")
-
     return {
-        "table": [info_h, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], 
-        "master": master, 
-        "daewun": daewun,
-        "ds": ds,  # 일간 추가
-        "db": db   # 일지 추가
+        "m_table": m_res["table"], "m_master": m_res["master"], "m_daewun": m_res["daewun"],
+        "w_table": w_res["table"], "w_master": w_res["master"], "w_daewun": w_res["daewun"],
+        
+        # 프롬프트 매핑용 데이터
+        "m_ds": m_res["master"][0],
+        "m_db": m_res["master"][1],
+        "m_gongmang_actual": m_res["master"][7],
+        
+        "f_ds": w_res["master"][0],
+        "f_db": w_res["master"][1],
+        "f_gongmang_actual": w_res["master"][7],
+        
+        "m_golden": f"{m_res['master'][0]}일간 중심의 성향 분석",
+        "f_golden": f"{w_res['master'][0]}일간 중심의 성향 분석",
+        
+        "calc_gyukgook": "시공명리 격국 분석",
+        "db_header": "초연 시공명리 심층 궁합 분석 리포트",
+        "ai_saju_mapping": "시공간의 교차점 분석",
+        "yukchin_rule": "육친 및 십이운성 상생법 적용",
+        "marital_info": marital_status
     }
 
 def get_gunghap_report(res):
