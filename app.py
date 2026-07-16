@@ -579,8 +579,11 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    # [핵심] 생성해둔 부부 대운 비교 박스(daewun_compare_html)를 마커 치환 인자로 전달
-                    parsed_content = parse_and_format_gunghap(ai_result, daewun_compare_html)
+                    # 1. 먼저 AI 텍스트의 줄바꿈을 HTML 태그로 변환합니다.
+                    formatted_ai = ai_result.replace('\n', '<br>')
+                    # 2. 프롬프트 마커를 실제 대운표 HTML(daewun_compare_html)로 치환합니다.
+                    parsed_content = formatted_ai.replace("[COUPLE_DAEWUN_TABLES_HERE]", daewun_compare_html)
+                    
                     ai_html = html_views.get_ai_report_box(parsed_content)
 
                 # 6. 최종 출력
