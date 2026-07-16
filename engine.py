@@ -971,9 +971,8 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
             b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
             
-            # [수정] 박사님 지시대로 각 지지별 방향 표시를 명확히 정의합니다.
-            # 0:년지, 1:월지, 2:일지, 3:시지
-            dir_map = {0: "←년지", 1: "←월지", 2: "←일지", 3: "시지→"}
+            # [박사님 최종 지시 반영] 년지부터 시지까지의 완벽한 방향 표시
+            dir_map = {0: "←년지", 1: "←월지→", 2: "←일지→", 3: "시지→"}
             
             cells = "".join([
                 f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if get_ji_rel_set(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; "
