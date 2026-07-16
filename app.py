@@ -602,14 +602,14 @@ if st.session_state.get('app_running', False):
                 intro_h = html_views.get_intro_html() 
                 closing = html_views.get_gunghap_closing(name, f_name)
 
-                # [남명] m_data, m_master, m_daewun 변수 사용
+                # 3. 본문 조립 (오류 수정: * 언패킹을 제거하거나, 리스트를 직접 전달)
+                # m_master가 이미 리스트 형태이므로, *를 빼고 전달해 보십시오.
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
-                m_master = html_views.get_master_bar(*m_master)
+                m_master = html_views.get_master_bar(m_master) # * 제거
                 m_un = html_views.generate_daewun_layout(*m_daewun)
 
-                # [여명] f_data, f_master, f_daewun 변수 사용 (중복 호출 없음)
                 w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                w_master = html_views.get_master_bar(*f_master)
+                w_master = html_views.get_master_bar(f_master) # * 제거
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 # 4. AI 통변 
