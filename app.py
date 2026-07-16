@@ -531,7 +531,12 @@ if st.session_state.get('app_running', False):
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
                 # 2. 표지 출력
-                cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
+                cover_html = html_views.get_gunghap_cover(
+                    APP_VERSION, 
+                    name, m_age, m_sol, m_lun, f"{b_time}시",  # 남명 시간 추가
+                    f_name, f_age, f_sol, f_lun, f_t,         # 여명 시간 추가
+                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일") # 분석일 추가
+                )
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
                 # 3. 본문 조립 (get_gunghap_person_box를 제거하여 3중 테두리 해결)
