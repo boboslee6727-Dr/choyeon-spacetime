@@ -577,11 +577,11 @@ if st.session_state.get('app_running', False):
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 5. 최종 통합 출력 (배치 순서 조정)
+                # 5. 최종 통합 출력 수정
                 full_report = (
                     m_info + m_table + m_master + m_un + 
-                    "<div style='height: 20px;'></div>" +  # 간격 축소
-                    intro + 
+                    intro +  # 대운 아래로 이동
+                    "<div style='height: 10px;'></div>" + # 간격 최소화
                     ai_output_html + 
                     closing
                 )
