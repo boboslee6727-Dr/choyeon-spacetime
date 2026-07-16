@@ -617,11 +617,11 @@ if st.session_state.get('app_running', False):
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 5. 최종 통합 출력 수정
+                # 5. 최종 통합 출력 수정 (상대방 데이터와 대운표가 모두 포함되도록 수정)
                 full_report = (
-                    m_info + m_table + m_master + 
-                    "<div style='border:5px solid red;'>여기가 대운표 자리입니다</div>" + 
-                    intro_html + 
+                    m_info + m_table + m_master + m_un + 
+                    w_info + w_table + w_master + w_un + 
+                    intro_html +
                     ai_output_html + 
                     closing
                 )
