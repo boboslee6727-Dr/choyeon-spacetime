@@ -609,12 +609,15 @@ if st.session_state.get('app_running', False):
                         ai_html += daewun_compare_html
 
                 # 6. 최종 출력 (중첩 방지를 위해 철저히 독립적으로 출력)
-                st.markdown(m_content, unsafe_allow_html=True)
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                st.markdown(w_content, unsafe_allow_html=True)
-                st.markdown(ai_html, unsafe_allow_html=True)
-                st.markdown(closing, unsafe_allow_html=True)
-
+                    st.markdown(m_content, unsafe_allow_html=True)
+                    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+                    st.markdown(w_content, unsafe_allow_html=True)
+                    st.markdown(ai_html, unsafe_allow_html=True)
+                    st.markdown(closing, unsafe_allow_html=True)
+                    
+                # [여기가 중요합니다] try와 같은 라인(세로줄)에 except가 있어야 합니다.
+                except Exception as e:
+                    st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
     # ---------------------------------------------------------
     # [8~12번 상품] 
     # ---------------------------------------------------------
