@@ -534,27 +534,23 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(APP_VERSION, name, m_age, m_sol, m_lun, f_name, f_age, f_sol, f_lun, dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
                 st.markdown(cover_html, unsafe_allow_html=True)
                 
-                # 3. 본문 조립 (정보 헤더를 박스 안으로 삽입)
+                # 3. 본문 조립 (사주 + 마스터바 + 개별 대운표 순차 결합)
                 
                 # [남명 조립]
                 m_info = html_views.get_info_header("♂️", name, gender, u_marital, m_age, m_sol, m_lun, f"{b_time}시", p_color="#1A237E")
                 m_table_html = html_views.get_saju_table(*gh_data["m_table"])
-                m_combined_table = m_info + m_table_html  
-                m_content = html_views.get_gunghap_person_box(m_combined_table, html_views.get_master_bar(*gh_data["m_master"]), add_page_break=False)
+                m_person_box = html_views.get_gunghap_person_box(m_info + m_table_html, html_views.get_master_bar(*gh_data["m_master"]), add_page_break=False)
+                m_un_html = html_views.generate_daewun_layout(*gh_data["m_daewun"]).replace('\n', '')
+                m_content = m_person_box + m_un_html
                 
                 # [여명 조립]
                 w_info = html_views.get_info_header("♀️", f_name, f_gender, f_marital, f_age, f_sol, f_lun, f_t, p_color="#2E7D32")
                 w_table_html = html_views.get_saju_table(*gh_data["w_table"])
-                w_combined_table = w_info + w_table_html  
-                w_content = html_views.get_gunghap_person_box(w_combined_table, html_views.get_master_bar(*gh_data["w_master"]), add_page_break=False)
+                w_person_box = html_views.get_gunghap_person_box(w_info + w_table_html, html_views.get_master_bar(*gh_data["w_master"]), add_page_break=False)
+                w_un_html = html_views.generate_daewun_layout(*gh_data["w_daewun"]).replace('\n', '')
+                w_content = w_person_box + w_un_html
 
-                # 4. 부부 대운 비교 박스 생성 (진짜 함수 적용)
-                m_un_html = html_views.generate_daewun_layout(*gh_data["m_daewun"])
-                w_un_html = html_views.generate_daewun_layout(*gh_data["w_daewun"])
-                
-                daewun_compare_html = html_views.get_daewun_compare_box(name, m_un_html, f_name, w_un_html)
-
-                # 5. AI 통변 (강력한 중복 방지 프롬프트 추가)
+                # 4. AI 통변 
                 closing = html_views.get_gunghap_closing(name, f_name)
                 ai_html = ""
                 
@@ -570,58 +566,37 @@ if st.session_state.get('app_running', False):
                     calc_gyukgook=gh_data.get("calc_gyukgook", "") 
                 )
                 
-                # [핵심] AI 게으름 원천 차단 철퇴 지시문
                 prompt_text += f"""
                 \n\n🚨 [최고 수준 시스템 경고: 내용 복사 절대 금지] 
-                현재 여명의 통변 내용이 남명과 똑같이 출력되는 치명적인 오류가 발생 중입니다.
-                - 남명 사주({gh_data.get("m_golden", "")})와 여명 사주({gh_data.get("f_golden", "")})는 100% 완전히 다른 데이터입니다.
-                - [FEMALE_START] 파트 작성 시, 절대 남명의 텍스트, 문장 구조, 내용을 복사하거나 재사용하지 마십시오. 
-                - 반드시 여명의 원국 데이터만을 독립적으로 새롭게 분석하여 남명과 완벽히 차별화된 통변을 작성하십시오.
+                - 남명 사주({gh_data.get("m_golden", "")})와 여명 사주({gh_data.get("f_golden", "")})는 완전히 다른 데이터입니다.
+                - [FEMALE_START] 파트 작성 시, 남명의 텍스트나 문장 구조를 절대 복사하지 마십시오. 
+                - 두 사람의 원국 데이터를 각각 독립적으로 새롭게 분석하여 완벽히 차별화된 통변을 작성하십시오.
                 """
                 
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
+                    # 마커 및 불필요한 프롬프트 지시문 강제 청소
                     clean_ai = ai_result.replace('[MALE_START]', '') \
                                         .replace('[MALE_END]', '') \
                                         .replace('[FEMALE_START]', '') \
                                         .replace('[FEMALE_END]', '') \
                                         .replace('[GUNGHAP_START]', '') \
-                                        .replace('[GUNGHAP_END]', '')
+                                        .replace('[GUNGHAP_END]', '') \
+                                        .replace('[COUPLE_DAEWUN_TABLES_HERE]', '') \
+                                        .strip()
 
-                    # 2. 대운표 마커를 기준으로 샌드위치처럼 박스 3개로 분리 결합
-                    if "[COUPLE_DAEWUN_TABLES_HERE]" in clean_ai:
-                        ai_parts = clean_ai.split("[COUPLE_DAEWUN_TABLES_HERE]")
-                        part1 = ai_parts[0].strip().replace('\n', '<br>')
-                        part2 = ai_parts[1].strip().replace('\n', '<br>')
-                        
-                        ai_html = html_views.get_ai_report_box(part1)
-                        ai_html += daewun_compare_html
-                        if part2:
-                            ai_html += html_views.get_ai_report_box(part2)
-                    else:
-                        ai_html = html_views.get_ai_report_box(clean_ai.replace('\n', '<br>'))
-                        ai_html += daewun_compare_html
+                    # 하나의 A4 박스 안에 나눔명조체로 AI 통변 일괄 삽입
+                    ai_html = html_views.get_ai_report_box(clean_ai.replace('\n', '<br>'))
 
-                # 6. 최종 출력 (HTML 태그 깨짐 방지를 위해 개별 출력 및 줄바꿈 강제 제거)
-                    st.markdown(m_content, unsafe_allow_html=True)
-                    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                    st.markdown(w_content, unsafe_allow_html=True)
-
-                    if "[COUPLE_DAEWUN_TABLES_HERE]" in clean_ai:
-                        ai_parts = clean_ai.split("[COUPLE_DAEWUN_TABLES_HERE]")
-                        st.markdown(html_views.get_ai_report_box(ai_parts[0].strip().replace('\n', '<br>')), unsafe_allow_html=True)
-                        
-                        # [핵심] 대운표 HTML 내부의 줄바꿈을 없애서 텍스트 노출 쓰레기값을 원천 차단합니다.
-                        st.markdown(daewun_compare_html.replace('\n', ''), unsafe_allow_html=True)
-                        
-                        if len(ai_parts) > 1 and ai_parts[1].strip():
-                            st.markdown(html_views.get_ai_report_box(ai_parts[1].strip().replace('\n', '<br>')), unsafe_allow_html=True)
-                    else:
-                        st.markdown(html_views.get_ai_report_box(clean_ai.replace('\n', '<br>')), unsafe_allow_html=True)
-                        st.markdown(daewun_compare_html.replace('\n', ''), unsafe_allow_html=True)
+                # 5. 최종 출력 (남명 전체 -> 여명 전체 -> 통합 AI 통변)
+                st.markdown(m_content, unsafe_allow_html=True)
+                st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+                st.markdown(w_content, unsafe_allow_html=True)
+                st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+                st.markdown(ai_html, unsafe_allow_html=True)
+                st.markdown(closing, unsafe_allow_html=True)
                 
-            # [핵심] try와 정확히 같은 세로줄에 위치해야 합니다.
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
