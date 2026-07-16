@@ -898,18 +898,41 @@ class UniversalPrintableGunghap:
 def get_gunghap_data(s_y, s_m, s_d, s_t, f_y, f_m, f_d, f_t):
     def get_oh_class(c): return f"color-{get_color(c)}"
 
-    # [수정] 시간 문자열에서 숫자(시, 분)를 정확히 추출하는 로직을 엔진에 포함합니다.
-    def extract_time(time_str):
-        if "모름" in time_str or not time_str: return 0, 0
-        match = re.search(r'(\d{2}):(\d{2})', time_str)
-        return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+    # [수정] 한글 시간 문자열(예: 진시)을 파싱하여 숫자와 한자로 분리하는 로직
+    def get_time_ganji_fixed(day_gan, time_str):
+        if "시간 모름" in time_str or "모름" in time_str: return "", ""
+        
+        # 괄호 안의 글자만 추출 (예: 진시)
+        start_idx = time_str.find('(')
+        end_idx = time_str.find(')')
+        raw_ji = time_str[start_idx+1:end_idx] if (start_idx != -1 and end_idx != -1) else "子"
+        raw_ji = raw_ji.replace('朝', '').replace('夜', '')
+        
+        t_ji = K2H_JI.get(raw_ji, raw_ji)
+        gan_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+        ji_arr = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        
+        if day_gan in gan_arr and t_ji in ji_arr:
+            d_idx, j_idx = gan_arr.index(day_gan), ji_arr.index(t_ji)
+            t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
+            return t_gan, t_ji
+        return "", ""
 
     def _get_person_data(y, m, d, t, gender, name, marital):
-        # [수정] t 대신 파싱된 h, m_val을 전달하여 오류를 방지합니다.
-        h, m_val = extract_time(t)
+        # 시간 추출 로직 (개인사주와 동일한 정수 추출)
+        h, m_val = 0, 0
+        if ":" in t:
+            col_idx = t.find(":")
+            try:
+                h = int(t[col_idx-2:col_idx].strip())
+                m_val = int(t[col_idx+1:col_idx+3].strip())
+            except: pass
+
         y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, h, m_val)
         _, _, d_pillar = get_ganji_from_date(y, m, d)
-        t_gan, t_ji = get_time_ganji(d_pillar[0], t)
+        
+        # [중요] 일주 기반 시주 계산 로직 적용
+        t_gan, t_ji = get_time_ganji_fixed(d_pillar[0], t)
         
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ys, yb = y_pillar[0], y_pillar[1]
