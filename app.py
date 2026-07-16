@@ -598,8 +598,15 @@ if st.session_state.get('app_running', False):
                                         .replace('[COUPLE_DAEWUN_TABLES_HERE]', '') \
                                         .strip()
 
-                    # 하나의 A4 박스 안에 나눔명조체로 AI 통변 일괄 삽입
-                    ai_html = html_views.get_ai_report_box(clean_ai.replace('\n', '<br>'))
+                    # [수정] 바깥 테두리는 투명하게, 안쪽은 둥근 테두리에 나눔명조체 적용
+                    formatted_ai = clean_ai.replace('\n', '<br>')
+                    ai_html = f"""
+                    <div class='report-page' style='border: none !important; box-shadow: none !important; background: transparent;'>
+                        <div style='border: 2px solid #e0e0e0; border-radius: 15px; padding: 35px; background-color: #ffffff; font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #222; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);'>
+                            {formatted_ai}
+                        </div>
+                    </div>
+                    """
 
                 # 5. 최종 출력 (남명 전체 -> 여명 전체 -> 통합 AI 통변)
                 st.markdown(m_content, unsafe_allow_html=True)
