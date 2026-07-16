@@ -227,7 +227,11 @@ with st.sidebar:
         # 2. 상대방 기본 정보 (복구 완료!)
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+            
+            # [수정된 부분] 신청인 성별(gender)에 따라 상대방 성별 기본값 자동 지정
+            p_gender_idx = 1 if gender == "여성" else 0
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], index=p_gender_idx, key="f_g")
+            
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
