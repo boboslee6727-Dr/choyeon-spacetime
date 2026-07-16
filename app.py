@@ -107,7 +107,7 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            st.session_state['app_running'] = False  # 🛑 AI 자동 구동 방지 코드 추가
+            st.session_state['app_running'] = False  # ✅ 신청인 자동입력 오류 방지 브레이크
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
@@ -177,10 +177,9 @@ with st.sidebar:
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
-                st.session_state['app_running'] = False  # 🛑 AI 자동 구동 방지 코드 추가
+                st.session_state['app_running'] = False  # ✅ 상대방 자동입력 오류 방지 브레이크
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
                 
-                # 들여쓰기 완벽 수정 완료
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -511,7 +510,7 @@ if st.session_state.get('app_running', False):
                 w_box = html_views.get_gunghap_person_box(html_views.get_saju_table(*gh_data["p_table"]), html_views.get_master_bar(*gh_data["p_master"]), add_page_break=True)
                 closing = html_views.get_gunghap_closing(name, f_name)
                 
-                # 3. AI 통변 (변수명 ai_html로 통일)
+                # 3. AI 통변
                 ai_html = ""
                 try:
                     prompt_content = f"신청인 {name}과 상대방 {f_name}의 궁합을 초연 시공명리 관점에서 분석하라."
