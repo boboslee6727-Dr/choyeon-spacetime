@@ -357,7 +357,7 @@ with st.sidebar:
             with col_g3: rd = st.text_input("일주", value="", key="sb_u_rd")
             with col_g4: rt = st.text_input("시주", value="", key="sb_u_rt")
             
-            if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
+            if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="sb_btn_user_rev"):
                 st.session_state['app_running'] = False  # 역산 시 AI 가동 차단
                 
                 # [복구] 박사님의 원본 추출 로직 100% 사수
