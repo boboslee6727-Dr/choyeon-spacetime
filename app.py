@@ -657,8 +657,8 @@ if st.session_state.get('app_running', False):
                 report_box = html_views.get_final_report_box(full_report)
                 st.markdown(report_box, unsafe_allow_html=True)
 
-        except Exception as e:
-            st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+            except Exception as e:
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
                 
     # ---------------------------------------------------------
     # [8~12번 상품] 
