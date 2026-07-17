@@ -257,7 +257,7 @@ with st.sidebar:
         "1. 개인사주 및 일진 분석", "2. 올 해의 운세 (세운)", "3. 이번 달의 운세 (월운)",
         "4. 재물운 특화 분석", "5. 직업/직장운 특화 분석", "6. 건강운 특화 분석",
         "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
-    ], label_visibility="collapsed")
+        ], label_visibility="collapsed", key="u_product_main")
 
     # [수정] 성별 양방향 자동 동기화를 위한 콜백 함수
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
