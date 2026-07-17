@@ -124,9 +124,9 @@ with st.sidebar:
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="sb_btn_user_rev"):
             st.session_state['app_running'] = False  # AI 가동 차단
-            _ry = extract_ganji(st.session_state.get('sb_u_ry', ''))
-            _rm = extract_ganji(st.session_state.get('sb_u_rm', ''))
-            _rd = extract_ganji(st.session_state.get('sb_u_rd', ''))
+            _ry = extract_ganji(st.session_state.get('main_u_ry', ''))
+            _rm = extract_ganji(st.session_state.get('main_u_rm', ''))
+            _rd = extract_ganji(st.session_state.get('main_u_rd', ''))
 
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
@@ -144,23 +144,24 @@ with st.sidebar:
                             klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                             gj = klc_find.getChineseGapJaString().split()
                             if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                                st.session_state['s_y'] = curr_dt.year
-                                st.session_state['s_m'] = curr_dt.month
-                                st.session_state['s_d'] = curr_dt.day
+                                # [수정구역] 화면 위젯 키에 맞게 자동입력 값 할당 (원본 사수)
+                                st.session_state['sidebar_s_y'] = curr_dt.year
+                                st.session_state['sidebar_s_m'] = curr_dt.month
+                                st.session_state['sidebar_s_d'] = curr_dt.day
                                 
                                 if rt:
                                     ji_char = rt[-1]
                                     rt_h = engine.K2H_JI.get(ji_char, ji_char)
                                     time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
-                                    st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
+                                    st.session_state['sidebar_s_t'] = time_map.get(rt_h, "시간 모름")
                                 else:
-                                    st.session_state['s_t'] = "시간 모름"
+                                    st.session_state['sidebar_s_t'] = "시간 모름"
 
                                 found = True
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                            curr_dt -= dt_mod.timedelta(days=1)
+                        curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
@@ -192,12 +193,12 @@ with st.sidebar:
             p_col_g1, p_col_g2 = st.columns(2)
             p_col_g3, p_col_g4 = st.columns(2)
 
-            with col_g1: ry = st.text_input("년주", value="", key="sb_u_ry")
-            with col_g2: rm = st.text_input("월주", value="", key="sb_u_rm")
-            with col_g3: rd = st.text_input("일주", value="", key="sb_u_rd")
-            with col_g4: rt = st.text_input("시주", value="", key="sb_u_rt")
+            with col_g1: p_ry = st.text_input("년주", value="", key="sb_u_ry")
+            with col_g2: p_rm = st.text_input("월주", value="", key="sb_u_rm")
+            with col_g3: p_rd = st.text_input("일주", value="", key="sb_u_rd")
+            with col_g4: p_rt = st.text_input("시주", value="", key="sb_u_rt")
             
-            if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="sb_btn_user_rev"):
+            if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="sb_btn_user_rev_p"):
                 st.session_state['app_running'] = False  # 역산 시 AI 가동 차단
                 
                 # [복구] 박사님의 원본 추출 로직 100% 사수
@@ -240,7 +241,7 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                                curr_dt -= dt_mod.timedelta(days=1)
+                            curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
                 if not found: 
                     st.error("일치하는 날짜가 없습니다.")
@@ -539,15 +540,15 @@ if st.session_state.get('app_running', False):
             
             st.markdown(cover_html, unsafe_allow_html=True)
             final_report = (
-                str(info_header_html or "") +  	# 여기에 헤더를 배치합니다!
-                str(table_html or "") + 		# 사주원국
-                str(master_bar_html or "") + 	# 마스터 바
-                str(un_html or "") +      		# 대운 표
-                str(intro_html or "") + 		# 머리말
-                str(golden_text_html or "") +	# 시공명리 풀이
-                str(specific_ui_html or "") + 	# 세운 표, 월운 표 등 추가 UI
-                str(ai_output_html or "") +   	# 원국+대운+세운 등 통합 AI 통변
-                str(closing_html or "")		# 맺음말
+                str(info_header_html or "") +   # 여기에 헤더를 배치합니다!
+                str(table_html or "") +         # 사주원국
+                str(master_bar_html or "") +    # 마스터 바
+                str(un_html or "") +            # 대운 표
+                str(intro_html or "") +         # 머리말
+                str(golden_text_html or "") +   # 시공명리 풀이
+                str(specific_ui_html or "") +   # 세운 표, 월운 표 등 추가 UI
+                str(ai_output_html or "") +     # 원국+대운+세운 등 통합 AI 통변
+                str(closing_html or "")         # 맺음말
             )
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
@@ -689,7 +690,7 @@ if st.session_state.get('app_running', False):
                 
                 report_box = html_views.get_final_report_box(full_report)
                 st.markdown(report_box, unsafe_allow_html=True)
-               
+                
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
     # ---------------------------------------------------------
