@@ -459,9 +459,11 @@ if st.session_state.get('app_running', False):
             elif "4. 재물" in u_product:
                 target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
                 extra_facts['goal'] = st.session_state.get('wealth_goal', '')
+
             elif "5. 직업" in u_product:
                 target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
                 extra_facts['goal'] = st.session_state.get('career_goal', '')
+
             elif "6. 건강" in u_product:
                 target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
                 extra_facts['goal'] = st.session_state.get('health_goal', '')
@@ -498,54 +500,41 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
+
             # 키(u_m_stat)에서 값을 안전하게 가져와 marital 변수에 할당합니다.
             marital = st.session_state.get("u_m_stat", "선택")
 
             # --- (E) 최종 통합 렌더링 ---
-            # 508라인 직전에 아래 방어 로직 추가 예정
-            if 'sol_str' not in locals():
-                sol_str = "양력 정보 미상" 
-            if 'lun_str' not in locals():
-                lun_str = "음력 정보 미상"
-            if 'time_str' not in locals():
-                time_str = "시간 미상"
-    
-            # 원본 코드 유지 (508라인)
-            info_header_html = html_views.get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str)
-
-            # w_key, i_key는 박사님의 기존 로직대로 생성
-            w_key = f"{ms}{mb}".strip()
-            i_key = f"{ds}{db}".strip()
-            
-            # 데이터 조회
-            # 524라인 직전: choyeon_db가 메모리에 없을 경우 임시로 빈 딕셔너리 할당 (에러 방어)
-            if 'choyeon_db' not in locals() and 'choyeon_db' not in globals():
-                choyeon_db = {"wolryeong": {}}
-
-            # [원본 사수] 524라인 유지
-            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 정보 없음")
-            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 정보 없음")
-            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 정보 없음")
-            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-
-            # html_views의 함수 호출 (구조 데이터를 포함하여 호출하도록 업그레이드 제안)
-            golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
             closing_html = html_views.get_closing_html(name)
             
             st.markdown(cover_html, unsafe_allow_html=True)
             final_report = (
-                str(info_header_html or "") +   # 여기에 헤더를 배치합니다!
-                str(table_html or "") +         # 사주원국
-                str(master_bar_html or "") +    # 마스터 바
-                str(un_html or "") +            # 대운 표
-                str(intro_html or "") +         # 머리말
-                str(golden_text_html or "") +   # 시공명리 풀이
-                str(specific_ui_html or "") +   # 세운 표, 월운 표 등 추가 UI
-                str(ai_output_html or "") +     # 원국+대운+세운 등 통합 AI 통변
-                str(closing_html or "")         # 맺음말
+                str(table_html or "") + 
+                str(master_bar_html or "") + 
+                str(intro_html or "") + 
+                str(un_html or "") +      # 대운 표
+                str(specific_ui_html or "") + # 세운 표, 월운 표 등 추가 UI
+                str(ai_output_html or "") +   # 원국+대운+세운 등 통합 AI 통변
+                str(closing_html or "")
             )
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+
+            # ---------------------------------------------------------
+            # 🚨 아래 코드는 SyntaxError를 유발하는 중복/고립된 코드입니다. 
+            # 들여쓰기 원칙에 맞추어 주석 처리 하였습니다.
+            # ---------------------------------------------------------
+            full_content = cover_html + m_box + w_box + ai_html + closing
+            st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"🚨 시스템 치명적 오류: {e}")
+            final_gunghap_report = (
+                str(cover_html or "").strip() + 
+                str(m_box or "").strip() + 
+                str(w_box or "").strip() + 
+                str(ai_output_html or "").strip() + 
+                str(closing or "").strip()
+            )
+            st.markdown(html_views.get_final_report_box(full_report_html), unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # [7번 상품] 연애/궁합 
