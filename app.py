@@ -513,18 +513,29 @@ if st.session_state.get('app_running', False):
             # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
+                    # [추가] html_views에 있는 함수를 사용하여 golden_text_html 생성
+                    # saju_facts 딕셔너리에 있는 키값들을 박사님의 엔진 환경에 맞게 매핑하십시오.
+                    golden_text_html = html_views.get_golden_text(
+                        name, 
+                        saju_facts.get('wolryung', '시공간 정보'), 
+                        saju_facts.get('ilju', '성품 정보'), 
+                        saju_facts.get('structure_name', '구조'), 
+                        saju_facts.get('structure_type', '유형'), 
+                        saju_facts.get('structure_desc', '상세 설명')
+                    )
                 
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
-                str(info_h or "") +            	# 1. 헤더 (이름, 양/음력)
-                str(table_html or "") +        	# 2. 사주원국 테이블 (여기에 배치!)
-                str(master_bar_html or "") +   	# 3. 마스터 바
-                str(un_html or "") +           	# 4. 대운
-                str(specific_ui_html or "") +  	# 5. 세운/월운
-                str(intro_html or "") +        	# 6. 도입부
-                str(ai_output_html or "") +    	# 7. AI 통변
-                str(closing_html or "")        	# 8. 맺음말
-            )
+                    str(info_h or "") +            	# 1. 헤더 (이름, 양/음력)
+                    str(table_html or "") +        	# 2. 사주원국 테이블 (여기에 배치!)
+                    str(master_bar_html or "") +   	# 3. 마스터 바
+                    str(un_html or "") +           	# 4. 대운
+                    str(specific_ui_html or "") +  	# 5. 세운/월운
+                    str(intro_html or "") +        	# 6. 도입부
+                    str(golden_text_html or "") +    	# 7. 초연 시공명리 사주요약
+                    str(ai_output_html or "") +    	# 8.  AI 통변
+                    str(closing_html or "")        	# 9. 맺음말
+                )
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             except Exception as e:
