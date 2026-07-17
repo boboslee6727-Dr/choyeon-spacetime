@@ -110,14 +110,6 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     <div class="page-break-before"></div>
     """
 
-def get_intro_html():
-    return """
-    <div style='font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 10px; padding: 0 10px;'>
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 분석하지만,</p>
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'>본 초연 시공명리 사주풀이는 5년에 한 번 돌아오는 '60월령'과 '60일주'의 조합으로 3,600가지의 유형으로 분석하기 때문에, 기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
-    </div>
-    """
-
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
     <div style='text-align:center; margin-bottom:25px; line-height:1.6;'>
@@ -184,6 +176,14 @@ def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color,
 
 def get_styled_td(ganji, oh_class):
     return f"<td class='{oh_class} ganji-cell'>{ganji}</td>"
+
+def get_intro_html():
+    return """
+    <div style='font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 10px; padding: 0 10px;'>
+        <p style='text-indent: 15px; margin: 0 0 5px 0;'>기존 전통 명리학 사주풀이는 1년에 한 번 돌아오는 '12월지'와 '60일주'의 조합으로 720가지의 유형으로 분석하지만,</p>
+        <p style='text-indent: 15px; margin: 0 0 5px 0;'>본 초연 시공명리 사주풀이는 5년에 한 번 돌아오는 '60월령'과 '60일주'의 조합으로 3,600가지의 유형으로 분석하기 때문에, 기존 전통명리학에 비교하면 '5배', 요즘 유행하는 MBTI의 16가지 유형과 비교하면 무려 '225배' 더 세분화된 정밀한 사주풀이 분석입니다.</p>
+    </div>
+    """
 
 def get_golden_text(name, w_val, i_val):
     return f"""
