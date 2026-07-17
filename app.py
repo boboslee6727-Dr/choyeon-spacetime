@@ -277,7 +277,7 @@ with st.sidebar:
 
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
-        with col_g1: ry = st.text_input("년주", value="", key="u_ry")
+        with col_g1: ry = st.text_input("년주", value="", key="p_ry_input")
         with col_g2: rm = st.text_input("월주", value="", key="u_rm")
         col_g3, col_g4 = st.columns(2)
         with col_g3: rd = st.text_input("일주", value="", key="u_rd")
