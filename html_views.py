@@ -191,8 +191,7 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
                 padding: 20px; background-color: #FAFAFA;'>
         <p style='text-indent: 0px; margin: 0;'>
             <b>초연 시공명리학적으로 풀이하면 {name}님</b>은 <b>'{w_val}'</b>의 시공간에서, 
-            <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, <br>
-            <b>'{s_name}로 {s_type} 즉, {s_desc}'</b>하는 성향이 있습니다.
+            <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, 성격은 <b>'{s_name}인 {s_type}으로, {s_desc}'</b>하는 성향이 있습니다.
         </p>
     </div>
     """
