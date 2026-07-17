@@ -528,23 +528,6 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
-            # ---------------------------------------------------------
-            # 🚨 아래 코드는 SyntaxError를 유발하는 중복/고립된 코드입니다. 
-            # 들여쓰기 원칙에 맞추어 주석 처리 하였습니다.
-            # ---------------------------------------------------------
-            full_content = cover_html + m_box + w_box + ai_html + closing
-            st.markdown(html_views.get_final_report_box(full_content), unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"🚨 시스템 치명적 오류: {e}")
-            final_gunghap_report = (
-                str(cover_html or "").strip() + 
-                str(m_box or "").strip() + 
-                str(w_box or "").strip() + 
-                str(ai_output_html or "").strip() + 
-                str(closing or "").strip()
-            )
-            st.markdown(html_views.get_final_report_box(full_report_html), unsafe_allow_html=True)
-
     # ---------------------------------------------------------
     # [7번 상품] 연애/궁합 
     # ---------------------------------------------------------
