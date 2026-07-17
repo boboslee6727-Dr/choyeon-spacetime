@@ -511,20 +511,26 @@ if st.session_state.get('app_running', False):
             marital = st.session_state.get("u_m_stat", "선택")
 
             # --- (E) 최종 통합 렌더링 ---
+            # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
-                    
-                # ver 48.7 검증 로직 이식
+                
+                # 1. DB는 choyeon_db 라는 별도의 이름으로 로드
+                choyeon_db = load_choyeon_db()
+
+                # 2. 일지는 db가 아닌 d_pillar[1]을 사용 (명확한 구분)
+                # d_pillar[0]은 일간, d_pillar[1]은 일지입니다.
                 w_key = f"{ms}{mb}".strip()
-                i_key = f"{ds}{db}".strip()
-                w_val = db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                i_val = db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                struct_data = db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                i_key = f"{ds}{d_pillar[1]}".strip() 
+
+                # 3. 안전하게 choyeon_db에서 데이터 추출
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-                   
-                # 박사님이 새로 만드신 get_golden_text 함수 활용
+                
                 golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
-                    
+                
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
                     str(info_h or "") +            	# 1. 헤더 (이름, 양/음력)
