@@ -513,16 +513,15 @@ if st.session_state.get('app_running', False):
             # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
-                    # [추가] html_views에 있는 함수를 사용하여 golden_text_html 생성
-                    # saju_facts 딕셔너리에 있는 키값들을 박사님의 엔진 환경에 맞게 매핑하십시오.
-                    golden_text_html = html_views.get_golden_text(
-                        name, 
-                        saju_facts.get('wolryung', '시공간 정보'), 
-                        saju_facts.get('ilju', '성품 정보'), 
-                        saju_facts.get('structure_name', '구조'), 
-                        saju_facts.get('structure_type', '유형'), 
-                        saju_facts.get('structure_desc', '상세 설명')
-                    )
+                # [추가] html_views에 있는 함수를 사용하여 golden_text_html 생성
+                golden_text_html = html_views.get_golden_text(
+                    name, 
+                    saju_facts.get('wolryung', '시공간 정보'), 
+                    saju_facts.get('ilju', '성품 정보'), 
+                    saju_facts.get('structure_name', '구조'), 
+                    saju_facts.get('structure_type', '유형'), 
+                    saju_facts.get('structure_desc', '상세 설명')
+                )
                 
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
