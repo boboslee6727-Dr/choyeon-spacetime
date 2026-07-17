@@ -516,15 +516,17 @@ if st.session_state.get('app_running', False):
                 
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
-                    str(table_html or "") + 
-                    str(master_bar_html or "") + 
-                    str(intro_html or "") + 
-                    str(un_html or "") + 
-                    str(specific_ui_html or "") + 
-                    str(ai_output_html or "") + 
-                    str(closing_html or "")
-                )
+                str(info_h or "") +            # 1. 헤더 (이름, 양/음력)
+                str(table_html or "") +        # 2. 사주원국 테이블 (여기에 배치!)
+                str(master_bar_html or "") +   # 3. 마스터 바
+                str(intro_html or "") +        # 4. 도입부
+                str(un_html or "") +           # 5. 대운
+                str(specific_ui_html or "") +  # 6. 세운/월운
+                str(ai_output_html or "") +    # 7. AI 통변
+                str(closing_html or "")        # 8. 맺음말
+            )
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
