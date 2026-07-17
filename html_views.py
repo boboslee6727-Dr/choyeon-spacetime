@@ -280,7 +280,7 @@ def get_closing_html(name):
         <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: 900; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
             <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
-        </div>
+    </div>
     """
 
 def get_final_report_box(content_html):
