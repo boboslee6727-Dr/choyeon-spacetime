@@ -256,6 +256,7 @@ with st.sidebar:
             f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
 
+
     # 3. 추가 옵션
     if "8. 결혼" in u_product:
         date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
