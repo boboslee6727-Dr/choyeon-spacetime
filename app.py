@@ -124,9 +124,10 @@ with st.sidebar:
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="sb_btn_user_rev"):
             st.session_state['app_running'] = False  # AI 가동 차단
-            _ry = extract_ganji(st.session_state['sb_u_ry'])
-            _rm = extract_ganji(st.session_state['sb_u_rm'])
-            _rd = extract_ganji(st.session_state['sb_u_rd'])
+            _ry = extract_ganji(st.session_state.get('sb_u_ry', ''))
+            _rm = extract_ganji(st.session_state.get('sb_u_rm', ''))
+            _rd = extract_ganji(st.session_state.get('sb_u_rd', ''))
+
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
