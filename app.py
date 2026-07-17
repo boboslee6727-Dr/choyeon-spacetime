@@ -326,7 +326,7 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     with st.expander("👤 신청인 기본 정보", expanded=True):
-        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
+        name = st.text_input("이름", value="", placeholder="홍길동", key="sb_u_n")
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
