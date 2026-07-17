@@ -513,16 +513,18 @@ if st.session_state.get('app_running', False):
             # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
-                # [추가] html_views에 있는 함수를 사용하여 golden_text_html 생성
-                golden_text_html = html_views.get_golden_text(
-                    name, 
-                    saju_facts.get('wolryung', '시공간 정보'), 
-                    saju_facts.get('ilju', '성품 정보'), 
-                    saju_facts.get('structure_name', '구조'), 
-                    saju_facts.get('structure_type', '유형'), 
-                    saju_facts.get('structure_desc', '상세 설명')
-                )
-                
+                    
+                # ver 48.7 검증 로직 이식
+                w_key = f"{ms}{mb}".strip()
+                i_key = f"{ds}{db}".strip()
+                w_val = db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                i_val = db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                struct_data = db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                   
+                # 박사님이 새로 만드신 get_golden_text 함수 활용
+                golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+                    
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
                     str(info_h or "") +            	# 1. 헤더 (이름, 양/음력)
