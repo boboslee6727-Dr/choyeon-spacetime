@@ -499,17 +499,33 @@ if st.session_state.get('app_running', False):
                 ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
             # --- (E) 최종 통합 렌더링 ---
+            info_header_html = html_views.get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str)
+
+            # w_key, i_key는 박사님의 기존 로직대로 생성
+            w_key = f"{ms}{mb}".strip()
+            i_key = f"{ds}{db}".strip()
+
+            # 데이터 조회
+            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 정보 없음")
+            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 정보 없음")
+            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+
+            # html_views의 함수 호출 (구조 데이터를 포함하여 호출하도록 업그레이드 제안)
+            golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
             closing_html = html_views.get_closing_html(name)
             
             st.markdown(cover_html, unsafe_allow_html=True)
             final_report = (
-                str(table_html or "") + 
-                str(master_bar_html or "") + 
-                str(intro_html or "") + 
-                str(un_html or "") +      # 대운 표
-                str(specific_ui_html or "") + # 세운 표, 월운 표 등 추가 UI
-                str(ai_output_html or "") +   # 원국+대운+세운 등 통합 AI 통변
-                str(closing_html or "")
+                str(info_header_html or "") +  	# 여기에 헤더를 배치합니다!
+                str(table_html or "") + 		# 사주원국
+                str(master_bar_html or "") + 	# 마스터 바
+                str(un_html or "") +      		# 대운 표
+                str(intro_html or "") + 		# 머리말
+                str(golden_text_html or "") +	# 시공명리 풀이
+                str(specific_ui_html or "") + 	# 세운 표, 월운 표 등 추가 UI
+                str(ai_output_html or "") +   	# 원국+대운+세운 등 통합 AI 통변
+                str(closing_html or "")		# 맺음말
             )
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
