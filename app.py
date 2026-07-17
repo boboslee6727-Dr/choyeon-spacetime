@@ -283,8 +283,7 @@ with st.sidebar:
         with col_g3: rd = st.text_input("일주", value="", key="main_u_rd")
         with col_g4: rt = st.text_input("시주", value="", key="main_u_rt")
         
-        
-        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
+        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="sb_btn_user_rev"):
             st.session_state['app_running'] = False  # AI 가동 차단
             _ry = extract_ganji(st.session_state['sb_u_ry'])
             _rm = extract_ganji(st.session_state['sb_u_rm'])
