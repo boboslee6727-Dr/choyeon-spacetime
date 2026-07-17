@@ -282,7 +282,6 @@ def get_closing_html(name):
         <div style='text-align: right; margin-top: 30px;'>
             <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
         </div>
-    </div>
     """
 
 def get_final_report_box(content_html):
