@@ -183,13 +183,16 @@ def get_intro_html():
     </div>
     """
 
-def get_golden_text(name, w_val, i_val):
+def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
+    # s_name: 비식관구조, s_type: 조직봉사형, s_desc: 조직과 봉사활동을 통해 정체성을 추구
     return f"""
     <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #000000; 
                 margin: 25px 0; border-top: 2px solid #1A237E; border-bottom: 2px solid #1A237E; 
                 padding: 20px; background-color: #FAFAFA;'>
         <p style='text-indent: 0px; margin: 0;'>
-            <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨습니다.
+            <b>초연 시공명리학적으로 풀이하면 {name}님</b>은 <b>'{w_val}'</b>의 시공간에서, 
+            <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, <br>
+            <b>'{s_name}로 {s_type} 즉, {s_desc}'</b>하는 성향이 있습니다.
         </p>
     </div>
     """
