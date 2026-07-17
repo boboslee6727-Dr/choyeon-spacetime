@@ -292,6 +292,12 @@ if st.session_state.get('app_running', False):
         
         # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
+
+        # [수정] 위젯의 최신 상태를 변수에 확실히 동기화
+        b_year = st.session_state.get("s_y", 1980)
+        b_month = st.session_state.get("s_m", 1)
+        b_day = st.session_state.get("s_d", 1)
+
         if "음력" in u_cal:
             is_leap = True if "윤달" in u_cal else False
             klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
@@ -361,14 +367,14 @@ if st.session_state.get('app_running', False):
             cur_samjae = engine.get_samjae(yb, curr_y_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
 
+            # --- (B) 공통 UI 렌더링 (원국, 마스터바, 대운) ---
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
-            time_str_fmt = f"{b_time.split('(')[0].strip()} ({hb})시" if b_time != "시간 모름" else ""
+            time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
 
-            # --- (B) 공통 UI 렌더링 (원국, 마스터바, 대운) ---
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
-            intro_html = html_views.get_intro_html()
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
+            intro_html = html_views.get_intro_html()
 
             ji_rel_rows = ""
             for l_idx, r_idx in enumerate([1, 2, 0, 3]):
