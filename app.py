@@ -505,6 +505,15 @@ if st.session_state.get('app_running', False):
             marital = st.session_state.get("u_m_stat", "선택")
 
             # --- (E) 최종 통합 렌더링 ---
+            # 508라인 직전에 아래 방어 로직 추가 예정
+            if 'sol_str' not in locals():
+                sol_str = "양력 정보 미상" 
+            if 'lun_str' not in locals():
+                lun_str = "음력 정보 미상"
+            if 'time_str' not in locals():
+                time_str = "시간 미상"
+    
+            # 원본 코드 유지 (508라인)
             info_header_html = html_views.get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str)
 
             # w_key, i_key는 박사님의 기존 로직대로 생성
