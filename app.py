@@ -277,15 +277,18 @@ with st.sidebar:
 
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
-        with col_g1: ry = st.text_input("년주", value="", key="p_ry_input")
-        with col_g2: rm = st.text_input("월주", value="", key="u_rm")
         col_g3, col_g4 = st.columns(2)
-        with col_g3: rd = st.text_input("일주", value="", key="u_rd")
-        with col_g4: rt = st.text_input("시주", value="", key="u_rt")
+        with col_g1: ry = st.text_input("년주", value="", key="main_u_ry")
+        with col_g2: rm = st.text_input("월주", value="", key="main_u_rm")
+        with col_g3: rd = st.text_input("일주", value="", key="main_u_rd")
+        with col_g4: rt = st.text_input("시주", value="", key="main_u_rt")
+        
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             st.session_state['app_running'] = False  # AI 가동 차단
-            _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+            _ry = extract_ganji(st.session_state['sb_u_ry'])
+            _rm = extract_ganji(st.session_state['sb_u_rm'])
+            _rd = extract_ganji(st.session_state['sb_u_rd'])
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
@@ -349,10 +352,10 @@ with st.sidebar:
             p_col_g1, p_col_g2 = st.columns(2)
             p_col_g3, p_col_g4 = st.columns(2)
 
-            with col_g1: ry = st.text_input("년주", value="", key="main_u_ry")
-            with col_g2: rm = st.text_input("월주", value="", key="main_u_rm")
-            with col_g3: rd = st.text_input("일주", value="", key="main_u_rd")
-            with col_g4: rt = st.text_input("시주", value="", key="main_u_rt")
+            with col_g1: ry = st.text_input("년주", value="", key="sb_u_ry")
+            with col_g2: rm = st.text_input("월주", value="", key="sb_u_rm")
+            with col_g3: rd = st.text_input("일주", value="", key="sb_u_rd")
+            with col_g4: rt = st.text_input("시주", value="", key="sb_u_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False  # 역산 시 AI 가동 차단
