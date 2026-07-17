@@ -347,11 +347,12 @@ with st.sidebar:
         # 1. 상대방 사주간지 역산
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
-            with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
-            with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
             p_col_g3, p_col_g4 = st.columns(2)
-            with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
-            with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
+
+            with col_g1: ry = st.text_input("년주", value="", key="main_u_ry")
+            with col_g2: rm = st.text_input("월주", value="", key="main_u_rm")
+            with col_g3: rd = st.text_input("일주", value="", key="main_u_rd")
+            with col_g4: rt = st.text_input("시주", value="", key="main_u_rt")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False  # 역산 시 AI 가동 차단
