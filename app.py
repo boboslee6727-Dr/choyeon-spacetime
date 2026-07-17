@@ -519,8 +519,14 @@ if st.session_state.get('app_running', False):
             # w_key, i_key는 박사님의 기존 로직대로 생성
             w_key = f"{ms}{mb}".strip()
             i_key = f"{ds}{db}".strip()
-
+            
             # 데이터 조회
+            # 524라인 직전: choyeon_db가 메모리에 없을 경우 임시로 빈 딕셔너리 할당 (에러 방어)
+            if 'choyeon_db' not in locals() and 'choyeon_db' not in globals():
+                choyeon_db = {"wolryeong": {}}
+
+            # [원본 사수] 524라인 유지
+            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 정보 없음")
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 정보 없음")
             i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 정보 없음")
             struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
