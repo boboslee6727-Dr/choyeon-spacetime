@@ -516,14 +516,14 @@ if st.session_state.get('app_running', False):
                 
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
-                str(info_h or "") +            # 1. 헤더 (이름, 양/음력)
-                str(table_html or "") +        # 2. 사주원국 테이블 (여기에 배치!)
-                str(master_bar_html or "") +   # 3. 마스터 바
-                str(intro_html or "") +        # 4. 도입부
-                str(un_html or "") +           # 5. 대운
-                str(specific_ui_html or "") +  # 6. 세운/월운
-                str(ai_output_html or "") +    # 7. AI 통변
-                str(closing_html or "")        # 8. 맺음말
+                str(info_h or "") +            	# 1. 헤더 (이름, 양/음력)
+                str(table_html or "") +        	# 2. 사주원국 테이블 (여기에 배치!)
+                str(master_bar_html or "") +   	# 3. 마스터 바
+                str(un_html or "") +           	# 4. 대운
+                str(specific_ui_html or "") +  	# 5. 세운/월운
+                str(intro_html or "") +        	# 6. 도입부
+                str(ai_output_html or "") +    	# 7. AI 통변
+                str(closing_html or "")        	# 8. 맺음말
             )
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
