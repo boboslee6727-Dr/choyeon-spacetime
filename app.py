@@ -326,16 +326,16 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     with st.expander("👤 신청인 기본 정보", expanded=True):
-        # key 값에 sb_를 붙여 고유하게 만듭니다.
-        name = st.text_input("이름", value="", placeholder="홍길동", key="sb_u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="sb_u_g", on_change=sync_partner_gender)
-        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="sb_u_m_stat")
-        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="sb_u_c") # 332라인 해결
+        # 박사님, 아래와 같이 모든 키 앞에 sidebar_를 붙여주십시오.
+        name = st.text_input("이름", value="", placeholder="홍길동", key="sidebar_u_n")
+        gender = st.selectbox("성별", ["남성", "여성"], key="sidebar_u_g", on_change=sync_partner_gender)
+        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="sidebar_u_m_stat")
+        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="sidebar_u_c")
         col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="s_y")
-        with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
-        with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
-        b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
+        with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="sidebar_s_y")
+        with col_m: b_month = st.number_input("월", 1, 12, value=1, key="sidebar_s_m")
+        with col_d: b_day = st.number_input("일", 1, 31, value=1, key="sidebar_s_d")
+        b_time = st.selectbox("태어난 시간", idx_list, key="sidebar_s_t")
 
     if "1. 개인사주" in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
