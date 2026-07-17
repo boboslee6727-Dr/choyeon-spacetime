@@ -338,7 +338,7 @@ with st.sidebar:
         b_time = st.selectbox("태어난 시간", idx_list, key="sidebar_s_t")
 
     if "1. 개인사주" in u_product:
-        run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False)
+        run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
     elif any(x in u_product for x in ["2. 올 해", "3. 이번 달", "4. 재물", "5. 직업", "6. 건강"]):
         if "4. 재물" in u_product: wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "5. 직업" in u_product: career_goal = st.text_input("고민되는 직업 분야는?", key="career_goal")
