@@ -268,8 +268,12 @@ with st.sidebar:
         elif "2-2." in u_product:
             run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
             
-        elif "3-" in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
+        elif "3-1." in u_product:
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key="other_reading")
+            
+        elif "3-2." in u_product:
+            other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="other_reading")
+            # 3-2는 궁합이므로 상대방 입력창이 하단에 자연스럽게 노출됨 (기존 로직 유지)
 
         # ==============================================================================
         # 👥 상대방(배우자/연인) 사주간지 역산
@@ -596,7 +600,7 @@ if st.session_state.get('app_running', False):
             # --- (D) AI 통변 통합 호출 ---
             ai_output_html = ""
             try:
-# 1. 팩트시트 생성 (원국 정보)
+                # 1. 팩트시트 생성 (원국 정보)
                 saju_facts = engine.get_saju_fact_sheet(
                     ys, yb, ms, mb, ds, db, hs, hb, 
                     name=name, age=age, gender=gender, marital=u_marital
