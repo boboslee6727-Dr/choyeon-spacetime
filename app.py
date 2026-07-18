@@ -580,17 +580,38 @@ if st.session_state.get('app_running', False):
             # --- (D) AI 통변 통합 호출 ---
             ai_output_html = ""
             try:
-                # 1. 팩트시트 생성 (원국 정보)
+# 1. 팩트시트 생성 (원국 정보)
                 saju_facts = engine.get_saju_fact_sheet(
                     ys, yb, ms, mb, ds, db, hs, hb, 
                     name=name, age=age, gender=gender, marital=u_marital
                 )
+                
+                # 2. 신규 프롬프트용 변수 완벽 매칭 (KeyError 방지)
                 saju_facts.update({
                     "all_daewun_data": all_daewun_data,
                     "dw_g_cur": dw_g_cur,
                     "dw_j_cur": dw_j_cur,
                     "dw_start_age": calc_d + (cur_dw_idx * 10),
-                    "dw_end_age": calc_d + ((cur_dw_idx + 1) * 10) - 1
+                    "dw_end_age": calc_d + ((cur_dw_idx + 1) * 10) - 1,
+                    
+                    # 공망 및 오행 카운트 (기존 변수 활용)
+                    "gongmang_actual": i_gong,
+                    "year_gongmang": n_gong,
+                    "mok": counts.get('목', 0),
+                    "hwa": counts.get('화', 0),
+                    "to": counts.get('토', 0),
+                    "geum": counts.get('금', 0),
+                    "su": counts.get('수', 0),
+                    "oheng_total": sum(counts.values()),
+                    
+                    # 신살 및 삼재
+                    "cheon_eul": guiin_str,
+                    "samjae_str": cur_samjae,
+                    
+                    # 묘고 작용 및 체용 매트릭스 (새로 추가한 engine 함수 호출)
+                    "won_guk_vaults_str": engine.get_won_guk_vaults_str(jjis),
+                    "dw_fact_str": engine.get_dw_fact_str(dw_g_cur, dw_j_cur),
+                    "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, jjis)
                 })
 
                 # 2. 누적된 프롬프트와 추가 정보를 하나로 병합
