@@ -239,51 +239,28 @@ with st.sidebar:
     if "1-1." in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
         
-    # 1-2 ~ 1-7 중 특화 분석이 선택되었을 때만 입력창 활성화
-    elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7."]):
-        
+    # 1-2 ~ 1-7. 3-1 중 특화 분석이 선택되었을 때만 입력창 활성화
+    elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7.", "3-1."]):
         if "1-4." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
-            
         elif "1-5." in u_product: 
             career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal")
-            
         elif "1-6." in u_product: 
             health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
-            
         elif "1-7." in u_product:
             moving_date = st.date_input("이사 희망일", key="moving_date")
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
+        elif "3-1." in u_product:
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
-    # 2. 궁합/결혼/출산/비교 옵션 (2-0 ~ 3-2)
-    elif any(x in u_product for x in ["2-", "3-1.", "3-2."]):
+    # 2. 궁합/결혼/출산/비교 (2-x, 3-2)
+    elif any(x in u_product for x in ["2-", "3-2."]):
         
-# 2-1. 특정 상품별 추가 옵션
+    # 2-1. 특정 상품별 추가 옵션
         # u_product 변수가 정의되지 않았을 경우를 대비해 안전하게 참조
         curr_prod = u_product if 'u_product' in locals() else ""
         
-        if "2-1." in curr_prod:
-            date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="m_mode_01")
-            if date_mode == "기간 선택":
-                start_date = st.date_input("시작일", key="m_start_date")
-                end_date = st.date_input("종료일", key="m_end_date")
-        
-        elif "2-2." in curr_prod:
-            run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="m_run_delivery")
-            
-        elif "3-1." in u_product:
-            other_report = st.text_area(
-                "📄 타 감명서 원문 (사주) 붙여넣기", # 라벨 수정
-                height=150, 
-                key=f"text_{u_product}"
-            )
-            
-        elif "3-2." in u_product:
-            other_report = st.text_area(
-                "📄 타 감명서 원문 (궁합) 붙여넣기 ", # 뒤에 공백 한 칸 추가 (시각적으로는 동일)
-                height=150, 
-                key=f"text_{u_product}"
-            ) 
+         
         # ==============================================================================
         # 👥 상대방(배우자/연인) 사주간지 역산
         # ==============================================================================
@@ -375,11 +352,8 @@ with st.sidebar:
     elif "2-2." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
 
-    # 타 감명서 비교 (3-1 또는 3-2 선택 시)
-    elif "3-1." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="key_3_1")
-            
-        elif "3-2." in u_product:
+          
+    elif "3-2." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="key_3_2")
     st.markdown("---")
 
