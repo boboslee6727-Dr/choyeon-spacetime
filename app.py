@@ -376,11 +376,11 @@ with st.sidebar:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
 
     # 타 감명서 비교 (3-1 또는 3-2 선택 시)
-    elif "3-1" in u_product:
-        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key=f"text_{u_product}")
-    elif "3-2" in u_product:
-        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key=f"text_{u_product}")
-
+    elif "3-1." in u_product:
+            other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="key_3_1")
+            
+        elif "3-2." in u_product:
+            other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="key_3_2")
     st.markdown("---")
 
     # ==============================================================================
