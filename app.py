@@ -272,12 +272,18 @@ with st.sidebar:
             run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="m_run_delivery")
             
         elif "3-1." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+            other_report = st.text_area(
+                "📄 타 감명서 원문 (사주) 붙여넣기", # 라벨 수정
+                height=150, 
+                key=f"text_{u_product}"
+            )
             
         elif "3-2." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key=f"text_{u_product}")
-            # 3-2는 궁합이므로 상대방 입력창이 하단에 자연스럽게 노출됨 (기존 로직 유지)
-
+            other_report = st.text_area(
+                "📄 타 감명서 원문 (궁합) 붙여넣기 ", # 뒤에 공백 한 칸 추가 (시각적으로는 동일)
+                height=150, 
+                key=f"text_{u_product}"
+            ) 
         # ==============================================================================
         # 👥 상대방(배우자/연인) 사주간지 역산
         # ==============================================================================
