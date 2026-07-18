@@ -560,6 +560,23 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
                 # (또는 MOVING_DATE_PROMPT 등 상황에 맞게 적용)
 
+            prompt_text = prompts.PERSONAL_SAJU_PROMPT.format(
+                name=name, age=age, gender=gender, marital=u_marital,
+                ys=ys, yb=yb, ms=ms, mb=mb, ds=ds, db=db, hs=hs, hb=hb,
+                all_daewun_data=all_daewun_data,
+                dw_g_cur=dw_g_cur, dw_j_cur=dw_j_cur,
+                dw_start_age=calc_d + (cur_dw_idx * 10),
+                dw_end_age=calc_d + ((cur_dw_idx + 1) * 10) - 1,
+                gyukgook_detail=struct_data[0] # 박사님 코드의 구조 데이터 활용
+            )
+
+            # AI 호출 및 결과 처리
+            ai_result = call_gemini_api(prompt_text)
+
+            # [중요] AI가 실토하지 않도록 결과를 강제 세척
+            # 만약 AI가 답변 시작 부분에 "안녕하세요", "AI로서" 등을 넣었다면 제거
+            ai_result = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', ai_result, flags=re.MULTILINE)
+
             # --- (D) AI 통변 통합 호출 ---
             ai_output_html = ""
             try:
