@@ -272,10 +272,10 @@ with st.sidebar:
             run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="m_run_delivery")
             
         elif "3-1." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key="other_reading")
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
             
         elif "3-2." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="other_reading")
+            other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key=f"text_{u_product}")
             # 3-2는 궁합이므로 상대방 입력창이 하단에 자연스럽게 노출됨 (기존 로직 유지)
 
         # ==============================================================================
@@ -370,8 +370,10 @@ with st.sidebar:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
 
     # 타 감명서 비교 (3-1 또는 3-2 선택 시)
-    elif "3-" in u_product:
-        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
+    elif "3-1" in u_product:
+        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key=f"text_{u_product}")
+    elif "3-2" in u_product:
+        other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key=f"text_{u_product}")
 
     st.markdown("---")
 
