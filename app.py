@@ -168,6 +168,9 @@ with st.sidebar:
         else:
             st.session_state["u_g"] = "남성"
 
+    # ==============================================================================
+    # 🔍 신청인 사주간지 역산 및 생년월일 자동입력
+    # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
@@ -215,6 +218,9 @@ with st.sidebar:
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
+    # ==============================================================================
+    # 🔍 신청인 정보 입력
+    # ==============================================================================
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
@@ -226,17 +232,32 @@ with st.sidebar:
         with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
 
-    if "1. 개인사주" in u_product:
+    # ==============================================================================
+    # 📌 특화 상품별 추가 옵션 입력부 (안전성 강화 코드)
+    # ==============================================================================
+    # 1-1. 사주팔자 및 대운 분석 선택 시
+    if "1-1." in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
-    elif any(x in u_product for x in ["2. 올 해", "3. 이번 달", "4. 재물", "5. 직업", "6. 건강"]):
-        if "4. 재물" in u_product: wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
-        elif "5. 직업" in u_product: career_goal = st.text_input("고민되는 직업 분야는?", key="career_goal")
-        elif "6. 건강" in u_product: health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
-
-    elif any(x in u_product for x in ["7. 연애", "8. 결혼", "9. 출산"]):
-        st.markdown("---")
         
-        # 1. 상대방 사주간지 역산
+    # 1-2 ~ 1-7 중 특화 분석이 선택되었을 때만 입력창 활성화
+    elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7."]):
+        
+        if "1-4." in u_product: 
+            wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
+            
+        elif "1-5." in u_product: 
+            career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal")
+            
+        elif "1-6." in u_product: 
+            health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
+            
+        elif "1-7." in u_product:
+            moving_date = st.date_input("이사 희망일", key="moving_date")
+            moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
+
+        # ==============================================================================
+        # 👥 상대방(배우자/연인) 사주간지 역산
+        # ==============================================================================
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -294,7 +315,10 @@ with st.sidebar:
                 else: 
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        # 2. 상대방 기본 정보 (복구 완료!)
+    # ==============================================================================
+    # 👥 상대방(배우자/연인) 정보 입력 (2번 전체 또는 3-2. 선택 시 노출)
+    # ==============================================================================
+    if "2-" in u_product or "3-2." in u_product:
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
@@ -306,23 +330,27 @@ with st.sidebar:
             f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
 
-    # 3. 추가 옵션
-    if "8. 결혼" in u_product:
-        date_mode = st.radio("택일 방식", ["기간 선택", "특정일 지정"])
+    # ==============================================================================
+    # 📌 특화 상품별 추가 옵션 입력부 (최신 체계 완벽 호환)
+    # ==============================================================================
+    if "2-1." in u_product:
+        date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="date_mode")
         if date_mode == "기간 선택":
-            start_date = st.date_input("시작일")
-            end_date = st.date_input("종료일")
-    elif "9. 출산" in u_product:
-        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True)
+            start_date = st.date_input("시작일", key="start_date")
+            end_date = st.date_input("종료일", key="end_date")
+            
+    elif "2-2." in u_product:
+        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
 
-    elif "10. 이사" in u_product:
-        moving_date = st.date_input("이사 희망일")
-        moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"])
-
-    elif "11. 타 감" in u_product:
+    # 타 감명서 비교 (3-1 또는 3-2 선택 시)
+    elif "3-" in u_product:
         other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="other_reading")
 
     st.markdown("---")
+
+    # ==============================================================================
+    # 🚀 실행 및 인쇄 버튼
+    # ==============================================================================
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
         
