@@ -554,6 +554,16 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
         })
     return daewun_list
 
+def get_daeun_fact_string(daewun_data_list):
+    """
+    daewun_data_list를 [나이(대운수) | 대운간지 | 주요특징] 형태의 문자열로 변환합니다.
+    """
+    fact_str = "\n"
+    for dw in daewun_data_list:
+        # dw 구조: [대운수, 대운간지, ...] (예: [5, "甲寅", ...])
+        fact_str += f"- {dw[0]}세 대운: {dw[1]}\n"
+    return fact_str
+
 def get_universal_analysis(ds, mb, db, gans, jjis):
     jg_list = JIJANGGAN.get(mb, [])
     
