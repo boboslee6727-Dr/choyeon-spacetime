@@ -180,8 +180,8 @@ def get_styled_td(ganji, oh_class):
 def get_intro_html():
     return """
     <div style='font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 10px; padding: 0 10px;'>
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'><b>"초연 시공 명리학"</b>는 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하기만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.</p> 
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'>따라서, <b>"본 초연 시공명리"</b>는 전통명리에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBT'와 비교하면 무려 <b>225배</b> 더 세밀화된 정밀한 사주풀이입니다.</p>
+        <p style='text-indent: 15px; margin: 0 0 5px 0;'><b>"초연 시공 명리학"</b>는 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.</p> 
+        <p style='text-indent: 15px; margin: 0 0 5px 0;'>따라서, <b>"본 초연 시공 명리학"</b>는 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBT'와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.</p>
     </div>
     """
 
