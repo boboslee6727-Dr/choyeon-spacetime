@@ -258,15 +258,18 @@ with st.sidebar:
     # 2. 궁합/결혼/출산/비교 옵션 (2-0 ~ 3-2)
     elif any(x in u_product for x in ["2-", "3-1.", "3-2."]):
         
-        # 2-1. 특정 상품별 추가 옵션
-        if "2-1." in u_product:
-            date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="date_mode")
-            if date_mode == "기간 선택":
-                start_date = st.date_input("시작일", key="start_date")
-                end_date = st.date_input("종료일", key="end_date")
+# 2-1. 특정 상품별 추가 옵션
+        # u_product 변수가 정의되지 않았을 경우를 대비해 안전하게 참조
+        curr_prod = u_product if 'u_product' in locals() else ""
         
-        elif "2-2." in u_product:
-            run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
+        if "2-1." in curr_prod:
+            date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="m_mode_01")
+            if date_mode == "기간 선택":
+                start_date = st.date_input("시작일", key="m_start_date")
+                end_date = st.date_input("종료일", key="m_end_date")
+        
+        elif "2-2." in curr_prod:
+            run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="m_run_delivery")
             
         elif "3-1." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key="other_reading")
@@ -354,7 +357,11 @@ with st.sidebar:
     # 📌 특화 상품별 추가 옵션 입력부 (최신 체계 완벽 호환)
     # ==============================================================================
     if "2-1." in u_product:
-        date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="date_mode")
+        if "2-1." in u_product:
+            date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
+            if date_mode == "기간 선택":
+                start_date = st.date_input("시작일", key="start_date_m")
+                end_date = st.date_input("종료일", key="end_date_m")
         if date_mode == "기간 선택":
             start_date = st.date_input("시작일", key="start_date")
             end_date = st.date_input("종료일", key="end_date")
