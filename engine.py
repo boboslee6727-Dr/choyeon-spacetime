@@ -556,12 +556,18 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
 
 def get_daeun_fact_string(daewun_data_list):
     """
-    daewun_data_list를 [나이(대운수) | 대운간지 | 주요특징] 형태의 문자열로 변환합니다.
+    딕셔너리 구조의 대운 리스트를 안전하게 읽어 문자열을 생성합니다.
     """
     fact_str = "\n"
     for dw in daewun_data_list:
-        # dw 구조: [대운수, 대운간지, ...] (예: [5, "甲寅", ...])
-        fact_str += f"- {dw[0]}세 대운: {dw[1]}\n"
+        # 딕셔너리 키를 사용하여 나이 구간과 대운 간지를 안전하게 결합
+        age_range = dw.get("age_range", "정보없음")
+        ganji = f"{dw.get('c_hangul', '')}{dw.get('j_hangul', '')}"
+        
+        # 십성과 신살 정보도 함께 넣어주면 AI가 훨씬 더 풍부한 통변을 합니다.
+        ss = f"{dw.get('ss_gan', '')}{dw.get('ss_ji', '')}"
+        
+        fact_str += f"- {age_range} 대운 ({ganji}): 주요 기운({ss})\n"
     return fact_str
 
 def get_universal_analysis(ds, mb, db, gans, jjis):
