@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.6"
+APP_VERSION = "ver 60.7"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -94,14 +94,63 @@ with st.sidebar:
     st.markdown(f"<p style='text-align: center; color: #555555; font-family: sans-serif; font-size: 12px;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
     
-    # [수정] on_change=stop_ai 추가
-    u_product = st.selectbox("상품선택", [
-        "1. 개인사주 및 일진 분석", "2. 올 해의 운세 (세운)", "3. 이번 달의 운세 (월운)",
-        "4. 재물운 특화 분석", "5. 직업/직장운 특화 분석", "6. 건강운 특화 분석",
-        "7. 연애 및 궁합운 특화 분석", "8. 결혼 택일 정밀 분석", "9. 출산 택일", "10. 이사 및 방위", "11. 타 감명서 비교 (개인)", "12. 타 감명서 비교 (궁합)"
-        ], label_visibility="collapsed", key="u_product_main", on_change=stop_ai)
+    # [수정] 1단계: 대분류 선택 (on_change=stop_ai 유지)
+    main_category = st.selectbox(
+        "어떤 상담을 원하십니까?", 
+        [
+            "1. 사주팔자 및 운세 풀이", 
+            "2. 연애/결혼운 (궁합) 풀이", 
+            "3. 타 감명서 비교"
+        ], 
+        key="main_category", 
+        on_change=stop_ai
+    )
+
+    st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
+
+    # [수정] 2단계: 중분류 선택 (선택된 값을 기존 u_product 변수에 담아 하위 로직과 완벽 호환)
+    if main_category == "1. 사주팔자 및 운세 풀이":
+        u_product = st.radio(
+            "상세 분석 항목을 선택하십시오:",
+            [
+                "1-1. 사주팔자 및 대운 분석",
+                "1-2. 올 해의 운세 상세 분석",
+                "1-3. 이번 달의 운세 상세 분석",
+                "1-4. 재물운 특화 분석",
+                "1-5. 직업/진학운 특화 분석",
+                "1-6. 건강운 특화 분석",
+                "1-7. 이사 및 방위 특화 분석"
+            ],
+            key="sub_category_1",
+            on_change=stop_ai
+        )
+
+    elif main_category == "2. 연애/결혼운 (궁합) 풀이":
+        u_product = st.radio(
+            "상세 분석 항목을 선택하십시오:",
+            [
+                "2-0. 연애/결혼운 (궁합) 기본 풀이", 
+                "2-1. 결혼 택일",
+                "2-2. 출산 택일"
+            ],
+            key="sub_category_2",
+            on_change=stop_ai
+        )
+
+    elif main_category == "3. 타 감명서 비교":
+        u_product = st.radio(
+            "비교 분석 대상을 선택하십시오:",
+            [
+                "3-1. 타 감명서 비교 (사주)",
+                "3-2. 타 감명서 비교 (궁합)"
+            ],
+            key="sub_category_3",
+            on_change=stop_ai
+        )
+
+    st.markdown("---")
 
     # 성별 양방향 자동 동기화를 위한 콜백 함수
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
@@ -286,9 +335,9 @@ with st.sidebar:
 if st.session_state.get('app_running', False):
     
     # ---------------------------------------------------------
-    # [1~6번 상품 통합 블록] 원국 + 대운을 무조건 먼저 생성합니다.
+    # [1-1 ~ 1-7번 상품 통합 블록] 원국 + 대운을 무조건 먼저 생성합니다.
     # ---------------------------------------------------------
-    if any(x in u_product for x in ["1.", "2.", "3.", "4.", "5.", "6."]):
+    if "1-" in u_product:  # "1-1", "1-2" 등 1번 카테고리 전체 감지
         
         # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
@@ -402,26 +451,27 @@ if st.session_state.get('app_running', False):
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
             # --- (C) 상품별 특화 UI 및 프롬프트 선택 ---
-            specific_ui_html = ""
             target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
             extra_facts = {}
+            sewun_html = "" # 에러 방지용 초기화
+            wolun_html = "" # 에러 방지용 초기화
 
-            # 현재 대운 간지 계산 (2번, 3번 등에서 사용)
+            # 현재 대운 간지 계산
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
             cur_dw_idx = max(0, (age - calc_d) // 10)
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
 
-            # [2. 올 해의 운세 (세운)]
-            if "2. 올 해" in u_product:
+            # 1-2. 올 해의 운세 (세운)
+            if "1-2." in u_product:
                 try:
                     current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
                     start_year = int(sol_y) + current_daewun_age - 1
                 except:
                     current_daewun_age = max(0, int(age))
                     start_year = curr_year
-                    
+                
                 se_content = ""
                 for i in range(10):
                     ty = start_year + i
@@ -439,11 +489,11 @@ if st.session_state.get('app_running', False):
                         f"{ty}년", tage, engine.get_ss(ds, tc_hangul), tc, get_oh_class(tc), 
                         tj, get_oh_class(tj), engine.get_ss(ds, tj_hangul), engine.get_unsung(ds, tj_hangul), engine.get_12_shinsal(yb, tj_hangul), bg_col, b_left
                     )
-                specific_ui_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
-                target_prompt = getattr(prompts, 'SEWUN_PROMPT', target_prompt)
+                sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
+                target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
 
-            # [3. 이번 달의 운세 (월운)]
-            elif "3. 이번 달" in u_product:
+            # 1-3. 이번 달의 운세 (월운)
+            elif "1-3." in u_product:
                 wol_gans_kor = ["기", "경", "신", "임", "계", "갑", "을", "병", "정", "무", "기", "경"]
                 wol_jis_kor = ["축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자"]
                 wol_content = ""
@@ -458,32 +508,33 @@ if st.session_state.get('app_running', False):
                         tm, engine.get_ss(ds, wc_kor) or "-", wc, get_oh_class(wc), 
                         wj, get_oh_class(wj), engine.get_ss(ds, wj_kor) or "-", engine.get_unsung(ds, wj_kor) or "-", engine.get_12_shinsal(yb, wj_kor) or "-", bg_col, b_left
                     )
-                specific_ui_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
-                target_prompt = getattr(prompts, 'WOLUN_PROMPT', target_prompt)
+                wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+                target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
 
-            # [4~6 특화 분석]
-            elif "4. 재물" in u_product:
-                target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
+            # 1-4 ~ 1-7. 특화 분석 프롬프트 연결
+            elif "1-4." in u_product:
+                target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
                 extra_facts['goal'] = st.session_state.get('wealth_goal', '')
-
-            elif "5. 직업" in u_product:
-                target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
+            elif "1-5." in u_product:
+                target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
                 extra_facts['goal'] = st.session_state.get('career_goal', '')
-
-            elif "6. 건강" in u_product:
-                target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
+            elif "1-6." in u_product:
+                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
                 extra_facts['goal'] = st.session_state.get('health_goal', '')
+            elif "1-7." in u_product:
+                target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
+                # (또는 MOVING_DATE_PROMPT 등 상황에 맞게 적용)
 
             # --- (D) AI 통변 통합 호출 ---
             ai_output_html = ""
             try:
-                # 1. 팩트시트 딕셔너리 생성 (원국+대운+세운 등 모든 정보 포함)
+                # 1. 팩트시트 생성 (원국 정보)
                 saju_facts = engine.get_saju_fact_sheet(
                     ys, yb, ms, mb, ds, db, hs, hb, 
                     name=name, age=age, gender=gender, marital=u_marital
                 )
                 
-                # 추가 정보 병합
+                # 2. 누적된 프롬프트와 추가 정보를 하나로 병합
                 saju_facts.update(extra_facts)
                 
                 class SafeDict(dict):
@@ -491,14 +542,22 @@ if st.session_state.get('app_running', False):
 
                 safe_facts = SafeDict(**saju_facts)
                 
-                # 타겟 프롬프트(개인/세운/월운 등)로 포맷팅
+                # 팩트 바인딩
                 prompt_content = target_prompt.format_map(safe_facts)
                 
-                # AI 호출
-                ai_result = call_gemini_api(prompt_content)
+                # AI 지시문
+                final_instruction = """
+                위의 사주 정보와 선택한 항목을 종합하여 체계적으로 통변하십시오. 
+                각 주제가 명확히 구분되도록 소제목을 사용하여 답변하십시오.
+                """
+                full_prompt = prompt_content + "\n\n" + final_instruction
+                
+                # 3. AI 호출
+                ai_result = call_gemini_api(full_prompt)
                 
                 if ai_result:
                     ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                    # 소제목 처리를 위한 정규식 보완
                     ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
                     ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
                     ai_output_html = html_views.get_ai_report_box(ai_result)
@@ -506,20 +565,14 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
 
-
-            # 키(u_m_stat)에서 값을 안전하게 가져와 marital 변수에 할당합니다.
-            marital = st.session_state.get("u_m_stat", "선택")
-
-            # --- (E) 최종 통합 렌더링 ---
             # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
                 
-                # 1. DB는 choyeon_db 라는 별도의 이름으로 로드
+                # 1. DB 로드
                 choyeon_db = load_choyeon_db()
 
                 # 2. 일지는 db가 아닌 d_pillar[1]을 사용 (명확한 구분)
-                # d_pillar[0]은 일간, d_pillar[1]은 일지입니다.
                 w_key = f"{ms}{mb}".strip()
                 i_key = f"{ds}{d_pillar[1]}".strip() 
 
@@ -533,25 +586,26 @@ if st.session_state.get('app_running', False):
                 
                 st.markdown(cover_html, unsafe_allow_html=True)
                 final_report = (
-                    str(info_h or "") +            	# 1. 헤더 (이름, 양/음력)
-                    str(table_html or "") +        	# 2. 사주원국 테이블 (여기에 배치!)
-                    str(master_bar_html or "") +   	# 3. 마스터 바
-                    str(un_html or "") +           	# 4. 대운
-                    str(specific_ui_html or "") +  	# 5. 세운/월운
-                    str(intro_html or "") +        	# 6. 도입부
-                    str(golden_text_html or "") +    	# 7. 초연 시공명리 사주요약
-                    str(ai_output_html or "") +    	# 8.  AI 통변
-                    str(closing_html or "")        	# 9. 맺음말
+                    str(info_h or "") +
+                    str(table_html or "") + 
+                    str(master_bar_html or "") + 
+                    str(un_html or "") +           # 4. 대운
+                    str(sewun_html or "") +        # 5. 세운 흐름표 (선택 시 렌더링)
+                    str(wolun_html or "") +        # 6. 월운 흐름표 (선택 시 렌더링)
+                    str(intro_html or "") + 
+                    str(golden_text_html or "") + 
+                    str(ai_output_html or "") + 
+                    str(closing_html or "")
                 )
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
-    # ---------------------------------------------------------
-    # [7번 상품] 연애/궁합 
-    # ---------------------------------------------------------
-    elif "7. 연애" in u_product:
+    # ==============================================================================
+    # [2번 카테고리] 연애/궁합 풀이
+    # ==============================================================================
+    elif "2-0." in u_product:
         st.header(f"💕 {name} & {f_name} 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
@@ -570,7 +624,7 @@ if st.session_state.get('app_running', False):
                 if gender == "여성":
                     marital_status = f"{f_marital}-{u_marital}" 
                     gh_data = engine.get_gunghap_data(
-                        int(f_y), int(f_m), int(f_d), f_t, f_marital,             
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,              
                         int(b_year), int(b_month), int(b_day), b_time, u_marital, 
                         marital_status
                     )
@@ -580,7 +634,7 @@ if st.session_state.get('app_running', False):
                     marital_status = f"{u_marital}-{f_marital}" 
                     gh_data = engine.get_gunghap_data(
                         int(b_year), int(b_month), int(b_day), b_time, u_marital, 
-                        int(f_y), int(f_m), int(f_d), f_t, f_marital,             
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,              
                         marital_status
                     )
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
@@ -651,7 +705,7 @@ if st.session_state.get('app_running', False):
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 5. 최종 통합 출력 (깨짐 방지용 변수명 적용)
+                # 5. 최종 통합 출력
                 full_report = (
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
@@ -664,23 +718,31 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
                 
-    # ---------------------------------------------------------
-    # [8~12번 상품] 
-    # ---------------------------------------------------------
-    elif any(x in u_product for x in ["8. 결혼", "9. 출산", "10. 이사"]):
-        st.header(f"🗓️ {name}님의 {u_product.split('.')[1].strip()}")
+    # ==============================================================================
+    # [2번 카테고리 특화] 결혼 / 출산 택일
+    # ==============================================================================
+    elif any(x in u_product for x in ["2-1.", "2-2."]):
+        title_str = u_product.split('.')[1].strip() if "." in u_product else u_product
+        st.header(f"🗓️ {name}님의 {title_str}")
         st.markdown("---")
         with st.spinner("⏳ 길일 및 시공간 분석 중..."):
             st.info("명리학적 택일 분석 엔진 가동 대기 중입니다.")
 
-    elif "11. 타 감" in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교")
+    # ==============================================================================
+    # [3번 카테고리] 타 감명서 1:1 비교
+    # ==============================================================================
+    elif "3-1." in u_product:
+        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교 (사주)")
         st.markdown("---")
-        if not other_report: st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: st.info("타 감명서 비교 로직이 작동합니다.")
+        if not other_report: 
+            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+        else: 
+            st.info("개인 사주 타 감명서 비교 로직이 작동합니다.")
 
-    elif "12. 타 감" in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 비교 (궁합)")
+    elif "3-2." in u_product:
+        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교 (궁합)")
         st.markdown("---")
-        if not st.session_state.get('other_reading', ""): st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
+        if not st.session_state.get('other_reading', ""): 
+            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
+        else: 
+            st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
