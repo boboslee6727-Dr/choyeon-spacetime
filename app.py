@@ -481,6 +481,7 @@ if st.session_state.get('app_running', False):
             # --- (C) 상품별 특화 UI 및 프롬프트 선택 ---
             target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
             extra_facts = {}
+
             sewun_html = "" # 에러 방지용 초기화
             wolun_html = "" # 에러 방지용 초기화
 
@@ -490,6 +491,12 @@ if st.session_state.get('app_running', False):
             cur_dw_idx = max(0, (age - calc_d) // 10)
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
+
+            # 기존 대운 데이터 리스트 생성 후 아래 코드 삽입
+            daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
+
+            # [추가] AI가 대운 로드맵을 완벽히 이해하도록 변환
+            all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
 
             # 1-2. 올 해의 운세 (세운)
             if "1-2." in u_product:
@@ -561,7 +568,14 @@ if st.session_state.get('app_running', False):
                     ys, yb, ms, mb, ds, db, hs, hb, 
                     name=name, age=age, gender=gender, marital=u_marital
                 )
-                
+                saju_facts.update({
+                    "all_daewun_data": all_daewun_data,
+                    "dw_g_cur": dw_g_cur,
+                    "dw_j_cur": dw_j_cur,
+                    "dw_start_age": calc_d + (cur_dw_idx * 10),
+                    "dw_end_age": calc_d + ((cur_dw_idx + 1) * 10) - 1
+                })
+
                 # 2. 누적된 프롬프트와 추가 정보를 하나로 병합
                 saju_facts.update(extra_facts)
                 
