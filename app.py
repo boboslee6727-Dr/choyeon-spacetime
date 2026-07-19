@@ -779,9 +779,9 @@ if st.session_state.get('app_running', False):
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
                     intro_h + 
-                    ai_output_html +           # 1. 초연 궁합풀이
-                    original_report_html +     # 2. 타 감명서 원문
-                    comparison_output_html +   # 3. 1:1 상세비교 분석
+                    ai_output_html +           	# 1. 초연 궁합풀이
+                    original_report_html +     	# 2. 타 감명서 원문
+                    comparison_output_html +   	# 3. 1:1 상세비교 분석
                     closing
                 )
                 report_box = html_views.get_final_report_box(full_report)
