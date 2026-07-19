@@ -619,9 +619,6 @@ if st.session_state.get('app_running', False):
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
 
-            except Exception as e:
-                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
-
             # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
