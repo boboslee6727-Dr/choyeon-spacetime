@@ -352,7 +352,6 @@ with st.sidebar:
     elif "2-2." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
 
-          
     elif "3-2." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="key_3_2")
     st.markdown("---")
@@ -820,18 +819,12 @@ if st.session_state.get('app_running', False):
     # ==============================================================================
     # [3번 카테고리] 타 감명서 1:1 비교
     # ==============================================================================
-    elif "3-1." in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교 (사주)")
-        st.markdown("---")
-        if not other_report: 
-            st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
-        else: 
-            st.info("개인 사주 타 감명서 비교 로직이 작동합니다.")
-
-    elif "3-2." in u_product:
-        st.header("⚖️ 초연 시공명리 타 감명서 1:1 비교 (궁합)")
-        st.markdown("---")
-        if not st.session_state.get('other_reading', ""): 
+    elif "3-1." in u_product or "3-2." in u_product:
+        # 동적으로 현재 상품의 키값을 가져옵니다.
+        current_key = "text_3-1." if "3-1." in u_product else "key_3_2"
+        other_report = st.session_state.get(current_key, "")
+        
+        if not other_report:
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
             st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
