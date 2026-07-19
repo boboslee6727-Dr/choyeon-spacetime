@@ -544,7 +544,6 @@ if st.session_state.get('app_running', False):
                         # 1-3번(월운)은 별도의 target_prompt가 필요하면 설정, 아니면 기존 유지
                         target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt)
                     elif "1-4." in u_product:
-                    elif "1-4." in u_product:
                         target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
                         extra_facts['goal'] = st.session_state.get('wealth_goal', '')
                     elif "1-5." in u_product:
