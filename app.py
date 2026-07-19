@@ -525,31 +525,36 @@ if st.session_state.get('app_running', False):
                 wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
                  
-                # ---------------------------------------------------------
-                # [1. 골든 텍스트 및 마무리 텍스트 공통 준비]
-                # ---------------------------------------------------------
-                closing_html = html_views.get_closing_html(name)
-                choyeon_db = load_choyeon_db()
-                w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-                golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
-                 
-                # ---------------------------------------------------------
-                # [2. 공통 HTML 재료 조립 (final_report_base)]
-                # ---------------------------------------------------------
-                final_report_base = (
+            # ---------------------------------------------------------
+            # [1. 공통 데이터 및 HTML 재료 준비] (12칸 들여쓰기)
+            # ---------------------------------------------------------
+            closing_html = html_views.get_closing_html(name)
+            choyeon_db = load_choyeon_db()
+            w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
+            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+            golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+            
+            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
+            wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+            closing_html = html_views.get_closing_html(name) 
+
+            # ---------------------------------------------------------
+            # [2. 통합 HTML 재료 조립 (final_report_base)] 
+            # ---------------------------------------------------------
+            final_report_base = (
                 str(cover_html or "") + str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
                 str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
                 str(intro_html or "") + str(golden_text_html or "")
-                )
-                closing_part = str(closing_html or "")
+            )
+            closing_part = str(closing_html or "")
 
             # ---------------------------------------------------------
-            # [2. 분기] AI 통변 프롬프트만 결정 (12칸 들여쓰기)
+            # [3. 상품별 AI 통변 프롬프트 분기] (중복 없이 여기서만 판단)
             # ---------------------------------------------------------
             if "1-1." in u_product:
                 target_prompt = prompts.PERSONAL_SAJU_PROMPT
@@ -566,14 +571,19 @@ if st.session_state.get('app_running', False):
             elif "1-7." in u_product:
                 target_prompt = prompts.MOVING_DIRECTION_PROMPT
             else:
-                target_prompt = prompts.PERSONAL_SAJU_PROMPT # 기본값
+                target_prompt = prompts.PERSONAL_SAJU_PROMPT # 기본값 보호장치
 
-            # AI 분석 실행
+            # ---------------------------------------------------------
+            # [4. 통합 출력부] (API 호출 및 화면 출력은 마지막에 딱 한 번만!)
+            # ---------------------------------------------------------
             with st.spinner("🤖 [정밀 분석] 통변 결과를 생성 중입니다..."):
-                # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                ai_output_html = "<div style='padding:20px;'>AI 심층 통변 내용입니다.</div>"
-
+                ai_output_html = call_gemini_api(target_prompt, extra_facts)
+            
+            # 모든 재료(base + ai_output + closing)를 합칩니다.
             final_report = final_report_base + str(ai_output_html or "") + closing_part
+            
+            # 최종 결과를 화면에 송출합니다.
+            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
             
             if "3-1." in u_product:
                 # 3-1은 기존의 밸런스 비교 분석 로직 추가
