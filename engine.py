@@ -597,6 +597,23 @@ def get_universal_analysis(ds, mb, db, gans, jjis):
 def get_group_ss(ss_str):
     return {'비견':'비겁', '겁재':'비겁', '식신':'식상', '상관':'식상', '편재':'재성', '정재':'재성', '편관':'관성', '정관':'관성', '편인':'인성', '정인':'인성'}.get(ss_str, '비겁')
 
+def get_opposite_gender(gender):
+    """성별을 입력받아 반대 성별을 반환하는 순수 함수"""
+    return "여성" if gender == "남성" else "남성"
+
+# 만약 꼭 session_state를 직접 제어해야 한다면 아래와 같이 엔진에 구성합니다.
+def update_partner_gender():
+    """신청인 성별을 기준으로 상대방 성별 업데이트"""
+    import streamlit as st
+    user_g = st.session_state.get("u_g", "남성")
+    st.session_state["f_g"] = get_opposite_gender(user_g)
+
+def update_user_gender():
+    """상대방 성별을 기준으로 신청인 성별 업데이트"""
+    import streamlit as st
+    partner_g = st.session_state.get("f_g", "여성")
+    st.session_state["u_g"] = get_opposite_gender(partner_g)
+
 def get_yukchin_rule(gender, marital):
     """내담자의 성별과 혼인 상태에 따른 육친 통변 규칙을 반환합니다."""
     if gender == '남성':
@@ -650,8 +667,25 @@ def get_matrix_keyword(che_group, yong_group):
             return line.split(":", 1)[1].strip()
     return "변화 감지"
 
+def get_won_guk_vaults_str(jjis):
+    """원국 내 진술축미(묘고) 글자를 파악하여 입고/개고 잠재력을 반환합니다."""
+    vaults = [j for j in jjis if j in ['辰', '戌', '丑', '未']]
+    if not vaults:
+        return "원국 내 진술축미(묘고) 글자 없음 (특수 입고 작용 미미함)"
+    return f"원국 내 묘고 글자 보유: {', '.join(vaults)} (강력한 입고 및 개고 잠재력 내재)"
+
+def get_dw_fact_str(dw_g, dw_j):
+    """현재 대운의 천간(체)과 지지(용)의 팩트 문자열을 생성합니다."""
+    return f"천간 {dw_g}의 기운이 지지 {dw_j}의 환경을 만난 형국 (체용의 상호작용)"
+
+def get_hang_un_vaults_str(dw_j, jjis):
+    """현재 대운 지지가 원국의 묘고 작용을 촉발하는지 분석합니다."""
+    if dw_j in ['辰', '戌', '丑', '未']:
+        return f"대운 지지({dw_j})가 묘고(창고)로 작용하여 원국 글자들의 입고/개고 반응 촉발 가능성 높음"
+    return "진술축미 대운이 아니므로 대운 자체의 강력한 입고 작용은 없음"
+
 # ==============================================================================
-# 4. 출산택일 및 궁합 연산 로직
+# 4. 궁합 및 출산 택일 연산 로직
 # ==============================================================================
 def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list=None):
     if forbidden_list is None: forbidden_list = []
