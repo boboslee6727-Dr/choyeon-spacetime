@@ -443,6 +443,13 @@ if st.session_state.get('app_running', False):
             cur_samjae = engine.get_samjae(yb, curr_y_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
 
+            user_info = html_views.get_info_header(
+                "👤", name, gender, u_marital, age,  # 여기서 m_age를 age로 변경!
+                f"{b_year}년 {b_month}월 {b_day}일", 
+                f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일", 
+                f"{b_time}시", p_color="#212121"
+            )
+
             # --- (B) 공통 UI 렌더링 (원국, 마스터바, 대운) ---
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
