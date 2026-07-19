@@ -283,7 +283,10 @@ with st.sidebar:
 
         # 전역 변수 time_options가 없으면 방어 코드를 사용
         current_time_options = time_options if 'time_options' in locals() or 'time_options' in globals() else safe_time_options
-        f_t = st.selectbox("태어난 시간", ["시간 모름"] + time_options, key="f_t")
+        
+        # 🎯 [핵심 수정] time_options -> current_time_options 로 변경!
+        f_t = st.selectbox("태어난 시간", ["시간 모름"] + current_time_options, key="f_t")
+        
         f_marital = st.radio("상대방 혼인 상태", ["미혼", "기혼", "돌싱"], key="f_marital")
          
         # ==============================================================================
