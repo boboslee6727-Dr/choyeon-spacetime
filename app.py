@@ -391,8 +391,6 @@ if st.session_state.get('app_running', False):
         p_icon = "♂️" if gender == "남성" else "♀️"
         today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
 
-        user_info = html_views.get_info_header( "👤", name, gender, u_marital, age, f"{b_year}년 {b_month}월 {b_day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일", f"{b_time}시", p_color="#212121")
-
         def extract_time(time_str):
             if "모름" in time_str: return 0, 0
             match = re.search(r'(\d{2}):(\d{2})', time_str)
@@ -444,16 +442,10 @@ if st.session_state.get('app_running', False):
             cur_samjae = engine.get_samjae(yb, curr_y_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
 
-
-
             # --- (B) 공통 UI 렌더링 (원국, 마스터바, 대운) ---
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
-
-            cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
-            info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-            intro_html = html_views.get_intro_html()
 
             ji_rel_rows = ""
             for l_idx, r_idx in enumerate([1, 2, 0, 3]):
@@ -473,6 +465,10 @@ if st.session_state.get('app_running', False):
             
             filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
             gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
+
+            cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
+            info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
+            intro_html = html_views.get_intro_html()
 
             table_html = html_views.get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
