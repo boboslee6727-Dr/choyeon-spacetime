@@ -365,9 +365,8 @@ if st.session_state.get('app_running', False):
     # [1-1 ~ 1-7번 + 3-1번 상품 통합 블록] 
     # ---------------------------------------------------------
     if any(x in u_product for x in ["1-", "3-1."]): 
-        user_info = html_views.get_info_header("👤", name, gender, u_marital, m_age, f"{b_year}년 {b_month}월 {b_day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일", f"{b_time}시", p_color="#212121")       
-
-        # --- (A) 기본 사주 원국 및 대운 연산 ---
+  
+       # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
 
         b_year = st.session_state.get("s_y", 1980)
@@ -644,10 +643,10 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                # 1. 커버 데이터 계산
+                # 1. 커버 데이터 계산 (m_age -> age / f_age -> p_age로 의미 명확화)
                 curr_y = dt_mod.datetime.now().year
-                m_age = curr_y - int(b_year) + 1
-                f_age = curr_y - int(f_y) + 1
+                age = curr_y - int(b_year) + 1    # 신청인 나이
+                p_age = curr_y - int(f_y) + 1     # 파트너 나이
                 
                 klc = KoreanLunarCalendar()
                 klc.setSolarDate(int(b_year), int(b_month), int(b_day))
@@ -657,22 +656,22 @@ if st.session_state.get('app_running', False):
                 
                 if gender == "여성":
                     marital_status = f"{f_marital}-{u_marital}" 
-                    gh_data = engine.get_gunghap_data(
-                        int(f_y), int(f_m), int(f_d), f_t, f_marital,              
-                        int(b_year), int(b_month), int(b_day), b_time, u_marital, 
-                        marital_status
-                    )
-                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
-                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
+                    gh_data = engine.get_gunghap_data(...)
+                    # 💡 여기서 male_age에 p_age를, female_age에 age를 할당
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, age, m_sol, m_lun, b_time, u_marital
                 else:
                     marital_status = f"{u_marital}-{f_marital}" 
+                    gh_data = engine.get_gunghap_data(...)
+                    # 💡 여기서 male_age에 age를, female_age에 p_age를 할당
                     gh_data = engine.get_gunghap_data(
                         int(b_year), int(b_month), int(b_day), b_time, u_marital, 
                         int(f_y), int(f_m), int(f_d), f_t, f_marital,              
                         marital_status
                     )
-                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
-                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, f_age, f_sol, f_lun, f_t, f_marital
+
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, age, m_sol, m_lun, b_time, u_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
 
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
