@@ -538,27 +538,86 @@ if st.session_state.get('app_running', False):
             # 💡 [핵심 해결] 모든 사주 분석 로직을 16칸 들여쓰기로 감싸는 거대한 문을 엽니다.
                 try:
                     # 💡 [핵심] 1-2 ~ 1-7번, 3-1번 상품 로직 추가 및 정리
-                    if "1-2." in u_product:
-                        target_prompt = getattr(prompts, 'BASIC_PROMPT', target_prompt)
-                    elif "1-3." in u_product:
-                        # 1-3번(월운)은 별도의 target_prompt가 필요하면 설정, 아니면 기존 유지
-                        target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt)
+                    # [공통 출력부] - 모든 상품이 공통으로 가지는 요소는 밖으로 뺍니다.
+                    st.markdown(cover_html, unsafe_allow_html=True)
+                    st.markdown(info_h, unsafe_allow_html=True)
+                    st.markdown(table_html, unsafe_allow_html=True)
+                    st.markdown(master_bar_html, unsafe_allow_html=True)
+                    st.markdown(un_html, unsafe_allow_html=True)
+                    st.markdown(intro_html, unsafe_allow_html=True)
+
+                    # [상품별 특화 출력] - 필요한 것만 조건부로 출력합니다.
+                    if "1-2." in u_product and sewun_html:
+                        st.markdown(sewun_html, unsafe_allow_html=True)
+                        target_prompt = getattr(prompts, 'SEWUN_PROMPT', target_prompt) # 세운 프롬프트로 변경
+                    if "1-3." in u_product and wolun_html:
+                        st.markdown(wolun_html, unsafe_allow_html=True)
+                        target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt) # 월운 프롬프트로 변경
+ 
+                    # [AI 통변 및 리포트 구성]
+                    extra_facts = {
+                        "daewun": all_daewun_data,
+                        "sewun": "있음" if sewun_html else "없음",
+                        "wolun": "있음" if wolun_html else "없음"
+                        # 1. 박사님이 공들여 계산하신 세운/월운의 실제 데이터 전달
+                        "sewun_content": se_content if "1-2." in u_product else "없음",
+                        "wolun_content": wol_content if "1-3." in u_product else "없음",
+                        # 2. 분석의 기준이 되는 현재 시간 정보 전달
+                        "curr_year": curr_year,
+                        "curr_month": curr_m                    
+                    } 
+
+                    # --- [최종 통변 및 마무리 출력부] ---
+                    # 이제 위에서 결정된 target_prompt를 가지고 AI 분석을 돌리고,
+                    # 마지막 리포트 박스를 출력합니다.
+                    try:
+                        # 1. AI 분석 수행 (위에서 정해진 target_prompt를 사용)
+                        # ai_output_html = run_ai_analysis(target_prompt, ...)
+    
+                        # 2. 마무리 내용(골든텍스트 등) 생성
+                        closing_html = html_views.get_closing_html(name)
+                        choyeon_db = load_choyeon_db()
+                        w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
+                        w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                        i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                        struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                        s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                        golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+                        st.markdown(cover_html, unsafe_allow_html=True)
+                        final_report = (
+                            str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
+                            str(un_html or "") + str(sewun_html or "") + 
+                            str(intro_html or "") + str(golden_text_html or "") + 
+                            str(ai_output_html or "") + str(closing_html or "")
+                        )
+                        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
+
+
                     elif "1-4." in u_product:
                         target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
                         extra_facts['goal'] = st.session_state.get('wealth_goal', '')
+
                     elif "1-5." in u_product:
                         target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
                         extra_facts['goal'] = st.session_state.get('career_goal', '')
+
                     elif "1-6." in u_product:
                         target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
                         extra_facts['goal'] = st.session_state.get('health_goal', '')
+
                     elif "1-7." in u_product:
                         target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
                         extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
+
                     elif "3-1." in u_product:
                         other_report = st.session_state.get("text_3-1.", "")
                         if other_report:
                             extra_facts['other_report'] = other_report
+
+                except Exception as e:
+                    st.error(f"🚨 사주 분석 전체 오류: {e}")
 
                     # ==========================================
                     # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 (사주 전용)
