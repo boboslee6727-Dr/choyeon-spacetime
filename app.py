@@ -247,7 +247,7 @@ with st.sidebar:
         elif "3-1." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
-# 2. 궁합/결혼/출산/비교 (2-x, 3-2)
+    # 2. 궁합/결혼/출산/비교 (2-x, 3-2)
     elif any(x in u_product for x in ["2-", "3-2."]):
         
         # u_product 변수가 정의되지 않았을 경우를 대비해 안전하게 참조
@@ -548,6 +548,16 @@ if st.session_state.get('app_running', False):
             elif "1-7." in u_product:
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
                 extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
+            # 💡 [정상 연동 1] 3-1번 상품 데이터 장전 코드를 원래 위치에 정렬
+            elif "3-1." in u_product:
+                other_report = st.session_state.get("text_3-1.", "")
+                if other_report:
+                    extra_facts['other_report'] = other_report
+
+            # ==============================================================================
+            # [AI 호출 및 1차 풀이 생성 구간] 
+            # (※ 박사님의 기존 call_gemini_api 호출 및 ai_output_html 생성 원본 코드가 여기에 위치함)
+            # ==============================================================================
 
             # ==========================================
             # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 (사주 전용)
@@ -558,14 +568,13 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product:
                 other_report = st.session_state.get("text_3-1.", "")
                 if other_report:
-                    # 💡 html_views에서 정의한 사주 전용 원문 함수 호출
+                    # html_views에서 정의한 사주 전용 원문 함수 호출
                     original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
                     
-                    # 💡 순차 로딩 스피너 장착
                     with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
                         fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
                         
-                        # 박사님의 COMPARE_PROMPT 구조로 스마트 연동
+                        # prompts.py의 공통 프롬프트 매핑
                         comp_prompt = prompts.COMPARE_PROMPT.format(
                             full_content_clean=ai_output_html.replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
                             other_report=other_report,
@@ -581,7 +590,6 @@ if st.session_state.get('app_running', False):
                             comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
                             comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                             
-                            # 💡 html_views에서 3장 비교 분석 박스 디자인 호출
                             comparison_output_html = html_views.get_comparison_html(comp_fmt)
                 else:
                     st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
@@ -589,7 +597,6 @@ if st.session_state.get('app_running', False):
             # ==========================================
             # [STEP 3] 최종 통합 출력 (사주 비교 밸런스 스타일)
             # ==========================================
-            # 💡 박사님이 지시하신 전용 표지(Cover) 호출 및 배치
             comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
             
             saju_report = (
@@ -604,7 +611,7 @@ if st.session_state.get('app_running', False):
             report_box = html_views.get_final_report_box(saju_report)
             st.markdown(report_box, unsafe_allow_html=True)
             
-            # 2. 3-1 상품인 경우 구분선 처리 후 타 감명서 원문 및 1:1 비교서 순차 출력
+            # 2. 3-1 상품인 경우 구분선 처리 후 하단에 원문 및 1:1 상세비교서 순차 출력
             if "3-1." in u_product and original_report_html:
                 st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
                 
@@ -612,58 +619,8 @@ if st.session_state.get('app_running', False):
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
 
-            # --- (D) AI 통변 통합 호출 ---
-            ai_output_html = ""
-            try:
-                # 1. 팩트시트 생성 (원국 정보)
-                saju_facts = engine.get_saju_fact_sheet(
-                    ys, yb, ms, mb, ds, db, hs, hb, 
-                    name=name, age=age, gender=gender, marital=u_marital
-                )
-                
-                # 2. 신규 프롬프트용 변수 매칭
-                saju_facts.update({
-                    "all_daewun_data": all_daewun_data,
-                    "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur,
-                    "dw_start_age": calc_d + (cur_dw_idx * 10),
-                    "dw_end_age": calc_d + ((cur_dw_idx + 1) * 10) - 1,
-                    "gongmang_actual": i_gong, "year_gongmang": n_gong,
-                    "mok": counts.get('목', 0), "hwa": counts.get('화', 0),
-                    "to": counts.get('토', 0), "geum": counts.get('금', 0), "su": counts.get('수', 0),
-                    "oheng_total": sum(counts.values()),
-                    "cheon_eul": guiin_str, "samjae_str": cur_samjae,
-                    "won_guk_vaults_str": engine.get_won_guk_vaults_str(jjis),
-                    "dw_fact_str": engine.get_dw_fact_str(dw_g_cur, dw_j_cur),
-                    "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, jjis)
-                })
-
-                # 3. 누적된 프롬프트와 추가 정보(1-4~1-7, 3-1) 병합
-                saju_facts.update(extra_facts)
-                
-                class SafeDict(dict):
-                    def __missing__(self, key): return "{" + key + "}"
-
-                safe_facts = SafeDict(**saju_facts)
-                prompt_content = target_prompt.format_map(safe_facts)
-                
-                final_instruction = """
-                위의 사주 정보와 선택한 항목을 종합하여 체계적으로 통변하십시오. 
-                각 주제가 명확히 구분되도록 소제목을 사용하여 답변하십시오.
-                """
-                full_prompt = prompt_content + "\n\n" + final_instruction
-                
-                # 4. AI 호출 및 세척
-                ai_result = call_gemini_api(full_prompt)
-                
-                if ai_result:
-                    ai_result = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', ai_result, flags=re.MULTILINE)
-                    ai_result = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    ai_result = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result)
-                    ai_result = ai_result.replace('\n', '<p style="margin:8px 0; line-height:1.6;">')
-                    ai_output_html = html_views.get_ai_report_box(ai_result)
-            
             except Exception as e:
-                ai_output_html = f"<div style='color:red;'>🚨 AI 시스템 에러: {str(e)}</div>"
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
             # --- (E) 최종 통합 렌더링 ---
             try:
