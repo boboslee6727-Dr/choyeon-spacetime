@@ -574,7 +574,7 @@ if st.session_state.get('app_running', False):
                 
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-elif "1-2." in u_product:
+            elif "1-2." in u_product:
                 try:
                     target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
                     extra_facts = {
