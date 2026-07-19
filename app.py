@@ -537,8 +537,14 @@ if st.session_state.get('app_running', False):
 
             # 💡 [핵심 해결] 모든 사주 분석 로직을 16칸 들여쓰기로 감싸는 거대한 문을 엽니다.
                 try:
-                    # 🎯 [수정 1] AI 통변 전, 특화 분석 및 사주 비교(3-1) 데이터 장전
-                    if "1-4." in u_product:
+                    # 💡 [핵심] 1-2 ~ 1-7번, 3-1번 상품 로직 추가 및 정리
+                    if "1-2." in u_product:
+                        target_prompt = getattr(prompts, 'BASIC_PROMPT', target_prompt)
+                    elif "1-3." in u_product:
+                        # 1-3번(월운)은 별도의 target_prompt가 필요하면 설정, 아니면 기존 유지
+                        target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt)
+                    elif "1-4." in u_product:
+                    elif "1-4." in u_product:
                         target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
                         extra_facts['goal'] = st.session_state.get('wealth_goal', '')
                     elif "1-5." in u_product:
