@@ -636,7 +636,7 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
-# ==============================================================================
+    # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
     elif any(x in u_product for x in ["2-0.", "3-2."]):
@@ -703,7 +703,7 @@ if st.session_state.get('app_running', False):
                 # [STEP 1] 초연 시공명리 궁합 풀이 (첫 번째 AI 호출)
                 # ==========================================
                 ai_output_html = ""
-                clean_ai = "" # 비교를 위해 원본 텍스트 저장용 변수
+                clean_ai = "" 
                 
                 gunghap_facts = {
                     "m_name": male_name, "m_age": male_age, 
@@ -722,14 +722,17 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    clean_ai = ai_result.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
+                    # 💡 [핵심 수정 1] 첫 번째 AI 결과물에서도 마크다운 백틱(```)을 완벽히 세척하여 소스코드 노출 에러 방지!
+                    clean_ai = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                    clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
+                    
                     ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                     ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#1A237E;'>\1</div>", ai_result_fmt)
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
                 # ==========================================
-                # [STEP 2] 타 감명서 원문 박스 출력
+                # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 준비
                 # ==========================================
                 original_report_html = ""
                 comparison_output_html = ""
@@ -737,12 +740,8 @@ if st.session_state.get('app_running', False):
                 if "3-2." in u_product:
                     other_report = st.session_state.get("key_3_2", "")
                     if other_report:
-                        # 💡 html_views에서 원문 디자인 박스를 불러옵니다.
                         original_report_html = html_views.get_original_report_html(other_report)
                         
-                        # ==========================================
-                        # [STEP 3] 1:1 상세비교 분석 (두 번째 AI 호출)
-                        # ==========================================
                         with st.spinner("⚖️ 초연 궁합과 타 감명서를 1:1로 정밀 비교 분석 중입니다..."):
                             comp_prompt = f"""
                             당신은 초연 시공명리의 최고 권위자입니다.
@@ -767,25 +766,41 @@ if st.session_state.get('app_running', False):
                                 comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
                                 comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                                 
-                                # 💡 html_views에서 비교 분석 디자인 박스를 불러옵니다.
                                 comparison_output_html = html_views.get_comparison_html(comp_fmt)
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
 
                 # ==========================================
-                # [STEP 4] 3단 구성 최종 통합 출력
+                # [STEP 3] 최종 통합 출력 (💡 탭 기능을 이용한 페이지 분리)
                 # ==========================================
-                full_report = (
+                
+                # 1. 초연 궁합 풀이 기본 조립
+                gunghap_report = (
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
                     intro_h + 
-                    ai_output_html +           	# 1. 초연 궁합풀이
-                    original_report_html +     	# 2. 타 감명서 원문
-                    comparison_output_html +   	# 3. 1:1 상세비교 분석
+                    ai_output_html +           
                     closing
                 )
-                report_box = html_views.get_final_report_box(full_report)
-                st.markdown(report_box, unsafe_allow_html=True)
+                
+                # 2. 3-2 (궁합 비교) 선택 여부에 따라 탭(Tab)으로 분리 출력
+                if "3-2." in u_product:
+                    # 두 개의 분리된 페이지 탭 생성
+                    tab1, tab2 = st.tabs(["💕 초연 시공명리 궁합 풀이", "⚖️ 타 감명서 1:1 비교 분석"])
+                    
+                    with tab1:
+                        report_box = html_views.get_final_report_box(gunghap_report)
+                        st.markdown(report_box, unsafe_allow_html=True)
+                        
+                    with tab2:
+                        comp_report = original_report_html + comparison_output_html
+                        # 비교 페이지도 예쁜 박스에 담아 렌더링
+                        comp_box = html_views.get_final_report_box(comp_report)
+                        st.markdown(comp_box, unsafe_allow_html=True)
+                else:
+                    # 일반 궁합 상품인 경우 탭 없이 출력
+                    report_box = html_views.get_final_report_box(gunghap_report)
+                    st.markdown(report_box, unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
