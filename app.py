@@ -746,12 +746,8 @@ if st.session_state.get('app_running', False):
                 if "3-2." in u_product:
                     other_report = st.session_state.get("key_3_2", "")
                     if other_report:
-                        original_report_html = f"""
-                        <div style='margin-top: 30px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
-                            <div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
-                            <pre style='white-space: pre-wrap; font-family: Nanum Myeongjo; line-height: 1.6; color:#444;'>{other_report}</pre>
-                        </div>
-                        """
+                        # 💡 html_views에서 원문 디자인 박스를 불러옵니다.
+                        original_report_html = html_views.get_original_report_html(other_report)
                         
                         # ==========================================
                         # [STEP 3] 1:1 상세비교 분석 (두 번째 AI 호출)
@@ -774,15 +770,14 @@ if st.session_state.get('app_running', False):
                             comp_result = call_gemini_api(comp_prompt)
                             
                             if comp_result:
-                                comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_result, flags=re.MULTILINE)
+                                comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                                comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
+                                
                                 comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
                                 comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
-                                comparison_output_html = f"""
-                                <div style='margin-top: 30px; padding: 25px; border: 2px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
-                                    <h3 style='color:#B71C1C; text-align:center; margin-bottom:20px;'>🔍 초연 시공명리 vs 타 감명서 1:1 비교 분석</h3>
-                                    {comp_fmt}
-                                </div>
-                                """
+                                
+                                # 💡 html_views에서 비교 분석 디자인 박스를 불러옵니다.
+                                comparison_output_html = html_views.get_comparison_html(comp_fmt)
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
 
