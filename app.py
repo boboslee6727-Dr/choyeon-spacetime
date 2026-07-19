@@ -273,7 +273,16 @@ with st.sidebar:
         f_m = col2.number_input("월", min_value=1, max_value=12, value=1, key="f_m")
         f_d = col3.number_input("일", min_value=1, max_value=31, value=1, key="f_d")
 
-        # time_options 리스트가 사전에 정의되어 있어야 합니다.
+        # 💡 [긴급 조치] time_options가 다른 블록에 묶여있을 경우를 대비한 안전망(방어 코드)
+        safe_time_options = [
+            "23:30 - 01:29 (子)", "01:30 - 03:29 (丑)", "03:30 - 05:29 (寅)", 
+            "05:30 - 07:29 (卯)", "07:30 - 09:29 (辰)", "09:30 - 11:29 (巳)", 
+            "11:30 - 13:29 (午)", "13:30 - 15:29 (未)", "15:30 - 17:29 (申)", 
+            "17:30 - 19:29 (酉)", "19:30 - 21:29 (戌)", "21:30 - 23:29 (亥)"
+        ]
+
+        # 전역 변수 time_options가 없으면 방어 코드를 사용
+        current_time_options = time_options if 'time_options' in locals() or 'time_options' in globals() else safe_time_options
         f_t = st.selectbox("태어난 시간", ["시간 모름"] + time_options, key="f_t")
         f_marital = st.radio("상대방 혼인 상태", ["미혼", "기혼", "돌싱"], key="f_marital")
          
