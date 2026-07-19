@@ -548,7 +548,6 @@ if st.session_state.get('app_running', False):
             elif "1-7." in u_product:
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
                 extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
-            # 💡 [정상 연동 1] 3-1번 상품 데이터 장전 코드를 원래 위치에 정렬
             elif "3-1." in u_product:
                 other_report = st.session_state.get("text_3-1.", "")
                 if other_report:
@@ -556,7 +555,7 @@ if st.session_state.get('app_running', False):
 
             # ==============================================================================
             # [AI 호출 및 1차 풀이 생성 구간] 
-            # (※ 박사님의 기존 call_gemini_api 호출 및 ai_output_html 생성 원본 코드가 여기에 위치함)
+            # (※ 박사님의 기존 call_gemini_api 호출 및 ai_output_html 생성 원본 코드가 위치하는 곳)
             # ==============================================================================
 
             # ==========================================
@@ -574,7 +573,6 @@ if st.session_state.get('app_running', False):
                     with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
                         fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
                         
-                        # prompts.py의 공통 프롬프트 매핑
                         comp_prompt = prompts.COMPARE_PROMPT.format(
                             full_content_clean=ai_output_html.replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
                             other_report=other_report,
@@ -619,8 +617,6 @@ if st.session_state.get('app_running', False):
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
 
-            # 💡 [김집사 조치완료] 여기에 끼어있어 시스템을 붕괴시키던 유령 except 2줄을 완전히 도려냈습니다!
-
             # --- (E) 최종 통합 렌더링 ---
             try:
                 closing_html = html_views.get_closing_html(name)
@@ -644,11 +640,18 @@ if st.session_state.get('app_running', False):
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             except Exception as e:
-                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+                st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
+
+        # ==========================================================
+        # 💡 [김집사 조치완료] 사라졌던 사주 메인 대문(except)을 정확한 위치에 복원!
+        # ==========================================================
+        except Exception as e:
+            st.error(f"🚨 사주 분석 중 오류가 발생했습니다: {e}")
+
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
-    elif any(x in u_product for x in ["2-0.", "3-2."]):
+    elif any(x in u_product for x in ["2-0.", 2-1, 2-2, 3-2."]):
         st.header(f"💕 {name} & {f_name} 초연 궁합")
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
