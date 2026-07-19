@@ -708,26 +708,31 @@ if st.session_state.get('app_running', False):
                 w_master_html = html_views.get_master_bar(f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10])
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
-                # 4. AI 통변 및 🎯 [수정 2] 궁합 비교(3-2) 장전
+                # 4. AI 통변 및 궁합 비교 장전
                 ai_output_html = ""
                 
-                prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format(
-                    m_name=name, m_age=m_age, f_name=f_name, f_age=f_age,
-                    db_header=gh_data.get("db_header", "초연 궁합 분석 리포트"),
-                    ai_saju_mapping=gh_data.get("ai_saju_mapping", ""),
-                    yukchin_rule=gh_data.get("yukchin_rule", ""),
-                    m_golden=gh_data.get("m_golden", ""), 
-                    m_ds=gh_data.get("m_ds", ""), 
-                    m_db=gh_data.get("m_db", ""), 
-                    m_gongmang_actual=gh_data.get("m_gongmang_actual", ""),
-                    f_golden=gh_data.get("f_golden", ""), 
-                    f_ds=gh_data.get("f_ds", ""), 
-                    f_db=gh_data.get("f_db", ""), 
-                    f_gongmang_actual=gh_data.get("f_gongmang_actual", ""),
-                    calc_gyukgook=gh_data.get("calc_gyukgook", "알 수 없음"),
-                    marital_info=f"{u_marital}-{f_marital}"
-                )
+                # (1) 모든 변수를 담는 딕셔너리 생성 (하드코딩 방지)
+                gunghap_facts = {
+                    "m_name": male_name, 
+                    "m_age": male_age, 
+                    "f_name": female_name, 
+                    "f_age": female_age,
+                    "marital_info": f"{u_marital}-{f_marital}"
+                }
+                
+                # (2) 엔진(gh_data)에서 계산된 모든 변수(m_dw_g_cur 등)를 통째로 쏟아붓기
+                gunghap_facts.update(gh_data)
+                
+                # (3) 에러 방지용 방탄조끼 클래스 (없는 변수를 요구해도 멈추지 않음)
+                class SafeDict(dict):
+                    def __missing__(self, key): return "{" + key + "}"
 
+                safe_gh_facts = SafeDict(**gunghap_facts)
+                
+                # (4) 에러 없이 프롬프트 렌더링
+                prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
+
+                # 3-2. 타 감명서 원문 결합
                 if "3-2." in u_product:
                     other_report = st.session_state.get("key_3_2", "")
                     if other_report:
@@ -738,6 +743,7 @@ if st.session_state.get('app_running', False):
 
                 prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
                 
+                # 5. AI 엔진 호출
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
@@ -747,7 +753,7 @@ if st.session_state.get('app_running', False):
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 5. 최종 통합 출력
+                # 6. 최종 통합 출력
                 full_report = (
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
