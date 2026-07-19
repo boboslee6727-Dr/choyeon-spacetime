@@ -525,16 +525,28 @@ if st.session_state.get('app_running', False):
                 wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
                  
-            # ---------------------------------------------------------
-            # [기반 데이터 조립] cover_html부터 조립 (변하지 않는 재료들)
-            # ---------------------------------------------------------
-            final_report_base = (
-                str(cover_html or "") + str(info_h or "") + 
-                str(table_html or "") + str(master_bar_html or "") + 
-                str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                str(intro_html or "") + str(golden_text_html or "")
-            )
-            closing_part = str(closing_html or "")
+                # ---------------------------------------------------------
+                # [1. 골든 텍스트 및 마무리 텍스트 공통 준비]
+                # ---------------------------------------------------------
+                closing_html = html_views.get_closing_html(name)
+                choyeon_db = load_choyeon_db()
+                w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+                 
+                # ---------------------------------------------------------
+                # [2. 공통 HTML 재료 조립 (final_report_base)]
+                # ---------------------------------------------------------
+                final_report_base = (
+                    str(cover_html or "") + str(info_h or "") + 
+                    str(table_html or "") + str(master_bar_html or "") + 
+                    str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                    str(intro_html or "") + str(golden_text_html or "")
+                )
+                closing_part = str(closing_html or "")
 
             # ---------------------------------------------------------
             # [상품별 특화 프롬프트 및 AI 통변] (여기만 갈아끼우면 됩니다)
