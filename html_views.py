@@ -397,6 +397,24 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     <div class="page-break-before"></div>
     """
 
+def get_original_report_html(other_report):
+    """타 감명서 원문을 출력하는 HTML 컨테이너"""
+    return f"""
+    <div style='margin-top: 30px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
+        <div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
+        <pre style='white-space: pre-wrap; font-family: Nanum Myeongjo; line-height: 1.6; color:#444;'>{other_report}</pre>
+    </div>
+    """
+
+def get_comparison_html(comp_fmt):
+    """초연 시공명리와 타 감명서 1:1 비교 분석 결과를 감싸는 HTML 컨테이너"""
+    return f"""
+    <div style='margin-top: 30px; padding: 25px; border: 2px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
+        <h3 style='color:#B71C1C; text-align:center; margin-bottom:20px;'>🔍 초연 시공명리 vs 타 감명서 1:1 비교 분석</h3>
+        {comp_fmt}
+    </div>
+    """
+
 def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
     return f"""
     <div style='margin-top: 20px;'>
