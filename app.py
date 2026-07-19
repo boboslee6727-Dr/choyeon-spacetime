@@ -553,7 +553,7 @@ if st.session_state.get('app_running', False):
                     if "1-3." in u_product and wolun_html:
                         st.markdown(wolun_html, unsafe_allow_html=True)
                         target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt) # 월운 프롬프트로 변경
- 
+                    
                     # [AI 통변 및 리포트 구성]
                     extra_facts = {
                         "daewun": all_daewun_data,
@@ -573,7 +573,7 @@ if st.session_state.get('app_running', False):
                     try:
                         # 1. AI 분석 수행 (위에서 정해진 target_prompt를 사용)
                         # ai_output_html = run_ai_analysis(target_prompt, ...)
-    
+                 
                         # 2. 마무리 내용(골든텍스트 등) 생성
                         closing_html = html_views.get_closing_html(name)
                         choyeon_db = load_choyeon_db()
@@ -593,29 +593,25 @@ if st.session_state.get('app_running', False):
                         st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
                     except Exception as e:
                         st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
-
-
-            elif "1-4." in u_product:
-                target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
-                extra_facts['goal'] = st.session_state.get('wealth_goal', '')
-
-            elif "1-5." in u_product:
-                target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
-                extra_facts['goal'] = st.session_state.get('career_goal', '')
-
-             elif "1-6." in u_product:
-                 target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
-                 extra_facts['goal'] = st.session_state.get('health_goal', '')
-
+                     
+                    elif "1-4." in u_product:
+                        target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
+                        extra_facts['goal'] = st.session_state.get('wealth_goal', '')
+                    elif "1-5." in u_product:
+                        target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
+                        extra_facts['goal'] = st.session_state.get('career_goal', '')
+                    elif "1-6." in u_product:
+                        target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
+                        extra_facts['goal'] = st.session_state.get('health_goal', '')
                     elif "1-7." in u_product:
                         target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
                         extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
-
+                        
                     elif "3-1." in u_product:
                         other_report = st.session_state.get("text_3-1.", "")
                         if other_report:
                             extra_facts['other_report'] = other_report
-
+         
                 except Exception as e:
                     st.error(f"🚨 사주 분석 전체 오류: {e}")
 
