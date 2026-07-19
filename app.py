@@ -549,14 +549,68 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
                 extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
 
+            # ==========================================
+            # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 (사주 전용)
+            # ==========================================
+            original_report_html = ""
+            comparison_output_html = ""
+
             if "3-1." in u_product:
                 other_report = st.session_state.get("text_3-1.", "")
                 if other_report:
-                    extra_facts['other_report'] = other_report
-                    target_prompt = getattr(prompts, 'COMPARISON_PROMPT', target_prompt)
-                    st.info("✅ 타 감명서(사주) 비교 데이터가 분석 엔진에 연동되었습니다.")
+                    # 💡 html_views에서 정의한 사주 전용 원문 함수 호출
+                    original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
+                    
+                    # 💡 순차 로딩 스피너 장착
+                    with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
+                        fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
+                        
+                        # 박사님의 COMPARE_PROMPT 구조로 스마트 연동
+                        comp_prompt = prompts.COMPARE_PROMPT.format(
+                            full_content_clean=ai_output_html.replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
+                            other_report=other_report,
+                            fact_reference=fact_str
+                        )
+                        
+                        comp_result = call_gemini_api(comp_prompt)
+                        
+                        if comp_result:
+                            comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                            comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
+                            
+                            comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
+                            comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
+                            
+                            # 💡 html_views에서 3장 비교 분석 박스 디자인 호출
+                            comparison_output_html = html_views.get_comparison_html(comp_fmt)
                 else:
                     st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
+
+            # ==========================================
+            # [STEP 3] 최종 통합 출력 (사주 비교 밸런스 스타일)
+            # ==========================================
+            # 💡 박사님이 지시하신 전용 표지(Cover) 호출 및 배치
+            comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
+            
+            saju_report = (
+                comparison_saju_report +
+                user_info + saju_table + master_html + daewun_layout + 
+                intro_html + 
+                ai_output_html + 
+                closing_html
+            )
+            
+            # 1. 초연 시공명리 기본 사주 풀이 화면 출력
+            report_box = html_views.get_final_report_box(saju_report)
+            st.markdown(report_box, unsafe_allow_html=True)
+            
+            # 2. 3-1 상품인 경우 구분선 처리 후 타 감명서 원문 및 1:1 비교서 순차 출력
+            if "3-1." in u_product and original_report_html:
+                st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
+                
+                comp_report = original_report_html + comparison_output_html
+                comp_box = html_views.get_final_report_box(comp_report)
+                st.markdown(comp_box, unsafe_allow_html=True)
 
             # --- (D) AI 통변 통합 호출 ---
             ai_output_html = ""
@@ -706,7 +760,7 @@ if st.session_state.get('app_running', False):
                 clean_ai = "" 
                 
                 # 💡 [요청 사항 반영 1] 첫 번째 순차 스피너 (작업 완료 후 자동으로 사라짐)
-                with st.spinner("💕 초연 시공명리 궁합 풀이 중..."):
+                with st.spinner("⏳ 초연 시공명리 궁합 풀이 중..."):
                     gunghap_facts = {
                         "m_name": male_name, "m_age": male_age, 
                         "f_name": female_name, "f_age": female_age,
@@ -747,7 +801,7 @@ if st.session_state.get('app_running', False):
                         # 💡 html_views에서 원문 박스 디자인을 우아하게 호출
                         original_report_html = html_views.get_original_report_html(other_report)
                         
-                        with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
+                        with st.spinner("⏳ 타 감명서 1:1 비교 분석 중..."):
                             # 💡 1. 팩트 데이터를 문자열로 정리
                             fact_str = "\n".join([f"- {k}: {v}" for k, v in gunghap_facts.items()])
                             
@@ -771,30 +825,37 @@ if st.session_state.get('app_running', False):
                                 comparison_output_html = html_views.get_comparison_html(comp_fmt)
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
+
                 # ==========================================
-                # [STEP 3] 최종 통합 출력 (💡 탭 제거, 순차적 렌더링)
+                # [STEP 3] 최종 통합 출력 (전용 표지 매핑 완료)
                 # ==========================================
                 
-                # 1. 초연 궁합 풀이 메인 화면 렌더링
+                # 💡 단순 텍스트 대신, html_views에 생성한 전용 품격 표지로 매핑!
+                comparison_gumhap_report = html_views.get_comparison_gunghap_cover_html(male_name, female_name)
+                
+                # 원본 데이터 구조 최상단에 전용 표지 결합
                 gunghap_report = (
+                    comparison_gumhap_report +
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
                     intro_h + 
                     ai_output_html +           
                     closing
                 )
-                gunghap_box = html_views.get_final_report_box(gunghap_report)
-                st.markdown(gunghap_box, unsafe_allow_html=True)
                 
-                # 2. 타 감명서가 있을 경우, 그 아래에 완전히 새로운 문단(별도 페이지 느낌)으로 렌더링
-                if "3-2." in u_product and original_report_html:
-                    st.markdown("<br><br><br>", unsafe_allow_html=True) # 확연한 구분을 위한 넉넉한 여백
+                # 1. 초연 궁합 풀이 메인 화면 출력
+                report_box = html_views.get_final_report_box(gunghap_report)
+                st.markdown(report_box, unsafe_allow_html=True)
+                
+                # 2. 비교 상품일 경우 구분선 처리 후 타 감명서 원문 및 비교 분석 출력
+                if ("3-2." in u_product or "12." in u_product) and original_report_html:
+                    st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
+                    
+                    # html_views에서 정의한 함수 호출 및 결합
+                    original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
                     comp_report = original_report_html + comparison_output_html
                     comp_box = html_views.get_final_report_box(comp_report)
                     st.markdown(comp_box, unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
                 
     # ==============================================================================
     # [2번 카테고리 특화] 결혼 / 출산 택일
