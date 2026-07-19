@@ -574,43 +574,6 @@ if st.session_state.get('app_running', False):
                 
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-                # --- (G) 화면 렌더링 ---
-                if "3-1." in u_product:
-                    # [3-1 특화] 밸런스 비교 분석 렌더링
-                    comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
-                    saju_report = comparison_saju_report + final_report
-                    st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
-                    
-                    if "other_report" in extra_facts:
-                        original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, extra_facts['other_report'])
-                        with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
-                            fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
-                            comp_prompt = getattr(prompts, 'COMPARE_PROMPT', "").format(
-                                full_content_clean=ai_output_html.replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
-                                other_report=extra_facts['other_report'],
-                                fact_reference=fact_str
-                            )
-                            # comp_result = call_gemini_api(comp_prompt) 
-                            comp_result = "비교 결과 텍스트 (임시)" 
-                            
-                            comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                            comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
-                            comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
-                            comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
-                            comparison_output_html = html_views.get_comparison_html(comp_fmt)
-                            
-                            st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
-                            comp_report = original_report_html + comparison_output_html
-                            st.markdown(html_views.get_final_report_box(comp_report), unsafe_allow_html=True)
-                    else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
-                else:
-                    # [1-1 ~ 1-7 일반] 공통 커버 및 누적된 맞춤형 리포트 출력
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"🚨 리포트 렌더링 중 오류가 발생했습니다: {e}")
                      
                 elif "3-1." in u_product:
                     other_report = st.session_state.get("text_3-1.", "")
