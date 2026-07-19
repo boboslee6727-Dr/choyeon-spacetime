@@ -142,14 +142,8 @@ with st.sidebar:
     elif main_category == "3. 타 감명서 비교":
         u_product = st.radio(
             "비교 분석 대상을 선택하십시오:",
-            [
-                "3-1. 타 감명서 비교 (사주)",
-                "3-2. 타 감명서 비교 (궁합)"
-            ],
-            key="sub_category_3",
-            on_change=stop_ai
-        )
-
+            [ "3-1. 타 감명서 비교 (사주)",
+              "3-2. 타 감명서 비교 (궁합)" ], key="sub_category_3", on_change=stop_ai )
     st.markdown("---")
 
     # 성별 양방향 자동 동기화를 위한 콜백 함수
@@ -223,7 +217,7 @@ with st.sidebar:
     # ==============================================================================
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g")
+        gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         col_y, col_m, col_d = st.columns(3)
@@ -325,14 +319,9 @@ with st.sidebar:
     if "2-" in u_product or "3-2." in u_product:
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
-            
-            # 💡 [핵심 수정부] 신청인 성별에 따라 자동 반전 및 수정 불가(disabled) 처리
-            auto_f_gender = "여성" if gender == "남성" else "남성"
-            f_gender = st.text_input("상대방 성별 (자동 설정)", value=auto_f_gender, disabled=True, key="f_g")
-            
+            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
-            
             p_col1, p_col2, p_col3 = st.columns(3)
             f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
             f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
