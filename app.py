@@ -535,62 +535,71 @@ if st.session_state.get('app_running', False):
                 wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
 
-            # 💡 [핵심 해결] 모든 사주 분석 로직을 16칸 들여쓰기로 감싸는 거대한 문을 엽니다.
-                try:
-                    # 💡 [핵심] 1-2 ~ 1-7번, 3-1번 상품 로직 추가 및 정리
-                    # [공통 출력부] - 모든 상품이 공통으로 가지는 요소는 밖으로 뺍니다.
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    st.markdown(info_h, unsafe_allow_html=True)
-                    st.markdown(table_html, unsafe_allow_html=True)
-                    st.markdown(master_bar_html, unsafe_allow_html=True)
-                    st.markdown(un_html, unsafe_allow_html=True)
-                    st.markdown(intro_html, unsafe_allow_html=True)
 
-                    # [상품별 특화 출력] - 필요한 것만 조건부로 출력합니다.
-                    if "1-2." in u_product and sewun_html:
-                        st.markdown(sewun_html, unsafe_allow_html=True)
-                        target_prompt = getattr(prompts, 'SEWUN_PROMPT', target_prompt) # 세운 프롬프트로 변경
-                    if "1-3." in u_product and wolun_html:
-                        st.markdown(wolun_html, unsafe_allow_html=True)
-                        target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt) # 월운 프롬프트로 변경
-                    
-                    # [AI 통변 및 리포트 구성]
-                    extra_facts = {
-                        "daewun": all_daewun_data,
-                        "sewun": "있음" if sewun_html else "없음",
-                        "wolun": "있음" if wolun_html else "없음",
-                        # 1. 박사님이 공들여 계산하신 세운/월운의 실제 데이터 전달
-                        "sewun_content": se_content if "1-2." in u_product else "없음",
-                        "wolun_content": wol_content if "1-3." in u_product else "없음",
-                        # 2. 분석의 기준이 되는 현재 시간 정보 전달
-                        "curr_year": curr_year,
-                        "curr_month": curr_m                    
-                    } 
+                # 1. 1-2 또는 1-3 처리 로직 (try-except 포함)
+                if "1-2." in u_product or "1-3." in u_product:
 
-                    # --- [최종 통변 및 마무리 출력부] ---
-                    # 이제 위에서 결정된 target_prompt를 가지고 AI 분석을 돌리고,
-                    # 마지막 리포트 박스를 출력합니다.
-                    try:
-                        # 1. AI 분석 수행 (위에서 정해진 target_prompt를 사용)
-                        # ai_output_html = run_ai_analysis(target_prompt, ...)
-                 
-                        # 2. 마무리 내용(골든텍스트 등) 생성
-                        closing_html = html_views.get_closing_html(name)
-                        choyeon_db = load_choyeon_db()
-                        w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                        w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                        i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                        struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                        s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-                        golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+                    try: # 1. 거대한 문의 시작
+                        # [공통 출력부]
                         st.markdown(cover_html, unsafe_allow_html=True)
-                        final_report = (
-                            str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                            str(un_html or "") + str(sewun_html or "") + 
-                            str(intro_html or "") + str(golden_text_html or "") + 
-                            str(ai_output_html or "") + str(closing_html or "")
-                        )
-                        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                        st.markdown(info_h, unsafe_allow_html=True)
+                        st.markdown(table_html, unsafe_allow_html=True)
+                        st.markdown(master_bar_html, unsafe_allow_html=True)
+                        st.markdown(un_html, unsafe_allow_html=True)
+                        st.markdown(intro_html, unsafe_allow_html=True)
+                        
+                        # [상품별 분기 및 데이터/출력 처리]
+                        if "1-2." in u_product:
+                            st.markdown(sewun_html, unsafe_allow_html=True)
+                            target_prompt = getattr(prompts, 'SEWUN_PROMPT', target_prompt)
+                            extra_facts.update({"sewun": "있음", "sewun_content": se_content})
+                        
+                        elif "1-3." in u_product:
+                            st.markdown(wolun_html, unsafe_allow_html=True)
+                            target_prompt = getattr(prompts, 'WOLWUN_PROMPT', target_prompt)
+                            extra_facts.update({"wolun": "있음", "wolun_content": wol_content})
+                                           
+                        # [AI 통변 및 리포트 구성]
+                        extra_facts = {
+                            "daewun": all_daewun_data,
+                            "sewun": "있음" if sewun_html else "없음",
+                            "wolun": "있음" if wolun_html else "없음",
+                            # 1. 박사님이 공들여 계산하신 세운/월운의 실제 데이터 전달
+                            "sewun_content": se_content if "1-2." in u_product else "없음",
+                            "wolun_content": wol_content if "1-3." in u_product else "없음",
+                            # 2. 분석의 기준이 되는 현재 시간 정보 전달
+                            "curr_year": curr_year,
+                            "curr_month": curr_m                    
+                        } 
+                        
+                        # 1. 먼저 상품별로 프롬프트와 추가 데이터를 결정합니다 (if-elif)
+                        target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
+                        extra_facts = {"daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m}
+                        
+                        # --- [최종 통변 및 마무리 출력부] ---
+                        # 이제 위에서 결정된 target_prompt를 가지고 AI 분석을 돌리고,
+                        # 마지막 리포트 박스를 출력합니다.
+                        try:
+                            # 1. AI 분석 수행 (위에서 정해진 target_prompt를 사용)
+                            # ai_output_html = run_ai_analysis(target_prompt, ...)
+                                         
+                            # 2. 마무리 내용(골든텍스트 등) 생성
+                            closing_html = html_views.get_closing_html(name)
+                            choyeon_db = load_choyeon_db()
+                            w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
+                            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                            golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+                            st.markdown(cover_html, unsafe_allow_html=True)
+                            final_report = (
+                                str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
+                                str(un_html or "") + str(sewun_html or "") + 
+                                str(intro_html or "") + str(golden_text_html or "") + 
+                                str(ai_output_html or "") + str(closing_html or "")
+                            )
+                            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
                     except Exception as e:
                         st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
                      
