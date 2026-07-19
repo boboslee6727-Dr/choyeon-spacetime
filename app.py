@@ -535,43 +535,40 @@ if st.session_state.get('app_running', False):
                 wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
 
-            # 🎯 [수정 1] AI 통변 전, 특화 분석 및 사주 비교(3-1) 데이터 장전
-            if "1-4." in u_product:
-                target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
-                extra_facts['goal'] = st.session_state.get('wealth_goal', '')
-            elif "1-5." in u_product:
-                target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
-                extra_facts['goal'] = st.session_state.get('career_goal', '')
-            elif "1-6." in u_product:
-                target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
-                extra_facts['goal'] = st.session_state.get('health_goal', '')
-            elif "1-7." in u_product:
-                target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
-                extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
-            elif "3-1." in u_product:
-                other_report = st.session_state.get("text_3-1.", "")
-                if other_report:
-                    extra_facts['other_report'] = other_report
+            # 💡 [핵심 해결] 여기서 모든 사주 분석 로직을 감싸는 거대한 문을 엽니다.
+            try:
+                # 🎯 [수정 1] AI 통변 전, 특화 분석 및 사주 비교(3-1) 데이터 장전
+                if "1-4." in u_product:
+                    target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
+                    extra_facts['goal'] = st.session_state.get('wealth_goal', '')
+                elif "1-5." in u_product:
+                    target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
+                    extra_facts['goal'] = st.session_state.get('career_goal', '')
+                elif "1-6." in u_product:
+                    target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
+                    extra_facts['goal'] = st.session_state.get('health_goal', '')
+                elif "1-7." in u_product:
+                    target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
+                    extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
+                elif "3-1." in u_product:
+                    other_report = st.session_state.get("text_3-1.", "")
+                    if other_report:
+                        extra_facts['other_report'] = other_report
 
-            # ==============================================================================
-            # [AI 호출 및 1차 풀이 생성 구간] 
-            # (※ 박사님의 기존 call_gemini_api 호출 및 ai_output_html 생성 원본 코드가 위치하는 곳)
-            # ==============================================================================
+                # ==========================================
+                # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 (사주 전용)
+                # ==========================================
+                original_report_html = ""
+                comparison_output_html = ""
 
-            # ==========================================
-            # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 (사주 전용)
-            # ==========================================
-            original_report_html = ""
-            comparison_output_html = ""
-
-            if "3-1." in u_product:
-                other_report = st.session_state.get("text_3-1.", "")
-                if other_report:
-                    # html_views에서 정의한 사주 전용 원문 함수 호출
-                    original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
+                if "3-1." in u_product:
+                    other_report = st.session_state.get("text_3-1.", "")
+                    if other_report:
+                        # html_views에서 정의한 사주 전용 원문 함수 호출
+                        original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
                     
-                    with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
-                        fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
+                        with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
+                           fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
                         
                         comp_prompt = prompts.COMPARE_PROMPT.format(
                             full_content_clean=ai_output_html.replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
@@ -592,56 +589,58 @@ if st.session_state.get('app_running', False):
                 else:  
                     st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
 
-            # ==========================================
-            # [STEP 3] 최종 통합 출력 (사주 비교 밸런스 스타일)
-            # ==========================================
-            comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
+                # ==========================================
+                # [STEP 3] 최종 통합 출력 (사주 비교 밸런스 스타일)
+                # ==========================================
+                comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
             
-            saju_report = (
-                comparison_saju_report +
-                user_info + saju_table + master_html + daewun_layout + 
-                intro_html + 
-                ai_output_html + 
-                closing_html
-            )
+                saju_report = (
+                    comparison_saju_report +
+                    user_info + saju_table + master_html + daewun_layout + 
+                    intro_html + 
+                    ai_output_html + 
+                    closing_html
+                )
             
-            # 1. 초연 시공명리 기본 사주 풀이 화면 출력
-            report_box = html_views.get_final_report_box(saju_report)
-            st.markdown(report_box, unsafe_allow_html=True)
+                # 1. 초연 시공명리 기본 사주 풀이 화면 출력
+                report_box = html_views.get_final_report_box(saju_report)
+                st.markdown(report_box, unsafe_allow_html=True)
             
-            # 2. 3-1 상품인 경우 구분선 처리 후 하단에 원문 및 1:1 상세비교서 순차 출력
-            if "3-1." in u_product and original_report_html:
-                st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
+                # 2. 3-1 상품인 경우 구분선 처리 후 하단에 원문 및 1:1 상세비교서 순차 출력
+                if "3-1." in u_product and original_report_html:
+                    st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
                 
                 comp_report = original_report_html + comparison_output_html
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
 
-            # --- (E) 최종 통합 렌더링 ---
-            try:
-                closing_html = html_views.get_closing_html(name)
-                choyeon_db = load_choyeon_db()
-                w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
+                # --- (E) 최종 통합 렌더링 ---
+                try:
+                    closing_html = html_views.get_closing_html(name)
+                    choyeon_db = load_choyeon_db()
+                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
                 
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                    s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
                 
-                golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
+                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
                 
-                st.markdown(cover_html, unsafe_allow_html=True)
-                final_report = (
-                    str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                    str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                    str(intro_html or "") + str(golden_text_html or "") + 
-                    str(ai_output_html or "") + str(closing_html or "")
-                )
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                    st.markdown(cover_html, unsafe_allow_html=True)
+                    final_report = (
+                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
+                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                        str(intro_html or "") + str(golden_text_html or "") + 
+                        str(ai_output_html or "") + str(closing_html or "")
+                    )
+                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+
+                except Exception as e:
+                    st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
 
             except Exception as e:
-                st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
-
+               st.error(f"🚨 사주 분석 전체 오류: {e}")
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
