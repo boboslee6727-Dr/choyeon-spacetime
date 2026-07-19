@@ -643,7 +643,7 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                # 1. 커버 데이터 계산 (m_age -> age / f_age -> p_age로 의미 명확화)
+                # 1. 커버 데이터 계산 
                 curr_y = dt_mod.datetime.now().year
                 age = curr_y - int(b_year) + 1    # 신청인 나이
                 p_age = curr_y - int(f_y) + 1     # 파트너 나이
@@ -662,14 +662,13 @@ if st.session_state.get('app_running', False):
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = name, age, m_sol, m_lun, b_time, u_marital
                 else:
                     marital_status = f"{u_marital}-{f_marital}" 
-                    gh_data = engine.get_gunghap_data(...)
-                    # 💡 여기서 male_age에 age를, female_age에 p_age를 할당
                     gh_data = engine.get_gunghap_data(
                         int(b_year), int(b_month), int(b_day), b_time, u_marital, 
                         int(f_y), int(f_m), int(f_d), f_t, f_marital,              
                         marital_status
                     )
 
+                    # 💡 여기가 중요합니다! 변수 할당을 확실하게 넣어주십시오.
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, age, m_sol, m_lun, b_time, u_marital
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
 
@@ -704,11 +703,13 @@ if st.session_state.get('app_running', False):
                 ai_output_html = ""
                 clean_ai = "" 
                 
-                # 💡 [요청 사항 반영 1] 첫 번째 순차 스피너 (작업 완료 후 자동으로 사라짐)
+                # 2. gunghap_facts는 기존 키(m_age, f_age)를 유지
                 with st.spinner("⏳ 초연 시공명리 궁합 풀이 중..."):
                     gunghap_facts = {
-                        "m_name": male_name, "m_age": male_age, 
-                        "f_name": female_name, "f_age": female_age,
+                        "m_name": male_name, 
+                        "m_age": male_age,  # 이 male_age 변수가 위에서 계산된 age/p_age를 담고 있음
+                        "f_name": female_name, 
+                        "f_age": female_age, # 이 female_age 변수가 위에서 계산된 age/p_age를 담고 있음
                         "marital_info": f"{u_marital}-{f_marital}"
                     }
                     gunghap_facts.update(gh_data)
