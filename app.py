@@ -595,17 +595,17 @@ if st.session_state.get('app_running', False):
                         st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
 
 
-                    elif "1-4." in u_product:
-                        target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
-                        extra_facts['goal'] = st.session_state.get('wealth_goal', '')
+            elif "1-4." in u_product:
+                target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
+                extra_facts['goal'] = st.session_state.get('wealth_goal', '')
 
-                    elif "1-5." in u_product:
-                        target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
-                        extra_facts['goal'] = st.session_state.get('career_goal', '')
+            elif "1-5." in u_product:
+                target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
+                extra_facts['goal'] = st.session_state.get('career_goal', '')
 
-                    elif "1-6." in u_product:
-                        target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
-                        extra_facts['goal'] = st.session_state.get('health_goal', '')
+             elif "1-6." in u_product:
+                 target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
+                 extra_facts['goal'] = st.session_state.get('health_goal', '')
 
                     elif "1-7." in u_product:
                         target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
