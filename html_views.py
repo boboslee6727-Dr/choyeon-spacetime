@@ -397,23 +397,44 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     <div class="page-break-before"></div>
     """
 
+def get_comparison_saju_cover_html(name, gender):
+    """🔍 타 감명서 비교 (사주) 전용 표지 HTML"""
+    return f"""<div style='text-align: center; padding: 40px 20px; background-color: #f9f9f9; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 30px;'>
+<div style='font-size: 15px; color: #666; letter-spacing: 2px; margin-bottom: 10px;'>📊 초연 시공명리 R&D 리포트</div>
+<div style='font-size: 21px; font-weight: 900; color: #1A237E; margin-bottom: 15px;'>🔍 {name}님 타 감명서 비교 분석 (개인사주)</div>
+<div style='font-size: 14px; color: #555;'>신청인 성별: {gender} | 본 분석은 의뢰인이 제공한 타 감명서와 초연 시공명리를 1:1로 대조한 R&D 검증 보고서입니다.</div>
+</div>
+"""
+
+def get_comparison_gunghap_cover_html(m_name, f_name):
+    """⚖️ 타 감명서 비교 (궁합) 전용 표지 HTML"""
+    return f"""<div style='text-align: center; padding: 40px 20px; background-color: #fffaf0; border-radius: 12px; border: 1px solid #f5e6cc; margin-bottom: 30px;'>
+<div style='font-size: 15px; color: #b8860b; letter-spacing: 2px; margin-bottom: 10px;'>💕 초연 시공명리 R&D 학술 리포트</div>
+<div style='font-size: 21px; font-weight: 900; color: #B71C1C; margin-bottom: 15px;'>🔍 {m_name} & {f_name} 타 감명서 비교 분석 (궁합풀이)</div>
+<div style='font-size: 14px; color: #555;'>남명: {m_name} & 여명: {f_name} | 두 사주의 체용 조화와 타 감명서의 명리학적 오류를 정밀 검증합니다.</div>
+</div>
+"""
+
+def get_comparison_gumhap_report_html(m_name, f_name, other_report):
+    return f"""<div style='margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
+<div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>💕 남성({m_name}) & 여성({f_name}) 타 감명서 원문 (의뢰인 제공)</div>
+<div style='white-space: pre-wrap; font-family: Nanum Myeongjo; line-height: 1.6; color:#444;'>{other_report}</div>
+</div>
+"""
+
 def get_original_report_html(other_report):
-    """타 감명서 원문을 출력하는 HTML 컨테이너"""
-    return f"""
-    <div style='margin-top: 30px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
-        <div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
-        <pre style='white-space: pre-wrap; font-family: Nanum Myeongjo; line-height: 1.6; color:#444;'>{other_report}</pre>
-    </div>
-    """
+    return f"""<div style='margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
+<div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
+<div style='white-space: pre-wrap; font-family: Nanum Myeongjo; line-height: 1.6; color:#444;'>{other_report}</div>
+</div>
+"""
 
 def get_comparison_html(comp_fmt):
-    """초연 시공명리와 타 감명서 1:1 비교 분석 결과를 감싸는 HTML 컨테이너"""
-    return f"""
-    <div style='margin-top: 30px; padding: 25px; border: 2px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
-        <h3 style='color:#B71C1C; text-align:center; margin-bottom:20px;'>🔍 초연 시공명리 vs 타 감명서 1:1 비교 분석</h3>
-        {comp_fmt}
-    </div>
-    """
+    return f"""<div style='margin-top: 30px; padding: 25px; border: 1px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
+<div style='font-size:21px; font-weight:900; margin-bottom: 20px; color:#B71C1C;'>🔍 초연 시공명리 vs 타 감명서 1:1 상세비교 분석</div>
+{comp_fmt}
+</div>
+"""
 
 def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
     return f"""
