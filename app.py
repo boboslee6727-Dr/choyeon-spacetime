@@ -541,15 +541,15 @@ if st.session_state.get('app_running', False):
                 # [2. 공통 HTML 재료 조립 (final_report_base)]
                 # ---------------------------------------------------------
                 final_report_base = (
-                    str(cover_html or "") + str(info_h or "") + 
-                    str(table_html or "") + str(master_bar_html or "") + 
-                    str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                    str(intro_html or "") + str(golden_text_html or "")
+                str(cover_html or "") + str(info_h or "") + 
+                str(table_html or "") + str(master_bar_html or "") + 
+                str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                str(intro_html or "") + str(golden_text_html or "")
                 )
                 closing_part = str(closing_html or "")
 
             # ---------------------------------------------------------
-            # [상품별 특화 프롬프트 및 AI 통변] (여기만 갈아끼우면 됩니다)
+            # [2. 분기] AI 통변 프롬프트만 결정 (12칸 들여쓰기)
             # ---------------------------------------------------------
             if "1-1." in u_product:
                 target_prompt = prompts.PERSONAL_SAJU_PROMPT
