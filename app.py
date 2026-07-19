@@ -525,244 +525,49 @@ if st.session_state.get('app_running', False):
                 wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
                  
+            # ---------------------------------------------------------
+            # [기반 데이터 조립] cover_html부터 조립 (변하지 않는 재료들)
+            # ---------------------------------------------------------
+            final_report_base = (
+                str(cover_html or "") + str(info_h or "") + 
+                str(table_html or "") + str(master_bar_html or "") + 
+                str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                str(intro_html or "") + str(golden_text_html or "")
+            )
+            closing_part = str(closing_html or "")
+
+            # ---------------------------------------------------------
+            # [상품별 특화 프롬프트 및 AI 통변] (여기만 갈아끼우면 됩니다)
+            # ---------------------------------------------------------
             if "1-1." in u_product:
-                # ---------------------------------------------------------
-                # [1-1. 전용 데이터 및 프롬프트 준비]
-                # ---------------------------------------------------------
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-                extra_facts = {
-                    "daewun": all_daewun_data,
-                    "curr_year": curr_year,
-                    "curr_month": curr_m
-                }
-                
-                # ---------------------------------------------------------
-                # [1-1. AI 통변 실행]
-                # ---------------------------------------------------------
-                with st.spinner("🤖 [사주팔자 및 대운 분석] 정밀 통변 중..."):
-                    # 실제 API 연동 시 아래 주석을 풀고 사용하십시오.
-                    # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                    ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                
-                # ---------------------------------------------------------
-                # [1-1. 전용 마무리 텍스트 및 DB 준비]
-                # ---------------------------------------------------------
-                closing_html = html_views.get_closing_html(name)
-                choyeon_db = load_choyeon_db()
-                w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-                golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
-                
-                # ---------------------------------------------------------
-                # [1-1. 최종 조립 및 화면 출력] (세운/월운표 없이 원국+대운만)
-                # ---------------------------------------------------------
-                st.markdown(cover_html, unsafe_allow_html=True)
-                
-                final_report = (
-                    str(info_h or "") + 
-                    str(table_html or "") + 
-                    str(master_bar_html or "") + 
-                    str(un_html or "") + 
-                    str(intro_html or "") + 
-                    str(golden_text_html or "") + 
-                    str(ai_output_html or "") + 
-                    str(closing_html or "")
-                )
-                
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
+                target_prompt = prompts.PERSONAL_SAJU_PROMPT
             elif "1-2." in u_product:
-                try:
-                    target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content
-                    }
-                    
-                    with st.spinner("🤖 [올 해의 운세 상세 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    closing_html = html_views.get_closing_html(name)
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 [1-2. 세운 분석] 처리 중 오류 발생: {e}")
-
+                target_prompt = prompts.SEWUN_PROMPT
             elif "1-3." in u_product:
-                try:
-                    target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content, "wolun": "있음", "wolun_content": wol_content
-                    }
-                    
-                    with st.spinner("🤖 [이번 달의 운세 상세 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    closing_html = html_views.get_closing_html(name)
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 [1-3. 월운 분석] 처리 중 오류 발생: {e}")
-
+                target_prompt = prompts.WOLWUN_PROMPT
             elif "1-4." in u_product:
-                try:
-                    target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content, "wolun": "있음", "wolun_content": wol_content,
-                        "goal": st.session_state.get('wealth_goal', '')
-                    }
-                    
-                    with st.spinner("🤖 [재물운 특화 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    closing_html = html_views.get_closing_html(name)
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 [1-4. 재물운 분석] 처리 중 오류 발생: {e}")
-
+                target_prompt = prompts.WEALTH_PROMPT
             elif "1-5." in u_product:
-                try:
-                    target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content, "wolun": "있음", "wolun_content": wol_content,
-                        "goal": st.session_state.get('career_goal', '')
-                    }
-                    
-                    with st.spinner("🤖 [직업/진학운 특화 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    closing_html = html_views.get_closing_html(name)
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 [1-5. 직업/진학운 분석] 처리 중 오류 발생: {e}")
-
+                target_prompt = prompts.CAREER_PROMPT
             elif "1-6." in u_product:
-                try:
-                    target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content, "wolun": "있음", "wolun_content": wol_content,
-                        "goal": st.session_state.get('health_goal', '')
-                    }
-                    
-                    with st.spinner("🤖 [건강운 특화 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    closing_html = html_views.get_closing_html(name)
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 [1-6. 건강운 분석] 처리 중 오류 발생: {e}")
-
+                target_prompt = prompts.HEALTH_PROMPT
             elif "1-7." in u_product:
-                try:
-                    target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content, "wolun": "있음", "wolun_content": wol_content,
-                        "goal": f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
-                    }
-                    
-                    with st.spinner("🤖 [이사 및 방위 특화 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    closing_html = html_views.get_closing_html(name)
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
-                    st.markdown(cover_html, unsafe_allow_html=True)
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"🚨 [1-7. 이사 및 방위 분석] 처리 중 오류 발생: {e}")
+                target_prompt = prompts.MOVING_DIRECTION_PROMPT
+            else:
+                target_prompt = prompts.PERSONAL_SAJU_PROMPT # 기본값
+
+            # AI 분석 실행
+            with st.spinner("🤖 [정밀 분석] 통변 결과를 생성 중입니다..."):
+                # ai_output_html = call_gemini_api(target_prompt, extra_facts)
+                ai_output_html = "<div style='padding:20px;'>AI 심층 통변 내용입니다.</div>"
+
+            final_report = final_report_base + str(ai_output_html or "") + closing_part
+            
+            if "3-1." in u_product:
+                # 3-1은 기존의 밸런스 비교 분석 로직 추가
+                comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
+                saju_report = comparison_saju_report + final_report
+                st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
 
             elif "3-1." in u_product:
                 try:
