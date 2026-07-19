@@ -415,11 +415,11 @@ if st.session_state.get('app_running', False):
                     t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
                 else:
                     t_gan = ""
-
+             
             gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
             hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
             hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
-
+            
             base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
             adj_mins = engine.get_total_time_adjustment(base_dt)
             utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
@@ -427,12 +427,12 @@ if st.session_state.get('app_running', False):
             order_dir = 1 if (engine.GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
             calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
             direction_str = "순행" if order_dir == 1 else "역행"
-
+            
             counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
             for c in gans + jjis:
                 oh = engine.get_color(c)
                 if oh in counts: counts[oh] += 1
-
+            
             guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(engine.K2H_GAN.get(ds, ds), '없음')
             curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
@@ -441,7 +441,7 @@ if st.session_state.get('app_running', False):
             i_gong = engine.calculate_gongmang(ds, db) or "-"
             cur_samjae = engine.get_samjae(yb, curr_y_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
-
+            
             # --- (B) 공통 UI 렌더링 (원국, 마스터바, 대운) ---
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
@@ -475,22 +475,22 @@ if st.session_state.get('app_running', False):
             
             daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
-
+            
             # --- (C) 상품별 특화 UI 및 프롬프트 선택 ---
             target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
             extra_facts = {}
-
+            
             sewun_html = "" 
             wolun_html = "" 
-
+            
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
             cur_dw_idx = max(0, (age - calc_d) // 10)
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
-
+            
             all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
-
+            
             # 1-2. 세운
             if "1-2." in u_product:
                 try:
@@ -534,8 +534,7 @@ if st.session_state.get('app_running', False):
                     )
                 wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
-
-
+                 
                 # 1. 1-2 또는 1-3 처리 로직 (try-except 포함)
                 if "1-2." in u_product or "1-3." in u_product:
                     try: # 1. # [공통 출력부]
@@ -601,24 +600,24 @@ if st.session_state.get('app_running', False):
                         except Exception as e:
                             st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
                      
-                    elif "1-4." in u_product:
-                        target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
-                        extra_facts['goal'] = st.session_state.get('wealth_goal', '')
-                    elif "1-5." in u_product:
-                        target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
-                        extra_facts['goal'] = st.session_state.get('career_goal', '')
-                    elif "1-6." in u_product:
-                        target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
-                        extra_facts['goal'] = st.session_state.get('health_goal', '')
-                    elif "1-7." in u_product:
-                        target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
-                        extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
+                elif "1-4." in u_product:
+                    target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
+                    extra_facts['goal'] = st.session_state.get('wealth_goal', '')
+                elif "1-5." in u_product:
+                    target_prompt = getattr(prompts, 'CAREER_PROMPT', target_prompt)
+                    extra_facts['goal'] = st.session_state.get('career_goal', '')
+                elif "1-6." in u_product:
+                    target_prompt = getattr(prompts, 'HEALTH_PROMPT', target_prompt)
+                    extra_facts['goal'] = st.session_state.get('health_goal', '')
+                elif "1-7." in u_product:
+                    target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', target_prompt)
+                    extra_facts['goal'] = f"이사일: {st.session_state.get('moving_date', '')}, 방위: {st.session_state.get('moving_dir', '')}"
                         
-                    elif "3-1." in u_product:
-                        other_report = st.session_state.get("text_3-1.", "")
-                        if other_report:
-                            extra_facts['other_report'] = other_report
-         
+                elif "3-1." in u_product:
+                    other_report = st.session_state.get("text_3-1.", "")
+                    if other_report:
+                        extra_facts['other_report'] = other_report
+                
                 except Exception as e:
                     st.error(f"🚨 사주 분석 전체 오류: {e}")
 
