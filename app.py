@@ -645,7 +645,7 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
-    # ==============================================================================
+# ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
     elif any(x in u_product for x in ["2-0.", "3-2."]):
@@ -708,56 +708,95 @@ if st.session_state.get('app_running', False):
                 w_master_html = html_views.get_master_bar(f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10])
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
-                # 4. AI 통변 및 궁합 비교 장전
+                # ==========================================
+                # [STEP 1] 초연 시공명리 궁합 풀이 (첫 번째 AI 호출)
+                # ==========================================
                 ai_output_html = ""
+                clean_ai = "" # 비교를 위해 원본 텍스트 저장용 변수
                 
-                # (1) 모든 변수를 담는 딕셔너리 생성 (하드코딩 방지)
                 gunghap_facts = {
-                    "m_name": male_name, 
-                    "m_age": male_age, 
-                    "f_name": female_name, 
-                    "f_age": female_age,
+                    "m_name": male_name, "m_age": male_age, 
+                    "f_name": female_name, "f_age": female_age,
                     "marital_info": f"{u_marital}-{f_marital}"
                 }
-                
-                # (2) 엔진(gh_data)에서 계산된 모든 변수(m_dw_g_cur 등)를 통째로 쏟아붓기
                 gunghap_facts.update(gh_data)
                 
-                # (3) 에러 방지용 방탄조끼 클래스 (없는 변수를 요구해도 멈추지 않음)
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
                 safe_gh_facts = SafeDict(**gunghap_facts)
-                
-                # (4) 에러 없이 프롬프트 렌더링
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
-
-                # 3-2. 타 감명서 원문 결합
-                if "3-2." in u_product:
-                    other_report = st.session_state.get("key_3_2", "")
-                    if other_report:
-                        prompt_text += f"\n\n[타 감명서 원문(궁합)]\n{other_report}\n\n위 타 감명서 내용과 초연 시공명리 관점의 궁합을 정밀하게 1:1 대조 분석하여 결과를 포함하십시오."
-                        st.info("✅ 타 감명서(궁합) 비교 데이터가 분석 엔진에 연동되었습니다.")
-                    else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
-
                 prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
                 
-                # 5. AI 엔진 호출
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
                     clean_ai = ai_result.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
                     ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
-                    ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0;'>\1</div>", ai_result_fmt)
+                    ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#1A237E;'>\1</div>", ai_result_fmt)
                     ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                     ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
-                # 6. 최종 통합 출력
+                # ==========================================
+                # [STEP 2] 타 감명서 원문 박스 출력
+                # ==========================================
+                original_report_html = ""
+                comparison_output_html = ""
+                
+                if "3-2." in u_product:
+                    other_report = st.session_state.get("key_3_2", "")
+                    if other_report:
+                        original_report_html = f"""
+                        <div style='margin-top: 30px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
+                            <div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
+                            <pre style='white-space: pre-wrap; font-family: Nanum Myeongjo; line-height: 1.6; color:#444;'>{other_report}</pre>
+                        </div>
+                        """
+                        
+                        # ==========================================
+                        # [STEP 3] 1:1 상세비교 분석 (두 번째 AI 호출)
+                        # ==========================================
+                        with st.spinner("⚖️ 초연 궁합과 타 감명서를 1:1로 정밀 비교 분석 중입니다..."):
+                            comp_prompt = f"""
+                            당신은 초연 시공명리의 최고 권위자입니다.
+                            아래는 당신이 방금 분석한 [초연 시공명리 궁합 결과]와 의뢰인이 가져온 [타 감명서 원문]입니다.
+                            두 내용을 1:1로 정밀하게 대조하여, 어느 부분이 일치하고 어느 부분이 다른지(왜 다른지 명리학적 근거 포함) 객관적이고 상세하게 비교 분석 리포트를 작성하십시오.
+
+                            [초연 시공명리 궁합 결과]
+                            {clean_ai if clean_ai else "분석 내용 없음"}
+
+                            [타 감명서 원문]
+                            {other_report}
+
+                            반드시 소제목(###)을 사용하여 가독성 있게 작성하고, 초연 시공명리의 논리적 우수성을 돋보이게 작성하십시오.
+                            """
+                            
+                            comp_result = call_gemini_api(comp_prompt)
+                            
+                            if comp_result:
+                                comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_result, flags=re.MULTILINE)
+                                comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
+                                comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
+                                comparison_output_html = f"""
+                                <div style='margin-top: 30px; padding: 25px; border: 2px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
+                                    <h3 style='color:#B71C1C; text-align:center; margin-bottom:20px;'>🔍 초연 시공명리 vs 타 감명서 1:1 비교 분석</h3>
+                                    {comp_fmt}
+                                </div>
+                                """
+                    else:
+                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
+
+                # ==========================================
+                # [STEP 4] 3단 구성 최종 통합 출력
+                # ==========================================
                 full_report = (
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
-                    intro_h + ai_output_html + closing
+                    intro_h + 
+                    ai_output_html +           # 1. 초연 궁합풀이
+                    original_report_html +     # 2. 타 감명서 원문
+                    comparison_output_html +   # 3. 1:1 상세비교 분석
+                    closing
                 )
                 report_box = html_views.get_final_report_box(full_report)
                 st.markdown(report_box, unsafe_allow_html=True)
