@@ -444,7 +444,7 @@ if st.session_state.get('app_running', False):
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
 
             user_info = html_views.get_info_header(
-                "👤", name, gender, u_marital, age,  # 여기서 m_age를 age로 변경!
+                "👤", name, gender, u_marital, age,  
                 f"{b_year}년 {b_month}월 {b_day}일", 
                 f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일", 
                 f"{b_time}시", p_color="#212121"
