@@ -253,44 +253,14 @@ with st.sidebar:
         elif "3-1." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
-    # 2. 궁합/결혼/출산/비교 (2-x, 3-2)
+# 2. 궁합/결혼/출산/비교 (2-x, 3-2)
     elif any(x in u_product for x in ["2-", "3-2."]):
         
         # u_product 변수가 정의되지 않았을 경우를 대비해 안전하게 참조
         curr_prod = u_product if 'u_product' in locals() else ""
-        
-        st.markdown("---")
-        st.subheader("💕 상대방 정보 입력")
-
-        # 💡 [자동 반전 로직] 신청인 성별(gender)을 인식하여 상대방 성별 고정
-        f_gender = "여성" if gender == "남성" else "남성"
-        st.text_input("상대방 성별 (자동 설정)", value=f_gender, disabled=True)
-
-        f_name = st.text_input("상대방 이름", "상대방", key="f_name")
-        
-        col1, col2, col3 = st.columns(3)
-        f_y = col1.number_input("태어난 년도", min_value=1900, max_value=2100, value=1980, key="f_y")
-        f_m = col2.number_input("월", min_value=1, max_value=12, value=1, key="f_m")
-        f_d = col3.number_input("일", min_value=1, max_value=31, value=1, key="f_d")
-
-        # 💡 [긴급 조치] time_options가 다른 블록에 묶여있을 경우를 대비한 안전망(방어 코드)
-        safe_time_options = [
-            "23:30 - 01:29 (子)", "01:30 - 03:29 (丑)", "03:30 - 05:29 (寅)", 
-            "05:30 - 07:29 (卯)", "07:30 - 09:29 (辰)", "09:30 - 11:29 (巳)", 
-            "11:30 - 13:29 (午)", "13:30 - 15:29 (未)", "15:30 - 17:29 (申)", 
-            "17:30 - 19:29 (酉)", "19:30 - 21:29 (戌)", "21:30 - 23:29 (亥)"
-        ]
-
-        # 전역 변수 time_options가 없으면 방어 코드를 사용
-        current_time_options = time_options if 'time_options' in locals() or 'time_options' in globals() else safe_time_options
-        
-        # 🎯 [핵심 수정] time_options -> current_time_options 로 변경!
-        f_t = st.selectbox("태어난 시간", ["시간 모름"] + current_time_options, key="f_t")
-        
-        f_marital = st.radio("상대방 혼인 상태", ["미혼", "기혼", "돌싱"], key="f_marital")
          
         # ==============================================================================
-        # 👥 상대방(배우자/연인) 사주간지 역산 (원문 유지)
+        # 👥 상대방(배우자/연인) 사주간지 역산 (원문 완벽 유지)
         # ==============================================================================
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
@@ -355,9 +325,14 @@ with st.sidebar:
     if "2-" in u_product or "3-2." in u_product:
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g")
+            
+            # 💡 [핵심 수정부] 신청인 성별에 따라 자동 반전 및 수정 불가(disabled) 처리
+            auto_f_gender = "여성" if gender == "남성" else "남성"
+            f_gender = st.text_input("상대방 성별 (자동 설정)", value=auto_f_gender, disabled=True, key="f_g")
+            
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
+            
             p_col1, p_col2, p_col3 = st.columns(3)
             f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
             f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
@@ -365,7 +340,7 @@ with st.sidebar:
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
 
     # ==============================================================================
-    # 📌 특화 상품별 추가 옵션 입력부 (최신 체계 완벽 호환)
+    # 📌 특화 상품별 2-1, 2-2, 3-2 추가 옵션 입력부
     # ==============================================================================
     if "2-1." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
