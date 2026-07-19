@@ -619,8 +619,7 @@ if st.session_state.get('app_running', False):
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
 
-            except Exception as e:
-                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+            # 💡 [김집사 조치완료] 여기에 끼어있어 시스템을 붕괴시키던 유령 except 2줄을 완전히 도려냈습니다!
 
             # --- (E) 최종 통합 렌더링 ---
             try:
@@ -646,7 +645,6 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
-
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
