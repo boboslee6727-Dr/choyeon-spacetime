@@ -705,31 +705,34 @@ if st.session_state.get('app_running', False):
                 ai_output_html = ""
                 clean_ai = "" 
                 
-                gunghap_facts = {
-                    "m_name": male_name, "m_age": male_age, 
-                    "f_name": female_name, "f_age": female_age,
-                    "marital_info": f"{u_marital}-{f_marital}"
-                }
-                gunghap_facts.update(gh_data)
-                
-                class SafeDict(dict):
-                    def __missing__(self, key): return "{" + key + "}"
-
-                safe_gh_facts = SafeDict(**gunghap_facts)
-                prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
-                prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
-                
-                ai_result = call_gemini_api(prompt_text)
-                
-                if ai_result:
-                    # 💡 [핵심 수정 1] 첫 번째 AI 결과물에서도 마크다운 백틱(```)을 완벽히 세척하여 소스코드 노출 에러 방지!
-                    clean_ai = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
+                # 💡 [요청 사항 반영 1] 첫 번째 순차 스피너 (작업 완료 후 자동으로 사라짐)
+                with st.spinner("💕 초연 시공명리 궁합 풀이 중..."):
+                    gunghap_facts = {
+                        "m_name": male_name, "m_age": male_age, 
+                        "f_name": female_name, "f_age": female_age,
+                        "marital_info": f"{u_marital}-{f_marital}"
+                    }
+                    gunghap_facts.update(gh_data)
                     
-                    ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
-                    ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#1A237E;'>\1</div>", ai_result_fmt)
-                    ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
-                    ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
+                    class SafeDict(dict):
+                        def __missing__(self, key): return "{" + key + "}"
+
+                    safe_gh_facts = SafeDict(**gunghap_facts)
+                    prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
+                    prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
+                    
+                    ai_result = call_gemini_api(prompt_text)
+                    
+                    if ai_result:
+                        clean_ai = ai_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                        clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
+                        
+                        ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
+                        ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#1A237E;'>\1</div>", ai_result_fmt)
+                        ai_result_fmt = ai_result_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
+                        
+                        # 스트림릿 버그 방지를 위해 들여쓰기 없이 밀착 배치
+                        ai_output_html = f"<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>{ai_result_fmt}</div>"
 
                 # ==========================================
                 # [STEP 2] 타 감명서 원문 및 1:1 비교 분석 준비
@@ -740,22 +743,20 @@ if st.session_state.get('app_running', False):
                 if "3-2." in u_product:
                     other_report = st.session_state.get("key_3_2", "")
                     if other_report:
+                        
+                        # 💡 html_views에서 원문 박스 디자인을 우아하게 호출
                         original_report_html = html_views.get_original_report_html(other_report)
                         
-                        with st.spinner("⚖️ 초연 궁합과 타 감명서를 1:1로 정밀 비교 분석 중입니다..."):
-                            comp_prompt = f"""
-                            당신은 초연 시공명리의 최고 권위자입니다.
-                            아래는 당신이 방금 분석한 [초연 시공명리 궁합 결과]와 의뢰인이 가져온 [타 감명서 원문]입니다.
-                            두 내용을 1:1로 정밀하게 대조하여, 어느 부분이 일치하고 어느 부분이 다른지(왜 다른지 명리학적 근거 포함) 객관적이고 상세하게 비교 분석 리포트를 작성하십시오.
-
-                            [초연 시공명리 궁합 결과]
-                            {clean_ai if clean_ai else "분석 내용 없음"}
-
-                            [타 감명서 원문]
-                            {other_report}
-
-                            반드시 소제목(###)을 사용하여 가독성 있게 작성하고, 초연 시공명리의 논리적 우수성을 돋보이게 작성하십시오.
-                            """
+                        with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
+                            # 💡 1. 팩트 데이터를 문자열로 정리
+                            fact_str = "\n".join([f"- {k}: {v}" for k, v in gunghap_facts.items()])
+                            
+                            # 💡 2. prompts.py의 공통 프롬프트를 스마트하게 호출
+                            comp_prompt = prompts.COMPARE_PROMPT.format(
+                                full_content_clean=clean_ai if clean_ai else "분석 내용 없음",
+                                other_report=other_report,
+                                fact_reference=fact_str
+                            )
                             
                             comp_result = call_gemini_api(comp_prompt)
                             
@@ -766,15 +767,15 @@ if st.session_state.get('app_running', False):
                                 comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
                                 comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                                 
+                                # 💡 html_views에서 비교 분석 박스 디자인을 우아하게 호출
                                 comparison_output_html = html_views.get_comparison_html(comp_fmt)
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
-
                 # ==========================================
-                # [STEP 3] 최종 통합 출력 (💡 탭 기능을 이용한 페이지 분리)
+                # [STEP 3] 최종 통합 출력 (💡 탭 제거, 순차적 렌더링)
                 # ==========================================
                 
-                # 1. 초연 궁합 풀이 기본 조립
+                # 1. 초연 궁합 풀이 메인 화면 렌더링
                 gunghap_report = (
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
@@ -782,25 +783,15 @@ if st.session_state.get('app_running', False):
                     ai_output_html +           
                     closing
                 )
+                gunghap_box = html_views.get_final_report_box(gunghap_report)
+                st.markdown(gunghap_box, unsafe_allow_html=True)
                 
-                # 2. 3-2 (궁합 비교) 선택 여부에 따라 탭(Tab)으로 분리 출력
-                if "3-2." in u_product:
-                    # 두 개의 분리된 페이지 탭 생성
-                    tab1, tab2 = st.tabs(["💕 초연 시공명리 궁합 풀이", "⚖️ 타 감명서 1:1 비교 분석"])
-                    
-                    with tab1:
-                        report_box = html_views.get_final_report_box(gunghap_report)
-                        st.markdown(report_box, unsafe_allow_html=True)
-                        
-                    with tab2:
-                        comp_report = original_report_html + comparison_output_html
-                        # 비교 페이지도 예쁜 박스에 담아 렌더링
-                        comp_box = html_views.get_final_report_box(comp_report)
-                        st.markdown(comp_box, unsafe_allow_html=True)
-                else:
-                    # 일반 궁합 상품인 경우 탭 없이 출력
-                    report_box = html_views.get_final_report_box(gunghap_report)
-                    st.markdown(report_box, unsafe_allow_html=True)
+                # 2. 타 감명서가 있을 경우, 그 아래에 완전히 새로운 문단(별도 페이지 느낌)으로 렌더링
+                if "3-2." in u_product and original_report_html:
+                    st.markdown("<br><br><br>", unsafe_allow_html=True) # 확연한 구분을 위한 넉넉한 여백
+                    comp_report = original_report_html + comparison_output_html
+                    comp_box = html_views.get_final_report_box(comp_report)
+                    st.markdown(comp_box, unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
