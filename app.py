@@ -365,7 +365,8 @@ if st.session_state.get('app_running', False):
     # [1-1 ~ 1-7번 + 3-1번 상품 통합 블록] 
     # ---------------------------------------------------------
     if any(x in u_product for x in ["1-", "3-1."]): 
-        
+        user_info = html_views.get_info_header("👤", name, gender, u_marital, m_age, f"{b_year}년 {b_month}월 {b_day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일", f"{b_time}시", p_color="#212121")       
+
         # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
 
