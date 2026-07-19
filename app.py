@@ -538,9 +538,7 @@ if st.session_state.get('app_running', False):
 
                 # 1. 1-2 또는 1-3 처리 로직 (try-except 포함)
                 if "1-2." in u_product or "1-3." in u_product:
-
-                    try: # 1. 거대한 문의 시작
-                        # [공통 출력부]
+                    try: # 1. # [공통 출력부]
                         st.markdown(cover_html, unsafe_allow_html=True)
                         st.markdown(info_h, unsafe_allow_html=True)
                         st.markdown(table_html, unsafe_allow_html=True)
@@ -600,8 +598,8 @@ if st.session_state.get('app_running', False):
                                 str(ai_output_html or "") + str(closing_html or "")
                             )
                             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
+                        except Exception as e:
+                            st.error(f"🚨 렌더링 중 오류가 발생했습니다: {e}")
                      
                     elif "1-4." in u_product:
                         target_prompt = getattr(prompts, 'WEALTH_PROMPT', target_prompt)
@@ -831,7 +829,7 @@ if st.session_state.get('app_running', False):
                                 comparison_output_html = html_views.get_comparison_html(comp_fmt)
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
-
+                
                 # ==========================================
                 # [STEP 3] 최종 통합 출력 (전용 표지 매핑 완료)
                 # ==========================================
@@ -862,7 +860,7 @@ if st.session_state.get('app_running', False):
                     comp_report = original_report_html + comparison_output_html
                     comp_box = html_views.get_final_report_box(comp_report)
                     st.markdown(comp_box, unsafe_allow_html=True)
-
+            
             except Exception as e:
                 st.error(f"🚨 궁합 분석 중 오류가 발생했습니다: {e}")
                 
