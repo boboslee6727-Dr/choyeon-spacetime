@@ -256,13 +256,29 @@ with st.sidebar:
     # 2. 궁합/결혼/출산/비교 (2-x, 3-2)
     elif any(x in u_product for x in ["2-", "3-2."]):
         
-    # 2-1. 특정 상품별 추가 옵션
         # u_product 변수가 정의되지 않았을 경우를 대비해 안전하게 참조
         curr_prod = u_product if 'u_product' in locals() else ""
         
+        st.markdown("---")
+        st.subheader("💕 상대방 정보 입력")
+
+        # 💡 [자동 반전 로직] 신청인 성별(gender)을 인식하여 상대방 성별 고정
+        f_gender = "여성" if gender == "남성" else "남성"
+        st.text_input("상대방 성별 (자동 설정)", value=f_gender, disabled=True)
+
+        f_name = st.text_input("상대방 이름", "상대방", key="f_name")
+        
+        col1, col2, col3 = st.columns(3)
+        f_y = col1.number_input("태어난 년도", min_value=1900, max_value=2100, value=1980, key="f_y")
+        f_m = col2.number_input("월", min_value=1, max_value=12, value=1, key="f_m")
+        f_d = col3.number_input("일", min_value=1, max_value=31, value=1, key="f_d")
+
+        # time_options 리스트가 사전에 정의되어 있어야 합니다.
+        f_t = st.selectbox("태어난 시간", ["시간 모름"] + time_options, key="f_t")
+        f_marital = st.radio("상대방 혼인 상태", ["미혼", "기혼", "돌싱"], key="f_marital")
          
         # ==============================================================================
-        # 👥 상대방(배우자/연인) 사주간지 역산
+        # 👥 상대방(배우자/연인) 사주간지 역산 (원문 유지)
         # ==============================================================================
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
@@ -340,20 +356,19 @@ with st.sidebar:
     # 📌 특화 상품별 추가 옵션 입력부 (최신 체계 완벽 호환)
     # ==============================================================================
     if "2-1." in u_product:
-        if "2-1." in u_product:
-            date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
-            if date_mode == "기간 선택":
-                start_date = st.date_input("시작일", key="start_date_m")
-                end_date = st.date_input("종료일", key="end_date_m")
+        date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
         if date_mode == "기간 선택":
-            start_date = st.date_input("시작일", key="start_date")
-            end_date = st.date_input("종료일", key="end_date")
+            # 화면을 깔끔하게 좌우로 나누어 시작일/종료일 배치
+            col_start, col_end = st.columns(2)
+            start_date = col_start.date_input("시작일", key="start_date_m")
+            end_date = col_end.date_input("종료일", key="end_date_m")
             
     elif "2-2." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
 
     elif "3-2." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 붙여넣기", height=150, key="key_3_2")
+        other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="key_3_2")
+        
     st.markdown("---")
 
     # ==============================================================================
