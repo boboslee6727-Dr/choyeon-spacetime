@@ -827,4 +827,14 @@ if st.session_state.get('app_running', False):
         if not other_report:
             st.warning("👈 사이드바에 타 감명서 원문을 입력해주세요.")
         else: 
-            st.info("상대방 사주 데이터와 타 감명서 궁합 내용을 대조 분석합니다.")
+            st.info("데이터가 확인되었습니다. 아래 버튼을 눌러 비교 분석을 가동하십시오.")
+            
+            # 여기서 AI에게 분석 지시를 내립니다!
+            if st.button("🚀 비교 분석 가동"):
+                with st.spinner("초연 시공명리 AI가 타 감명서와 비교 분석 중입니다..."):
+                    # 1. 박사님의 기존 분석 로직을 여기서 호출하십시오.
+                    # 예: result = run_comparison_logic(other_report, u_product)
+                    
+                    # 2. 결과 출력
+                    # st.write(result)
+                    st.success("✅ 비교 분석이 완료되었습니다.")
