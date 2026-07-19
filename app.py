@@ -558,7 +558,7 @@ if st.session_state.get('app_running', False):
                     extra_facts = {
                         "daewun": all_daewun_data,
                         "sewun": "있음" if sewun_html else "없음",
-                        "wolun": "있음" if wolun_html else "없음"
+                        "wolun": "있음" if wolun_html else "없음",
                         # 1. 박사님이 공들여 계산하신 세운/월운의 실제 데이터 전달
                         "sewun_content": se_content if "1-2." in u_product else "없음",
                         "wolun_content": wol_content if "1-3." in u_product else "없음",
