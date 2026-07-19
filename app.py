@@ -619,9 +619,8 @@ if st.session_state.get('app_running', False):
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
 
-        # 💡 [핵심 해결] 상단 try문의 예외 처리를 정확히 닫아주어 하단 elif와의 충돌을 원천 차단합니다!
-        except Exception as e:
-            st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
+            except Exception as e:
+                st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
             # --- (E) 최종 통합 렌더링 ---
             try:
