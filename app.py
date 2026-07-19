@@ -591,7 +591,7 @@ if st.session_state.get('app_running', False):
                             comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
                             
                             comparison_output_html = html_views.get_comparison_html(comp_fmt)
-                else:
+                else:  
                     st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
 
             # ==========================================
@@ -618,6 +618,10 @@ if st.session_state.get('app_running', False):
                 comp_report = original_report_html + comparison_output_html
                 comp_box = html_views.get_final_report_box(comp_report)
                 st.markdown(comp_box, unsafe_allow_html=True)
+
+        # 💡 [핵심 해결] 상단 try문의 예외 처리를 정확히 닫아주어 하단 elif와의 충돌을 원천 차단합니다!
+        except Exception as e:
+            st.error(f"🚨 시스템 오류가 발생했습니다: {e}")
 
             # --- (E) 최종 통합 렌더링 ---
             try:
