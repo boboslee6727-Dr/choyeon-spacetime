@@ -763,7 +763,7 @@ if st.session_state.get('app_running', False):
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
     elif any(x in u_product for x in ["2-0", "궁합", "3-2"]) and not any(x in u_product for x in ["2-1.", "2-2."]):
-        st.header(f"💕 {name} & {f_name} 초연 궁합")
+        # 💡 [요청 반영 1] 상단 header 타이틀 출력 완전 삭제 (st.header 삭제)
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
@@ -821,54 +821,55 @@ if st.session_state.get('app_running', False):
                 w_master_html = html_views.get_master_bar(f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10])
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
-                # ==========================================
-                # [STEP 1] 대운/세운/일주 팩트 변수 완벽 추출
-                # ==========================================
-                # 1. 남성 팩트 데이터 추출
-                m_ilju = f"{m_data[3][0]}{m_data[3][1]}" if (m_data and len(m_data) > 3) else "일주"
-                m_dw_g = m_daewun[0] if (m_daewun and len(m_daewun) > 0) else ""
-                m_dw_j = m_daewun[1] if (m_daewun and len(m_daewun) > 1) else ""
+                # 💡 [요청 반영 2] 초연 DB 연동하여 golden_text_html 정밀 복구
+                choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
+                # 신청인의 월령 및 일주 팩트 추출
+                m_ms, m_mb = m_data[2][0], m_data[2][1] if len(m_data) > 2 else ("", "")
+                m_ds, m_db = m_data[3][0], m_data[3][1] if len(m_data) > 3 else ("", "")
                 
-                # 2. 여성 팩트 데이터 추출
-                f_ilju = f"{f_data[3][0]}{f_data[3][1]}" if (f_data and len(f_data) > 3) else "일주"
-                f_dw_g = f_daewun[0] if (f_daewun and len(f_daewun) > 0) else ""
-                f_dw_j = f_daewun[1] if (f_daewun and len(f_daewun) > 1) else ""
+                w_key, i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
+                w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터")
+                i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터")
+                struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조", "유형", "성향"])
+                s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
+                
+                golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc) if hasattr(html_views, 'get_golden_text') else ""
 
-                # 3. 세운/월운 공통 팩트
-                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
-                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
-                w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
-                w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
+                # 💡 [요청 반영 4] AI에 넘길 팩트 데이터 철통 강화 (원국 8자, 일간, 일지, 오행, 대운/세운/월운)
+                m_ilju = f"{m_data[3][0]}{m_data[3][1]}" if (m_data and len(m_data) > 3) else "남성일주"
+                f_ilju = f"{f_data[3][0]}{f_data[3][1]}" if (f_data and len(f_data) > 3) else "여성일주"
+                
+                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() and cur_sewun_gan else "丙"
+                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() and cur_sewun_ji else "午"
+                w_gan = cur_wol_g if 'cur_wol_g' in locals() and cur_wol_g else "壬"
+                w_ji = cur_wol_j if 'cur_wol_j' in locals() and cur_wol_j else "寅"
 
-                # 4. 프롬프트 바인딩용 사전 구축 (중괄호 미치환 원천 차단)
                 gunghap_facts = {
                     "m_name": male_name, "m_age": male_age, "m_ilju": m_ilju,
-                    "m_dw_g_cur": m_dw_g, "m_dw_j_cur": m_dw_j,
-                    "m_sewun_gan": s_gan, "m_sewun_ji": s_ji,
+                    "m_ganju_str": f"년:{m_data[1][0]}{m_data[1][1]}, 월:{m_data[2][0]}{m_data[2][1]}, 일:{m_data[3][0]}{m_data[3][1]}, 시:{m_data[4][0]}{m_data[4][1]}",
+                    "m_dw_g_cur": m_daewun[0] if len(m_daewun) > 0 else "",
+                    "m_dw_j_cur": m_daewun[1] if len(m_daewun) > 1 else "",
                     
                     "f_name": female_name, "f_age": female_age, "f_ilju": f_ilju,
-                    "f_dw_g_cur": f_dw_g, "f_dw_j_cur": f_dw_j,
-                    "f_sewun_gan": s_gan, "f_sewun_ji": s_ji,
+                    "f_ganju_str": f"년:{f_data[1][0]}{f_data[1][1]}, 월:{f_data[2][0]}{f_data[2][1]}, 일:{f_data[3][0]}{f_data[3][1]}, 시:{f_data[4][0]}{f_data[4][1]}",
+                    "f_dw_g_cur": f_daewun[0] if len(f_daewun) > 0 else "",
+                    "f_dw_j_cur": f_daewun[1] if len(f_daewun) > 1 else "",
                     
+                    "sewun_gan": s_gan, "sewun_ji": s_ji,
                     "cur_wol_g": w_gan, "cur_wol_j": w_ji,
                     "marital_info": f"{u_marital}-{f_marital}"
                 }
                 if isinstance(gh_data, dict):
                     gunghap_facts.update(gh_data)
 
-                # ==========================================
-                # [STEP 2] 종합 시각화 자료 레고 조립 (intro_h 직후)
-                # ==========================================
-                # html_views에서 두 사람의 시공간/오행 종합 시각화 차트 및 비교표 호출
+                # 종합 시각화 레이아웃 생성
                 visual_analysis_html = html_views.get_gunghap_visual_analysis(
-                    male_name, m_ilju, f"{m_dw_g}{m_dw_j}",
-                    female_name, f_ilju, f"{f_dw_g}{f_dw_j}",
+                    male_name, m_ilju, f"{gunghap_facts['m_dw_g_cur']}{gunghap_facts['m_dw_j_cur']}",
+                    female_name, f_ilju, f"{gunghap_facts['f_dw_g_cur']}{gunghap_facts['f_dw_j_cur']}",
                     s_gan, s_ji, w_gan, w_ji
                 ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
 
-                # ==========================================
-                # [STEP 3] AI 통변 안전 호출 및 정제
-                # ==========================================
+                # 5. AI 지시어에 팩트 데이터 강제 주입
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
@@ -877,15 +878,15 @@ if st.session_state.get('app_running', False):
                 if hasattr(prompts, 'GUNGHAP_ESSAY_PROMPT'):
                     prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
                 else:
-                    prompt_text = f"남명 {male_name}({male_age}세, {m_ilju}일주, {m_dw_g}{m_dw_j}대운)와 여명 {female_name}({female_age}세, {f_ilju}일주, {f_dw_g}{f_dw_j}대운)의 정밀 궁합 통변을 작성하십시오."
+                    prompt_text = f"남명 {male_name}({m_ilju})과 여명 {female_name}({f_ilju})의 정밀 궁합을 작성하십시오."
 
-                # AI 지시어에 실제 데이터 변수를 직접 명시하여 환각/미치환 방지
                 prompt_text += (
-                    f"\n\n🚨 [최우선 엄수 지침]:\n"
-                    f"1. 남성({male_name})의 일주는 '{m_ilju}', 대운은 '{m_dw_g}{m_dw_j}대운'입니다.\n"
-                    f"2. 여성({female_name})의 일주는 '{f_ilju}', 대운은 '{f_dw_g}{f_dw_j}대운'입니다.\n"
-                    f"3. 올해 세운은 '{s_gan}{s_ji}년'이며, 월운은 '{w_gan}{w_ji}월'입니다.\n"
-                    f"4. 본문 서술 시 {{m_dw_g_cur}} 같은 변수 태그를 절대로 그대로 출력하지 말고, 위에서 전달한 '실제 한글/한자 데이터'로 완전히 대체하여 통변하십시오."
+                    f"\n\n🚨 [최우선 엄수 지침 - 환각 방지]:\n"
+                    f"1. 남성 사주 원국: {gunghap_facts['m_ganju_str']} (일주: {m_ilju})\n"
+                    f"2. 여성 사주 원국: {gunghap_facts['f_ganju_str']} (일주: {f_ilju})\n"
+                    f"3. 위와 같이 두 사람의 완벽한 사주팔자(8자) 데이터가 모두 제공되었습니다.\n"
+                    f"   따라서 '일주 정보가 부족하다', '오행 분포를 알 수 없다', '일지 정보가 없다'라는 식의 문장을 절대로 서술하지 마십시오.\n"
+                    f"4. 💡 [요청 반영 3] '6일간 중심의 성향 분석', '10일간 중심의 성향 분석'처럼 일간 분석 제목 앞에 '6일간', '10일간' 같은 어색한 숫자를 절대로 붙이지 마십시오. (예: '남성(일간) 성향 분석', '여성(일간) 성향 분석'으로 표기할 것)"
                 )
 
                 ai_result = call_gemini_api(prompt_text)
@@ -894,6 +895,9 @@ if st.session_state.get('app_running', False):
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
                     clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
                     
+                    # 💡 [요청 반영 3] 6일간, 10일간 등 이상한 숫자 정규식 강제 제거
+                    clean_ai = re.sub(r'\b\d+일간\b', '일간', clean_ai)
+                    
                     ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                     ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>\1</h3>", ai_result_fmt)
                     ai_result_fmt = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; border-bottom:1px solid #ddd;'>\1</h2>", ai_result_fmt)
@@ -901,33 +905,29 @@ if st.session_state.get('app_running', False):
                     paragraphs = [f"<p style='margin:10px 0; line-height:1.7; font-family:Nanum Myeongjo, serif;'>{p.strip()}</p>" for p in ai_result_fmt.split('\n') if p.strip()]
                     ai_output_html = "".join(paragraphs)
                 else:
-                    ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변을 가져오지 못했습니다.</p>"
+                    ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 불러오지 못했습니다.</p>"
 
                 # ==========================================
-                # [STEP 3] 궁합 리포트 단계별 정밀 출력 (개인사주 연동 방식)
+                # [STEP 3] 요구하신 정확한 순서로 단일 통출력
                 # ==========================================
-                
-                # 1. 커버(표지) 단독 최우선 출력
+                # 1. cover_html 단독 최우선 출력
                 st.markdown(cover_html, unsafe_allow_html=True)
 
-                # 2. intro_h 다음에 위치할 golden_text HTML 생성/바인딩
-                golden_text_html = html_views.get_golden_text_html() if hasattr(html_views, 'get_golden_text_html') else (golden_text if 'golden_text' in locals() else "")
-
-                # 3. 본문 통합 컨테이너 결합 (cover_html 제반 제거 및 golden_text_html 직결)
+                # 2. 본문 컨테이너 (intro_h -> golden_text_html -> visual_analysis_html -> ai_output_html 순서)
                 full_inner_content = (
                     str(m_info or "") + str(m_table or "") + str(m_master_html or "") + str(m_un or "") + 
                     str(w_info or "") + str(w_table or "") + str(w_master_html or "") + str(w_un or "") + 
-                    str(intro_h or "") + str(golden_text_html or "") +
-                    str(visual_analysis_html or "") +
+                    str(intro_h or "") + 
+                    str(golden_text_html or "") + # 💡 [복구] intro_h 바로 뒤에 golden_text 배치
+                    str(visual_analysis_html or "") + # 💡 [복구] 종합 시각화 자료 배치
                     f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +            
                     str(closing or "")
                 )
                 
-                # 4. 본문 리포트 박스 단일 출력
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(report_box, unsafe_allow_html=True)
                 
-                # 5. 타 감명서 비교 상품(3-2)일 경우 구분선 및 비교 출력
+                # 3. 타 감명서 비교 상품(3-2)일 경우 구분선 및 비교 출력
                 if ("3-2" in u_product or "12" in u_product) and original_report_html:
                     st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
                     original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
@@ -937,62 +937,3 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
-
-    # ==============================================================================
-    # [2번 카테고리 특화] 결혼(2-1.) / 출산(2-2.) 택일 전용 분기
-    # ==============================================================================
-    elif any(x in u_product for x in ["2-1.", "2-2.", "결혼", "출산"]):
-        try:
-            is_wedding = "2-1" in u_product or "결혼" in u_product
-            title_label = "결혼 택일" if is_wedding else "출산 택일"
-            
-            st.header(f"🗓️ {name}님의 초연 {title_label} 분석")
-            st.markdown("---")
-            
-            with st.spinner(f"⏳ {title_label}을 위한 최적의 시공간 길일을 정밀 분석 중입니다..."):
-                takeil_facts = {
-                    "name": name, "gender": gender, "marital": u_marital,
-                    "m_name": f_name if gender == "여성" else name,
-                    "f_name": name if gender == "여성" else f_name,
-                    "sewun_gan": cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙",
-                    "sewun_ji": cur_sewun_ji if 'cur_sewun_ji' in locals() else "午",
-                    "cur_wol_g": cur_wol_g if 'cur_wol_g' in locals() else "壬",
-                    "cur_wol_j": cur_wol_j if 'cur_wol_j' in locals() else "寅",
-                    "u_question": u_question if 'u_question' in locals() and u_question else "최적의 길일 추천 요청"
-                }
-                
-                if is_wedding:
-                    takeil_prompt_template = getattr(prompts, 'MARRIAGE_TAKEIL_PROMPT', "결혼 길일 정밀 분석 요청")
-                else:
-                    takeil_prompt_template = getattr(prompts, 'BIRTH_TAKEIL_PROMPT', "출산 길일 정밀 분석 요청")
-                
-                class SafeDict(dict):
-                    def __missing__(self, key): return "{" + key + "}"
-                
-                prompt_text = takeil_prompt_template.format_map(SafeDict(**takeil_facts)) if isinstance(takeil_prompt_template, str) else str(takeil_prompt_template)
-                
-                ai_raw = call_gemini_api(prompt_text)
-                if ai_raw:
-                    clean_takeil = re.sub(r'```[a-zA-Z]*', '', ai_raw).replace("```", "").strip()
-                    clean_takeil = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_takeil, flags=re.MULTILINE)
-                    clean_takeil = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>🗓️ \1</h3>", clean_takeil)
-                    
-                    paragraphs = [f"<p style='margin:10px 0; line-height:1.7; font-family:Nanum Myeongjo, serif;'>{p.strip()}</p>" for p in clean_takeil.split('\n') if p.strip()]
-                    takeil_html_body = "".join(paragraphs)
-                else:
-                    takeil_html_body = "<p style='color:red;'>⚠️ 택일 분석 AI 통변 데이터를 생성하지 못했습니다.</p>"
-                
-                takeil_header = f"""
-                <div style='text-align:center; padding:20px; background:#f5f5f5; border-radius:10px; margin-bottom:20px;'>
-                    <h2 style='color:#1A237E; margin:0;'>☯️ 초연 시공명리 {title_label} 감명서</h2>
-                    <p style='color:#555; margin-top:8px;'>신청인: {name}님 | 대운·세운·월운 연계 정밀 길일 추출</p>
-                </div>
-                """
-                
-                full_takeil_content = takeil_header + f"<div style='padding:10px;'>{takeil_html_body}</div>"
-                takeil_report_box = html_views.get_final_report_box(full_takeil_content)
-                
-                st.markdown(takeil_report_box, unsafe_allow_html=True)
-                
-        except Exception as e:
-            st.error(f"🚨 {title_label} 처리 중 예외가 발생했습니다: {e}")
