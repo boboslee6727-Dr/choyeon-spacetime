@@ -560,7 +560,9 @@ if st.session_state.get('app_running', False):
             # ---------------------------------------------------------
             # [4. AI 통변 및 최종 출력]
             # ---------------------------------------------------------
-            with st.spinner("🤖 [초연 시공명리] 분석 내용을 생성 중입니다..."):
+            # 스피너 문구 삭제 및 중복 방지
+            with st.spinner("🤖"):
+                # (중략: 데이터 추출 및 formatted_prompt 생성 로직 유지)
     
                 # --- [엔진 데이터 추출부 시작] ---
                 # 1. 격국 데이터
@@ -618,22 +620,27 @@ if st.session_state.get('app_running', False):
                 # AI 호출
                 raw_ai_output = call_gemini_api(formatted_prompt, extra_facts)
                 ai_output_html = raw_ai_output.replace("```html", "").replace("```", "").strip()
-    
+                
+                # 불필요한 문구 정규식 삭제
                 ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
                 ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
 
             # --------------------------------------------------------- 
             # [스피너(with문) 탈출!] 여기서부터 4칸(Tab 1번) 앞으로 나옵니다.
             # --------------------------------------------------------- 
-            st.markdown(cover_html, unsafe_allow_html=True) 
-            final_report = final_report_base + str(ai_output_html or "") + closing_part
+            st.markdown(cover_html, unsafe_allow_html=True)
             
-            # [수정] 3-1 상품인지 아닌지에 따라 출력을 완벽히 분리하여 중복을 방지합니다.
+            # 결합 확인: final_report_base가 존재하는지 확인하십시오.
+            # final_report_base에 cover_html이 포함되어 있다면 중복되니 반드시 빼주세요.
+            final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+            
+            # 3-1 상품 여부에 따른 출력 분기
             if "3-1." in u_product:
-                # 3-1은 기존의 밸런스 비교 분석 로직 추가
                 comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
-                saju_report = comparison_saju_report + final_report
+                saju_report = str(comparison_saju_report or "") + final_report
                 st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
+            else:
+                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
             elif "3-1." in u_product:
                 try:
