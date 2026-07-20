@@ -355,8 +355,8 @@ if st.session_state.get('app_running', False):
     # [1-1 ~ 1-7번 + 3-1번 상품 통합 블록] 
     # ---------------------------------------------------------
     if any(x in u_product for x in ["1-", "3-1."]): 
-  
-       # --- (A) 기본 사주 원국 및 대운 연산 ---
+ 
+        # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
 
         b_year = st.session_state.get("s_y", 1980)
@@ -432,7 +432,7 @@ if st.session_state.get('app_running', False):
             cur_samjae = engine.get_samjae(yb, curr_y_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
             
-            # --- (B) 공통 UI 렌더링 (원국, 마스터바, 대운) ---
+            # --- (B) 공통 UI 렌더링 (원국, 마스터바) ---
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
@@ -456,79 +456,65 @@ if st.session_state.get('app_running', False):
             filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
             gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
              
-            cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
-            info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-            intro_html = html_views.get_intro_html()
-            
             table_html = html_views.get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
             
-            daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
-            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
-            
-            # --- (C) 상품별 특화 UI 및 프롬프트 선택 ---
-            target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-            extra_facts = {}
-            
-            sewun_html = "" 
-            wolun_html = "" 
-            
+            # --- (C) 대운/세운 기준점 연산 ---
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
             cur_dw_idx = max(0, (age - calc_d) // 10)
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             
+            # ---------------------------------------------------------
+            # [1. 공통 데이터 및 모든 표(대운/세운/월운) 일괄 준비] 
+            # ---------------------------------------------------------
+            # 대운표 생성
+            daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
             all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
+            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+
+            try:
+                current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
+                start_year = int(sol_y) + current_daewun_age - 1
+            except:
+                current_daewun_age = max(0, int(age))
+                start_year = curr_year
+
+            # 세운표 생성 (중복 제거 완료)
+            se_content = ""
+            for i in range(10):
+                ty = start_year + i
+                tage = current_daewun_age + i
+                base = (ty - 1984) % 60
+                tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
+                tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
+                tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
+                bg_col = "#E1F5FE" if ty == curr_year else "transparent"
+                b_left = "1px solid #ccc" if i != 0 else "none"
+                se_content += html_views.get_sewun_cell(
+                    f"{ty}년", tage, engine.get_ss(ds, tc_hangul), tc, get_oh_class(tc), 
+                    tj, get_oh_class(tj), engine.get_ss(ds, tj_hangul), engine.get_unsung(ds, tj_hangul), engine.get_12_shinsal(yb, tj_hangul), bg_col, b_left
+                )
+            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
             
-            # 1-2. 세운
-            if "1-2." in u_product:
-                try:
-                    current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
-                    start_year = int(sol_y) + current_daewun_age - 1
-                except:
-                    current_daewun_age = max(0, int(age))
-                    start_year = curr_year
-                
-                se_content = ""
-                for i in range(10):
-                    ty = start_year + i
-                    tage = current_daewun_age + i
-                    base = (ty - 1984) % 60
-                    tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
-                    tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
-                    tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
-                    bg_col = "#E1F5FE" if ty == curr_year else "transparent"
-                    b_left = "1px solid #ccc" if i != 0 else "none"
-                    se_content += html_views.get_sewun_cell(
-                        f"{ty}년", tage, engine.get_ss(ds, tc_hangul), tc, get_oh_class(tc), 
-                        tj, get_oh_class(tj), engine.get_ss(ds, tj_hangul), engine.get_unsung(ds, tj_hangul), engine.get_12_shinsal(yb, tj_hangul), bg_col, b_left
-                    )
-                sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
-                target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
-             
-            # 1-3. 월운
-            elif "1-3." in u_product:
-                wol_gans_kor = ["기", "경", "신", "임", "계", "갑", "을", "병", "정", "무", "기", "경"]
-                wol_jis_kor = ["축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자"]
-                wol_content = ""
-                for i in range(12):
-                    tm = i + 1
-                    wc_kor, wj_kor = wol_gans_kor[i], wol_jis_kor[i]
-                    wc, wj = engine.K2H_GAN.get(wc_kor, wc_kor), engine.K2H_JI.get(wj_kor, wj_kor)
-                    bg_col = "#E8F5E9" if tm == curr_m else "transparent"
-                    b_left = "1px solid #ccc" if i != 0 else "none" 
-                    wol_content += html_views.get_wolun_cell(
-                        tm, engine.get_ss(ds, wc_kor) or "-", wc, get_oh_class(wc), 
-                        wj, get_oh_class(wj), engine.get_ss(ds, wj_kor) or "-", engine.get_unsung(ds, wj_kor) or "-", engine.get_12_shinsal(yb, wj_kor) or "-", bg_col, b_left
-                    )
-                wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
-                target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
-                 
-            # ---------------------------------------------------------
-            # [1. 공통 데이터 및 HTML 재료 준비] (12칸 들여쓰기)
-            # ---------------------------------------------------------
-            closing_html = html_views.get_closing_html(name)
+            # 월운표 생성
+            wol_gans_kor = ["기", "경", "신", "임", "계", "갑", "을", "병", "정", "무", "기", "경"]
+            wol_jis_kor = ["축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자"]
+            wol_content = ""
+            for i in range(12):
+                tm = i + 1
+                wc_kor, wj_kor = wol_gans_kor[i], wol_jis_kor[i]
+                wc, wj = engine.K2H_GAN.get(wc_kor, wc_kor), engine.K2H_JI.get(wj_kor, wj_kor)
+                bg_col = "#E8F5E9" if tm == curr_m else "transparent"
+                b_left = "1px solid #ccc" if i != 0 else "none" 
+                wol_content += html_views.get_wolun_cell(
+                    tm, engine.get_ss(ds, wc_kor) or "-", wc, get_oh_class(wc), 
+                    wj, get_oh_class(wj), engine.get_ss(ds, wj_kor) or "-", engine.get_unsung(ds, wj_kor) or "-", engine.get_12_shinsal(yb, wj_kor) or "-", bg_col, b_left
+                )
+            wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+
+            # 초연 시공명리 풀이 (골든 텍스트)
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
@@ -536,14 +522,12 @@ if st.session_state.get('app_running', False):
             struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
             s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
             golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
-            
-            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
-            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
-            wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
-            closing_html = html_views.get_closing_html(name) 
+
+            closing_html = html_views.get_closing_html(name)            
+            closing_part = str(closing_html or "")
 
             # ---------------------------------------------------------
-            # [2. 통합 HTML 재료 조립 (final_report_base)] 
+            # [2. 통합 HTML 베이스 조립 (모든 표가 무조건 다 들어감!)]
             # ---------------------------------------------------------
             final_report_base = (
                 str(cover_html or "") + str(info_h or "") + 
@@ -551,38 +535,36 @@ if st.session_state.get('app_running', False):
                 str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
                 str(intro_html or "") + str(golden_text_html or "")
             )
-            closing_part = str(closing_html or "")
 
             # ---------------------------------------------------------
-            # [3. 상품별 AI 통변 프롬프트 분기] (중복 없이 여기서만 판단)
+            # [3. 상품별 AI 통변 프롬프트만 분기 (박사님의 완벽한 기획)]
             # ---------------------------------------------------------
+            extra_facts = {}
             if "1-1." in u_product:
-                target_prompt = prompts.PERSONAL_SAJU_PROMPT
+                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
             elif "1-2." in u_product:
-                target_prompt = prompts.SEWUN_PROMPT
+                target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
             elif "1-3." in u_product:
-                target_prompt = prompts.WOLWUN_PROMPT
+                target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
             elif "1-4." in u_product:
-                target_prompt = prompts.WEALTH_PROMPT
+                target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
             elif "1-5." in u_product:
-                target_prompt = prompts.CAREER_PROMPT
+                target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
             elif "1-6." in u_product:
-                target_prompt = prompts.HEALTH_PROMPT
+                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
             elif "1-7." in u_product:
-                target_prompt = prompts.MOVING_DIRECTION_PROMPT
+                target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
             else:
-                target_prompt = prompts.PERSONAL_SAJU_PROMPT # 기본값 보호장치
+                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
 
             # ---------------------------------------------------------
-            # [4. 통합 출력부] (API 호출 및 화면 출력은 마지막에 딱 한 번만!)
+            # [4. AI 통변 및 최종 출력]
             # ---------------------------------------------------------
             with st.spinner("🤖 [정밀 분석] 통변 결과를 생성 중입니다..."):
-                ai_output_html = call_gemini_api(target_prompt, extra_facts)
+                # ai_output_html = call_gemini_api(target_prompt, extra_facts)
+                ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용입니다.</div>"
             
-            # 모든 재료(base + ai_output + closing)를 합칩니다.
             final_report = final_report_base + str(ai_output_html or "") + closing_part
-            
-            # 최종 결과를 화면에 송출합니다.
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
             
             if "3-1." in u_product:
