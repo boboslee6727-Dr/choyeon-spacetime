@@ -802,114 +802,84 @@ if st.session_state.get('app_running', False):
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
                 # ========================================================
-                # [박사님 지적 100% 반영] 사이드바 입력 기반 만세력 데이터 직접 호출
+                # [개정] 사이드바 입력 기반 만세력 데이터(gh_data) 직접 추출 및 golden_text 구축
                 # ========================================================
-                # 화면 출력용 배열을 파싱하는 바보 같은 짓을 버리고, 
-                # engine이 사이드바 입력값으로 이미 계산해둔 원본 팩트(gh_data)를 씁니다.
+                m_ms = gh_data.get("m_ms", "")
+                m_mb = gh_data.get("m_mb", "")
+                m_ds = gh_data.get("m_ds", "")
+                m_db = gh_data.get("m_db", "")
                 
-                m_ms, m_mb = gh_data.get("m_ms", ""), gh_data.get("m_mb", "")
-                m_ds, m_db = gh_data.get("m_ds", ""), gh_data.get("m_db", "")
-                
-                f_ms, f_mb = gh_data.get("f_ms", ""), gh_data.get("f_mb", "")
-                f_ds, f_db = gh_data.get("f_ds", ""), gh_data.get("f_db", "")
+                f_ms = gh_data.get("f_ms", "")
+                f_mb = gh_data.get("f_mb", "")
+                f_ds = gh_data.get("f_ds", "")
+                f_db = gh_data.get("f_db", "")
 
                 choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
                 
-                # 남성 골든 텍스트 HTML
+                # 1. 남성 골든 텍스트 HTML 및 팩트 변수 정의 (m_golden_fact 정의 완료)
                 m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
                 m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"[{m_w_key}] 시공간 데이터 없음")
                 m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"[{m_i_key}] 성품 데이터 없음")
                 m_struct = choyeon_db.get("ilju_structure", {}).get(m_i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct[0], m_struct[1], m_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
+                
+                # 💡 [NameError 원천 차단] 변수 명시적 정의
+                m_golden_fact = f"월령: {m_w_val} / 일주: {m_i_val}"
 
-                # 여성 골든 텍스트 HTML
+                # 2. 여성 골든 텍스트 HTML 및 팩트 변수 정의 (f_golden_fact 정의 완료)
                 f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
                 f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"[{f_w_key}] 시공간 데이터 없음")
                 f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"[{f_i_key}] 성품 데이터 없음")
                 f_struct = choyeon_db.get("ilju_structure", {}).get(f_i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct[0], f_struct[1], f_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
+                
+                f_golden_fact = f"월령: {f_w_val} / 일주: {f_i_val}"
 
-                # 3. 명리표 및 정보 헤더 조립
-                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
-                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
+                # 3. 종합 시각화 레이아웃
+                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
+                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
+                w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
+                w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
                 
-                cover_html = html_views.get_gunghap_cover(
-                    APP_VERSION, 
-                    male_name, male_age, male_sol, male_lun, f"{male_time}",  
-                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
-                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-                )
-                
-                intro_h = html_views.get_intro_html() 
-                closing = html_views.get_gunghap_closing(name, f_name)
-                
-                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
-                m_master_html = html_views.get_master_bar(m_master_list[0], m_master_list[1], m_master_list[2], m_master_list[3], m_master_list[4], m_master_list[5], m_master_list[6], m_master_list[7], m_master_list[8], m_master_list[9], m_master_list[10])
-                m_un = html_views.generate_daewun_layout(*m_daewun)
-                
-                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                w_master_html = html_views.get_master_bar(f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10])
-                w_un = html_views.generate_daewun_layout(*f_daewun)
+                visual_analysis_html = html_views.get_gunghap_visual_analysis(
+                    male_name, m_i_key, f"{m_daewun[0]}{m_daewun[1]}" if len(m_daewun)>1 else "",
+                    female_name, f_i_key, f"{f_daewun[0]}{f_daewun[1]}" if len(f_daewun)>1 else "",
+                    s_gan, s_ji, w_gan, w_ji
+                ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
 
-                # 4. 세운 / 월운 공통 팩트
-                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() and cur_sewun_gan else "丙"
-                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() and cur_sewun_ji else "午"
-                w_gan = cur_wol_g if 'cur_wol_g' in locals() and cur_wol_g else "壬"
-                w_ji = cur_wol_j if 'cur_wol_j' in locals() and cur_wol_j else "寅"
-
-                # 5. [개인사주 로직 차용] AI 바인딩용 1:1 완벽 사전 구축
+                # 4. AI 바인딩 사전 조립
                 gunghap_facts = {
-                    "m_name": male_name, "m_age": male_age, 
-                    "m_ds": m_ds, "m_db": m_db, "m_ilju": m_i_key, 
+                    "m_name": male_name, "m_age": male_age,
+                    "m_ds": m_ds, "m_db": m_db, "m_ilju": m_i_key,
                     "m_golden": m_golden_fact,
-                    "m_ganju_str": f"년:{m_y_key}, 월:{m_w_key}, 일:{m_i_key}, 시:{m_h_key}",
-                    "m_gyukgook": gh_data.get("m_gyukgook", "격국 미상"),
-                    "m_gongmang_actual": gh_data.get("m_gongmang", "공망"),
-                    "m_spouse_star": gh_data.get("m_spouse_star", "재성"),
+                    "m_gongmang_actual": gh_data.get("m_gongmang_actual", gh_data.get("m_gongmang", "")),
+                    "m_gyukgook": gh_data.get("m_gyukgook", ""),
                     "m_dw_g_cur": m_daewun[0] if len(m_daewun) > 0 else "",
                     "m_dw_j_cur": m_daewun[1] if len(m_daewun) > 1 else "",
                     
-                    "f_name": female_name, "f_age": female_age, 
+                    "f_name": female_name, "f_age": female_age,
                     "f_ds": f_ds, "f_db": f_db, "f_ilju": f_i_key,
                     "f_golden": f_golden_fact,
-                    "f_ganju_str": f"년:{f_y_key}, 월:{f_w_key}, 일:{f_i_key}, 시:{f_h_key}",
-                    "f_gyukgook": gh_data.get("f_gyukgook", "격국 미상"),
-                    "f_gongmang_actual": gh_data.get("f_gongmang", "공망"),
-                    "f_spouse_star": gh_data.get("f_spouse_star", "관성"),
+                    "f_gongmang_actual": gh_data.get("f_gongmang_actual", gh_data.get("f_gongmang", "")),
+                    "f_gyukgook": gh_data.get("f_gyukgook", ""),
                     "f_dw_g_cur": f_daewun[0] if len(f_daewun) > 0 else "",
                     "f_dw_j_cur": f_daewun[1] if len(f_daewun) > 1 else "",
                     
                     "m_sewun_gan": s_gan, "m_sewun_ji": s_ji,
                     "f_sewun_gan": s_gan, "f_sewun_ji": s_ji,
                     "cur_wol_g": w_gan, "cur_wol_j": w_ji,
-                    
-                    "db_header": "[초연 시공명리 정밀 해석 지침 적용]",
-                    "ai_saju_mapping": "[상대적 시공간 세력 및 십성/12운성 자동 매핑 완료]",
-                    "yukchin_rule": "[임관 표기 금지 -> 건록 대체 엄수]"
+                    "marital_info": f"{u_marital}-{f_marital}"
                 }
                 if isinstance(gh_data, dict):
                     gunghap_facts.update(gh_data)
 
-                # 6. 시각화 레이아웃 (html_views 연동)
-                visual_analysis_html = html_views.get_gunghap_visual_analysis(
-                    male_name, m_i_key, f"{gunghap_facts['m_dw_g_cur']}{gunghap_facts['m_dw_j_cur']}",
-                    female_name, f_i_key, f"{gunghap_facts['f_dw_g_cur']}{gunghap_facts['f_dw_j_cur']}",
-                    s_gan, s_ji, w_gan, w_ji
-                ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
-
-                # 7. 안전한 포매팅 및 AI 에세이 지시어 (환각 원천 차단)
+                # 5. 안전한 포매팅 및 AI 지시문
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
-                safe_gh_facts = SafeDict(**gunghap_facts)
-                prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
-                
-                prompt_text += (
-                    f"\n\n🚨 [최상위 통제 명령: 명리 용어 정확성 및 에세이 문체 엄수]\n"
-                    f"1. AI는 일간을 지칭할 때 '일간 6' 같은 숫자를 절대 사용하지 마십시오. 반드시 남성은 '{m_ds}일간', 여성은 '{f_ds}일간'으로 한자(간지)를 명시하십시오.\n"
-                    f"2. 추상적인 헛소리나 단답형 서술을 금지합니다. 두 사람의 십성과 격국, {m_ds}{m_db}일주와 {f_ds}{f_db}일주의 기운적 특징을 구체적인 한자 명사와 함께 '이야기식 에세이'로 풍부하게 서술하십시오.\n"
-                    f"3. 팩트 요약: 남성({m_y_key}년 {m_w_key}월 {m_i_key}일), 여성({f_y_key}년 {f_w_key}월 {f_i_key}일)"
-                )
+                safe_facts = SafeDict(**gunghap_facts)
+                prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_facts)
+                prompt_text += f"\n\n🚨 [지침] 남성({m_ds}일간, {m_i_key}일주)과 여성({f_ds}일간, {f_i_key}일주)의 사주를 바탕으로 풍부한 에세이 문체로 통변을 작성하십시오."
 
                 ai_result = call_gemini_api(prompt_text)
                 
