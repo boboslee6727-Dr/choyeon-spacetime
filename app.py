@@ -611,22 +611,17 @@ if st.session_state.get('app_running', False):
                 
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
                 
-                # [실제 API 호출 시 아래 주석 해제]
-                ai_output_html = call_gemini_api(formatted_prompt, extra_facts)
-                #ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
+                # [수정 후: 마크다운 구조를 유지하며 줄바꿈과 제목을 살리는 정제 로직]
                 
-                # [기존 후처리 코드]
+                # 1. 코드 블록 제거
                 ai_output_html = ai_output_html.replace("```html", "").replace("```", "").strip()
+                
+                # 2. 문단 줄바꿈을 들여쓰기 포함 <p> 태그로 변환 (제목 태그 없이)
+                ai_output_html = ai_output_html.replace('\n', '<p style="margin:15px 0 0 20px; line-height:1.7; font-family:Nanum Myeongjo;">')
+                
+                # 3. 불필요 문구 제거
                 ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
                 ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
-
-                # [추가할 강력 정제 로직]
-                # 1. AI가 혹시라도 줄바꿈 문자를 마크다운으로 오해하지 않게 강제 정리
-                ai_output_html = ai_output_html.replace('\n', ' ')
-                
-                # 2. HTML로 시작하지 않는 경우 강제로 <div> 태그로 감싸기 (가장 확실한 방법)
-                if not ai_output_html.strip().startswith("<"):
-                    ai_output_html = f"<div style='padding:20px; font-family:Nanum Myeongjo;'>{ai_output_html}</div>"
 
             # ---------------------------------------------------------
             # [5. 최종 화면 출력 (1-1~1-7 vs 3-1 완벽 분리)]
