@@ -835,6 +835,14 @@ if st.session_state.get('app_running', False):
                 
                 f_golden_fact = f"월령: {f_w_val} / 일주: {f_i_val}"
 
+                # 💡 [NameError 해결] cover_html 명시적 생성
+                cover_html = html_views.get_gunghap_cover(
+                    APP_VERSION, 
+                    male_name, male_age, male_sol, male_lun, f"{male_time}",  
+                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
+                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                )
+                 
                 # 3. 종합 시각화 레이아웃
                 s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
                 s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
