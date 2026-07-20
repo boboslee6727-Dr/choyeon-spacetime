@@ -83,87 +83,43 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (디자인 보정 및 기능 완전 복구)
-# ==============================================================================
-with st.sidebar:
-    # [버튼 글씨 굵게 스타일링 추가]
-    st.markdown("""
-        <style>
-        div.stButton > button {
-            font-weight: 900 !important;
-            font-size: 16px !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    # 2. 사이드바 통제 센터 (박사님 원본 스타일로 완벽 복구)
+    # ==============================================================================
+    with st.sidebar:
+        def stop_ai():
+            st.session_state['app_running'] = False
 
-    def stop_ai():
-        st.session_state['app_running'] = False
+        st.markdown(f"""<div style="text-align: center;"><h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin-bottom: 5px;">🏮 초연 시공명리 연구소</h1></div>""", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; color: #555555; font-family: sans-serif; font-size: 12px;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
+        st.markdown("---")
 
-    st.markdown(f"""<div style="text-align: center;"><h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin-bottom: 5px;">🏮 초연 시공명리 연구소</h1></div>""", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #555555; font-family: sans-serif; font-size: 12px;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
-    st.markdown("---")
+        st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
+        
+        main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
-    st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
-    
-    main_category = st.selectbox(
-        "어떤 상담을 원하십니까?", 
-        [
-            "1. 사주팔자 및 운세 풀이", 
-            "2. 연애/결혼운 (궁합) 풀이", 
-            "3. 타 감명서 비교"
-        ], 
-        key="main_category", 
-        on_change=stop_ai
-    )
+        if main_category == "1. 사주팔자 및 운세 풀이":
+            u_product = st.radio("상세 분석 항목을 선택하십시오:", ["1-1. 사주팔자 및 대운 분석", "1-2. 올 해의 운세 상세 분석", "1-3. 이번 달의 운세 상세 분석", "1-4. 재물운 특화 분석", "1-5. 직업/진학운 특화 분석", "1-6. 건강운 특화 분석", "1-7. 이사 및 방위 특화 분석"], key="sub_category_1", on_change=stop_ai)
+        elif main_category == "2. 연애/결혼운 (궁합) 풀이":
+            u_product = st.radio("상세 분석 항목을 선택하십시오:", ["2-0. 연애/결혼운 (궁합) 기본 풀이", "2-1. 결혼 택일", "2-2. 출산 택일"], key="sub_category_2", on_change=stop_ai)
+        elif main_category == "3. 타 감명서 비교":
+            u_product = st.radio("비교 분석 대상을 선택하십시오:", ["3-1. 타 감명서 비교 (사주)", "3-2. 타 감명서 비교 (궁합)"], key="sub_category_3", on_change=stop_ai)
+        st.markdown("---")
 
-    st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
+        # 기존 콜백 함수 유지
+        if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
+        if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
+        def sync_partner_gender():
+            if st.session_state["u_g"] == "여성": st.session_state["f_g"] = "남성"
+            else: st.session_state["f_g"] = "여성"
+        def sync_user_gender():
+            if st.session_state["f_g"] == "남성": st.session_state["u_g"] = "여성"
+            else: st.session_state["u_g"] = "남성"
 
-    if main_category == "1. 사주팔자 및 운세 풀이":
-        u_product = st.radio(
-            "상세 분석 항목을 선택하십시오:",
-            ["1-1. 사주팔자 및 대운 분석",
-             "1-2. 올 해의 운세 상세 분석",
-             "1-3. 이번 달의 운세 상세 분석",
-             "1-4. 재물운 특화 분석",
-             "1-5. 직업/진학운 특화 분석",
-             "1-6. 건강운 특화 분석",
-             "1-7. 이사 및 방위 특화 분석"], key="sub_category_1", on_change=stop_ai)
-
-    elif main_category == "2. 연애/결혼운 (궁합) 풀이":
-        u_product = st.radio(
-            "상세 분석 항목을 선택하십시오:",
-            ["2-0. 연애/결혼운 (궁합) 기본 풀이", 
-             "2-1. 결혼 택일",
-             "2-2. 출산 택일"], key="sub_category_2", on_change=stop_ai)
-
-    elif main_category == "3. 타 감명서 비교":
-        u_product = st.radio(
-            "비교 분석 대상을 선택하십시오:",
-            ["3-1. 타 감명서 비교 (사주)",
-             "3-2. 타 감명서 비교 (궁합)" ], key="sub_category_3", on_change=stop_ai)
-    st.markdown("---")
-
-    # 성별 양방향 자동 동기화를 위한 콜백 함수
-    if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
-    if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
-
-    def sync_partner_gender():
-        if st.session_state["u_g"] == "여성":
-            st.session_state["f_g"] = "남성"
-        else:
-            st.session_state["f_g"] = "여성"
-
-    def sync_user_gender():
-        if st.session_state["f_g"] == "남성":
-            st.session_state["u_g"] = "여성"
-        else:
-            st.session_state["u_g"] = "남성"
+        with st.expander("🔍 신청인 사주간지 역산", expanded=False):
 
     # ==============================================================================
     # 🔍 신청인 사주간지 역산 (기존 박스 위치에 파스텔 블루 스타일만 입힘)
     # ==============================================================================
-    st.markdown("<div style='background-color: #F0F4F8; padding: 15px; border-radius: 10px; border: 1px solid #D0DCE5; margin-bottom: 20px;'>", unsafe_allow_html=True)
-    
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
@@ -212,7 +168,7 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     # ==============================================================================
-    # 👤 [파스텔 블루 톤] 신청인 기본 정보
+    # 👤 신청인 기본 정보
     # ==============================================================================
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -249,7 +205,6 @@ with st.sidebar:
     # 👥 [파스텔 핑크/로즈 톤] 상대방 사주간지 역산 & 기본 정보
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
-        st.markdown("<div style='background-color: #F9F0F2; padding: 10px; border-radius: 8px; border: 1px solid #E8D5D8; margin-top: 10px; margin-bottom: 10px;'>", unsafe_allow_html=True)
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
