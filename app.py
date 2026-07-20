@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.7"
+APP_VERSION = "ver 60.8"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -455,7 +455,7 @@ if st.session_state.get('app_running', False):
                         
             filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
             gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
-             
+
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
             
@@ -530,7 +530,6 @@ if st.session_state.get('app_running', False):
             closing_part = str(closing_html or "")
 
             # [2. 통합 HTML 베이스 조립 (모든 표가 무조건 다 들어감!)]
-
             final_report_base = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -557,19 +556,70 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
             else:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-
-            # [4. AI 통변]
-
+            
+            # ---------------------------------------------------------
+            # [4. AI 통변 및 최종 출력]
+            # ---------------------------------------------------------
             with st.spinner("🤖 [초연 시공명리] 분석 내용을 생성 중입니다..."):
-                ai_output_html = call_gemini_api(target_prompt, extra_facts)
+    
+                # --- [엔진 데이터 추출부 시작] ---
+                # 1. 격국 데이터
+                gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
+                
+                # 2. 육친 및 십이운성 (년, 월, 일, 시 순서)
+                ss_unsung_str = (
+                    f"년주:{engine.get_ss(ds, ys)}{engine.get_ss(ds, yb)}({engine.get_unsung(ds, yb)}) / "
+                    f"월주:{engine.get_ss(ds, ms)}{engine.get_ss(ds, mb)}({engine.get_unsung(ds, mb)}) / "
+                    f"일주:{ds}(본인){engine.get_ss(ds, db)}({engine.get_unsung(ds, db)}) / "
+                    f"시주:{engine.get_ss(ds, hs)}{engine.get_ss(ds, hb)}({engine.get_unsung(ds, hb)})"
+                )
+                
+                # 3. 묘고(입고/개고) 작용 및 지장간
+                won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
+                
+                won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
+                if not won_guk_vaults_str:
+                    # [수정] 4칸 안으로 들여쓰기 완벽 적용!
+                    won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
+                
+                # 4. 합충형파해 (주요 지지 관계 텍스트화)
+                hap_chung_hyoung_pa_hae = (
+                    f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, "
+                    f"일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
+                )
+                
+                # 5. 12신살 및 일반신살
+                s12_str = engine.get_all_12_shinsal(yb, yb, mb, db, hb)
+                
+                # gans 배열에서 일주의 인덱스는 1 (gans = [hs, ds, ms, ys])
+                shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
+                shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
+                # --- [엔진 데이터 추출부 끝] ---
+                
+                # 추출한 데이터를 프롬프트 템플릿에 완벽하게 바인딩
+                formatted_prompt = target_prompt.format(
+                    name=name, age=age, gender=gender, marital=u_marital,
+                    ys=ys, yb=yb, ms=ms, mb=mb, ds=ds, db=db, hs=hs, hb=hb,
+                    gyukgook_detail=gyukgook_detail, gongmang_actual=i_gong, year_gongmang=n_gong,
+                    mok=counts['목'], hwa=counts['화'], to=counts['토'], geum=counts['금'], su=counts['수'],
+                    oheng_total=sum(counts.values()), ss_unsung_str=ss_unsung_str, won_guk_vaults_str=won_guk_vaults_str,
+                    hap_chung_hyoung_pa_hae=hap_chung_hyoung_pa_hae, cheon_eul=guiin_str, s12_str=s12_str, shinsal_str=shinsal_str, samjae_str=cur_samjae
+                )
+    
+                # AI 호출
+                raw_ai_output = call_gemini_api(formatted_prompt, extra_facts)
+                ai_output_html = raw_ai_output.replace("```html", "").replace("```", "").strip()
+    
+                ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
+                ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
 
-            # [5. 최종 출력]
-
+            # --------------------------------------------------------- 
+            # [스피너(with문) 탈출!] 여기서부터 4칸(Tab 1번) 앞으로 나옵니다.
+            # --------------------------------------------------------- 
             st.markdown(cover_html, unsafe_allow_html=True) 
             final_report = final_report_base + str(ai_output_html or "") + closing_part
-            st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
-            # ---------------------------------------------------------            
+            
+            # [수정] 3-1 상품인지 아닌지에 따라 출력을 완벽히 분리하여 중복을 방지합니다.
             if "3-1." in u_product:
                 # 3-1은 기존의 밸런스 비교 분석 로직 추가
                 comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
