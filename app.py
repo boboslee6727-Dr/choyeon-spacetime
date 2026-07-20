@@ -83,10 +83,19 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터
+# 2. 사이드바 통제 센터 (디자인 보정 및 기능 완전 복구)
 # ==============================================================================
 with st.sidebar:
-    # [추가] 타이핑 시 원치 않는 AI 가동을 차단하는 제동 함수
+    # [버튼 글씨 굵게 스타일링 추가]
+    st.markdown("""
+        <style>
+        div.stButton > button {
+            font-weight: 900 !important;
+            font-size: 16px !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     def stop_ai():
         st.session_state['app_running'] = False
 
@@ -96,7 +105,6 @@ with st.sidebar:
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
     
-    # [수정] 1단계: 대분류 선택 (on_change=stop_ai 유지)
     main_category = st.selectbox(
         "어떤 상담을 원하십니까?", 
         [
@@ -110,7 +118,6 @@ with st.sidebar:
 
     st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
 
-    # [수정] 2단계: 중분류 선택 (선택된 값을 기존 u_product 변수에 담아 하위 로직과 완벽 호환)
     if main_category == "1. 사주팔자 및 운세 풀이":
         u_product = st.radio(
             "상세 분석 항목을 선택하십시오:",
@@ -153,8 +160,9 @@ with st.sidebar:
             st.session_state["u_g"] = "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산 및 생년월일 자동입력
+    # 🔍 [파스텔 블루 톤] 신청인 사주간지 역산 및 생년월일 자동입력
     # ==============================================================================
+    st.markdown("<div style='background-color: #F0F4F8; padding: 10px; border-radius: 8px; border: 1px solid #D0DCE5; margin-bottom: 10px;'>", unsafe_allow_html=True)
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
@@ -203,7 +211,7 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     # ==============================================================================
-    # 🔍 신청인 정보 입력
+    # 👤 [파스텔 블루 톤] 신청인 기본 정보
     # ==============================================================================
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -215,15 +223,14 @@ with st.sidebar:
         with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
         with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ==============================================================================
-    # 📌 특화 상품별 추가 옵션 입력부 (안전성 강화 코드)
+    # 📌 특화 상품별 추가 옵션 입력부
     # ==============================================================================
-    # 1-1. 사주팔자 및 대운 분석 선택 시
     if "1-1." in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
         
-    # 1-2 ~ 1-7. 3-1 중 특화 분석이 선택되었을 때만 입력창 활성화
     elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7.", "3-1."]):
         if "1-4." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
@@ -237,15 +244,11 @@ with st.sidebar:
         elif "3-1." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
-    # 2. 궁합/결혼/출산/비교 (2-x, 3-2)
+    # ==============================================================================
+    # 👥 [파스텔 핑크/로즈 톤] 상대방 사주간지 역산 & 기본 정보
+    # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
-        
-        # u_product 변수가 정의되지 않았을 경우를 대비해 안전하게 참조
-        curr_prod = u_product if 'u_product' in locals() else ""
-         
-        # ==============================================================================
-        # 👥 상대방(배우자/연인) 사주간지 역산 (원문 완벽 유지)
-        # ==============================================================================
+        st.markdown("<div style='background-color: #F9F0F2; padding: 10px; border-radius: 8px; border: 1px solid #E8D5D8; margin-top: 10px; margin-bottom: 10px;'>", unsafe_allow_html=True)
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -256,8 +259,6 @@ with st.sidebar:
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
-                
-                # 들여쓰기 완벽 수정 완료
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
@@ -303,10 +304,6 @@ with st.sidebar:
                 else: 
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-    # ==============================================================================
-    # 👥 상대방(배우자/연인) 정보 입력 (2번 전체 또는 3-2. 선택 시 노출)
-    # ==============================================================================
-    if "2-" in u_product or "3-2." in u_product:
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
@@ -317,20 +314,26 @@ with st.sidebar:
             f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # ==============================================================================
-    # 📌 특화 상품별 2-1, 2-2, 3-2 추가 옵션 입력부
+    # 📌 [완벽 복구] 2-1(결혼택일), 2-2(출산택일), 3-2 특화 옵션 입력부
     # ==============================================================================
     if "2-1." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
         if date_mode == "기간 선택":
-            # 화면을 깔끔하게 좌우로 나누어 시작일/종료일 배치
             col_start, col_end = st.columns(2)
             start_date = col_start.date_input("시작일", key="start_date_m")
             end_date = col_end.date_input("종료일", key="end_date_m")
+        else:
+            # 💡 [오류 수정] 특정일 지정 시 선택 달력 출력
+            target_date = st.date_input("결혼 예정일 선택", key="target_date_m")
             
     elif "2-2." in u_product:
-        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석", value=True, key="run_delivery_calc")
+        run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc")
+        # 💡 [오류 수정] 생리 시작일 및 생리 주기 입력난 완비
+        last_period_date = st.date_input("마지막 생리 시작일", key="last_period_date")
+        period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=28, key="period_cycle")
 
     elif "3-2." in u_product:
         other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="key_3_2")
@@ -338,7 +341,7 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 🚀 실행 및 인쇄 버튼
+    # 🚀 실행 및 인쇄 버튼 (글자 굵게 강조)
     # ==============================================================================
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
