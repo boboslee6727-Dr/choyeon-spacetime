@@ -661,9 +661,10 @@ if st.session_state.get('app_running', False):
 
                     closing_html = html_views.get_closing_html(name)
                   
+                    # [수정반영] str(un_html or "") 앞의 + 기호 중복 에러 해결
                     final_report = (
                         str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        + str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
                         str(intro_html or "") + str(golden_text_html or "") + 
                         str(ai_output_html or "") + str(closing_html or "")
                     )
@@ -683,7 +684,7 @@ if st.session_state.get('app_running', False):
                                 other_report=other_report,
                                 fact_reference=fact_str
                             )
-                            comp_result = call_gemini_api(comp_prompt)
+                            # comp_result = call_gemini_api(comp_prompt)
                             comp_result = "비교 결과 텍스트 (API 연동 대기중)" 
                             
                             comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
