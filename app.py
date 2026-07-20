@@ -904,18 +904,87 @@ if st.session_state.get('app_running', False):
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변을 가져오지 못했습니다.</p>"
 
                 # ==========================================
-                # [STEP 4] 완벽한 순서로 최종 조립 및 단일 출력
+                # [STEP 3] 최종 통합 출력 (커버 + 명리표 + AI통변)
                 # ==========================================
                 full_inner_content = (
                     cover_html +
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
                     intro_h + 
-                    visual_analysis_html + # 💡 [복구] 종합 시각화 자료가 intro_h 바로 뒤에 완벽 배치
+                    visual_analysis_html +
                     f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +            
                     closing
                 )
                 
-                # 개인사주와 동일한 final_report_box 통출력
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(report_box, unsafe_allow_html=True)
+                
+                # 비교 상품일 경우 구분선 및 비교 출력
+                if ("3-2" in u_product or "12" in u_product) and original_report_html:
+                    st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
+                    original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
+                    comp_report = original_report_html + comparison_output_html
+                    comp_box = html_views.get_final_report_box(comp_report)
+                    st.markdown(comp_box, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
+
+    # ==============================================================================
+    # [2번 카테고리 특화] 결혼(2-1.) / 출산(2-2.) 택일 전용 분기
+    # ==============================================================================
+    elif any(x in u_product for x in ["2-1.", "2-2.", "결혼", "출산"]):
+        try:
+            is_wedding = "2-1" in u_product or "결혼" in u_product
+            title_label = "결혼 택일" if is_wedding else "출산 택일"
+            
+            st.header(f"🗓️ {name}님의 초연 {title_label} 분석")
+            st.markdown("---")
+            
+            with st.spinner(f"⏳ {title_label}을 위한 최적의 시공간 길일을 정밀 분석 중입니다..."):
+                takeil_facts = {
+                    "name": name, "gender": gender, "marital": u_marital,
+                    "m_name": f_name if gender == "여성" else name,
+                    "f_name": name if gender == "여성" else f_name,
+                    "sewun_gan": cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙",
+                    "sewun_ji": cur_sewun_ji if 'cur_sewun_ji' in locals() else "午",
+                    "cur_wol_g": cur_wol_g if 'cur_wol_g' in locals() else "壬",
+                    "cur_wol_j": cur_wol_j if 'cur_wol_j' in locals() else "寅",
+                    "u_question": u_question if 'u_question' in locals() and u_question else "최적의 길일 추천 요청"
+                }
+                
+                if is_wedding:
+                    takeil_prompt_template = getattr(prompts, 'MARRIAGE_TAKEIL_PROMPT', "결혼 길일 정밀 분석 요청")
+                else:
+                    takeil_prompt_template = getattr(prompts, 'BIRTH_TAKEIL_PROMPT', "출산 길일 정밀 분석 요청")
+                
+                class SafeDict(dict):
+                    def __missing__(self, key): return "{" + key + "}"
+                
+                prompt_text = takeil_prompt_template.format_map(SafeDict(**takeil_facts)) if isinstance(takeil_prompt_template, str) else str(takeil_prompt_template)
+                
+                ai_raw = call_gemini_api(prompt_text)
+                if ai_raw:
+                    clean_takeil = re.sub(r'```[a-zA-Z]*', '', ai_raw).replace("```", "").strip()
+                    clean_takeil = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_takeil, flags=re.MULTILINE)
+                    clean_takeil = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>🗓️ \1</h3>", clean_takeil)
+                    
+                    paragraphs = [f"<p style='margin:10px 0; line-height:1.7; font-family:Nanum Myeongjo, serif;'>{p.strip()}</p>" for p in clean_takeil.split('\n') if p.strip()]
+                    takeil_html_body = "".join(paragraphs)
+                else:
+                    takeil_html_body = "<p style='color:red;'>⚠️ 택일 분석 AI 통변 데이터를 생성하지 못했습니다.</p>"
+                
+                takeil_header = f"""
+                <div style='text-align:center; padding:20px; background:#f5f5f5; border-radius:10px; margin-bottom:20px;'>
+                    <h2 style='color:#1A237E; margin:0;'>☯️ 초연 시공명리 {title_label} 감명서</h2>
+                    <p style='color:#555; margin-top:8px;'>신청인: {name}님 | 대운·세운·월운 연계 정밀 길일 추출</p>
+                </div>
+                """
+                
+                full_takeil_content = takeil_header + f"<div style='padding:10px;'>{takeil_html_body}</div>"
+                takeil_report_box = html_views.get_final_report_box(full_takeil_content)
+                
+                st.markdown(takeil_report_box, unsafe_allow_html=True)
+                
+        except Exception as e:
+            st.error(f"🚨 {title_label} 처리 중 예외가 발생했습니다: {e}")
