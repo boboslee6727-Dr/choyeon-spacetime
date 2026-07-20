@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.8"
+APP_VERSION = "ver 60.9"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # CSS 적용 (html_views에서 호출)
@@ -549,6 +549,8 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
             elif "1-3." in u_product:
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
+                # 💡 [추가] 월운 전용 지시사항 강제 주입 (원국/대운 중복 설명 완전 차단)
+                target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 이번 달(월운)의 핵심 흐름과 인과관계, 행동 지침만 집중적으로 출력하라.]"
             elif "1-4." in u_product:
                 target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
             elif "1-5." in u_product:
@@ -702,9 +704,22 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
             
             else:
-                # 1-1 ~ 1-7 일반 상품 출력
-                final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                # 💡 [추가] 1-3 월운은 탭 분리, 나머지는 기존 방식 유지
+                if "1-3." in u_product:
+                    st.session_state['base_html'] = final_report_base
+                    
+                    tab1, tab2 = st.tabs(["📊 사주/운세 기본표", "🔮 이번 달 심층 분석"])
+                    
+                    with tab1:
+                        st.markdown(st.session_state['base_html'], unsafe_allow_html=True)
+                        
+                    with tab2:
+                        final_ai_report = str(ai_output_html or "") + str(closing_part or "")
+                        st.markdown(html_views.get_final_report_box(final_ai_report), unsafe_allow_html=True)
+                else:
+                    # 1-1, 1-2, 1-4 ~ 1-7 일반 상품 출력 (기존 로직 동일)
+                    final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
