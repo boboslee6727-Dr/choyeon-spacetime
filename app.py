@@ -529,7 +529,9 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "")
 
-            # [2. 통합 HTML 베이스 조립 (모든 표가 무조건 다 들어감!)]
+            # ---------------------------------------------------------
+            # [2. 통합 HTML 베이스 조립 (표지는 제외하고 묶음)]
+            # ---------------------------------------------------------
             final_report_base = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -537,8 +539,9 @@ if st.session_state.get('app_running', False):
                 str(intro_html or "") + str(golden_text_html or "")
             )
 
-            # [3. 상품별 AI 통변 프롬프트만 분기 (박사님의 완벽한 기획)]
-
+            # ---------------------------------------------------------
+            # [3. 상품별 AI 통변 프롬프트 및 로직 분기]
+            # ---------------------------------------------------------
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -554,21 +557,20 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
             elif "1-7." in u_product:
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
+            elif "3-1." in u_product:
+                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
             else:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-            
+
             # ---------------------------------------------------------
-            # [4. AI 통변 및 최종 출력]
+            # [4. AI 통변 (데이터 매핑 및 API 호출)]
             # ---------------------------------------------------------
-            # 스피너 문구 삭제 및 중복 방지
-            with st.spinner("🤖"):
-                # (중략: 데이터 추출 및 formatted_prompt 생성 로직 유지)
-    
+            with st.spinner("🤖 [초연 시공명리] 분석 내용을 생성 중입니다..."):
+                import re
+                
                 # --- [엔진 데이터 추출부 시작] ---
-                # 1. 격국 데이터
                 gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
                 
-                # 2. 육친 및 십이운성 (년, 월, 일, 시 순서)
                 ss_unsung_str = (
                     f"년주:{engine.get_ss(ds, ys)}{engine.get_ss(ds, yb)}({engine.get_unsung(ds, yb)}) / "
                     f"월주:{engine.get_ss(ds, ms)}{engine.get_ss(ds, mb)}({engine.get_unsung(ds, mb)}) / "
@@ -576,29 +578,23 @@ if st.session_state.get('app_running', False):
                     f"시주:{engine.get_ss(ds, hs)}{engine.get_ss(ds, hb)}({engine.get_unsung(ds, hb)})"
                 )
                 
-                # 3. 묘고(입고/개고) 작용 및 지장간
                 won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
-                
                 won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
                 if not won_guk_vaults_str:
-                    # [수정] 4칸 안으로 들여쓰기 완벽 적용!
                     won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
-                
-                # 4. 합충형파해 (주요 지지 관계 텍스트화)
+                    
                 hap_chung_hyoung_pa_hae = (
                     f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, "
                     f"일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
                 )
                 
-                # 5. 12신살 및 일반신살
                 s12_str = engine.get_all_12_shinsal(yb, yb, mb, db, hb)
                 
-                # gans 배열에서 일주의 인덱스는 1 (gans = [hs, ds, ms, ys])
                 shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
                 shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
                 # --- [엔진 데이터 추출부 끝] ---
                 
-                # 추출한 데이터를 프롬프트 템플릿에 완벽하게 바인딩
+                # 딕셔너리에 데이터 안전하게 매핑
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
@@ -609,71 +605,33 @@ if st.session_state.get('app_running', False):
                     "shinsal_str": shinsal_str, "samjae_str": cur_samjae
                 }
 
-                # format 대신 format_map을 사용하여 매칭되지 않는 변수가 있어도 에러 없이 통과시킵니다.
-                # 변수가 없으면 원래 형태({변수명}) 그대로 남겨두어 어디가 누락되었는지 AI가 알려주도록 설정합니다.
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return '{' + key + '}'
                 
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-    
-                # AI 호출
-                raw_ai_output = call_gemini_api(formatted_prompt, extra_facts)
-                ai_output_html = raw_ai_output.replace("```html", "").replace("```", "").strip()
                 
-                # 불필요한 문구 정규식 삭제
+                # [실제 API 호출 시 아래 주석 해제]
+                # ai_output_html = call_gemini_api(formatted_prompt, extra_facts)
+                ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
+                
+                ai_output_html = ai_output_html.replace("```html", "").replace("```", "").strip()
                 ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
                 ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
 
-            # --------------------------------------------------------- 
-            # [스피너(with문) 탈출!] 여기서부터 4칸(Tab 1번) 앞으로 나옵니다.
-            # --------------------------------------------------------- 
-            st.markdown(cover_html, unsafe_allow_html=True)
+            # ---------------------------------------------------------
+            # [5. 최종 화면 출력 (1-1~1-7 vs 3-1 완벽 분리)]
+            # ---------------------------------------------------------
+            st.markdown(cover_html, unsafe_allow_html=True) 
             
-            # 결합 확인: final_report_base가 존재하는지 확인하십시오.
-            # final_report_base에 cover_html이 포함되어 있다면 중복되니 반드시 빼주세요.
-            final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
-            
-            elif "3-1." in u_product:
+            if "3-1." in u_product:
                 try:
-                    # 1. 1차 원국 풀이 (기본 베이스)
-                    target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-                    extra_facts = {
-                        "daewun": all_daewun_data, "curr_year": curr_year, "curr_month": curr_m,
-                        "sewun": "있음", "sewun_content": se_content, "wolun": "있음", "wolun_content": wol_content
-                    }
-                    with st.spinner("🤖 [타 감명서 1차 원국 분석] 정밀 통변 중..."):
-                        # ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                        ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
-                    
-                    cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
-                    info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-                    table_html = html_views.get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
-                    master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
-                    intro_html = html_views.get_intro_html() 
-
-                    choyeon_db = load_choyeon_db()
-                    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
-                    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-                    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-                    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-
-                    closing_html = html_views.get_closing_html(name)
-                  
-                    # [수정반영] str(un_html or "") 앞의 + 기호 중복 에러 해결
-                    final_report = (
-                        str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                        str(intro_html or "") + str(golden_text_html or "") + 
-                        str(ai_output_html or "") + str(closing_html or "")
-                    )
-                    
+                    final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                     comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
-                    saju_report = comparison_saju_report + final_report
+                    saju_report = str(comparison_saju_report or "") + final_report
                     st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
                     
-                    # 2. 타 감명서 1:1 비교 분석 렌더링
+                    # 3-1 고유 1:1 비교 분석 렌더링
                     other_report = st.session_state.get("text_3-1.", "")
                     if other_report:
                         original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
@@ -700,6 +658,11 @@ if st.session_state.get('app_running', False):
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
+            
+            else:
+                # 1-1 ~ 1-7 일반 상품 출력
+                final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
