@@ -768,7 +768,7 @@ if st.session_state.get('app_running', False):
             try:
                 curr_y = dt_mod.datetime.now().year
                 
-                # 1. 신청자(b_year)와 파트너(f_y) 나이 및 음양력 정확한 계산
+                # 1. 나이 및 음양력 계산
                 age = curr_y - int(b_year) + 1
                 p_age = curr_y - int(f_y) + 1
                 
@@ -778,10 +778,9 @@ if st.session_state.get('app_running', False):
                 klc.setSolarDate(int(f_y), int(f_m), int(f_d))
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
-                # 2. [핵심] 성별에 따른 engine.get_gunghap_data 매개변수 철통 정렬 (사주 꼬임 원천 차단)
+                # 2. 성별 매개변수 정렬 (신청자 성별 기준)
                 if gender == "여성":
                     marital_status = f"{f_marital}-{u_marital}" 
-                    # 여성이 신청자일 때: 남성(f_y 파트너)데이터가 1번 인자, 여성(b_year 신청자)데이터가 2번 인자
                     gh_data = engine.get_gunghap_data(
                         int(f_y), int(f_m), int(f_d), f_t, f_marital,
                         int(b_year), int(b_month), int(b_day), b_time, u_marital,
@@ -791,7 +790,6 @@ if st.session_state.get('app_running', False):
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = name, age, m_sol, m_lun, b_time, u_marital
                 else:
                     marital_status = f"{u_marital}-{f_marital}" 
-                    # 남성이 신청자일 때: 남성(b_year 신청자)데이터가 1번 인자, 여성(f_y 파트너)데이터가 2번 인자
                     gh_data = engine.get_gunghap_data(
                         int(b_year), int(b_month), int(b_day), b_time, u_marital, 
                         int(f_y), int(f_m), int(f_d), f_t, f_marital,              
@@ -803,8 +801,7 @@ if st.session_state.get('app_running', False):
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
-                # 3. [100% 진품 8자 추출] m_data/f_data에서 간지 텍스트 파싱
-                # m_data 구조: [0]헤더, [1]년, [2]월, [3]일, [4]시
+                # 3. 8자 간지 텍스트 파싱
                 m_ys, m_yb = str(m_data[1][0]), str(m_data[1][1])
                 m_ms, m_mb = str(m_data[2][0]), str(m_data[2][1])
                 m_ds, m_db = str(m_data[3][0]), str(m_data[3][1])
@@ -817,24 +814,26 @@ if st.session_state.get('app_running', False):
                 f_hs, f_hb = str(f_data[4][0]), str(f_data[4][1])
                 f_ilju = f"{f_ds}{f_db}"
 
-                # 4. [골든 텍스트 남/여 각각 완벽 추출]
+                # 4. [박사님 코드 지정 적용] 초연 DB 골든 텍스트 파싱
                 choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
                 
                 # 남성 골든 텍스트
-                m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
-                m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"{m_w_key}월")
-                m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"{m_i_key}일주 성품")
-                m_struct = choyeon_db.get("ilju_structure", {}).get(m_i_key, ["기본구조", "기본유형", "기본성향"])
-                m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct[0], m_struct[1], m_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
+                m_w_key = f"{m_ms}{m_mb}".strip()
+                m_i_key = f"{m_ds}{m_db}".strip()
+                m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"[{m_w_key}] 시공간 데이터 없음")
+                m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"[{m_i_key}] 성품 데이터 없음")
+                m_struct_data = choyeon_db.get("ilju_structure", {}).get(m_i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct_data[0], m_struct_data[1], m_struct_data[2]) if hasattr(html_views, 'get_golden_text') else ""
 
                 # 여성 골든 텍스트
-                f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
-                f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"{f_w_key}월")
-                f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"{f_i_key}일주 성품")
-                f_struct = choyeon_db.get("ilju_structure", {}).get(f_i_key, ["기본구조", "기본유형", "기본성향"])
-                f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct[0], f_struct[1], f_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
+                f_w_key = f"{f_ms}{f_mb}".strip()
+                f_i_key = f"{f_ds}{f_db}".strip()
+                f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"[{f_w_key}] 시공간 데이터 없음")
+                f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"[{f_i_key}] 성품 데이터 없음")
+                f_struct_data = choyeon_db.get("ilju_structure", {}).get(f_i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct_data[0], f_struct_data[1], f_struct_data[2]) if hasattr(html_views, 'get_golden_text') else ""
 
-                # 5. 명리표 및 정보 헤더 생성
+                # 5. 명리표 및 정보 헤더 조립
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
                 
@@ -862,7 +861,7 @@ if st.session_state.get('app_running', False):
                 w_gan = cur_wol_g if 'cur_wol_g' in locals() and cur_wol_g else "壬"
                 w_ji = cur_wol_j if 'cur_wol_j' in locals() and cur_wol_j else "寅"
 
-                # 7. AI 전달용 완벽 사전 구축
+                # 7. AI 바인딩용 1:1 완벽 사전 구축
                 gunghap_facts = {
                     "m_name": male_name, "m_age": male_age, 
                     "m_ys": m_ys, "m_yb": m_yb, "m_ms": m_ms, "m_mb": m_mb,
@@ -897,25 +896,25 @@ if st.session_state.get('app_running', False):
                 if isinstance(gh_data, dict):
                     gunghap_facts.update(gh_data)
 
-                # 종합 시각화 레이아웃 생성 (html_views에 존재하는 모듈 연동)
+                # 시각화 레이아웃
                 visual_analysis_html = html_views.get_gunghap_visual_analysis(
                     male_name, m_ilju, f"{gunghap_facts['m_dw_g_cur']}{gunghap_facts['m_dw_j_cur']}",
                     female_name, f_ilju, f"{gunghap_facts['f_dw_g_cur']}{gunghap_facts['f_dw_j_cur']}",
                     s_gan, s_ji, w_gan, w_ji
                 ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
 
-                # 8. AI 호출 및 에세이 스타일 강화 프롬프트 전달
+                # 8. AI 호출
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
                 safe_gh_facts = SafeDict(**gunghap_facts)
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
                 
-                # 에세이풍 서술 강제 지시문
                 prompt_text += (
-                    f"\n\n🚨 [최우선 필수 서술 지침 - 에세이 스타일 준수]:\n"
-                    f"1. 단답형이나 개조식 문장을 절대 피하고, 두 사람의 시공간과 기운의 조화를 다정하고 품격 있는 '이야기식 에세이 문체'로 깊이 있게 풀어서 작성하십시오.\n"
-                    f"2. 남성 {male_name}님의 8자({gunghap_facts['m_ganju_str']})와 여성 {female_name}님의 8자({gunghap_facts['f_ganju_str']})는 실제 계산된 절대적 팩트입니다. 정확히 이 8자를 바탕으로 통변하십시오."
+                    f"\n\n🚨 [경고: 구체적 명리 명사 직접 사용] 🚨\n"
+                    f"1. 남성 팩트: {male_name}님은 {m_ds}일간, {m_ilju}일주, 8자({gunghap_facts['m_ganju_str']})\n"
+                    f"2. 여성 팩트: {female_name}님은 {f_ds}일간, {f_ilju}일주, 8자({gunghap_facts['f_ganju_str']})\n"
+                    f"3. 겉도는 일반론적 수식어만 남발하지 말고, 위에서 제공한 구체적 일간({m_ds}, {f_ds})과 십성/격국 명사를 반드시 명시하여 다정하고 깊이 있는 '이야기식 에세이 문체'로 작성하십시오."
                 )
 
                 ai_result = call_gemini_api(prompt_text)
@@ -934,22 +933,18 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
-                # ==========================================
-                # [STEP 3] 정통 관락 순서에 따른 리포트 최종 배치
-                # ==========================================
-                # 1. 커버 표지 최상단 출력
+                # 9. [최종 통합 출력] (표지 -> 남성 명리/골든 -> 여성 명리/골든 -> intro -> 시각화 -> AI통변)
                 st.markdown(cover_html, unsafe_allow_html=True)
 
-                # 2. 본문 컨테이너 결합 (남성 표/대운 -> 남성 golden -> 여성 표/대운 -> 여성 golden -> intro -> visual -> AI통변)
                 full_inner_content = (
                     str(m_info or "") + str(m_table or "") + str(m_master_html or "") + str(m_un or "") + 
-                    str(m_golden_html or "") + # 💡 [복구] 남성 대운표 직후 남성 golden_text
+                    str(m_golden_html or "") + 
                     
                     str(w_info or "") + str(w_table or "") + str(w_master_html or "") + str(w_un or "") + 
-                    str(f_golden_html or "") + # 💡 [복구] 여성 대운표 직후 여성 golden_text
+                    str(f_golden_html or "") + 
                     
                     str(intro_h or "") + 
-                    str(visual_analysis_html or "") + # 💡 [복구] 종합 시각화 레이아웃
+                    str(visual_analysis_html or "") + 
                     f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +            
                     str(closing or "")
                 )
@@ -957,7 +952,7 @@ if st.session_state.get('app_running', False):
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(report_box, unsafe_allow_html=True)
                 
-                # 3. 타 감명서 비교 상품(3-2) 구분선 및 비교 리포트 출력
+                # 10. 타 감명서 비교 상품(3-2)일 경우 구분선 및 비교 리포트 출력
                 if ("3-2" in u_product or "12" in u_product) and original_report_html:
                     st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
                     original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
