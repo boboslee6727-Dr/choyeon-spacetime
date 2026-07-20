@@ -612,8 +612,8 @@ if st.session_state.get('app_running', False):
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
                 
                 # [실제 API 호출 시 아래 주석 해제]
-                # ai_output_html = call_gemini_api(formatted_prompt, extra_facts)
-                ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
+                ai_output_html = call_gemini_api(formatted_prompt, extra_facts)
+                #ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
                 
                 ai_output_html = ai_output_html.replace("```html", "").replace("```", "").strip()
                 ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
