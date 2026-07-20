@@ -611,17 +611,20 @@ if st.session_state.get('app_running', False):
                 
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
                 
-                # [수정 후: 마크다운 구조를 유지하며 줄바꿈과 제목을 살리는 정제 로직]
-                
-                # 1. 코드 블록 제거
-                ai_output_html = ai_output_html.replace("```html", "").replace("```", "").strip()
-                
-                # 2. 문단 줄바꿈을 들여쓰기 포함 <p> 태그로 변환 (제목 태그 없이)
-                ai_output_html = ai_output_html.replace('\n', '<p style="margin:15px 0 0 20px; line-height:1.7; font-family:Nanum Myeongjo;">')
-                
-                # 3. 불필요 문구 제거
-                ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
-                ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
+                # [오류 방지용 안전 후처리 코드]
+                if ai_output_html and isinstance(ai_output_html, str):
+                    # 1. 코드 블록 제거
+                    ai_output_html = ai_output_html.replace("```html", "").replace("```", "").strip()
+                    
+                    # 2. 문단 줄바꿈 및 들여쓰기 적용
+                    ai_output_html = ai_output_html.replace('\n', '<p style="margin:15px 0 0 20px; line-height:1.7; font-family:Nanum Myeongjo;">')
+                    
+                    # 3. 불필요 문구 제거
+                    ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
+                    ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
+                else:
+                    # AI 응답이 없을 경우를 대비한 기본값
+                    ai_output_html = "<p>분석 결과를 생성하는 중입니다.</p>"
 
             # ---------------------------------------------------------
             # [5. 최종 화면 출력 (1-1~1-7 vs 3-1 완벽 분리)]
