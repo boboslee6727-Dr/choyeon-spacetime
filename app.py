@@ -634,14 +634,6 @@ if st.session_state.get('app_running', False):
             # final_report_base에 cover_html이 포함되어 있다면 중복되니 반드시 빼주세요.
             final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
             
-            # 3-1 상품 여부에 따른 출력 분기
-            if "3-1." in u_product:
-                comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
-                saju_report = str(comparison_saju_report or "") + final_report
-                st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
-            else:
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
             elif "3-1." in u_product:
                 try:
                     # 1. 1차 원국 풀이 (기본 베이스)
