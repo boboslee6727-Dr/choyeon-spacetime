@@ -631,8 +631,8 @@ if st.session_state.get('app_running', False):
                     "sewun_ji": cur_sewun_ji,
                     "dw_g_cur": dw_g_cur,
                     "dw_j_cur": dw_j_cur,
-                    "cur_wol_g": cur_wol_g,
-                    "cur_wol_j": cur_wol_j,
+                    "cur_wol_g": cur_wol_g, # 현재 월운 천간 (예: "壬")
+                    "cur_wol_j": cur_wol_j, # 현재 월운 지지 (예: "寅")
                     "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)", # HTML(se_content)을 텍스트로 요약하는 변수가 없으므로 임시 대체
                     # --- [추가] 재물운 및 분야별 고민사항/사용자 질문 변수 바인딩 ---
                     "user_query": user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음",
