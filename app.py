@@ -350,7 +350,6 @@ with st.sidebar:
 # 3. 메인 화면 출력부
 # ==============================================================================
 if st.session_state.get('app_running', False):
-    
     # ---------------------------------------------------------
     # [1-1 ~ 1-7번 + 3-1번 상품 통합 블록] 
     # ---------------------------------------------------------
@@ -433,6 +432,7 @@ if st.session_state.get('app_running', False):
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
             
             # --- (B) 공통 UI 렌더링 (원국, 마스터바) ---
+
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
@@ -470,9 +470,8 @@ if st.session_state.get('app_running', False):
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             
-            # ---------------------------------------------------------
             # [1. 공통 데이터 및 모든 표(대운/세운/월운) 일괄 준비] 
-            # ---------------------------------------------------------
+
             # 대운표 생성
             daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
             all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
@@ -530,9 +529,8 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "")
 
-            # ---------------------------------------------------------
             # [2. 통합 HTML 베이스 조립 (모든 표가 무조건 다 들어감!)]
-            # ---------------------------------------------------------
+
             final_report_base = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -540,9 +538,8 @@ if st.session_state.get('app_running', False):
                 str(intro_html or "") + str(golden_text_html or "")
             )
 
-            # ---------------------------------------------------------
             # [3. 상품별 AI 통변 프롬프트만 분기 (박사님의 완벽한 기획)]
-            # ---------------------------------------------------------
+
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -561,13 +558,12 @@ if st.session_state.get('app_running', False):
             else:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
 
-            # ---------------------------------------------------------
-            # [4. AI 통변 및 최종 출력]
-            # ---------------------------------------------------------
-           
-            with st.spinner("🤖 [정밀 분석] 통변 결과를 생성 중입니다..."):
+            # [4. AI 통변]
+
+            with st.spinner("🤖 [초연 시공명리] 분석 내용을 생성 중입니다..."):
                 ai_output_html = call_gemini_api(target_prompt, extra_facts)
-                ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용입니다.</div>"
+
+            # [5. 최종 출력]
 
             st.markdown(cover_html, unsafe_allow_html=True) 
             final_report = final_report_base + str(ai_output_html or "") + closing_part
