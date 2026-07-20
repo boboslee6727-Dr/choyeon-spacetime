@@ -568,8 +568,9 @@ if st.session_state.get('app_running', False):
             # 1. 변수 안전 초기화 (NameError 방지)
             ai_output_html = ""
             
-            with st.spinner("⚡ [초연 시공명리] 플래시 엔진으로 정밀 분석 중..."):
-                import re
+            if True:  # 스피너 무력화 (들여쓰기 유지용 뼈대)
+                pass  # 중복된 import re를 삭제하고 pass로 빈자리만 채움 (또는 # import re 로 주석처리)
+                # ... (아래쪽 코드들은 단 1칸도 건드릴 필요 없이 그대로 둡니다!) ...
                 
                 # --- [A. 엔진 데이터 추출부] ---
                 gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
@@ -595,21 +596,39 @@ if st.session_state.get('app_running', False):
                 shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
                 shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
                 
-                # --- [B. 프롬프트 데이터 바인딩] ---
+                # --- [B. 프롬프트 데이터 통합 바인딩] ---
+                # 1. 1-2(세운)를 위해 현재 세운의 천간/지지 변수를 안전하게 가져옵니다.
+                try:
+                    current_sewun_base = (curr_year - 1984) % 60
+                    cur_sewun_gan = engine.GAN[current_sewun_base % 10]
+                    cur_sewun_ji = engine.JI[current_sewun_base % 12]
+                except:
+                    cur_sewun_gan, cur_sewun_ji = "", ""
+
+                # 2. 모든 프롬프트(1-1 ~ 1-7)가 요구할 수 있는 변수들을 하나의 사전에 몽땅 넣습니다.
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                     "gyukgook_detail": gyukgook_detail, "gongmang_actual": i_gong, "year_gongmang": n_gong,
-                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts['su'] if 'su' in counts else counts['수'],
+                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
-                    "shinsal_str": shinsal_str, "samjae_str": cur_samjae
+                    "shinsal_str": shinsal_str, "samjae_str": cur_samjae,
+                    # --- 아래는 1-2 (세운) 등에서 추가로 요구하는 변수들 ---
+                    "curr_y": curr_year,
+                    "sewun_gan": cur_sewun_gan,
+                    "sewun_ji": cur_sewun_ji,
+                    "dw_g_cur": dw_g_cur,
+                    "dw_j_cur": dw_j_cur,
+                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)" # HTML(se_content)을 텍스트로 요약하는 변수가 없으므로 임시 대체
                 }
 
+                # 3. 안전한 포매팅 클래스 (프롬프트에 정의되지 않은 {}가 있어도 에러 방지)
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return '{' + key + '}'
                 
+                # target_prompt 하나만 포매팅하면 끝납니다!
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
                 
                 # --- [C. 플래시 모델 API 호출] ---
