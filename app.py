@@ -616,7 +616,34 @@ if st.session_state.get('app_running', False):
                     cur_wol_g = getattr(engine, 'cur_wol_g', '')
                     cur_wol_j = getattr(engine, 'cur_wol_j', '')
 
-                # 2. 모든 프롬프트(1-1 ~ 1-7)가 요구할 수 있는 변수들을 하나의 사전에 몽땅 넣습니다.
+                # --- [프로모델 캡처 로직: Streamlit 변수 증발 원천 차단] ---
+                # 호출 시점의 지역(locals) 및 전역(globals) 스코프를 미리 확보
+                _current_locals = locals()
+                _current_globals = globals()
+                
+                def get_val(*keys):
+                    """세션 상태, 지역 변수, 전역 변수를 교차 검증하여 유효한 첫 번째 값을 반환합니다."""
+                    for k in keys:
+                        # 1. session_state 확인 (가장 확실한 Streamlit 데이터 보관소)
+                        if 'st' in _current_globals and hasattr(_current_globals['st'], 'session_state'):
+                            if k in _current_globals['st'].session_state and _current_globals['st'].session_state[k]:
+                                v = str(_current_globals['st'].session_state[k]).strip()
+                                if v: return v
+                        # 2. 현재 지역 및 전역 스코프 확인
+                        if k in _current_locals and _current_locals[k]:
+                            v = str(_current_locals[k]).strip()
+                            if v: return v
+                        if k in _current_globals and _current_globals[k]:
+                            v = str(_current_globals[k]).strip()
+                            if v: return v
+                    return None
+
+                # 헬퍼 함수를 통해 텍스트 최우선 추출 (없을 경우에만 디폴트값 적용)
+                career_val = get_val('u_career_issue', 'u_job', 'user_query', 'u_question') or "특별히 제시된 고민 내용 없음"
+                wealth_val = get_val('u_wealth_issue', 'u_wealth_goal', 'u_money_issue') or "특별히 제시된 고민 내용 없음"
+                health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
+                question_val = get_val('u_question') or "특별히 제시된 질문 없음"
+
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
@@ -631,44 +658,22 @@ if st.session_state.get('app_running', False):
                     "sewun_ji": cur_sewun_ji,
                     "dw_g_cur": dw_g_cur,
                     "dw_j_cur": dw_j_cur,
-                    "cur_wol_g": cur_wol_g, # 현재 월운 천간
-                    "cur_wol_j": cur_wol_j, # 현재 월운 지지
-                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)", # HTML(se_content) 요약 대체
+                    "cur_wol_g": cur_wol_g,
+                    "cur_wol_j": cur_wol_j,
+                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)",
                     
-                    # --- [추가 1] 건강운 특화 변수 (HEALTH_PROMPT 연동) ---
-                    "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in locals() else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
-                    "weak_health_str": weak_health_str if 'weak_health_str' in locals() else "취약 장기 및 신체 부위 분석 팩트",
-                    "health_goal": u_health_goal.strip() if 'u_health_goal' in locals() and u_health_goal and u_health_goal.strip() else (
-                        u_question.strip() if 'u_question' in locals() and u_question and u_question.strip() else "전반적인 건강 체질 관리"
-                    ),
+                    # --- [건강/직업/재물 팩트 변수] ---
+                    "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in _current_locals else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
+                    "weak_health_str": weak_health_str if 'weak_health_str' in _current_locals else "취약 장기 및 신체 부위 분석 팩트",
+                    "health_goal": health_val,
+                    "jaeseong_str": jaeseong_str if 'jaeseong_str' in _current_locals else "재성 세력 분석 팩트",
+                    "wealth_fact_str": wealth_fact_str if 'wealth_fact_str' in _current_locals else "금전 흐름 체용 매트릭스",
+                    "career_fact_str": career_fact_str if 'career_fact_str' in _current_locals else "직업/진학 핵심 십성 분석",
                     
-                    # --- [추가 2] 직업/진학운 및 재물운 팩트 변수 ---
-                    "jaeseong_str": jaeseong_str if 'jaeseong_str' in locals() else "재성 세력 분석 팩트",
-                    "wealth_fact_str": wealth_fact_str if 'wealth_fact_str' in locals() else "금전 흐름 체용 매트릭스",
-                    "career_fact_str": career_fact_str if 'career_fact_str' in locals() else "직업/진학 핵심 십성 분석",
-                    
-                    # --- [추가 3] 사이드바/UI 입력 고민 및 질문 사항 바인딩 ---
-                    "user_query": (
-                        u_career_issue.strip() if 'u_career_issue' in locals() and u_career_issue and u_career_issue.strip() else (
-                            u_job.strip() if 'u_job' in locals() and u_job and u_job.strip() else (
-                                user_query.strip() if 'user_query' in locals() and user_query and user_query.strip() else (
-                                    u_question.strip() if 'u_question' in locals() and u_question and u_question.strip() else "특별히 제시된 고민 내용 없음"
-                                )
-                            )
-                        )
-                    ),
-                    "wealth_issue": (
-                        u_wealth_issue.strip() if 'u_wealth_issue' in locals() and u_wealth_issue and u_wealth_issue.strip() else (
-                            u_wealth_goal.strip() if 'u_wealth_goal' in locals() and u_wealth_goal and u_wealth_goal.strip() else (
-                                u_money_issue.strip() if 'u_money_issue' in locals() and u_money_issue and u_money_issue.strip() else (
-                                    user_query.strip() if 'user_query' in locals() and user_query and user_query.strip() else (
-                                        u_question.strip() if 'u_question' in locals() and u_question and u_question.strip() else "특별히 제시된 고민 내용 없음"
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    "u_question": u_question if 'u_question' in locals() and u_question else "특별히 제시된 질문 없음"
+                    # --- [실제 입력 텍스트 바인딩 (철통 방어)] ---
+                    "user_query": career_val,
+                    "wealth_issue": wealth_val,
+                    "u_question": question_val
                 }
 
                 # 3. 안전한 포매팅 클래스 (프롬프트에 정의되지 않은 {}가 있어도 에러 방지)
