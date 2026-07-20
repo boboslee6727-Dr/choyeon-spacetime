@@ -810,6 +810,95 @@ if st.session_state.get('app_running', False):
                     female_name, female_age, female_sol, female_lun, f"{female_time}", 
                     dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                 )
+
+                # ==========================================
+                # [개인사주 연동 방식] 남/여 만세력 팩트 철통 구축
+                # ==========================================
+                # 1. 남성 만세력 팩트 추출 (m_data: [0]헤더, [1]년, [2]월, [3]일, [4]시)
+                m_ys, m_yb = (m_data[1][0], m_data[1][1]) if len(m_data) > 1 else ("", "")
+                m_ms, m_mb = (m_data[2][0], m_data[2][1]) if len(m_data) > 2 else ("", "")
+                m_ds, m_db = (m_data[3][0], m_data[3][1]) if len(m_data) > 3 else ("", "")
+                m_hs, m_hb = (m_data[4][0], m_data[4][1]) if len(m_data) > 4 else ("", "")
+                m_ilju = f"{m_ds}{m_db}"
+                
+                # 2. 여성 만세력 팩트 추출
+                f_ys, f_yb = (f_data[1][0], f_data[1][1]) if len(f_data) > 1 else ("", "")
+                f_ms, f_mb = (f_data[2][0], f_data[2][1]) if len(f_data) > 2 else ("", "")
+                f_ds, f_db = (f_data[3][0], f_data[3][1]) if len(f_data) > 3 else ("", "")
+                f_hs, f_hb = (f_data[4][0], f_data[4][1]) if len(f_data) > 4 else ("", "")
+                f_ilju = f"{f_ds}{f_db}"
+
+                # 3. 초연 DB 골든 텍스트 조회
+                choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
+                
+                # 남성 골든 텍스트
+                m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
+                m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, "시공간 데이터")
+                m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, "성품 데이터")
+                m_golden = f"월령: {m_w_val} / 일주: {m_i_val}"
+                
+                # 여성 골든 텍스트
+                f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
+                f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, "시공간 데이터")
+                f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, "성품 데이터")
+                f_golden = f"월령: {f_w_val} / 일주: {f_i_val}"
+
+                # 4. 세운 / 월운 공통 팩트
+                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() and cur_sewun_gan else "丙"
+                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() and cur_sewun_ji else "午"
+                w_gan = cur_wol_g if 'cur_wol_g' in locals() and cur_wol_g else "壬"
+                w_ji = cur_wol_j if 'cur_wol_j' in locals() and cur_wol_j else "寅"
+
+                # 5. [핵심] 프롬프트 바인딩용 1:1 완벽 사전 구축 (개인사주 수준 방어)
+                gunghap_facts = {
+                    # 남성 기본 및 만세력 팩트
+                    "m_name": male_name, "m_age": male_age, 
+                    "m_ys": m_ys, "m_yb": m_yb, "m_ms": m_ms, "m_mb": m_mb,
+                    "m_ds": m_ds, "m_db": m_db, "m_hs": m_hs, "m_hb": m_hb,
+                    "m_ilju": m_ilju, "m_golden": m_golden,
+                    "m_ganju_str": f"년주:{m_ys}{m_yb}, 월주:{m_ms}{m_mb}, 일주:{m_ds}{m_db}, 시주:{m_hs}{m_hb}",
+                    "m_gyukgook": gh_data.get("m_gyukgook", "격국 미상"),
+                    "m_gongmang_actual": gh_data.get("m_gongmang", "공망 분석"),
+                    "m_spouse_star": gh_data.get("m_spouse_star", "재성 세력"),
+                    "m_dw_g_cur": m_daewun[0] if len(m_daewun) > 0 else "",
+                    "m_dw_j_cur": m_daewun[1] if len(m_daewun) > 1 else "",
+                    "m_sewun_gan": s_gan, "m_sewun_ji": s_ji,
+
+                    # 여성 기본 및 만세력 팩트
+                    "f_name": female_name, "f_age": female_age, 
+                    "f_ys": f_ys, "f_yb": f_yb, "f_ms": f_ms, "f_mb": f_mb,
+                    "f_ds": f_ds, "f_db": f_db, "f_hs": f_hs, "f_hb": f_hb,
+                    "f_ilju": f_ilju, "f_golden": f_golden,
+                    "f_ganju_str": f"년주:{f_ys}{f_yb}, 월주:{f_ms}{f_mb}, 일주:{f_ds}{f_db}, 시주:{f_hs}{f_hb}",
+                    "f_gyukgook": gh_data.get("f_gyukgook", "격국 미상"),
+                    "f_gongmang_actual": gh_data.get("f_gongmang", "공망 분석"),
+                    "f_spouse_star": gh_data.get("f_spouse_star", "관성 세력"),
+                    "f_dw_g_cur": f_daewun[0] if len(f_daewun) > 0 else "",
+                    "f_dw_j_cur": f_daewun[1] if len(f_daewun) > 1 else "",
+                    "f_sewun_gan": s_gan, "f_sewun_ji": s_ji,
+
+                    # 공통 시공간 및 규칙 헤더
+                    "cur_wol_g": w_gan, "cur_wol_j": w_ji,
+                    "marital_info": f"{u_marital}-{f_marital}",
+                    "db_header": "[초연 시공명리 정밀 해석 지침 적용]",
+                    "ai_saju_mapping": "[상대적 시공간 세력 및 십성/12운성 자동 매핑 완료]",
+                    "yukchin_rule": "[임관 표기 금지 -> 건록 대체 엄수]"
+                }
+                if isinstance(gh_data, dict):
+                    gunghap_facts.update(gh_data)
+
+                # 6. 안전한 포매팅 클래스로 프롬프트 결합
+                class SafeDict(dict):
+                    def __missing__(self, key):
+                        return "{" + key + "}"
+
+                safe_gh_facts = SafeDict(**gunghap_facts)
+                
+                # 프롬프트 바인딩
+                if hasattr(prompts, 'GUNGHAP_ESSAY_PROMPT'):
+                    prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
+                else:
+                    prompt_text = f"남명 {male_name}({m_ilju})과 여명 {female_name}({f_ilju})의 정밀 궁합을 작성하십시오."
                 
                 # 3. 명리표 및 안내문 조립
                 intro_h = html_views.get_intro_html() 
