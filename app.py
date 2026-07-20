@@ -798,6 +798,7 @@ if st.session_state.get('app_running', False):
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, age, m_sol, m_lun, b_time, u_marital
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
 
+                # 엔진 결과에서 남/여 각각의 만세력 표(2차원 배열) 추출
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
@@ -830,17 +831,18 @@ if st.session_state.get('app_running', False):
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 # ==============================================================================
-                # [박사님 지정 코드 100% 적용] HTML 표(m_data, f_data) 원본에서 진품 천간/지지 직접 파싱
+                # [개인사주 파싱 방식 100% 동일 적용] m_data, f_data 원본 행렬에서 정밀 추출
+                # m_data[1]=년주, m_data[2]=월주, m_data[3]=일주, m_data[4]=시주
                 # ==============================================================================
                 choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
 
-                # 4-1. 남성 명조 파싱 (m_data[2]=월주, m_data[3]=일주)
+                # 4-1. 남명(m) 8자 파싱
+                m_ys, m_yb = str(m_data[1][0]), str(m_data[1][1])
                 m_ms, m_mb = str(m_data[2][0]), str(m_data[2][1])
                 m_ds, m_db = str(m_data[3][0]), str(m_data[3][1])
-                m_ys, m_yb = str(m_data[1][0]), str(m_data[1][1])
-                m_hs, m_hb = str(m_data[4][0]), str(m_data[4][1]) if len(m_data) > 4 else ("", "")
+                m_hs, m_hb = (str(m_data[4][0]), str(m_data[4][1])) if len(m_data) > 4 else ("", "")
 
-                # 박사님 지정 골든텍스트 파싱 로직 (남성)
+                # 남성 골든텍스트 파싱
                 m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
                 m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"[{m_w_key}] 시공간 데이터 없음")
                 m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"[{m_i_key}] 성품 데이터 없음")
@@ -848,13 +850,13 @@ if st.session_state.get('app_running', False):
                 m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct[0], m_struct[1], m_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
                 m_golden_fact = f"월령: {m_w_val} / 일주: {m_i_val}"
 
-                # 4-2. 여성 명조 파싱 (f_data[2]=월주, f_data[3]=일주)
+                # 4-2. 여명(f) 8자 파싱
+                f_ys, f_yb = str(f_data[1][0]), str(f_data[1][1])
                 f_ms, f_mb = str(f_data[2][0]), str(f_data[2][1])
                 f_ds, f_db = str(f_data[3][0]), str(f_data[3][1])
-                f_ys, f_yb = str(f_data[1][0]), str(f_data[1][1])
-                f_hs, f_hb = str(f_data[4][0]), str(f_data[4][1]) if len(f_data) > 4 else ("", "")
+                f_hs, f_hb = (str(f_data[4][0]), str(f_data[4][1])) if len(f_data) > 4 else ("", "")
 
-                # 박사님 지정 골든텍스트 파싱 로직 (여성)
+                # 여성 골든텍스트 파싱
                 f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
                 f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"[{f_w_key}] 시공간 데이터 없음")
                 f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"[{f_i_key}] 성품 데이터 없음")
@@ -874,7 +876,7 @@ if st.session_state.get('app_running', False):
                     s_gan, s_ji, w_gan, w_ji
                 ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
 
-                # 6. AI 바인딩 사전 조립 (진품 8자 팩트 결합)
+                # 6. AI 바인딩 사전 조립 (사주팔자 팩트 완벽 주입)
                 gunghap_facts = {
                     "m_name": male_name, "m_age": male_age,
                     "m_ds": m_ds, "m_db": m_db, "m_ilju": m_i_key,
@@ -902,19 +904,19 @@ if st.session_state.get('app_running', False):
                 if isinstance(gh_data, dict):
                     gunghap_facts.update(gh_data)
 
-                # 7. AI 통변 호출 및 팩트 통제
+                # 7. AI 통변 호출 및 SafeDict 포매팅
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
                 safe_facts = SafeDict(**gunghap_facts)
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_facts)
                 
-                # AI 환각 및 성별 교차 오류 엄금 지침
+                # AI 통변 성별 바뀜 및 헛소리 영구 방지 지침
                 prompt_text += (
-                    f"\n\n🚨 [최우선 엄수 지침]:\n"
-                    f"1. 남성({male_name})의 완벽 사주 8자: {gunghap_facts['m_ganju_str']} (일간: {m_ds}, 일주: {m_i_key})\n"
-                    f"2. 여성({female_name})의 완벽 사주 8자: {gunghap_facts['f_ganju_str']} (일간: {f_ds}, 일주: {f_i_key})\n"
-                    f"3. 위 사주 8자는 절대적 팩트입니다. 남성과 여성을 바르게 구별하여 정확히 위 일간({m_ds}, {f_ds})과 일주를 바탕으로만 깊이 있는 에세이를 서술하십시오."
+                    f"\n\n🚨 [최우선 절대 엄수 지침]:\n"
+                    f"1. 남성({male_name})의 정확한 사주팔자: {gunghap_facts['m_ganju_str']} (일간: {m_ds}, 일주: {m_i_key})\n"
+                    f"2. 여성({female_name})의 정확한 사주팔자: {gunghap_facts['f_ganju_str']} (일간: {f_ds}, 일주: {f_i_key})\n"
+                    f"3. 절대 남녀의 사주나 성별을 바꾸어 작성하지 말고, 위 팩트대로 정확히 명시하여 깊이 있는 에세이를 작성하십시오."
                 )
 
                 ai_result = call_gemini_api(prompt_text)
@@ -933,7 +935,7 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
-                # 8. [최종 통합 출력] 커버 선출력 후 HTML 결합
+                # 8. [최종 통합 출력] 표지 -> 본문 리포트 순서 배치
                 st.markdown(cover_html, unsafe_allow_html=True)
 
                 full_inner_content = (
