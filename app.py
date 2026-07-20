@@ -699,27 +699,26 @@ if st.session_state.get('app_running', False):
                         comp_report = original_report_html + comparison_output_html
                         st.markdown(html_views.get_final_report_box(comp_report), unsafe_allow_html=True)
                     else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
+                        # 1-3 월운은 A4 박스를 유지한 채 탭 분리, 나머지는 기존 방식 유지
+                        if "1-3." in u_product:
+                            tab1, tab2 = st.tabs(["📊 사주/운세 기본표", "🔮 이번 달 심층 분석"])
+                    
+                            with tab1:
+                                # 기본표 전체를 A4 용지 박스 내에 완벽 렌더링
+                                tab1_report = str(final_report_base or "") + str(closing_part or "")
+                                st.markdown(html_views.get_final_report_box(tab1_report), unsafe_allow_html=True)
+                        
+                            with tab2:
+                                # 월운 AI 통변만 A4 용지 박스 내에 완벽 렌더링
+                                tab2_report = str(ai_output_html or "") + str(closing_part or "")
+                                st.markdown(html_views.get_final_report_box(tab2_report), unsafe_allow_html=True)
+                    else:
+                        # 1-1, 1-2, 1-4 ~ 1-7 일반 상품 (기존 로직 동일)
+                        final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+                        st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
-            
-            else:
-                # 💡 [추가] 1-3 월운은 탭 분리, 나머지는 기존 방식 유지
-                if "1-3." in u_product:
-                    st.session_state['base_html'] = final_report_base
-                    
-                    tab1, tab2 = st.tabs(["📊 사주/운세 기본표", "🔮 이번 달 심층 분석"])
-                    
-                    with tab1:
-                        st.markdown(st.session_state['base_html'], unsafe_allow_html=True)
-                        
-                    with tab2:
-                        final_ai_report = str(ai_output_html or "") + str(closing_part or "")
-                        st.markdown(html_views.get_final_report_box(final_ai_report), unsafe_allow_html=True)
-                else:
-                    # 1-1, 1-2, 1-4 ~ 1-7 일반 상품 출력 (기존 로직 동일)
-                    final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
-                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
