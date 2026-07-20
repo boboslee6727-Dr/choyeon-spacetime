@@ -804,11 +804,11 @@ if st.session_state.get('app_running', False):
                 # ==========================================
                 # [프로모델 로직] 만세력 팩트 추출 및 DB 연동
                 # ==========================================
-                 def clean_ganji(raw_data):
-                    """만세력 배열에서 괄호, 따옴표 등을 완벽히 제거하고 순수 한자만 추출"""
-                    return re.sub(r'[^一-龥]', '', str(raw_data)).strip()
+                import re
 
-                # 1. 8자 간지(한자) 완벽 추출 (대괄호/따옴표 원천 차단)
+                # 1. 8자 간지(한자) 완벽 추출 (들여쓰기 에러 방지용 한 줄 함수 적용)
+                clean_ganji = lambda raw_data: re.sub(r'[^一-龥]', '', str(raw_data)).strip()
+
                 m_y_key = clean_ganji(m_data[1])
                 m_w_key = clean_ganji(m_data[2])
                 m_i_key = clean_ganji(m_data[3])
