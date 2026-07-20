@@ -647,10 +647,13 @@ if st.session_state.get('app_running', False):
                     
                     # --- [추가 3] 사이드바/UI 입력 고민 및 질문 사항 바인딩 ---
                     # 직업/진학 고민 변수명이 무엇이든 빠짐없이 체크하여 꽂아 넣습니다.
-                    "user_query": u_career_issue if 'u_career_issue' in locals() and u_career_issue else (
-                        u_job_issue if 'u_job_issue' in locals() and u_job_issue else (
-                        user_query if 'user_query' in locals() and user_query else (
-                            u_question if 'u_question' in locals() and u_question else "특별히 제시된 고민 내용 없음"
+                    # UI 입력 변수 중 가장 정확한 값을 우선순위로 채택
+                    "user_query": (
+                        u_career_issue.strip() if 'u_career_issue' in locals() and u_career_issue and u_career_issue.strip() else (
+                            u_job.strip() if 'u_job' in locals() and u_job and u_job.strip() else (
+                                user_query.strip() if 'user_query' in locals() and user_query and user_query.strip() else (
+                                    u_question.strip() if 'u_question' in locals() and u_question and u_question.strip() else "특별히 제시된 고민 내용 없음"
+                                )
                             )
                         )
                     ),
