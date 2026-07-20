@@ -613,7 +613,7 @@ if st.session_state.get('app_running', False):
                     "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
-                    "shinsal_str": shinsal_str, "samjae_str": cur_samjae,
+                    "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
                     # --- 아래는 1-2 (세운) 등에서 추가로 요구하는 변수들 ---
                     "curr_y": curr_year,
                     "sewun_gan": cur_sewun_gan,
