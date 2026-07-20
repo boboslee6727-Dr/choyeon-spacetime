@@ -458,10 +458,10 @@ if st.session_state.get('app_running', False):
              
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-            intro_html = html_views.get_intro_html()
             
             table_html = html_views.get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
+            intro_html = html_views.get_intro_html()
             
             # --- (C) 대운/세운 기준점 연산 ---
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
@@ -534,7 +534,7 @@ if st.session_state.get('app_running', False):
             # [2. 통합 HTML 베이스 조립 (모든 표가 무조건 다 들어감!)]
             # ---------------------------------------------------------
             final_report_base = (
-                str(cover_html or "") + str(info_h or "") + 
+                str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
                 str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
                 str(intro_html or "") + str(golden_text_html or "")
@@ -564,13 +564,16 @@ if st.session_state.get('app_running', False):
             # ---------------------------------------------------------
             # [4. AI 통변 및 최종 출력]
             # ---------------------------------------------------------
+           
             with st.spinner("🤖 [정밀 분석] 통변 결과를 생성 중입니다..."):
                 # ai_output_html = call_gemini_api(target_prompt, extra_facts)
                 ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용입니다.</div>"
-            
+
+            st.markdown(cover_html, unsafe_allow_html=True) 
             final_report = final_report_base + str(ai_output_html or "") + closing_part
             st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-            
+
+            # ---------------------------------------------------------            
             if "3-1." in u_product:
                 # 3-1은 기존의 밸런스 비교 분석 로직 추가
                 comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
@@ -589,17 +592,24 @@ if st.session_state.get('app_running', False):
                         # ai_output_html = call_gemini_api(target_prompt, extra_facts)
                         ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용이 이곳에 렌더링됩니다.</div>"
                     
-                    closing_html = html_views.get_closing_html(name)
+                    cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
+                    info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
+                    table_html = html_views.get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
+                    master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
+                    intro_html = html_views.get_intro_html() 
+
                     choyeon_db = load_choyeon_db()
                     w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
                     w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
                     i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
                     struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
                     golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2])
-                    
+
+                    closing_html = html_views.get_closing_html(name)
+                  
                     final_report = (
                         str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + 
-                        str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                        + str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
                         str(intro_html or "") + str(golden_text_html or "") + 
                         str(ai_output_html or "") + str(closing_html or "")
                     )
