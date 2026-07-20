@@ -566,7 +566,7 @@ if st.session_state.get('app_running', False):
             # ---------------------------------------------------------
            
             with st.spinner("🤖 [정밀 분석] 통변 결과를 생성 중입니다..."):
-                # ai_output_html = call_gemini_api(target_prompt, extra_facts)
+                ai_output_html = call_gemini_api(target_prompt, extra_facts)
                 ai_output_html = "<div style='padding:20px; font-family:Nanum Myeongjo;'>AI 심층 통변 내용입니다.</div>"
 
             st.markdown(cover_html, unsafe_allow_html=True) 
@@ -629,7 +629,7 @@ if st.session_state.get('app_running', False):
                                 other_report=other_report,
                                 fact_reference=fact_str
                             )
-                            # comp_result = call_gemini_api(comp_prompt)
+                            comp_result = call_gemini_api(comp_prompt)
                             comp_result = "비교 결과 텍스트 (API 연동 대기중)" 
                             
                             comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
