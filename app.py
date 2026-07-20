@@ -625,17 +625,28 @@ if st.session_state.get('app_running', False):
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
                     "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
-                    # --- 아래는 1-2 (세운) 등에서 추가로 요구하는 변수들 ---
+                    # --- [상위 환경: 대운/세운/월운 변수] ---
                     "curr_y": curr_year,
                     "sewun_gan": cur_sewun_gan,
                     "sewun_ji": cur_sewun_ji,
                     "dw_g_cur": dw_g_cur,
                     "dw_j_cur": dw_j_cur,
-                    "cur_wol_g": cur_wol_g, # 현재 월운 천간 (예: "壬")
-                    "cur_wol_j": cur_wol_j, # 현재 월운 지지 (예: "寅")
-                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)", # HTML(se_content)을 텍스트로 요약하는 변수가 없으므로 임시 대체
-                    # --- [추가] 재물운 및 분야별 고민사항/사용자 질문 변수 바인딩 ---
-                    "user_query": user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음",
+                    "cur_wol_g": cur_wol_g, # 현재 월운 천간
+                    "cur_wol_j": cur_wol_j, # 현재 월운 지지
+                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)", # HTML(se_content) 요약 대체
+                    
+                    # --- [추가 1] 건강운 특화 변수 (HEALTH_PROMPT 연동) ---
+                    "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in locals() else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
+                    "weak_health_str": weak_health_str if 'weak_health_str' in locals() else "취약 장기 및 신체 부위 분석 팩트",
+                    "health_goal": u_health_goal if 'u_health_goal' in locals() and u_health_goal else (u_question if 'u_question' in locals() and u_question else "전반적인 건강 체질 관리"),
+                    
+                    # --- [추가 2] 직업/진학운 및 재물운 팩트 변수 ---
+                    "jaeseong_str": jaeseong_str if 'jaeseong_str' in locals() else "재성 세력 분석 팩트",
+                    "wealth_fact_str": wealth_fact_str if 'wealth_fact_str' in locals() else "금전 흐름 체용 매트릭스",
+                    "career_fact_str": career_fact_str if 'career_fact_str' in locals() else "직업/진학 핵심 십성 분석",
+                    
+                    # --- [추가 3] 사이드바/UI 입력 고민 및 질문 사항 바인딩 ---
+                    "user_query": user_query if 'user_query' in locals() and user_query else (u_question if 'u_question' in locals() and u_question else "특별히 제시된 고민 내용 없음"),
                     "wealth_issue": u_wealth_issue if 'u_wealth_issue' in locals() and u_wealth_issue else (user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음"),
                     "u_question": u_question if 'u_question' in locals() and u_question else "특별히 제시된 질문 없음"
                 }
