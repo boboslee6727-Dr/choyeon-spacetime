@@ -597,14 +597,23 @@ if st.session_state.get('app_running', False):
                 # --- [엔진 데이터 추출부 끝] ---
                 
                 # 추출한 데이터를 프롬프트 템플릿에 완벽하게 바인딩
-                formatted_prompt = target_prompt.format(
-                    name=name, age=age, gender=gender, marital=u_marital,
-                    ys=ys, yb=yb, ms=ms, mb=mb, ds=ds, db=db, hs=hs, hb=hb,
-                    gyukgook_detail=gyukgook_detail, gongmang_actual=i_gong, year_gongmang=n_gong,
-                    mok=counts['목'], hwa=counts['화'], to=counts['토'], geum=counts['금'], su=counts['수'],
-                    oheng_total=sum(counts.values()), ss_unsung_str=ss_unsung_str, won_guk_vaults_str=won_guk_vaults_str,
-                    hap_chung_hyoung_pa_hae=hap_chung_hyoung_pa_hae, cheon_eul=guiin_str, s12_str=s12_str, shinsal_str=shinsal_str, samjae_str=cur_samjae
-                )
+                prompt_data = {
+                    "name": name, "age": age, "gender": gender, "marital": u_marital,
+                    "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
+                    "gyukgook_detail": gyukgook_detail, "gongmang_actual": i_gong, "year_gongmang": n_gong,
+                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts['수'],
+                    "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
+                    "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
+                    "shinsal_str": shinsal_str, "samjae_str": cur_samjae
+                }
+
+                # format 대신 format_map을 사용하여 매칭되지 않는 변수가 있어도 에러 없이 통과시킵니다.
+                # 변수가 없으면 원래 형태({변수명}) 그대로 남겨두어 어디가 누락되었는지 AI가 알려주도록 설정합니다.
+                class SafeDict(dict):
+                    def __missing__(self, key):
+                        return '{' + key + '}'
+                
+                formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
     
                 # AI 호출
                 raw_ai_output = call_gemini_api(formatted_prompt, extra_facts)
