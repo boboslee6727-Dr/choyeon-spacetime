@@ -607,6 +607,15 @@ if st.session_state.get('app_running', False):
                 except:
                     cur_sewun_gan, cur_sewun_ji = "", ""
 
+                # 현재 월운의 천간과 지지 추출 (엔진 내 함수 사용)
+                try:
+                    # 엔진 내 월운 구하는 함수 호출 (또는 cur_wol_g, cur_wol_j 변수 생성)
+                    cur_wol_g, cur_wol_j = engine.get_current_wolun_gan_ji() 
+                except Exception:
+                    # 혹시 함수명이 다를 경우를 대비한 안전 장치 (기본값 설정)
+                    cur_wol_g = getattr(engine, 'cur_wol_g', '')
+                    cur_wol_j = getattr(engine, 'cur_wol_j', '')
+
                 # 2. 모든 프롬프트(1-1 ~ 1-7)가 요구할 수 있는 변수들을 하나의 사전에 몽땅 넣습니다.
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
@@ -622,7 +631,13 @@ if st.session_state.get('app_running', False):
                     "sewun_ji": cur_sewun_ji,
                     "dw_g_cur": dw_g_cur,
                     "dw_j_cur": dw_j_cur,
-                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)" # HTML(se_content)을 텍스트로 요약하는 변수가 없으므로 임시 대체
+                    "cur_wol_g": cur_wol_g,
+                    "cur_wol_j": cur_wol_j,
+                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)", # HTML(se_content)을 텍스트로 요약하는 변수가 없으므로 임시 대체
+                    # --- [추가] 재물운 및 분야별 고민사항/사용자 질문 변수 바인딩 ---
+                    "user_query": user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음",
+                    "wealth_issue": u_wealth_issue if 'u_wealth_issue' in locals() and u_wealth_issue else (user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음"),
+                    "u_question": u_question if 'u_question' in locals() and u_question else "특별히 제시된 질문 없음"
                 }
 
                 # 3. 안전한 포매팅 클래스 (프롬프트에 정의되지 않은 {}가 있어도 에러 방지)
