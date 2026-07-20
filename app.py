@@ -822,19 +822,53 @@ if st.session_state.get('app_running', False):
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 # ==========================================
-                # [STEP 1] 개인사주 방식 정교 텍스트 정제 (AI 호출)
+                # [STEP 1] 대운/세운/일주 팩트 변수 완벽 추출
                 # ==========================================
-                ai_output_html = ""
-                clean_ai = "" 
+                # 1. 남성 팩트 데이터 추출
+                m_ilju = f"{m_data[3][0]}{m_data[3][1]}" if (m_data and len(m_data) > 3) else "일주"
+                m_dw_g = m_daewun[0] if (m_daewun and len(m_daewun) > 0) else ""
+                m_dw_j = m_daewun[1] if (m_daewun and len(m_daewun) > 1) else ""
                 
+                # 2. 여성 팩트 데이터 추출
+                f_ilju = f"{f_data[3][0]}{f_data[3][1]}" if (f_data and len(f_data) > 3) else "일주"
+                f_dw_g = f_daewun[0] if (f_daewun and len(f_daewun) > 0) else ""
+                f_dw_j = f_daewun[1] if (f_daewun and len(f_daewun) > 1) else ""
+
+                # 3. 세운/월운 공통 팩트
+                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
+                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
+                w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
+                w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
+
+                # 4. 프롬프트 바인딩용 사전 구축 (중괄호 미치환 원천 차단)
                 gunghap_facts = {
-                    "m_name": male_name, "m_age": male_age, 
-                    "f_name": female_name, "f_age": female_age, 
+                    "m_name": male_name, "m_age": male_age, "m_ilju": m_ilju,
+                    "m_dw_g_cur": m_dw_g, "m_dw_j_cur": m_dw_j,
+                    "m_sewun_gan": s_gan, "m_sewun_ji": s_ji,
+                    
+                    "f_name": female_name, "f_age": female_age, "f_ilju": f_ilju,
+                    "f_dw_g_cur": f_dw_g, "f_dw_j_cur": f_dw_j,
+                    "f_sewun_gan": s_gan, "f_sewun_ji": s_ji,
+                    
+                    "cur_wol_g": w_gan, "cur_wol_j": w_ji,
                     "marital_info": f"{u_marital}-{f_marital}"
                 }
                 if isinstance(gh_data, dict):
                     gunghap_facts.update(gh_data)
-                
+
+                # ==========================================
+                # [STEP 2] 종합 시각화 자료 레고 조립 (intro_h 직후)
+                # ==========================================
+                # html_views에서 두 사람의 시공간/오행 종합 시각화 차트 및 비교표 호출
+                visual_analysis_html = html_views.get_gunghap_visual_analysis(
+                    male_name, m_ilju, f"{m_dw_g}{m_dw_j}",
+                    female_name, f_ilju, f"{f_dw_g}{f_dw_j}",
+                    s_gan, s_ji, w_gan, w_ji
+                ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
+
+                # ==========================================
+                # [STEP 3] AI 통변 안전 호출 및 정제
+                # ==========================================
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
@@ -843,79 +877,45 @@ if st.session_state.get('app_running', False):
                 if hasattr(prompts, 'GUNGHAP_ESSAY_PROMPT'):
                     prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_gh_facts)
                 else:
-                    prompt_text = f"남명 {male_name}와 여명 {female_name}의 궁합을 상세히 통변하십시오."
-                    
-                prompt_text += "\n\n🚨 [경고] 남명과 여명의 데이터를 각각 독립적으로 분석하여 완벽히 차별화된 통변을 작성하십시오."
-                
+                    prompt_text = f"남명 {male_name}({male_age}세, {m_ilju}일주, {m_dw_g}{m_dw_j}대운)와 여명 {female_name}({female_age}세, {f_ilju}일주, {f_dw_g}{f_dw_j}대운)의 정밀 궁합 통변을 작성하십시오."
+
+                # AI 지시어에 실제 데이터 변수를 직접 명시하여 환각/미치환 방지
+                prompt_text += (
+                    f"\n\n🚨 [최우선 엄수 지침]:\n"
+                    f"1. 남성({male_name})의 일주는 '{m_ilju}', 대운은 '{m_dw_g}{m_dw_j}대운'입니다.\n"
+                    f"2. 여성({female_name})의 일주는 '{f_ilju}', 대운은 '{f_dw_g}{f_dw_j}대운'입니다.\n"
+                    f"3. 올해 세운은 '{s_gan}{s_ji}년'이며, 월운은 '{w_gan}{w_ji}월'입니다.\n"
+                    f"4. 본문 서술 시 {{m_dw_g_cur}} 같은 변수 태그를 절대로 그대로 출력하지 말고, 위에서 전달한 '실제 한글/한자 데이터'로 완전히 대체하여 통변하십시오."
+                )
+
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    # 마크다운 백틱 및 태그 완벽 정제 (개인사주 방식)
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
                     clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
                     
-                    # 제목 및 단락 태그 서식 변환 (HTML 소스 오인 방지)
                     ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                     ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>\1</h3>", ai_result_fmt)
                     ai_result_fmt = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; border-bottom:1px solid #ddd;'>\1</h2>", ai_result_fmt)
                     
-                    # 줄바꿈 처리 (p 태그 사용)
                     paragraphs = [f"<p style='margin:10px 0; line-height:1.7; font-family:Nanum Myeongjo, serif;'>{p.strip()}</p>" for p in ai_result_fmt.split('\n') if p.strip()]
                     ai_output_html = "".join(paragraphs)
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변을 가져오지 못했습니다.</p>"
 
                 # ==========================================
-                # [STEP 2] 타 감명서 원문 및 1:1 비교 분석
-                # ==========================================
-                original_report_html = ""
-                comparison_output_html = ""
-                
-                if "3-2" in u_product:
-                    other_report = st.session_state.get("key_3_2", "")
-                    if other_report:
-                        original_report_html = html_views.get_original_report_html(other_report)
-                        fact_str = "\n".join([f"- {k}: {v}" for k, v in gunghap_facts.items()])
-                        comp_prompt = prompts.COMPARE_PROMPT.format(
-                            full_content_clean=clean_ai if clean_ai else "분석 내용 없음",
-                            other_report=other_report,
-                            fact_reference=fact_str
-                        )
-                        comp_result = call_gemini_api(comp_prompt)
-                        
-                        if comp_result:
-                            comp_clean = re.sub(r'```[a-zA-Z]*', '', comp_result).replace("```", "").strip()
-                            comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
-                            comp_fmt = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#B71C1C; font-size:20px; font-weight:bold; margin-top:25px;'>⚖️ \1</h3>", comp_clean)
-                            
-                            comp_paragraphs = [f"<p style='margin:10px 0; line-height:1.7; font-family:Nanum Myeongjo, serif;'>{p.strip()}</p>" for p in comp_fmt.split('\n') if p.strip()]
-                            comparison_output_html = html_views.get_comparison_html("".join(comp_paragraphs))
-                    else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
-                
-                # ==========================================
-                # [STEP 3]개인사주와 완전히 동일한 최종 박스 통출력
+                # [STEP 4] 완벽한 순서로 최종 조립 및 단일 출력
                 # ==========================================
                 full_inner_content = (
                     cover_html +
                     m_info + m_table + m_master_html + m_un + 
                     w_info + w_table + w_master_html + w_un + 
                     intro_h + 
-                    f"<div style='margin-top:20px;'>{ai_output_html}</div>" +            
+                    visual_analysis_html + # 💡 [복구] 종합 시각화 자료가 intro_h 바로 뒤에 완벽 배치
+                    f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +            
                     closing
                 )
                 
-                # 개인사주와 동일한 final_report_box로 전체 감싸기
+                # 개인사주와 동일한 final_report_box 통출력
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(report_box, unsafe_allow_html=True)
-                
-                # 비교 분석 결과물 출력 (있을 경우)
-                if ("3-2" in u_product or "12" in u_product) and original_report_html:
-                    st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
-                    original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
-                    comp_report = original_report_html + comparison_output_html
-                    comp_box = html_views.get_final_report_box(comp_report)
-                    st.markdown(comp_box, unsafe_allow_html=True)
-            
-            except Exception as e:
-                st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
