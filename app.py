@@ -801,44 +801,33 @@ if st.session_state.get('app_running', False):
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
-                # ==========================================
-                # [프로모델 로직] 만세력 팩트 추출 및 DB 연동
-                # ==========================================
-                import re
-
-                # 1. 8자 간지(한자) 완벽 추출 (들여쓰기 에러 방지용 한 줄 함수 적용)
-                clean_ganji = lambda raw_data: re.sub(r'[^一-龥]', '', str(raw_data)).strip()
-
-                m_y_key = clean_ganji(m_data[1])
-                m_w_key = clean_ganji(m_data[2])
-                m_i_key = clean_ganji(m_data[3])
-                m_h_key = clean_ganji(m_data[4])
+                # ========================================================
+                # [박사님 지적 100% 반영] 사이드바 입력 기반 만세력 데이터 직접 호출
+                # ========================================================
+                # 화면 출력용 배열을 파싱하는 바보 같은 짓을 버리고, 
+                # engine이 사이드바 입력값으로 이미 계산해둔 원본 팩트(gh_data)를 씁니다.
                 
-                f_y_key = clean_ganji(f_data[1])
-                f_w_key = clean_ganji(f_data[2])
-                f_i_key = clean_ganji(f_data[3])
-                f_h_key = clean_ganji(f_data[4])
+                m_ms, m_mb = gh_data.get("m_ms", ""), gh_data.get("m_mb", "")
+                m_ds, m_db = gh_data.get("m_ds", ""), gh_data.get("m_db", "")
+                
+                f_ms, f_mb = gh_data.get("f_ms", ""), gh_data.get("f_mb", "")
+                f_ds, f_db = gh_data.get("f_ds", ""), gh_data.get("f_db", "")
 
-                # 개별 일간(ds)/일지(db) 한자 분리 (AI 숫자 환각 방지용)
-                m_ds, m_db = m_i_key[0] if len(m_i_key) > 0 else "", m_i_key[1] if len(m_i_key) > 1 else ""
-                f_ds, f_db = f_i_key[0] if len(f_i_key) > 0 else "", f_i_key[1] if len(f_i_key) > 1 else ""
-
-                # 2. [박사님 코드 100% 적용] 초연 DB 골든 텍스트 정밀 매핑
                 choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
                 
-                # 남성 골든 텍스트 추출
+                # 남성 골든 텍스트 HTML
+                m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
                 m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"[{m_w_key}] 시공간 데이터 없음")
                 m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"[{m_i_key}] 성품 데이터 없음")
-                m_struct_data = choyeon_db.get("ilju_structure", {}).get(m_i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct_data[0], m_struct_data[1], m_struct_data[2]) if hasattr(html_views, 'get_golden_text') else ""
-                m_golden_fact = f"월령: {m_w_val} / 일주: {m_i_val}"
+                m_struct = choyeon_db.get("ilju_structure", {}).get(m_i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct[0], m_struct[1], m_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
 
-                # 여성 골든 텍스트 추출
+                # 여성 골든 텍스트 HTML
+                f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
                 f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"[{f_w_key}] 시공간 데이터 없음")
                 f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"[{f_i_key}] 성품 데이터 없음")
-                f_struct_data = choyeon_db.get("ilju_structure", {}).get(f_i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct_data[0], f_struct_data[1], f_struct_data[2]) if hasattr(html_views, 'get_golden_text') else ""
-                f_golden_fact = f"월령: {f_w_val} / 일주: {f_i_val}"
+                f_struct = choyeon_db.get("ilju_structure", {}).get(f_i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct[0], f_struct[1], f_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
 
                 # 3. 명리표 및 정보 헤더 조립
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
