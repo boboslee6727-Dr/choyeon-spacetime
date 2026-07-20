@@ -563,12 +563,15 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
 
             # ---------------------------------------------------------
-            # [4. AI 통변 (데이터 매핑 및 API 호출)]
+            # [4. AI 통변 (플래시 모델 전환 및 Safe Pipeline)]
             # ---------------------------------------------------------
-            with st.spinner("🤖 [초연 시공명리] 분석 내용을 생성 중입니다..."):
+            # 1. 변수 안전 초기화 (NameError 방지)
+            ai_output_html = ""
+            
+            with st.spinner("⚡ [초연 시공명리] 플래시 엔진으로 정밀 분석 중..."):
                 import re
                 
-                # --- [엔진 데이터 추출부 시작] ---
+                # --- [A. 엔진 데이터 추출부] ---
                 gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
                 
                 ss_unsung_str = (
@@ -589,17 +592,15 @@ if st.session_state.get('app_running', False):
                 )
                 
                 s12_str = engine.get_all_12_shinsal(yb, yb, mb, db, hb)
-                
                 shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
                 shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
-                # --- [엔진 데이터 추출부 끝] ---
                 
-                # 딕셔너리에 데이터 안전하게 매핑
+                # --- [B. 프롬프트 데이터 바인딩] ---
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                     "gyukgook_detail": gyukgook_detail, "gongmang_actual": i_gong, "year_gongmang": n_gong,
-                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts['수'],
+                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts['su'] if 'su' in counts else counts['수'],
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
                     "shinsal_str": shinsal_str, "samjae_str": cur_samjae
@@ -611,23 +612,39 @@ if st.session_state.get('app_running', False):
                 
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
                 
-                # [오류 방지용 안전 후처리 코드]
-                if ai_output_html and isinstance(ai_output_html, str):
-                    # 1. 코드 블록 제거
-                    ai_output_html = ai_output_html.replace("```html", "").replace("```", "").strip()
+                # --- [C. 플래시 모델 API 호출] ---
+                # call_gemini_api 호출 시 플래시 모델 명시 (내부 구현에 맞게 파라미터 전달)
+                try:
+                    raw_response = call_gemini_api(formatted_prompt, extra_facts, model="gemini-2.5-flash")
+                except TypeError:
+                    # 함수가 model 인자를 직접 받지 않는 구조일 경우 기본 호출
+                    raw_response = call_gemini_api(formatted_prompt, extra_facts)
+                
+                # --- [D. 텍스트 정제 및 문단 스타일링] ---
+                if raw_response and isinstance(raw_response, str):
+                    # 1. 마크다운 코드 블록 제거
+                    cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                     
-                    # 2. 문단 줄바꿈 및 들여쓰기 적용
-                    ai_output_html = ai_output_html.replace('\n', '<p style="margin:15px 0 0 20px; line-height:1.7; font-family:Nanum Myeongjo;">')
+                    # 2. 상단 불필요 팩트 및 지시사항 텍스트 도려내기
+                    cleaned = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', cleaned)
+                    cleaned = re.sub(r'분석 지시 사항', '', cleaned)
                     
-                    # 3. 불필요 문구 제거
-                    ai_output_html = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', ai_output_html)
-                    ai_output_html = re.sub(r'분석 지시 사항', '', ai_output_html)
+                    # 3. 제목 태그(###) 제거하고 텍스트 깔끔히 보정
+                    cleaned = re.sub(r'###\s*', '', cleaned)
+                    cleaned = re.sub(r'##\s*', '', cleaned)
+                    
+                    # 4. 줄바꿈을 문단 <p> 태그로 변환하여 뭉텅이 문장 해소 (들여쓰기 및 행간 적용)
+                    paragraphs = [p.strip() for p in cleaned.split('\n') if p.strip()]
+                    formatted_paragraphs = [
+                        f"<p style='margin-bottom:16px; line-height:1.8; text-indent:10px; font-family:Nanum Myeongjo, serif; font-size:15px; color:#2c3e50;'>{p}</p>" 
+                        for p in paragraphs
+                    ]
+                    ai_output_html = "".join(formatted_paragraphs)
                 else:
-                    # AI 응답이 없을 경우를 대비한 기본값
-                    ai_output_html = "<p>분석 결과를 생성하는 중입니다.</p>"
+                    ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
             # ---------------------------------------------------------
-            # [5. 최종 화면 출력 (1-1~1-7 vs 3-1 완벽 분리)]
+            # [5. 최종 화면 렌더링 (1-1~1-7 / 3-1 완전 분리)]
             # ---------------------------------------------------------
             st.markdown(cover_html, unsafe_allow_html=True) 
             
@@ -649,8 +666,7 @@ if st.session_state.get('app_running', False):
                                 other_report=other_report,
                                 fact_reference=fact_str
                             )
-                            # comp_result = call_gemini_api(comp_prompt)
-                            comp_result = "비교 결과 텍스트 (API 연동 대기중)" 
+                            comp_result = call_gemini_api(comp_prompt, model="gemini-2.5-flash")
                             
                             comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                             comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
