@@ -657,12 +657,19 @@ if st.session_state.get('app_running', False):
                             )
                         )
                     ),
-                    "wealth_issue": u_wealth_issue if 'u_wealth_issue' in locals() and u_wealth_issue else (
-                        user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음"
+                    "wealth_issue": (
+                        u_wealth_issue.strip() if 'u_wealth_issue' in locals() and u_wealth_issue and u_wealth_issue.strip() else (
+                            u_wealth_goal.strip() if 'u_wealth_goal' in locals() and u_wealth_goal and u_wealth_goal.strip() else (
+                                u_money_issue.strip() if 'u_money_issue' in locals() and u_money_issue and u_money_issue.strip() else (
+                                    user_query.strip() if 'user_query' in locals() and user_query and user_query.strip() else (
+                                        u_question.strip() if 'u_question' in locals() and u_question and u_question.strip() else "특별히 제시된 고민 내용 없음"
+                                    )
+                                )
+                            )
+                        )
                     ),
                     "u_question": u_question if 'u_question' in locals() and u_question else "특별히 제시된 질문 없음"
                 }
-
                 # 3. 안전한 포매팅 클래스 (프롬프트에 정의되지 않은 {}가 있어도 에러 방지)
                 class SafeDict(dict):
                     def __missing__(self, key):
