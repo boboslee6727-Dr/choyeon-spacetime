@@ -31,6 +31,32 @@ JIJANGGAN = {
     '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] 
 }
 
+CHE_YONG_MATRIX_TEXT = """- 체(비겁)+용(비겁): 주체성 강화 및 동료/경쟁자와의 연대
+- 체(비겁)+용(식상): 창의적 활동 및 기운의 발산
+- 체(비겁)+용(재성): 현실적 결실 취득 및 재물 확장
+- 체(비겁)+용(관성): 조직 책임 완수 및 명예 상승
+- 체(비겁)+용(인성): 수용성 증대 및 학문/자격의 성취
+- 체(식상)+용(비겁): 기운의 보충 및 행동력 강화
+- 체(식상)+용(식상): 전문성 극대화 및 활발한 표현
+- 체(식상)+용(재성): 식상생재 발현 및 사업적 성공
+- 체(식상)+용(관성): 규범과의 마찰 및 조직 내 조율
+- 체(식상)+용(인성): 정서적 안점감 및 브레이크 작용
+- 체(재성)+용(비겁): 재물 분탈 주의 및 소유권 경쟁
+- 체(재성)+용(식상): 재물 창출의 근원 확보
+- 체(재성)+용(재성): 시장 확대 및 결과물 집중
+- 체(재성)+용(관성): 재생관 발현 및 사회적 신분 상승
+- 체(재성)+용(인성): 문서 자산화 및 자격 가치 상승
+- 체(관성)+용(비겁): 조직 내 주도권 확보 및 리더십
+- 체(관성)+용(식상): 관살제어 및 문제 해결 능력
+- 체(관성)+용(재성): 조직 자금 확보 및 세력 확장
+- 체(관성)+용(관성): 권위 및 책임감의 배가
+- 체(관성)+용(인성): 관인상생 발현 및 승진/인정
+- 체(인성)+용(비겁): 지식의 현실 적용 및 신념 강화
+- 체(인성)+용(식상): 도모하던 일의 실행 및 창작
+- 체(인성)+용(재성): 재극인 발현 및 문서 자산 매매
+- 체(인성)+용(관성): 사회적 체면 및 조직의 후원
+- 체(인성)+용(인성): 깊은 학문적 성취 및 권위 유지"""
+
 def _to_hanja(char):
     if not char: return char
     return K2H_GAN.get(char, K2H_JI.get(char, char))
@@ -50,6 +76,14 @@ def extract_ganji(text):
     g = [c for c in text if c in "甲乙丙丁戊己庚辛壬癸갑을병정무기경신임계"]
     j = [c for c in text if c in "子丑寅卯辰巳午未申酉戌亥자축인묘진사오미신유술해"]
     return (g[0] if g else "?") + (j[0] if j else "?")
+
+def extract_pure_ganji(cell_0, cell_1):
+    """만세력 표 셀 데이터(리스트, 튜플, 문자열 등)에서 순수 한자 1글자씩 안전 추출"""
+    raw_s = str(cell_0[0] if isinstance(cell_0, (list, tuple)) else cell_0)
+    raw_b = str(cell_1[1] if isinstance(cell_1, (list, tuple)) and len(cell_1) > 1 else (cell_1[0] if isinstance(cell_1, (list, tuple)) else cell_1))
+    s = re.sub(r'[^一-龥]', '', raw_s)
+    b = re.sub(r'[^一-龥]', '', raw_b)
+    return (s[0] if s else ""), (b[0] if b else "")
 
 def get_true_year_month_pillar(year, month, day, hour, minute):
     kst = pytz.timezone('Asia/Seoul')
@@ -138,19 +172,23 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
+def get_group_ss(ss_name):
+    """십성 명칭을 5대 그룹(비겁, 식상, 재성, 관성, 인성)으로 매핑합니다."""
+    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
+    if "비" in ss_name or "겁" in ss_name: return "비겁"
+    if "식" in ss_name or "상" in ss_name: return "식상"
+    if "재" in ss_name: return "재성"
+    if "관" in ss_name: return "관성"
+    if "인" in ss_name: return "인성"
+    return "비겁"
+
 def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, **kwargs):
-    """
-    모든 명리적 팩트와 체용 매트릭스 분석 결과를 딕셔너리로 통합 반환합니다.
-    """
-    
-    # 1. 기본 팩트 산출 (기존 로직 유지)
     ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
     gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
     counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
     for c in [ys, yb, ms, mb, ds, db, hs, hb]: counts[get_color(c)] += 1
     oheng_str = f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}"
 
-    # 2. 체용 매트릭스 연산
     ilju_lower_group = get_group_ss(get_ss(ds, db))
     
     dw_fact_str = "대운 정보 없음"
@@ -174,13 +212,12 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         w_che = get_group_ss(get_ss(ds, curr_y_ganji[1][0])) if curr_y_ganji else "비겁"
         wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
 
-    # 3. 팩트 시트 통합
     fact_data = {
         "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
         "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
         "gongmang_actual": calculate_gongmang(ds, db),
         "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
-        "s12_str": get_all_12_shinsal(yb, yb, mb, db, hb),
+        "s12_str": get_all_12_shinsal(yb, mb, db, hb),
         "won_guk_vaults_str": " ".join(check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)),
         "oheng_counts_str": oheng_str,
         "samjae_str": get_samjae(yb, "현재년지"), 
@@ -191,10 +228,7 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         "yukchin_rule": get_yukchin_rule(gender, marital),
         "dw_fact_str": dw_fact_str, "sewun_fact_str": sewun_fact_str, "wol_fact_str": wol_fact_str
     }
-    
-    # [비결] kwargs를 통해 넘어온 데이터(other_report, ilju, wolryeong 등)를 팩트 시트에 병합
     fact_data.update(kwargs)
-    
     return fact_data
 
 def get_daeun_su_accurate(utc_dt, order):
@@ -289,15 +323,13 @@ def get_12_shinsal(year_ji, target_ji):
     except:
         return "-"
 
-def get_all_12_shinsal(yb_unused, yb, mb, db, hb):
-    """
-    인자를 5개 받도록 수정했습니다. 첫 번째 인자는 무시(unused)합니다.
-    """
+def get_all_12_shinsal(yb, mb, db, hb):
+    """년지(yb)를 기준으로 년/월/일/시 지지의 12신살을 안전 추출합니다."""
     results = [
-        get_12_shinsal(yb, yb), # 년지 신살
-        get_12_shinsal(yb, mb), # 월지 신살
-        get_12_shinsal(yb, db), # 일지 신살
-        get_12_shinsal(yb, hb)  # 시지 신살
+        get_12_shinsal(yb, yb),
+        get_12_shinsal(yb, mb),
+        get_12_shinsal(yb, db),
+        get_12_shinsal(yb, hb)
     ]
     return ", ".join(results)
 
@@ -555,18 +587,11 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
     return daewun_list
 
 def get_daeun_fact_string(daewun_data_list):
-    """
-    딕셔너리 구조의 대운 리스트를 안전하게 읽어 문자열을 생성합니다.
-    """
     fact_str = "\n"
     for dw in daewun_data_list:
-        # 딕셔너리 키를 사용하여 나이 구간과 대운 간지를 안전하게 결합
         age_range = dw.get("age_range", "정보없음")
         ganji = f"{dw.get('c_hangul', '')}{dw.get('j_hangul', '')}"
-        
-        # 십성과 신살 정보도 함께 넣어주면 AI가 훨씬 더 풍부한 통변을 합니다.
         ss = f"{dw.get('ss_gan', '')}{dw.get('ss_ji', '')}"
-        
         fact_str += f"- {age_range} 대운 ({ganji}): 주요 기운({ss})\n"
     return fact_str
 
@@ -594,28 +619,20 @@ def get_universal_analysis(ds, mb, db, gans, jjis):
         results.append(f"{m}({ss}): 인종법 적용 - {twelve}종")
     return results
 
-def get_group_ss(ss_str):
-    return {'비견':'비겁', '겁재':'비겁', '식신':'식상', '상관':'식상', '편재':'재성', '정재':'재성', '편관':'관성', '정관':'관성', '편인':'인성', '정인':'인성'}.get(ss_str, '비겁')
-
 def get_opposite_gender(gender):
-    """성별을 입력받아 반대 성별을 반환하는 순수 함수"""
     return "여성" if gender == "남성" else "남성"
 
-# 만약 꼭 session_state를 직접 제어해야 한다면 아래와 같이 엔진에 구성합니다.
 def update_partner_gender():
-    """신청인 성별을 기준으로 상대방 성별 업데이트"""
     import streamlit as st
     user_g = st.session_state.get("u_g", "남성")
     st.session_state["f_g"] = get_opposite_gender(user_g)
 
 def update_user_gender():
-    """상대방 성별을 기준으로 신청인 성별 업데이트"""
     import streamlit as st
     partner_g = st.session_state.get("f_g", "여성")
     st.session_state["u_g"] = get_opposite_gender(partner_g)
 
 def get_yukchin_rule(gender, marital):
-    """내담자의 성별과 혼인 상태에 따른 육친 통변 규칙을 반환합니다."""
     if gender == '남성':
         return f"""
 🚨 [육친 통변 특수부대 절대 규칙 (남성용)]: 
@@ -628,7 +645,7 @@ def get_yukchin_rule(gender, marital):
 3. 🏠 [처가 및 형제]: 장모 = 식상 / 형제(남) = 비견 / 형제(여) = 겁재
 4. 🚨 [상태별 타겟팅]: 내담자 상태({marital})에 따라 인연(아내/재혼운 등)으로 카운슬링할 것.
 """
-    else: # 여성
+    else:
         return f"""
 🚨 [육친 통변 특수부대 절대 규칙 (여성용)]: 
 - 본 내담자는 여성(현재 상태: {marital})입니다.
@@ -640,14 +657,6 @@ def get_yukchin_rule(gender, marital):
 3. 🏠 [시댁 및 자매]: 시어머니 = 재성 / 자매 = 비견 / 형제 = 겁재
 4. 🚨 [상태별 타겟팅]: 내담자 상태({marital})에 따라 인연(남편/재혼운 등)으로 카운슬링할 것.
 """
-def get_group_ss(ss_name):
-    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
-    if "비" in ss_name or "겁" in ss_name: return "비겁"
-    if "식" in ss_name or "상" in ss_name: return "식상"
-    if "재" in ss_name: return "재성"
-    if "관" in ss_name: return "관성"
-    if "인" in ss_name: return "인성"
-    return "비겁"
 
 def get_execution_yong(upper_group, lower_group):
     matrix = {
@@ -660,7 +669,6 @@ def get_execution_yong(upper_group, lower_group):
     return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
 def get_matrix_keyword(che_group, yong_group):
-    # che_yong_matrix_text는 engine.py 상단에 상수로 정의하거나 이 함수 내부에서 관리
     target_str = f"- 체({che_group})+용({yong_group}):"
     for line in CHE_YONG_MATRIX_TEXT.splitlines():
         if line.startswith(target_str):
@@ -668,24 +676,21 @@ def get_matrix_keyword(che_group, yong_group):
     return "변화 감지"
 
 def get_won_guk_vaults_str(jjis):
-    """원국 내 진술축미(묘고) 글자를 파악하여 입고/개고 잠재력을 반환합니다."""
     vaults = [j for j in jjis if j in ['辰', '戌', '丑', '未']]
     if not vaults:
         return "원국 내 진술축미(묘고) 글자 없음 (특수 입고 작용 미미함)"
     return f"원국 내 묘고 글자 보유: {', '.join(vaults)} (강력한 입고 및 개고 잠재력 내재)"
 
 def get_dw_fact_str(dw_g, dw_j):
-    """현재 대운의 천간(체)과 지지(용)의 팩트 문자열을 생성합니다."""
     return f"천간 {dw_g}의 기운이 지지 {dw_j}의 환경을 만난 형국 (체용의 상호작용)"
 
 def get_hang_un_vaults_str(dw_j, jjis):
-    """현재 대운 지지가 원국의 묘고 작용을 촉발하는지 분석합니다."""
     if dw_j in ['辰', '戌', '丑', '未']:
         return f"대운 지지({dw_j})가 묘고(창고)로 작용하여 원국 글자들의 입고/개고 반응 촉발 가능성 높음"
     return "진술축미 대운이 아니므로 대운 자체의 강력한 입고 작용은 없음"
 
 # ==============================================================================
-# 4. 궁합 및 출산 택일 연산 로직
+# 4. 궁합 및 출산 택일 연산 로직 (버그 정밀 수정 완비)
 # ==============================================================================
 def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list=None):
     if forbidden_list is None: forbidden_list = []
@@ -948,11 +953,8 @@ class UniversalPrintableGunghap:
 def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marital, marital_status):
     def get_oh_class(c): return f"color-{get_color(c)}"
 
-    # [수정] 한글 시간 문자열(예: 진시)을 파싱하여 숫자와 한자로 분리하는 로직
     def get_time_ganji_fixed(day_gan, time_str):
         if "시간 모름" in time_str or "모름" in time_str: return "", ""
-        
-        # 괄호 안의 글자만 추출 (예: 진시)
         start_idx = time_str.find('(')
         end_idx = time_str.find(')')
         raw_ji = time_str[start_idx+1:end_idx] if (start_idx != -1 and end_idx != -1) else "子"
@@ -969,7 +971,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         return "", ""
 
     def _get_person_data(y, m, d, t, gender, name, marital):
-        # 시간 추출 로직 (개인사주와 동일한 정수 추출)
         h, m_val = 0, 0
         if ":" in t:
             col_idx = t.find(":")
@@ -981,24 +982,20 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         y_pillar, m_pillar, _ = get_true_year_month_pillar(y, m, d, h, m_val)
         _, _, d_pillar = get_ganji_from_date(y, m, d)
         
-        # [중요] 일주 기반 시주 계산 로직 적용
         t_gan, t_ji = get_time_ganji_fixed(d_pillar[0], t)
         
         gans, jjis = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]], [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
         ys, yb = y_pillar[0], y_pillar[1]
         ms, mb = m_pillar[0], m_pillar[1]
         ds, db = d_pillar[0], d_pillar[1]        
-        
-        # 1. 먼저 order_dir을 결정합니다.
+        hs, hb = t_gan, t_ji
+
         order_dir = 1 if (GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
-        
-        # 2. 결정된 order_dir을 사용하여 calc_d를 계산합니다.
         calc_d = get_daeun_su_accurate(datetime(y, m, d), order_dir)
 
         curr_year = datetime.now().year
         age = curr_year - y + 1
 
-        # 3. 이후 대운 리스트를 생성합니다.
         direction_str = "순행" if order_dir == 1 else "역행"
         daewun_data_list = get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
         daewun = (daewun_data_list, direction_str, calc_d, get_oh_class)
@@ -1008,7 +1005,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
             oh = get_color(c)
             if oh in counts: counts[oh] += 1
         
-        info_h = f"<div style='text-align:center;'>{name}님</div>"
         gan_rel = "".join([f"<td style='border:1px solid #444;'>{get_gan_rel_all(i, gans)}</td>" for i in range(4)])
         gan_ss = f"<td style='border:1px solid #444;'>{get_ss(ds,gans[0])}</td><td style='border:1px solid #444; font-weight:900;'>일원</td><td style='border:1px solid #444;'>{get_ss(ds,gans[2])}</td><td style='border:1px solid #444;'>{get_ss(ds,gans[3])}</td>"
         gan_row = "".join([f"<td class='{get_oh_class(g)}' style='border:1px solid #444; font-size:24px; font-weight:900;'>{g}</td>" for g in gans])
@@ -1017,11 +1013,8 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         jijanggan = "".join([f"<td>{get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
         
         ji_rel_rows = ""
-        # 순서: 월(1), 일(2), 년(0), 시(3)
         for l_idx, r_idx in enumerate([1, 2, 0, 3]):
             b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
-            
-            # [최종] 각 지지별 실제 한자를 가져와 박사님께서 지시하신 방향 포맷에 삽입합니다.
             current_ji = jjis[r_idx]
             if r_idx == 0: dir_label = f"({current_ji})→"
             elif r_idx == 1: dir_label = f"←({current_ji})→"
@@ -1050,7 +1043,16 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
             "#2E7D32" if get_samjae(yb, db) == "해당 없음" else "#1A237E", get_samjae(yb, db)
         ]
 
-        return {"table": [None, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], "master": master, "daewun": daewun}
+        gyukgook_name, _ = get_gyukgook_detailed(ds, ys, ms, hs, mb)
+        gongmang_val = calculate_gongmang(ds, db)
+
+        return {
+            "table": [None, gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal], 
+            "master": master, 
+            "daewun": daewun,
+            "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
+            "gyukgook": gyukgook_name, "gongmang": gongmang_val
+        }
 
     m_res = _get_person_data(s_y, s_m, s_d, s_t, "남성", "신청인", m_marital)
     w_res = _get_person_data(f_y, f_m, f_d, f_t, "여성", "상대방", f_marital)
@@ -1059,17 +1061,23 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         "m_table": m_res["table"], "m_master": m_res["master"], "m_daewun": m_res["daewun"],
         "w_table": w_res["table"], "w_master": w_res["master"], "w_daewun": w_res["daewun"],
         
-        # 프롬프트 매핑용 데이터
-        "m_ds": m_res["master"][0],
-        "m_db": m_res["master"][1],
-        "m_gongmang_actual": m_res["master"][7],
+        # 💡 [버그 완전 보정] 숫자가 아닌 100% 진품 한자 팩트 바인딩!
+        "m_ys": m_res["ys"], "m_yb": m_res["yb"],
+        "m_ms": m_res["ms"], "m_mb": m_res["mb"],
+        "m_ds": m_res["ds"], "m_db": m_res["db"],
+        "m_hs": m_res["hs"], "m_hb": m_res["hb"],
+        "m_gongmang_actual": m_res["gongmang"],
+        "m_gyukgook": m_res["gyukgook"],
         
-        "f_ds": w_res["master"][0],
-        "f_db": w_res["master"][1],
-        "f_gongmang_actual": w_res["master"][7],
+        "f_ys": w_res["ys"], "f_yb": w_res["yb"],
+        "f_ms": w_res["ms"], "f_mb": w_res["mb"],
+        "f_ds": w_res["ds"], "f_db": w_res["db"],
+        "f_hs": w_res["hs"], "f_hb": w_res["hb"],
+        "f_gongmang_actual": w_res["gongmang"],
+        "f_gyukgook": w_res["gyukgook"],
         
-        "m_golden": f"{m_res['master'][0]}일간 중심의 성향 분석",
-        "f_golden": f"{w_res['master'][0]}일간 중심의 성향 분석",
+        "m_golden": f"{m_res['ds']}일간 중심의 성향 분석",
+        "f_golden": f"{w_res['ds']}일간 중심의 성향 분석",
         
         "calc_gyukgook": "시공명리 격국 분석",
         "db_header": "초연 시공명리 심층 궁합 분석 리포트",
@@ -1080,4 +1088,3 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
 
 def get_gunghap_report(res):
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
-
