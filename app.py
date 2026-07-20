@@ -759,7 +759,7 @@ if st.session_state.get('app_running', False):
                 final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-    # ==============================================================================
+# ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
     # ==============================================================================
     elif any(x in u_product for x in ["2-0", "궁합", "3-2"]) and not any(x in u_product for x in ["2-1.", "2-2."]):
@@ -801,9 +801,35 @@ if st.session_state.get('app_running', False):
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
-                # ========================================================
-                # [개정] 사이드바 입력 기반 만세력 데이터(gh_data) 직접 추출 및 golden_text 구축
-                # ========================================================
+                # 3. [복구 완료] 정보 헤더, 표지, 안내문, 표, 대운 레이아웃 생성
+                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
+                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
+                
+                cover_html = html_views.get_gunghap_cover(
+                    APP_VERSION, 
+                    male_name, male_age, male_sol, male_lun, f"{male_time}",  
+                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
+                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                )
+                
+                intro_h = html_views.get_intro_html() 
+                closing = html_views.get_gunghap_closing(name, f_name)
+
+                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
+                m_master_html = html_views.get_master_bar(
+                    m_master_list[0], m_master_list[1], m_master_list[2], m_master_list[3], m_master_list[4], 
+                    m_master_list[5], m_master_list[6], m_master_list[7], m_master_list[8], m_master_list[9], m_master_list[10]
+                )
+                m_un = html_views.generate_daewun_layout(*m_daewun)
+
+                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
+                w_master_html = html_views.get_master_bar(
+                    f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], 
+                    f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10]
+                )
+                w_un = html_views.generate_daewun_layout(*f_daewun)
+
+                # 4. 만세력 데이터 직접 추출 및 golden_text 구축
                 m_ms = gh_data.get("m_ms", "")
                 m_mb = gh_data.get("m_mb", "")
                 m_ds = gh_data.get("m_ds", "")
@@ -816,34 +842,23 @@ if st.session_state.get('app_running', False):
 
                 choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
                 
-                # 1. 남성 골든 텍스트 HTML 및 팩트 변수 정의 (m_golden_fact 정의 완료)
+                # 남성 골든 텍스트 HTML 및 팩트 변수 정의
                 m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
                 m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"[{m_w_key}] 시공간 데이터 없음")
                 m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"[{m_i_key}] 성품 데이터 없음")
                 m_struct = choyeon_db.get("ilju_structure", {}).get(m_i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct[0], m_struct[1], m_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
-                
-                # 💡 [NameError 원천 차단] 변수 명시적 정의
                 m_golden_fact = f"월령: {m_w_val} / 일주: {m_i_val}"
 
-                # 2. 여성 골든 텍스트 HTML 및 팩트 변수 정의 (f_golden_fact 정의 완료)
+                # 여성 골든 텍스트 HTML 및 팩트 변수 정의
                 f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
                 f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"[{f_w_key}] 시공간 데이터 없음")
                 f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"[{f_i_key}] 성품 데이터 없음")
                 f_struct = choyeon_db.get("ilju_structure", {}).get(f_i_key, ["구조 미상", "유형 미상", "성향 미상"])
                 f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct[0], f_struct[1], f_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
-                
                 f_golden_fact = f"월령: {f_w_val} / 일주: {f_i_val}"
 
-                # 💡 [NameError 해결] cover_html 명시적 생성
-                cover_html = html_views.get_gunghap_cover(
-                    APP_VERSION, 
-                    male_name, male_age, male_sol, male_lun, f"{male_time}",  
-                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
-                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-                )
-                 
-                # 3. 종합 시각화 레이아웃
+                # 5. 종합 시각화 레이아웃
                 s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
                 s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
                 w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
@@ -855,7 +870,7 @@ if st.session_state.get('app_running', False):
                     s_gan, s_ji, w_gan, w_ji
                 ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
 
-                # 4. AI 바인딩 사전 조립
+                # 6. AI 바인딩 사전 조립
                 gunghap_facts = {
                     "m_name": male_name, "m_age": male_age,
                     "m_ds": m_ds, "m_db": m_db, "m_ilju": m_i_key,
@@ -881,7 +896,7 @@ if st.session_state.get('app_running', False):
                 if isinstance(gh_data, dict):
                     gunghap_facts.update(gh_data)
 
-                # 5. 안전한 포매팅 및 AI 지시문
+                # 7. AI 통변 호출
                 class SafeDict(dict):
                     def __missing__(self, key): return "{" + key + "}"
 
@@ -891,11 +906,10 @@ if st.session_state.get('app_running', False):
 
                 ai_result = call_gemini_api(prompt_text)
                 
-                # 8. 마크다운 및 불순물 정제
                 if ai_result:
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
                     clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
-                    clean_ai = re.sub(r'\b\d+일간\b', '일간', clean_ai) # 만약의 숫자 찌꺼기 2차 청소
+                    clean_ai = re.sub(r'\b\d+일간\b', '일간', clean_ai)
                     
                     ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                     ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>\1</h3>", ai_result_fmt)
@@ -906,7 +920,7 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
-                # 9. [최종 통합 출력] 커버 선출력 후 HTML 결합
+                # 8. [최종 통합 출력] 커버 선출력 후 HTML 결합
                 st.markdown(cover_html, unsafe_allow_html=True)
 
                 full_inner_content = (
@@ -925,7 +939,7 @@ if st.session_state.get('app_running', False):
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(report_box, unsafe_allow_html=True)
                 
-                # 10. 타 감명서 비교 처리 (3-2)
+                # 9. 타 감명서 비교 처리 (3-2)
                 if ("3-2" in u_product or "12" in u_product) and original_report_html:
                     st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
                     original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
