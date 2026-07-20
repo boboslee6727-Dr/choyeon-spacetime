@@ -904,7 +904,7 @@ if st.session_state.get('app_running', False):
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변을 가져오지 못했습니다.</p>"
 
                 # ==========================================
-                # [STEP 3] 최종 통합 출력 (커버 + 명리표 + AI통변)
+                # [STEP 4] 최종 통합 출력 (커버 + 명리표 + AI통변)
                 # ==========================================
                 full_inner_content = (
                     cover_html +
