@@ -904,26 +904,34 @@ if st.session_state.get('app_running', False):
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변을 가져오지 못했습니다.</p>"
 
                 # ==========================================
-                # [STEP 4] 최종 통합 출력 (커버 + 명리표 + AI통변)
+                # [STEP 3] 궁합 리포트 단계별 정밀 출력 (개인사주 연동 방식)
                 # ==========================================
+                
+                # 1. 커버(표지) 단독 최우선 출력
+                st.markdown(cover_html, unsafe_allow_html=True)
+
+                # 2. intro_h 다음에 위치할 golden_text HTML 생성/바인딩
+                golden_text_html = html_views.get_golden_text_html() if hasattr(html_views, 'get_golden_text_html') else (golden_text if 'golden_text' in locals() else "")
+
+                # 3. 본문 통합 컨테이너 결합 (cover_html 제반 제거 및 golden_text_html 직결)
                 full_inner_content = (
-                    cover_html +
-                    m_info + m_table + m_master_html + m_un + 
-                    w_info + w_table + w_master_html + w_un + 
-                    intro_h + 
-                    visual_analysis_html +
+                    str(m_info or "") + str(m_table or "") + str(m_master_html or "") + str(m_un or "") + 
+                    str(w_info or "") + str(w_table or "") + str(w_master_html or "") + str(w_un or "") + 
+                    str(intro_h or "") + str(golden_text_html or "") +
+                    str(visual_analysis_html or "") +
                     f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +            
-                    closing
+                    str(closing or "")
                 )
                 
+                # 4. 본문 리포트 박스 단일 출력
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(report_box, unsafe_allow_html=True)
                 
-                # 비교 상품일 경우 구분선 및 비교 출력
+                # 5. 타 감명서 비교 상품(3-2)일 경우 구분선 및 비교 출력
                 if ("3-2" in u_product or "12" in u_product) and original_report_html:
                     st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
                     original_report_html = html_views.get_comparison_gumhap_report_html(male_name, female_name, other_report)
-                    comp_report = original_report_html + comparison_output_html
+                    comp_report = str(original_report_html or "") + str(comparison_output_html or "")
                     comp_box = html_views.get_final_report_box(comp_report)
                     st.markdown(comp_box, unsafe_allow_html=True)
 
