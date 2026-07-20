@@ -658,6 +658,7 @@ if st.session_state.get('app_running', False):
                         user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음"
                     ),
                     "u_question": u_question if 'u_question' in locals() and u_question else "특별히 제시된 질문 없음"
+                }
 
                 # 3. 안전한 포매팅 클래스 (프롬프트에 정의되지 않은 {}가 있어도 에러 방지)
                 class SafeDict(dict):
