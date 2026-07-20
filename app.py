@@ -887,7 +887,11 @@ if st.session_state.get('app_running', False):
                     comp_report = original_report_html + comparison_output_html
                     comp_box = html_views.get_final_report_box(comp_report)
                     st.markdown(comp_box, unsafe_allow_html=True)
-            
+                else:
+                    # 1-1 ~ 1-7 모든 일반 상품: 기존 A4 박스 구조 100% 유지
+                    final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+
             except Exception as e:
                 st.error(f"🚨 궁합 분석 중 오류가 발생했습니다: {e}")
                 
