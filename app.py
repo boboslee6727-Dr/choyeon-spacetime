@@ -635,7 +635,7 @@ if st.session_state.get('app_running', False):
                     "cur_wol_j": cur_wol_j, # 현재 월운 지지
                     "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)", # HTML(se_content) 요약 대체
                     
-                    # --- [추가 1] 건강운 특화 변수 (HEALTH_PROMPT 연동) ---
+                    # --- [추가 3] 건강운 특화 변수 (HEALTH_PROMPT 연동) ---
                     "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in locals() else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
                     "weak_health_str": weak_health_str if 'weak_health_str' in locals() else "취약 장기 및 신체 부위 분석 팩트",
                     "health_goal": u_health_goal if 'u_health_goal' in locals() and u_health_goal else (u_question if 'u_question' in locals() and u_question else "전반적인 건강 체질 관리"),
@@ -646,10 +646,18 @@ if st.session_state.get('app_running', False):
                     "career_fact_str": career_fact_str if 'career_fact_str' in locals() else "직업/진학 핵심 십성 분석",
                     
                     # --- [추가 3] 사이드바/UI 입력 고민 및 질문 사항 바인딩 ---
-                    "user_query": user_query if 'user_query' in locals() and user_query else (u_question if 'u_question' in locals() and u_question else "특별히 제시된 고민 내용 없음"),
-                    "wealth_issue": u_wealth_issue if 'u_wealth_issue' in locals() and u_wealth_issue else (user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음"),
+                    # 직업/진학 고민 변수명이 무엇이든 빠짐없이 체크하여 꽂아 넣습니다.
+                    "user_query": u_career_issue if 'u_career_issue' in locals() and u_career_issue else (
+                        u_job_issue if 'u_job_issue' in locals() and u_job_issue else (
+                        user_query if 'user_query' in locals() and user_query else (
+                            u_question if 'u_question' in locals() and u_question else "특별히 제시된 고민 내용 없음"
+                            )
+                        )
+                    ),
+                    "wealth_issue": u_wealth_issue if 'u_wealth_issue' in locals() and u_wealth_issue else (
+                        user_query if 'user_query' in locals() and user_query else "특별히 제시된 고민 내용 없음"
+                    ),
                     "u_question": u_question if 'u_question' in locals() and u_question else "특별히 제시된 질문 없음"
-                }
 
                 # 3. 안전한 포매팅 클래스 (프롬프트에 정의되지 않은 {}가 있어도 에러 방지)
                 class SafeDict(dict):
