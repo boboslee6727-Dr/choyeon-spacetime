@@ -160,9 +160,10 @@ with st.sidebar:
             st.session_state["u_g"] = "남성"
 
     # ==============================================================================
-    # 🔍 [파스텔 블루 톤] 신청인 사주간지 역산 및 생년월일 자동입력
+    # 🔍 신청인 사주간지 역산 (기존 박스 위치에 파스텔 블루 스타일만 입힘)
     # ==============================================================================
-    st.markdown("<div style='background-color: #F0F4F8; padding: 10px; border-radius: 8px; border: 1px solid #D0DCE5; margin-bottom: 10px;'>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #F0F4F8; padding: 15px; border-radius: 10px; border: 1px solid #D0DCE5; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: ry = st.text_input("년주", value="", key="u_ry")
