@@ -106,17 +106,18 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 👥 [간결화 완료] 성별 상태 초기화 및 자동 연동 (함수 선언 제거)
+    # 👥 성별 상태 초기화 및 자동 연동 (함수 선언 완전 제거 버전)
     # ==============================================================================
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
 
-    # 신청인 성별 선택 (값이 바뀔 때 람다식이나 인라인으로 상대방 성별 자동 반전)
+    # 신청인 성별 선택
     gender = st.selectbox(
         "성별", ["남성", "여성"], 
         key="u_g",
         on_change=lambda: st.session_state.update({"f_g": "남성" if st.session_state["u_g"] == "여성" else "여성"})
     )
+    
     # 상대방 성별 선택
     f_gender = st.selectbox(
         "상대방 성별", ["여성", "남성"], 
