@@ -729,9 +729,7 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                # 1. 성별 동기화 세션 읽기
                 user_gender = st.session_state.get("u_g", gender)
-                
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
                 p_age = curr_y - int(f_y) + 1
@@ -742,7 +740,6 @@ if st.session_state.get('app_running', False):
                 klc.setSolarDate(int(f_y), int(f_m), int(f_d))
                 f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
                 
-                # 2. 신청자 성별에 따른 엔진 데이터 호출
                 if user_gender == "여성":
                     marital_status = f"{f_marital}-{u_marital}" 
                     gh_data = engine.get_gunghap_data(
@@ -765,7 +762,6 @@ if st.session_state.get('app_running', False):
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
-                # 3. [engine.py의 진품 팩트 직접 수신] 
                 m_ys, m_yb = gh_data.get("m_ys", ""), gh_data.get("m_yb", "")
                 m_ms, m_mb = gh_data.get("m_ms", ""), gh_data.get("m_mb", "")
                 m_ds, m_db = gh_data.get("m_ds", ""), gh_data.get("m_db", "")
@@ -778,7 +774,6 @@ if st.session_state.get('app_running', False):
 
                 choyeon_db = load_choyeon_db() if 'load_choyeon_db' in globals() else {}
 
-                # 4. 남성 골든텍스트 파싱
                 m_w_key, m_i_key = f"{m_ms}{m_mb}".strip(), f"{m_ds}{m_db}".strip()
                 m_w_val = choyeon_db.get("wolryeong", {}).get(m_w_key, f"[{m_w_key}] 시공간 데이터 없음")
                 m_i_val = choyeon_db.get("ilju", {}).get(m_i_key, f"[{m_i_key}] 성품 데이터 없음")
@@ -786,7 +781,6 @@ if st.session_state.get('app_running', False):
                 m_golden_html = html_views.get_golden_text(male_name, m_w_val, m_i_val, m_struct[0], m_struct[1], m_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
                 m_golden_text = f"초연 시공명리학적으로 풀이하면 {male_name}님은 '{m_w_val}'의 시공간에서, '{m_i_val}'의 성품을 가지고 태어나셨으며, 성격은 '{m_struct[0]}'인 '{m_struct[1]}'으로, '{m_struct[2]}'하는 성향이 있습니다."
 
-                # 5. 여성 골든텍스트 파싱
                 f_w_key, f_i_key = f"{f_ms}{f_mb}".strip(), f"{f_ds}{f_db}".strip()
                 f_w_val = choyeon_db.get("wolryeong", {}).get(f_w_key, f"[{f_w_key}] 시공간 데이터 없음")
                 f_i_val = choyeon_db.get("ilju", {}).get(f_i_key, f"[{f_i_key}] 성품 데이터 없음")
@@ -794,7 +788,6 @@ if st.session_state.get('app_running', False):
                 f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct[0], f_struct[1], f_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
                 f_golden_text = f"초연 시공명리학적으로 풀이하면 {female_name}님은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 가지고 태어나셨으며, 성격은 '{f_struct[0]}'인 '{f_struct[1]}'으로, '{f_struct[2]}'하는 성향이 있습니다."
 
-                # 6. HTML 뷰 조립
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
                 
@@ -826,13 +819,28 @@ if st.session_state.get('app_running', False):
                 w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
                 w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
                 
-                visual_analysis_html = html_views.get_gunghap_visual_analysis(
-                    male_name, m_i_key, f"{m_daewun[0]}{m_daewun[1]}" if len(m_daewun)>1 else "",
-                    female_name, f_i_key, f"{f_daewun[0]}{f_daewun[1]}" if len(f_daewun)>1 else "",
-                    s_gan, s_ji, w_gan, w_ji
-                ) if hasattr(html_views, 'get_gunghap_visual_analysis') else ""
+                # ==============================================================================
+                # 📊 [시각화 자료 완벽 복구] 시각화 엔진 연산 및 HTML 생성
+                # ==============================================================================
+                # 1. 남성/여성 사주 4주 간지 배열 구성 (년, 월, 일, 시)
+                male_pillars = [f"{m_ys}{m_yb}", f"{m_ms}{m_mb}", f"{m_ds}{m_db}", f"{m_hs}{m_hb}"]
+                female_pillars = [f"{f_ys}{f_yb}", f"{f_ms}{f_mb}", f"{f_ds}{f_db}", f"{f_hs}{f_hb}"]
 
-                # 7. 프롬프트 바인딩 (원본 사수)
+                # 2. engine.py의 시각화 통합 엔진 가동
+                gh_obj = engine.UniversalPrintableGunghap(
+                    applicant=male_name,
+                    partner_name=female_name,
+                    male=male_pillars,
+                    female=female_pillars,
+                    daeun_score=10
+                )
+                gh_obj.run_universal_logic()  # 💡 종합 점수 및 6대 항목 수치 연산 실행!
+
+                # 3. html_views를 통해 시각화 차트 HTML 렌더링
+                if hasattr(html_views, 'get_gunghap_visual_analysis'):
+                    visual_analysis_html = html_views.get_gunghap_visual_analysis(gh_obj)
+                else:
+                    visual_analysis_html = ""
                 gunghap_facts = {
                     "m_name": male_name, "m_age": male_age,
                     "m_ganju_str": f"년주:{m_ys}{m_yb}, 월주:{m_ms}{m_mb}, 일주:{m_ds}{m_db}, 시주:{m_hs}{m_hb}",
@@ -888,9 +896,6 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
-                # 8. 최종 화면 출격
-                st.markdown(cover_html, unsafe_allow_html=True)
-
                 full_inner_content = (
                     str(m_info or "") + str(m_table or "") + str(m_master_html or "") + str(m_un or "") + 
                     str(m_golden_html or "") + 
@@ -905,45 +910,38 @@ if st.session_state.get('app_running', False):
                 )
                 
                 report_box = html_views.get_final_report_box(full_inner_content)
+                
+                # 💡 [핵심] 궁합 리포트 임시 저장 및 화면 출력
+                st.session_state['cached_gunghap_cover'] = cover_html
+                st.session_state['cached_gunghap_report'] = report_box
+                
+                st.markdown(cover_html, unsafe_allow_html=True)
                 st.markdown(report_box, unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
 
     # ==============================================================================
-    # [2-1번 카테고리] 결혼 택일 정밀 분석 가동 블록
+    # [2-1번 카테고리] 결혼 택일 (궁합 결과 유지 후 하단 연쇄 출력)
     # ==============================================================================
     elif "2-1." in u_product:
+        # 💡 [연쇄 로직 1] 기존 궁합 풀이가 존재하면 상단에 먼저 뿌려줌
+        if 'cached_gunghap_cover' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
+        if 'cached_gunghap_report' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
+
         st.markdown("---")
         with st.spinner("💍 두 사람의 인연을 가장 빛내줄 천생연분 결혼 길일(吉日)을 엄선 중입니다..."):
             try:
-                # 1. 사이드바 변수 및 신청인/상대방 사주 데이터 가져오기
                 date_mode = st.session_state.get("radio_marriage_mode", "기간 선택")
+                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
+                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
                 
-                s_y = st.session_state.get("s_y", 1980)
-                s_m = st.session_state.get("s_m", 1)
-                s_d = st.session_state.get("s_d", 1)
-                s_t = st.session_state.get("s_t", "시간 모름")
-                
-                p_y = st.session_state.get("p_y_in", 1980)
-                p_m = st.session_state.get("p_m_in", 1)
-                p_d = st.session_state.get("p_d_in", 1)
-                p_t = st.session_state.get("p_t_key", "시간 모름")
-
-                # 2. 부모/당사자 일지 추출 (궁합 데이터 활용)
-                m_marital = st.session_state.get("u_m_stat", "미혼")
-                f_marital = st.session_state.get("p_m_stat", "미혼")
-                marital_status = f"{m_marital}-{f_marital}"
-
-                gh_data = engine.get_gunghap_data(
-                    int(s_y), int(s_m), int(s_d), s_t, m_marital,
-                    int(p_y), int(p_m), int(p_d), p_t, f_marital,
-                    marital_status
-                )
-                
-                # 신청인/상대방 일지(지지) 추출
-                m_db = gh_data["m_master"][1] if "m_master" in gh_data else ""
-                f_db = gh_data["w_master"][1] if "w_master" in gh_data else ""
+                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
+                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
+                m_db = m_d_pillar[1] if m_d_pillar else ""
+                f_db = f_d_pillar[1] if f_d_pillar else ""
 
                 st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
 
@@ -954,7 +952,6 @@ if st.session_state.get('app_running', False):
                     st.info(f"💡 **선택된 택일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
                             f"💡 **분석 기준**: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.")
                     
-                    # 기간 내 길일 추천 로직 (출산택일 엔진 구조 활용 확장)
                     best_marriage_days = engine.get_optimized_delivery_days(start_date, end_date, [m_db], [f_db])
 
                     if not best_marriage_days:
@@ -980,70 +977,53 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
- 
+
     # ==============================================================================
-    # [2-2번 카테고리] 출산 택일 정밀 분석 가동 블록
+    # [2-2번 카테고리] 출산 택일 (궁합 결과 유지 후 하단 연쇄 출력)
     # ==============================================================================
     elif "2-2." in u_product:
+        # 💡 [연쇄 로직 2] 기존 궁합 풀이가 존재하면 상단에 먼저 뿌려줌
+        if 'cached_gunghap_cover' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
+        if 'cached_gunghap_report' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
+
         st.markdown("---")
         with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)을 탐색 중입니다..."):
             try:
-                # 1. 사이드바에서 입력받은 변수 안전하게 가져오기
+                start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
+                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=30))
                 last_period = st.session_state.get('last_period_date')
                 cycle = st.session_state.get('period_cycle', 28)
                 
-                s_y = st.session_state.get("s_y", 1980)
-                s_m = st.session_state.get("s_m", 1)
-                s_d = st.session_state.get("s_d", 1)
-                
-                p_y = st.session_state.get("p_y_in", 1980)
-                p_m = st.session_state.get("p_m_in", 1)
-                p_d = st.session_state.get("p_d_in", 1)
+                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
+                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
 
-                if not last_period:
-                    st.error("🚨 사이드바에서 '마지막 생리 시작일'을 정확히 입력해 주십시오.")
+                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
+                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
+                m_jjis = [m_d_pillar[1]] if m_d_pillar else []
+                f_jjis = [f_d_pillar[1]] if f_d_pillar else []
+
+                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
+
+                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+                st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
+                        f"💡 **참고 산모 정보**: 마지막 생리일({last_period}), 평균 주기({cycle}일)")
+
+                if not best_days:
+                    st.warning("⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.")
                 else:
-                    # 2. 출산 예정일 및 안전 탐색 구간 연산
-                    # 주기 오차(cycle - 28) 반영하여 예정일 계산 (평균 280일)
-                    cycle_offset = cycle - 28
-                    expected_date = last_period + dt_mod.timedelta(days=280 + cycle_offset)
-                    
-                    # 제왕절개 길일은 보통 예정일 기준 1주 ~ 3주(21일) 전으로 탐색
-                    start_date = expected_date - dt_mod.timedelta(days=21)
-                    end_date = expected_date - dt_mod.timedelta(days=5)
-
-                    # 3. 부모(신청인, 상대방) 일지 추출 (아기 사주와의 충돌 방지용)
-                    _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
-                    _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
-                    m_jjis = [m_d_pillar[1]] if m_d_pillar else []
-                    f_jjis = [f_d_pillar[1]] if f_d_pillar else []
-
-                    # 4. 출산택일 엔진 가동 (engine.py 연동)
-                    best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
-
-                    # 5. 결과 화면 렌더링
-                    st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
-                    st.info(f"💡 **계산된 출산 예정일**: {expected_date.strftime('%Y년 %m월 %d일')} (생리주기 {cycle}일 반영)\n\n"
-                            f"💡 **명리학적 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}")
-
-                    if not best_days:
-                        st.warning("⚠️ 지정된 산욕기 기간 내에 오행이 완벽히 조화로운 특A급 길일이 없습니다. 기간 조율이 필요합니다.")
-                    else:
-                        for idx, day_info in enumerate(best_days):
-                            d_str = day_info['date']
-                            score = day_info['score']
-                            b_time_info = day_info['best_time']
-                            
-                            # 1순위일 경우 조금 더 화려하게 강조
-                            border_col = "#C62828" if idx == 0 else "#2E7D32"
-                            st.markdown(f"""
-                            <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
-                                <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 : {d_str} (명리 종합점수: {score:.1f}점)</h4>
-                                <ul style='margin-bottom:0; font-size:16px;'>
-                                    <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
-                                </ul>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
+                    for idx, day_info in enumerate(best_days):
+                        border_col = "#C62828" if idx == 0 else "#2E7D32"
+                        b_time_info = day_info['best_time']
+                        st.markdown(f"""
+                        <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
+                            <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {day_info['date']} (명리 종합점수: {day_info['score']:.1f}점)</h4>
+                            <ul style='margin-bottom:0; font-size:16px;'>
+                                <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
+                            </ul>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
             except Exception as e:
                 st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
