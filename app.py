@@ -127,26 +127,15 @@ with st.sidebar:
             st.session_state["u_g"] = "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산 
-    # ==============================================================================
-    with st.expander("🔍 신청인 사주간지 역산", expanded=False):
-        col_g1, col_g2 = st.columns(2)
-        with col_g1: ry = st.text_input("년주", value="", key="u_ry")
-        with col_g2: rm = st.text_input("월주", value="", key="u_rm")
-        col_g3, col_g4 = st.columns(2)
-        with col_g3: rd = st.text_input("일주", value="", key="u_rd")
-        with col_g4: rt = st.text_input("시주", value="", key="u_rt")
-        
-# ==============================================================================
-    # 🔍 신청인 사주간지 역산 & 👤 기본 정보 통합부
+    # 🔍 신청인 사주간지 역산 & 👤 기본 정보 통합부 (Key 중복 원천 해결)
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         cg1, cg2 = st.columns(2)
-        with cg1: ry = st.text_input("년주", value="", key="u_ry")
-        with cg2: rm = st.text_input("월주", value="", key="u_rm")
+        with cg1: ry = st.text_input("년주", value="", key="u_ry_in")
+        with cg2: rm = st.text_input("월주", value="", key="u_rm_in")
         cg3, cg4 = st.columns(2)
-        with cg3: rd = st.text_input("일주", value="", key="u_rd")
-        with cg4: rt = st.text_input("시주", value="", key="u_rt")
+        with cg3: rd = st.text_input("일주", value="", key="u_rd_in")
+        with cg4: rt = st.text_input("시주", value="", key="u_rt_in")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             st.session_state['app_running'] = False
