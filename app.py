@@ -898,41 +898,7 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
-                # 💙 [시각화 연한 파란색 계열 스타일링 적용]
-                t_col = "#3498db" if gh_engine.final_score >= 70 else ("#5C6BC0" if gh_engine.final_score >= 60 else "#42A5F5")
-                
-                # SVG 막대 그래프도 파란색 톤으로 통일
-                bars = "".join([
-                    f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
-                    f"<div style='width:130px; font-size:13px; font-weight:bold; color:#333;'>{d['label']}</div>"
-                    f"<div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#E8EAF6' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='#3498db' /></svg></div>"
-                    f"<div style='width:35px; font-size:12px; font-weight:bold; color:#1A237E;'>{d['pct']}%</div>"
-                    f"</div>" 
-                    for d in gh_engine.details
-                ])
-
-                closing_original = (
-                    f"<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>\n"
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p>\n"
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p>\n"
-                    f"<div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 드림 -</span></div>\n"
-                    f"</div>"
-                )
-
-                score_visual_html = (
-                    f"<h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900; color:#1A237E;'>📊 최종 궁합 점수</h2>\n"
-                    f"<div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>\n"
-                    f"<div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #E8EAF6 0); display:flex; justify-content:center; align-items:center;'>\n"
-                    f"<div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>\n"
-                    f"<span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>\n"
-                    f"<span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>\n"
-                    f"</div>\n"
-                    f"</div>\n"
-                    f"</div>\n"
-                    f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px;'>{gh_engine.grade}</span></div>\n"
-                    f"<div style='max-width:500px; margin:0 auto;'>\n{bars}\n</div>\n"
-                    f"{closing_original}"
-                )
+                score_visual_html = html_views.get_gunghap_score_visual_html(gh_engine)
 
                 # 3. 최종 컨텐츠 결합
                 full_inner_content = (
