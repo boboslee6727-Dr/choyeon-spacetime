@@ -106,24 +106,25 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 👥 성별 상태 초기화 및 자동 연동 (함수 선언 완전 제거 버전)
+    # 💡 [안전 가드 적용] 성별 양방향 자동 동기화 콜백 함수
     # ==============================================================================
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
 
-    # 신청인 성별 선택
-    gender = st.selectbox(
-        "성별", ["남성", "여성"], 
-        key="u_g",
-        on_change=lambda: st.session_state.update({"f_g": "남성" if st.session_state["u_g"] == "여성" else "여성"})
-    )
-    
-    # 상대방 성별 선택
-    f_gender = st.selectbox(
-        "상대방 성별", ["여성", "남성"], 
-        key="f_g",
-        on_change=lambda: st.session_state.update({"u_g": "여성" if st.session_state["f_g"] == "남성" else "남성"})
-    )
+    def sync_partner_gender():
+        # session_state에 안전하게 접근하도록 보완
+        u_val = st.session_state.get("u_g", "남성")
+        if u_val == "여성":
+            st.session_state["f_g"] = "남성"
+        else:
+            st.session_state["f_g"] = "여성"
+
+    def sync_user_gender():
+        f_val = st.session_state.get("f_g", "여성")
+        if f_val == "남성":
+            st.session_state["u_g"] = "여성"
+        else:
+            st.session_state["u_g"] = "남성"
 
     # ==============================================================================
     # 🔍 신청인 사주간지 역산 (기존 박스 위치에 파스텔 블루 스타일만 입힘)
