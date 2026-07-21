@@ -938,7 +938,7 @@ if st.session_state.get('app_running', False):
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
 
     # ==============================================================================
-    # 💍 [2-1번 카테고리] 결혼 택일 복원 (A4 테두리 박스 적용)
+    # 💍 [2-1번 카테고리] 결혼 택일 복원 (고품격 AI 통변 및 A4 테두리 박스 적용)
     # ==============================================================================
     elif "2-1." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
@@ -947,7 +947,7 @@ if st.session_state.get('app_running', False):
             st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
 
         st.markdown("---")
-        with st.spinner("💍 두 사람의 인연을 가장 빛내줄 천생연분 결혼 길일(吉日)을 엄선 중입니다..."):
+        with st.spinner("💍 초연 시공명리학 기반으로 지정하신 날짜의 시공간 에너지를 심층 분석 중입니다..."):
             try:
                 date_mode = st.session_state.get("radio_marriage_mode", "기간 선택")
                 s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
@@ -957,9 +957,12 @@ if st.session_state.get('app_running', False):
                 _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
                 m_db = m_d_pillar[1] if m_d_pillar else ""
                 f_db = f_d_pillar[1] if f_d_pillar else ""
+                
+                # 남녀 이름 확보 (세션 스테이트나 로컬 변수 우선 활용)
+                m_n = st.session_state.get("name", "신랑")
+                f_n = st.session_state.get("p_name_in", "신부")
 
-                # 화면에 바로 쏘지 않고 taegil_html 변수에 결과물 차곡차곡 수집
-                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>"
+                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px; text-align:center;'>💍 결혼 택일(길일) 정밀 감명 보고서</h3>"
 
                 if date_mode == "기간 선택":
                     start_date = st.session_state.get("start_date_m", dt_mod.date.today())
@@ -982,15 +985,48 @@ if st.session_state.get('app_running', False):
                             """
                 else:
                     target_date = st.session_state.get("target_date_m", dt_mod.date.today())
-                    taegil_html += f"<p style='color:#2E7D32; font-weight:bold;'>🎯 지정하신 특정 결혼 예정일: {target_date.strftime('%Y년 %m월 %d일')}</p>"
+                    try:
+                        _, _, target_d_pillar = engine.get_ganji_from_date(target_date.year, target_date.month, target_date.day)
+                        target_ganji = f"{target_d_pillar[0]}{target_d_pillar[1]}" if target_d_pillar else "알 수 없음"
+                    except:
+                        target_ganji = "알 수 없음"
+
+                    # 💡 프롬프트 포맷팅 및 AI 호출
+                    taegil_facts = {
+                        "m_name": m_n, "f_name": f_n,
+                        "m_db": m_db, "f_db": f_db,
+                        "target_date": target_date.strftime('%Y년 %m월 %d일'),
+                        "target_ganji": target_ganji
+                    }
+                    
+                    prompt_text = prompts.MARRIAGE_TAEGIL_PROMPT.format_map(taegil_facts)
+                    ai_result = call_gemini_api(prompt_text)
+                    
+                    if ai_result:
+                        clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
+                        clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:18px; font-weight:bold; margin-top:20px; margin-bottom:10px;">\1</h3>', clean_ai)
+                        clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#0D47A1; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:12px; border-bottom:1px solid #ddd;">\1</h2>', clean_ai)
+                        
+                        formatted_lines = []
+                        for line in clean_ai.split('\n'):
+                            line_str = line.strip()
+                            if line_str:
+                                if line_str.startswith('<h') or line_str.startswith('<div'):
+                                    formatted_lines.append(line_str)
+                                else:
+                                    formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
+                        ai_output_html = "".join(formatted_lines)
+                    else:
+                        ai_output_html = '<p style="color:red;">⚠️ 특정일 택일 AI 정밀 분석 응답을 불러오지 못했습니다.</p>'
+
+                    taegil_html += f"<h4 style='color:#2E7D32; font-weight:bold; text-align:center;'>🎯 지정일: {target_date.strftime('%Y년 %m월 %d일')} [{target_ganji}일]</h4>"
                     taegil_html += f"""
-                    <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5;'>
-                        <h4 style='color: #0D47A1; margin-top:0;'>✨ 특정일 궁합 정밀 검증</h4>
-                        <p>선택하신 날짜({target_date.strftime('%Y년 %m월 %d일')})의 일진 기운과 두 분({m_db}, {f_db})의 사주 원국을 교차 검증한 결과, <b>충(沖)이나 형(刑)의 기운이 없고 평안한 상생의 기운이 흐르는 길일</b>로 판명됩니다.</p>
+                    <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5; margin-top:15px;'>
+                        {ai_output_html}
                     </div>
                     """
 
-                # 💡 수집된 결과를 A4 테두리 박스로 포장하여 최종 출력
+                # 💡 수집된 결과를 A4 테두리 박스로 포장하여 최종 출력 (들여쓰기 100% 제거)
                 clean_taegil_html = re.sub(r'>\s+<', '><', taegil_html.replace('\n', '')).strip()
                 report_box = html_views.get_final_report_box(clean_taegil_html)
                 st.markdown(report_box, unsafe_allow_html=True)
