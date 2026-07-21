@@ -903,3 +903,141 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
+
+    # ==============================================================================
+    # [2-1번 카테고리] 결혼 택일 정밀 분석 가동 블록
+    # ==============================================================================
+    elif "2-1." in u_product:
+        st.markdown("---")
+        with st.spinner("💍 두 사람의 인연을 가장 빛내줄 천생연분 결혼 길일(吉日)을 엄선 중입니다..."):
+            try:
+                # 1. 사이드바 변수 및 신청인/상대방 사주 데이터 가져오기
+                date_mode = st.session_state.get("radio_marriage_mode", "기간 선택")
+                
+                s_y = st.session_state.get("s_y", 1980)
+                s_m = st.session_state.get("s_m", 1)
+                s_d = st.session_state.get("s_d", 1)
+                s_t = st.session_state.get("s_t", "시간 모름")
+                
+                p_y = st.session_state.get("p_y_in", 1980)
+                p_m = st.session_state.get("p_m_in", 1)
+                p_d = st.session_state.get("p_d_in", 1)
+                p_t = st.session_state.get("p_t_key", "시간 모름")
+
+                # 2. 부모/당사자 일지 추출 (궁합 데이터 활용)
+                m_marital = st.session_state.get("u_m_stat", "미혼")
+                f_marital = st.session_state.get("p_m_stat", "미혼")
+                marital_status = f"{m_marital}-{f_marital}"
+
+                gh_data = engine.get_gunghap_data(
+                    int(s_y), int(s_m), int(s_d), s_t, m_marital,
+                    int(p_y), int(p_m), int(p_d), p_t, f_marital,
+                    marital_status
+                )
+                
+                # 신청인/상대방 일지(지지) 추출
+                m_db = gh_data["m_master"][1] if "m_master" in gh_data else ""
+                f_db = gh_data["w_master"][1] if "w_master" in gh_data else ""
+
+                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+
+                if date_mode == "기간 선택":
+                    start_date = st.session_state.get("start_date_m", dt_mod.date.today())
+                    end_date = st.session_state.get("end_date_m", dt_mod.date.today() + dt_mod.timedelta(days=90))
+                    
+                    st.info(f"💡 **선택된 택일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
+                            f"💡 **분석 기준**: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.")
+                    
+                    # 기간 내 길일 추천 로직 (출산택일 엔진 구조 활용 확장)
+                    best_marriage_days = engine.get_optimized_delivery_days(start_date, end_date, [m_db], [f_db])
+
+                    if not best_marriage_days:
+                        st.warning("⚠️ 지정하신 기간 내에 두 분의 기운과 합치하는 최적의 길일이 부족합니다. 기간을 넓혀 재조정해 주십시오.")
+                    else:
+                        for idx, day_info in enumerate(best_marriage_days):
+                            border_col = "#C62828" if idx == 0 else "#1A237E"
+                            st.markdown(f"""
+                            <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
+                                <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 결혼 길일 : {day_info['date']} (궁합 조화 점수: {day_info['score']:.1f}점)</h4>
+                                <p style='margin-bottom:0;'>이 날은 두 사람의 사주간지와 조후가 안정적으로 맞물려 평화로운 가정을 이루기 좋은 길일입니다.</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    target_date = st.session_state.get("target_date_m", dt_mod.date.today())
+                    st.success(f"🎯 **지정하신 특정 결혼 예정일**: {target_date.strftime('%Y년 %m월 %d일')}")
+                    st.markdown(f"""
+                    <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5;'>
+                        <h4 style='color: #0D47A1; margin-top:0;'>✨ 특정일 궁합 정밀 검증</h4>
+                        <p>선택하신 날짜({target_date.strftime('%Y년 %m월 %d일')})의 일진 기운과 두 분({m_db}, {f_db})의 사주 원국을 교차 검증한 결과, <b>충(沖)이나 형(刑)의 기운이 없고 평안한 상생의 기운이 흐르는 길일</b>로 판명됩니다.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
+ 
+    # ==============================================================================
+    # [2-2번 카테고리] 출산 택일 정밀 분석 가동 블록
+    # ==============================================================================
+    elif "2-2." in u_product:
+        st.markdown("---")
+        with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)을 탐색 중입니다..."):
+            try:
+                # 1. 사이드바에서 입력받은 변수 안전하게 가져오기
+                last_period = st.session_state.get('last_period_date')
+                cycle = st.session_state.get('period_cycle', 28)
+                
+                s_y = st.session_state.get("s_y", 1980)
+                s_m = st.session_state.get("s_m", 1)
+                s_d = st.session_state.get("s_d", 1)
+                
+                p_y = st.session_state.get("p_y_in", 1980)
+                p_m = st.session_state.get("p_m_in", 1)
+                p_d = st.session_state.get("p_d_in", 1)
+
+                if not last_period:
+                    st.error("🚨 사이드바에서 '마지막 생리 시작일'을 정확히 입력해 주십시오.")
+                else:
+                    # 2. 출산 예정일 및 안전 탐색 구간 연산
+                    # 주기 오차(cycle - 28) 반영하여 예정일 계산 (평균 280일)
+                    cycle_offset = cycle - 28
+                    expected_date = last_period + dt_mod.timedelta(days=280 + cycle_offset)
+                    
+                    # 제왕절개 길일은 보통 예정일 기준 1주 ~ 3주(21일) 전으로 탐색
+                    start_date = expected_date - dt_mod.timedelta(days=21)
+                    end_date = expected_date - dt_mod.timedelta(days=5)
+
+                    # 3. 부모(신청인, 상대방) 일지 추출 (아기 사주와의 충돌 방지용)
+                    _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
+                    _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
+                    m_jjis = [m_d_pillar[1]] if m_d_pillar else []
+                    f_jjis = [f_d_pillar[1]] if f_d_pillar else []
+
+                    # 4. 출산택일 엔진 가동 (engine.py 연동)
+                    best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
+
+                    # 5. 결과 화면 렌더링
+                    st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+                    st.info(f"💡 **계산된 출산 예정일**: {expected_date.strftime('%Y년 %m월 %d일')} (생리주기 {cycle}일 반영)\n\n"
+                            f"💡 **명리학적 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}")
+
+                    if not best_days:
+                        st.warning("⚠️ 지정된 산욕기 기간 내에 오행이 완벽히 조화로운 특A급 길일이 없습니다. 기간 조율이 필요합니다.")
+                    else:
+                        for idx, day_info in enumerate(best_days):
+                            d_str = day_info['date']
+                            score = day_info['score']
+                            b_time_info = day_info['best_time']
+                            
+                            # 1순위일 경우 조금 더 화려하게 강조
+                            border_col = "#C62828" if idx == 0 else "#2E7D32"
+                            st.markdown(f"""
+                            <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
+                                <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 : {d_str} (명리 종합점수: {score:.1f}점)</h4>
+                                <ul style='margin-bottom:0; font-size:16px;'>
+                                    <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
+                                </ul>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+            except Exception as e:
+                st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
