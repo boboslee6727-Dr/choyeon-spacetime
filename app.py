@@ -138,25 +138,33 @@ with st.sidebar:
         with col_g4: rt = st.text_input("시주", value="", key="u_rt")
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
-            st.session_state['app_running'] = False  # 💡 [핵심 방어막] 값만 채우고 분석(AI)이 제멋대로 시작되는 것 원천 차단
+            st.session_state['app_running'] = False  # 💡 분석 자동실행 차단
             _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+            
             if not _ry and not _rm and not _rd:
-                if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
+                if 'rev_success_msg' in st.session_state: 
+                    del st.session_state['rev_success_msg']
                 st.rerun()
+                
             elif len(_ry)==2 and len(_rm)==2 and len(_rd)==2:
                 ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
                 rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
                 rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
-                klc_find = KoreanLunarCalendar(); found = False
+                
+                klc_find = KoreanLunarCalendar()
+                found = False
+                
                 for y in range(2026, 1899, -1):
-                    klc_find.setSolarDate(y, 7, 1); gj_y = klc_find.getChineseGapJaString().split()
+                    klc_find.setSolarDate(y, 7, 1)
+                    gj_y = klc_find.getChineseGapJaString().split()
+                    
                     if gj_y and gj_y[0][:2] == ry_h:
                         curr_dt = dt_mod.date(y+1, 2, 28)
                         while curr_dt >= dt_mod.date(y, 1, 1):
                             klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                             gj = klc_find.getChineseGapJaString().split()
+                            
                             if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-
                                 st.session_state['s_y'] = curr_dt.year
                                 st.session_state['s_m'] = curr_dt.month
                                 st.session_state['s_d'] = curr_dt.day
@@ -164,34 +172,39 @@ with st.sidebar:
                                 if rt:
                                     ji_char = rt[-1]
                                     rt_h = engine.K2H_JI.get(ji_char, ji_char)
-                                    time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                                    time_map = {
+                                        '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', 
+                                        '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', 
+                                        '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', 
+                                        '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', 
+                                        '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', 
+                                        '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', 
+                                        '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', 
+                                        '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', 
+                                        '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', 
+                                        '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', 
+                                        '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', 
+                                        '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
+                                    }
                                     st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
                                 else:
                                     st.session_state['s_t'] = "시간 모름"
 
                                 found = True
-                                st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
-                                st.rerun()
-                                break
-                        curr_dt -= dt_mod.timedelta(days=1)
-                if found: break
-            if not found: st.error("일치하는 날짜가 없습니다.")
-        else: st.warning("간지를 2글자씩 정확히 입력하세요.")
-
-    # ==============================================================================
-    # 👤 신청인 기본 정보
-    # ==============================================================================
-    with st.expander("👤 신청인 기본 정보", expanded=True):
-        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
-        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
-        u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
-        col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, value=1980, key="s_y")
-        with col_m: b_month = st.number_input("월", 1, 12, value=1, key="s_m")
-        with col_d: b_day = st.number_input("일", 1, 31, value=1, key="s_d")
-        b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
-    st.markdown("</div>", unsafe_allow_html=True)
+                                st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
+                                break  # 💡 while 루프 탈출
+                                
+                            curr_dt -= dt_mod.timedelta(days=1)
+                            
+                    if found:
+                        break  # 💡 for 루프 탈출
+                        
+                if not found: 
+                    st.error("일치하는 날짜가 없습니다.")
+                else:
+                    st.rerun()
+            else: 
+                st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     # ==============================================================================
     # 📌 특화 상품별 추가 옵션 입력부
