@@ -734,7 +734,7 @@ if st.session_state.get('app_running', False):
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
-    # [2번 카테고리] 연애/궁합 풀이 및 3-2. 타 감명서(궁합) 비교
+    # [2번 카테고리] 연애/궁합 풀이
     # ==============================================================================
     elif any(x in u_product for x in ["2-0", "궁합", "3-2"]) and not any(x in u_product for x in ["2-1.", "2-2."]):
         st.markdown("---")
@@ -829,7 +829,7 @@ if st.session_state.get('app_running', False):
                 w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
                 w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
                 
-                # 📊 [시각화 엔진 가동]
+                # 시각화 엔진 가동
                 male_pillars = [f"{m_ys}{m_yb}", f"{m_ms}{m_mb}", f"{m_ds}{m_db}", f"{m_hs}{m_hb}"]
                 female_pillars = [f"{f_ys}{f_yb}", f"{f_ms}{f_mb}", f"{f_ds}{f_db}", f"{f_hs}{f_hb}"]
 
@@ -891,37 +891,41 @@ if st.session_state.get('app_running', False):
                     if '[COUPLE_DAEWUN_TABLES_HERE]' in clean_ai:
                         clean_ai = clean_ai.replace('[COUPLE_DAEWUN_TABLES_HERE]', couple_daewun_tables)
                     
-                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>\n', clean_ai)
-                    clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;">\1</h2>\n', clean_ai)
+                    # 마크다운 제목 치환 (들여쓰기 제거)
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>', clean_ai)
+                    clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;">\1</h2>', clean_ai)
                     
+                    # 라인별 안전 P 태그 포장 (들여쓰기 없는 단일 라인)
                     formatted_lines = []
                     for line in clean_ai.split('\n'):
                         line_str = line.strip()
-                        if not line_str:
-                            continue
-                        if line_str.startswith('<h') or line_str.startswith('<div') or line_str.startswith('<table'):
-                            formatted_lines.append(line_str)
-                        else:
-                            formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
+                        if line_str:
+                            if line_str.startswith('<h') or line_str.startswith('<div') or line_str.startswith('<table'):
+                                formatted_lines.append(line_str)
+                            else:
+                                formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
                     
-                    ai_output_html = "\n".join(formatted_lines)
+                    ai_output_html = "".join(formatted_lines)
                 else:
                     ai_output_html = '<p style="color:red;">⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>'
 
+                # html_views 함수 호출
                 score_visual_html = html_views.get_gunghap_score_visual_html(gh_engine)
 
-                # 최종 컨텐츠 결합
-                full_inner_content = (
-                    f"{m_info or ''}{m_table or ''}{m_master_html or ''}{m_un or ''}{m_golden_html or ''}"
-                    f"{w_info or ''}{w_table or ''}{w_master_html or ''}{w_un or ''}{f_golden_html or ''}"
-                    f"{intro_h or ''}"
-                    f"""<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;">{ai_output_html}</div>"""
-                    f"{score_visual_html or ''}"
-                )
+                # AI 통변 박스 감싸기 (공백/들여쓰기 차단)
+                ai_box_html = f'<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;">{ai_output_html}</div>'
+
+                # 파이썬 들여쓰기 공백이 유입되지 않도록 join 결합
+                full_inner_content = "".join([
+                    str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''), str(m_golden_html or ''),
+                    str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''), str(f_golden_html or ''),
+                    str(intro_h or ''),
+                    str(ai_box_html or ''),
+                    str(score_visual_html or '')
+                ])
                 
                 report_box = html_views.get_final_report_box(full_inner_content)
                 
-                # 💡 궁합 리포트 임시 저장 및 화면 출력
                 st.session_state['cached_gunghap_cover'] = cover_html
                 st.session_state['cached_gunghap_report'] = report_box
                 
@@ -1040,7 +1044,7 @@ if st.session_state.get('app_running', False):
                 st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
 
     # ==============================================================================
-    # [3-2번 카테고리] 타 감명서 비교 (궁합) 정밀 분석
+    # [3-2번 카테고리] 타 감명서 비교 (궁합) 정밀 분석 (HTML 소스코드 노출 원천 차단)
     # ==============================================================================
     elif "3-2" in u_product:
         st.markdown("---")
@@ -1125,14 +1129,19 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
 
                 if ai_result:
+                    # [계획 1] 백틱 및 특수문자 완벽 정제
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
-                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>', clean_ai)
                     
+                    # [계획 3] 마크다운 헤더 안전 치환 (들여쓰기 제거)
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>', clean_ai)
+                    clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;">\1</h2>', clean_ai)
+                    
+                    # [계획 3] 라인별 P 태그 감싸기 및 태그 파괴 차단
                     formatted_lines = []
                     for line in clean_ai.split('\n'):
                         line_str = line.strip()
                         if line_str:
-                            if line_str.startswith('<h') or line_str.startswith('<div'):
+                            if line_str.startswith('<h') or line_str.startswith('<div') or line_str.startswith('<table'):
                                 formatted_lines.append(line_str)
                             else:
                                 formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
@@ -1140,9 +1149,15 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = '<p style="color:red;">⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.</p>'
 
+                # [계획 2] 들여쓰기 공백 없는 래퍼 생성
                 ai_box_html = f'<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;"><h2 style="color:#0D47A1; border-bottom:2px solid #0D47A1; padding-bottom:8px;">🔍 타 감명서(궁합) 초연 정밀 비교 검증 보고서</h2>{ai_output_html}</div>'
 
-                full_inner_content = str(m_info or '') + str(m_table or '') + str(m_master_html or '') + str(m_un or '') + str(w_info or '') + str(w_table or '') + str(w_master_html or '') + str(w_un or '') + str(ai_box_html or '')
+                # [계획 2] join을 활용한 들여쓰기 공백 100% 차단 문자열 결합
+                full_inner_content = "".join([
+                    str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''),
+                    str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''),
+                    str(ai_box_html or '')
+                ])
                 
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(cover_html, unsafe_allow_html=True)
