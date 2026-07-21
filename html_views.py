@@ -439,10 +439,12 @@ def get_comparison_html(comp_fmt):
 def get_gunghap_score_visual_html(gh_engine):
     """
     구 버전 오리지널 시각화 차트, 최종 궁합 점수, 6대 세부항목 바, 클로징 멘트를 
-    HTML 뷰로 완벽 조합하여 반환하는 전담 함수
+    HTML 뷰로 완벽 조합하여 반환하는 전담 함수 (도넛: 하늘색 / 막대: 구버전 원본색)
     """
-    t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
+    # 💙 박사님 요청 반영: 도넛 원형 차트 및 점수 뱃지는 맑은 하늘색으로 지정
+    sky_blue = "#38B6FF"
     
+    # 📊 구 버전 ver 48.6 오리지널 막대 그래프 색상 (d['color']) 유지
     bars = "".join([
         f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
         f"<div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div>"
@@ -463,18 +465,19 @@ def get_gunghap_score_visual_html(gh_engine):
     score_chart_html = (
         f"<h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>\n"
         f"<div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>\n"
-        f"<div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>\n"
+        f"<div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({sky_blue} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>\n"
         f"<div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>\n"
-        f"<span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>\n"
+        f"<span style='font-size:32px; font-weight:900; color:{sky_blue};'>{gh_engine.final_score}</span>\n"
         f"<span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>\n"
         f"</div>\n"
         f"</div>\n"
         f"</div>\n"
-        f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>\n"
+        f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{sky_blue}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>\n"
         f"<div style='max-width:500px; margin:0 auto;'>\n{bars}\n</div>\n"
         f"{closing_original}"
     )
     return score_chart_html
+
 
 def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
     return f"""
@@ -487,6 +490,27 @@ def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
         </div>
     </div>
     <div class='page-break-before'></div>
+    """
+
+def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b_time_pillar, gestation_warning, conception_title, conception_str, conception_msg, baby_saju_html, ai_output_html):
+    """출산 택일 결과 및 신생아 사주, AI 통변을 포함한 종합 HTML 카드 생성"""
+    return f"""
+    <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 25px; border-radius: 5px;'>
+        <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {b_date_str} (명리 종합점수: {score:.1f}점)</h4>
+        <ul style='margin-bottom:15px; font-size:16px; line-height:1.8;'>
+            <li><b>가장 좋은 출산 시간</b>: {b_time_str} <b>({b_time_pillar}시)</b></li>
+            {gestation_warning}
+            <li><b style='color:#E91E63;'>{conception_title}</b>: <span style='font-weight:bold; background-color:#FCE4EC; padding:2px 8px; border-radius:5px;'>{conception_str}</span> <br>{conception_msg}</li>
+        </ul>
+        <div style='border:1px dashed #ccc; padding:15px; border-radius:8px; background-color:#ffffff;'>
+            <h5 style='color:#424242; margin-top:0; border-bottom:2px solid #00695C; padding-bottom:5px;'>🔮 해당 일시 신생아 사주명조 원국 (미리보기)</h5>
+            {baby_saju_html}
+            <div style='margin-top:20px; padding:20px; background-color:#F0F4F8; border-radius:8px; border: 1px solid #B2DFDB;'>
+                <h4 style='color:#004D40; margin-top:0; border-bottom:1px solid #80CBC4; padding-bottom:10px;'>🌟 신생아 시공간 정밀 감명 (남/여 대운 및 부모 인연)</h4>
+                {ai_output_html}
+            </div>
+        </div>
+    </div>
     """
 
 def get_ai_report_box(content):
