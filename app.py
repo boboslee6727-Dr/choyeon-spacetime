@@ -809,7 +809,6 @@ if st.session_state.get('app_running', False):
                 )
                 
                 intro_h = html_views.get_intro_html() 
-                closing = html_views.get_gunghap_closing(name, f_name) if hasattr(html_views, 'get_gunghap_closing') else ""
 
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
                 m_master_html = html_views.get_master_bar(
@@ -830,7 +829,7 @@ if st.session_state.get('app_running', False):
                 w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
                 w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
                 
-                # 📊 [시각화 연산 실행 - engine.py]
+                # 📊 [시각화 엔진 가동]
                 male_pillars = [f"{m_ys}{m_yb}", f"{m_ms}{m_mb}", f"{m_ds}{m_db}", f"{m_hs}{m_hb}"]
                 female_pillars = [f"{f_ys}{f_yb}", f"{f_ms}{f_mb}", f"{f_ds}{f_db}", f"{f_hs}{f_hb}"]
 
@@ -881,56 +880,59 @@ if st.session_state.get('app_running', False):
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_facts)
                 prompt_text += f"\n\n🚨 [주의]: 프롬프트 지시문 안의 '<...>' 예시 텍스트 문구를 그대로 복사하여 출력하지 말고, 주어진 사주팔자 팩트를 바탕으로 실제 완성된 통변 문장만 작성하십시오."
 
+                # AI 통변 호출
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
+                    # AI 응답 정제 (태그 삭제 정규식 제거하여 AI 통변 완전 보존)
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
                     clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
-                    clean_ai = re.sub(r'\b\d+일간\b', '일간', clean_ai)
                     
-                    ai_result_fmt = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
-                    ai_result_fmt = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>\1</h3>", ai_result_fmt)
-                    ai_result_fmt = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; border-bottom:1px solid #ddd;'>\1</h2>", ai_result_fmt)
+                    # 마크다운 제목을 HTML 제목으로 변경
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>\1</h3>", clean_ai)
+                    clean_ai = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; border-bottom:1px solid #ddd;'>\1</h2>", clean_ai)
                     
-                    paragraphs = [f"<p style='margin:10px 0; line-height:1.8; font-family:Nanum Myeongjo, serif; font-size:16px;'>{p.strip()}</p>" for p in ai_result_fmt.split('\n') if p.strip()]
+                    # 문단을 명리 스타일 P 태그로 래핑
+                    paragraphs = [f"<p style='margin:10px 0; line-height:1.8; font-family:Nanum Myeongjo, serif; font-size:16px;'>{p.strip()}</p>" for p in clean_ai.split('\n') if p.strip()]
                     ai_output_html = "".join(paragraphs)
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
-                # 🎨 [시각화 오리지널 차트 및 클로징 렌더링 - 100% 진품 이식]
-                if hasattr(html_views, 'get_gunghap_score_visual_html'):
-                    score_visual_html = html_views.get_gunghap_score_visual_html(gh_engine)
-                else:
-                    t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
-                    bars = "".join([
-                        f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
-                        f"<div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div>"
-                        f"<div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div>"
-                        f"<div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div>"
-                        f"</div>" 
-                        for d in gh_engine.details
-                    ])
-                    closing_original = (
-                        f"<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>\n"
-                        f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p>\n"
-                        f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p>\n"
-                        f"<div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 드림 -</span></div>\n"
-                        f"</div>"
-                    )
-                    score_visual_html = (
-                        f"<h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>\n"
-                        f"<div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>\n"
-                        f"<div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>\n"
-                        f"<div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>\n"
-                        f"<span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>\n"
-                        f"<span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>\n"
-                        f"</div>\n"
-                        f"</div>\n"
-                        f"</div>\n"
-                        f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>\n"
-                        f"<div style='max-width:500px; margin:0 auto;'>\n{bars}\n</div>\n"
-                        f"{closing_original}"
-                    )
+                # 💙 [시각화 연한 파란색 계열 스타일링 적용]
+                t_col = "#3498db" if gh_engine.final_score >= 70 else ("#5C6BC0" if gh_engine.final_score >= 60 else "#42A5F5")
+                
+                # SVG 막대 그래프도 파란색 톤으로 통일
+                bars = "".join([
+                    f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
+                    f"<div style='width:130px; font-size:13px; font-weight:bold; color:#333;'>{d['label']}</div>"
+                    f"<div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#E8EAF6' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='#3498db' /></svg></div>"
+                    f"<div style='width:35px; font-size:12px; font-weight:bold; color:#1A237E;'>{d['pct']}%</div>"
+                    f"</div>" 
+                    for d in gh_engine.details
+                ])
+
+                closing_original = (
+                    f"<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>\n"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p>\n"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p>\n"
+                    f"<div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Nanum Myeongjo\", serif;'>- 초연 시공명리 연구소 드림 -</span></div>\n"
+                    f"</div>"
+                )
+
+                score_visual_html = (
+                    f"<h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900; color:#1A237E;'>📊 최종 궁합 점수</h2>\n"
+                    f"<div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>\n"
+                    f"<div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #E8EAF6 0); display:flex; justify-content:center; align-items:center;'>\n"
+                    f"<div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>\n"
+                    f"<span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>\n"
+                    f"<span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>\n"
+                    f"</div>\n"
+                    f"</div>\n"
+                    f"</div>\n"
+                    f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px;'>{gh_engine.grade}</span></div>\n"
+                    f"<div style='max-width:500px; margin:0 auto;'>\n{bars}\n</div>\n"
+                    f"{closing_original}"
+                )
 
                 # 3. 최종 컨텐츠 결합
                 full_inner_content = (
@@ -941,7 +943,7 @@ if st.session_state.get('app_running', False):
                     str(f_golden_html or "") + 
                     
                     str(intro_h or "") + 
-                    f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +
+                    f"<div style='margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;'>{ai_output_html}</div>" +
                     str(score_visual_html or "")
                 )
                 
@@ -956,217 +958,3 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
-
-    # ==============================================================================
-    # [2-1번 카테고리] 결혼 택일 (궁합 결과 유지 후 하단 연쇄 출력)
-    # ==============================================================================
-    elif "2-1." in u_product:
-        # 💡 [연쇄 로직 1] 기존 궁합 풀이가 존재하면 상단에 먼저 뿌려줌
-        if 'cached_gunghap_cover' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
-        if 'cached_gunghap_report' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
-
-        st.markdown("---")
-        with st.spinner("💍 두 사람의 인연을 가장 빛내줄 천생연분 결혼 길일(吉日)을 엄선 중입니다..."):
-            try:
-                date_mode = st.session_state.get("radio_marriage_mode", "기간 선택")
-                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
-                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
-                
-                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
-                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
-                m_db = m_d_pillar[1] if m_d_pillar else ""
-                f_db = f_d_pillar[1] if f_d_pillar else ""
-
-                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
-
-                if date_mode == "기간 선택":
-                    start_date = st.session_state.get("start_date_m", dt_mod.date.today())
-                    end_date = st.session_state.get("end_date_m", dt_mod.date.today() + dt_mod.timedelta(days=90))
-                    
-                    st.info(f"💡 **선택된 택일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
-                            f"💡 **분석 기준**: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.")
-                    
-                    best_marriage_days = engine.get_optimized_delivery_days(start_date, end_date, [m_db], [f_db])
-
-                    if not best_marriage_days:
-                        st.warning("⚠️ 지정하신 기간 내에 두 분의 기운과 합치하는 최적의 길일이 부족합니다. 기간을 넓혀 재조정해 주십시오.")
-                    else:
-                        for idx, day_info in enumerate(best_marriage_days):
-                            border_col = "#C62828" if idx == 0 else "#1A237E"
-                            st.markdown(f"""
-                            <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
-                                <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 결혼 길일 : {day_info['date']} (궁합 조화 점수: {day_info['score']:.1f}점)</h4>
-                                <p style='margin-bottom:0;'>이 날은 두 사람의 사주간지와 조후가 안정적으로 맞물려 평화로운 가정을 이루기 좋은 길일입니다.</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                else:
-                    target_date = st.session_state.get("target_date_m", dt_mod.date.today())
-                    st.success(f"🎯 **지정하신 특정 결혼 예정일**: {target_date.strftime('%Y년 %m월 %d일')}")
-                    st.markdown(f"""
-                    <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5;'>
-                        <h4 style='color: #0D47A1; margin-top:0;'>✨ 특정일 궁합 정밀 검증</h4>
-                        <p>선택하신 날짜({target_date.strftime('%Y년 %m월 %d일')})의 일진 기운과 두 분({m_db}, {f_db})의 사주 원국을 교차 검증한 결과, <b>충(沖)이나 형(刑)의 기운이 없고 평안한 상생의 기운이 흐르는 길일</b>로 판명됩니다.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
-
-    # ==============================================================================
-    # [2-2번 카테고리] 출산 택일 (궁합 결과 유지 후 하단 연쇄 출력)
-    # ==============================================================================
-    elif "2-2." in u_product:
-        # 💡 [연쇄 로직 2] 기존 궁합 풀이가 존재하면 상단에 먼저 뿌려줌
-        if 'cached_gunghap_cover' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
-        if 'cached_gunghap_report' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
-
-        st.markdown("---")
-        with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)을 탐색 중입니다..."):
-            try:
-                start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
-                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=30))
-                last_period = st.session_state.get('last_period_date')
-                cycle = st.session_state.get('period_cycle', 28)
-                
-                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
-                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
-
-                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
-                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
-                m_jjis = [m_d_pillar[1]] if m_d_pillar else []
-                f_jjis = [f_d_pillar[1]] if f_d_pillar else []
-
-                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
-
-                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
-                st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
-                        f"💡 **참고 산모 정보**: 마지막 생리일({last_period}), 평균 주기({cycle}일)")
-
-                if not best_days:
-                    st.warning("⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.")
-                else:
-                    for idx, day_info in enumerate(best_days):
-                        border_col = "#C62828" if idx == 0 else "#2E7D32"
-                        b_time_info = day_info['best_time']
-                        st.markdown(f"""
-                        <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
-                            <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {day_info['date']} (명리 종합점수: {day_info['score']:.1f}점)</h4>
-                            <ul style='margin-bottom:0; font-size:16px;'>
-                                <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
-                            </ul>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-            except Exception as e:
-                st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
-
-    # ==============================================================================
-    # [2-1번 카테고리] 결혼 택일 (궁합 결과 유지 후 하단 연쇄 출력)
-    # ==============================================================================
-    elif "2-1." in u_product:
-        # 💡 [연쇄 로직 1] 기존 궁합 풀이가 존재하면 상단에 먼저 뿌려줌
-        if 'cached_gunghap_cover' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
-        if 'cached_gunghap_report' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
-
-        st.markdown("---")
-        with st.spinner("💍 두 사람의 인연을 가장 빛내줄 천생연분 결혼 길일(吉日)을 엄선 중입니다..."):
-            try:
-                date_mode = st.session_state.get("radio_marriage_mode", "기간 선택")
-                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
-                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
-                
-                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
-                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
-                m_db = m_d_pillar[1] if m_d_pillar else ""
-                f_db = f_d_pillar[1] if f_d_pillar else ""
-
-                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
-
-                if date_mode == "기간 선택":
-                    start_date = st.session_state.get("start_date_m", dt_mod.date.today())
-                    end_date = st.session_state.get("end_date_m", dt_mod.date.today() + dt_mod.timedelta(days=90))
-                    
-                    st.info(f"💡 **선택된 택일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
-                            f"💡 **분석 기준**: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.")
-                    
-                    best_marriage_days = engine.get_optimized_delivery_days(start_date, end_date, [m_db], [f_db])
-
-                    if not best_marriage_days:
-                        st.warning("⚠️ 지정하신 기간 내에 두 분의 기운과 합치하는 최적의 길일이 부족합니다. 기간을 넓혀 재조정해 주십시오.")
-                    else:
-                        for idx, day_info in enumerate(best_marriage_days):
-                            border_col = "#C62828" if idx == 0 else "#1A237E"
-                            st.markdown(f"""
-                            <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
-                                <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 결혼 길일 : {day_info['date']} (궁합 조화 점수: {day_info['score']:.1f}점)</h4>
-                                <p style='margin-bottom:0;'>이 날은 두 사람의 사주간지와 조후가 안정적으로 맞물려 평화로운 가정을 이루기 좋은 길일입니다.</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                else:
-                    target_date = st.session_state.get("target_date_m", dt_mod.date.today())
-                    st.success(f"🎯 **지정하신 특정 결혼 예정일**: {target_date.strftime('%Y년 %m월 %d일')}")
-                    st.markdown(f"""
-                    <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5;'>
-                        <h4 style='color: #0D47A1; margin-top:0;'>✨ 특정일 궁합 정밀 검증</h4>
-                        <p>선택하신 날짜({target_date.strftime('%Y년 %m월 %d일')})의 일진 기운과 두 분({m_db}, {f_db})의 사주 원국을 교차 검증한 결과, <b>충(沖)이나 형(刑)의 기운이 없고 평안한 상생의 기운이 흐르는 길일</b>로 판명됩니다.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
-
-    # ==============================================================================
-    # [2-2번 카테고리] 출산 택일 (궁합 결과 유지 후 하단 연쇄 출력)
-    # ==============================================================================
-    elif "2-2." in u_product:
-        # 💡 [연쇄 로직 2] 기존 궁합 풀이가 존재하면 상단에 먼저 뿌려줌
-        if 'cached_gunghap_cover' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
-        if 'cached_gunghap_report' in st.session_state:
-            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
-
-        st.markdown("---")
-        with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)을 탐색 중입니다..."):
-            try:
-                start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
-                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=30))
-                last_period = st.session_state.get('last_period_date')
-                cycle = st.session_state.get('period_cycle', 28)
-                
-                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
-                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
-
-                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
-                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
-                m_jjis = [m_d_pillar[1]] if m_d_pillar else []
-                f_jjis = [f_d_pillar[1]] if f_d_pillar else []
-
-                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
-
-                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
-                st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
-                        f"💡 **참고 산모 정보**: 마지막 생리일({last_period}), 평균 주기({cycle}일)")
-
-                if not best_days:
-                    st.warning("⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.")
-                else:
-                    for idx, day_info in enumerate(best_days):
-                        border_col = "#C62828" if idx == 0 else "#2E7D32"
-                        b_time_info = day_info['best_time']
-                        st.markdown(f"""
-                        <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
-                            <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {day_info['date']} (명리 종합점수: {day_info['score']:.1f}점)</h4>
-                            <ul style='margin-bottom:0; font-size:16px;'>
-                                <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
-                            </ul>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-            except Exception as e:
-                st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
