@@ -105,15 +105,26 @@ with st.sidebar:
         u_product = st.radio("비교 분석 대상:", ["3-1. 타 감명서 비교 (사주)", "3-2. 타 감명서 비교 (궁합)"], key="sub_category_3", on_change=stop_ai)
     st.markdown("---")
 
-    # 성별 동기화 함수
+    # ==============================================================================
+    # 💡 [안전 가드 적용] 성별 양방향 자동 동기화 콜백 함수
+    # ==============================================================================
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
+
     def sync_partner_gender():
-        if st.session_state["u_g"] == "여성": st.session_state["f_g"] = "남성"
-        else: st.session_state["f_g"] = "여성"
+        # session_state에 안전하게 접근하도록 보완
+        u_val = st.session_state.get("u_g", "남성")
+        if u_val == "여성":
+            st.session_state["f_g"] = "남성"
+        else:
+            st.session_state["f_g"] = "여성"
+
     def sync_user_gender():
-        if st.session_state["f_g"] == "남성": st.session_state["u_g"] = "여성"
-        else: st.session_state["u_g"] = "남성"
+        f_val = st.session_state.get("f_g", "여성")
+        if f_val == "남성":
+            st.session_state["u_g"] = "여성"
+        else:
+            st.session_state["u_g"] = "남성"
 
     # ==============================================================================
     # 🔍 신청인 사주간지 역산 (기존 박스 위치에 파스텔 블루 스타일만 입힘)
