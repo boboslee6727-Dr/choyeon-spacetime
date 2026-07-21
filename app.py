@@ -1046,10 +1046,8 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 입력받은 궁합 감명서와 초연 시공명리 알고리즘을 교차 검증 중입니다..."):
             try:
-                # 1. 사이드바 입력 감명서 텍스트 가져오기
                 external_review_text = st.session_state.get("external_review_input", "").strip()
 
-                # 2. 궁합 만세력 기본 데이터 생성
                 user_gender = st.session_state.get("u_g", gender)
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
@@ -1080,7 +1078,6 @@ if st.session_state.get('app_running', False):
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
                     female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
 
-                # 3. 만세력 표 및 헤더 준비
                 m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
                 f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
 
@@ -1117,7 +1114,6 @@ if st.session_state.get('app_running', False):
                 )
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
-                # 4. 비교 분석 전용 AI 프롬프트 구성 및 연산
                 compare_facts = {
                     "m_name": male_name, "f_name": female_name,
                     "m_ganju": f"{m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}",
@@ -1125,14 +1121,12 @@ if st.session_state.get('app_running', False):
                     "external_text": external_review_text if external_review_text else "입력된 외부 감명서가 없습니다."
                 }
 
-                # 💡 하드코딩 완전 제거 -> prompts.py 정의 모듈 사용
                 prompt_text = prompts.COMPARE_GUNGHAP_PROMPT.format_map(compare_facts)
-                
                 ai_result = call_gemini_api(prompt_text)
 
                 if ai_result:
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
-                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>\n', clean_ai)
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>', clean_ai)
                     
                     formatted_lines = []
                     for line in clean_ai.split('\n'):
@@ -1142,19 +1136,13 @@ if st.session_state.get('app_running', False):
                                 formatted_lines.append(line_str)
                             else:
                                 formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
-                    ai_output_html = "\n".join(formatted_lines)
+                    ai_output_html = "".join(formatted_lines)
                 else:
                     ai_output_html = '<p style="color:red;">⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.</p>'
 
-                # 5. 최종 리포트 출력
-                full_inner_content = (
-                    f"{m_info or ''}{m_table or ''}{m_master_html or ''}{m_un or ''}"
-                    f"{w_info or ''}{w_table or ''}{w_master_html or ''}{w_un or ''}"
-                    f"""<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;">
-                        <h2 style="color:#0D47A1; border-bottom:2px solid #0D47A1; padding-bottom:8px;">🔍 타 감명서(궁합) 초연 정밀 비교 검증 보고서</h2>
-                        {ai_output_html}
-                    </div>"""
-                )
+                ai_box_html = f'<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;"><h2 style="color:#0D47A1; border-bottom:2px solid #0D47A1; padding-bottom:8px;">🔍 타 감명서(궁합) 초연 정밀 비교 검증 보고서</h2>{ai_output_html}</div>'
+
+                full_inner_content = str(m_info or '') + str(m_table or '') + str(m_master_html or '') + str(m_un or '') + str(w_info or '') + str(w_table or '') + str(w_master_html or '') + str(w_un or '') + str(ai_box_html or '')
                 
                 report_box = html_views.get_final_report_box(full_inner_content)
                 st.markdown(cover_html, unsafe_allow_html=True)
@@ -1162,5 +1150,3 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 타 감명서 비교(궁합) 처리 중 오류 발생: {e}")
-
-
