@@ -1046,7 +1046,7 @@ if st.session_state.get('app_running', False):
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
-    # 👶 [2-2번 카테고리] 출산 택일 복원 (A4 테두리 박스 적용)
+    # 👶 [2-2번 카테고리] 출산 택일 복원 (신생아 사주명조 및 합궁기간 추가)
     # ==============================================================================
     elif "2-2." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
@@ -1055,7 +1055,7 @@ if st.session_state.get('app_running', False):
             st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
 
         st.markdown("---")
-        with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)을 탐색 중입니다..."):
+        with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)과 잉태(합궁) 시기를 탐색 중입니다..."):
             try:
                 start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
                 end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=30))
@@ -1072,7 +1072,7 @@ if st.session_state.get('app_running', False):
 
                 best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
 
-                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>"
+                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px; text-align:center;'>👶 출산 택일(제왕절개/임신 계획) 정밀 분석 결과</h3>"
                 
                 if last_period:
                     taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}<br>💡 참고 산모 정보: 마지막 생리일({last_period}), 평균 주기({cycle}일)</p>"
@@ -1085,12 +1085,55 @@ if st.session_state.get('app_running', False):
                     for idx, day_info in enumerate(best_days):
                         border_col = "#C62828" if idx == 0 else "#2E7D32"
                         b_time_info = day_info['best_time']
+                        
+                        # 💡 날짜 파싱 및 합궁 기간(출산일 기준 약 266일 전) 계산 로직
+                        b_date_str = day_info['date']
+                        if isinstance(b_date_str, str):
+                            y_s, m_s, d_s = map(int, b_date_str.split('-'))
+                            b_dt = dt_mod.date(y_s, m_s, d_s)
+                        else:
+                            b_dt = b_date_str
+                            
+                        conception_start = b_dt - dt_mod.timedelta(days=268)
+                        conception_end = b_dt - dt_mod.timedelta(days=264)
+                        conception_str = f"{conception_start.strftime('%Y년 %m월 %d일')} ~ {conception_end.strftime('%Y년 %m월 %d일')}"
+
+                        # 💡 신생아 사주 HTML 추출 (기존 궁합 엔진을 완벽하게 우회 활용하여 100% 안전하게 테이블 획득)
+                        try:
+                            fake_gh = engine.get_gunghap_data(
+                                b_dt.year, b_dt.month, b_dt.day, b_time_info['time_str'], "미혼",
+                                b_dt.year, b_dt.month, b_dt.day, b_time_info['time_str'], "미혼",
+                                "미혼-미혼"
+                            )
+                            b_table_data = fake_gh["m_table"]
+                            b_master_list = fake_gh["m_master"]
+                            
+                            klc = KoreanLunarCalendar()
+                            klc.setSolarDate(b_dt.year, b_dt.month, b_dt.day)
+                            b_sol = f"{b_dt.year}년 {b_dt.month}월 {b_dt.day}일"
+                            b_lun = f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
+                            
+                            baby_info = html_views.get_info_header("👶", f"신생아 (추천 {idx+1}순위)", "미정", "미혼", 1, b_sol, b_lun, b_time_info['time_str'], p_color="#00695C")
+                            baby_table = html_views.get_gunghap_saju_table(*b_table_data[1:])
+                            baby_master = html_views.get_master_bar(
+                                b_master_list[0], b_master_list[1], b_master_list[2], b_master_list[3], b_master_list[4], 
+                                b_master_list[5], b_master_list[6], b_master_list[7], b_master_list[8], b_master_list[9], b_master_list[10]
+                            )
+                            baby_saju_html = f"<div style='margin-top:15px;'>{baby_info}{baby_table}{baby_master}</div>"
+                        except Exception as e:
+                            baby_saju_html = f"<p style='color:red;'>⚠️ 신생아 사주명조 렌더링 중 오류: {e}</p>"
+
                         taegil_html += f"""
-                        <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
-                            <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {day_info['date']} (명리 종합점수: {day_info['score']:.1f}점)</h4>
-                            <ul style='margin-bottom:0; font-size:16px;'>
+                        <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 25px; border-radius: 5px;'>
+                            <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {b_date_str} (명리 종합점수: {day_info['score']:.1f}점)</h4>
+                            <ul style='margin-bottom:15px; font-size:16px; line-height:1.8;'>
                                 <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
+                                <li><b style='color:#E91E63;'>💖 잉태(합궁) 권장 기간</b>: <span style='font-weight:bold; background-color:#FCE4EC; padding:2px 8px; border-radius:5px;'>{conception_str}</span> <br><span style='font-size:13px; color:#555;'>(※ 계획 임신 시, 위 기간 내에 잉태해야 해당 길일에 출산할 확률이 높습니다)</span></li>
                             </ul>
+                            <div style='border:1px dashed #ccc; padding:15px; border-radius:8px; background-color:#ffffff;'>
+                                <h5 style='color:#424242; margin-top:0; border-bottom:2px solid #00695C; padding-bottom:5px;'>🔮 해당 일시 신생아 사주명조 원국 (미리보기)</h5>
+                                {baby_saju_html}
+                            </div>
                         </div>
                         """
                 
@@ -1100,7 +1143,7 @@ if st.session_state.get('app_running', False):
                 st.markdown(report_box, unsafe_allow_html=True)
                         
             except Exception as e:
-                st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
+                st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
     # [3-2번 카테고리] 타 감명서 비교 (궁합) 정밀 분석 (들여쓰기 제거 포함)
