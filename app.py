@@ -1118,9 +1118,6 @@ if st.session_state.get('app_running', False):
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 # 4. 비교 분석 전용 AI 프롬프트 구성 및 연산
-                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
-                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
-                
                 compare_facts = {
                     "m_name": male_name, "f_name": female_name,
                     "m_ganju": f"{m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}",
