@@ -896,6 +896,19 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
+                # 1. 시각화 연산 실행 (engine.py)
+                gh_engine = engine.UniversalPrintableGunghap(
+                    applicant=male_name, partner_name=female_name,
+                    male=[f"{m_ys}{m_yb}", f"{m_ms}{m_mb}", f"{m_ds}{m_db}", f"{m_hs}{m_hb}"],
+                    female=[f"{f_ys}{f_yb}", f"{f_ms}{f_mb}", f"{f_ds}{f_db}", f"{f_hs}{f_hb}"],
+                    daeun_score=10
+                )
+                gh_engine.run_universal_logic()
+
+                # 2. html_views 전담 함수를 통해 시각화 차트 HTML 획득
+                score_visual_html = html_views.get_gunghap_score_visual_html(gh_engine)
+
+                # 3. 최종 컨텐츠 결합
                 full_inner_content = (
                     str(m_info or "") + str(m_table or "") + str(m_master_html or "") + str(m_un or "") + 
                     str(m_golden_html or "") + 
@@ -904,9 +917,8 @@ if st.session_state.get('app_running', False):
                     str(f_golden_html or "") + 
                     
                     str(intro_h or "") + 
-                    str(visual_analysis_html or "") + 
-                    f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +            
-                    str(closing or "")
+                    f"<div style='margin-top:20px; padding:15px; background-color:#ffffff; border-radius:10px;'>{ai_output_html}</div>" +
+                    str(score_visual_html or "")  # 💡 깔끔한 뷰 함수 결합!
                 )
                 
                 report_box = html_views.get_final_report_box(full_inner_content)
