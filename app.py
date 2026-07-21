@@ -285,7 +285,13 @@ with st.sidebar:
             
     elif "2-2." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc")
-        # 💡 [오류 수정] 생리 시작일 및 생리 주기 입력난 완비
+        
+        # 💡 [추가] 출산 택일 탐색 기간 설정 위젯
+        st.markdown("<p style='font-size:14px; font-weight:bold; margin-bottom:0px;'>📅 길일 탐색 기간 설정</p>", unsafe_allow_html=True)
+        col_d1, col_d2 = st.columns(2)
+        delivery_start_date = col_d1.date_input("탐색 시작일", key="delivery_start_date")
+        delivery_end_date = col_d2.date_input("탐색 종료일", key="delivery_end_date")
+
         last_period_date = st.date_input("마지막 생리 시작일", key="last_period_date")
         period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=28, key="period_cycle")
 
