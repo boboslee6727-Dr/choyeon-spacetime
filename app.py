@@ -884,20 +884,16 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    # 1. 백틱 및 기본 마커 정제
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
                     clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').strip()
                     
-                    # 2. 커플 대운표 마커 치환 (마커가 없으면 하단에 안전 배치)
                     couple_daewun_tables = html_views.get_couple_daewun_tables(gh_data) if hasattr(html_views, 'get_couple_daewun_tables') else ""
                     if '[COUPLE_DAEWUN_TABLES_HERE]' in clean_ai:
                         clean_ai = clean_ai.replace('[COUPLE_DAEWUN_TABLES_HERE]', couple_daewun_tables)
                     
-                    # 3. 마크다운 제목(##, ###)을 깔끔한 HTML 스타일로 치환
-                    clean_ai = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;'>\1</h3>\n", clean_ai)
-                    clean_ai = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;'>\1</h2>\n", clean_ai)
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>\n', clean_ai)
+                    clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;">\1</h2>\n', clean_ai)
                     
-                    # 4. 라인별 안전 P 태그 포장 (제목이나 이미 완성된 HTML 태그 제외)
                     formatted_lines = []
                     for line in clean_ai.split('\n'):
                         line_str = line.strip()
@@ -906,25 +902,21 @@ if st.session_state.get('app_running', False):
                         if line_str.startswith('<h') or line_str.startswith('<div') or line_str.startswith('<table'):
                             formatted_lines.append(line_str)
                         else:
-                            formatted_lines.append(f"<p style='margin:10px 0; line-height:1.8; font-family:\"Nanum Myeongjo\", serif; font-size:16px; color:#333;'>{line_str}</p>")
+                            formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
                     
                     ai_output_html = "\n".join(formatted_lines)
                 else:
-                    ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
+                    ai_output_html = '<p style="color:red;">⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>'
 
                 score_visual_html = html_views.get_gunghap_score_visual_html(gh_engine)
 
-                # 3. 최종 컨텐츠 결합
+                # 최종 컨텐츠 결합
                 full_inner_content = (
-                    str(m_info or "") + str(m_table or "") + str(m_master_html or "") + str(m_un or "") + 
-                    str(m_golden_html or "") + 
-                    
-                    str(w_info or "") + str(w_table or "") + str(w_master_html or "") + str(w_un or "") + 
-                    str(f_golden_html or "") + 
-                    
-                    str(intro_h or "") + 
-                    f"<div style='margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;'>{ai_output_html}</div>" +
-                    str(score_visual_html or "")
+                    f"{m_info or ''}{m_table or ''}{m_master_html or ''}{m_un or ''}{m_golden_html or ''}"
+                    f"{w_info or ''}{w_table or ''}{w_master_html or ''}{w_un or ''}{f_golden_html or ''}"
+                    f"{intro_h or ''}"
+                    f"""<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;">{ai_output_html}</div>"""
+                    f"{score_visual_html or ''}"
                 )
                 
                 report_box = html_views.get_final_report_box(full_inner_content)
@@ -938,3 +930,240 @@ if st.session_state.get('app_running', False):
 
             except Exception as e:
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
+
+    # ==============================================================================
+    # 💍 [2-1번 카테고리] 결혼 택일 복원 (기존 궁합 결과 상단 유지)
+    # ==============================================================================
+    elif "2-1." in u_product:
+        if 'cached_gunghap_cover' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
+        if 'cached_gunghap_report' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
+
+        st.markdown("---")
+        with st.spinner("💍 두 사람의 인연을 가장 빛내줄 천생연분 결혼 길일(吉日)을 엄선 중입니다..."):
+            try:
+                date_mode = st.session_state.get("radio_marriage_mode", "기간 선택")
+                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
+                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
+                
+                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
+                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
+                m_db = m_d_pillar[1] if m_d_pillar else ""
+                f_db = f_d_pillar[1] if f_d_pillar else ""
+
+                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+
+                if date_mode == "기간 선택":
+                    start_date = st.session_state.get("start_date_m", dt_mod.date.today())
+                    end_date = st.session_state.get("end_date_m", dt_mod.date.today() + dt_mod.timedelta(days=90))
+                    
+                    st.info(f"💡 **선택된 택일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
+                            f"💡 **분석 기준**: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.")
+                    
+                    best_marriage_days = engine.get_optimized_delivery_days(start_date, end_date, [m_db], [f_db])
+
+                    if not best_marriage_days:
+                        st.warning("⚠️ 지정하신 기간 내에 두 분의 기운과 합치하는 최적의 길일이 부족합니다. 기간을 넓혀 재조정해 주십시오.")
+                    else:
+                        for idx, day_info in enumerate(best_marriage_days):
+                            border_col = "#C62828" if idx == 0 else "#1A237E"
+                            st.markdown(f"""
+                            <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
+                                <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 결혼 길일 : {day_info['date']} (궁합 조화 점수: {day_info['score']:.1f}점)</h4>
+                                <p style='margin-bottom:0;'>이 날은 두 사람의 사주간지와 조후가 안정적으로 맞물려 평화로운 가정을 이루기 좋은 길일입니다.</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    target_date = st.session_state.get("target_date_m", dt_mod.date.today())
+                    st.success(f"🎯 **지정하신 특정 결혼 예정일**: {target_date.strftime('%Y년 %m월 %d일')}")
+                    st.markdown(f"""
+                    <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5;'>
+                        <h4 style='color: #0D47A1; margin-top:0;'>✨ 특정일 궁합 정밀 검증</h4>
+                        <p>선택하신 날짜({target_date.strftime('%Y년 %m월 %d일')})의 일진 기운과 두 분({m_db}, {f_db})의 사주 원국을 교차 검증한 결과, <b>충(沖)이나 형(刑)의 기운이 없고 평안한 상생의 기운이 흐르는 길일</b>로 판명됩니다.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
+
+    # ==============================================================================
+    # 👶 [2-2번 카테고리] 출산 택일 복원 (기존 궁합 결과 상단 유지)
+    # ==============================================================================
+    elif "2-2." in u_product:
+        if 'cached_gunghap_cover' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
+        if 'cached_gunghap_report' in st.session_state:
+            st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
+
+        st.markdown("---")
+        with st.spinner("⏳ 아기에게 가장 완벽한 시공간의 길일(吉日)을 탐색 중입니다..."):
+            try:
+                start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
+                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=30))
+                last_period = st.session_state.get('last_period_date')
+                cycle = st.session_state.get('period_cycle', 28)
+                
+                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
+                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
+
+                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
+                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
+                m_jjis = [m_d_pillar[1]] if m_d_pillar else []
+                f_jjis = [f_d_pillar[1]] if f_d_pillar else []
+
+                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
+
+                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+                if last_period:
+                    st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
+                            f"💡 **참고 산모 정보**: 마지막 생리일({last_period}), 평균 주기({cycle}일)")
+                else:
+                    st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}")
+
+                if not best_days:
+                    st.warning("⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.")
+                else:
+                    for idx, day_info in enumerate(best_days):
+                        border_col = "#C62828" if idx == 0 else "#2E7D32"
+                        b_time_info = day_info['best_time']
+                        st.markdown(f"""
+                        <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
+                            <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {day_info['date']} (명리 종합점수: {day_info['score']:.1f}점)</h4>
+                            <ul style='margin-bottom:0; font-size:16px;'>
+                                <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
+                            </ul>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+            except Exception as e:
+                st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
+
+    # ==============================================================================
+    # [3-2번 카테고리] 타 감명서 비교 (궁합) 정밀 분석
+    # ==============================================================================
+    elif "3-2" in u_product:
+        st.markdown("---")
+        with st.spinner("⏳ 입력받은 궁합 감명서와 초연 시공명리 알고리즘을 교차 검증 중입니다..."):
+            try:
+                # 1. 사이드바 입력 감명서 텍스트 가져오기
+                external_review_text = st.session_state.get("external_review_input", "").strip()
+
+                # 2. 궁합 만세력 기본 데이터 생성
+                user_gender = st.session_state.get("u_g", gender)
+                curr_y = dt_mod.datetime.now().year
+                m_age = curr_y - int(b_year) + 1
+                p_age = curr_y - int(f_y) + 1
+                
+                klc = KoreanLunarCalendar()
+                klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+                m_sol, m_lun = f"{b_year}년 {b_month}월 {b_day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
+                klc.setSolarDate(int(f_y), int(f_m), int(f_d))
+                f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
+                
+                if user_gender == "여성":
+                    marital_status = f"{f_marital}-{u_marital}" 
+                    gh_data = engine.get_gunghap_data(
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,
+                        int(b_year), int(b_month), int(b_day), b_time, u_marital,
+                        marital_status
+                    )
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
+                else:
+                    marital_status = f"{u_marital}-{f_marital}" 
+                    gh_data = engine.get_gunghap_data(
+                        int(b_year), int(b_month), int(b_day), b_time, u_marital, 
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,              
+                        marital_status
+                    )
+                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
+                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
+
+                # 3. 만세력 표 및 헤더 준비
+                m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
+                f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
+
+                m_ys, m_yb = gh_data.get("m_ys", ""), gh_data.get("m_yb", "")
+                m_ms, m_mb = gh_data.get("m_ms", ""), gh_data.get("m_mb", "")
+                m_ds, m_db = gh_data.get("m_ds", ""), gh_data.get("m_db", "")
+                m_hs, m_hb = gh_data.get("m_hs", ""), gh_data.get("m_hb", "")
+
+                f_ys, f_yb = gh_data.get("f_ys", ""), gh_data.get("f_yb", "")
+                f_ms, f_mb = gh_data.get("f_ms", ""), gh_data.get("f_mb", "")
+                f_ds, f_db = gh_data.get("f_ds", ""), gh_data.get("f_db", "")
+                f_hs, f_hb = gh_data.get("f_hs", ""), gh_data.get("f_hb", "")
+
+                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
+                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
+                
+                cover_html = html_views.get_gunghap_cover(
+                    APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}",  
+                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
+                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                )
+
+                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
+                m_master_html = html_views.get_master_bar(
+                    m_master_list[0], m_master_list[1], m_master_list[2], m_master_list[3], m_master_list[4], 
+                    m_master_list[5], m_master_list[6], m_master_list[7], m_master_list[8], m_master_list[9], m_master_list[10]
+                )
+                m_un = html_views.generate_daewun_layout(*m_daewun)
+
+                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
+                w_master_html = html_views.get_master_bar(
+                    f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], 
+                    f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10]
+                )
+                w_un = html_views.generate_daewun_layout(*f_daewun)
+
+                # 4. 비교 분석 전용 AI 프롬프트 구성 및 연산
+                s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
+                s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
+                
+                compare_facts = {
+                    "m_name": male_name, "f_name": female_name,
+                    "m_ganju": f"{m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}",
+                    "f_ganju": f"{f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}",
+                    "external_text": external_review_text if external_review_text else "입력된 외부 감명서가 없습니다."
+                }
+
+                # 💡 하드코딩 완전 제거 -> prompts.py 정의 모듈 사용
+                prompt_text = prompts.COMPARE_GUNGHAP_PROMPT.format_map(compare_facts)
+                
+                ai_result = call_gemini_api(prompt_text)
+
+                if ai_result:
+                    clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>\n', clean_ai)
+                    
+                    formatted_lines = []
+                    for line in clean_ai.split('\n'):
+                        line_str = line.strip()
+                        if line_str:
+                            if line_str.startswith('<h') or line_str.startswith('<div'):
+                                formatted_lines.append(line_str)
+                            else:
+                                formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:16px; color:#333;">{line_str}</p>')
+                    ai_output_html = "\n".join(formatted_lines)
+                else:
+                    ai_output_html = '<p style="color:red;">⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.</p>'
+
+                # 5. 최종 리포트 출력
+                full_inner_content = (
+                    f"{m_info or ''}{m_table or ''}{m_master_html or ''}{m_un or ''}"
+                    f"{w_info or ''}{w_table or ''}{w_master_html or ''}{w_un or ''}"
+                    f"""<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;">
+                        <h2 style="color:#0D47A1; border-bottom:2px solid #0D47A1; padding-bottom:8px;">🔍 타 감명서(궁합) 초연 정밀 비교 검증 보고서</h2>
+                        {ai_output_html}
+                    </div>"""
+                )
+                
+                report_box = html_views.get_final_report_box(full_inner_content)
+                st.markdown(cover_html, unsafe_allow_html=True)
+                st.markdown(report_box, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"🚨 타 감명서 비교(궁합) 처리 중 오류 발생: {e}")
+
+
