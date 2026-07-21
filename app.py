@@ -938,7 +938,7 @@ if st.session_state.get('app_running', False):
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
 
     # ==============================================================================
-    # 💍 [2-1번 카테고리] 결혼 택일 복원 (기존 궁합 결과 상단 유지)
+    # 💍 [2-1번 카테고리] 결혼 택일 복원 (A4 테두리 박스 적용)
     # ==============================================================================
     elif "2-1." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
@@ -958,43 +958,48 @@ if st.session_state.get('app_running', False):
                 m_db = m_d_pillar[1] if m_d_pillar else ""
                 f_db = f_d_pillar[1] if f_d_pillar else ""
 
-                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+                # 화면에 바로 쏘지 않고 taegil_html 변수에 결과물 차곡차곡 수집
+                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px;'>💍 결혼 택일(길일) 정밀 분석 결과</h3>"
 
                 if date_mode == "기간 선택":
                     start_date = st.session_state.get("start_date_m", dt_mod.date.today())
                     end_date = st.session_state.get("end_date_m", dt_mod.date.today() + dt_mod.timedelta(days=90))
                     
-                    st.info(f"💡 **선택된 택일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
-                            f"💡 **분석 기준**: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.")
+                    taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 선택된 택일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}<br>💡 분석 기준: 두 사람의 일지({m_db}, {f_db})와 상생하며 합(合)이 드는 최적의 길일을 스캔합니다.</p>"
                     
                     best_marriage_days = engine.get_optimized_delivery_days(start_date, end_date, [m_db], [f_db])
 
                     if not best_marriage_days:
-                        st.warning("⚠️ 지정하신 기간 내에 두 분의 기운과 합치하는 최적의 길일이 부족합니다. 기간을 넓혀 재조정해 주십시오.")
+                        taegil_html += "<p style='color:#D32F2F; font-weight:bold;'>⚠️ 지정하신 기간 내에 두 분의 기운과 합치하는 최적의 길일이 부족합니다. 기간을 넓혀 재조정해 주십시오.</p>"
                     else:
                         for idx, day_info in enumerate(best_marriage_days):
                             border_col = "#C62828" if idx == 0 else "#1A237E"
-                            st.markdown(f"""
+                            taegil_html += f"""
                             <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
                                 <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 결혼 길일 : {day_info['date']} (궁합 조화 점수: {day_info['score']:.1f}점)</h4>
                                 <p style='margin-bottom:0;'>이 날은 두 사람의 사주간지와 조후가 안정적으로 맞물려 평화로운 가정을 이루기 좋은 길일입니다.</p>
                             </div>
-                            """, unsafe_allow_html=True)
+                            """
                 else:
                     target_date = st.session_state.get("target_date_m", dt_mod.date.today())
-                    st.success(f"🎯 **지정하신 특정 결혼 예정일**: {target_date.strftime('%Y년 %m월 %d일')}")
-                    st.markdown(f"""
+                    taegil_html += f"<p style='color:#2E7D32; font-weight:bold;'>🎯 지정하신 특정 결혼 예정일: {target_date.strftime('%Y년 %m월 %d일')}</p>"
+                    taegil_html += f"""
                     <div style='padding: 20px; background-color: #F0F4F8; border-radius: 8px; border: 1px solid #D0DCE5;'>
                         <h4 style='color: #0D47A1; margin-top:0;'>✨ 특정일 궁합 정밀 검증</h4>
                         <p>선택하신 날짜({target_date.strftime('%Y년 %m월 %d일')})의 일진 기운과 두 분({m_db}, {f_db})의 사주 원국을 교차 검증한 결과, <b>충(沖)이나 형(刑)의 기운이 없고 평안한 상생의 기운이 흐르는 길일</b>로 판명됩니다.</p>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """
+
+                # 💡 수집된 결과를 A4 테두리 박스로 포장하여 최종 출력
+                clean_taegil_html = re.sub(r'>\s+<', '><', taegil_html.replace('\n', '')).strip()
+                report_box = html_views.get_final_report_box(clean_taegil_html)
+                st.markdown(report_box, unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
-    # 👶 [2-2번 카테고리] 출산 택일 복원 (기존 궁합 결과 상단 유지)
+    # 👶 [2-2번 카테고리] 출산 택일 복원 (A4 테두리 박스 적용)
     # ==============================================================================
     elif "2-2." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
@@ -1020,33 +1025,38 @@ if st.session_state.get('app_running', False):
 
                 best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
 
-                st.markdown("<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>", unsafe_allow_html=True)
+                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px;'>👶 출산 택일(제왕절개 길일) 정밀 분석 결과</h3>"
+                
                 if last_period:
-                    st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}\n\n"
-                            f"💡 **참고 산모 정보**: 마지막 생리일({last_period}), 평균 주기({cycle}일)")
+                    taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}<br>💡 참고 산모 정보: 마지막 생리일({last_period}), 평균 주기({cycle}일)</p>"
                 else:
-                    st.info(f"💡 **지정한 길일 탐색 구간**: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}")
+                    taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}</p>"
 
                 if not best_days:
-                    st.warning("⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.")
+                    taegil_html += "<p style='color:#D32F2F; font-weight:bold;'>⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.</p>"
                 else:
                     for idx, day_info in enumerate(best_days):
                         border_col = "#C62828" if idx == 0 else "#2E7D32"
                         b_time_info = day_info['best_time']
-                        st.markdown(f"""
+                        taegil_html += f"""
                         <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 10px; border-radius: 5px;'>
                             <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {day_info['date']} (명리 종합점수: {day_info['score']:.1f}점)</h4>
                             <ul style='margin-bottom:0; font-size:16px;'>
                                 <li><b>가장 좋은 출산 시간</b>: {b_time_info['time_str']} <b>({b_time_info['time_pillar']}시)</b></li>
                             </ul>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """
+                
+                # 💡 수집된 결과를 A4 테두리 박스로 포장하여 최종 출력
+                clean_taegil_html = re.sub(r'>\s+<', '><', taegil_html.replace('\n', '')).strip()
+                report_box = html_views.get_final_report_box(clean_taegil_html)
+                st.markdown(report_box, unsafe_allow_html=True)
                         
             except Exception as e:
                 st.error(f"🚨 출산 택일 분석 중 엔진 오류 발생: {e}")
 
     # ==============================================================================
-    # [3-2번 카테고리] 타 감명서 비교 (궁합) 정밀 분석 (HTML 소스코드 노출 원천 차단)
+    # [3-2번 카테고리] 타 감명서 비교 (궁합) 정밀 분석 (들여쓰기 제거 포함)
     # ==============================================================================
     elif "3-2" in u_product:
         st.markdown("---")
@@ -1131,14 +1141,10 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
 
                 if ai_result:
-                    # [계획 1] 백틱 및 특수문자 완벽 정제
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
-                    
-                    # [계획 3] 마크다운 헤더 안전 치환 (들여쓰기 제거)
                     clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;">\1</h3>', clean_ai)
                     clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;">\1</h2>', clean_ai)
                     
-                    # [계획 3] 라인별 P 태그 감싸기 및 태그 파괴 차단
                     formatted_lines = []
                     for line in clean_ai.split('\n'):
                         line_str = line.strip()
@@ -1151,17 +1157,18 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = '<p style="color:red;">⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.</p>'
 
-                # [계획 2] 들여쓰기 공백 없는 래퍼 생성
                 ai_box_html = f'<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;"><h2 style="color:#0D47A1; border-bottom:2px solid #0D47A1; padding-bottom:8px;">🔍 타 감명서(궁합) 초연 정밀 비교 검증 보고서</h2>{ai_output_html}</div>'
 
-                # [계획 2] join을 활용한 들여쓰기 공백 100% 차단 문자열 결합
                 full_inner_content = "".join([
                     str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''),
                     str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''),
                     str(ai_box_html or '')
                 ])
                 
-                report_box = html_views.get_final_report_box(full_inner_content)
+                # 💡 들여쓰기 공백 정제 후 A4 테두리 씌워서 최종 출력
+                clean_full_inner = re.sub(r'>\s+<', '><', full_inner_content.replace('\n', '')).strip()
+                report_box = html_views.get_final_report_box(clean_full_inner)
+                
                 st.markdown(cover_html, unsafe_allow_html=True)
                 st.markdown(report_box, unsafe_allow_html=True)
 
