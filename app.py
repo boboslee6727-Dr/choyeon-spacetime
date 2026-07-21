@@ -225,28 +225,29 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 사주간지 역산 & 기본 정보
+    # 👥 상대방 사주간지 역산 & 기본 정보 (무한 루프 원천 차단 버전)
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
-            with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
-            with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
+            with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry_rev")
+            with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm_rev")
             p_col_g3, p_col_g4 = st.columns(2)
-            with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
-            with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
+            with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd_rev")
+            with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt_rev")
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+                
                 if not _p_ry and not _p_rm and not _p_rd:
-                    if 'rev_p_success_msg' in st.session_state: 
-                        del st.session_state['rev_p_success_msg']
+                    st.session_state.pop('rev_p_success_msg', None)
                     st.rerun()
                 elif len(_p_ry) == 2 and len(_p_rm) == 2 and len(_p_rd) == 2:
                     p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
                     p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
                     p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
+                    
                     klc_find = KoreanLunarCalendar()
                     found = False
                     
@@ -259,9 +260,10 @@ with st.sidebar:
                                 klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                                 gj = klc_find.getChineseGapJaString().split()
                                 if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                                    st.session_state['p_y_in'] = curr_dt.year
-                                    st.session_state['p_m_in'] = curr_dt.month
-                                    st.session_state['p_d_in'] = curr_dt.day
+                                    # 💡 위젯 key에 직접 쓰지 않고 임시 세션 변수에 담아 충돌 방지
+                                    st.session_state['p_target_y'] = curr_dt.year
+                                    st.session_state['p_target_m'] = curr_dt.month
+                                    st.session_state['p_target_d'] = curr_dt.day
                                     
                                     if p_rt:
                                         ji_char_p = p_rt[-1]
@@ -280,20 +282,28 @@ with st.sidebar:
                                             '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
                                             '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
                                         }
-                                        st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                                        st.session_state['p_target_t'] = time_map.get(p_rt_h, "시간 모름")
                                     else:
-                                        st.session_state['p_t_key'] = "시간 모름"
+                                        st.session_state['p_target_t'] = "시간 모름"
 
                                     found = True
                                     st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
-                                    st.rerun()
                                     break
                             curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
+                        
                     if not found: 
                         st.error("일치하는 날짜가 없습니다.")
+                    else: 
+                        st.rerun()
                 else: 
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
+
+        # 💡 안전하게 세션 값을 받아오는 초기화 로직
+        p_def_y = st.session_state.get('p_target_y', 1980)
+        p_def_m = st.session_state.get('p_target_m', 1)
+        p_def_d = st.session_state.get('p_target_d', 1)
+        p_def_t = st.session_state.get('p_target_t', idx_list[0])
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
@@ -301,10 +311,13 @@ with st.sidebar:
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=1980, key="p_y_in")
-            f_m = p_col2.number_input("월(상대)", 1, 12, value=1, key="p_m_in")
-            f_d = p_col3.number_input("일(상대)", 1, 31, value=1, key="p_d_in")
-            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
+            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=p_def_y, key="p_y_in")
+            f_m = p_col2.number_input("월(상대)", 1, 12, value=p_def_m, key="p_m_in")
+            f_d = p_col3.number_input("일(상대)", 1, 31, value=p_def_d, key="p_d_in")
+            
+            # selectbox의 index 안전 매핑
+            t_idx = idx_list.index(p_def_t) if p_def_t in idx_list else 0
+            f_t = st.selectbox("태어난 시간(상대)", idx_list, index=t_idx, key="p_t_key")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ==============================================================================
