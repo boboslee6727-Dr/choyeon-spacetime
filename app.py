@@ -127,7 +127,7 @@ with st.sidebar:
             st.session_state["u_g"] = "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산 (기존 박스 위치에 파스텔 블루 스타일만 입힘)
+    # 🔍 신청인 사주간지 역산 
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -155,6 +155,7 @@ with st.sidebar:
                             klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                             gj = klc_find.getChineseGapJaString().split()
                             if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+
                                 st.session_state['s_y'] = curr_dt.year
                                 st.session_state['s_m'] = curr_dt.month
                                 st.session_state['s_d'] = curr_dt.day
@@ -211,7 +212,7 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 [파스텔 핑크/로즈 톤] 상대방 사주간지 역산 & 기본 정보
+    # 👥 상대방 사주간지 역산 & 기본 정보
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
@@ -261,7 +262,7 @@ with st.sidebar:
                                     st.session_state['rev_p_success_msg'] = f"✅ 상대방 자동입력 완료!"
                                     st.rerun()
                                     break
-                                curr_dt -= dt_mod.timedelta(days=1)
+                            curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
                     if not found: 
                         st.error("일치하는 날짜가 없습니다.")
@@ -958,7 +959,6 @@ if st.session_state.get('app_running', False):
                 m_db = m_d_pillar[1] if m_d_pillar else ""
                 f_db = f_d_pillar[1] if f_d_pillar else ""
                 
-                # 남녀 이름 확보 (세션 스테이트나 로컬 변수 우선 활용)
                 m_n = st.session_state.get("name", "신랑")
                 f_n = st.session_state.get("p_name_in", "신부")
 
@@ -991,15 +991,26 @@ if st.session_state.get('app_running', False):
                     except:
                         target_ganji = "알 수 없음"
 
-                    # 💡 프롬프트 포맷팅 및 AI 호출
+                    # 💡 프롬프트 변수명(WEDDING_DATE_PROMPT) 및 팩트 시트 매핑 완벽 수정
                     taegil_facts = {
-                        "m_name": m_n, "f_name": f_n,
-                        "m_db": m_db, "f_db": f_db,
-                        "target_date": target_date.strftime('%Y년 %m월 %d일'),
-                        "target_ganji": target_ganji
+                        "groom_ilju": m_db, 
+                        "bride_ilju": f_db,
+                        "groom_dw": "현재 대운 흐름",
+                        "groom_sewun": "올해 세운",
+                        "bride_dw": "현재 대운 흐름",
+                        "bride_sewun": "올해 세운",
+                        "selected_date": target_date.strftime('%Y년 %m월 %d일'),
+                        "date_ganji": target_ganji,
+                        "date_shinsal_str": "가내 평안과 상생의 길신 작용",
+                        "date_interaction_str": "충형파해(沖刑破害) 없이 원만히 융합되는 흐름"
                     }
                     
-                    prompt_text = prompts.MARRIAGE_TAEGIL_PROMPT.format_map(taegil_facts)
+                    # KeyError 방지용 안전 딕셔너리
+                    class SafeDict(dict):
+                        def __missing__(self, key): return "{" + key + "}"
+                        
+                    safe_facts = SafeDict(**taegil_facts)
+                    prompt_text = prompts.WEDDING_DATE_PROMPT.format_map(safe_facts)
                     ai_result = call_gemini_api(prompt_text)
                     
                     if ai_result:
@@ -1026,7 +1037,7 @@ if st.session_state.get('app_running', False):
                     </div>
                     """
 
-                # 💡 수집된 결과를 A4 테두리 박스로 포장하여 최종 출력 (들여쓰기 100% 제거)
+                # 💡 수집된 결과를 A4 테두리 박스로 포장하여 최종 출력
                 clean_taegil_html = re.sub(r'>\s+<', '><', taegil_html.replace('\n', '')).strip()
                 report_box = html_views.get_final_report_box(clean_taegil_html)
                 st.markdown(report_box, unsafe_allow_html=True)
