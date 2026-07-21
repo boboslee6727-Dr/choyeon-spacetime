@@ -173,10 +173,10 @@ with st.sidebar:
                                 st.session_state['rev_success_msg'] = f"✅ 자동입력 완료!"
                                 st.rerun()
                                 break
-                            curr_dt -= dt_mod.timedelta(days=1)
-                    if found: break
-                if not found: st.error("일치하는 날짜가 없습니다.")
-            else: st.warning("간지를 2글자씩 정확히 입력하세요.")
+                        curr_dt -= dt_mod.timedelta(days=1)
+                if found: break
+            if not found: st.error("일치하는 날짜가 없습니다.")
+        else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
     # ==============================================================================
     # 👤 신청인 기본 정보
@@ -227,7 +227,6 @@ with st.sidebar:
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False  # 💡 [핵심 방어막] 값만 채우고 분석(AI)이 제멋대로 시작되는 것 원천 차단
                 _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
-                # ... (이하 기존 코드 동일)
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: 
                         del st.session_state['rev_p_success_msg']
