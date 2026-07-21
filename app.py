@@ -924,7 +924,9 @@ if st.session_state.get('app_running', False):
                     str(score_visual_html or '')
                 ])
                 
-                report_box = html_views.get_final_report_box(full_inner_content)
+                # [수정계획안] HTML 태그 사이의 들여쓰기 공백/줄바꿈을 정제하여 코드블록 노출 현상 완전 차단
+                clean_full_inner = re.sub(r'>\s+<', '><', full_inner_content.replace('\n', '')).strip()
+                report_box = html_views.get_final_report_box(clean_full_inner)
                 
                 st.session_state['cached_gunghap_cover'] = cover_html
                 st.session_state['cached_gunghap_report'] = report_box
