@@ -884,17 +884,31 @@ if st.session_state.get('app_running', False):
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
-                    # AI 응답 정제 (태그 삭제 정규식 제거하여 AI 통변 완전 보존)
+                    # 1. 백틱 및 기본 마커 정제
                     clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
-                    clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').replace('[COUPLE_DAEWUN_TABLES_HERE]', '').strip()
+                    clean_ai = clean_ai.replace('[MALE_START]', '').replace('[MALE_END]', '').replace('[FEMALE_START]', '').replace('[FEMALE_END]', '').replace('[GUNGHAP_START]', '').replace('[GUNGHAP_END]', '').strip()
                     
-                    # 마크다운 제목을 HTML 제목으로 변경
-                    clean_ai = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px;'>\1</h3>", clean_ai)
-                    clean_ai = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; border-bottom:1px solid #ddd;'>\1</h2>", clean_ai)
+                    # 2. 커플 대운표 마커 치환 (마커가 없으면 하단에 안전 배치)
+                    couple_daewun_tables = html_views.get_couple_daewun_tables(gh_data) if hasattr(html_views, 'get_couple_daewun_tables') else ""
+                    if '[COUPLE_DAEWUN_TABLES_HERE]' in clean_ai:
+                        clean_ai = clean_ai.replace('[COUPLE_DAEWUN_TABLES_HERE]', couple_daewun_tables)
                     
-                    # 문단을 명리 스타일 P 태그로 래핑
-                    paragraphs = [f"<p style='margin:10px 0; line-height:1.8; font-family:Nanum Myeongjo, serif; font-size:16px;'>{p.strip()}</p>" for p in clean_ai.split('\n') if p.strip()]
-                    ai_output_html = "".join(paragraphs)
+                    # 3. 마크다운 제목(##, ###)을 깔끔한 HTML 스타일로 치환
+                    clean_ai = re.sub(r'###\s*(.*?)\n', r"<h3 style='color:#1A237E; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:10px;'>\1</h3>\n", clean_ai)
+                    clean_ai = re.sub(r'##\s*(.*?)\n', r"<h2 style='color:#0D47A1; font-size:22px; font-weight:bold; margin-top:30px; margin-bottom:15px; border-bottom:1px solid #ddd;'>\1</h2>\n", clean_ai)
+                    
+                    # 4. 라인별 안전 P 태그 포장 (제목이나 이미 완성된 HTML 태그 제외)
+                    formatted_lines = []
+                    for line in clean_ai.split('\n'):
+                        line_str = line.strip()
+                        if not line_str:
+                            continue
+                        if line_str.startswith('<h') or line_str.startswith('<div') or line_str.startswith('<table'):
+                            formatted_lines.append(line_str)
+                        else:
+                            formatted_lines.append(f"<p style='margin:10px 0; line-height:1.8; font-family:\"Nanum Myeongjo\", serif; font-size:16px; color:#333;'>{line_str}</p>")
+                    
+                    ai_output_html = "\n".join(formatted_lines)
                 else:
                     ai_output_html = "<p style='color:red;'>⚠️ 궁합 AI 통변 데이터를 생성하지 못했습니다.</p>"
 
