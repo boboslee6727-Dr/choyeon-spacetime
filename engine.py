@@ -273,10 +273,13 @@ def get_daeun_su_accurate(utc_dt, order):
         return 1
 
 # ==============================================================================
-# 역산 연산 전용 콜백 함수 (완전 자립형 - AttributeError 원천 차단)
+# 역산 연산 전용 콜백 함수 (완전 자립형 - 중복 제거 및 AI 조기 실행 차단)
 # ==============================================================================
 def auto_fill_user_ganji():
+    import streamlit as st
+    # AI 자동 구동 방지
     st.session_state['app_running'] = False
+    
     ry = st.session_state.get("u_ry_rev", "")
     rm = st.session_state.get("u_rm_rev", "")
     rd = st.session_state.get("u_rd_rev", "")
@@ -327,8 +330,12 @@ def auto_fill_user_ganji():
     else: 
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
+
 def auto_fill_partner_ganji():
+    import streamlit as st
+    # AI 자동 구동 방지
     st.session_state['app_running'] = False
+    
     p_ry = st.session_state.get("p_ry_rev", "")
     p_rm = st.session_state.get("p_rm_rev", "")
     p_rd = st.session_state.get("p_rd_rev", "")
@@ -378,7 +385,6 @@ def auto_fill_partner_ganji():
             st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
     else: 
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
-
 # ==============================================================================
 # 3. 명리 이론 연산 로직
 # ==============================================================================
