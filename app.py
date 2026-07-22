@@ -225,7 +225,7 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 사주간지 역산 & 기본 정보 (무한 루프 완전 차단 최종 수정본)
+    # 👥 상대방 사주간지 역산 & 기본 정보 (ver 60.9 원본 구조 100% 사수 + 무한루프 완벽 차단)
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
@@ -259,6 +259,7 @@ with st.sidebar:
                                 klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                                 gj = klc_find.getChineseGapJaString().split()
                                 if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
+                                    # 위젯 key 직접 주입 및 st.rerun()을 제거하여 충돌 차단
                                     st.session_state['p_target_y'] = curr_dt.year
                                     st.session_state['p_target_m'] = curr_dt.month
                                     st.session_state['p_target_d'] = curr_dt.day
@@ -289,16 +290,17 @@ with st.sidebar:
                                     break
                             curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
-                        
                     if not found: 
                         st.error("일치하는 날짜가 없습니다.")
                 else: 
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
 
+        # 안전 세션 상태에서 동적으로 값을 수신
         p_def_y = st.session_state.get('p_target_y', 1980)
         p_def_m = st.session_state.get('p_target_m', 1)
         p_def_d = st.session_state.get('p_target_d', 1)
         p_def_t = st.session_state.get('p_target_t', idx_list[0])
+        t_idx = idx_list.index(p_def_t) if p_def_t in idx_list else 0
 
         with st.expander("👥 상대방 기본 정보", expanded=True):
             f_name = st.text_input("상대방 이름", value="", key="f_n")
@@ -309,11 +311,8 @@ with st.sidebar:
             f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=p_def_y, key="p_y_in")
             f_m = p_col2.number_input("월(상대)", 1, 12, value=p_def_m, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, value=p_def_d, key="p_d_in")
-            
-            t_idx = idx_list.index(p_def_t) if p_def_t in idx_list else 0
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=t_idx, key="p_t_key")
         st.markdown("</div>", unsafe_allow_html=True)
-
     # ==============================================================================
     # 📌 궁합(2-1, 2-2) 및 타 감명서(3-2) 특화 옵션 입력부
     # ==============================================================================
