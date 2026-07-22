@@ -336,12 +336,25 @@ with st.sidebar:
             
     elif "2-2." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc")
-        st.markdown("<p style='font-size:14px; font-weight:bold; margin-bottom:0px;'>📅 길일 탐색 기간 설정</p>", unsafe_allow_html=True)
+        
+        st.subheader("🩺 산모 생리 주기 및 기준 정보")
+        
+        # 1. 생리 시작일과 주기를 최상단에 배치하여 의학적 기준 확립
+        last_period_date = st.date_input("마지막 생리 시작일", value=dt_mod.date(2026, 7, 23), key="last_period_date")
+        period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=30, key="period_cycle")
+        
+        st.markdown("---")
+        st.subheader("📅 출산 길일 탐색 기간 설정")
+        
+        # 2. 생리일 기준으로 예상되는 출산 예정일 부근을 기본 탐색 기간으로 자동 연동 제안
+        default_start = last_period_date + dt_mod.timedelta(days=260)
+        default_end = last_period_date + dt_mod.timedelta(days=280)
+        
         col_d1, col_d2 = st.columns(2)
-        delivery_start_date = col_d1.date_input("탐색 시작일", key="delivery_start_date")
-        delivery_end_date = col_d2.date_input("탐색 종료일", key="delivery_end_date")
-        last_period_date = st.date_input("마지막 생리 시작일", key="last_period_date")
-        period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=28, key="period_cycle")
+        delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date")
+        delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
+        
+        st.caption("💡 생리일 기준 약 37주~41주 안전 주수 구간으로 자동 최적화되었습니다.")
 
     elif "3-2." in u_product:
         other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="key_3_2")
