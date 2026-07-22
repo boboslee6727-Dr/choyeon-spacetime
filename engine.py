@@ -1247,7 +1247,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
 def get_gunghap_report(res):
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
 
-# 기존에 넣었던 이름(get_optimized_delivery_days_forward)을 app.py가 찾는 이름으로 변경합니다.
 def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis):
     """
     [출산 택일 정방향 탐색 엔진 - app.py 완벽 호환 연계 버전]
@@ -1261,10 +1260,21 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis):
     
     optimized_results = []
     current_date = start_date
-    
     while current_date <= end_date:
         conception_date = current_date 
-        delivery_date = conception_date + dt_mod.timedelta(days=268) # 정방향 268일 후 출산일
+        delivery_date = conception_date + dt_mod.timedelta(days=268) # 👈 이 줄 바로 아래에 삽입!
+        
+        # ==========================================
+        # 🛡️ [정확한 삽입 좌표] 의학적 안전 주수 필터 장착
+        # ==========================================
+        if last_period_date:
+            gestation_days = (delivery_date - last_period_date).days
+            if gestation_days > 0:
+                g_weeks = gestation_days // 7
+                # 37주 미만(조산) 또는 41주 초과(과숙아)는 후보에서 원천 배제
+                if g_weeks < 37 or g_weeks > 41:
+                    current_date += dt_mod.timedelta(days=1)
+                    continue
         
         if start_date <= delivery_date <= end_date:
             try:
