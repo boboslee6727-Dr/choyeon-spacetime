@@ -83,7 +83,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (최종 정밀 수색 및 버그 완벽 차단 버전)
+# 2. 사이드바 통제 센터 (최종 정밀 수색 및 버그 완벽 차단 버전) ver 60.9
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -225,7 +225,7 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 사주간지 역산 & 기본 정보 (무한 루프 원천 차단 버전)
+    # 👥 상대방 사주간지 역산 & 기본 정보 (무한 루프 완전 차단 최종 수정본)
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
@@ -242,7 +242,6 @@ with st.sidebar:
                 
                 if not _p_ry and not _p_rm and not _p_rd:
                     st.session_state.pop('rev_p_success_msg', None)
-                    st.rerun()
                 elif len(_p_ry) == 2 and len(_p_rm) == 2 and len(_p_rd) == 2:
                     p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
                     p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
@@ -260,7 +259,6 @@ with st.sidebar:
                                 klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                                 gj = klc_find.getChineseGapJaString().split()
                                 if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                                    # 💡 위젯 key에 직접 쓰지 않고 임시 세션 변수에 담아 충돌 방지
                                     st.session_state['p_target_y'] = curr_dt.year
                                     st.session_state['p_target_m'] = curr_dt.month
                                     st.session_state['p_target_d'] = curr_dt.day
@@ -294,12 +292,9 @@ with st.sidebar:
                         
                     if not found: 
                         st.error("일치하는 날짜가 없습니다.")
-                    else: 
-                        st.rerun()
                 else: 
                     st.warning("간지를 2글자씩 정확히 입력하세요.")
 
-        # 💡 안전하게 세션 값을 받아오는 초기화 로직
         p_def_y = st.session_state.get('p_target_y', 1980)
         p_def_m = st.session_state.get('p_target_m', 1)
         p_def_d = st.session_state.get('p_target_d', 1)
@@ -315,7 +310,6 @@ with st.sidebar:
             f_m = p_col2.number_input("월(상대)", 1, 12, value=p_def_m, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, value=p_def_d, key="p_d_in")
             
-            # selectbox의 index 안전 매핑
             t_idx = idx_list.index(p_def_t) if p_def_t in idx_list else 0
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=t_idx, key="p_t_key")
         st.markdown("</div>", unsafe_allow_html=True)
