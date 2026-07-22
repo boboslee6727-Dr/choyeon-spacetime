@@ -339,22 +339,25 @@ with st.sidebar:
         
         st.subheader("🩺 산모 생리 주기 및 기준 정보")
         
-        # 1. 생리 시작일과 주기를 최상단에 배치하여 의학적 기준 확립
-        last_period_date = st.date_input("마지막 생리 시작일", value=dt_mod.date(2026, 7, 23), key="last_period_date")
+        # 오늘 날짜를 기준으로 동적 초기값 설정 (고정 날짜 아님)
+        today_default = dt_mod.date.today()
+        
+        # 1. 생리 시작일 (오늘 기준 대략 한 달 전이나 최근 날짜를 기본값으로 유연하게 제시)
+        last_period_date = st.date_input("마지막 생리 시작일", value=today_default - dt_mod.timedelta(days=30), key="last_period_date")
         period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=30, key="period_cycle")
         
         st.markdown("---")
         st.subheader("📅 출산 길일 탐색 기간 설정")
         
-        # 2. 생리일 기준으로 예상되는 출산 예정일 부근을 기본 탐색 기간으로 자동 연동 제안
-        default_start = last_period_date + dt_mod.timedelta(days=260)
-        default_end = last_period_date + dt_mod.timedelta(days=280)
+        # 2. 탐색 시작일은 오늘(현재 기준 2026-07-22), 종료일은 약 1년 후(2027-07-22)로 초기값 설정
+        today_date = dt_mod.date(2026, 7, 22)
+        default_end = today_date + dt_mod.timedelta(days=365)
         
         col_d1, col_d2 = st.columns(2)
-        delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date")
+        delivery_start_date = col_d1.date_input("탐색 시작일", value=today_date, key="delivery_start_date")
         delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
         
-        st.caption("💡 생리일 기준 약 37주~41주 안전 주수 구간으로 자동 최적화되었습니다.")
+        st.caption("💡 오늘부터 향후 1년간의 안전 주수 구간 내 길일을 정밀 탐색합니다.")
 
     elif "3-2." in u_product:
         other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="key_3_2")
