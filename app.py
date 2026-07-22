@@ -8,7 +8,7 @@ import datetime as dt_mod
 from datetime import datetime
 from korean_lunar_calendar import KoreanLunarCalendar
 import ephem
-import google.generativeai as genai
+from google import genai
 import pytz
 import streamlit.components.v1 as components
 import re
