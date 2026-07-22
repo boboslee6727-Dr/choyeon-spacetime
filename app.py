@@ -352,14 +352,32 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 및 명리 연산 엔진 (최신 google-genai SDK 규격)
+# 2. AI 및 명리 연산 엔진 (구버전 'model' 변수 완벽 호환 최신 규격)
 # ==============================================================================
 try:
-    # Client 객체를 생성하면서 Secrets의 API 키를 전달합니다.
+    # 1. 최신 SDK 클라이언트 생성
     client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+    
+    # 2. 구버전 'model' 변수를 그대로 사용하는 코드들과의 완벽 호환성 레이어
+    class GeminiModelCompat:
+        def __init__(self, genai_client):
+            self.client = genai_client
+            
+        def generate_content(self, contents, **kwargs):
+            # 구버전 model.generate_content(...) 호출 시 최신 API로 자동 우회
+            res = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=contents
+            )
+            return res
+
+    # 구버전 코드들이 찾고 있던 'model' 변수를 생성하여 매핑
+    model = GeminiModelCompat(client)
+
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     client = None
+    model = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
     # 상단에서 정의한 client 객체 존재 여부 확인
