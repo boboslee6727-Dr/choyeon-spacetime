@@ -128,7 +128,7 @@ with st.sidebar:
         with col_g4: st.text_input("시주", value="", key="u_rt_rev")
         
         # engine.py 로직 호출
-        st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=engine.auto_fill_user_ganji)
+        st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=getattr(engine, 'auto_fill_user_ganji', None))
         
         if 'rev_success_msg' in st.session_state:
             st.success(st.session_state['rev_success_msg'])
@@ -189,7 +189,7 @@ with st.sidebar:
             with p_col_g4: st.text_input("상대방 시주", key="p_rt_rev")
             
             # engine.py 로직 호출
-            st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=engine.auto_fill_partner_ganji)
+            st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=getattr(engine, 'auto_fill_partner_ganji', None))
             
             if 'rev_p_success_msg' in st.session_state:
                 st.success(st.session_state['rev_p_success_msg'])
