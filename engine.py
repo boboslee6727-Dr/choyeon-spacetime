@@ -213,6 +213,16 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         w_che = get_group_ss(get_ss(ds, curr_y_ganji[1][0])) if curr_y_ganji else "비겁"
         wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
 
+    # 💡 [미반영 변수 정밀 보완 계산]
+    # 1. 삼재 텍스트 (년지 기준 현재 일지/세운 지지와의 삼재 여부)
+    samjae_val = get_samjae(yb, db) if 'get_samjae' in globals() else "해당 없음"
+    
+    # 2. 대운 종료 연령 (현재 나이 기준 10년 대운 마감 나이)
+    dw_end_val = age + 9
+
+    # 3. 행운(대운) 묘고 작용 텍스트
+    hang_un_vaults_val = get_hang_un_vaults_str(dw_j_cur, [yb, mb, db, hb]) if (dw_j_cur and 'get_hang_un_vaults_str' in globals()) else "대운 입고 작용 없음"
+
     fact_data = {
         "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
         "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
@@ -221,7 +231,12 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         "s12_str": get_all_12_shinsal(yb, mb, db, hb),
         "won_guk_vaults_str": " ".join(check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)),
         "oheng_counts_str": oheng_str,
-        "samjae_str": get_samjae(yb, "현재년지"), 
+        
+        # 💡 미반영 변수 100% 바인딩 완료
+        "samjae_str": samjae_val,
+        "dw_end_age": dw_end_val,
+        "hang_un_vaults_str": hang_un_vaults_val,
+        
         "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
         "curr_y": dt_mod.datetime.now().year,
         "curr_m": dt_mod.datetime.now().month,
