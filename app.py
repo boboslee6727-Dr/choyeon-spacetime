@@ -362,14 +362,18 @@ except Exception as _api_e:
     client = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
-    if model is None:
+    # 상단에서 정의한 client 객체 존재 여부 확인
+    if client is None:
         return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. API 키를 확인하세요.</div>"
     try:
-        response = model.generate_content(prompt_text)
+        # 최신 google-genai SDK 전용 호출 문법
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",  # 또는 "gemini-1.5-flash"
+            contents=prompt_text
+        )
         return response.text.strip()
     except Exception as e:
         return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
-
 JIJANGGAN = {'子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] }
 
 def get_color(c):
