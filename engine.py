@@ -117,24 +117,87 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산
+    # 🔍 신청인 사주간지 역산 (value 충돌 제거 및 인라인 연산 완벽 적용)
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
-        with col_g1: st.text_input("년주", value="", key="u_ry_rev")
-        with col_g2: st.text_input("월주", value="", key="u_rm_rev")
+        # 💡 원인 제거: value="" 삭제
+        with col_g1: u_ry = st.text_input("년주", key="u_ry_rev")
+        with col_g2: u_rm = st.text_input("월주", key="u_rm_rev")
         col_g3, col_g4 = st.columns(2)
-        with col_g3: st.text_input("일주", value="", key="u_rd_rev")
-        with col_g4: st.text_input("시주", value="", key="u_rt_rev")
+        with col_g3: u_rd = st.text_input("일주", key="u_rd_rev")
+        with col_g4: u_rt = st.text_input("시주", key="u_rt_rev")
         
-        st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=getattr(engine, 'auto_fill_user_ganji', None))
-        
+        # 💡 원인 제거: 외부 콜백(on_click) 대신 app.py 내부 직접 연산(st.button)으로 교체
+        if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
+            st.session_state['app_running'] = False
+            
+            _ry = extract_ganji(u_ry) if 'extract_ganji' in globals() else u_ry
+            _rm = extract_ganji(u_rm) if 'extract_ganji' in globals() else u_rm
+            _rd = extract_ganji(u_rd) if 'extract_ganji' in globals() else u_rd
+            
+            if not _ry and not _rm and not _rd:
+                if 'rev_success_msg' in st.session_state: 
+                    del st.session_state['rev_success_msg']
+                st.rerun()
+                
+            elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
+                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
+                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
+                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+                
+                klc_find = KoreanLunarCalendar()
+                found = False
+                
+                time_map = {
+                    '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
+                    '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
+                    '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
+                    '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
+                    '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
+                    '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
+                    '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
+                    '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
+                    '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
+                    '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
+                    '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
+                    '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
+                }
+                
+                for y in range(2026, 1899, -1):
+                    klc_find.setSolarDate(y, 7, 1)
+                    gj_y = klc_find.getChineseGapJaString().split()
+                    if gj_y and gj_y[0][:2] == ry_h:
+                        curr_dt = dt_mod.date(y+1, 2, 28)
+                        while curr_dt >= dt_mod.date(y, 1, 1):
+                            klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                            gj = klc_find.getChineseGapJaString().split()
+                            if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                                # 세션에 역산된 신청인 생년월일/시간 세팅
+                                st.session_state['s_y'] = curr_dt.year
+                                st.session_state['s_m'] = curr_dt.month
+                                st.session_state['s_d'] = curr_dt.day
+                                
+                                if u_rt:
+                                    ji_char_u = u_rt[-1]
+                                    u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u) if 'engine' in globals() else ji_char_u
+                                    st.session_state['s_t'] = time_map.get(u_rt_h, "시간 모름")
+                                else:
+                                    st.session_state['s_t'] = "시간 모름"
+
+                                found = True
+                                st.session_state['rev_success_msg'] = "✅ 신청인 자동입력 완료!"
+                                st.rerun()
+                                break
+                            curr_dt -= dt_mod.timedelta(days=1)
+                    if found: break
+                if not found: 
+                    st.error("일치하는 날짜가 없습니다.")
+            else: 
+                st.warning("간지를 2글자씩 정확히 입력하세요.")
+
         if 'rev_success_msg' in st.session_state:
             st.success(st.session_state['rev_success_msg'])
-            del st.session_state['rev_success_msg']
-        if 'rev_error_msg' in st.session_state:
-            st.error(st.session_state['rev_error_msg'])
-            del st.session_state['rev_error_msg']
 
     # ==============================================================================
     # 👤 신청인 기본 정보
