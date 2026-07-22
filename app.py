@@ -177,7 +177,7 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 사주간지 역산 (무결점 조건문 체인 복원)
+    # 👥 상대방 사주간지 역산 & 기본 정보 (무한루프 완전 소멸 버전)
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
@@ -188,7 +188,7 @@ with st.sidebar:
             with p_col_g3: st.text_input("상대방 일주", key="p_rd_rev")
             with p_col_g4: st.text_input("상대방 시주", key="p_rt_rev")
             
-            # engine.py 로직 호출
+            # engine.py의 자립형 콜백 함수 안전 호출
             st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=getattr(engine, 'auto_fill_partner_ganji', None))
             
             if 'rev_p_success_msg' in st.session_state:
@@ -199,7 +199,7 @@ with st.sidebar:
                 del st.session_state['rev_p_error_msg']
 
         # ==============================================================================
-        # 👥 상대방 기본 정보
+        # 👥 상대방 기본 정보 (value 매개변수를 완전히 지워 무한루프 충돌 원천 차단)
         # ==============================================================================
         if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1980
         if 'p_m_in' not in st.session_state: st.session_state['p_m_in'] = 1
@@ -212,6 +212,7 @@ with st.sidebar:
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             p_col1, p_col2, p_col3 = st.columns(3)
+            # 💡 value=p_def_y 등을 제거하여 Streamlit 엔진의 무한 Rerun을 차단합니다.
             f_y = p_col1.number_input("년도(상대)", 1900, 2050, key="p_y_in")
             f_m = p_col2.number_input("월(상대)", 1, 12, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, key="p_d_in")
