@@ -1246,7 +1246,7 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
 
 def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=28):
     """
-    [출산 택일 정방향 탐색 엔진 - 사이드바 연동 및 안전 주수 필터 완성본]
+    [초연 시공명리 출산 택일 정방향 탐색 엔진 - 3주 6자 및 12시진 전수 분석 호환 버전]
     """
     male_jiji = male_jjis[0] if male_jjis else "子"
     female_jiji = female_jjis[0] if female_jjis else "丑"
@@ -1258,84 +1258,81 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, la
         conception_date = current_date 
         delivery_date = conception_date + dt_mod.timedelta(days=268) # 정방향 268일 후 출산일
         
-        # 1. 탐색 기간 내에 들어오는 출산일인지 먼저 검증
+        # 1. 탐색 기간 내에 들어오는 출산일 검증
         if start_date <= delivery_date <= end_date:
             
-            # 2. 마지막 생리일이 입력된 경우에만 의학적 안전 주수(37~41주) 필터 적용
+            # 2. 마지막 생리일 기준 의학적 안전 주수(37~41주) 필터
             if last_period_date:
                 gestation_days = (delivery_date - last_period_date).days
                 if gestation_days > 0:
                     g_weeks = gestation_days // 7
-                    # 37주 미만(조산) 또는 41주 초과(과숙아)는 후보에서 제외하되, 
-                    # 탐색 자체가 막히지 않도록 부드럽게 넘어가게 처리
                     if g_weeks < 37 or g_weeks > 41:
                         current_date += dt_mod.timedelta(days=1)
                         continue
             
             try:
-                _, _, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
+                # 3주 6자 (년, 월, 일 주) 정확히 추출
+                y_pillar, m_pillar, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
                 day_gan, day_ji = d_pillar[0], d_pillar[1]
             except:
                 current_date += dt_mod.timedelta(days=1)
                 continue
             
-            best_time_slot = find_best_birth_time(delivery_date, male_jiji, female_jiji)
-            score = evaluate_saju_harmony(day_ji, male_jiji, female_jiji, best_time_slot['ji'])
+            # 해당 날짜의 12시진 전체 스캔하여 가장 최적의 시진과 평균 점수 산출
+            time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
+            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '시간 미정', 'ji': '子', 'score': 70}
             
             optimized_results.append({
                 'date': delivery_date.strftime("%Y-%m-%d"),
                 'conception_date': conception_date.strftime("%Y-%m-%d"),
-                'score': score,
+                'three_pillars': f"{y_pillar}년 {m_pillar}월 {d_pillar}일", # 👈 3주 6자 명확히 구분
+                'score': best_slot['score'],
                 'best_time': {
-                    'time_str': best_time_slot['time_str'],
-                    'time_pillar': best_time_slot['pillar'],
-                    'ji': best_time_slot['ji']
-                }
+                    'time_str': best_slot['time_str'],
+                    'ji': best_slot['ji']
+                },
+                'all_time_slots': time_slots_eval # 12시진 전체 비교 데이터 탑재
             })
             
-        current_date += dt_mod.timedelta(days=2) # 탐색 간격 조절 (2일 간격 스캔)
+        current_date += dt_mod.timedelta(days=2) # 2일 간격 스캔
         
-    # 만약 엄격한 주수 필터 때문에 결과가 아예 없다면, 안전 주수 제한을 풀고 상위 5개를 보여주는 방어 로직 추가
     if not optimized_results and last_period_date:
-        # 재귀적으로 주수 필터 없이 다시 탐색 수행
         return get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=period_cycle)
         
     optimized_results.sort(key=lambda x: x['score'], reverse=True)
     return optimized_results[:5]
 
-def find_best_birth_time(target_date, male_jiji, female_jiji):
+
+def get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji):
     """
-    [초연 시공명리 자시 정밀 분기 엔진]
-    야자시(23:30~00:29)와 조자시(00:30~01:29)를 명리학 원칙에 맞게 완벽히 분기하여 시진을 선정합니다.
+    특정 출산일 하루의 12시진(자시~해시) 전체를 순회하며 부모 일지와의 조화도 점수를 산출합니다.
     """
-    # 박사님의 공통 시간 리스트 규격과 100% 일치하는 14개 시진 테이블
     time_slots = [
-        {'time_str': '시간 모름', 'ji': '子', 'sub': '미상'},
-        {'time_str': '00:30 ~ 01:29 (朝子)시', 'ji': '子', 'sub': '조자시'},
-        {'time_str': '01:30 ~ 03:29 (丑)시', 'ji': '丑', 'sub': '축시'},
-        {'time_str': '03:30 ~ 05:29 (寅)시', 'ji': '寅', 'sub': '인시'},
-        {'time_str': '05:30 ~ 07:29 (卯)시', 'ji': '卯', 'sub': '묘시'},
-        {'time_str': '07:30 ~ 09:29 (辰)시', 'ji': '辰', 'sub': '진시'},
-        {'time_str': '09:30 ~ 11:29 (巳)시', 'ji': '巳', 'sub': '사시'},
-        {'time_str': '11:30 ~ 13:29 (午)시', 'ji': '午', 'sub': '오시'},
-        {'time_str': '13:30 ~ 15:29 (未)시', 'ji': '未', 'sub': '미시'},
-        {'time_str': '15:30 ~ 17:29 (申)시', 'ji': '申', 'sub': '신시'},
-        {'time_str': '17:30 ~ 19:29 (酉)시', 'ji': '酉', 'sub': '유시'},
-        {'time_str': '19:30 ~ 21:29 (戌)시', 'ji': '戌', 'sub': '술시'},
-        {'time_str': '21:30 ~ 23:29 (亥)시', 'ji': '亥', 'sub': '해시'},
-        {'time_str': '23:30 ~ 00:29 (夜子)시', 'ji': '子', 'sub': '야자시'}
+        {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子'},
+        {'time_str': '01:30 ~ 03:29 (축)시', 'ji': '丑'},
+        {'time_str': '03:30 ~ 05:29 (인)시', 'ji': '寅'},
+        {'time_str': '05:30 ~ 07:29 (묘)시', 'ji': '卯'},
+        {'time_str': '07:30 ~ 09:29 (진)시', 'ji': '辰'},
+        {'time_str': '09:30 ~ 11:29 (사)시', 'ji': '巳'},
+        {'time_str': '11:30 ~ 13:29 (오)시', 'ji': '午'},
+        {'time_str': '13:30 ~ 15:29 (미)시', 'ji': '未'},
+        {'time_str': '15:30 ~ 17:29 (신)시', 'ji': '申'},
+        {'time_str': '17:30 ~ 19:29 (유)시', 'ji': '酉'},
+        {'time_str': '19:30 ~ 21:29 (술)시', 'ji': '戌'},
+        {'time_str': '21:30 ~ 23:29 (해)시', 'ji': '亥'}
     ]
     
-    # 출산 택일 시뮬레이션 시 가장 길흉이 조화롭고 부모 일지와 합이 드는 시진을 우선 스캔
-    # (기본값으로 안정적인 인시 또는 조자시를 매칭)
-    selected = time_slots[1] # 조자시 기본 탑재 (필요에 따라 알고리즘에 의해 순환 선택됨)
+    evaluated = []
+    for slot in time_slots:
+        score = evaluate_saju_harmony(slot['ji'], male_jiji, female_jiji, slot['ji'])
+        evaluated.append({
+            'time_str': slot['time_str'],
+            'ji': slot['ji'],
+            'score': score
+        })
     
-    return {
-        'time_str': selected['time_str'],
-        'pillar': f"시간{selected['ji']}",
-        'ji': selected['ji'],
-        'sub_type': selected['sub'] # 야자시/조자시 구분 속성 추가
-    }
+    evaluated.sort(key=lambda x: x['score'], reverse=True)
+    return evaluated
 
 def evaluate_saju_harmony(baby_ji, male_jiji, female_jiji, time_ji):
     """
