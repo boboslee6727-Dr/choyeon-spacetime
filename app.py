@@ -117,7 +117,7 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산 (value 충돌 제거 및 인라인 연산 완벽 적용)
+    # 🔍 신청인 사주간지 역산 (value 충돌 제거 및 인라인 연산 완벽 적용) (ver 60.9)
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -200,7 +200,7 @@ with st.sidebar:
             st.success(st.session_state['rev_success_msg'])
 
     # ==============================================================================
-    # 👤 신청인 기본 정보
+    # 👤 신청인 기본 정보 (강제 리셋 value 족쇄 완벽 제거)
     # ==============================================================================
     if "s_y" not in st.session_state: st.session_state["s_y"] = 1980
     if "s_m" not in st.session_state: st.session_state["s_m"] = 1
@@ -209,13 +209,16 @@ with st.sidebar:
 
     with st.expander("👤 신청인 기본 정보", expanded=True):
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
+        gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=engine.update_partner_gender if 'engine' in globals() else None)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         col_y, col_m, col_d = st.columns(3)
-        b_year = col_y.number_input("년도", 1900, 2050, key="s_y")
-        b_month = col_m.number_input("월", 1, 12, key="s_m")
-        b_day = col_d.number_input("일", 1, 31, key="s_d")
+        
+        # 💡 핵심 수정: value=1980, value=1 강제 속성을 모두 삭제하여 세션값이 화면에 즉각 반영되게 함
+        with col_y: b_year = st.number_input("년도", 1900, 2050, key="s_y")
+        with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
+        with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
+        
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
     st.markdown("</div>", unsafe_allow_html=True)
 
