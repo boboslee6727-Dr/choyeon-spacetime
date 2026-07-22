@@ -172,6 +172,124 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
+# ==============================================================================
+# 역산 연산 전용 콜백 함수 (무한 루프 방지 및 위젯 안전 동기화)
+# ==============================================================================
+import streamlit as st
+import datetime as dt_mod
+from korean_lunar_calendar import KoreanLunarCalendar
+# (참고: extract_ganji 함수가 다른 파일에 있다면 여기 engine.py에서도 import 되어 있어야 합니다.)
+
+def auto_fill_user_ganji():
+    st.session_state['app_running'] = False
+    ry = st.session_state.get("u_ry_rev", "")
+    rm = st.session_state.get("u_rm_rev", "")
+    rd = st.session_state.get("u_rd_rev", "")
+    rt = st.session_state.get("u_rt_rev", "")
+    
+    # 간지 추출 (기존 로직 동일)
+    try:
+        _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
+    except NameError:
+        # app.py에 정의되어 있다면 engine.py 환경에 맞게 호출 방식을 맞추십시오.
+        pass 
+    
+    if not _ry and not _rm and not _rd:
+        st.session_state.pop('rev_success_msg', None)
+    elif len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
+        ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
+        rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
+        rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
+        
+        klc_find = KoreanLunarCalendar()
+        found = False
+        
+        for y in range(2026, 1899, -1):
+            klc_find.setSolarDate(y, 7, 1)
+            gj_y = klc_find.getChineseGapJaString().split()
+            if gj_y and gj_y[0][:2] == ry_h:
+                curr_dt = dt_mod.date(y+1, 2, 28)
+                while curr_dt >= dt_mod.date(y, 1, 1):
+                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                    gj = klc_find.getChineseGapJaString().split()
+                    if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                        # 위젯 Key 직접 할당
+                        st.session_state['s_y'] = curr_dt.year
+                        st.session_state['s_m'] = curr_dt.month
+                        st.session_state['s_d'] = curr_dt.day
+                        
+                        if rt:
+                            ji_char = rt[-1]
+                            rt_h = K2H_JI.get(ji_char, ji_char)
+                            time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                            st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
+                        else:
+                            st.session_state['s_t'] = "시간 모름"
+
+                        found = True
+                        st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
+                        break
+                curr_dt -= dt_mod.timedelta(days=1)
+            if found: break
+        if not found: 
+            st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
+    else: 
+        st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
+def auto_fill_partner_ganji():
+    st.session_state['app_running'] = False
+    p_ry = st.session_state.get("p_ry_rev", "")
+    p_rm = st.session_state.get("p_rm_rev", "")
+    p_rd = st.session_state.get("p_rd_rev", "")
+    p_rt = st.session_state.get("p_rt_rev", "")
+    
+    try:
+        _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
+    except NameError:
+        pass
+
+    if not _p_ry and not _p_rm and not _p_rd:
+        st.session_state.pop('rev_p_success_msg', None)
+    elif len(_p_ry) == 2 and len(_p_rm) == 2 and len(_p_rd) == 2:
+        p_ry_h = K2H_GAN.get(_p_ry[0], _p_ry[0]) + K2H_JI.get(_p_ry[1], _p_ry[1])
+        p_rm_h = K2H_GAN.get(_p_rm[0], _p_rm[0]) + K2H_JI.get(_p_rm[1], _p_rm[1])
+        p_rd_h = K2H_GAN.get(_p_rd[0], _p_rd[0]) + K2H_JI.get(_p_rd[1], _p_rd[1])
+        
+        klc_find = KoreanLunarCalendar()
+        found = False
+        
+        for y in range(2026, 1899, -1):
+            klc_find.setSolarDate(y, 7, 1)
+            gj_y = klc_find.getChineseGapJaString().split()
+            if gj_y and gj_y[0][:2] == p_ry_h:
+                curr_dt = dt_mod.date(y+1, 2, 28)
+                while curr_dt >= dt_mod.date(y, 1, 1):
+                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                    gj = klc_find.getChineseGapJaString().split()
+                    if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
+                        # 위젯 Key 직접 할당 및 시간 누락 완벽 해결
+                        st.session_state['p_y_in'] = curr_dt.year
+                        st.session_state['p_m_in'] = curr_dt.month
+                        st.session_state['p_d_in'] = curr_dt.day
+                        
+                        if p_rt:
+                            ji_char_p = p_rt[-1]
+                            p_rt_h = K2H_JI.get(ji_char_p, ji_char_p)
+                            time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
+                            st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                        else:
+                            st.session_state['p_t_key'] = "시간 모름"
+
+                        found = True
+                        st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
+                        break
+                curr_dt -= dt_mod.timedelta(days=1)
+            if found: break
+        if not found: 
+            st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
+    else: 
+        st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
 def get_group_ss(ss_name):
     """십성 명칭을 5대 그룹(비겁, 식상, 재성, 관성, 인성)으로 매핑합니다."""
     if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
@@ -692,6 +810,7 @@ def get_hang_un_vaults_str(dw_j, jjis):
 # ==============================================================================
 # 4. 궁합 및 출산 택일 연산 로직 (버그 정밀 수정 완비)
 # ==============================================================================
+
 def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list=None):
     if forbidden_list is None: forbidden_list = []
         
