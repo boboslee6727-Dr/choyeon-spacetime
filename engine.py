@@ -1244,39 +1244,34 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         "marital_info": marital_status
     }
 
-def get_gunghap_report(res):
-    return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
-
-def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis):
+def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=28):
     """
-    [출산 택일 정방향 탐색 엔진 - app.py 완벽 호환 연계 버전]
+    [출산 택일 정방향 탐색 엔진 - 사이드바 연동 및 안전 주수 필터 완성본]
     """
-    # 마지막 생리일이나 주기는 세션 스테이트나 기본값으로 안전하게 처리
-    last_period_date = dt_mod.date.today() - dt_mod.timedelta(days=180) # 안전 기본값
-    period_cycle = 28
-    
     male_jiji = male_jjis[0] if male_jjis else "子"
     female_jiji = female_jjis[0] if female_jjis else "丑"
     
     optimized_results = []
     current_date = start_date
+    
     while current_date <= end_date:
         conception_date = current_date 
-        delivery_date = conception_date + dt_mod.timedelta(days=268) # 👈 이 줄 바로 아래에 삽입!
+        delivery_date = conception_date + dt_mod.timedelta(days=268) # 정방향 268일 후 출산일
         
-        # ==========================================
-        # 🛡️ [정확한 삽입 좌표] 의학적 안전 주수 필터 장착
-        # ==========================================
-        if last_period_date:
-            gestation_days = (delivery_date - last_period_date).days
-            if gestation_days > 0:
-                g_weeks = gestation_days // 7
-                # 37주 미만(조산) 또는 41주 초과(과숙아)는 후보에서 원천 배제
-                if g_weeks < 37 or g_weeks > 41:
-                    current_date += dt_mod.timedelta(days=1)
-                    continue
-        
+        # 1. 탐색 기간 내에 들어오는 출산일인지 먼저 검증
         if start_date <= delivery_date <= end_date:
+            
+            # 2. 마지막 생리일이 입력된 경우에만 의학적 안전 주수(37~41주) 필터 적용
+            if last_period_date:
+                gestation_days = (delivery_date - last_period_date).days
+                if gestation_days > 0:
+                    g_weeks = gestation_days // 7
+                    # 37주 미만(조산) 또는 41주 초과(과숙아)는 후보에서 제외하되, 
+                    # 탐색 자체가 막히지 않도록 부드럽게 넘어가게 처리
+                    if g_weeks < 37 or g_weeks > 41:
+                        current_date += dt_mod.timedelta(days=1)
+                        continue
+            
             try:
                 _, _, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
                 day_gan, day_ji = d_pillar[0], d_pillar[1]
@@ -1293,11 +1288,17 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis):
                 'score': score,
                 'best_time': {
                     'time_str': best_time_slot['time_str'],
-                    'time_pillar': best_time_slot['pillar']
+                    'time_pillar': best_time_slot['pillar'],
+                    'ji': best_time_slot['ji']
                 }
             })
             
-        current_date += dt_mod.timedelta(days=3)
+        current_date += dt_mod.timedelta(days=2) # 탐색 간격 조절 (2일 간격 스캔)
+        
+    # 만약 엄격한 주수 필터 때문에 결과가 아예 없다면, 안전 주수 제한을 풀고 상위 5개를 보여주는 방어 로직 추가
+    if not optimized_results and last_period_date:
+        # 재귀적으로 주수 필터 없이 다시 탐색 수행
+        return get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=period_cycle)
         
     optimized_results.sort(key=lambda x: x['score'], reverse=True)
     return optimized_results[:5]
