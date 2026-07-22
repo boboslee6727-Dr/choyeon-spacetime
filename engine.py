@@ -1246,7 +1246,7 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
 
 def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=28):
     """
-    [초연 시공명리 출산 택일 정방향 탐색 엔진 - 3주 6자 및 12시진 전수 분석 호환 버전]
+    [초연 시공명리 출산 택일 정방향 탐색 엔진 - 3주 6자 및 12시진 전수 분석 완성본]
     """
     male_jiji = male_jjis[0] if male_jjis else "子"
     female_jiji = female_jjis[0] if female_jjis else "丑"
@@ -1278,24 +1278,29 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, la
                 current_date += dt_mod.timedelta(days=1)
                 continue
             
-            # 1. 해당 날짜의 12시진 전체 스캔하여 가장 최적의 시진 산출
+            # 3. 해당 날짜의 12시진 전체 스캔하여 가장 최적의 시진 산출
             time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
-            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '시간 미정', 'ji': '子', 'score': 70}
+            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70}
             
-            # 2. 기존 시진 계산 함수 활용 및 time_pillar 안전 추출
-            best_time_slot = find_best_birth_time(delivery_date, male_jiji, female_jiji)
+            # 4. 시진 지지(ji)에 따른 시주 표기 매핑
+            ji_to_pillar = {
+                '子': '子時', '丑': '丑時', '寅': '寅時', '卯': '卯時',
+                '辰': '辰時', '巳': '巳時', '午': '午時', '未': '未時',
+                '申': '申時', '酉': '酉時', '戌': '戌時', '亥': '亥時'
+            }
+            time_pillar_str = ji_to_pillar.get(best_slot['ji'], '子時')
             
-            # 3. 12시진 스캔 최고 점수와 시진 정보를 완벽하게 결합
+            # 5. 최종 결과 리스트 적재
             optimized_results.append({
                 'date': delivery_date.strftime("%Y-%m-%d"),
                 'conception_date': conception_date.strftime("%Y-%m-%d"),
-                'score': best_slot['score'], # 👈 12시진 중 가장 높은 최고 점수 반영
+                'score': best_slot['score'], 
                 'best_time': {
                     'time_str': best_slot['time_str'],
-                    'time_pillar': best_time_slot.get('pillar', '子時'),
+                    'time_pillar': time_pillar_str,
                     'ji': best_slot['ji']
                 },
-                'all_time_slots': time_slots_eval # 12시진 전체 비교 데이터도 함께 탑재
+                'all_time_slots': time_slots_eval # 12시진 전체 비교 데이터 탑재
             })
             
         current_date += dt_mod.timedelta(days=2) # 2일 간격 스캔
