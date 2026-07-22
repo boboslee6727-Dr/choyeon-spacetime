@@ -83,7 +83,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (중복 Key 및 논리 오류 원천 차단 최종 버전) ver 60.9
+# 2. 사이드바 통제 센터 (방탄(Bulletproof) 역산 로직 및 UI 증발 원천 차단 버전)
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -95,7 +95,6 @@ with st.sidebar:
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
     
-    # 💡 main_category 셀렉트박스는 파일 전체에서 오직 여기서만 단 1번 선언됩니다.
     main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
     if main_category == "1. 사주팔자 및 운세 풀이":
@@ -118,7 +117,7 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산
+    # 🔍 신청인 사주간지 역산 (독립형 방탄 로직 장착)
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -130,17 +129,23 @@ with st.sidebar:
         
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             st.session_state['app_running'] = False
-            _ry = extract_ganji(u_ry) if 'extract_ganji' in globals() else u_ry
-            _rm = extract_ganji(u_rm) if 'extract_ganji' in globals() else u_rm
-            _rd = extract_ganji(u_rd) if 'extract_ganji' in globals() else u_rd
+            
+            import re
+            _ry = re.sub(r'[^가-힣一-龥]', '', u_ry) if u_ry else ""
+            _rm = re.sub(r'[^가-힣一-龥]', '', u_rm) if u_rm else ""
+            _rd = re.sub(r'[^가-힣一-龥]', '', u_rd) if u_rd else ""
             
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
             elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+                # 💡 핵심 수정: 외부 engine 딕셔너리에 의존하지 않는 자체 변환망 (절대 뻗지 않음)
+                safe_gan = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
+                safe_ji = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
+                
+                ry_h = safe_gan.get(_ry[0], _ry[0]) + safe_ji.get(_ry[1], _ry[1])
+                rm_h = safe_gan.get(_rm[0], _rm[0]) + safe_ji.get(_rm[1], _rm[1])
+                rd_h = safe_gan.get(_rd[0], _rd[0]) + safe_ji.get(_rd[1], _rd[1])
                 
                 klc_find = KoreanLunarCalendar()
                 found = False
@@ -172,12 +177,12 @@ with st.sidebar:
                                 st.session_state['s_d'] = curr_dt.day
                                 if u_rt:
                                     ji_char_u = u_rt[-1]
-                                    u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u) if 'engine' in globals() else ji_char_u
+                                    u_rt_h = safe_ji.get(ji_char_u, ji_char_u)
                                     st.session_state['s_t'] = time_map.get(u_rt_h, "시간 모름")
                                 else:
                                     st.session_state['s_t'] = "시간 모름"
                                 found = True
-                                st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
+                                st.session_state['rev_success_msg'] = "✅ 신청인 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -203,7 +208,7 @@ with st.sidebar:
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = col_number_input = st.number_input("년도", 1900, 2050, key="s_y")
+        with col_y: b_year = st.number_input("년도", 1900, 2050, key="s_y")
         with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
         with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
@@ -240,17 +245,22 @@ with st.sidebar:
             
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False
-                _p_ry = extract_ganji(p_ry) if 'extract_ganji' in globals() else p_ry
-                _p_rm = extract_ganji(p_rm) if 'extract_ganji' in globals() else p_rm
-                _p_rd = extract_ganji(p_rd) if 'extract_ganji' in globals() else p_rd
+                
+                import re
+                _p_ry = re.sub(r'[^가-힣一-龥]', '', p_ry) if p_ry else ""
+                _p_rm = re.sub(r'[^가-힣一-龥]', '', p_rm) if p_rm else ""
+                _p_rd = re.sub(r'[^가-힣一-龥]', '', p_rd) if p_rd else ""
                 
                 if not _p_ry and not _p_rm and not _p_rd:
                     if 'rev_p_success_msg' in st.session_state: del st.session_state['rev_p_success_msg']
                     st.rerun()
                 elif len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
-                    p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
-                    p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
-                    p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
+                    safe_gan = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
+                    safe_ji = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
+                    
+                    p_ry_h = safe_gan.get(_p_ry[0], _p_ry[0]) + safe_ji.get(_p_ry[1], _p_ry[1])
+                    p_rm_h = safe_gan.get(_p_rm[0], _p_rm[0]) + safe_ji.get(_p_rm[1], _p_rm[1])
+                    p_rd_h = safe_gan.get(_p_rd[0], _p_rd[0]) + safe_ji.get(_p_rd[1], _p_rd[1])
                     
                     klc_find = KoreanLunarCalendar()
                     found = False
@@ -282,7 +292,7 @@ with st.sidebar:
                                     st.session_state['p_d_in'] = curr_dt.day
                                     if p_rt:
                                         ji_char_p = p_rt[-1]
-                                        p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p) if 'engine' in globals() else ji_char_p
+                                        p_rt_h = safe_ji.get(ji_char_p, ji_char_p)
                                         st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
                                     else:
                                         st.session_state['p_t_key'] = "시간 모름"
