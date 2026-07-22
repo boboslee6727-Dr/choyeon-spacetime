@@ -352,14 +352,14 @@ components.html("""
 """, height=0, width=0)
 
 # ==============================================================================
-# 2. AI 및 명리 연산 엔진
+# 2. AI 및 명리 연산 엔진 (최신 google-genai SDK 규격)
 # ==============================================================================
 try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Client 객체를 생성하면서 Secrets의 API 키를 전달합니다.
+    client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
-    model = None
+    client = None
 
 def call_claude_api(prompt_text, max_tokens=8000):
     if model is None:
