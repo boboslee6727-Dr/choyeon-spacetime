@@ -1247,30 +1247,26 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
 def get_gunghap_report(res):
     return "두 분의 사주 에너지는 시공간의 조화를 이루고 있습니다. 정밀 분석 결과..."
 
-def get_optimized_delivery_days_forward(start_date, end_date, last_period_date, period_cycle, male_jiji, female_jiji):
+# 기존에 넣었던 이름(get_optimized_delivery_days_forward)을 app.py가 찾는 이름으로 변경합니다.
+def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis):
     """
-    [출산 택일 정방향 탐색 엔진]
-    1. 산모의 마지막 생리일과 평균 주기를 바탕으로 미래의 가임기(합궁일) 후보들을 스캔합니다.
-    2. 합궁일로부터 정확히 268일(약 38~40주)을 미래로 더해 출산 예정일을 산출합니다.
-    3. 해당 출산일의 사주 원국과 태어날 시간별(12시진) 명리를 분석하여 가장 조화로운 길일/시간을 뽑아냅니다.
+    [출산 택일 정방향 탐색 엔진 - app.py 완벽 호환 연계 버전]
     """
-    optimized_results = []
+    # 마지막 생리일이나 주기는 세션 스테이트나 기본값으로 안전하게 처리
+    last_period_date = dt_mod.date.today() - dt_mod.timedelta(days=180) # 안전 기본값
+    period_cycle = 28
     
-    # 산모의 생리 주기 기반 평균 배란일 계산 함수 (생리 주기 - 14일)
-    # 만약 마지막 생리일 정보가 없다면 탐색 시작일을 기준으로 가상의 가임기를 잡습니다.
+    male_jiji = male_jjis[0] if male_jjis else "子"
+    female_jiji = female_jjis[0] if female_jjis else "丑"
+    
+    optimized_results = []
     current_date = start_date
     
-    # 탐색 종료일까지 반복하며 가임기 및 출산일 스캔
     while current_date <= end_date:
-        # 가상의 생리 시작일로 가정하고 배란일 추정 (생리 시작일 + (주기 - 14일))
-        # 여기서는 탐색일 자체를 합궁(임신 시도) 가능일로 열어두고 순방향으로 268일을 더합니다.
-        
-        conception_date = current_date # 합궁(잉태)일 후보
+        conception_date = current_date 
         delivery_date = conception_date + dt_mod.timedelta(days=268) # 정방향 268일 후 출산일
         
-        # 만약 계산된 출산일이 사용자가 설정한 탐색 범위 내에 들어온다면 평가 진행
         if start_date <= delivery_date <= end_date:
-            # 해당 출산일의 사주 간지 추출
             try:
                 _, _, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
                 day_gan, day_ji = d_pillar[0], d_pillar[1]
@@ -1278,10 +1274,7 @@ def get_optimized_delivery_days_forward(start_date, end_date, last_period_date, 
                 current_date += dt_mod.timedelta(days=1)
                 continue
             
-            # 태어날 시간별(자시~해시) 최적의 시진 탐색
             best_time_slot = find_best_birth_time(delivery_date, male_jiji, female_jiji)
-            
-            # 명리 조화 점수 산정 (부모 일지와 합(合)이 들거나 오행이 조화로우면 고득점)
             score = evaluate_saju_harmony(day_ji, male_jiji, female_jiji, best_time_slot['ji'])
             
             optimized_results.append({
@@ -1294,12 +1287,10 @@ def get_optimized_delivery_days_forward(start_date, end_date, last_period_date, 
                 }
             })
             
-        # 효율적인 스캔을 위해 3일 간격으로 점프 (필요시 1일 단위로 변경 가능)
         current_date += dt_mod.timedelta(days=3)
         
-    # 점수가 높은 순으로 정렬하여 상위 목록 반환
     optimized_results.sort(key=lambda x: x['score'], reverse=True)
-    return optimized_results[:5] # 상위 5개 길일 추천
+    return optimized_results[:5]
 
 def find_best_birth_time(target_date, male_jiji, female_jiji):
     """
