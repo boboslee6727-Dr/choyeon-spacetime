@@ -83,7 +83,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (최종 정밀 수색 및 버그 완벽 차단 버전) ver 60.9 - Callback 도입
+# 2. 사이드바 통제 센터 (최종 정밀 수색 및 버그 완벽 차단 버전) ver 60.9 - 무결점 원상복구
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -105,7 +105,6 @@ with st.sidebar:
         u_product = st.radio("비교 분석 대상:", ["3-1. 타 감명서 비교 (사주)", "3-2. 타 감명서 비교 (궁합)"], key="sub_category_3", on_change=stop_ai)
     st.markdown("---")
 
-    # 성별 양방향 자동 동기화 콜백 함수
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
 
@@ -118,61 +117,6 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 [신청인] 역산 연산 전용 콜백 함수 (무한 루프 방지)
-    # ==============================================================================
-    def auto_fill_user_ganji():
-        st.session_state['app_running'] = False
-        ry = st.session_state.get("u_ry_rev", "")
-        rm = st.session_state.get("u_rm_rev", "")
-        rd = st.session_state.get("u_rd_rev", "")
-        rt = st.session_state.get("u_rt_rev", "")
-        
-        _ry, _rm, _rd = extract_ganji(ry), extract_ganji(rm), extract_ganji(rd)
-        
-        if not _ry and not _rm and not _rd:
-            st.session_state.pop('rev_success_msg', None)
-        elif len(_ry) == 2 and len(_rm) == 2 and len(_rd) == 2:
-            ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-            rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-            rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
-            
-            klc_find = KoreanLunarCalendar()
-            found = False
-            
-            for y in range(2026, 1899, -1):
-                klc_find.setSolarDate(y, 7, 1)
-                gj_y = klc_find.getChineseGapJaString().split()
-                if gj_y and gj_y[0][:2] == ry_h:
-                    curr_dt = dt_mod.date(y+1, 2, 28)
-                    while curr_dt >= dt_mod.date(y, 1, 1):
-                        klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                        gj = klc_find.getChineseGapJaString().split()
-                        if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                            # 💡 위젯 key에 직접 세팅하여 무한 루프 차단
-                            st.session_state['s_y'] = curr_dt.year
-                            st.session_state['s_m'] = curr_dt.month
-                            st.session_state['s_d'] = curr_dt.day
-                            
-                            if rt:
-                                ji_char = rt[-1]
-                                rt_h = engine.K2H_JI.get(ji_char, ji_char)
-                                time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
-                                st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
-                            else:
-                                st.session_state['s_t'] = "시간 모름"
-
-                            found = True
-                            st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
-                            break
-                    curr_dt -= dt_mod.timedelta(days=1)
-                if found: break
-            
-            if not found: 
-                st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
-        else: 
-            st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
-
-    # ==============================================================================
     # 🔍 신청인 사주간지 역산
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -183,8 +127,8 @@ with st.sidebar:
         with col_g3: st.text_input("일주", value="", key="u_rd_rev")
         with col_g4: st.text_input("시주", value="", key="u_rt_rev")
         
-        # 콜백(on_click) 적용: 클릭 시 위 함수가 먼저 안전하게 실행됨
-        st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=auto_fill_user_ganji)
+        # engine.py 로직 호출
+        st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=engine.auto_fill_user_ganji)
         
         if 'rev_success_msg' in st.session_state:
             st.success(st.session_state['rev_success_msg'])
@@ -194,7 +138,7 @@ with st.sidebar:
             del st.session_state['rev_error_msg']
 
     # ==============================================================================
-    # 👤 신청인 기본 정보 (위젯 충돌을 막기 위해 value 매개변수 제거)
+    # 👤 신청인 기본 정보
     # ==============================================================================
     if "s_y" not in st.session_state: st.session_state["s_y"] = 1980
     if "s_m" not in st.session_state: st.session_state["s_m"] = 1
@@ -233,61 +177,7 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 [상대방] 역산 연산 전용 콜백 함수 (무한 루프 방지)
-    # ==============================================================================
-    def auto_fill_partner_ganji():
-        st.session_state['app_running'] = False
-        p_ry = st.session_state.get("p_ry_rev", "")
-        p_rm = st.session_state.get("p_rm_rev", "")
-        p_rd = st.session_state.get("p_rd_rev", "")
-        p_rt = st.session_state.get("p_rt_rev", "")
-        
-        _p_ry, _p_rm, _p_rd = extract_ganji(p_ry), extract_ganji(p_rm), extract_ganji(p_rd)
-        
-        if not _p_ry and not _p_rm and not _p_rd:
-            st.session_state.pop('rev_p_success_msg', None)
-        elif len(_p_ry) == 2 and len(_p_rm) == 2 and len(_p_rd) == 2:
-            p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
-            p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
-            p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
-            
-            klc_find = KoreanLunarCalendar()
-            found = False
-            
-            for y in range(2026, 1899, -1):
-                klc_find.setSolarDate(y, 7, 1)
-                gj_y = klc_find.getChineseGapJaString().split()
-                if gj_y and gj_y[0][:2] == p_ry_h:
-                    curr_dt = dt_mod.date(y+1, 2, 28)
-                    while curr_dt >= dt_mod.date(y, 1, 1):
-                        klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                        gj = klc_find.getChineseGapJaString().split()
-                        if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                            # 💡 위젯 key에 직접 세팅하여 무한 루프 차단 및 시간값 누락 완벽 해결
-                            st.session_state['p_y_in'] = curr_dt.year
-                            st.session_state['p_m_in'] = curr_dt.month
-                            st.session_state['p_d_in'] = curr_dt.day
-                            
-                            if p_rt:
-                                ji_char_p = p_rt[-1]
-                                p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
-                                time_map = {'자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시', '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시', '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시', '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시', '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시', '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시', '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시', '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시', '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시', '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시', '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시', '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'}
-                                st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
-                            else:
-                                st.session_state['p_t_key'] = "시간 모름"
-
-                            found = True
-                            st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
-                            break
-                    curr_dt -= dt_mod.timedelta(days=1)
-                if found: break
-            if not found: 
-                st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
-        else: 
-            st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
-
-    # ==============================================================================
-    # 👥 상대방 사주간지 역산 (ver 60.9 원본 구조 100% 사수)
+    # 👥 상대방 사주간지 역산 (무결점 조건문 체인 복원)
     # ==============================================================================
     elif any(x in u_product for x in ["2-", "3-2."]):
         with st.expander("👥 상대방 사주간지 역산", expanded=False):
@@ -298,8 +188,8 @@ with st.sidebar:
             with p_col_g3: st.text_input("상대방 일주", key="p_rd_rev")
             with p_col_g4: st.text_input("상대방 시주", key="p_rt_rev")
             
-            # 콜백(on_click) 적용
-            st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=auto_fill_partner_ganji)
+            # engine.py 로직 호출
+            st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=engine.auto_fill_partner_ganji)
             
             if 'rev_p_success_msg' in st.session_state:
                 st.success(st.session_state['rev_p_success_msg'])
@@ -309,7 +199,7 @@ with st.sidebar:
                 del st.session_state['rev_p_error_msg']
 
         # ==============================================================================
-        # 👥 상대방 기본 정보 (위젯 충돌을 막기 위해 value 매개변수 제거)
+        # 👥 상대방 기본 정보
         # ==============================================================================
         if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1980
         if 'p_m_in' not in st.session_state: st.session_state['p_m_in'] = 1
