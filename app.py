@@ -504,7 +504,7 @@ if st.session_state.get('app_running', False):
                     f"일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
                 )
                 
-                s12_str = engine.get_all_12_shinsal(yb, yb, mb, db, hb)
+                s12_str = engine.get_all_12_shinsal(yb, mb, db, hb)
                 shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
                 shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
                 
