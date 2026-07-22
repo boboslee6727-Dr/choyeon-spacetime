@@ -1045,9 +1045,9 @@ if st.session_state.get('app_running', False):
         with st.spinner("⏳ 신생아의 명조 분석 및 남/여 대운 흐름, 부모 인연을 심층 분석 중입니다..."):
             try:
                 start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
-                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=30))
+                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=365))
                 last_period = st.session_state.get('last_period_date')
-                cycle = st.session_state.get('period_cycle', 28)
+                cycle = st.session_state.get('period_cycle', 30)
                 
                 s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
                 p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
@@ -1059,7 +1059,7 @@ if st.session_state.get('app_running', False):
                 m_jjis = [m_d_pillar[1]] if m_d_pillar else []
                 f_jjis = [f_d_pillar[1]] if f_d_pillar else []
 
-                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis)
+                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, last_period_date=last_period, period_cycle=cycle)
 
                 taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px; text-align:center;'>👶 출산 택일(제왕절개/임신 계획) 정밀 분석 결과</h3>"
                 
