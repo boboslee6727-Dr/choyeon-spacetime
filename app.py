@@ -121,11 +121,18 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산 (진한 파스텔 회색 바탕)
+    # 🔍 신청인 사주간지 역산 (진한 파스텔 회색 톤)
     # ==============================================================================
     with st.sidebar.expander("🔍 신청인 사주간지 역산"):
+        # 인라인 스타일 주입 (빈 박스 안 생김)
         st.markdown("""
-            <div style="background-color: #ECEFF1; padding: 12px; border-radius: 8px; border: 1px solid #CFD8DC; margin-bottom: 10px;">
+            <style>
+                div[data-testid="stSidebar"] div[data-testid="stExpander"]:has(span:contains("신청인 사주간지")) {
+                    background-color: #ECEFF1 !important;
+                    border: 1px solid #CFD8DC !important;
+                    border-radius: 8px !important;
+                }
+            </style>
         """, unsafe_allow_html=True)
 
         col_g1, col_g2 = st.columns(2)
@@ -134,8 +141,6 @@ with st.sidebar:
         col_g3, col_g4 = st.columns(2)
         with col_g3: u_rd = st.text_input("일주", key="u_rd_rev")
         with col_g4: u_rt = st.text_input("시주", key="u_rt_rev")
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             st.session_state['app_running'] = False
@@ -206,7 +211,7 @@ with st.sidebar:
             del st.session_state['rev_success_msg']
 
     # ==============================================================================
-    # 👤 신청인 기본 정보 (파스텔 연하늘색 바탕)
+    # 👤 신청인 기본 정보 (파스텔 연하늘색 톤)
     # ==============================================================================
     if "s_y" not in st.session_state: st.session_state["s_y"] = 1980
     if "s_m" not in st.session_state: st.session_state["s_m"] = 1
@@ -215,7 +220,13 @@ with st.sidebar:
 
     with st.sidebar.expander("👤 신청인 기본 정보"):
         st.markdown("""
-            <div style="background-color: #E3F2FD; padding: 12px; border-radius: 8px; border: 1px solid #BBDEFB; margin-bottom: 10px;">
+            <style>
+                div[data-testid="stSidebar"] div[data-testid="stExpander"]:has(span:contains("신청인 기본 정보")) {
+                    background-color: #E3F2FD !important;
+                    border: 1px solid #BBDEFB !important;
+                    border-radius: 8px !important;
+                }
+            </style>
         """, unsafe_allow_html=True)
 
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
@@ -227,8 +238,6 @@ with st.sidebar:
         with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
         with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # ==============================================================================
     # 📌 특화 상품별 추가 옵션
@@ -250,13 +259,19 @@ with st.sidebar:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 정보 입력부 (궁합/타 감명서 비교 상품 선택 시에만 노출)
+    # 👥 상대방 정보 입력부
     # ==============================================================================
     if any(x in u_product for x in ["2-", "3-2."]):
-        # 1) 상대방 사주간지 역산 (진한 파스텔 회색 바탕)
+        # 1) 상대방 사주간지 역산
         with st.sidebar.expander("🔍 상대방 사주간지 역산"):
             st.markdown("""
-                <div style="background-color: #ECEFF1; padding: 12px; border-radius: 8px; border: 1px solid #CFD8DC; margin-bottom: 10px;">
+                <style>
+                    div[data-testid="stSidebar"] div[data-testid="stExpander"]:has(span:contains("상대방 사주간지")) {
+                        background-color: #ECEFF1 !important;
+                        border: 1px solid #CFD8DC !important;
+                        border-radius: 8px !important;
+                    }
+                </style>
             """, unsafe_allow_html=True)
 
             p_col_g1, p_col_g2 = st.columns(2)
@@ -265,8 +280,6 @@ with st.sidebar:
             p_col_g3, p_col_g4 = st.columns(2)
             with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
-
-            st.markdown("</div>", unsafe_allow_html=True)
 
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False
@@ -341,10 +354,16 @@ with st.sidebar:
         if 'p_d_in' not in st.session_state: st.session_state['p_d_in'] = 1
         if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
 
-        # 2) 상대방 기본 정보 (파스텔 연하늘색 바탕)
+        # 2) 상대방 기본 정보
         with st.sidebar.expander("👥 상대방 기본 정보"):
             st.markdown("""
-                <div style="background-color: #E3F2FD; padding: 12px; border-radius: 8px; border: 1px solid #BBDEFB; margin-bottom: 10px;">
+                <style>
+                    div[data-testid="stSidebar"] div[data-testid="stExpander"]:has(span:contains("상대방 기본 정보")) {
+                        background-color: #E3F2FD !important;
+                        border: 1px solid #BBDEFB !important;
+                        border-radius: 8px !important;
+                    }
+                </style>
             """, unsafe_allow_html=True)
 
             f_name = st.text_input("상대방 이름", value="", key="f_n")
@@ -356,8 +375,6 @@ with st.sidebar:
             f_m = p_col2.number_input("월(상대)", 1, 12, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, key="p_d_in")
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
-
-            st.markdown("</div>", unsafe_allow_html=True)
 
     if "2-1." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
