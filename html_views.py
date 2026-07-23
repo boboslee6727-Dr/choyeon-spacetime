@@ -44,36 +44,42 @@ def get_global_css():
     .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; padding: 0 !important; }
 
     /* ==========================================================================
-       🎨 [사이드바 파스텔 컬러링 전용 스타일 추가]
+       🎨 [사이드바 파스텔 컬러링 전용 방탄 스타일]
        ========================================================================== */
-    /* 1. [신청인/상대방 사주간지 역산 박스] - 진한 파스텔 회색 (Cool Gray 톤) */
-    div[data-testid="stSidebar"] details:has(span:contains("역산")) {
-        background-color: #ECEFF1 !important;
-        border: 1px solid #CFD8DC !important;
+    /* 1. [사이드바 내 모든 접이식 박스(expander) 기본 둥근 모서리 및 간격] */
+    [data-testid="stSidebar"] details {
         border-radius: 10px !important;
         margin-bottom: 12px !important;
         padding: 4px !important;
+        overflow: hidden;
     }
-    div[data-testid="stSidebar"] details:has(span:contains("역산")) summary {
+
+    /* 2. [사이드바 역산 박스] - 진한 파스텔 회색 (Cool Gray 톤) */
+    [data-testid="stSidebar"] details:nth-of-type(1),
+    [data-testid="stSidebar"] details:nth-of-type(3) {
+        background-color: #ECEFF1 !important;
+        border: 1px solid #CFD8DC !important;
+    }
+    [data-testid="stSidebar"] details:nth-of-type(1) summary,
+    [data-testid="stSidebar"] details:nth-of-type(3) summary {
         color: #37474F !important;
         font-weight: bold !important;
     }
 
-    /* 2. [신청인/상대방 기본 정보 박스] - 파스텔 연하늘색 (Pastel Sky Blue 톤) */
-    div[data-testid="stSidebar"] details:has(span:contains("기본 정보")) {
+    /* 3. [사이드바 기본 정보 박스] - 파스텔 연하늘색 (Pastel Sky Blue 톤) */
+    [data-testid="stSidebar"] details:nth-of-type(2),
+    [data-testid="stSidebar"] details:nth-of-type(4) {
         background-color: #E3F2FD !important;
         border: 1px solid #BBDEFB !important;
-        border-radius: 10px !important;
-        margin-bottom: 12px !important;
-        padding: 4px !important;
     }
-    div[data-testid="stSidebar"] details:has(span:contains("기본 정보")) summary {
+    [data-testid="stSidebar"] details:nth-of-type(2) summary,
+    [data-testid="stSidebar"] details:nth-of-type(4) summary {
         color: #0D47A1 !important;
         font-weight: bold !important;
     }
 
-    /* 3. [자동입력 성공 메시지 박스] - 명확하고 싱그러운 파스텔 연녹색 */
-    div[data-testid="stSidebar"] .element-container:has(.stAlert) div[role="alert"] {
+    /* 4. [자동입력 성공 메시지 박스] - 싱그러운 파스텔 연녹색 */
+    [data-testid="stSidebar"] div[data-testid="stNotification"] {
         background-color: #E8F5E9 !important;
         border: 1px solid #A5D6A7 !important;
         color: #1B5E20 !important;
