@@ -12,7 +12,7 @@ def get_global_css():
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
 
     /* ==========================================================================
-       🔴🟢 [버튼 전용 원본 스타일 복원 : 빨간색 & 진녹색 볼드체]
+       🔴🟢 [버튼 전용 명확한 보색 대비 스타일]
        ========================================================================== */
     /* 모든 버튼 공통 폰트 및 굵은 글씨 지정 */
     div.stButton > button { 
@@ -22,7 +22,7 @@ def get_global_css():
         border-radius: 8px !important;
     }
 
-    /* 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
+    /* 🔴 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
     div.stButton > button[kind="primary"] { 
         background-color: #D50000 !important; 
         color: #FFFFFF !important; 
@@ -36,17 +36,18 @@ def get_global_css():
         color: #FFFFFF !important;
     }
 
-    /* 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 산뜻하고 화사한 밝은 연녹색 바탕 + 짙은 녹색 굵은 글자 */
+    /* 🟢 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 완벽 보색 녹색 바탕 + 흰색 굵은 글자 */
     div.stButton > button[kind="secondary"] { 
-        background-color: #E8F5E9 !important; 
-        color: #1B5E20 !important; 
-        border: 1.5px solid #81C784 !important; 
+        background-color: #00A843 !important; 
+        color: #FFFFFF !important; 
+        border: none !important; 
         height: 48px !important;
         font-weight: 900 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important;
     }
     div.stButton > button[kind="secondary"]:hover {
-        background-color: #C8E6C9 !important;
-        color: #0F3811 !important;
+        background-color: #008937 !important;
+        color: #FFFFFF !important;
     }
 
     .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
