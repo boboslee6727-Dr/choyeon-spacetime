@@ -1085,16 +1085,20 @@ if st.session_state.get('app_running', False):
                             b_dt = b_date_str
                             b_date_str = b_dt.strftime("%Y-%m-%d")
                             
-                        conception_start = b_dt - dt_mod.timedelta(days=268)
-                        conception_end = b_dt - dt_mod.timedelta(days=264)
-                        conception_str = f"{conception_start.strftime('%Y년 %m월 %d일')} ~ {conception_end.strftime('%Y년 %m월 %d일')}"
-
-                        if conception_end < today_dt:
-                            conception_title = "💖 추정 잉태(합궁) 시기"
-                            conception_msg = f"<span style='font-size:13px; color:#D32F2F; font-weight:bold;'>(※ 주의: 이 날짜에 출산하려면 과거에 이미 잉태가 완료되었어야 합니다. 현재 임신 중인 산모 전용 길일입니다.)</span>"
+                        if last_period:
+                            # 산모가 마지막 생리일을 입력한 경우: 생리일 기준 배란기(약 12일~16일 후)가 실제 잉태 시기입니다.
+                            conception_start = last_period + dt_mod.timedelta(days=12)
+                            conception_end = last_period + dt_mod.timedelta(days=16)
+                            conception_title = "💖 실제 잉태(합궁) 추정 시기 (마지막 생리일 기준)"
+                            conception_msg = f"<span style='font-size:13px; color:#D32F2F; font-weight:bold;'>(※ 입력하신 마지막 생리일({last_period.strftime('%Y-%m-%d')})을 기준으로 산출된 실제 잉태 시기입니다.)</span>"
                         else:
+                            # 계획 임신(생리일 미입력)인 경우에만 출산일 기준 역산
+                            conception_start = b_dt - dt_mod.timedelta(days=268)
+                            conception_end = b_dt - dt_mod.timedelta(days=264)
                             conception_title = "💖 잉태(합궁) 권장 기간"
                             conception_msg = f"<span style='font-size:13px; color:#0277BD; font-weight:bold;'>(※ 계획 임신 시, 위 기간 내에 잉태해야 해당 길일에 출산할 확률이 높습니다.)</span>"
+
+                        conception_str = f"{conception_start.strftime('%Y년 %m월 %d일')} ~ {conception_end.strftime('%Y년 %m월 %d일')}"
 
                         gestation_warning = ""
                         if last_period:
