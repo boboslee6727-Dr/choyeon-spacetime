@@ -43,6 +43,43 @@ def get_global_css():
     .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif; }
     .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; padding: 0 !important; }
 
+    /* ==========================================================================
+       🎨 [사이드바 파스텔 컬러링 전용 스타일 추가]
+       ========================================================================== */
+    /* 1. [신청인/상대방 사주간지 역산 박스] - 진한 파스텔 회색 (Cool Gray 톤) */
+    div[data-testid="stSidebar"] details:has(span:contains("역산")) {
+        background-color: #ECEFF1 !important;
+        border: 1px solid #CFD8DC !important;
+        border-radius: 10px !important;
+        margin-bottom: 12px !important;
+        padding: 4px !important;
+    }
+    div[data-testid="stSidebar"] details:has(span:contains("역산")) summary {
+        color: #37474F !important;
+        font-weight: bold !important;
+    }
+
+    /* 2. [신청인/상대방 기본 정보 박스] - 파스텔 연하늘색 (Pastel Sky Blue 톤) */
+    div[data-testid="stSidebar"] details:has(span:contains("기본 정보")) {
+        background-color: #E3F2FD !important;
+        border: 1px solid #BBDEFB !important;
+        border-radius: 10px !important;
+        margin-bottom: 12px !important;
+        padding: 4px !important;
+    }
+    div[data-testid="stSidebar"] details:has(span:contains("기본 정보")) summary {
+        color: #0D47A1 !important;
+        font-weight: bold !important;
+    }
+
+    /* 3. [자동입력 성공 메시지 박스] - 명확하고 싱그러운 파스텔 연녹색 */
+    div[data-testid="stSidebar"] .element-container:has(.stAlert) div[role="alert"] {
+        background-color: #E8F5E9 !important;
+        border: 1px solid #A5D6A7 !important;
+        color: #1B5E20 !important;
+        border-radius: 8px !important;
+    }
+
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
