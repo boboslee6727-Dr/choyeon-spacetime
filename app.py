@@ -1041,160 +1041,164 @@ if st.session_state.get('app_running', False):
         if 'cached_gunghap_report' in st.session_state:
             st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
 
-        st.markdown("---")
-        with st.spinner("⏳ 신생아의 명조 분석 및 남/여 대운 흐름, 부모 인연을 심층 분석 중입니다..."):
-            try:
-                start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
-                end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=365))
-                last_period = st.session_state.get('last_period_date')
-                cycle = st.session_state.get('period_cycle', 30)
-                
-                s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
-                p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
+        # 사이드바의 출산택일 분석 가동 체크박스 상태 확인
+        run_delivery = st.session_state.get("run_delivery_calc", True)
 
-                _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
-                _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
-                m_db = m_d_pillar[1] if m_d_pillar else "알 수 없음"
-                f_db = f_d_pillar[1] if f_d_pillar else "알 수 없음"
-                m_jjis = [m_d_pillar[1]] if m_d_pillar else []
-                f_jjis = [f_d_pillar[1]] if f_d_pillar else []
-
-                best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, last_period_date=last_period, period_cycle=cycle)
-
-                taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px; text-align:center;'>👶 출산 택일(제왕절개/임신 계획) 정밀 분석 결과</h3>"
-                
-                if last_period:
-                    taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}<br>💡 참고 산모 정보: 마지막 생리일({last_period.strftime('%Y-%m-%d')}), 평균 주기({cycle}일)</p>"
-                else:
-                    taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}</p>"
-
-                if not best_days:
-                    taegil_html += "<p style='color:#D32F2F; font-weight:bold;'>⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.</p>"
-                else:
-                    today_dt = dt_mod.date.today()
+        if run_delivery:
+            st.markdown("---")
+            with st.spinner("⏳ 신생아의 명조 분석 및 남/여 대운 흐름, 부모 인연을 심층 분석 중입니다..."):
+                try:
+                    start_date = st.session_state.get("delivery_start_date", dt_mod.date.today())
+                    end_date = st.session_state.get("delivery_end_date", dt_mod.date.today() + dt_mod.timedelta(days=365))
+                    last_period = st.session_state.get('last_period_date')
+                    cycle = st.session_state.get('period_cycle', 30)
                     
-                    for idx, day_info in enumerate(best_days):
-                        border_col = "#C62828" if idx == 0 else "#2E7D32"
-                        b_time_info = day_info['best_time']
+                    s_y, s_m, s_d = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
+                    p_y, p_m, p_d = st.session_state.get("p_y_in", 1980), st.session_state.get("p_m_in", 1), st.session_state.get("p_d_in", 1)
+
+                    _, _, m_d_pillar = engine.get_ganji_from_date(int(s_y), int(s_m), int(s_d))
+                    _, _, f_d_pillar = engine.get_ganji_from_date(int(p_y), int(p_m), int(p_d))
+                    m_db = m_d_pillar[1] if m_d_pillar else "알 수 없음"
+                    f_db = f_d_pillar[1] if f_d_pillar else "알 수 없음"
+                    m_jjis = [m_d_pillar[1]] if m_d_pillar else []
+                    f_jjis = [f_d_pillar[1]] if f_d_pillar else []
+
+                    best_days = engine.get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, last_period_date=last_period, period_cycle=cycle)
+
+                    taegil_html = "<h3 style='color:#1A237E; margin-bottom:15px; text-align:center;'>👶 출산 택일(제왕절개/임신 계획) 정밀 분석 결과</h3>"
+                    
+                    if last_period:
+                        taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}<br>💡 참고 산모 정보: 마지막 생리일({last_period.strftime('%Y-%m-%d')}), 평균 주기({cycle}일)</p>"
+                    else:
+                        taegil_html += f"<p style='color:#0277BD; font-weight:bold;'>💡 지정한 길일 탐색 구간: {start_date.strftime('%Y년 %m월 %d일')} ~ {end_date.strftime('%Y년 %m월 %d일')}</p>"
+
+                    if not best_days:
+                        taegil_html += "<p style='color:#D32F2F; font-weight:bold;'>⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.</p>"
+                    else:
+                        today_dt = dt_mod.date.today()
                         
-                        b_date_str = day_info['date']
-                        if isinstance(b_date_str, str):
-                            y_s, m_s, d_s = map(int, b_date_str.split('-'))
-                            b_dt = dt_mod.date(y_s, m_s, d_s)
-                        else:
-                            b_dt = b_date_str
-                            b_date_str = b_dt.strftime("%Y-%m-%d")
+                        for idx, day_info in enumerate(best_days):
+                            border_col = "#C62828" if idx == 0 else "#2E7D32"
+                            b_time_info = day_info['best_time']
                             
-                        if last_period:
-                            # 산모가 마지막 생리일을 입력한 경우: 생리일 기준 배란기(약 12일~16일 후)가 실제 잉태 시기입니다.
-                            conception_start = last_period + dt_mod.timedelta(days=12)
-                            conception_end = last_period + dt_mod.timedelta(days=16)
-                            conception_title = "💖 실제 잉태(합궁) 추정 시기 (마지막 생리일 기준)"
-                            conception_msg = f"<span style='font-size:13px; color:#D32F2F; font-weight:bold;'>(※ 입력하신 마지막 생리일({last_period.strftime('%Y-%m-%d')})을 기준으로 산출된 실제 잉태 시기입니다.)</span>"
-                        else:
-                            # 계획 임신(생리일 미입력)인 경우에만 출산일 기준 역산
-                            conception_start = b_dt - dt_mod.timedelta(days=268)
-                            conception_end = b_dt - dt_mod.timedelta(days=264)
-                            conception_title = "💖 잉태(합궁) 권장 기간"
-                            conception_msg = f"<span style='font-size:13px; color:#0277BD; font-weight:bold;'>(※ 계획 임신 시, 위 기간 내에 잉태해야 해당 길일에 출산할 확률이 높습니다.)</span>"
-
-                        conception_str = f"{conception_start.strftime('%Y년 %m월 %d일')} ~ {conception_end.strftime('%Y년 %m월 %d일')}"
-
-                        gestation_warning = ""
-                        if last_period:
-                            gestation_days = (b_dt - last_period).days
-                            if gestation_days > 0:
-                                g_weeks = gestation_days // 7
-                                g_days = gestation_days % 7
-                                if 37 <= g_weeks <= 40:
-                                    g_color, g_status = "#2E7D32", "정상 출산 주수"
-                                elif g_weeks < 37:
-                                    g_color, g_status = "#C62828", "⚠️ 조산 위험 (주수 부족)"
-                                else:
-                                    g_color, g_status = "#E65100", "⚠️ 출산 지연 (과숙아 위험)"
-                                gestation_warning = f"<li><b style='color:#673AB7;'>🩺 산모 생물학적 임신 주차</b>: <span style='font-weight:bold; color:{g_color};'>임신 {g_weeks}주 {g_days}일 ({g_status})</span> <br><span style='font-size:13px; color:#555;'>(※ 입력하신 생리일 기준이며, 의학적 소견과 교차 검증하시기 바랍니다.)</span></li>"
-
-                        fake_gh = engine.get_gunghap_data(
-                            b_dt.year, b_dt.month, b_dt.day, b_time_info['time_str'], "미혼",
-                            b_dt.year, b_dt.month, b_dt.day, b_time_info['time_str'], "미혼",
-                            "미혼-미혼"
-                        )
-                        b_table_data = fake_gh["m_table"]
-                        b_master_list = fake_gh["m_master"]
-                        
-                        klc = KoreanLunarCalendar()
-                        klc.setSolarDate(b_dt.year, b_dt.month, b_dt.day)
-                        b_sol, b_lun = f"{b_dt.year}년 {b_dt.month}월 {b_dt.day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
-                        
-                        baby_info = html_views.get_info_header("👶", f"신생아 (추천 {idx+1}순위)", "미정", "미혼", 1, b_sol, b_lun, b_time_info['time_str'], p_color="#00695C")
-                        baby_table = html_views.get_gunghap_saju_table(*b_table_data[1:])
-                        baby_master = html_views.get_master_bar(
-                            b_master_list[0], b_master_list[1], b_master_list[2], b_master_list[3], b_master_list[4], 
-                            b_master_list[5], b_master_list[6], b_master_list[7], b_master_list[8], b_master_list[9], b_master_list[10]
-                        )
-                        baby_saju_html = f"<div style='margin-top:15px;'>{baby_info}{baby_table}{baby_master}</div>"
-
-                        try:
-                            b_y_ganju = fake_gh.get("m_ys", "") + fake_gh.get("m_yb", "")
-                            b_m_ganju = fake_gh.get("m_ms", "") + fake_gh.get("m_mb", "")
-                            b_d_ganju = fake_gh.get("m_ds", "") + fake_gh.get("m_db", "")
-                            b_h_ganju = fake_gh.get("m_hs", "") + fake_gh.get("m_hb", "")
-                            baby_ganju_str = f"년주:{b_y_ganju}, 월주:{b_m_ganju}, 일주:{b_d_ganju}, 시주:{b_h_ganju}"
-                            
-                            taegil_facts = {
-                                "b_date_str": b_date_str,
-                                "b_time_str": b_time_info['time_str'],
-                                "baby_ganju": baby_ganju_str,
-                                "m_db": m_db, "f_db": f_db
-                            }
-                            
-                            class SafeDict(dict):
-                                def __missing__(self, key): return "{" + key + "}"
-                                
-                            safe_facts = SafeDict(**taegil_facts)
-                            prompt_text = prompts.CHILDBIRTH_TAEGIL_PROMPT.format_map(safe_facts)
-                            ai_result = call_gemini_api(prompt_text)
-                            
-                            if ai_result:
-                                clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
-                                clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#00695C; font-size:18px; font-weight:bold; margin-top:20px; margin-bottom:10px;">\1</h3>', clean_ai)
-                                clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#004D40; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:12px; border-bottom:1px solid #ddd;">\1</h2>', clean_ai)
-                                
-                                formatted_lines = []
-                                for line in clean_ai.split('\n'):
-                                    line_str = line.strip()
-                                    if line_str:
-                                        if line_str.startswith('<h') or line_str.startswith('<div'):
-                                            formatted_lines.append(line_str)
-                                        else:
-                                            formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:15px; color:#333;">{line_str}</p>')
-                                ai_output_html = "".join(formatted_lines)
+                            b_date_str = day_info['date']
+                            if isinstance(b_date_str, str):
+                                y_s, m_s, d_s = map(int, b_date_str.split('-'))
+                                b_dt = dt_mod.date(y_s, m_s, d_s)
                             else:
-                                ai_output_html = '<p style="color:red;">⚠️ 출산 택일 AI 정밀 분석 응답을 불러오지 못했습니다.</p>'
-                        except Exception as e:
-                            ai_output_html = f'<p style="color:red;">⚠️ AI 분석 중 오류: {e}</p>'
+                                b_dt = b_date_str
+                                b_date_str = b_dt.strftime("%Y-%m-%d")
+                                
+                            if last_period:
+                                # 산모가 마지막 생리일을 입력한 경우: 생리일 기준 배란기(약 12일~16일 후)가 실제 잉태 시기입니다.
+                                conception_start = last_period + dt_mod.timedelta(days=12)
+                                conception_end = last_period + dt_mod.timedelta(days=16)
+                                conception_title = "💖 실제 잉태(합궁) 추정 시기 (마지막 생리일 기준)"
+                                conception_msg = f"<span style='font-size:13px; color:#D32F2F; font-weight:bold;'>(※ 입력하신 마지막 생리일({last_period.strftime('%Y-%m-%d')})을 기준으로 산출된 실제 잉태 시기입니다.)</span>"
+                            else:
+                                # 계획 임신(생리일 미입력)인 경우에만 출산일 기준 역산
+                                conception_start = b_dt - dt_mod.timedelta(days=268)
+                                conception_end = b_dt - dt_mod.timedelta(days=264)
+                                conception_title = "💖 잉태(합궁) 권장 기간"
+                                conception_msg = f"<span style='font-size:13px; color:#0277BD; font-weight:bold;'>(※ 계획 임신 시, 위 기간 내에 잉태해야 해당 길일에 출산할 확률이 높습니다.)</span>"
 
-                        taegil_html += html_views.get_childbirth_taegil_card(
-                            border_col=border_col,
-                            idx=idx,
-                            b_date_str=b_date_str,
-                            score=day_info['score'],
-                            b_time_str=b_time_info['time_str'],
-                            b_time_pillar=b_time_info['time_pillar'],
-                            gestation_warning=gestation_warning,
-                            conception_title=conception_title,
-                            conception_str=conception_str,
-                            conception_msg=conception_msg,
-                            baby_saju_html=baby_saju_html,
-                            ai_output_html=ai_output_html
-                        )
-                
-                clean_taegil_html = re.sub(r'>\s+<', '><', taegil_html.replace('\n', '')).strip()
-                report_box = html_views.get_final_report_box(clean_taegil_html)
-                st.markdown(report_box, unsafe_allow_html=True)
-                        
-            except Exception as e:
-                st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
+                            conception_str = f"{conception_start.strftime('%Y년 %m월 %d일')} ~ {conception_end.strftime('%Y년 %m월 %d일')}"
+
+                            gestation_warning = ""
+                            if last_period:
+                                gestation_days = (b_dt - last_period).days
+                                if gestation_days > 0:
+                                    g_weeks = gestation_days // 7
+                                    g_days = gestation_days % 7
+                                    if 37 <= g_weeks <= 40:
+                                        g_color, g_status = "#2E7D32", "정상 출산 주수"
+                                    elif g_weeks < 37:
+                                        g_color, g_status = "#C62828", "⚠️ 조산 위험 (주수 부족)"
+                                    else:
+                                        g_color, g_status = "#E65100", "⚠️ 출산 지연 (과숙아 위험)"
+                                    gestation_warning = f"<li><b style='color:#673AB7;'>🩺 산모 생물학적 임신 주차</b>: <span style='font-weight:bold; color:{g_color};'>임신 {g_weeks}주 {g_days}일 ({g_status})</span> <br><span style='font-size:13px; color:#555;'>(※ 입력하신 생리일 기준이며, 의학적 소견과 교차 검증하시기 바랍니다.)</span></li>"
+
+                            fake_gh = engine.get_gunghap_data(
+                                b_dt.year, b_dt.month, b_dt.day, b_time_info['time_str'], "미혼",
+                                b_dt.year, b_dt.month, b_dt.day, b_time_info['time_str'], "미혼",
+                                "미혼-미혼"
+                            )
+                            b_table_data = fake_gh["m_table"]
+                            b_master_list = fake_gh["m_master"]
+                            
+                            klc = KoreanLunarCalendar()
+                            klc.setSolarDate(b_dt.year, b_dt.month, b_dt.day)
+                            b_sol, b_lun = f"{b_dt.year}년 {b_dt.month}월 {b_dt.day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
+                            
+                            baby_info = html_views.get_info_header("👶", f"신생아 (추천 {idx+1}순위)", "미정", "미혼", 1, b_sol, b_lun, b_time_info['time_str'], p_color="#00695C")
+                            baby_table = html_views.get_gunghap_saju_table(*b_table_data[1:])
+                            baby_master = html_views.get_master_bar(
+                                b_master_list[0], b_master_list[1], b_master_list[2], b_master_list[3], b_master_list[4], 
+                                b_master_list[5], b_master_list[6], b_master_list[7], b_master_list[8], b_master_list[9], b_master_list[10]
+                            )
+                            baby_saju_html = f"<div style='margin-top:15px;'>{baby_info}{baby_table}{baby_master}</div>"
+
+                            try:
+                                b_y_ganju = fake_gh.get("m_ys", "") + fake_gh.get("m_yb", "")
+                                b_m_ganju = fake_gh.get("m_ms", "") + fake_gh.get("m_mb", "")
+                                b_d_ganju = fake_gh.get("m_ds", "") + fake_gh.get("m_db", "")
+                                b_h_ganju = fake_gh.get("m_hs", "") + fake_gh.get("m_hb", "")
+                                baby_ganju_str = f"년주:{b_y_ganju}, 월주:{b_m_ganju}, 일주:{b_d_ganju}, 시주:{b_h_ganju}"
+                                
+                                taegil_facts = {
+                                    "b_date_str": b_date_str,
+                                    "b_time_str": b_time_info['time_str'],
+                                    "baby_ganju": baby_ganju_str,
+                                    "m_db": m_db, "f_db": f_db
+                                }
+                                
+                                class SafeDict(dict):
+                                    def __missing__(self, key): return "{" + key + "}"
+                                    
+                                safe_facts = SafeDict(**taegil_facts)
+                                prompt_text = prompts.CHILDBIRTH_TAEGIL_PROMPT.format_map(safe_facts)
+                                ai_result = call_gemini_api(prompt_text)
+                                
+                                if ai_result:
+                                    clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_result).replace("```", "").strip()
+                                    clean_ai = re.sub(r'###\s*(.*?)\n', r'<h3 style="color:#00695C; font-size:18px; font-weight:bold; margin-top:20px; margin-bottom:10px;">\1</h3>', clean_ai)
+                                    clean_ai = re.sub(r'##\s*(.*?)\n', r'<h2 style="color:#004D40; font-size:20px; font-weight:bold; margin-top:25px; margin-bottom:12px; border-bottom:1px solid #ddd;">\1</h2>', clean_ai)
+                                    
+                                    formatted_lines = []
+                                    for line in clean_ai.split('\n'):
+                                        line_str = line.strip()
+                                        if line_str:
+                                            if line_str.startswith('<h') or line_str.startswith('<div'):
+                                                formatted_lines.append(line_str)
+                                            else:
+                                                formatted_lines.append(f'<p style="margin:10px 0; line-height:1.8; font-family:\'Nanum Myeongjo\', serif; font-size:15px; color:#333;">{line_str}</p>')
+                                    ai_output_html = "".join(formatted_lines)
+                                else:
+                                    ai_output_html = '<p style="color:red;">⚠️ 출산 택일 AI 정밀 분석 응답을 불러오지 못했습니다.</p>'
+                            except Exception as e:
+                                ai_output_html = f'<p style="color:red;">⚠️ AI 분석 중 오류: {e}</p>'
+
+                            taegil_html += html_views.get_childbirth_taegil_card(
+                                border_col=border_col,
+                                idx=idx,
+                                b_date_str=b_date_str,
+                                score=day_info['score'],
+                                b_time_str=b_time_info['time_str'],
+                                b_time_pillar=b_time_info['time_pillar'],
+                                gestation_warning=gestation_warning,
+                                conception_title=conception_title,
+                                conception_str=conception_str,
+                                conception_msg=conception_msg,
+                                baby_saju_html=baby_saju_html,
+                                ai_output_html=ai_output_html
+                            )
+                    
+                    clean_taegil_html = re.sub(r'>\s+<', '><', taegil_html.replace('\n', '')).strip()
+                    report_box = html_views.get_final_report_box(clean_taegil_html)
+                    st.markdown(report_box, unsafe_allow_html=True)
+                            
+                except Exception as e:
+                    st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
     # [3-2번 카테고리] 타 감명서 비교 (궁합)
