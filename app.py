@@ -16,11 +16,58 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 60.9"
+APP_VERSION = "ver 70.0"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# CSS 적용 (html_views에서 호출)
-st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
+# 전역 CSS 적용 (html_views 모듈 호출)
+if hasattr(html_views, 'get_global_css'):
+    st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
+
+# ==============================================================================
+# 🎨 사이드바 파스텔 박스 전용 인라인 CSS (Direct Override)
+# ==============================================================================
+st.markdown("""
+<style>
+    /* 1. 사이드바 내 모든 expander의 테두리 및 기본 설정 */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] {
+        border-radius: 10px !important;
+        margin-bottom: 15px !important;
+        overflow: hidden !important;
+    }
+
+    /* 2. [역산 박스 - 1번째, 3번째 expander] : 진한 파스텔 회색 (Cool Gray) */
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1),
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1) summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1) div[role="region"],
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3),
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3) summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3) div[role="region"] {
+        background-color: #ECEFF1 !important;
+        border: 1px solid #CFD8DC !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1) summary *,
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3) summary * {
+        color: #37474F !important;
+        font-weight: bold !important;
+    }
+
+    /* 3. [기본 정보 박스 - 2번째, 4번째 expander] : 파스텔 연하늘색 (Pastel Sky Blue) */
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2),
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2) summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2) div[role="region"],
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4),
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4) summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4) div[role="region"] {
+        background-color: #E3F2FD !important;
+        border: 1px solid #BBDEFB !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2) summary *,
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4) summary * {
+        color: #0D47A1 !important;
+        font-weight: bold !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
     "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
