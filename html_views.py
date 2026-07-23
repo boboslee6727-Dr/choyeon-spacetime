@@ -11,9 +11,43 @@ def get_global_css():
     [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
 
-    div.stButton > button { font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important; }
-    div.stButton > button[kind="primary"] { background-color: #D50000 !important; color: white !important; border: none !important; height: 45px !important; }
-    div.stButton > button[kind="secondary"] { background-color: #E8F5E9 !important; color: #2E7D32 !important; border: 1px solid #81C784 !important; }
+    /* ==========================================================================
+       🔴🟢 [버튼 전용 원본 스타일 복원 : 빨간색 & 진녹색 볼드체]
+       ========================================================================== */
+    /* 모든 버튼 공통 폰트 및 굵은 글씨 지정 */
+    div.stButton > button { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
+        font-weight: 900 !important; 
+        font-size: 16px !important;
+        border-radius: 8px !important;
+    }
+
+    /* 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
+    div.stButton > button[kind="primary"] { 
+        background-color: #D50000 !important; 
+        color: #FFFFFF !important; 
+        border: none !important; 
+        height: 50px !important; 
+        font-weight: 900 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #B71C1C !important;
+        color: #FFFFFF !important;
+    }
+
+    /* 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 선명한 진녹색 바탕 + 흰색 굵은 글자 */
+    div.stButton > button[kind="secondary"] { 
+        background-color: #1B5E20 !important; 
+        color: #FFFFFF !important; 
+        border: 1px solid #1B5E20 !important; 
+        height: 48px !important;
+        font-weight: 900 !important;
+    }
+    div.stButton > button[kind="secondary"]:hover {
+        background-color: #2E7D32 !important;
+        color: #FFFFFF !important;
+    }
 
     .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
     .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
