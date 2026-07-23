@@ -44,42 +44,51 @@ def get_global_css():
     .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; padding: 0 !important; }
 
     /* ==========================================================================
-       🎨 [사이드바 파스텔 컬러링 전용 방탄 스타일]
+       🎨 [사이드바 파스텔 컬러링 전용 완벽 강제 적용 CSS]
        ========================================================================== */
-    /* 1. [사이드바 내 모든 접이식 박스(expander) 기본 둥근 모서리 및 간격] */
-    [data-testid="stSidebar"] details {
-        border-radius: 10px !important;
-        margin-bottom: 12px !important;
-        padding: 4px !important;
-        overflow: hidden;
-    }
-
-    /* 2. [사이드바 역산 박스] - 진한 파스텔 회색 (Cool Gray 톤) */
+    
+    /* 1. [사이드바 역산 박스 - 첫번째/세번째 details] : 진한 파스텔 회색 (Cool Gray) */
     [data-testid="stSidebar"] details:nth-of-type(1),
-    [data-testid="stSidebar"] details:nth-of-type(3) {
-        background-color: #ECEFF1 !important;
-        border: 1px solid #CFD8DC !important;
-    }
     [data-testid="stSidebar"] details:nth-of-type(1) summary,
-    [data-testid="stSidebar"] details:nth-of-type(3) summary {
+    [data-testid="stSidebar"] details:nth-of-type(1) [data-testid="stExpanderDetails"],
+    [data-testid="stSidebar"] details:nth-of-type(3),
+    [data-testid="stSidebar"] details:nth-of-type(3) summary,
+    [data-testid="stSidebar"] details:nth-of-type(3) [data-testid="stExpanderDetails"] {
+        background-color: #ECEFF1 !important;
+        border-color: #CFD8DC !important;
+    }
+    [data-testid="stSidebar"] details:nth-of-type(1) summary p,
+    [data-testid="stSidebar"] details:nth-of-type(3) summary p {
         color: #37474F !important;
         font-weight: bold !important;
     }
 
-    /* 3. [사이드바 기본 정보 박스] - 파스텔 연하늘색 (Pastel Sky Blue 톤) */
+    /* 2. [사이드바 기본 정보 박스 - 두번째/네번째 details] : 파스텔 연하늘색 (Pastel Sky Blue) */
     [data-testid="stSidebar"] details:nth-of-type(2),
-    [data-testid="stSidebar"] details:nth-of-type(4) {
-        background-color: #E3F2FD !important;
-        border: 1px solid #BBDEFB !important;
-    }
     [data-testid="stSidebar"] details:nth-of-type(2) summary,
-    [data-testid="stSidebar"] details:nth-of-type(4) summary {
+    [data-testid="stSidebar"] details:nth-of-type(2) [data-testid="stExpanderDetails"],
+    [data-testid="stSidebar"] details:nth-of-type(4),
+    [data-testid="stSidebar"] details:nth-of-type(4) summary,
+    [data-testid="stSidebar"] details:nth-of-type(4) [data-testid="stExpanderDetails"] {
+        background-color: #E3F2FD !important;
+        border-color: #BBDEFB !important;
+    }
+    [data-testid="stSidebar"] details:nth-of-type(2) summary p,
+    [data-testid="stSidebar"] details:nth-of-type(4) summary p {
         color: #0D47A1 !important;
         font-weight: bold !important;
     }
 
-    /* 4. [자동입력 성공 메시지 박스] - 싱그러운 파스텔 연녹색 */
-    [data-testid="stSidebar"] div[data-testid="stNotification"] {
+    /* 3. [모든 사이드바 expander 공통 테두리 및 둥근 모서리 서식] */
+    [data-testid="stSidebar"] details {
+        border: 1.5px solid !important;
+        border-radius: 10px !important;
+        margin-bottom: 12px !important;
+        overflow: hidden !important;
+    }
+
+    /* 4. [자동입력 성공 메시지 영역] : 싱그러운 파스텔 연녹색 */
+    [data-testid="stSidebar"] [data-testid="stAlert"] {
         background-color: #E8F5E9 !important;
         border: 1px solid #A5D6A7 !important;
         color: #1B5E20 !important;
