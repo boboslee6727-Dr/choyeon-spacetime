@@ -493,25 +493,30 @@ def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
     """
 
 def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b_time_pillar, gestation_warning, conception_title, conception_str, conception_msg, baby_saju_html, ai_output_html):
-    """출산 택일 결과 및 신생아 사주, AI 통변을 포함한 종합 HTML 카드 생성"""
-    return f"""
-    <div style='border-left: 5px solid {border_col}; padding: 15px; background-color: #f9f9f9; margin-bottom: 25px; border-radius: 5px;'>
-        <h4 style='margin-top:0; color: {border_col};'>🏅 추천 {idx+1}순위 출산 길일 : {b_date_str} (명리 종합점수: {score:.1f}점)</h4>
-        <ul style='margin-bottom:15px; font-size:16px; line-height:1.8;'>
-            <li><b>가장 좋은 출산 시간</b>: {b_time_str} <b>({b_time_pillar}시)</b></li>
+    """
+    [출산 택일 카드 뷰 - 좌측 세로선 완벽 제거 버전]
+    """
+    card_html = f"""
+    <div style="background-color:#FFFFFF; border:1px solid #E0E0E0; border-radius:12px; padding:20px; margin-bottom:25px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #F1F3F4; padding-bottom:12px; margin-bottom:15px;">
+            <h3 style="color:#1A237E; margin:0; font-size:18px;">🏅 추천 {idx+1}순위 출산 길일 : {b_date_str}</h3>
+            <span style="background-color:#E8EAF6; color:#1A237E; font-weight:bold; padding:5px 12px; border-radius:20px; font-size:14px;">명리 종합점수: {score}점</span>
+        </div>
+        
+        <ul style="list-style-type:none; padding-left:0; margin-top:10px; line-height:1.8; color:#333; font-size:14px;">
+            <li><b>⏰ 가장 좋은 출산 시간</b>: <span style="color:#00695C; font-weight:bold;">{b_time_str} ({b_time_pillar})</span></li>
             {gestation_warning}
-            <li><b style='color:#E91E63;'>{conception_title}</b>: <span style='font-weight:bold; background-color:#FCE4EC; padding:2px 8px; border-radius:5px;'>{conception_str}</span> <br>{conception_msg}</li>
+            <li><b>{conception_title}</b>: <span style="font-weight:bold; color:#0277BD;">{conception_str}</span> <br>{conception_msg}</li>
         </ul>
-        <div style='border:1px dashed #ccc; padding:15px; border-radius:8px; background-color:#ffffff;'>
-            <h5 style='color:#424242; margin-top:0; border-bottom:2px solid #00695C; padding-bottom:5px;'>🔮 해당 일시 신생아 사주명조 원국 (미리보기)</h5>
-            {baby_saju_html}
-            <div style='margin-top:20px; padding:20px; background-color:#F0F4F8; border-radius:8px; border: 1px solid #B2DFDB;'>
-                <h4 style='color:#004D40; margin-top:0; border-bottom:1px solid #80CBC4; padding-bottom:10px;'>🌟 신생아 시공간 정밀 감명 (남/여 대운 및 부모 인연)</h4>
-                {ai_output_html}
-            </div>
+        
+        {baby_saju_html}
+        
+        <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #DDD;">
+            {ai_output_html}
         </div>
     </div>
     """
+    return card_html
 
 def get_ai_report_box(content):
     return f"""
