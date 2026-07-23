@@ -23,52 +23,6 @@ st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", la
 if hasattr(html_views, 'get_global_css'):
     st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
 
-# ==============================================================================
-# 🎨 사이드바 파스텔 박스 전용 인라인 CSS (Direct Override)
-# ==============================================================================
-st.markdown("""
-<style>
-    /* 1. 사이드바 내 모든 expander의 테두리 및 기본 설정 */
-    section[data-testid="stSidebar"] [data-testid="stExpander"] {
-        border-radius: 10px !important;
-        margin-bottom: 15px !important;
-        overflow: hidden !important;
-    }
-
-    /* 2. [역산 박스 - 1번째, 3번째 expander] : 진한 파스텔 회색 (Cool Gray) */
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1),
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1) summary,
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1) div[role="region"],
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3),
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3) summary,
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3) div[role="region"] {
-        background-color: #ECEFF1 !important;
-        border: 1px solid #CFD8DC !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(1) summary *,
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(3) summary * {
-        color: #37474F !important;
-        font-weight: bold !important;
-    }
-
-    /* 3. [기본 정보 박스 - 2번째, 4번째 expander] : 파스텔 연하늘색 (Pastel Sky Blue) */
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2),
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2) summary,
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2) div[role="region"],
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4),
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4) summary,
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4) div[role="region"] {
-        background-color: #E3F2FD !important;
-        border: 1px solid #BBDEFB !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(2) summary *,
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:nth-of-type(4) summary * {
-        color: #0D47A1 !important;
-        font-weight: bold !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
     "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
     "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", 
@@ -167,16 +121,22 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산 (독립형 방탄 로직 장착)
+    # 🔍 신청인 사주간지 역산 (진한 파스텔 회색 바탕)
     # ==============================================================================
-    with st.expander("🔍 신청인 사주간지 역산", expanded=False):
+    with st.sidebar.expander("🔍 신청인 사주간지 역산"):
+        st.markdown("""
+            <div style="background-color: #ECEFF1; padding: 12px; border-radius: 8px; border: 1px solid #CFD8DC; margin-bottom: 10px;">
+        """, unsafe_allow_html=True)
+
         col_g1, col_g2 = st.columns(2)
         with col_g1: u_ry = st.text_input("년주", key="u_ry_rev")
         with col_g2: u_rm = st.text_input("월주", key="u_rm_rev")
         col_g3, col_g4 = st.columns(2)
         with col_g3: u_rd = st.text_input("일주", key="u_rd_rev")
         with col_g4: u_rt = st.text_input("시주", key="u_rt_rev")
-        
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             st.session_state['app_running'] = False
             
@@ -231,10 +191,9 @@ with st.sidebar:
                                     st.session_state['s_t'] = "시간 모름"
                                 found = True
                                 
-                                # 양력/음력 날짜 메시지 구성
                                 s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                 s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt}\n ✅음력{s_lun_fmt} 자동입력 완료!"
+                                st.session_state['rev_success_msg'] = f"✅양력 {s_sol_fmt}\n ✅음력 {s_lun_fmt} 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -247,14 +206,18 @@ with st.sidebar:
             del st.session_state['rev_success_msg']
 
     # ==============================================================================
-    # 👤 신청인 기본 정보
+    # 👤 신청인 기본 정보 (파스텔 연하늘색 바탕)
     # ==============================================================================
     if "s_y" not in st.session_state: st.session_state["s_y"] = 1980
     if "s_m" not in st.session_state: st.session_state["s_m"] = 1
     if "s_d" not in st.session_state: st.session_state["s_d"] = 1
     if "s_t" not in st.session_state: st.session_state["s_t"] = idx_list[0] if 'idx_list' in locals() or 'idx_list' in globals() else "시간 모름"
 
-    with st.expander("👤 신청인 기본 정보", expanded=True):
+    with st.sidebar.expander("👤 신청인 기본 정보"):
+        st.markdown("""
+            <div style="background-color: #E3F2FD; padding: 12px; border-radius: 8px; border: 1px solid #BBDEFB; margin-bottom: 10px;">
+        """, unsafe_allow_html=True)
+
         name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
@@ -264,10 +227,11 @@ with st.sidebar:
         with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
         with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
         b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
-    st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # ==============================================================================
-    # 📌 특화 상품별 추가 옵션 및 상대방 정보 입력부
+    # 📌 특화 상품별 추가 옵션
     # ==============================================================================
     if "1-1." in u_product:
         run_iljin_calc = st.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
@@ -285,16 +249,25 @@ with st.sidebar:
         elif "3-1." in u_product:
             other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
-    # 궁합 및 타 감명서 비교 (2번, 3-2) 상품 선택 시에만 상대방 역산 및 기본정보 노출
+    # ==============================================================================
+    # 👥 상대방 정보 입력부 (궁합/타 감명서 비교 상품 선택 시에만 노출)
+    # ==============================================================================
     if any(x in u_product for x in ["2-", "3-2."]):
-        with st.expander("👥 상대방 사주간지 역산", expanded=False):
+        # 1) 상대방 사주간지 역산 (진한 파스텔 회색 바탕)
+        with st.sidebar.expander("🔍 상대방 사주간지 역산"):
+            st.markdown("""
+                <div style="background-color: #ECEFF1; padding: 12px; border-radius: 8px; border: 1px solid #CFD8DC; margin-bottom: 10px;">
+            """, unsafe_allow_html=True)
+
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
             with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
             p_col_g3, p_col_g4 = st.columns(2)
             with p_col_g3: p_rd = st.text_input("상대방 일주", key="p_rd")
             with p_col_g4: p_rt = st.text_input("상대방 시주", key="p_rt")
-            
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
             if st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev"):
                 st.session_state['app_running'] = False
                 
@@ -349,10 +322,9 @@ with st.sidebar:
                                         st.session_state['p_t_key'] = "시간 모름"
                                     found = True
                                     
-                                    # 양력/음력 날짜 메시지 구성
                                     p_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                     p_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                    st.session_state['rev_p_success_msg'] = f"✅양력{p_sol_fmt}\n ✅음력{p_lun_fmt} 자동입력 완료!"
+                                    st.session_state['rev_p_success_msg'] = f"✅양력 {p_sol_fmt}\n ✅음력 {p_lun_fmt} 자동입력 완료!"
                                     st.rerun()
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
@@ -369,7 +341,12 @@ with st.sidebar:
         if 'p_d_in' not in st.session_state: st.session_state['p_d_in'] = 1
         if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
 
-        with st.expander("👥 상대방 기본 정보", expanded=True):
+        # 2) 상대방 기본 정보 (파스텔 연하늘색 바탕)
+        with st.sidebar.expander("👥 상대방 기본 정보"):
+            st.markdown("""
+                <div style="background-color: #E3F2FD; padding: 12px; border-radius: 8px; border: 1px solid #BBDEFB; margin-bottom: 10px;">
+            """, unsafe_allow_html=True)
+
             f_name = st.text_input("상대방 이름", value="", key="f_n")
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
@@ -379,6 +356,8 @@ with st.sidebar:
             f_m = p_col2.number_input("월(상대)", 1, 12, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, key="p_d_in")
             f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
+
+            st.markdown("</div>", unsafe_allow_html=True)
 
     if "2-1." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
