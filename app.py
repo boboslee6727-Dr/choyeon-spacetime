@@ -368,7 +368,7 @@ with st.sidebar:
             delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date")
             delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
             
-            st.caption("💡 오늘부터 향후 1년간의 안전 주수 구간 내 길일을 정밀 탐색합니다.")
+            st.caption("💡 탐색 시작일 ~ 탐색 종료일 기간 내 출산 길일을 정밀 탐색합니다.")
         
     st.markdown("---")
 
