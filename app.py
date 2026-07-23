@@ -183,7 +183,11 @@ with st.sidebar:
                                 else:
                                     st.session_state['s_t'] = "시간 모름"
                                 found = True
-                                st.session_state['rev_success_msg'] = "✅ 신청인 자동입력 완료!"
+                                
+                                # 양력/음력 날짜 메시지 구성
+                                s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                                s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
+                                st.session_state['rev_success_msg'] = f"✅ 신청인 양력 {s_sol_fmt}\n   음력 {s_lun_fmt} 자동입력 완료!"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -297,7 +301,11 @@ with st.sidebar:
                                     else:
                                         st.session_state['p_t_key'] = "시간 모름"
                                     found = True
-                                    st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
+                                    
+                                    # 양력/음력 날짜 메시지 구성
+                                    p_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                                    p_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
+                                    st.session_state['rev_p_success_msg'] = f"✅ 상대방 양력 {p_sol_fmt}\n   음력 {p_lun_fmt} 자동입력 완료!"
                                     st.rerun()
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
@@ -335,32 +343,32 @@ with st.sidebar:
             target_date = st.date_input("결혼 예정일 선택", key="target_date_m")
             
     elif "2-2." in u_product:
+        # 1. 출산택일 분석 가동 체크박스
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc")
         
-        st.subheader("🩺 산모 생리 주기 및 기준 정보")
-        
-        # 오늘 날짜를 기준으로 동적 초기값 설정 (고정 날짜 아님)
-        today_default = dt_mod.date.today()
-        
-        # 1. 생리 시작일 (오늘 기준 대략 한 달 전이나 최근 날짜를 기본값으로 유연하게 제시)
-        last_period_date = st.date_input("마지막 생리 시작일", value=today_default - dt_mod.timedelta(days=30), key="last_period_date")
-        period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=30, key="period_cycle")
-        
-        st.markdown("---")
-        st.subheader("📅 출산 길일 탐색 기간 설정")
-        
-        # 2. 탐색 시작일은 오늘(현재 기준 2026-07-22), 종료일은 약 1년 후(2027-07-22)로 초기값 설정
-        today_date = dt_mod.date(2026, 7, 22)
-        default_end = today_date + dt_mod.timedelta(days=365)
-        
-        col_d1, col_d2 = st.columns(2)
-        delivery_start_date = col_d1.date_input("탐색 시작일", value=today_date, key="delivery_start_date")
-        delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
-        
-        st.caption("💡 오늘부터 향후 1년간의 안전 주수 구간 내 길일을 정밀 탐색합니다.")
-
-    elif "3-2." in u_product:
-        other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key="key_3_2")
+        # 2. 체크박스가 활성화(True)된 경우에만 사이드바 입력 폼 노출
+        if run_delivery_calc:
+            st.subheader("🩺 산모 생리 주기 및 기준 정보")
+            
+            # 오늘 날짜 기준 동적 기본값 설정 (고정 날짜 2026-06-23 완전 제거)
+            today_dt = dt_mod.date.today()
+            default_last_period = today_dt - dt_mod.timedelta(days=30)
+            
+            last_period_date = st.date_input("마지막 생리 시작일", value=default_last_period, key="last_period_date")
+            period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=30, key="period_cycle")
+            
+            st.markdown("---")
+            st.subheader("📅 출산 길일 탐색 기간 설정")
+            
+            # 오늘부터 정확히 1년 후로 초기값 설정
+            default_start = today_dt
+            default_end = today_dt + dt_mod.timedelta(days=365)
+            
+            col_d1, col_d2 = st.columns(2)
+            delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date")
+            delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
+            
+            st.caption("💡 오늘부터 향후 1년간의 안전 주수 구간 내 길일을 정밀 탐색합니다.")
         
     st.markdown("---")
 
