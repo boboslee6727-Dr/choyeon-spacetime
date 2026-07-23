@@ -1040,7 +1040,7 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
 
-    # ==============================================================================
+# ==============================================================================
     # 👶 [2-2번 카테고리] 출산 택일
     # ==============================================================================
     elif "2-2." in u_product:
@@ -1083,6 +1083,10 @@ if st.session_state.get('app_running', False):
                     if not best_days:
                         taegil_html += "<p style='color:#D32F2F; font-weight:bold;'>⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.</p>"
                     else:
+                        # 📌 [상단 요약 박스 표출] html_views 모듈 함수를 통한 상단 한눈에 보기 요약 리스트 추가
+                        if hasattr(html_views, 'get_delivery_summary_box'):
+                            taegil_html += html_views.get_delivery_summary_box(best_days)
+
                         today_dt = dt_mod.date.today()
                         
                         for idx, day_info in enumerate(best_days):
@@ -1101,7 +1105,7 @@ if st.session_state.get('app_running', False):
                                 # 산모가 마지막 생리일을 입력한 경우: 생리일 기준 배란기(약 12일~16일 후)가 실제 잉태 시기입니다.
                                 conception_start = last_period + dt_mod.timedelta(days=12)
                                 conception_end = last_period + dt_mod.timedelta(days=16)
-                                conception_title = "💖 실제 잉태(합궁) 추정 시기 (마지막 생리일 기준)"
+                                conception_title = "💖 실제 잉태(합궁) 추정 시기"
                                 conception_msg = f"<span style='font-size:13px; color:#D32F2F; font-weight:bold;'>(※ 입력하신 마지막 생리일({last_period.strftime('%Y-%m-%d')})을 기준으로 산출된 실제 잉태 시기입니다.)</span>"
                             else:
                                 # 계획 임신(생리일 미입력)인 경우에만 출산일 기준 역산
