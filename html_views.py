@@ -518,6 +518,35 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
     """
     return card_html
 
+def get_delivery_summary_box(best_days):
+    """
+    [출산 길일 한눈에 보기 요약 박스 View]
+    """
+    summary_items = ""
+    for idx, day_info in enumerate(best_days):
+        b_time_info = day_info['best_time']
+        pillars_str = day_info.get('four_pillars', '')
+        
+        summary_items += f"""
+        <li style="margin-bottom:6px;">
+            🏅 <b>추천 {idx+1}순위</b> (명리 종합점수: <span style="color:#C62828; font-weight:bold;">{day_info['score']}점</span>) : 
+            <b>{day_info['date']} {b_time_info['time_str']}</b> 
+            <span style="color:#555; font-size:13px;">({pillars_str})</span>
+        </li>
+        """
+
+    html_code = f"""
+    <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:18px; margin-top:15px; margin-bottom:25px;">
+        <h4 style="color:#1A237E; margin-top:0; margin-bottom:12px; font-size:16px; border-bottom:1px solid #C5CAE9; padding-bottom:8px;">
+            📋 출산 길일 한눈에 보기 (가임/배란 주기별 최적 길일)
+        </h4>
+        <ul style="list-style-type:none; padding-left:0; margin:0; line-height:1.8; font-size:14px; color:#2C3E50;">
+            {summary_items}
+        </ul>
+    </div>
+    """
+    return html_code
+
 def get_ai_report_box(content):
     return f"""
     <div style='margin-top:20px; padding:20px; border: 2px solid #1A237E; border-radius:10px; background-color:#F9F9F9;'>
