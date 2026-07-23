@@ -36,17 +36,17 @@ def get_global_css():
         color: #FFFFFF !important;
     }
 
-    /* 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 선명한 진녹색 바탕 + 흰색 굵은 글자 */
+    /* 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 산뜻하고 화사한 밝은 연녹색 바탕 + 짙은 녹색 굵은 글자 */
     div.stButton > button[kind="secondary"] { 
-        background-color: #1B5E20 !important; 
-        color: #FFFFFF !important; 
-        border: 1px solid #1B5E20 !important; 
+        background-color: #E8F5E9 !important; 
+        color: #1B5E20 !important; 
+        border: 1.5px solid #81C784 !important; 
         height: 48px !important;
         font-weight: 900 !important;
     }
     div.stButton > button[kind="secondary"]:hover {
-        background-color: #2E7D32 !important;
-        color: #FFFFFF !important;
+        background-color: #C8E6C9 !important;
+        color: #0F3811 !important;
     }
 
     .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
