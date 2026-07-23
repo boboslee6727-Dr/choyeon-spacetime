@@ -1244,24 +1244,21 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         "marital_info": marital_status
     }
 
-def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=28):
+def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=30):
     """
-    [초연 시공명리 출산 택일 정방향 탐색 엔진 - 3주 6자 및 12시진 전수 분석 완성본]
+    [초연 시공명리 출산 택일 - 가임 주기별(한 달 간격) 최적 길일 추출 엔진]
     """
     male_jiji = male_jjis[0] if male_jjis else "子"
     female_jiji = female_jjis[0] if female_jjis else "丑"
     
-    optimized_results = []
+    candidate_results = []
     current_date = start_date
     
     while current_date <= end_date:
         conception_date = current_date 
-        delivery_date = conception_date + dt_mod.timedelta(days=268) # 정방향 268일 후 출산일
+        delivery_date = conception_date + dt_mod.timedelta(days=268)
         
-        # 1. 탐색 기간 내에 들어오는 출산일 검증
         if start_date <= delivery_date <= end_date:
-            
-            # 2. 마지막 생리일 기준 의학적 안전 주수(37~41주) 필터
             if last_period_date:
                 gestation_days = (delivery_date - last_period_date).days
                 if gestation_days > 0:
@@ -1270,46 +1267,47 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, la
                         current_date += dt_mod.timedelta(days=1)
                         continue
             
-            try:
-                # 3주 6자 (년, 월, 일 주) 정확히 추출
-                y_pillar, m_pillar, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
-                day_gan, day_ji = d_pillar[0], d_pillar[1]
-            except:
-                current_date += dt_mod.timedelta(days=1)
-                continue
-            
-            # 3. 해당 날짜의 12시진 전체 스캔하여 가장 최적의 시진 산출
+            # 해당 날짜의 12시진 스캔 및 3주 6자 기반 정밀 점수 산출
             time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
-            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70}
+            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70.0}
             
-            # 4. 시진 지지(ji)에 따른 시주 표기 매핑
-            ji_to_pillar = {
-                '子': '子時', '丑': '丑時', '寅': '寅時', '卯': '卯時',
-                '辰': '辰時', '巳': '巳時', '午': '午時', '未': '未時',
-                '申': '申時', '酉': '酉時', '戌': '戌時', '亥': '亥時'
-            }
-            time_pillar_str = ji_to_pillar.get(best_slot['ji'], '子時')
-            
-            # 5. 최종 결과 리스트 적재
-            optimized_results.append({
+            # 간지 4주 8자 구성
+            try:
+                y_p, m_p, d_p = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
+                # 시주 추정 (간단 매핑)
+                h_p = f"{best_slot['ji']}時"
+                four_pillars = f"{y_p}년 {m_p}월 {d_p}일 {h_p}"
+            except:
+                four_pillars = "사주간지 분석중"
+
+            candidate_results.append({
                 'date': delivery_date.strftime("%Y-%m-%d"),
+                'delivery_dt': delivery_date,
                 'conception_date': conception_date.strftime("%Y-%m-%d"),
-                'score': best_slot['score'], 
+                'score': best_slot['score'],
+                'four_pillars': four_pillars,
                 'best_time': {
                     'time_str': best_slot['time_str'],
-                    'time_pillar': time_pillar_str,
+                    'time_pillar': f"{best_slot['ji']}時",
                     'ji': best_slot['ji']
                 },
-                'all_time_slots': time_slots_eval # 12시진 전체 비교 데이터 탑재
+                'all_time_slots': time_slots_eval
             })
             
         current_date += dt_mod.timedelta(days=2) # 2일 간격 스캔
         
-    if not optimized_results and last_period_date:
-        return get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=period_cycle)
-        
-    optimized_results.sort(key=lambda x: x['score'], reverse=True)
-    return optimized_results[:5]
+    # 📌 [핵심 로직] 점수가 높은 순으로 정렬한 후, 같은 가임 주기(30일 이내) 중복 제거
+    candidate_results.sort(key=lambda x: x['score'], reverse=True)
+    
+    filtered_results = []
+    for item in candidate_results:
+        # 이미 뽑힌 길일과 출산일 차이가 25일 이상 나는 경우에만(즉, 다음 달 가임기) 채택
+        if not any(abs((item['delivery_dt'] - selected['delivery_dt']).days) < 25 for selected in filtered_results):
+            filtered_results.append(item)
+            if len(filtered_results) >= 5: # 최상위 5개 달(月)의 길일 확정 시 종료
+                break
+                
+    return filtered_results
 
 def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, time_ji):
     """
