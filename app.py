@@ -187,7 +187,7 @@ with st.sidebar:
                                 
                                 s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                 s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt}✅음력{s_lun_fmt}"
+                                st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt}\n 음력{s_lun_fmt}\n"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -309,7 +309,7 @@ with st.sidebar:
                                     
                                     p_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                     p_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                    st.session_state['rev_p_success_msg'] = f"✅양력{p_sol_fmt}✅음력{p_lun_fmt}"
+                                    st.session_state['rev_p_success_msg'] = f"✅양력{p_sol_fmt}\n음력{p_lun_fmt}\n"
                                     st.rerun()
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
