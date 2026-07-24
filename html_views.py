@@ -13,12 +13,12 @@ def get_global_css():
 
     /* 사이드바 알림 상자 : 단 두 줄 완벽 고정 스타일 */
     [data-testid="stSidebar"] div[data-testid="stNotification"] {
-        padding: 8px 10px !important;
+        padding: 3px 3px !important;
     }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
         font-size: 11px !important;
         line-height: 1.5 !important;
-        letter-spacing: -0.3px !important;
+        letter-spacing: -0.5px !important;
         font-family: 'Nanum Gothic', sans-serif !important;
         white-space: pre-wrap !important; /* 줄바꿈 100% 보장 */
     }
