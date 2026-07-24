@@ -13,11 +13,12 @@ def get_global_css():
 
     /* 사이드바 st.success 알림 상자 폰트 크기 및 정돈 스타일 */
     [data-testid="stSidebar"] div[data-testid="stNotification"] {
-        padding: 8px 12px !important;
+        padding: 6px 10px !important; /* 상하좌우 여백을 약간 축소 */
     }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
         font-size: 11.5px !important;
-        line-height: 1.5 !important;
+        line-height: 1.3 !important;        /* 줄간격을 1.5에서 1.3으로 축소 */
+        letter-spacing: -0.8px !important;  /* 🎯 글자 간격(자간)을 좁힘 */
         font-family: 'Nanum Gothic', sans-serif !important;
     }
 
