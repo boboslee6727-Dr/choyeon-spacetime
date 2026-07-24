@@ -13,7 +13,7 @@ def get_global_css():
 
     /* 사이드바 st.success 알림 상자 폰트 크기 및 정돈 스타일 */
     [data-testid="stSidebar"] div[data-testid="stNotification"] {
-        padding: 5px 8px !important; /* 상하좌우 여백을 약간 축소 */
+        padding: 5px 5px !important; /* 상하좌우 여백을 약간 축소 */
     }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
         font-size: 8px !important;
