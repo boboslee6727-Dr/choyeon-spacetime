@@ -11,15 +11,16 @@ def get_global_css():
     [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
 
-    /* 사이드바 st.success 알림 상자 폰트 크기 및 정돈 스타일 */
+    /* 사이드바 알림 상자 : 단 두 줄 완벽 고정 스타일 */
     [data-testid="stSidebar"] div[data-testid="stNotification"] {
-        padding: 3px 3px !important; /* 상하좌우 여백을 약간 축소 */
+        padding: 8px 10px !important;
     }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
-        font-size: 8px !important;
-        line-height: 1.2 !important;        /* 줄간격을 1.5에서 1.2으로 축소 */
-        letter-spacing: -0.8px !important;  /* 🎯 글자 간격(자간)을 좁힘 */
+        font-size: 11px !important;
+        line-height: 1.5 !important;
+        letter-spacing: -0.3px !important;
         font-family: 'Nanum Gothic', sans-serif !important;
+        white-space: pre-wrap !important; /* 줄바꿈 100% 보장 */
     }
 
     /* ==========================================================================
