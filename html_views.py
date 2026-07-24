@@ -11,10 +11,14 @@ def get_global_css():
     [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
 
-    /* 사이드바 자동입력 성공 메시지 폰트 크기 조정 */
+    /* 사이드바 st.success 알림 상자 폰트 크기 및 정돈 스타일 */
+    [data-testid="stSidebar"] div[data-testid="stNotification"] {
+        padding: 8px 12px !important;
+    }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
-        font-size: 13px !important;
+        font-size: 11.5px !important;
         line-height: 1.5 !important;
+        font-family: 'Nanum Gothic', sans-serif !important;
     }
 
     /* ==========================================================================
@@ -47,7 +51,7 @@ def get_global_css():
         background-color: #00A843 !important; 
         color: #FFFFFF !important; 
         border: none !important; 
-        height: 48px !important;
+        height: 50px !important;
         font-weight: 900 !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important;
     }
