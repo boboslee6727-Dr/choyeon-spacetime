@@ -716,40 +716,35 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
-                    # [1단계 PAGE] 메인 표지 + 5대 헤더 + 1차 초연 사주/대운 AI 통변 완판
+                    # [1단계 PAGE] 오리지널 사주풀이 (기존 1-1과 완벽히 동일하게 출력)
                     # ------------------------------------------------------------------
-                    u_name_str = locals().get('name', '신청인')
-                    sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
-                    lun_val = locals().get('lun_str', '')
-                    today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                    # final_report_base에는 이미 '초연 시공명리 사주풀이' 일반 표지와 5대 헤더가 담겨 있습니다.
+                    first_stage_html = str(final_report_base or "") + str(ai_output_html or "")
                     
-                    saju_main_cover = html_views.get_comparison_saju_cover(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
-                    
-                    saju_body_content = (
-                        str(locals().get('inho_html', '')) + 
-                        str(locals().get('table_html', '')) + 
-                        str(locals().get('master_html', '')) + 
-                        str(locals().get('intro_html', '')) + 
-                        str(locals().get('golden_text_html', '')) + 
-                        f"<div style='margin-top:20px;'>{str(locals().get('ai_output_html', ''))}</div>"
-                    )
-                    
-                    # [출력 1단계] 1차 초연 사주팔자 및 대운분석 완판
-                    st.markdown(html_views.get_final_report_box(saju_main_cover + saju_body_content), unsafe_allow_html=True)
+                    # [출력 1] 첫 번째 페이지: 기본 사주풀이 완판
+                    st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
                     # ------------------------------------------------------------------
-                    # [2단계 PAGE] 타 감명서 원문 입력 검증 및 원문 카드 출력
+                    # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트 별도 출력
                     # ------------------------------------------------------------------
+                    # 세션 텍스트 완벽 구출 (버그 원천 차단)
                     other_text_input = st.session_state.get("other_reading_text", "") or st.session_state.get("text_3-1.", "") or st.session_state.get("external_review_input", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
+                        u_name_str = locals().get('name', '신청인')
+                        sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
+                        lun_val = locals().get('lun_str', '')
+                        today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                        
+                        # 박사님 지시대로 '타 감명서 비교' 표지는 2단계 앞에 별도로 생성!
+                        other_cover_html = html_views.get_comparison_saju_cover(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         
-                        # [출력 2단계] 타 감명서 원문 카드 단독 출력
-                        st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
+                        # [출력 2] 두 번째 페이지: 타 감명서 표지 + 원본 카드
+                        st.markdown(html_views.get_final_report_box(other_cover_html + report_2_html), unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] prompts.COMPARE_PROMPT 활용 1:1 상세비교 AI 통변
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             fact_str = f"- 신청인 기운: {name}({gender}) 원국 및 대운 전체 로드맵"
@@ -764,7 +759,7 @@ if st.session_state.get('app_running', False):
                             
                             c_res_html = html_views.get_comparison_result_box_html(c_res_clean)
                             
-                        # [출력 3단계] 1:1 상세비교 AI 통변 단독 출력
+                        # [출력 3] 세 번째 페이지: 비교 리포트 단독 출력
                         st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
                         
                     else:
@@ -1247,13 +1242,12 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
-    # [3-2번 카테고리] 타 감명서 비교 (궁합) - prompts.COMPARE_PROMPT 및 html_views 결합
+    # [3-2번 카테고리] 타 감명서 비교 (궁합) - 정통 3단계 구조
     # ==============================================================================
     elif "3-2" in u_product:
         st.markdown("---")
         with st.spinner("⏳ 입력받은 궁합 감명서와 초연 시공명리 알고리즘을 교차 검증 중입니다..."):
             try:
-                # 0. 세션 데이터 및 원문 입력값 구출
                 other_text_input = st.session_state.get("external_review_input", "") or st.session_state.get("other_reading_text", "") or st.session_state.get("text_3-2.", "")
                 user_gender = st.session_state.get("u_g", gender)
                 curr_y = dt_mod.datetime.now().year
@@ -1286,7 +1280,8 @@ if st.session_state.get('app_running', False):
                 m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
                 w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
                 
-                gunghap_main_cover = html_views.get_gunghap_cover(APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}", female_name, female_age, female_sol, female_lun, f"{female_time}", dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
+                # 1단계용 오리지널 '궁합풀이' 표지
+                cover_html = html_views.get_gunghap_cover(APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}", female_name, female_age, female_sol, female_lun, f"{female_time}", dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
 
                 m_table = html_views.get_gunghap_saju_table(*m_data[1:])
                 m_master_html = html_views.get_master_bar(m_master_list[0], m_master_list[1], m_master_list[2], m_master_list[3], m_master_list[4], m_master_list[5], m_master_list[6], m_master_list[7], m_master_list[8], m_master_list[9], m_master_list[10])
@@ -1297,7 +1292,7 @@ if st.session_state.get('app_running', False):
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 # ------------------------------------------------------------------
-                # [1단계 PAGE] 표지 + 남녀 5대 명조 헤더 + 1차 초연 궁합 AI 통변 완판
+                # [1단계 PAGE] 오리지널 궁합풀이 (기본 궁합 표지 + 헤더 + 1차 AI)
                 # ------------------------------------------------------------------
                 gh_prompt = prompts.GUNGHAP_ESSAY_PROMPT.format(
                     m_name=male_name, m_age=male_age, f_name=female_name, f_age=female_age,
@@ -1313,28 +1308,29 @@ if st.session_state.get('app_running', False):
                 first_ai_result = call_gemini_api(gh_prompt, model="gemini-2.5-flash")
                 first_ai_clean = re.sub(r'```[a-zA-Z]*', '', first_ai_result).replace("```", "").strip()
                 
-                first_page_content = str(gunghap_main_cover or '') + "".join([
+                first_page_content = str(cover_html or '') + "".join([
                     str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''),
                     str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''),
                     f"<div style='margin-top:25px; font-family:\"Nanum Myeongjo\", serif; line-height:1.8;'>{first_ai_clean}</div>"
                 ])
                 
-                # [출력 1단계] 궁합 표지 + 헤더 + 1차 궁합 통변 완판
+                # [출력 1] 첫 번째 페이지: 기본 궁합풀이 완판
                 st.markdown(html_views.get_final_report_box(first_page_content), unsafe_allow_html=True)
 
                 # ------------------------------------------------------------------
-                # [2단계 PAGE & 3단계 PAGE] 타 궁합 감명서 원문 및 1:1 상세 비교 리포트
+                # [2단계 & 3단계 PAGE] 타 감명서 전용 표지/원문 및 1:1 비교 리포트
                 # ------------------------------------------------------------------
                 if other_text_input and len(str(other_text_input).strip()) > 0:
                     today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                     
+                    # 박사님 지시대로 '타 감명서 비교' 표지는 2단계 앞에 별도로 생성!
                     gunghap_other_cover = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
                     report_2_html = html_views.get_other_report_original_html(other_text_input)
                     
-                    # [출력 2단계] 타 궁합 감명서 표지 + 원문 카드 단독 출력
+                    # [출력 2] 두 번째 페이지: 타 감명서 표지 + 원본 카드
                     st.markdown(html_views.get_final_report_box(gunghap_other_cover + report_2_html), unsafe_allow_html=True)
 
-                    # [출력 3단계] 1:1 상세 비교 R&D 리포트 카드 단독 출력
+                    # [출력 3] 세 번째 페이지: 1:1 상세 비교 리포트 단독 출력
                     fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
                     comp_prompt = prompts.COMPARE_PROMPT.format(
                         full_content_clean=str(first_ai_clean).strip(),
