@@ -720,13 +720,20 @@ if st.session_state.get('app_running', False):
                     saju_report = str(comparison_saju_report or "") + final_report
                     st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
                     
-                    other_report = st.session_state.get("text_3-1.", "")
-                    if other_report:
-                        original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
+                    other_report = st.session_state.get("text_3-1.", "") or st.session_state.get("other_reading_text", "")
+                    if other_report and len(other_report.strip()) > 0:
+                        original_report_html = f"""
+                        <div style='margin-top:40px; padding:25px; background-color:#FAFAFA; border:1px solid #DDDDDD; border-radius:8px;'>
+                            <h3 style='text-align:center; color:#333333; font-weight:900; margin-bottom:15px;'>📜 의뢰인이 제공한 타 감명서 원문</h3>
+                            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.8; color:#222222; text-align:justify; word-break:keep-all;'>
+                                {other_report.replace(chr(10), '<br>')}
+                            </div>
+                        </div>
+                        """
                         with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
                             fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
                             comp_prompt = getattr(prompts, 'COMPARE_PROMPT', "").format(
-                                full_content_clean=ai_output_html.replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
+                                full_content_clean=str(ai_output_html or "").replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
                                 other_report=other_report,
                                 fact_reference=fact_str
                             )
