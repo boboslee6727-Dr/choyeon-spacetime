@@ -732,13 +732,14 @@ if st.session_state.get('app_running', False):
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
-                        u_name_str = locals().get('name', '신청인')
-                        p_icon_str = locals().get('p_icon', '♂️')
+                        u_name_str = name
+                        p_icon_str = p_icon
                         
-                        sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
-                        lun_val = locals().get('lun_str', '')
-                        time_val = locals().get('b_time', '')
-                        today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                        # 🚨 [김집사의 실수 완전 수정]: 상단 연산부의 정확한 음력 변수(lun_str_fmt) 바인딩
+                        sol_val = sol_str_fmt
+                        lun_val = lun_str_fmt
+                        time_val = time_str_fmt
+                        today_val = today_str
                         
                         # 1. 표지 출력
                         other_cover_html = html_views.get_comparison_saju_cover(
@@ -754,17 +755,17 @@ if st.session_state.get('app_running', False):
                         # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            u_name_val = locals().get('name', '신청인')
-                            u_gender_val = locals().get('gender', '남성')
-                            b_y = locals().get('b_year', '')
-                            b_m = locals().get('b_month', '')
-                            b_d = locals().get('b_day', '')
-                            b_t = locals().get('b_time', '')
+                            u_name_val = name
+                            u_gender_val = gender
+                            b_y = sol_y
+                            b_m = sol_m
+                            b_d = sol_d
+                            b_t = time_str_fmt
                             
-                            g_list = locals().get('gans', ['', '', '', ''])
-                            j_list = locals().get('jjis', ['', '', '', ''])
+                            g_list = gans
+                            j_list = jjis
                             pillar_str = f"{g_list[3]}{j_list[3]}년 {g_list[2]}{j_list[2]}월 {g_list[1]}{j_list[1]}일 {g_list[0]}{j_list[0]}시" if len(g_list) >= 4 else ""
-                            calc_daewun = locals().get('calc_d', '')
+                            calc_daewun = calc_d
 
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
@@ -777,12 +778,10 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 🚨 [태그 노출 방지 핵심]: AI가 뱉어낸 HTML 태그 및 주석 완벽 정화
+                                # HTML 주석 태그 및 마크다운 백틱 정화
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
-                                
-                                # HTML 치환 문자가 원문 텍스트 형태로 드러나는 것 전면 방지
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
                                 
                                 formatted_comp = c_res_clean.replace("\n", "<br>")
@@ -790,8 +789,6 @@ if st.session_state.get('app_running', False):
                                 formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
                                 
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
-                                
-                                # st.components.v1 대신 표준 st.markdown으로 안전 출력
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
@@ -804,7 +801,7 @@ if st.session_state.get('app_running', False):
                 final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-    # ==============================================================================
+# ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
     # ==============================================================================
     elif any(x in u_product for x in ["2-0", "3-2"]):
@@ -870,12 +867,16 @@ if st.session_state.get('app_running', False):
                 f_golden_html = html_views.get_golden_text(female_name, f_w_val, f_i_val, f_struct[0], f_struct[1], f_struct[2]) if hasattr(html_views, 'get_golden_text') else ""
                 f_golden_text = f"초연 시공명리학적으로 풀이하면 {female_name}님은 '{f_w_val}'의 시공간에서, '{f_i_val}'의 성품을 가지고 태어나셨으며, 성격은 '{f_struct[0]}'인 '{f_struct[1]}'으로, '{f_struct[2]}'하는 성향이 있습니다."
 
-                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
-                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
+                # 태어난 시 표기 방어
+                m_time_clean = male_time if male_time.endswith("시") else f"{male_time}시"
+                f_time_clean = female_time if female_time.endswith("시") else f"{female_time}시"
+
+                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, m_time_clean, p_color="#1A237E")
+                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f_time_clean, p_color="#2E7D32")
                 
                 cover_html = html_views.get_gunghap_cover(
-                    APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}",  
-                    female_name, female_age, female_sol, female_lun, f"{female_time}", 
+                    APP_VERSION, male_name, male_age, male_sol, male_lun, male_time,  
+                    female_name, female_age, female_sol, female_lun, female_time, 
                     dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                 )
                 
@@ -1007,10 +1008,10 @@ if st.session_state.get('app_running', False):
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        # 1. 궁합 타 감명서 독립 표지 생성 및 출력
+                        # 1. 궁합 타 감명서 독립 표지 생성 및 출력 (인자 포맷 교정)
                         gunghap_other_cover = html_views.get_comparison_gunghap_cover(
-                            APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}시",  
-                            female_name, female_age, female_sol, female_lun, f"{female_time}시", 
+                            APP_VERSION, male_name, male_age, male_sol, male_lun, male_time,  
+                            female_name, female_age, female_sol, female_lun, female_time, 
                             today_val
                         )
                         st.markdown(gunghap_other_cover, unsafe_allow_html=True)
@@ -1032,8 +1033,11 @@ if st.session_state.get('app_running', False):
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
-                                clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
+                                # 🚨 [태그 노출 방지 정화 구문 완벽 탑재]
+                                clean_ai = re.sub(r'<!--.*?-->', '', ai_compare_result, flags=re.DOTALL)
+                                clean_ai = re.sub(r'```[a-zA-Z]*', '', clean_ai).replace("```", "").strip()
                                 clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
+                                clean_ai = clean_ai.replace("&lt;", "<").replace("&gt;", ">")
                                 
                                 formatted_comp = clean_ai.replace("\n", "<br>")
                                 formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
@@ -1162,7 +1166,6 @@ if st.session_state.get('app_running', False):
         if 'cached_gunghap_report' in st.session_state:
             st.markdown(st.session_state['cached_gunghap_report'], unsafe_allow_html=True)
 
-        # 사이드바의 출산택일 분석 가동 체크박스 상태 확인
         run_delivery = st.session_state.get("run_delivery_calc", True)
 
         if run_delivery:
@@ -1196,7 +1199,6 @@ if st.session_state.get('app_running', False):
                     if not best_days:
                         taegil_html += "<p style='color:#D32F2F; font-weight:bold;'>⚠️ 지정하신 탐색 기간 내에 오행이 조화로운 특A급 길일이 없습니다. 탐색 기간을 더 넓게 조정해 주십시오.</p>"
                     else:
-                        # 📌 [상단 요약 박스 표출] html_views 모듈 함수를 통한 상단 한눈에 보기 요약 리스트 추가
                         if hasattr(html_views, 'get_delivery_summary_box'):
                             taegil_html += html_views.get_delivery_summary_box(best_days)
 
@@ -1215,13 +1217,11 @@ if st.session_state.get('app_running', False):
                                 b_date_str = b_dt.strftime("%Y-%m-%d")
                                 
                             if last_period:
-                                # 산모가 마지막 생리일을 입력한 경우: 생리일 기준 배란기(약 12일~16일 후)가 실제 잉태 시기입니다.
                                 conception_start = last_period + dt_mod.timedelta(days=12)
                                 conception_end = last_period + dt_mod.timedelta(days=16)
                                 conception_title = "💖 실제 잉태(합궁) 추정 시기"
                                 conception_msg = f"<span style='font-size:13px; color:#D32F2F; font-weight:bold;'>(※ 입력하신 마지막 생리일({last_period.strftime('%Y-%m-%d')})을 기준으로 산출된 실제 잉태 시기입니다.)</span>"
                             else:
-                                # 계획 임신(생리일 미입력)인 경우에만 출산일 기준 역산
                                 conception_start = b_dt - dt_mod.timedelta(days=268)
                                 conception_end = b_dt - dt_mod.timedelta(days=264)
                                 conception_title = "💖 잉태(합궁) 권장 기간"
