@@ -34,6 +34,13 @@ def get_global_css():
         border-radius: 8px !important;
     }
 
+    /* AI 통변 전용 계층 스타일 */
+    .ai-title-l1 { font-size: 18px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #1A237E; padding-bottom: 5px; }
+    .ai-title-l2 { font-size: 16px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 18px; margin-bottom: 8px; }
+    .ai-sub-item { margin: 6px 0; line-height: 1.85; font-size: 15px; color: #2c3e50; text-indent: 0.5em; }
+    .ai-sub-item strong { font-weight: 700 !important; color: #1F2937; }
+    .ai-body-p { margin-bottom: 12px; line-height: 1.85; text-indent: 1em; font-size: 15px; color: #2c3e50; font-weight: normal !important; }
+
     /* 🔴 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
     div.stButton > button[kind="primary"] { 
         background-color: #D50000 !important; 
@@ -414,7 +421,6 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
                     {w_un_html}
                 </div>
             </div>
-            
         </div>
     </div>
     <div class="page-break-before"></div>
@@ -653,6 +659,38 @@ def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
         </div>
     </div>
     """
+
+def format_ai_text_to_html(raw_text):
+    """AI 응답 순수 텍스트를 계층별 HTML 서식으로 변환하는 전용 뷰 함수"""
+    import re
+    if not raw_text or not isinstance(raw_text, str):
+        return "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
+        
+    paragraphs = [p.strip() for p in raw_text.split('\n') if p.strip()]
+    formatted = []
+    
+    for p in paragraphs:
+        # 1. 대제목 (1. 성격 및 가치관)
+        if re.match(r'^\d+\.\s+[^\)]+', p):
+            formatted.append(f"<h3 class='ai-title-l1'>{p}</h3>")
+            
+        # 2. 소제목 (1) 겉으로 드러난 성격)
+        elif re.match(r'^\d+\)', p):
+            formatted.append(f"<h4 class='ai-title-l2'>{p}</h4>")
+            
+        # 3. 소소제목 (- 표면적 성향: ...)
+        elif p.startswith('-') or p.startswith(' -'):
+            if ':' in p:
+                title, content = p.split(':', 1)
+                formatted.append(f"<p class='ai-sub-item'><strong>{title.strip()}:</strong>{content}</p>")
+            else:
+                formatted.append(f"<p class='ai-sub-item'><strong>{p}</strong></p>")
+                
+        # 4. 일반 본문
+        else:
+            formatted.append(f"<p class='ai-body-p'>{p}</p>")
+            
+    return "".join(formatted)
 
 def get_ai_report_box(content):
     """5. 기본 AI 통변용 감싸기 카드"""
