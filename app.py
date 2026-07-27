@@ -774,14 +774,14 @@ if st.session_state.get('app_running', False):
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이
     # ==============================================================================
-    elif any(x in u_product for x in ["2-0", "궁합", "3-2"]) and not any(x in u_product for x in ["2-1.", "2-2."]):
+    elif "2-0." in u_product:
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
+                # (기존 2-0 로직 그대로 유지)
                 user_gender = st.session_state.get("u_g", gender)
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
-                p_age = curr_y - int(f_y) + 1
                 
                 klc = KoreanLunarCalendar()
                 klc.setSolarDate(int(b_year), int(b_month), int(b_day))
