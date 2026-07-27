@@ -692,6 +692,47 @@ def format_ai_text_to_html(raw_text):
             
     return "".join(formatted)
 
+def format_ai_text_to_html(raw_text):
+    """모든 상품(개인사주, 궁합, 택일, 타감명서) AI 통변 텍스트 계층별 자동 UI 변환 함수"""
+    import re
+    if not raw_text or not isinstance(raw_text, str):
+        return "<p style='padding:20px; color:#666;'>분석 결과를 불러오지 못했습니다.</p>"
+        
+    paragraphs = [p.strip() for p in raw_text.split('\n') if p.strip()]
+    formatted = []
+    
+    for p in paragraphs:
+        # 1. 대제목 (예: 1. 성격 및 가치관 분석)
+        if re.match(r'^\d+\.\s+[^\)]+', p):
+            formatted.append(
+                f"<h3 style='font-size:18px !important; font-weight:900 !important; color:#1A237E !important; margin-top:25px; margin-bottom:12px; border-bottom:2px solid #1A237E; padding-bottom:6px;'>{p}</h3>"
+            )
+        # 2. 소제목 (예: 1) 겉으로 드러난 성격)
+        elif re.match(r'^\d+\)', p):
+            formatted.append(
+                f"<h4 style='font-size:16px !important; font-weight:800 !important; color:#2E7D32 !important; margin-top:18px; margin-bottom:8px;'>{p}</h4>"
+            )
+        # 3. 소소제목 (예: - 표면적 성향: 본문 내용...)
+        elif p.startswith('-') or p.startswith(' -'):
+            if ':' in p:
+                title, content = p.split(':', 1)
+                formatted.append(
+                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:15px; color:#2c3e50; text-indent:0.5em;'>"
+                    f"<strong style='font-weight:800 !important; color:#1F2937;'>{title.strip()}:</strong>{content}"
+                    f"</p>"
+                )
+            else:
+                formatted.append(
+                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:15px; color:#2c3e50; text-indent:0.5em;'><strong style='font-weight:800 !important; color:#1F2937;'>{p}</strong></p>"
+                )
+        # 4. 일반 본문 문단 (일반 두께 font-weight: normal)
+        else:
+            formatted.append(
+                f"<p style='margin-bottom:12px; line-height:1.85; text-indent:1em; font-family:\"Nanum Myeongjo\", serif; font-size:15px; color:#2c3e50; font-weight:normal !important;'>{p}</p>"
+            )
+            
+    return "".join(formatted)
+
 def get_ai_report_box(content):
     """5. 기본 AI 통변용 감싸기 카드"""
     return f"""
