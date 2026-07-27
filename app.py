@@ -1248,7 +1248,7 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
-    # [3-2번 카테고리] 타 감명서 비교 (궁합) - 3단계 완벽 독립 모듈화 분리 출력
+    # [3-2번 카테고리] 타 감명서 비교 (궁합) - 정통 3단계 완벽 독립 카드 출력
     # ==============================================================================
     elif "3-2" in u_product:
         st.markdown("---")
@@ -1323,7 +1323,7 @@ if st.session_state.get('app_running', False):
                 w_un = html_views.generate_daewun_layout(*f_daewun)
 
                 # ------------------------------------------------------------------
-                # [1단계 PAGE] 1차 초연 궁합 AI 통변 + 표지 + 5대 남녀 명조 헤더
+                # [1단계 PAGE] 궁합 메인 표지 + 5대 남녀 명조 헤더 + 1차 초연 궁합 AI 통변 (완판 출력)
                 # ------------------------------------------------------------------
                 gh_prompt = prompts.GUNGHAP_ESSAY_PROMPT.format(
                     m_name=male_name, m_age=male_age, f_name=female_name, f_age=female_age,
@@ -1339,29 +1339,28 @@ if st.session_state.get('app_running', False):
                 first_ai_result = call_gemini_api(gh_prompt, model="gemini-2.5-flash")
                 first_ai_clean = re.sub(r'```[a-zA-Z]*', '', first_ai_result).replace("```", "").strip()
                 
-                first_page_content = "".join([
+                first_page_content = str(cover_html or '') + "".join([
                     str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''),
                     str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''),
                     f"<div style='margin-top:25px; font-family:\"Nanum Myeongjo\", serif; line-height:1.8;'>{first_ai_clean}</div>"
                 ])
                 
-                # [출력 1] 첫 번째 페이지: 궁합 메인 표지 + 1차 궁합 통변 완판
-                st.markdown(cover_html, unsafe_allow_html=True)
+                # [출력 1] 첫 번째 완판 카드 출력 (표지 + 헤더 + 1차 궁합 통변)
                 st.markdown(html_views.get_final_report_box(first_page_content), unsafe_allow_html=True)
 
                 # ------------------------------------------------------------------
-                # [2단계 PAGE & 3단계 PAGE] 타 감명서 원문 카드 및 1:1 비교 리포트 카드 (모듈화)
+                # [2단계 PAGE & 3단계 PAGE] 타 궁합 감명서 원문 및 1:1 상세 비교 리포트
                 # ------------------------------------------------------------------
                 if external_review_text and len(str(external_review_text).strip()) > 0:
                     today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                     
-                    # [출력 2] 두 번째 페이지: html_views 궁합 전용 표지 + 원문 카드
+                    # [출력 2] 두 번째 완판 카드 출력 (궁합 비교 전용 표지 + 원문 카드)
                     gunghap_cover_html = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
                     original_report_html = html_views.get_other_report_original_html(external_review_text)
                     
                     st.markdown(html_views.get_final_report_box(gunghap_cover_html + original_report_html), unsafe_allow_html=True)
 
-                    # [출력 3] 세 번째 페이지: 1:1 상세 비교 R&D 리포트 카드
+                    # [출력 3] 세 번째 완판 카드 출력 (1:1 상세 비교 R&D 리포트)
                     compare_facts = {
                         "m_name": male_name, "f_name": female_name,
                         "m_ganju": f"{m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}",
@@ -1375,6 +1374,8 @@ if st.session_state.get('app_running', False):
                     if ai_compare_result:
                         clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
                         comparison_output_html = html_views.get_comparison_result_box_html(clean_ai)
+                        
+                        # 오직 비교 AI 통변 카드만 정통 3단계로 완판 출력
                         st.markdown(html_views.get_final_report_box(comparison_output_html), unsafe_allow_html=True)
                     else:
                         st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
