@@ -456,7 +456,7 @@ def get_comparison_saju_cover_html(name, gender):
 def get_comparison_gunghap_cover_html(m_name, f_name):
     """⚖️ 타 감명서 비교 (궁합) 전용 표지 HTML"""
     return f"""<div style='text-align: center; padding: 40px 20px; background-color: #fffaf0; border-radius: 12px; border: 1px solid #f5e6cc; margin-bottom: 30px;'>
-<div style='font-size: 15px; color: #b8860b; letter-spacing: 2px; margin-bottom: 10px;'>💕 초연 시공명리 R&D 학술 리포트</div>
+<div style='font-size: 15px; color: #b8860b; letter-spacing: 2px; margin-bottom: 10px;'>💕 초연 시공명리 R&D 리포트</div>
 <div style='font-size: 21px; font-weight: 900; color: #B71C1C; margin-bottom: 15px;'>🔍 {m_name} & {f_name} 타 감명서 비교 분석 (궁합풀이)</div>
 <div style='font-size: 14px; color: #555;'>남명: {m_name} & 여명: {f_name} | 두 사주의 체용 조화와 타 감명서의 명리학적 오류를 정밀 검증합니다.</div>
 </div>
@@ -594,29 +594,31 @@ def get_delivery_summary_box(best_days):
     """
     return html_code
 
-def get_comparison_saju_cover(app_version, u_name, sol_str, lun_str, today_str):
-    """1. 타 감명서 비교 (개인사주) 전용 표지 HTML"""
+def get_comparison_saju_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
+    """기존 개인사주 표지와 100% 동일한 레이아웃 (타이틀만 타 감명서 비교로 교체)"""
     return f"""
-    <div class='page-break-before'></div>
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-            <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 class='title-gothic' style='font-size: 36px !important; margin:0 !important; color:#2E7D32;'>초연 시공명리 타 감명서 비교</h1>
+        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+                <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮 초연 시공명리 타 감명서 비교</h1>
                 <div style='text-align: right; margin-top: 10px;'>
-                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{app_version}</span>
+                    <span style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-bottom: 15px;'>👤 신청인 : {u_name} 님</h2>
-                <div style='font-size: 14px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
+                <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
+                        <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                        <p style='margin: 5px 0 0 0; white-space: nowrap;'>{time_str}</p>
+                    </div>
                 </div>
             </div>
-            <p style='font-size: 16px; margin-top: 40px; font-weight: 800; color:#333;'>{today_str}</p>
-            <p style='font-size: 20px; font-weight: 800; color: #2E7D32; margin-top: 15px;'>초연 시공명리 연구소</p>
+            <p style='font-size: 18px; margin-top: 50px; font-weight: 900;'>{today_str}</p>
+            <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>
         </div>
     </div>
-    """
+    <div clas
 
 def get_comparison_gunghap_cover(app_version, male_name, female_name, today_str):
     """2. 타 감명서 비교 (궁합) 전용 표지 HTML"""
