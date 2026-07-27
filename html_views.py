@@ -634,7 +634,7 @@ def get_other_report_original_html(other_text_input):
     """
 
 def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
-    """4. 1:1 상세비교 AI 본문 리포트 카드 (화면 소스코드 노출 방지 및 정상 렌더링)"""
+    """4. 1:1 상세비교 AI 본문 리포트 카드 (높이 제한 완벽 해제 및 소스코드 노출 방지)"""
     info_box_html = ""
     if member_info_str:
         info_box_html = f"""
@@ -647,13 +647,13 @@ def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
         
     return f"""
     <div class='page-break-before'></div>
-    <div class='report-page' style='margin-top:20px;'>
-        <div class='vip-inset-frame' style='border:2px solid #2E7D32; padding:30px 25px; background:#FFFFFF; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
-            <h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 900; border-bottom:2px dashed #2E7D32; padding-bottom:15px; margin-top:0; margin-bottom:20px;'>
+    <div class='report-page' style='margin-top:20px; height:auto !important; max-height:none !important; overflow:visible !important;'>
+        <div class='vip-inset-frame' style='border:2px solid #2E7D32; padding:30px 25px; background:#FFFFFF !important; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); height:auto !important; max-height:none !important; overflow:visible !important;'>
+            <h1 style='text-align:center; color:#2E7D32 !important; font-size: 26px; font-weight: 900; border-bottom:2px dashed #2E7D32; padding-bottom:15px; margin-top:0; margin-bottom:20px;'>
                 ⚖️ 1:1 상세 비교 리포트 분석
             </h1>
             {info_box_html}
-            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.9; color:#111111; text-align:justify;'>
+            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.9; color:#111111 !important; text-align:justify; height:auto !important; max-height:none !important; overflow:visible !important; display:block !important;'>
                 {comp_clean_text}
             </div>
         </div>
@@ -717,18 +717,18 @@ def format_ai_text_to_html(raw_text):
             if ':' in p:
                 title, content = p.split(':', 1)
                 formatted.append(
-                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:15px; color:#2c3e50; text-indent:0.5em;'>"
+                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:13px; color:#2c3e50; text-indent:0.5em;'>"
                     f"<strong style='font-weight:800 !important; color:#1F2937;'>{title.strip()}:</strong>{content}"
                     f"</p>"
                 )
             else:
                 formatted.append(
-                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:15px; color:#2c3e50; text-indent:0.5em;'><strong style='font-weight:800 !important; color:#1F2937;'>{p}</strong></p>"
+                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:12px; color:#2c3e50; text-indent:0.5em;'><strong style='font-weight:800 !important; color:#1F2937;'>{p}</strong></p>"
                 )
         # 4. 일반 본문 문단 (일반 두께 font-weight: normal)
         else:
             formatted.append(
-                f"<p style='margin-bottom:12px; line-height:1.85; text-indent:1em; font-family:\"Nanum Myeongjo\", serif; font-size:15px; color:#2c3e50; font-weight:normal !important;'>{p}</p>"
+                f"<p style='margin-bottom:12px; line-height:1.85; text-indent:1em; font-family:\"Nanum Myeongjo\", serif; font-size:11px; color:#2c3e50; font-weight:normal !important;'>{p}</p>"
             )
             
     return "".join(formatted)
