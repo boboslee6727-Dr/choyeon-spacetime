@@ -987,8 +987,11 @@ if st.session_state.get('app_running', False):
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        gunghap_other_cover = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
-                        report_2_html = html_views.get_other_report_original_html(other_text_input)
+                        gunghap_other_cover = html_views.get_comparison_gunghap_cover(
+                            APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}시",  
+                            female_name, female_age, female_sol, female_lun, f"{female_time}시", 
+                            today_val
+                        )
                         
                         # 1. 궁합 타 감명서 독립 표지 출력
                         st.markdown(gunghap_other_cover, unsafe_allow_html=True)
