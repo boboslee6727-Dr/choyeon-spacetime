@@ -1247,7 +1247,7 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
-    # [3-2번 카테고리] 타 감명서 비교 (궁합) - prompts.COMPARE_PROMPT 결합
+    # [3-2번 카테고리] 타 감명서 비교 (궁합) - prompts.COMPARE_PROMPT 및 html_views 결합
     # ==============================================================================
     elif "3-2" in u_product:
         st.markdown("---")
@@ -1334,7 +1334,7 @@ if st.session_state.get('app_running', False):
                     # [출력 2단계] 타 궁합 감명서 표지 + 원문 카드 단독 출력
                     st.markdown(html_views.get_final_report_box(gunghap_other_cover + report_2_html), unsafe_allow_html=True)
 
-                    # [출력 3단계] 1:1 상세 비교 R&D 리포트 카드 단독 출력 (prompts.COMPARE_PROMPT 포맷팅)
+                    # [출력 3단계] 1:1 상세 비교 R&D 리포트 카드 단독 출력
                     fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
                     comp_prompt = prompts.COMPARE_PROMPT.format(
                         full_content_clean=str(first_ai_clean).strip(),
