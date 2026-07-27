@@ -136,7 +136,6 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
-    # '구분' 난 15% 배분, 나머지 4열 21.25% 균등 배분
     return f"""
      <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; margin-top:10px; table-layout:fixed;'>
         <tr class='top-header-cell'>
@@ -160,12 +159,9 @@ def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_ro
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """모든 테이블 HTML 조각을 조립하여 최종 테이블을 반환하는 함수"""
-    
-    # 여기서 각 행을 생성하는 로직을 html_views가 직접 처리
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, gans[0])}</td><td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td><td style='border:1px solid #444;'>{engine.get_ss(ds, gans[2])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, gans[3])}</td>"
-    gan_row = "".join([get_styled_td(g, f"color-{engine.get_color(g)}") for g in gans]) # get_styled_td 활용
+    gan_row = "".join([get_styled_td(g, f"color-{engine.get_color(g)}") for g in gans])
     ji_row = "".join([f"<td class='color-{engine.get_color(j)} ganji-cell'>{j}</td>" for j in jjis])
     ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[0])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[1])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[2])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[3])}</td>"
     jijanggan = "".join([f"<td style='padding:0 !important; border:1px solid #444 !important; height:45px; vertical-align:middle;'><div style='display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; font-size:13px; font-weight:900; line-height:1.0;'>{get_jijanggan_full(ds, jjis[i])}</div></td>" for i in range(4)])
@@ -201,7 +197,6 @@ def get_intro_html():
     """
 
 def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
-    # s_name: 비식관구조, s_type: 조직봉사형, s_desc: 조직과 봉사활동을 통해 정체성을 추구
     return f"""
     <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8; color: #000000; 
                 margin: 25px 0; border-top: 2px solid #1A237E; border-bottom: 2px solid #1A237E; 
@@ -255,17 +250,15 @@ def get_sewun_layout(title, content):
     """
 
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    # 한자 변환 딕셔너리 (필요한 간지 추가 가능)
     hanja_map = {
         "갑자": "甲子", "을축": "乙丑", "병인": "丙寅", "정묘": "丁卯", "무진": "戊辰", "기사": "己巳", "경오": "庚午", "신미": "辛未", "임신": "壬申", "계유": "癸酉",
-        "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁축", "무인": "戊寅", "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
+        "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅", "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
         "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子", "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
         "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌", "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
         "갑진": "甲辰", "을사": "乙巳", "병오": "丙午", "정미": "丁未", "무신": "戊申", "기유": "己酉", "경술": "庚戌", "신해": "辛亥", "임자": "壬子", "계축": "癸丑",
         "갑인": "甲寅", "을묘": "乙卯", "병진": "丙辰", "정사": "丁巳", "무오": "戊午", "기미": "己未", "경신": "庚申", "신유": "辛酉", "임술": "壬戌", "계해": "癸亥"
     }
     
-    # 제목에서 대운명 추출 및 한자 변환
     display_title = title_str
     for hangul, hanja in hanja_map.items():
         if hangul in title_str:
@@ -309,7 +302,7 @@ def get_closing_html(name):
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
         <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
         <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
         <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: 900; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
@@ -389,24 +382,7 @@ def get_gunghap_person_box(table_html, master_bar_html, add_page_break=False):
     {pb}
     """
 
-def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
-    return f"""
-    <div class='report-page'>
-        <div style='border: 2px solid #1A237E; border-radius: 12px; padding: 25px; background-color:#FAFAFA;'>
-            <h2 style='text-align:center; color:#1A237E; font-weight:900; margin-bottom: 30px;'>[ 부부 대운 흐름 비교 분석 ]</h2>
-            <div style='margin-bottom: 40px;'>
-                <h4 style='color:#3E2723; font-weight:900;'>&#9794; 남명 ({m_name}님) 대운 흐름</h4>
-                {m_un_html}
-            </div>
-            <div>
-                <h4 style='color:#3E2723; font-weight:900;'>&#9792; 여명 ({w_name}님) 대운 흐름</h4>
-                {w_un_html}
-            </div>
-        </div>
-    </div>
-    <div class="page-break-before"></div>
-    """
-
+# 🚨 중복 선언되었던 get_daewun_compare_box 중 단 하나만 남겨 깔끔히 단권화했습니다.
 def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     return f"""
     <div class='report-page' style='font-family: "Nanum Myeongjo", serif; margin-top: 20px;'>
@@ -444,24 +420,6 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     <div class="page-break-before"></div>
     """
 
-def get_comparison_saju_cover_html(name, gender):
-    """🔍 타 감명서 비교 (사주) 전용 표지 HTML"""
-    return f"""<div style='text-align: center; padding: 40px 20px; background-color: #f9f9f9; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 30px;'>
-<div style='font-size: 15px; color: #666; letter-spacing: 2px; margin-bottom: 10px;'>📊 초연 시공명리 R&D 리포트</div>
-<div style='font-size: 21px; font-weight: 900; color: #1A237E; margin-bottom: 15px;'>🔍 {name}님 타 감명서 비교 분석 (개인사주)</div>
-<div style='font-size: 14px; color: #555;'>신청인 성별: {gender} | 본 분석은 의뢰인이 제공한 타 감명서와 초연 시공명리를 1:1로 대조한 R&D 검증 보고서입니다.</div>
-</div>
-"""
-
-def get_comparison_gunghap_cover_html(m_name, f_name):
-    """⚖️ 타 감명서 비교 (궁합) 전용 표지 HTML"""
-    return f"""<div style='text-align: center; padding: 40px 20px; background-color: #fffaf0; border-radius: 12px; border: 1px solid #f5e6cc; margin-bottom: 30px;'>
-<div style='font-size: 15px; color: #b8860b; letter-spacing: 2px; margin-bottom: 10px;'>💕 초연 시공명리 R&D 리포트</div>
-<div style='font-size: 21px; font-weight: 900; color: #B71C1C; margin-bottom: 15px;'>🔍 {m_name} & {f_name} 타 감명서 비교 분석 (궁합풀이)</div>
-<div style='font-size: 14px; color: #555;'>남명: {m_name} & 여명: {f_name} | 두 사주의 체용 조화와 타 감명서의 명리학적 오류를 정밀 검증합니다.</div>
-</div>
-"""
-
 def get_comparison_gumhap_report_html(m_name, f_name, other_report):
     return f"""<div style='margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
 <div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>💕 남성({m_name}) & 여성({f_name}) 타 감명서 원문 (의뢰인 제공)</div>
@@ -484,14 +442,8 @@ def get_comparison_html(comp_fmt):
 """
 
 def get_gunghap_score_visual_html(gh_engine):
-    """
-    구 버전 오리지널 시각화 차트, 최종 궁합 점수, 6대 세부항목 바, 클로징 멘트를 
-    HTML 뷰로 완벽 조합하여 반환하는 전담 함수 (도넛: 하늘색 / 막대: 구버전 원본색)
-    """
-    # 💙 박사님 요청 반영: 도넛 원형 차트 및 점수 뱃지는 맑은 하늘색으로 지정
     sky_blue = "#38B6FF"
     
-    # 📊 구 버전 ver 48.6 오리지널 막대 그래프 색상 (d['color']) 유지
     bars = "".join([
         f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
         f"<div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div>"
@@ -525,8 +477,7 @@ def get_gunghap_score_visual_html(gh_engine):
     )
     return score_chart_html
 
-
-def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
+def get_gunghap_closing(name1, name2):
     return f"""
     <div style='margin-top: 20px;'>
         <p style='font-size:16px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>
@@ -540,9 +491,6 @@ def get_gunghap_closing(name1, name2): # 인자를 2개 받도록 수정
     """
 
 def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b_time_pillar, gestation_warning, conception_title, conception_str, conception_msg, baby_saju_html, ai_output_html):
-    """
-    [출산 택일 카드 뷰 - 좌측 세로선 완벽 제거 버전]
-    """
     card_html = f"""
     <div style="background-color:#FFFFFF; border:1px solid #E0E0E0; border-radius:12px; padding:20px; margin-bottom:25px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #F1F3F4; padding-bottom:12px; margin-bottom:15px;">
@@ -566,9 +514,6 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
     return card_html
 
 def get_delivery_summary_box(best_days):
-    """
-    [출산 길일 한눈에 보기 요약 박스 View]
-    """
     summary_items = ""
     for idx, day_info in enumerate(best_days):
         b_time_info = day_info['best_time']
@@ -618,27 +563,37 @@ def get_comparison_saju_cover(version, p_icon, name, sol_str, lun_str, time_str,
             <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>
         </div>
     </div>
-    <div clas
+    <div class="page-break-before"></div>
+    """
 
-def get_comparison_gunghap_cover(app_version, male_name, female_name, today_str):
-    """2. 타 감명서 비교 (궁합) 전용 표지 HTML"""
+def get_comparison_gunghap_cover(version, m_name, m_age, m_sol, m_lun, m_time, f_name, f_age, f_sol, f_lun, f_time, today_str):
+    """기존 궁합 표지와 100% 동일한 레이아웃 (타이틀만 타 감명서 비교 (궁합)으로 교체)"""
     return f"""
-    <div class='page-break-before'></div>
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
-            <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 class='title-gothic' style='font-size: 32px !important; margin:0 !important; color:#2E7D32;'>🏮타 감명서 비교 (궁합)</h1>
+        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+                <h1 class='title-gothic' style='font-size: 32px !important; margin:0 !important; color:#1A237E; font-weight:900;'>🏮 타 감명서 비교 (궁합)</h1>
                 <div style='text-align: right; margin-top: 10px;'>
-                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{app_version}</span>
+                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style='font-size: 20px; font-weight: 800; color: #2E7D32; margin-bottom: 10px;'>👫 대상 : {male_name} 님 & {female_name} 님</h2>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>
+                <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 15px;'>♂️ 남명 : {m_name} 님 <span style='font-size:16px; color:#555;'>( {m_age}세 )</span></h2>
+                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun} {m_time}</p>
+                </div>
             </div>
-            <p style='font-size: 16px; margin-top: 40px; font-weight: 800; color:#333;'>{today_str}</p>
-            <p style='font-size: 20px; font-weight: 800; color: #2E7D32; margin-top: 15px;'>초연 시공명리 연구소</p>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>
+                <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 15px;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>
+                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun} {f_time}</p>
+                </div>
+            </div>
+            <p style='font-size: 18px; margin-top: 30px; font-weight: 800;'>{today_str}</p>
+            <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class="page-break-before"></div>
     """
 
 def get_other_report_original_html(other_report_text):
