@@ -732,8 +732,8 @@ if st.session_state.get('app_running', False):
                     # ------------------------------------------------------------------
                     # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트 별도 출력
                     # ------------------------------------------------------------------
-                    # 세션 텍스트 완벽 구출 (버그 원천 차단)
-                    other_text_input = st.session_state.get("other_reading_text", "") or st.session_state.get("text_3-1.", "") or st.session_state.get("external_review_input", "")
+                    # 🚨 박사님 지시 반영: 사이드바 UI와 100% 동일한 동적 Key 이름표 사용
+                    other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         u_name_str = locals().get('name', '신청인')
@@ -1253,8 +1253,10 @@ if st.session_state.get('app_running', False):
         st.markdown("---")
         with st.spinner("⏳ 입력받은 궁합 감명서와 초연 시공명리 알고리즘을 교차 검증 중입니다..."):
             try:
-                other_text_input = st.session_state.get("external_review_input", "") or st.session_state.get("other_reading_text", "") or st.session_state.get("text_3-2.", "")
+                # 🚨 박사님 지시 반영: 사이드바 UI와 100% 동일한 동적 Key 이름표 사용
+                other_text_input = st.session_state.get(f"text_{u_product}", "")
                 user_gender = st.session_state.get("u_g", gender)
+
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
                 p_age = curr_y - int(f_y) + 1
