@@ -721,12 +721,9 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
-                    # [1단계 PAGE] 오리지널 사주풀이 (기존 1-1과 완벽히 동일하게 출력)
+                    # [1단계 PAGE] 오리지널 사주풀이
                     # ------------------------------------------------------------------
-                    # final_report_base에는 이미 '초연 시공명리 사주풀이' 일반 표지와 5대 헤더가 담겨 있습니다.
                     first_stage_html = str(final_report_base or "") + str(ai_output_html or "")
-                    
-                    # [출력 1] 첫 번째 페이지: 기본 사주풀이 완판
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
                     # ------------------------------------------------------------------
@@ -743,9 +740,8 @@ if st.session_state.get('app_running', False):
                         other_cover_html = html_views.get_comparison_saju_cover(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         
-                        # [출력 2단계 분리] 1. 타 감명서 표지는 독립 페이지로 출력
+                        # [출력 2단계 분리] 타 감명서 표지는 독립, 원본은 A4 박스에
                         st.markdown(other_cover_html, unsafe_allow_html=True)
-                        # [출력 2단계 분리] 2. 타 감명서 원본은 A4 둥근 박스에 담아 출력
                         st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
@@ -758,11 +754,9 @@ if st.session_state.get('app_running', False):
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=fact_str
                             )
-                            # 🚨 API 오류의 주범인 model 인자 삭제 완료
                             c_res = call_gemini_api(comp_prompt)
                             c_res_clean = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                             c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
-                            
                             c_res_html = html_views.get_comparison_result_box_html(c_res_clean)
                             
                         # [출력 3단계] 비교 리포트 단독 출력
@@ -770,6 +764,13 @@ if st.session_state.get('app_running', False):
                         
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
+                
+                # 🚨 [중요] 이 except 구문이 지워져서 발생한 에러입니다. 완벽 복원했습니다.
+                except Exception as e:
+                    st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
+            else:
+                final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
