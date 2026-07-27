@@ -772,16 +772,17 @@ if st.session_state.get('app_running', False):
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
 
     # ==============================================================================
-    # [2번 카테고리] 연애/궁합 풀이
+    # [2번 카테고리] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
     # ==============================================================================
-    elif "2-0." in u_product:
+    # 🚨 박사님 지시 반영: 애매한 텍스트 제거하고 명확한 코드(2-0, 3-2)로만 통제
+    elif any(x in u_product for x in ["2-0", "3-2"]):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
-                # (기존 2-0 로직 그대로 유지)
                 user_gender = st.session_state.get("u_g", gender)
                 curr_y = dt_mod.datetime.now().year
                 m_age = curr_y - int(b_year) + 1
+                p_age = curr_y - int(f_y) + 1
                 
                 klc = KoreanLunarCalendar()
                 klc.setSolarDate(int(b_year), int(b_month), int(b_day))
@@ -802,7 +803,7 @@ if st.session_state.get('app_running', False):
                     marital_status = f"{u_marital}-{f_marital}" 
                     gh_data = engine.get_gunghap_data(
                         int(b_year), int(b_month), int(b_day), b_time, u_marital, 
-                        int(f_y), int(f_m), int(f_d), f_t, f_marital,             
+                        int(f_y), int(f_m), int(f_d), f_t, f_marital,              
                         marital_status
                     )
                     male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
@@ -917,6 +918,7 @@ if st.session_state.get('app_running', False):
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_facts)
                 prompt_text += f"\n\n🚨 [주의]: 프롬프트 지시문 안의 '<...>' 예시 텍스트 문구를 그대로 복사하여 출력하지 말고, 주어진 사주팔자 팩트를 바탕으로 실제 완성된 통변 문장만 작성하십시오."
 
+                # 1차 궁합 통변 AI
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
@@ -960,9 +962,50 @@ if st.session_state.get('app_running', False):
                 st.session_state['cached_gunghap_cover'] = cover_html
                 st.session_state['cached_gunghap_report'] = report_box
                 
+                # [출력 1단계] 기본 궁합 풀이
                 st.markdown(cover_html, unsafe_allow_html=True)
                 st.markdown(report_box, unsafe_allow_html=True)
 
+                # ------------------------------------------------------------------
+                # 🚨 [2단계 & 3단계 PAGE] 타 감명서 (궁합) 선택 시에만 추가 가동
+                # ------------------------------------------------------------------
+                if "3-2" in u_product:
+                    other_text_input = st.session_state.get(f"text_{u_product}", "")
+                    
+                    if other_text_input and len(str(other_text_input).strip()) > 0:
+                        today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                        
+                        gunghap_other_cover = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
+                        report_2_html = html_views.get_other_report_original_html(other_text_input)
+                        
+                        # [출력 2단계 분리] 표지는 독립 페이지, 원문은 A4 박스
+                        st.markdown(gunghap_other_cover, unsafe_allow_html=True)
+                        st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
+
+                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
+                            first_ai_clean = re.sub(r'<[^>]+>', '', ai_output_html) # 1차결과에서 태그 제거
+                            fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
+                            
+                            comp_prompt = prompts.COMPARE_PROMPT.format(
+                                full_content_clean=str(first_ai_clean).strip(),
+                                other_report=str(other_text_input).strip(),
+                                fact_reference=fact_str
+                            )
+                            # 🚨 API model 파라미터 에러 완전 제거
+                            ai_compare_result = call_gemini_api(comp_prompt)
+
+                            if ai_compare_result:
+                                clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
+                                c_res_html = html_views.get_comparison_result_box_html(clean_ai)
+                                
+                                # [출력 3단계] 비교 리포트
+                                st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
+                            else:
+                                st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
+                    else:
+                        st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
+
+            # 🚨 들여쓰기 꼬임 완벽 해결 (try 닫기)
             except Exception as e:
                 st.error(f"🚨 궁합 분석 처리 중 예외 발생: {e}")
 
@@ -1241,114 +1284,3 @@ if st.session_state.get('app_running', False):
                             
                 except Exception as e:
                     st.error(f"🚨 출산 택일 분석 중 오류 발생: {e}")
-
-    # ==============================================================================
-    # [3-2번 카테고리] 타 감명서 비교 (궁합) - 정통 3단계 구조
-    # ==============================================================================
-    elif "3-2" in u_product:
-        st.markdown("---")
-        with st.spinner("⏳ 입력받은 궁합 감명서와 초연 시공명리 알고리즘을 교차 검증 중입니다..."):
-            try:
-                # 🚨 박사님 지시 반영: 사이드바 UI와 100% 동일한 동적 Key 이름표 사용
-                other_text_input = st.session_state.get(f"text_{u_product}", "")
-                user_gender = st.session_state.get("u_g", gender)
-
-                curr_y = dt_mod.datetime.now().year
-                m_age = curr_y - int(b_year) + 1
-                p_age = curr_y - int(f_y) + 1
-                
-                klc = KoreanLunarCalendar()
-                klc.setSolarDate(int(b_year), int(b_month), int(b_day))
-                m_sol, m_lun = f"{b_year}년 {b_month}월 {b_day}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {klc.lunarDay}일"
-                klc.setSolarDate(int(f_y), int(f_m), int(f_d))
-                f_sol, f_lun = f"{f_y}년 {f_m}월 {f_d}일", f"{klc.lunarYear}년 {klc.lunarMonth}월 {f_d}일"
-                
-                if user_gender == "여성":
-                    marital_status = f"{f_marital}-{u_marital}" 
-                    gh_data = engine.get_gunghap_data(int(f_y), int(f_m), int(f_d), f_t, f_marital, int(b_year), int(b_month), int(b_day), b_time, u_marital, marital_status)
-                    male_name, male_age, male_sol, male_lun, male_time, male_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
-                    female_name, female_age, female_sol, female_lun, female_time, female_marital = name, m_age, m_sol, m_lun, b_time, u_marital
-                else:
-                    marital_status = f"{u_marital}-{f_marital}" 
-                    gh_data = engine.get_gunghap_data(int(b_year), int(b_month), int(b_day), b_time, u_marital, int(f_y), int(f_m), int(f_d), f_t, f_marital, marital_status)
-                    male_name, male_age, male_sol, male_lun, male_time, male_marital = name, m_age, m_sol, m_lun, b_time, u_marital
-                    female_name, female_age, female_sol, female_lun, female_time, female_marital = f_name, p_age, f_sol, f_lun, f_t, f_marital
-
-                m_data, m_master_list, m_daewun = gh_data["m_table"], gh_data["m_master"], gh_data["m_daewun"]
-                f_data, f_master_list, f_daewun = gh_data["w_table"], gh_data["w_master"], gh_data["w_daewun"]
-
-                m_ys, m_yb, m_ms, m_mb, m_ds, m_db, m_hs, m_hb = gh_data.get("m_ys",""), gh_data.get("m_yb",""), gh_data.get("m_ms",""), gh_data.get("m_mb",""), gh_data.get("m_ds",""), gh_data.get("m_db",""), gh_data.get("m_hs",""), gh_data.get("m_hb","")
-                f_ys, f_yb, f_ms, f_mb, f_ds, f_db, f_hs, f_hb = gh_data.get("f_ys",""), gh_data.get("f_yb",""), gh_data.get("f_ms",""), gh_data.get("f_mb",""), gh_data.get("f_ds",""), gh_data.get("f_db",""), gh_data.get("f_hs",""), gh_data.get("f_hb","")
-
-                m_info = html_views.get_info_header("♂️", male_name, "남성", male_marital, male_age, male_sol, male_lun, f"{male_time}시", p_color="#1A237E")
-                w_info = html_views.get_info_header("♀️", female_name, "여성", female_marital, female_age, female_sol, female_lun, f"{female_time}시", p_color="#2E7D32")
-                
-                # 1단계용 오리지널 '궁합풀이' 표지
-                cover_html = html_views.get_gunghap_cover(APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}", female_name, female_age, female_sol, female_lun, f"{female_time}", dt_mod.datetime.now().strftime("%Y년 %m월 %d일"))
-
-                m_table = html_views.get_gunghap_saju_table(*m_data[1:])
-                m_master_html = html_views.get_master_bar(m_master_list[0], m_master_list[1], m_master_list[2], m_master_list[3], m_master_list[4], m_master_list[5], m_master_list[6], m_master_list[7], m_master_list[8], m_master_list[9], m_master_list[10])
-                m_un = html_views.generate_daewun_layout(*m_daewun)
-
-                w_table = html_views.get_gunghap_saju_table(*f_data[1:])
-                w_master_html = html_views.get_master_bar(f_master_list[0], f_master_list[1], f_master_list[2], f_master_list[3], f_master_list[4], f_master_list[5], f_master_list[6], f_master_list[7], f_master_list[8], f_master_list[9], f_master_list[10])
-                w_un = html_views.generate_daewun_layout(*f_daewun)
-
-                # ------------------------------------------------------------------
-                # [1단계 PAGE] 오리지널 궁합풀이 (기본 궁합 표지 + 헤더 + 1차 AI)
-                # ------------------------------------------------------------------
-                gh_prompt = prompts.GUNGHAP_ESSAY_PROMPT.format(
-                    m_name=male_name, m_age=male_age, f_name=female_name, f_age=female_age,
-                    m_ganju_str=f"{m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}", m_ilju=f"{m_ds}{m_db}",
-                    m_dw_g_cur="", m_dw_j_cur="", m_sewun_gan="", m_sewun_ji="", cur_wol_g="", cur_wol_j="",
-                    f_ganju_str=f"{f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}", f_ilju=f"{f_ds}{f_db}",
-                    f_dw_g_cur="", f_dw_j_cur="", f_sewun_gan="", f_sewun_ji="",
-                    m_spouse_star="", f_spouse_star="", db_header="", ai_saju_mapping="", yukchin_rule="",
-                    m_golden="", m_gyukgook="", m_ds=m_ds, m_gongmang_actual="", m_db=m_db,
-                    f_golden="", f_gyukgook="", f_ds=f_ds, f_gongmang_actual="", f_db=f_db
-                )
-                
-                first_ai_result = call_gemini_api(gh_prompt, model="gemini-2.5-flash")
-                first_ai_clean = re.sub(r'```[a-zA-Z]*', '', first_ai_result).replace("```", "").strip()
-                
-                first_page_content = str(cover_html or '') + "".join([
-                    str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''),
-                    str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''),
-                    f"<div style='margin-top:25px; font-family:\"Nanum Myeongjo\", serif; line-height:1.8;'>{first_ai_clean}</div>"
-                ])
-                
-                # [출력 1] 첫 번째 페이지: 기본 궁합풀이 완판
-                st.markdown(html_views.get_final_report_box(first_page_content), unsafe_allow_html=True)
-
-                # ------------------------------------------------------------------
-                # [2단계 & 3단계 PAGE] 타 감명서 전용 표지/원문 및 1:1 비교 리포트
-                # ------------------------------------------------------------------
-                if other_text_input and len(str(other_text_input).strip()) > 0:
-                    today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-                    
-                    gunghap_other_cover = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
-                    report_2_html = html_views.get_other_report_original_html(other_text_input)
-                    
-                    # [출력 2단계 분리] 1. 타 감명서 궁합 표지는 독립 페이지로 출력
-                    st.markdown(gunghap_other_cover, unsafe_allow_html=True)
-                    # [출력 2단계 분리] 2. 궁합 원본 텍스트는 A4 둥근 박스에 담아 출력
-                    st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
-
-                    # [출력 3단계] 1:1 상세 비교 리포트 단독 출력
-                    fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
-                    comp_prompt = prompts.COMPARE_PROMPT.format(
-                        full_content_clean=str(first_ai_clean).strip(),
-                        other_report=str(other_text_input).strip(),
-                        fact_reference=fact_str
-                    )
-                    # 🚨 API 오류의 주범인 model 인자 삭제 완료
-                    ai_compare_result = call_gemini_api(comp_prompt)
-
-                    if ai_compare_result:
-                        clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
-                        c_res_html = html_views.get_comparison_result_box_html(clean_ai)
-                        st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
-                    else:
-                        st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
-                else:
-                    st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
