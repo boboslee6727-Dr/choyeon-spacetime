@@ -718,7 +718,7 @@ if st.session_state.get('app_running', False):
 
             st.markdown(cover_html, unsafe_allow_html=True) 
             
-if "3-1." in u_product or u_product == "타 감명서":
+            if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
                     # [1단계 PAGE] 오리지널 사주풀이
