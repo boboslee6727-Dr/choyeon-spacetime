@@ -716,38 +716,42 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product:
                 try:
                     # ------------------------------------------------------------------
-                    # [1단계 PAGE] 1차 초연 사주풀이 완판 (표지 + 5대 헤더 + 1차 AI)
+                    # [1단계 PAGE] 전용 표지("타 감명서 비교 (사주)") + 5대 헤더 + 1차 개인사주 풀이
                     # ------------------------------------------------------------------
-                    comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
+                    # 1. '타 감명서 비교 (사주)' 전용 녹색 메인 표지 생성
+                    u_name_str = locals().get('name', '신청인')
+                    sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
+                    lun_val = locals().get('lun_str', '')
+                    today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                    
+                    saju_compare_cover = html_views.get_comparison_saju_cover(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
+                    
+                    # 2. 5대 헤더(inho+table+master+intro+golden)와 1차 개인사주 AI 통변 본문 결합
                     saju_body_content = (
                         str(locals().get('inho_html', '')) + 
                         str(locals().get('table_html', '')) + 
                         str(locals().get('master_html', '')) + 
                         str(locals().get('intro_html', '')) + 
                         str(locals().get('golden_text_html', '')) + 
-                        str(locals().get('ai_output_html', ''))
+                        f"<div style='margin-top:20px;'>{str(locals().get('ai_output_html', ''))}</div>"
                     )
-                    st.markdown(html_views.get_final_report_box(comparison_saju_report + saju_body_content), unsafe_allow_html=True)
+                    
+                    # [출력 1] 첫 번째 페이지 출력: '타 감명서 비교 (사주)' 표지 + 1차 초연 사주풀이
+                    st.markdown(html_views.get_final_report_box(saju_compare_cover + saju_body_content), unsafe_allow_html=True)
                     
                     # ------------------------------------------------------------------
-                    # [2단계 PAGE] 2단계 전용 녹색 표지 + 타 감명서 원문 카드
+                    # [2단계 PAGE] 타 감명서 원문 카드 단독 출력
                     # ------------------------------------------------------------------
                     other_report = st.session_state.get("text_3-1.", "") or st.session_state.get("other_reading_text", "") or st.session_state.get("user_other_text", "")
                     
                     if other_report and len(str(other_report).strip()) > 0:
-                        u_name_str = locals().get('name', '신청인')
-                        sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
-                        lun_val = locals().get('lun_str', '')
-                        today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
-                        
-                        # html_views 함수 호출
-                        other_cover_html = html_views.get_comparison_cover_html(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
                         report_2_html = html_views.get_other_report_original_html(other_report)
                         
-                        st.markdown(html_views.get_final_report_box(other_cover_html + report_2_html), unsafe_allow_html=True)
+                        # [출력 2] 두 번째 페이지 출력: 타 감명서 원본 텍스트
+                        st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 본문 리포트 카드 (AI 통변)
+                        # [3단계 PAGE] 1:1 상세비교 본문 리포트 (오직 AI 비교 통변 내용만!)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운 전체 로드맵"
@@ -761,9 +765,9 @@ if st.session_state.get('app_running', False):
                             comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                             comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
                             
-                            # html_views 함수 호출
                             comparison_output_html = html_views.get_comparison_result_box_html(comp_clean)
                             
+                        # [출력 3] 세 번째 페이지 출력: 순수 1:1 상세비교 AI 통변 결과
                         st.markdown(html_views.get_final_report_box(comparison_output_html), unsafe_allow_html=True)
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
@@ -772,7 +776,6 @@ if st.session_state.get('app_running', False):
             else:
                 final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이
     # ==============================================================================
