@@ -727,7 +727,7 @@ if st.session_state.get('app_running', False):
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
                     # ------------------------------------------------------------------
-                    # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트 (이중 박스 해제)
+                    # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트
                     # ------------------------------------------------------------------
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
@@ -735,19 +735,18 @@ if st.session_state.get('app_running', False):
                         u_name_str = locals().get('name', '신청인')
                         p_icon_str = locals().get('p_icon', '♂️')
                         
-                        # 1단계 원본과 100% 동일한 변수 사용
                         sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
                         lun_val = locals().get('lun_str', '')
                         time_val = locals().get('b_time', '')
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        # 1. 기존 표지와 동일 규격의 비교 표지 출력
+                        # 1. 표지 출력
                         other_cover_html = html_views.get_comparison_saju_cover(
                             APP_VERSION, p_icon_str, u_name_str, sol_val, lun_val, time_val, today_val
                         )
                         st.markdown(other_cover_html, unsafe_allow_html=True)
                         
-                        # 2. 🚨 이중 박스 완전 해제: 겉껍질(get_final_report_box) 없이 단독 A4 원문 박스 출력
+                        # 2. 타 감명서 원문 단독 출력
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
@@ -755,7 +754,6 @@ if st.session_state.get('app_running', False):
                         # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            # 안전한 변수 바인딩
                             u_name_val = locals().get('name', '신청인')
                             u_gender_val = locals().get('gender', '남성')
                             b_y = locals().get('b_year', '')
@@ -779,14 +777,16 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res).replace("```", "").strip()
+                                # HTML 주석 태그 및 마크다운 백틱 완전 정화
+                                c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
+                                c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 
                                 formatted_comp = c_res_clean.replace("\n", "<br>")
                                 formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
                                 formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
                                 
-                                # 인자 2개 정상 전달
+                                # 최종 HTML 조립 후 화면 표출
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
@@ -794,7 +794,6 @@ if st.session_state.get('app_running', False):
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
                 
-                # 🚨 [중요] 이 except 구문이 지워져서 발생한 에러입니다. 완벽 복원했습니다.
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
             else:
