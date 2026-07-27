@@ -804,7 +804,6 @@ if st.session_state.get('app_running', False):
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
     # ==============================================================================
-    # 🚨 박사님 지시 반영: 애매한 텍스트 제거하고 명확한 코드(2-0, 3-2)로만 통제
     elif any(x in u_product for x in ["2-0", "3-2"]):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
@@ -1000,73 +999,52 @@ if st.session_state.get('app_running', False):
                 # [2단계 & 3단계 PAGE] 타 감명서 (궁합) 전용 표지/원문 및 1:1 비교
                 # ------------------------------------------------------------------
                 if "3-2" in u_product:
-                    try:
-                        # ------------------------------------------------------------------
-                        # [2단계 PAGE] 궁합 타 감명서 전용 표지 + 원본 텍스트
-                        # ------------------------------------------------------------------
-                        other_text_input = st.session_state.get(f"text_{u_product}", "")
+                    other_text_input = st.session_state.get(f"text_{u_product}", "")
+                    
+                    if other_text_input and len(str(other_text_input).strip()) > 0:
+                        today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        if other_text_input and len(str(other_text_input).strip()) > 0:
-                            today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                        # 1. 궁합 타 감명서 독립 표지 생성 및 출력
+                        gunghap_other_cover = html_views.get_comparison_gunghap_cover(
+                            APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}시",  
+                            female_name, female_age, female_sol, female_lun, f"{female_time}시", 
+                            today_val
+                        )
+                        st.markdown(gunghap_other_cover, unsafe_allow_html=True)
+                        
+                        # 2. 타 감명서 원문 단독 출력 (이중 박스 해제)
+                        report_2_html = html_views.get_other_report_original_html(other_text_input)
+                        st.markdown(report_2_html, unsafe_allow_html=True)
+
+                        # 3. 1:1 상세비교 AI 리포트 출력
+                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
+                            gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
                             
-                            # 1. 궁합 타 감명서 독립 표지 생성 및 출력
-                            gunghap_other_cover = html_views.get_comparison_gunghap_cover(
-                                APP_VERSION, male_name, male_age, male_sol, male_lun, f"{male_time}시",  
-                                female_name, female_age, female_sol, female_lun, f"{female_time}시", 
-                                today_val
+                            comp_prompt = prompts.COMPARE_PROMPT.format(
+                                full_content_clean=str(locals().get('ai_output_html', '')).strip(),
+                                other_report=str(other_text_input).strip(),
+                                fact_reference=gunghap_fact_summary
                             )
-                            st.markdown(gunghap_other_cover, unsafe_allow_html=True)
                             
-                            # 2. 🚨 이중 박스 완전 해제: 타 감명서 원문 단독 출력
-                            report_2_html = html_views.get_other_report_original_html(other_text_input)
-                            st.markdown(report_2_html, unsafe_allow_html=True)
+                            ai_compare_result = call_gemini_api(comp_prompt)
 
-                            # ------------------------------------------------------------------
-                            # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
-                            # ------------------------------------------------------------------
-                            with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                                # 남녀 명조 팩트 문자열 구성 (안전 바인딩)
-                                m_n_val = locals().get('male_name', '남명')
-                                f_n_val = locals().get('female_name', '여명')
+                            if ai_compare_result:
+                                clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
+                                clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                                 
-                                m_ys_v, m_yb_v = locals().get('m_ys', ''), locals().get('m_yb', '')
-                                m_ms_v, m_mb_v = locals().get('m_ms', ''), locals().get('m_mb', '')
-                                m_ds_v, m_db_v = locals().get('m_ds', ''), locals().get('m_db', '')
-                                m_hs_v, m_hb_v = locals().get('m_hs', ''), locals().get('m_hb', '')
+                                formatted_comp = clean_ai.replace("\n", "<br>")
+                                formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
+                                formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
                                 
-                                f_ys_v, f_yb_v = locals().get('f_ys', ''), locals().get('f_yb', '')
-                                f_ms_v, f_mb_v = locals().get('f_ms', ''), locals().get('f_mb', '')
-                                f_ds_v, f_db_v = locals().get('f_ds', ''), locals().get('f_db', '')
-                                f_hs_v, f_hb_v = locals().get('f_hs', ''), locals().get('f_hb', '')
+                                c_res_html = html_views.get_comparison_result_box_html(formatted_comp, gunghap_fact_summary)
+                                st.markdown(c_res_html, unsafe_allow_html=True)
+                            else:
+                                st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
+                    else:
+                        st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
 
-                                gunghap_fact_summary = f"♂️ 남명: <b>{m_n_val}</b> 님 ({m_ys_v}{m_yb_v}년 {m_ms_v}{m_mb_v}월 {m_ds_v}{m_db_v}일 {m_hs_v}{m_hb_v}시)<br>♀️ 여명: <b>{f_n_val}</b> 님 ({f_ys_v}{f_yb_v}년 {f_ms_v}{f_mb_v}월 {f_ds_v}{f_db_v}일 {f_hs_v}{f_hb_v}시)"
-                                
-                                comp_prompt = prompts.COMPARE_PROMPT.format(
-                                    full_content_clean=str(locals().get('ai_output_html', '')).strip(),
-                                    other_report=str(other_text_input).strip(),
-                                    fact_reference=gunghap_fact_summary
-                                )
-                                
-                                ai_compare_result = call_gemini_api(comp_prompt)
-
-                                if ai_compare_result:
-                                    clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
-                                    clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
-                                    
-                                    formatted_comp = clean_ai.replace("\n", "<br>")
-                                    formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
-                                    formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
-                                    
-                                    # 인자 2개 정상 전달
-                                    c_res_html = html_views.get_comparison_result_box_html(formatted_comp, gunghap_fact_summary)
-                                    st.markdown(c_res_html, unsafe_allow_html=True)
-                                else:
-                                    st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
-                        else:
-                            st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
-
-                    except Exception as e:
-                        st.error(f"🚨 궁합 비교 분석 처리 중 예외 발생: {e}")
+            except Exception as e:
+                st.error(f"🚨 궁합 및 타 감명서 비교 처리 중 오류 발생: {e}")
 
     # ==============================================================================
     # 💍 [2-1번 카테고리] 결혼 택일
