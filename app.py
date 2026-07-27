@@ -701,18 +701,14 @@ if st.session_state.get('app_running', False):
                     raw_response = call_gemini_api(formatted_prompt, extra_facts)
                 
                 if raw_response and isinstance(raw_response, str):
+                    # 1. AI 응답 기본 마크다운 및 불필요 문구 정화
                     cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                     cleaned = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', cleaned)
                     cleaned = re.sub(r'분석 지시 사항', '', cleaned)
-                    cleaned = re.sub(r'###\s*', '', cleaned)
-                    cleaned = re.sub(r'##\s*', '', cleaned)
+                    cleaned = re.sub(r'#{1,6}\s*', '', cleaned)  # ###, ## 마크다운 기호 정화
                     
-                    paragraphs = [p.strip() for p in cleaned.split('\n') if p.strip()]
-                    formatted_paragraphs = [
-                        f"<p style='margin-bottom:16px; line-height:1.8; text-indent:10px; font-family:Nanum Myeongjo, serif; font-size:15px; color:#2c3e50;'>{p}</p>" 
-                        for p in paragraphs
-                    ]
-                    ai_output_html = "".join(formatted_paragraphs)
+                    # 2. html_views 통변 전용 뷰 함수로 계층별(대/소/소소제목/본문) HTML 일괄 변환
+                    ai_output_html = html_views.format_ai_text_to_html(cleaned)
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
@@ -778,16 +774,16 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # HTML 주석 태그 및 마크다운 백틱 정화
+                                # 1. 기본 텍스트 정화
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                formatted_comp = c_res_clean.replace("\n", "<br>")
-                                formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
-                                formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
+                                # 2. html_views 통변 전용 뷰 함수를 통해 계층 디자인(대/소/소소제목) 일괄 변환
+                                formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
+                                # 3. 최종 카드로 출력
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
