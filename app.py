@@ -1017,7 +1017,7 @@ if st.session_state.get('app_running', False):
                             )
                             st.markdown(gunghap_other_cover, unsafe_allow_html=True)
                             
-                            # 2. 🚨 [이중 박스 완전 해제]: 타 감명서 원문 단독 출력 (변수 정의 복원)
+                            # 2. 타 감명서 원문 단독 출력 (이중 박스 해제)
                             report_2_html = html_views.get_other_report_original_html(other_text_input)
                             st.markdown(report_2_html, unsafe_allow_html=True)
 
