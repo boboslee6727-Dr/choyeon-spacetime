@@ -1006,24 +1006,29 @@ if st.session_state.get('app_running', False):
                         # 2. 🚨 [이중 박스 완전 해제]: get_final_report_box 껍질을 벗기고 단독 출력
                         st.markdown(report_2_html, unsafe_allow_html=True)
 
-                        # 3. 1:1 상세 비교 리포트 단독 출력
+                        # 3. 1:1 상세비교 AI 리포트 출력 (궁합 명조 요약 상단 반영)
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            first_ai_clean = re.sub(r'<[^>]+>', '', ai_output_html)
-                            fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
+                            # 남녀 명조 팩트 문자열 구성
+                            gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
                             
                             comp_prompt = prompts.COMPARE_PROMPT.format(
-                                full_content_clean=str(first_ai_clean).strip(),
+                                full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
-                                fact_reference=fact_str
+                                fact_reference=gunghap_fact_summary
                             )
                             
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
-                                clean_ai = re.sub(r'^.*?border-radius:8px;.*?>', '', clean_ai, flags=re.DOTALL)
-                                c_res_html = html_views.get_comparison_result_box_html(clean_ai)
-                                st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
+                                clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
+                                
+                                formatted_comp = clean_ai.replace("\n", "<br>")
+                                formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
+                                formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
+                                
+                                c_res_html = html_views.get_comparison_result_box_html(formatted_comp, gunghap_fact_summary)
+                                st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
