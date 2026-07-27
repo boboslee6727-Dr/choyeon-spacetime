@@ -612,7 +612,7 @@ def get_other_report_original_html(other_report_text):
     """
 
 def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
-    """4. 1:1 상세비교 AI 본문 리포트 카드 (인자 2개 수용 완정본)"""
+    """4. 1:1 상세비교 AI 본문 리포트 카드 (인자 2개 완벽 수용)"""
     info_box_html = ""
     if member_info_str:
         info_box_html = f"""
