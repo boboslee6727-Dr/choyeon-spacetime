@@ -983,26 +983,32 @@ if st.session_state.get('app_running', False):
                         st.markdown(gunghap_other_cover, unsafe_allow_html=True)
                         st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
 
-                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            first_ai_clean = re.sub(r'<[^>]+>', '', ai_output_html) # 1차결과에서 태그 제거
-                            fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
+                        with st.spinner("⚖️ [김집사 감시망] R&D 1:1 정밀 비교 분석 및 오류 검증 가동 중..."):
+                            # 🚨 초연 시스템의 핵심 팩트 데이터를 강제로 추출하여 비교 검증에 활용
+                            fact_payload = f"""
+                            - 분석 대상: {male_name} 및 {female_name} 교차 분석
+                            - 남성 원국 팩트: 년주({m_ys}{m_yb}) 월주({m_ms}{m_mb}) 일주({m_ds}{m_db}) 시주({m_hs}{m_hb})
+                            - 여성 원국 팩트: 년주({f_ys}{f_yb}) 월주({f_ms}{f_mb}) 일주({f_ds}{f_db}) 시주({f_hs}{f_hb})
+                            - 초연 시공명리 핵심 알고리즘: 오행/공망/격국/합충형파해 팩트 데이터 기반 대조 필수
+                            """
                             
                             comp_prompt = prompts.COMPARE_PROMPT.format(
                                 full_content_clean=str(first_ai_clean).strip(),
                                 other_report=str(other_text_input).strip(),
-                                fact_reference=fact_str
+                                fact_reference=fact_payload
                             )
-                            # 🚨 API model 파라미터 에러 완전 제거
+                            
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
-                                c_res_html = html_views.get_comparison_result_box_html(clean_ai)
+                                clean_ai = re.sub(r'^.*?border-radius:8px;.*?>', '', clean_ai, flags=re.DOTALL)
+                                clean_ai = re.sub(r'#+\s*', '', clean_ai)
                                 
-                                # [출력 3단계] 비교 리포트
+                                c_res_html = html_views.get_comparison_result_box_html(clean_ai)
                                 st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
                             else:
-                                st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
+                                st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
                         st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
 
