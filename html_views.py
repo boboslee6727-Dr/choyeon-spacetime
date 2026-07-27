@@ -594,7 +594,82 @@ def get_delivery_summary_box(best_days):
     """
     return html_code
 
+def get_comparison_saju_cover(app_version, u_name, sol_str, lun_str, today_str):
+    """1. 타 감명서 비교 (개인사주) 전용 표지 HTML"""
+    return f"""
+    <div class='page-break-before'></div>
+    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
+                <h1 class='title-gothic' style='font-size: 36px !important; margin:0 !important; color:#2E7D32;'>초연 시공명리 타 감명서 비교</h1>
+                <div style='text-align: right; margin-top: 10px;'>
+                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{app_version}</span>
+                </div>
+            </div>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
+                <h2 style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-bottom: 15px;'>👤 신청인 : {u_name} 님</h2>
+                <div style='font-size: 14px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                </div>
+            </div>
+            <p style='font-size: 16px; margin-top: 40px; font-weight: 800; color:#333;'>{today_str}</p>
+            <p style='font-size: 20px; font-weight: 800; color: #2E7D32; margin-top: 15px;'>초연 시공명리 연구소</p>
+        </div>
+    </div>
+    """
+
+def get_comparison_gunghap_cover(app_version, male_name, female_name, today_str):
+    """2. 타 감명서 비교 (궁합) 전용 표지 HTML"""
+    return f"""
+    <div class='page-break-before'></div>
+    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>
+                <h1 class='title-gothic' style='font-size: 32px !important; margin:0 !important; color:#2E7D32;'>초연 시공명리 타 감명서 비교 (궁합)</h1>
+                <div style='text-align: right; margin-top: 10px;'>
+                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{app_version}</span>
+                </div>
+            </div>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
+                <h2 style='font-size: 20px; font-weight: 800; color: #2E7D32; margin-bottom: 10px;'>👫 대상 : {male_name} 님 & {female_name} 님</h2>
+            </div>
+            <p style='font-size: 16px; margin-top: 40px; font-weight: 800; color:#333;'>{today_str}</p>
+            <p style='font-size: 20px; font-weight: 800; color: #2E7D32; margin-top: 15px;'>초연 시공명리 연구소</p>
+        </div>
+    </div>
+    """
+
+def get_other_report_original_html(other_report_text):
+    """3. 타 감명서 원문 카드 (공통)"""
+    formatted_text = str(other_report_text).replace(chr(10), '<br>')
+    return f"""
+    <div class='page-break-before'></div>
+    <div class='report-page' style='margin-top:20px;'>
+        <div class='vip-inset-frame' style='border:2px solid #555555; padding:25px; background:#FAFAFA; border-radius:8px;'>
+            <h2 style='text-align:center; color:#333333; font-family:"Malgun Gothic", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2>
+            <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #111111; text-align: justify; word-break: keep-all;'>
+                {formatted_text}
+            </div>
+        </div>
+    </div>
+    """
+
+def get_comparison_result_box_html(comp_clean_text):
+    """4. 1:1 상세비교 AI 본문 리포트 카드 (공통)"""
+    return f"""
+    <div class='page-break-before'></div>
+    <div class='report-page' style='margin-top:20px;'>
+        <div class='vip-inset-frame' style='border:2px solid #2E7D32; padding:25px; background:#FFFFFF; border-radius:8px;'>
+            <h1 style='text-align:center; color:#2E7D32; font-size: 24px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px; margin-bottom:20px;'>⚖️ 1:1 상세비교 본문 리포트</h1>
+            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.8; color:#111111; text-align:justify;'>
+                {comp_clean_text}
+            </div>
+        </div>
+    </div>
+    """
+
 def get_ai_report_box(content):
+    """5. 기본 AI 통변용 감싸기 카드"""
     return f"""
     <div style='margin-top:20px; padding:20px; border: 2px solid #1A237E; border-radius:10px; background-color:#F9F9F9;'>
         <h3 style='color:#1A237E; margin-bottom:15px; border-bottom:none;'>🔍 초연 시공명리 AI 정밀 통변</h3>
