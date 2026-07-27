@@ -611,14 +611,27 @@ def get_other_report_original_html(other_report_text):
     </div>
     """
 
-def get_comparison_result_box_html(comp_clean_text):
-    """4. 1:1 상세비교 AI 본문 리포트 카드 (공통)"""
+def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
+    """4. 1:1 상세비교 AI 본문 리포트 카드 (인자 2개 수용 완정본)"""
+    info_box_html = ""
+    if member_info_str:
+        info_box_html = f"""
+        <div style='background-color:#F5F7FA; border:1px solid #D1D5DB; border-radius:8px; padding:15px 20px; margin-bottom:25px; text-align:center;'>
+            <div style='font-size:15px; font-weight:800; color:#1F2937; line-height:1.6;'>
+                {member_info_str}
+            </div>
+        </div>
+        """
+        
     return f"""
     <div class='page-break-before'></div>
     <div class='report-page' style='margin-top:20px;'>
-        <div class='vip-inset-frame' style='border:2px solid #2E7D32; padding:25px; background:#FFFFFF; border-radius:8px;'>
-            <h1 style='text-align:center; color:#2E7D32; font-size: 24px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px; margin-bottom:20px;'>⚖️ 1:1 상세비교 본문 리포트</h1>
-            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.8; color:#111111; text-align:justify;'>
+        <div class='vip-inset-frame' style='border:2px solid #2E7D32; padding:30px 25px; background:#FFFFFF; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+            <h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 900; border-bottom:2px dashed #2E7D32; padding-bottom:15px; margin-top:0; margin-bottom:20px;'>
+                ⚖️ 1:1 상세 비교 리포트 분석
+            </h1>
+            {info_box_html}
+            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.9; color:#111111; text-align:justify;'>
                 {comp_clean_text}
             </div>
         </div>
