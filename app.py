@@ -722,14 +722,7 @@ if st.session_state.get('app_running', False):
                     
                     other_report = st.session_state.get("text_3-1.", "") or st.session_state.get("other_reading_text", "")
                     if other_report and len(other_report.strip()) > 0:
-                        original_report_html = f"""
-                        <div style='margin-top:40px; padding:25px; background-color:#FAFAFA; border:1px solid #DDDDDD; border-radius:8px;'>
-                            <h3 style='text-align:center; color:#333333; font-weight:900; margin-bottom:15px;'>📜 의뢰인이 제공한 타 감명서 원문</h3>
-                            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.8; color:#222222; text-align:justify; word-break:keep-all;'>
-                                {other_report.replace(chr(10), '<br>')}
-                            </div>
-                        </div>
-                        """
+                        original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
                         with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
                             fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
                             comp_prompt = getattr(prompts, 'COMPARE_PROMPT', "").format(
@@ -1055,7 +1048,7 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
 
-# ==============================================================================
+    # ==============================================================================
     # 👶 [2-2번 카테고리] 출산 택일
     # ==============================================================================
     elif "2-2." in u_product:
