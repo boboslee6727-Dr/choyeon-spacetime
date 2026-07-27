@@ -596,43 +596,32 @@ def get_comparison_gunghap_cover(version, m_name, m_age, m_sol, m_lun, m_time, f
     <div class="page-break-before"></div>
     """
 
-def get_other_report_original_html(other_report_text):
-    """3. 타 감명서 원문 카드 (공통)"""
-    formatted_text = str(other_report_text).replace(chr(10), '<br>')
-    return f"""
-    <div class='page-break-before'></div>
-    <div class='report-page' style='margin-top:20px;'>
-        <div class='vip-inset-frame' style='border:2px solid #555555; padding:25px; background:#FAFAFA; border-radius:8px;'>
-            <h2 style='text-align:center; color:#333333; font-family:"Malgun Gothic", sans-serif; font-weight:900; margin-bottom:20px;'>📜 타 감명서 원문</h2>
-            <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #111111; text-align: justify; word-break: keep-all;'>
-                {formatted_text}
-            </div>
-        </div>
-    </div>
-    """
+def get_other_report_original_html(other_text_input):
+    """2단계 타 감명서 원문 카드 (단락 들여쓰기 및 깔끔 서식 적용)"""
+    # 줄바꿈 기준 단락 분리 및 첫 문장 들여쓰기 적용
+    paragraphs = str(other_text_input).strip().split('\n')
+    formatted_p = []
+    
+    for p in paragraphs:
+        p_clean = p.strip()
+        if p_clean:
+            # 목차 제목 형태가 아닌 일반 문장에 text-indent 1em(들여쓰기) 적용
+            if p_clean.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.', '10.', '1)', '2)', '3)', '4)', '5)', '■', '●', '◆', 'http')):
+                formatted_p.append(f"<div style='font-weight:bold; color:#1F2937; margin-top:18px; margin-bottom:8px; font-size:16px;'>{p_clean}</div>")
+            else:
+                formatted_p.append(f"<p style='text-indent: 1em; margin: 8px 0; line-height: 1.85; word-break: keep-all;'>{p_clean}</p>")
+                
+    content_body = "".join(formatted_p)
 
-def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
-    """4. 1:1 상세비교 AI 본문 리포트 카드 (인자 2개 완벽 수용)"""
-    info_box_html = ""
-    if member_info_str:
-        info_box_html = f"""
-        <div style='background-color:#F5F7FA; border:1px solid #D1D5DB; border-radius:8px; padding:15px 20px; margin-bottom:25px; text-align:center;'>
-            <div style='font-size:15px; font-weight:800; color:#1F2937; line-height:1.6;'>
-                {member_info_str}
-            </div>
-        </div>
-        """
-        
     return f"""
     <div class='page-break-before'></div>
     <div class='report-page' style='margin-top:20px;'>
-        <div class='vip-inset-frame' style='border:2px solid #2E7D32; padding:30px 25px; background:#FFFFFF; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
-            <h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 900; border-bottom:2px dashed #2E7D32; padding-bottom:15px; margin-top:0; margin-bottom:20px;'>
-                ⚖️ 1:1 상세 비교 리포트 분석
-            </h1>
-            {info_box_html}
-            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.9; color:#111111; text-align:justify;'>
-                {comp_clean_text}
+        <div class='vip-inset-frame' style='border:2px solid #4B5563; padding:30px 25px; background:#FFFFFF; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+            <h2 style='text-align:center; color:#374151; font-size:24px; font-weight:900; border-bottom:2px solid #4B5563; padding-bottom:12px; margin-top:0; margin-bottom:20px;'>
+                📜 타 감명서 원문
+            </h2>
+            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; color:#111111; text-align:justify;'>
+                {content_body}
             </div>
         </div>
     </div>
