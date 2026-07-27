@@ -715,40 +715,54 @@ if st.session_state.get('app_running', False):
             
             if "3-1." in u_product:
                 try:
-                    final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
+                    # 1. [1단계] 신버전 초연 1차 개인사주+대운분석 통변 출력
                     comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
-                    saju_report = str(comparison_saju_report or "") + final_report
-                    st.markdown(html_views.get_final_report_box(saju_report), unsafe_allow_html=True)
+                    saju_body_html = f"<div style='margin-top: 20px; padding: 20px; font-family: \"Nanum Myeongjo\", serif; line-height: 1.8; color: #111;'>{ai_output_html}</div>"
+                    first_full_report = comparison_saju_report + saju_body_html
                     
-                    other_report = st.session_state.get("text_3-1.", "") or st.session_state.get("other_reading_text", "")
-                    if other_report and len(other_report.strip()) > 0:
-                        original_report_html = html_views.get_comparison_gumhap_report_html(name, gender, other_report)
-                        with st.spinner("⚖️ 타 감명서 1:1 비교 분석 중..."):
-                            fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운/세운/월운"
+                    # 1차 초연 사주풀이 렌더링
+                    st.markdown(html_views.get_final_report_box(first_full_report), unsafe_allow_html=True)
+                    
+                    # 2. [2단계] 타 감명서 원문 세션 데이터 안전 추출
+                    other_report = st.session_state.get("text_3-1.", "") or st.session_state.get("other_reading_text", "") or st.session_state.get("user_other_text", "")
+                    
+                    if other_report and len(str(other_report).strip()) > 0:
+                        # 타 감명서 원문 카드 렌더링
+                        original_report_html = f"""
+                        <div style='margin-top:40px; padding:25px; background-color:#FAFAFA; border:2px solid #555555; border-radius:8px;'>
+                            <h3 style='text-align:center; color:#333333; font-weight:900; margin-bottom:15px; font-family:sans-serif;'>📜 의뢰인이 제공한 타 감명서 원문</h3>
+                            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; line-height:1.8; color:#222222; text-align:justify; word-break:keep-all;'>
+                                {str(other_report).replace(chr(10), '<br>')}
+                            </div>
+                        </div>
+                        """
+                        
+                        # 3. [3단계] 1:1 비교 분석 R&D AI 실행
+                        with st.spinner("⚖️ 타 감명서 1:1 비교 대조 분석 중..."):
+                            fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운 전체 로드맵"
                             comp_prompt = getattr(prompts, 'COMPARE_PROMPT', "").format(
-                                full_content_clean=str(ai_output_html or "").replace("<div style='margin-top: 30px; padding: 20px; font-family: Nanum Myeongjo; line-height: 1.6;'>", "").replace("</div>", "").strip(),
-                                other_report=other_report,
+                                full_content_clean=str(ai_output_html or "").strip(),
+                                other_report=str(other_report).strip(),
                                 fact_reference=fact_str
                             )
                             comp_result = call_gemini_api(comp_prompt, model="gemini-2.5-flash")
                             
+                            # 순수 HTML 마크다운 정돈
                             comp_clean = comp_result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                             comp_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', comp_clean, flags=re.MULTILINE)
-                            comp_fmt = re.sub(r'###\s*(.*?)\n', r"<div style='font-size:21px; font-weight:900; margin:20px 0 10px 0; color:#B71C1C;'>⚖️ \1</div>", comp_clean)
-                            comp_fmt = comp_fmt.replace('\n', '<p style="margin:8px 0; line-height:1.6; font-family:Nanum Myeongjo;">')
-                            comparison_output_html = html_views.get_comparison_html(comp_fmt)
+                            comparison_output_html = f"<div style='margin-top:30px; font-family: \"Nanum Myeongjo\", serif; line-height:1.8;'>{comp_clean}</div>"
                             
-                        st.markdown("<br><br><hr style='border:1px dashed #ccc;'><br>", unsafe_allow_html=True)
-                        comp_report = original_report_html + comparison_output_html
-                        st.markdown(html_views.get_final_report_box(comp_report), unsafe_allow_html=True)
+                        # 최종 2차 비교 카드 출력
+                        st.markdown("<br><hr style='border:1px dashed #999;'><br>", unsafe_allow_html=True)
+                        second_full_report = original_report_html + comparison_output_html
+                        st.markdown(html_views.get_final_report_box(second_full_report), unsafe_allow_html=True)
                     else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다.")
+                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 입력창을 확인해 주십시오.")
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
             else:
                 final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
-
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이
     # ==============================================================================
