@@ -92,10 +92,11 @@ def get_global_css():
     .top-header-cell td { font-size: 15px !important; color: #FFFFFF !important; border: 1px solid #444 !important; font-weight: 900 !important; }
     .header-cell-main { background-color: #f5f5f5 !important; font-weight: 900 !important; white-space: nowrap; color: #1A237E !important; font-size: 15px !important; }
 
-    .report-page { width: 210mm; max-width: 100%; margin: 30px auto; background-color: #FFFFFF !important; padding: 15mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; color: #000000; font-family: 'Nanum Myeongjo', serif; }
+    /* Ver 70.0 원본 기반 가독성 최적화 CSS */
+    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; color: #000000; font-family: 'Nanum Myeongjo', serif; }
     .report-page h1, .report-page h3 { color: #1A237E !important; } 
     .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif; }
-    .content-box-loose { line-height: 1.8; font-size: 16px; text-align: justify; word-break: keep-all; padding: 0 !important; }
+    .content-box-loose { line-height: 1.85; font-size: 16px; text-align: justify; word-break: keep-all; padding: 0 !important; color: #111111; }
 
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
@@ -661,75 +662,71 @@ def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
     """
 
 def format_ai_text_to_html(raw_text):
-    """AI 응답 순수 텍스트를 계층별 HTML 서식으로 변환하는 전용 뷰 함수"""
-    import re
-    if not raw_text or not isinstance(raw_text, str):
-        return "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
-        
-    paragraphs = [p.strip() for p in raw_text.split('\n') if p.strip()]
-    formatted = []
-    
-    for p in paragraphs:
-        # 1. 대제목 (1. 성격 및 가치관)
-        if re.match(r'^\d+\.\s+[^\)]+', p):
-            formatted.append(f"<h3 class='ai-title-l1'>{p}</h3>")
-            
-        # 2. 소제목 (1) 겉으로 드러난 성격)
-        elif re.match(r'^\d+\)', p):
-            formatted.append(f"<h4 class='ai-title-l2'>{p}</h4>")
-            
-        # 3. 소소제목 (- 표면적 성향: ...)
-        elif p.startswith('-') or p.startswith(' -'):
-            if ':' in p:
-                title, content = p.split(':', 1)
-                formatted.append(f"<p class='ai-sub-item'><strong>{title.strip()}:</strong>{content}</p>")
-            else:
-                formatted.append(f"<p class='ai-sub-item'><strong>{p}</strong></p>")
-                
-        # 4. 일반 본문
-        else:
-            formatted.append(f"<p class='ai-body-p'>{p}</p>")
-            
-    return "".join(formatted)
-
-def format_ai_text_to_html(raw_text):
-    """모든 상품(개인사주, 궁합, 택일, 타감명서) AI 통변 텍스트 계층별 자동 UI 변환 함수"""
+    """[Ver 70.0 원본 사수] AI 통변 텍스트를 Ver 46.7 전역 CSS 폰트 규격(15px~18px)으로 완벽 전환하는 함수"""
     import re
     if not raw_text or not isinstance(raw_text, str):
         return "<p style='padding:20px; color:#666;'>분석 결과를 불러오지 못했습니다.</p>"
         
-    paragraphs = [p.strip() for p in raw_text.split('\n') if p.strip()]
+    paragraphs = [p.strip() for p in str(raw_text).split('\n') if p.strip()]
     formatted = []
     
     for p in paragraphs:
-        # 1. 대제목 (예: 1. 성격 및 가치관 분석)
-        if re.match(r'^\d+\.\s+[^\)]+', p):
+        # 태그 내 기존 고정 font-size 지우기
+        p_clean = re.sub(r'font-size:\s*\d+px;?', '', p)
+        
+        # 1. 대제목 (예: 1. 사주팔자 구조 분석, <h3...>) -> Ver 46.7 대제목 18px / weight 900
+        if '<h3' in p_clean or re.match(r'^\d+\.\s+[^\)]+', p_clean):
+            title_text = re.sub(r'<[^>]+>', '', p_clean).strip()
             formatted.append(
-                f"<h3 style='font-size:18px !important; font-weight:900 !important; color:#1A237E !important; margin-top:25px; margin-bottom:12px; border-bottom:2px solid #1A237E; padding-bottom:6px;'>{p}</h3>"
+                f"<h3 style='font-size:18px !important; font-weight:900 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:10px !important; border-bottom:2px solid #1A237E !important; padding-bottom:5px !important;'>{title_text}</h3>"
             )
-        # 2. 소제목 (예: 1) 겉으로 드러난 성격)
-        elif re.match(r'^\d+\)', p):
-            formatted.append(
-                f"<h4 style='font-size:16px !important; font-weight:800 !important; color:#2E7D32 !important; margin-top:18px; margin-bottom:8px;'>{p}</h4>"
-            )
-        # 3. 소소제목 (예: - 표면적 성향: 본문 내용...)
-        elif p.startswith('-') or p.startswith(' -'):
-            if ':' in p:
-                title, content = p.split(':', 1)
+            
+        # 2. 소제목 (예: 1) 겉으로 드러난 성격, sub-title 스팬 태그) -> Ver 46.7 소제목 16px / weight 800
+        elif "sub-title" in p_clean or re.match(r'^\d+\)', p_clean):
+            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
+            if ':' in text_only:
+                title, content = text_only.split(':', 1)
                 formatted.append(
-                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:13px; color:#2c3e50; text-indent:0.5em;'>"
-                    f"<strong style='font-weight:800 !important; color:#1F2937;'>{title.strip()}:</strong>{content}"
+                    f"<p style='margin:8px 0 !important; line-height:1.8 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0.3em !important;'>"
+                    f"<strong style='font-size:16px !important; font-weight:800 !important; color:#2E7D32 !important;'>{title.strip()}:</strong>"
+                    f"<span style='font-weight:normal !important; color:#2c3e50 !important;'>{content}</span>"
                     f"</p>"
                 )
             else:
                 formatted.append(
-                    f"<p style='margin:8px 0; line-height:1.85; font-family:\"Nanum Myeongjo\", serif; font-size:12px; color:#2c3e50; text-indent:0.5em;'><strong style='font-weight:800 !important; color:#1F2937;'>{p}</strong></p>"
+                    f"<h4 style='font-size:16px !important; font-weight:800 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important;'>{text_only}</h4>"
                 )
-        # 4. 일반 본문 문단 (일반 두께 font-weight: normal)
-        else:
+                
+        # 3. 섹션 헤더 (예: ▷ 지나온 과거 각 대운 분석) -> Ver 46.7 본문 강조 15px / weight 800
+        elif any(p_clean.startswith(symbol) for symbol in ['▷', '▶', '■', '●']):
+            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             formatted.append(
-                f"<p style='margin-bottom:12px; line-height:1.85; text-indent:1em; font-family:\"Nanum Myeongjo\", serif; font-size:11px; color:#2c3e50; font-weight:normal !important;'>{p}</p>"
+                f"<h5 style='font-size:15px !important; font-weight:800 !important; color:#0D47A1 !important; margin-top:14px !important; margin-bottom:6px !important; text-indent:0.2em !important;'>{text_only}</h5>"
             )
+            
+        # 4. 소소제목 및 불릿 (예: • 6세~15세 (己未대운): ..., - 표면적 성향: ...) -> Ver 46.7 15px (콜론 전반부만 굵게)
+        elif any(p_clean.startswith(symbol) for symbol in ['-', ' -', '•', '*']):
+            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
+            if ':' in text_only:
+                title, content = text_only.split(':', 1)
+                formatted.append(
+                    f"<p style='margin:6px 0 !important; line-height:1.8 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0.5em !important;'>"
+                    f"<strong style='font-size:15px !important; font-weight:800 !important; color:#1F2937 !important;'>{title.strip()}:</strong>"
+                    f"<span style='font-weight:normal !important; color:#2c3e50 !important;'>{content}</span>"
+                    f"</p>"
+                )
+            else:
+                formatted.append(
+                    f"<p style='margin:6px 0 !important; line-height:1.8 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0.5em !important;'><strong style='font-size:15px !important; font-weight:800 !important; color:#1F2937 !important;'>{text_only}</strong></p>"
+                )
+                
+        # 5. 일반 본문 문단 -> Ver 46.7 본문 규격 15px / normal 두께
+        else:
+            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
+            if text_only:
+                formatted.append(
+                    f"<p style='margin-bottom:12px !important; line-height:1.8 !important; text-indent:1em !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; font-weight:normal !important;'>{text_only}</p>"
+                )
             
     return "".join(formatted)
 
