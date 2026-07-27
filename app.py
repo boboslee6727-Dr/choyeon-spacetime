@@ -727,25 +727,32 @@ if st.session_state.get('app_running', False):
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
                     # ------------------------------------------------------------------
-                    # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트 별도 출력
+                    # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트 (이중 박스 해제)
                     # ------------------------------------------------------------------
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         u_name_str = locals().get('name', '신청인')
+                        p_icon_str = locals().get('p_icon', '♂️')
+                        
+                        # 1단계 원본과 100% 동일한 변수 사용
                         sol_val = locals().get('sol_str', f"{b_year}년 {b_month}월 {b_day}일")
                         lun_val = locals().get('lun_str', '')
+                        time_val = locals().get('b_time', '')
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        other_cover_html = html_views.get_comparison_saju_cover(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
-                        report_2_html = html_views.get_other_report_original_html(other_text_input)
-                        
-                        # [출력 2단계 분리] 타 감명서 표지는 독립, 원본은 A4 박스에
+                        # 1. 기존 표지와 동일 규격의 비교 표지 출력
+                        other_cover_html = html_views.get_comparison_saju_cover(
+                            APP_VERSION, p_icon_str, u_name_str, sol_val, lun_val, time_val, today_val
+                        )
                         st.markdown(other_cover_html, unsafe_allow_html=True)
-                        st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
+                        
+                        # 2. 🚨 이중 박스 완전 해제: 겉껍질(get_final_report_box) 없이 단독 A4 원문 박스 출력
+                        report_2_html = html_views.get_other_report_original_html(other_text_input)
+                        st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력 (플래시 모델)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             fact_str = f"- 신청인 기운: {name}({gender}) 원국 및 대운 전체 로드맵"
@@ -754,14 +761,18 @@ if st.session_state.get('app_running', False):
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=fact_str
                             )
-                            c_res = call_gemini_api(comp_prompt)
-                            c_res_clean = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                            c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
-                            c_res_html = html_views.get_comparison_result_box_html(c_res_clean)
                             
-                        # [출력 3단계] 비교 리포트 단독 출력
-                        st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
-                        
+                            c_res = call_gemini_api(comp_prompt)
+                            
+                            if c_res:
+                                c_res_clean = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                                c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
+                                c_res_clean = re.sub(r'^.*?border-radius:8px;.*?>', '', c_res_clean, flags=re.DOTALL)
+                                
+                                c_res_html = html_views.get_comparison_result_box_html(c_res_clean)
+                                st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
+                            else:
+                                st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
                 
@@ -968,7 +979,7 @@ if st.session_state.get('app_running', False):
                 st.markdown(report_box, unsafe_allow_html=True)
 
                 # ------------------------------------------------------------------
-                # 🚨 [2단계 & 3단계 PAGE] 타 감명서 (궁합) 선택 시에만 추가 가동
+                # [2단계 & 3단계 PAGE] 타 감명서 (궁합) 전용 표지/원문 및 1:1 비교
                 # ------------------------------------------------------------------
                 if "3-2" in u_product:
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
@@ -979,23 +990,21 @@ if st.session_state.get('app_running', False):
                         gunghap_other_cover = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         
-                        # [출력 2단계 분리] 표지는 독립 페이지, 원문은 A4 박스
+                        # 1. 궁합 타 감명서 독립 표지 출력
                         st.markdown(gunghap_other_cover, unsafe_allow_html=True)
-                        st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
+                        
+                        # 2. 🚨 [이중 박스 완전 해제]: get_final_report_box 껍질을 벗기고 단독 출력
+                        st.markdown(report_2_html, unsafe_allow_html=True)
 
-                        with st.spinner("⚖️ [김집사 감시망] R&D 1:1 정밀 비교 분석 및 오류 검증 가동 중..."):
-                            # 🚨 초연 시스템의 핵심 팩트 데이터를 강제로 추출하여 비교 검증에 활용
-                            fact_payload = f"""
-                            - 분석 대상: {male_name} 및 {female_name} 교차 분석
-                            - 남성 원국 팩트: 년주({m_ys}{m_yb}) 월주({m_ms}{m_mb}) 일주({m_ds}{m_db}) 시주({m_hs}{m_hb})
-                            - 여성 원국 팩트: 년주({f_ys}{f_yb}) 월주({f_ms}{f_mb}) 일주({f_ds}{f_db}) 시주({f_hs}{f_hb})
-                            - 초연 시공명리 핵심 알고리즘: 오행/공망/격국/합충형파해 팩트 데이터 기반 대조 필수
-                            """
+                        # 3. 1:1 상세 비교 리포트 단독 출력
+                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
+                            first_ai_clean = re.sub(r'<[^>]+>', '', ai_output_html)
+                            fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
                             
                             comp_prompt = prompts.COMPARE_PROMPT.format(
                                 full_content_clean=str(first_ai_clean).strip(),
                                 other_report=str(other_text_input).strip(),
-                                fact_reference=fact_payload
+                                fact_reference=fact_str
                             )
                             
                             ai_compare_result = call_gemini_api(comp_prompt)
@@ -1003,12 +1012,10 @@ if st.session_state.get('app_running', False):
                             if ai_compare_result:
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
                                 clean_ai = re.sub(r'^.*?border-radius:8px;.*?>', '', clean_ai, flags=re.DOTALL)
-                                clean_ai = re.sub(r'#+\s*', '', clean_ai)
-                                
                                 c_res_html = html_views.get_comparison_result_box_html(clean_ai)
                                 st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
                             else:
-                                st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
+                                st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
                         st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
 
