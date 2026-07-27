@@ -720,14 +720,14 @@ if st.session_state.get('app_running', False):
                     # ------------------------------------------------------------------
                     comparison_saju_report = html_views.get_comparison_saju_cover_html(name, gender)
                     
-                    # ver 46.7 5대 헤더 및 1차 AI 통변 결합
+                    # 상단에서 생성된 헤더 변수들을 안전하게 대입 (미선언 시 빈값 처리)
                     saju_body_content = (
-                        str(inho_html or "") + 
-                        str(table_html or "") + 
-                        str(master_html or "") + 
-                        str(intro_html or "") + 
-                        str(golden_text_html or "") + 
-                        str(ai_output_html or "")
+                        str(locals().get('inho_html', '')) + 
+                        str(locals().get('table_html', '')) + 
+                        str(locals().get('master_html', '')) + 
+                        str(locals().get('intro_html', '')) + 
+                        str(locals().get('golden_text_html', '')) + 
+                        str(locals().get('ai_output_html', ''))
                     )
                     
                     first_page_report = str(comparison_saju_report or "") + saju_body_content
@@ -760,7 +760,7 @@ if st.session_state.get('app_running', False):
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             fact_str = f"신청인 기운: {name}({gender}) 원국 및 대운 전체 로드맵"
                             comp_prompt = getattr(prompts, 'COMPARE_PROMPT', "").format(
-                                full_content_clean=str(ai_output_html or "").strip(),
+                                full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_report).strip(),
                                 fact_reference=fact_str
                             )
