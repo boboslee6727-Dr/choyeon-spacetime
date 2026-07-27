@@ -732,7 +732,6 @@ if st.session_state.get('app_running', False):
                     # ------------------------------------------------------------------
                     # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트 별도 출력
                     # ------------------------------------------------------------------
-                    # 🚨 박사님 지시 반영: 사이드바 UI와 100% 동일한 동적 Key 이름표 사용
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
@@ -741,12 +740,13 @@ if st.session_state.get('app_running', False):
                         lun_val = locals().get('lun_str', '')
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        # 박사님 지시대로 '타 감명서 비교' 표지는 2단계 앞에 별도로 생성!
                         other_cover_html = html_views.get_comparison_saju_cover(APP_VERSION, u_name_str, sol_val, lun_val, today_val)
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         
-                        # [출력 2] 두 번째 페이지: 타 감명서 표지 + 원본 카드
-                        st.markdown(html_views.get_final_report_box(other_cover_html + report_2_html), unsafe_allow_html=True)
+                        # [출력 2단계 분리] 1. 타 감명서 표지는 독립 페이지로 출력
+                        st.markdown(other_cover_html, unsafe_allow_html=True)
+                        # [출력 2단계 분리] 2. 타 감명서 원본은 A4 둥근 박스에 담아 출력
+                        st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
                         # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
@@ -758,22 +758,18 @@ if st.session_state.get('app_running', False):
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=fact_str
                             )
-                            c_res = call_gemini_api(comp_prompt, model="gemini-2.5-flash")
+                            # 🚨 API 오류의 주범인 model 인자 삭제 완료
+                            c_res = call_gemini_api(comp_prompt)
                             c_res_clean = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                             c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                             
                             c_res_html = html_views.get_comparison_result_box_html(c_res_clean)
                             
-                        # [출력 3] 세 번째 페이지: 비교 리포트 단독 출력
+                        # [출력 3단계] 비교 리포트 단독 출력
                         st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
                         
                     else:
                         st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
-                except Exception as e:
-                    st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
-            else:
-                final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
     # [2번 카테고리] 연애/궁합 풀이
@@ -1330,21 +1326,23 @@ if st.session_state.get('app_running', False):
                 if other_text_input and len(str(other_text_input).strip()) > 0:
                     today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                     
-                    # 박사님 지시대로 '타 감명서 비교' 표지는 2단계 앞에 별도로 생성!
                     gunghap_other_cover = html_views.get_comparison_gunghap_cover(APP_VERSION, male_name, female_name, today_val)
                     report_2_html = html_views.get_other_report_original_html(other_text_input)
                     
-                    # [출력 2] 두 번째 페이지: 타 감명서 표지 + 원본 카드
-                    st.markdown(html_views.get_final_report_box(gunghap_other_cover + report_2_html), unsafe_allow_html=True)
+                    # [출력 2단계 분리] 1. 타 감명서 궁합 표지는 독립 페이지로 출력
+                    st.markdown(gunghap_other_cover, unsafe_allow_html=True)
+                    # [출력 2단계 분리] 2. 궁합 원본 텍스트는 A4 둥근 박스에 담아 출력
+                    st.markdown(html_views.get_final_report_box(report_2_html), unsafe_allow_html=True)
 
-                    # [출력 3] 세 번째 페이지: 1:1 상세 비교 리포트 단독 출력
+                    # [출력 3단계] 1:1 상세 비교 리포트 단독 출력
                     fact_str = f"- 남성({male_name}): {m_ys}{m_yb} {m_ms}{m_mb} {m_ds}{m_db} {m_hs}{m_hb}\n- 여성({female_name}): {f_ys}{f_yb} {f_ms}{f_mb} {f_ds}{f_db} {f_hs}{f_hb}"
                     comp_prompt = prompts.COMPARE_PROMPT.format(
                         full_content_clean=str(first_ai_clean).strip(),
                         other_report=str(other_text_input).strip(),
                         fact_reference=fact_str
                     )
-                    ai_compare_result = call_gemini_api(comp_prompt, model="gemini-2.5-flash")
+                    # 🚨 API 오류의 주범인 model 인자 삭제 완료
+                    ai_compare_result = call_gemini_api(comp_prompt)
 
                     if ai_compare_result:
                         clean_ai = re.sub(r'```[a-zA-Z]*', '', ai_compare_result).replace("```", "").strip()
@@ -1353,7 +1351,4 @@ if st.session_state.get('app_running', False):
                     else:
                         st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
                 else:
-                    st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 입력창을 확인해 주십시오.")
-
-            except Exception as e:
-                st.error(f"🚨 타 감명서 비교(궁합) 처리 중 오류 발생: {e}")
+                    st.warning("⚠️ 타 궁합 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
