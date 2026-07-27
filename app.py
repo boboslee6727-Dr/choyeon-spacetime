@@ -752,10 +752,10 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력 (변수명 완전 교정 완료)
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            # 🚨 안전한 변수 바인딩 (b_year, b_month, b_day, b_time 활용)
+                            # 안전한 변수 바인딩
                             u_name_val = locals().get('name', '신청인')
                             u_gender_val = locals().get('gender', '남성')
                             b_y = locals().get('b_year', '')
@@ -763,13 +763,11 @@ if st.session_state.get('app_running', False):
                             b_d = locals().get('b_day', '')
                             b_t = locals().get('b_time', '')
                             
-                            # 4주 간지 안전 추출
                             g_list = locals().get('gans', ['', '', '', ''])
                             j_list = locals().get('jjis', ['', '', '', ''])
                             pillar_str = f"{g_list[3]}{j_list[3]}년 {g_list[2]}{j_list[2]}월 {g_list[1]}{j_list[1]}일 {g_list[0]}{j_list[0]}시" if len(g_list) >= 4 else ""
                             calc_daewun = locals().get('calc_d', '')
 
-                            # 명조 팩트 문자열 안전하게 구성
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
                             comp_prompt = prompts.COMPARE_PROMPT.format(
@@ -784,12 +782,11 @@ if st.session_state.get('app_running', False):
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 
-                                # 마크다운을 정갈한 HTML 서식으로 다듬기
                                 formatted_comp = c_res_clean.replace("\n", "<br>")
                                 formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
                                 formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
                                 
-                                # 대제목 + 명조 요약 포함 카드 출력
+                                # 인자 2개 정상 전달
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
@@ -1023,7 +1020,20 @@ if st.session_state.get('app_running', False):
                         # 3. 1:1 상세비교 AI 리포트 출력 (궁합 명조 요약 상단 반영)
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             # 남녀 명조 팩트 문자열 구성
-                            gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
+                            m_n_val = locals().get('male_name', '남명')
+                            f_n_val = locals().get('female_name', '여명')
+                            
+                            m_ys_v, m_yb_v = locals().get('m_ys', ''), locals().get('m_yb', '')
+                            m_ms_v, m_mb_v = locals().get('m_ms', ''), locals().get('m_mb', '')
+                            m_ds_v, m_db_v = locals().get('m_ds', ''), locals().get('m_db', '')
+                            m_hs_v, m_hb_v = locals().get('m_hs', ''), locals().get('m_hb', '')
+                            
+                            f_ys_v, f_yb_v = locals().get('f_ys', ''), locals().get('f_yb', '')
+                            f_ms_v, f_mb_v = locals().get('f_ms', ''), locals().get('f_mb', '')
+                            f_ds_v, f_db_v = locals().get('f_ds', ''), locals().get('f_db', '')
+                            f_hs_v, f_hb_v = locals().get('f_hs', ''), locals().get('f_hb', '')
+
+                            gunghap_fact_summary = f"♂️ 남명: <b>{m_n_val}</b> 님 ({m_ys_v}{m_yb_v}년 {m_ms_v}{m_mb_v}월 {m_ds_v}{m_db_v}일 {m_hs_v}{m_hb_v}시)<br>♀️ 여명: <b>{f_n_val}</b> 님 ({f_ys_v}{f_yb_v}년 {f_ms_v}{f_mb_v}월 {f_ds_v}{f_db_v}일 {f_hs_v}{f_hb_v}시)"
                             
                             comp_prompt = prompts.COMPARE_PROMPT.format(
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
@@ -1041,6 +1051,7 @@ if st.session_state.get('app_running', False):
                                 formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
                                 formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
                                 
+                                # 인자 2개 정상 전달 (인자 개수 오류 완벽 방지)
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, gunghap_fact_summary)
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
