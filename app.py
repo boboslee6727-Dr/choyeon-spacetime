@@ -16,7 +16,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 70.0"
+APP_VERSION = "ver 70.1"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용 (html_views 모듈 호출)
@@ -358,7 +358,7 @@ with st.sidebar:
         if run_delivery_calc:
             st.subheader("🩺 산모 생리 주기 및 기준 정보")
             
-            # 오늘 날짜 기준 동적 기본값 설정 (고정 날짜 2026-06-23 완전 제거)
+            # 오늘 날짜 기준 동적 기본값 설정
             today_dt = dt_mod.date.today()
             default_last_period = today_dt - dt_mod.timedelta(days=30)
             
@@ -377,7 +377,12 @@ with st.sidebar:
             delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
             
             st.caption("💡 탐색 시작일 ~ 탐색 종료일 기간 내 출산 길일을 정밀 탐색합니다.")
-        
+
+    # 🚨 [최소 개입 추가]: 상대방 정보와 2번 카테고리 옵션이 모두 끝난 지점에 3-2 창 삽입
+    elif "3-2." in u_product:
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+        other_report = st.sidebar.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key=f"text_{u_product}")
+
     st.markdown("---")
 
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
