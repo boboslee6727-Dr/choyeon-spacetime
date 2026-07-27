@@ -752,25 +752,32 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력 (플래시 모델)
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력 (명조 요약 상단 반영)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            fact_str = f"- 신청인 기운: {name}({gender}) 원국 및 대운 전체 로드맵"
+                            # 명조 팩트 문자열 구성
+                            saju_fact_summary = f"👤 신청인: <b>{name}</b> 님 ({gender}) &nbsp;|&nbsp; <b>{year}년 {month}월 {day}일 {time}시</b><br>📜 사주명식: <b>{gans[3]}{jjis[3]}년 {gans[2]}{jjis[2]}월 {gans[1]}{jjis[1]}일 {gans[0]}{jjis[0]}시</b> (대운수: {calc_d})"
+                            
                             comp_prompt = prompts.COMPARE_PROMPT.format(
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
-                                fact_reference=fact_str
+                                fact_reference=saju_fact_summary
                             )
                             
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                c_res_clean = c_res.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                                c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
-                                c_res_clean = re.sub(r'^.*?border-radius:8px;.*?>', '', c_res_clean, flags=re.DOTALL)
                                 
-                                c_res_html = html_views.get_comparison_result_box_html(c_res_clean)
-                                st.markdown(html_views.get_final_report_box(c_res_html), unsafe_allow_html=True)
+                                # 마크다운을 간단한 HTML 서식으로 변환
+                                formatted_comp = c_res_clean.replace("\n", "<br>")
+                                formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
+                                formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
+                                
+                                # 대제목 + 명조 요약이 포함된 통합 카드 생성 및 출력
+                                c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
+                                st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
