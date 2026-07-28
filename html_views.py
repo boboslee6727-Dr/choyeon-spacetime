@@ -648,61 +648,43 @@ def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
     </div>
 </div>"""
 
-def format_ai_text_to_html(raw_text):
-    """[.ai- 전용 클래스 완벽 매핑] 구버전 간섭 없이 들여쓰기 및 단락 구분 적용 함수"""
-    import re
-    if not raw_text or not isinstance(raw_text, str):
-        return "<p class='ai-body-p' style='padding:20px; color:#666;'>분석 결과를 불러오지 못했습니다.</p>"
-        
-    paragraphs = [p.strip() for p in str(raw_text).split('\n') if p.strip()]
-    formatted = []
+def format_ai_text_to_html(ai_raw_text):
+    """AI 통변 텍스트를 수평 스크롤바 없이 완벽한 P 태그 문단으로 변환하는 함수"""
+    if not ai_raw_text:
+        return ""
     
-    for p in paragraphs:
-        # 0. 불필요 머리말 제거
-        if p.startswith('[제목]') or p.startswith('[내용]'):
-            p = re.sub(r'^\[(제목|내용)\]\s*', '', p)
-            if not p: continue
+    lines = ai_raw_text.split('\n')
+    formatted_html = []
+    
+    for line in lines:
+        line_str = line.strip()
+        if not line_str:
+            continue
             
-        p_clean = re.sub(r'font-size:\s*\d+px;?', '', p)
-        
-        # 1. 대제목 -> .ai-title-l1 클래스 부여
-        if '<h3' in p_clean or re.match(r'^\d+\.\s+[^\)]+', p_clean):
-            title_text = re.sub(r'<[^>]+>', '', p_clean).strip()
-            formatted.append(f"<p class='ai-title-l1'>{title_text}</p>")
-            
-        # 2. 소제목 -> .ai-title-l2 클래스 부여
-        elif "sub-title" in p_clean or re.match(r'^\d+\)', p_clean):
-            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
-            if ':' in text_only:
-                title, content = text_only.split(':', 1)
-                formatted.append(
-                    f"<p class='ai-sub-item'>"
-                    f"<strong>{title.strip()}:</strong> {content}"
-                    f"</p>"
-                )
-            else:
-                formatted.append(f"<p class='ai-title-l2'>{text_only}</p>")
-                
-        # 3. 불릿 및 소소제목 -> .ai-sub-item 클래스 부여
-        elif any(p_clean.startswith(symbol) for symbol in ['-', ' -', '•', '*', '▷', '▶', '■', '●']):
-            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
-            if ':' in text_only:
-                title, content = text_only.split(':', 1)
-                formatted.append(
-                    f"<p class='ai-sub-item'>"
-                    f"<strong>{title.strip()}:</strong> {content}"
-                    f"</p>"
-                )
-            else:
-                formatted.append(f"<p class='ai-sub-item'><strong>{text_only}</strong></p>")
-                
-        # 4. 일반 AI 통변 본문 -> .ai-body-p 클래스 + 물리적 공백(&nbsp;&nbsp;) 조합으로 들여쓰기 100% 보장
+        # 대제목 (1., 2., 3. ...)
+        if re.match(r'^\d+\.\s+', line_str):
+            formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:10px !important; border-bottom:1px dashed #C5CAE9; padding-bottom:5px; word-break:break-word !important;'>{line_str}</p>")
+        # 소제목 (1), 2), ...)
+        elif re.match(r'^\d+\)\s+', line_str):
+            formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word !important;'>{line_str}</p>")
+        # 일반 본문 문단
         else:
-            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
-            if text_only:
-                formatted.append(f"<p class='ai-body-p'>&nbsp;&nbsp;{text_only}</p>")
+            # 특수 공백으로 인한 폭 넓어짐 방지
+            clean_line = line_str.replace("&nbsp;", " ")
+            formatted_html.append(f"<p class='ai-body-p' style='font-size:15px !important; line-height:1.85 !important; color:#222222 !important; text-align:justify !important; margin-bottom:12px !important; word-break:break-word !important; white-space:normal !important;'>{clean_line}</p>")
             
-    return "".join(formatted)
+    return "".join(formatted_html)
+
+
+def get_final_report_box(content_html):
+    """[수평 스크롤바 100% 무력화] A4 둥근 테두리 프리미엄 리포트 박스"""
+    return f"""
+    <div class='report-page' style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; border:2px solid #3E2723 !important; border-radius:12px !important; padding:30px 25px !important; background-color:#FFFFFF !important; margin-top:15px !important; margin-bottom:25px !important; box-shadow:0 4px 10px rgba(0,0,0,0.05) !important; overflow-x:hidden !important; overflow-y:visible !important; word-break:break-word !important;'>
+        <div style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; overflow-x:hidden !important; word-break:break-word !important; white-space:normal !important;'>
+            {content_html}
+        </div>
+    </div>
+    """
 
 def get_ai_report_box(content):
     """5. 기본 AI 통변용 감싸기 카드"""
