@@ -752,21 +752,24 @@ if st.session_state.get('app_running', False):
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
                             u_gender_val = gender
+                            u_age_val = age
                             b_y = sol_y
                             b_m = sol_m
                             b_d = sol_d
-                            b_t = b_time  # 사이드바 선택 한자 시간대 매칭
+                            b_t = b_time
                             
                             g_list = gans
                             j_list = jjis
                             pillar_str = f"{g_list[3]}{j_list[3]}년 {g_list[2]}{j_list[2]}월 {g_list[1]}{j_list[1]}일 {g_list[0]}{j_list[0]}시" if len(g_list) >= 4 else ""
                             calc_daewun = calc_d
 
-                            saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
+                            saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            # 🚨 [KeyError: 'name' 완벽 방지] name 변수를 인자에 명시적으로 추가
+                            # 🚨 [나이(age) 포함 전수 전달] KeyError 완벽 방지 및 연령별 맞춤 분석 강화
                             comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
                                 name=name,
+                                age=age,
+                                gender=gender,
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=saju_fact_summary
