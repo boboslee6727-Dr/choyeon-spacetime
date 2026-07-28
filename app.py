@@ -764,8 +764,9 @@ if st.session_state.get('app_running', False):
 
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            # 🚨 [정석 변수명 교정] COMPARE_PROMPT -> COMPARE_PERSONAL_PROMPT
+                            # 🚨 [KeyError: 'name' 완벽 방지] name 변수를 인자에 명시적으로 추가
                             comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
+                                name=name,
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=saju_fact_summary
