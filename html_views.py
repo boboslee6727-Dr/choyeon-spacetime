@@ -100,26 +100,31 @@ def get_global_css():
     </style>"""
 
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
+    """[Ver 70.1 원본] 표지 커버 - 시간 표시 영역 빨간색(#D50000) 수정본"""
     return f"""
-    <div class='report-page cover-page' style="font-family: 'Nanum Myeongjo', serif !important; padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;">
-        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 40px !important; margin:0 !important; color: #1A237E;">초연 시공명리 사주팔자 풀이</h1>
+                <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮 초연 시공명리 사주풀이</h1>
                 <div style='text-align: right; margin-top: 10px;'>
-                    <span style='font-size: 14px; letter-spacing: 1px;'>{version}</span>
+                    <span style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 20px;">{p_icon} 신청인 : {name} 님</h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                    <p style='margin: 5px 0 0 0; color: #D50000 !important; font-weight: 800; white-space: nowrap;'>{time_str}</p>
+                <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
+                <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
+                        <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                        <!-- 👇 Ver 70.1 원본 유지를 기본으로 하며, 시간 표시부만 빨간색(#D50000)으로 지정 -->
+                        <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
+                    </div>
                 </div>
             </div>
-            <p style="font-family: 'Nanum Myeongjo', serif !important; font-size: 18px; margin-top: 50px; font-weight: 800;">{today_str}</p>
-            <p style="font-family: 'Nanum Myeongjo', serif !important; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;">초연 시공명리 연구소</p>
+            <p style='font-size: 18px; margin-top: 50px; font-weight: 900;'>{today_str}</p>
+            <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class="page-break-before"></div>
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
