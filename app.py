@@ -200,26 +200,30 @@ with st.sidebar:
             del st.session_state['rev_success_msg']
 
     # ==============================================================================
-    # 👤 신청인 기본 정보 (상시 노출 & 파스텔 연하늘색 바탕 박스)
+    # 👤 신청인 기본 정보 (Rerun 시에도 입력 데이터 100% 영구 보존)
     # ==============================================================================
     if "s_y" not in st.session_state: st.session_state["s_y"] = 1980
     if "s_m" not in st.session_state: st.session_state["s_m"] = 1
     if "s_d" not in st.session_state: st.session_state["s_d"] = 1
-    if "s_t" not in st.session_state: st.session_state["s_t"] = idx_list[0] if 'idx_list' in locals() or 'idx_list' in globals() else "시간 모름"
+    if "s_t" not in st.session_state: st.session_state["s_t"] = idx_list[0]
+    if "u_n_val" not in st.session_state: st.session_state["u_n_val"] = ""
 
     u_box = st.sidebar.container()
     with u_box:
         st.subheader("👤 신청인 기본 정보")
-        name = st.text_input("이름", value="", placeholder="홍길동", key="u_n")
+        name = st.text_input("이름", value=st.session_state["u_n_val"], placeholder="홍길동", key="u_n", on_change=lambda: st.session_state.update({"u_n_val": st.session_state.u_n}))
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
         
         col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, key="s_y")
-        with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
-        with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
-        b_time = st.selectbox("태어난 시간", idx_list, key="s_t")
+        with col_y: b_year = st.number_input("년도", 1900, 2050, value=int(st.session_state["s_y"]), key="sb_s_y", on_change=lambda: st.session_state.update({"s_y": st.session_state.sb_s_y}))
+        with col_m: b_month = st.number_input("월", 1, 12, value=int(st.session_state["s_m"]), key="sb_s_m", on_change=lambda: st.session_state.update({"s_m": st.session_state.sb_s_m}))
+        with col_d: b_day = st.number_input("일", 1, 31, value=int(st.session_state["s_d"]), key="sb_s_d", on_change=lambda: st.session_state.update({"s_d": st.session_state.sb_s_d}))
+        
+        # 태어난 시간 인덱스 보장
+        t_idx = idx_list.index(st.session_state["s_t"]) if st.session_state["s_t"] in idx_list else 0
+        b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="sb_s_t", on_change=lambda: st.session_state.update({"s_t": st.session_state.sb_s_t}))
 
     # ==============================================================================
     # 📌 특화 상품별 추가 옵션
@@ -241,7 +245,7 @@ with st.sidebar:
             other_report = st.sidebar.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 정보 입력부 (궁합 및 타 감명서 비교 상품 선택 시에만 노출)
+    # 👥 상대방 정보 입력부 (Rerun 시에도 입력 데이터 100% 영구 보존)
     # ==============================================================================
     if any(x in u_product for x in ["2-", "3-2."]):
         # 1) 상대방 사주간지 역산 (접이식 숨김 상태)
@@ -321,25 +325,29 @@ with st.sidebar:
                 st.success(st.session_state['rev_p_success_msg'])
                 del st.session_state['rev_p_success_msg']
 
+        # 2) 세션 상태 초기값 방어 설정
         if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1980
         if 'p_m_in' not in st.session_state: st.session_state['p_m_in'] = 1
         if 'p_d_in' not in st.session_state: st.session_state['p_d_in'] = 1
         if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
+        if 'f_n_val' not in st.session_state: st.session_state['f_n_val'] = ""
 
-        # 2) 상대방 기본 정보 (상시 노출 & 파스텔 연하늘색 바탕 박스)
+        # 3) 상대방 기본 정보 입력 박스
         p_box = st.sidebar.container()
         with p_box:
             st.subheader("👥 상대방 기본 정보")
-            f_name = st.text_input("상대방 이름", value="", key="f_n")
+            f_name = st.text_input("상대방 이름", value=st.session_state["f_n_val"], key="f_n", on_change=lambda: st.session_state.update({"f_n_val": st.session_state.f_n}))
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat")
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c")
             
             p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, key="p_y_in")
-            f_m = p_col2.number_input("월(상대)", 1, 12, key="p_m_in")
-            f_d = p_col3.number_input("일(상대)", 1, 31, key="p_d_in")
-            f_t = st.selectbox("태어난 시간(상대)", idx_list, key="p_t_key")
+            f_y = p_col1.number_input("년도(상대)", 1900, 2050, value=int(st.session_state["p_y_in"]), key="sb_p_y", on_change=lambda: st.session_state.update({"p_y_in": st.session_state.sb_p_y}))
+            f_m = p_col2.number_input("월(상대)", 1, 12, value=int(st.session_state["p_m_in"]), key="sb_p_m", on_change=lambda: st.session_state.update({"p_m_in": st.session_state.sb_p_m}))
+            f_d = p_col3.number_input("일(상대)", 1, 31, value=int(st.session_state["p_d_in"]), key="sb_p_d", on_change=lambda: st.session_state.update({"p_d_in": st.session_state.sb_p_d}))
+            
+            p_t_idx = idx_list.index(st.session_state["p_t_key"]) if st.session_state["p_t_key"] in idx_list else 0
+            f_t = st.selectbox("태어난 시간(상대)", idx_list, index=p_t_idx, key="sb_p_t", on_change=lambda: st.session_state.update({"p_t_key": st.session_state.sb_p_t}))
 
     if "2-1." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
