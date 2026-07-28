@@ -663,7 +663,7 @@ def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
     """
 
 def format_ai_text_to_html(raw_text):
-    """[Ver 70.0 원본 사수] AI 통변 텍스트를 Ver 46.7 전역 CSS 폰트 규격(15px~18px)으로 완벽 전환하는 함수"""
+    """[최종 감수 완료] AI 통변 본문 첫 줄 들여쓰기(text-indent: 1em) 및 소제목 크기(17px) 정돈 함수"""
     import re
     if not raw_text or not isinstance(raw_text, str):
         return "<p style='padding:20px; color:#666;'>분석 결과를 불러오지 못했습니다.</p>"
@@ -672,61 +672,65 @@ def format_ai_text_to_html(raw_text):
     formatted = []
     
     for p in paragraphs:
-        # 태그 내 기존 고정 font-size 지우기
+        # 0. [제목] 또는 [내용] 같은 머리말 불필요 레이블 원천 제거
+        if p.startswith('[제목]') or p.startswith('[내용]'):
+            p = re.sub(r'^\[(제목|내용)\]\s*', '', p)
+            if not p: continue
+            
         p_clean = re.sub(r'font-size:\s*\d+px;?', '', p)
         
-        # 1. 대제목 (예: 1. 사주팔자 구조 분석, <h3...>) -> Ver 46.7 대제목 18px / weight 900
+        # 1. 대제목 (예: 1. 사주팔자 구조 분석, <h3...>) -> 18px 굵게
         if '<h3' in p_clean or re.match(r'^\d+\.\s+[^\)]+', p_clean):
             title_text = re.sub(r'<[^>]+>', '', p_clean).strip()
             formatted.append(
                 f"<h3 style='font-size:18px !important; font-weight:900 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:10px !important; border-bottom:2px solid #1A237E !important; padding-bottom:5px !important;'>{title_text}</h3>"
             )
             
-        # 2. 소제목 (예: 1) 겉으로 드러난 성격, sub-title 스팬 태그) -> Ver 46.7 소제목 16px / weight 800
+        # 2. 소제목 (예: 1) 내 삶의 무대와 타고난 기본 성향:) -> 본문보다 1~2px 큰 17px 굵게
         elif "sub-title" in p_clean or re.match(r'^\d+\)', p_clean):
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             if ':' in text_only:
                 title, content = text_only.split(':', 1)
                 formatted.append(
-                    f"<p style='margin:8px 0 !important; line-height:1.8 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0.3em !important;'>"
-                    f"<strong style='font-size:16px !important; font-weight:800 !important; color:#2E7D32 !important;'>{title.strip()}:</strong>"
+                    f"<p style='margin:10px 0 !important; line-height:1.85 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0 !important;'>"
+                    f"<strong style='font-size:17px !important; font-weight:800 !important; color:#2E7D32 !important;'>{title.strip()}:</strong>"
                     f"<span style='font-weight:normal !important; color:#2c3e50 !important;'>{content}</span>"
                     f"</p>"
                 )
             else:
                 formatted.append(
-                    f"<h4 style='font-size:16px !important; font-weight:800 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important;'>{text_only}</h4>"
+                    f"<h4 style='font-size:17px !important; font-weight:800 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important;'>{text_only}</h4>"
                 )
                 
-        # 3. 섹션 헤더 (예: ▷ 지나온 과거 각 대운 분석) -> Ver 46.7 본문 강조 15px / weight 800
+        # 3. 섹션 헤더 (▷, ▶, ■, ●) -> 16px 굵게
         elif any(p_clean.startswith(symbol) for symbol in ['▷', '▶', '■', '●']):
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             formatted.append(
-                f"<h5 style='font-size:15px !important; font-weight:800 !important; color:#0D47A1 !important; margin-top:14px !important; margin-bottom:6px !important; text-indent:0.2em !important;'>{text_only}</h5>"
+                f"<h5 style='font-size:16px !important; font-weight:800 !important; color:#0D47A1 !important; margin-top:14px !important; margin-bottom:6px !important; text-indent:0 !important;'>{text_only}</h5>"
             )
             
-        # 4. 소소제목 및 불릿 (예: • 6세~15세 (己未대운): ..., - 표면적 성향: ...) -> Ver 46.7 15px (콜론 전반부만 굵게)
+        # 4. 소소제목 및 불릿 (•, -, *) -> 15px (제목부만 굵게)
         elif any(p_clean.startswith(symbol) for symbol in ['-', ' -', '•', '*']):
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             if ':' in text_only:
                 title, content = text_only.split(':', 1)
                 formatted.append(
-                    f"<p style='margin:6px 0 !important; line-height:1.8 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0.5em !important;'>"
+                    f"<p style='margin:6px 0 !important; line-height:1.85 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0 !important;'>"
                     f"<strong style='font-size:15px !important; font-weight:800 !important; color:#1F2937 !important;'>{title.strip()}:</strong>"
                     f"<span style='font-weight:normal !important; color:#2c3e50 !important;'>{content}</span>"
                     f"</p>"
                 )
             else:
                 formatted.append(
-                    f"<p style='margin:6px 0 !important; line-height:1.8 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0.5em !important;'><strong style='font-size:15px !important; font-weight:800 !important; color:#1F2937 !important;'>{text_only}</strong></p>"
+                    f"<p style='margin:6px 0 !important; line-height:1.85 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; text-indent:0 !important;'><strong style='font-size:15px !important; font-weight:800 !important; color:#1F2937 !important;'>{text_only}</strong></p>"
                 )
                 
-        # 5. 일반 본문 문단 -> Ver 46.7 본문 규격 15px / normal 두께
+        # 5. 일반 AI 통변 본문 문단 -> 15px 보통체 + ★ 원고지식 첫 줄 들여쓰기(text-indent: 1em) 강제 적용 ★
         else:
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             if text_only:
                 formatted.append(
-                    f"<p style='margin-bottom:12px !important; line-height:1.8 !important; text-indent:1em !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; font-weight:normal !important;'>{text_only}</p>"
+                    f"<p style='margin-bottom:12px !important; line-height:1.85 !important; text-indent:1em !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:15px !important; color:#2c3e50 !important; font-weight:normal !important;'>{text_only}</p>"
                 )
             
     return "".join(formatted)
