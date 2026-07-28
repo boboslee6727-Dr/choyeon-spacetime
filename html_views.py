@@ -677,9 +677,9 @@ def format_ai_text_to_html(ai_raw_text):
 
 
 def get_final_report_box(content_html):
-    """[수평 스크롤바 100% 무력화] A4 둥근 테두리 프리미엄 리포트 박스"""
+    """[둥근 사각 테두리 완벽 복원 & A4 규격 안착] 프리미엄 리포트 박스"""
     return f"""
-    <div class='report-page' style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; border:2px solid #3E2723 !important; border-radius:12px !important; padding:30px 25px !important; background-color:#FFFFFF !important; margin-top:15px !important; margin-bottom:25px !important; box-shadow:0 4px 10px rgba(0,0,0,0.05) !important; overflow-x:hidden !important; overflow-y:visible !important; word-break:break-word !important;'>
+    <div class='report-page' style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; border:2.5px solid #3E2723 !important; border-radius:14px !important; padding:30px 25px !important; background-color:#FFFFFF !important; margin-top:15px !important; margin-bottom:25px !important; box-shadow:0 4px 12px rgba(62, 39, 35, 0.08) !important; overflow-x:hidden !important; overflow-y:visible !important; word-break:break-word !important;'>
         <div style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; overflow-x:hidden !important; word-break:break-word !important; white-space:normal !important;'>
             {content_html}
         </div>
