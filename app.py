@@ -746,7 +746,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (독립 표지 + info_header + AI 통변)
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (HTML 섹션헤더 + AI 통변 직결)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
@@ -766,7 +766,6 @@ if st.session_state.get('app_running', False):
 
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세, {u_marital_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            # 프롬프트 포맷팅
                             comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
                                 name=name,
                                 age=age,
@@ -780,23 +779,23 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 3-1. [박사님의 지시] 3단계 독립 비교 표지 출력
-                                comp_cover_html = html_views.get_comparison_saju_cover(
-                                    APP_VERSION, "⚖️", f"{u_name_str} (1:1 비교분석)", sol_val, lun_val, time_val, today_val
-                                )
-                                st.markdown(comp_cover_html, unsafe_allow_html=True)
+                                # 3-1. 3단계 HTML 섹션 헤더 출력 (밑줄 포함)
+                                section_header_html = """
+                                <div style='margin-top: 40px; margin-bottom: 20px;'>
+                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; border-bottom: 2px solid #3E2723 !important; padding-bottom: 8px !important; margin: 0 !important;'>
+                                        📜 타 감명서 1:1 상세 분석
+                                    </h2>
+                                </div>
+                                """
+                                st.markdown(section_header_html, unsafe_allow_html=True)
                                 
-                                # 3-2. 상단 기본 명조 info_header 출력
-                                if hasattr(html_views, 'get_info_header'):
-                                    st.markdown(html_views.get_info_header(saju_fact_summary), unsafe_allow_html=True)
-                                
-                                # 3-3. AI 응답 정화 (마크다운 백틱 및 주석 완전 차단)
+                                # 3-2. AI 응답 정화 (마크다운 백틱 및 주석 완전 차단)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                # 3-4. 표준 계층별 HTML 변환 후 안전한 기본 리포트 박스(get_final_report_box)로 깔끔하게 통출력
+                                # 3-3. 표준 리포트 박스로 AI 통변 직결 출력 (info_header 제거)
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 st.markdown(html_views.get_final_report_box(formatted_comp), unsafe_allow_html=True)
                             else:
@@ -1017,7 +1016,7 @@ if st.session_state.get('app_running', False):
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        # 2-1. 궁합 타 감명서 독립 표지 생성 및 출력
+                        # 2-1. 궁합 타 감명서 원본 표지 생성 및 출력
                         gunghap_other_cover = html_views.get_comparison_gunghap_cover(
                             APP_VERSION, male_name, male_age, male_sol, male_lun, male_time,  
                             female_name, female_age, female_sol, female_lun, female_time, 
@@ -1030,7 +1029,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
 
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (독립 표지 + info_header + AI 통변)
+                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (HTML 섹션헤더 + AI 통변 직결)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 궁합 1:1 상세 비교 리포트 분석 중..."):
                             gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
@@ -1046,25 +1045,23 @@ if st.session_state.get('app_running', False):
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
-                                # 3-1. 궁합 1:1 비교 전용 독립 표지 출력
-                                gunghap_comp_cover = html_views.get_comparison_gunghap_cover(
-                                    APP_VERSION, f"{male_name}(비교)", male_age, male_sol, male_lun, male_time,  
-                                    f"{female_name}(비교)", female_age, female_sol, female_lun, female_time, 
-                                    today_val
-                                )
-                                st.markdown(gunghap_comp_cover, unsafe_allow_html=True)
+                                # 3-1. 3단계 HTML 섹션 헤더 출력 (밑줄 포함)
+                                gunghap_section_header = """
+                                <div style='margin-top: 40px; margin-bottom: 20px;'>
+                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; border-bottom: 2px solid #3E2723 !important; padding-bottom: 8px !important; margin: 0 !important;'>
+                                        📜 타 궁합 감명서 1:1 상세 분석
+                                    </h2>
+                                </div>
+                                """
+                                st.markdown(gunghap_section_header, unsafe_allow_html=True)
                                 
-                                # 3-2. 상단 기본 명조 info_header 출력
-                                if hasattr(html_views, 'get_info_header'):
-                                    st.markdown(html_views.get_info_header(gunghap_fact_summary), unsafe_allow_html=True)
-                                
-                                # 3-3. AI 응답 정화
+                                # 3-2. AI 응답 정화 (마크다운 백틱 및 주석 차단)
                                 clean_ai = re.sub(r'<!--.*?-->', '', ai_compare_result, flags=re.DOTALL)
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', clean_ai).replace("```", "").strip()
                                 clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                                 clean_ai = clean_ai.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                # 3-4. 표준 계층별 HTML 변환 후 안전한 기본 리포트 박스(get_final_report_box)로 깔끔하게 통출력
+                                # 3-3. 표준 리포트 박스로 궁합 AI 통변 직결 출력 (info_header 제거)
                                 formatted_comp = html_views.format_ai_text_to_html(clean_ai)
                                 st.markdown(html_views.get_final_report_box(formatted_comp), unsafe_allow_html=True)
                             else:
