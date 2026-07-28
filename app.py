@@ -715,17 +715,16 @@ if st.session_state.get('app_running', False):
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
             st.markdown(cover_html, unsafe_allow_html=True) 
             
+            # ------------------------------------------------------------------
+            # [3-1. 타 감명서 비교 (사주)] 선택 시: 1단계 + 2단계 + 3단계 순차 출력
+            # ------------------------------------------------------------------
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
-                    # ------------------------------------------------------------------
-                    # [1단계 PAGE] 초연 오리지널 사주풀이 (완벽한 둥근 테두리 적용)
-                    # ------------------------------------------------------------------
+                    # [1단계 PAGE] 초연 오리지널 사주풀이
                     first_stage_html = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
-                    # ------------------------------------------------------------------
                     # [2단계 PAGE] 타 감명서 전용 표지 + 원본 텍스트
-                    # ------------------------------------------------------------------
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
@@ -736,19 +735,15 @@ if st.session_state.get('app_running', False):
                         time_val = b_time
                         today_val = today_str
                         
-                        # 2-1. 타 감명서 원본 표지
                         other_cover_html = html_views.get_comparison_saju_cover(
                             APP_VERSION, p_icon_str, u_name_str, sol_val, lun_val, time_val, today_val
                         )
                         st.markdown(other_cover_html, unsafe_allow_html=True)
                         
-                        # 2-2. 타 감명서 원문 단독 출력
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
-                        # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (헤더 박스 안착 & 테두리 완제)
-                        # ------------------------------------------------------------------
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
                             u_gender_val = gender
@@ -780,18 +775,14 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 완전 정화 (마크다운 백틱, 주석, 헤더 기호 제어 및 서론 원천 차단)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
-                                
-                                # 🚨 [박사님 지시 반영] 서두의 모든 인사말/서론을 완전히 삭제하고 '1.' 대제목부터 즉시 시작
                                 c_res_clean = re.sub(r'^(.*?)(?=\d+\.\s*)', '', c_res_clean, flags=re.DOTALL).strip()
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 2. [완벽 안착] 3단계 내부 상단 헤더
                                 section_header_html = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
                                     <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; text-align:center;'>
                                         📜 타 감명서 1:1 상세 분석
@@ -807,6 +798,10 @@ if st.session_state.get('app_running', False):
                 
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
+
+            # ------------------------------------------------------------------
+            # [1-1 ~ 1-7번 일반 사주 풀이] 선택 시: 단일 1단계 리포트 박스만 출력
+            # ------------------------------------------------------------------
             else:
                 final_report = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
