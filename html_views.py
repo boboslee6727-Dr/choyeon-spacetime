@@ -1,48 +1,68 @@
 import re
 
 def get_global_css():
-    """[나눔명조체 우선 적용 및 폰트 크기 개편 CSS]"""
+    """[구버전 태그 완전히 삭제 및 .ai- 클래스 단일화 정돈 CSS]"""
     return """<style>
-    @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
 
-    /* 기본 바탕 폰트를 나눔명조체로 변경 */
-    html, body, .stApp { 
-        font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; 
-        background-color: #FFF8E1 !important; 
-    }
-    
-    div.report-page, .choyeon-premium-report { 
-        font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; 
-    }
+    /* 배경색 지정 */
+    .stApp { background-color: #FFF8E1 !important; }
 
-    /* 사이드바 및 버튼만 고딕체 유지 */
-    [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { 
+    /* ==========================================================================
+       1. 사이드바 및 버튼 영역 : 고딕체(Nanum Gothic) 강제 고정
+       ========================================================================== */
+    [data-testid="stSidebar"], 
+    [data-testid="stSidebar"] * { 
         font-family: 'Nanum Gothic', sans-serif !important; 
     }
 
-    div.stButton > button { 
+    [data-testid="stSidebar"] div[data-testid="stNotification"] { padding: 3px 3px !important; }
+    [data-testid="stSidebar"] div[data-testid="stNotification"] p {
+        font-size: 11px !important; line-height: 1.5 !important; letter-spacing: -0.5px !important;
+        font-family: 'Nanum Gothic', sans-serif !important; white-space: pre-wrap !important;
+    }
+
+    div.stButton > button, 
+    div.stButton > button * { 
         font-family: 'Nanum Gothic', sans-serif !important; 
         font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important;
     }
 
-    /* AI 통변 계층 클래스 (본문 16px 기준 재정돈) */
-    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; text-indent: 0 !important; }
-    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 20px !important; margin-bottom: 8px !important; text-indent: 0 !important; }
-    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; text-indent: 0 !important; }
+    /* ==========================================================================
+       2. 감명서 리포트 및 표지 영역 : 나눔명조체(Nanum Myeongjo) 고정
+       ========================================================================== */
+    .report-page, 
+    .cover-page, 
+    .choyeon-premium-report { 
+        font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; 
+    }
+
+    /* ==========================================================================
+       3. AI 통변 전용 계층 클래스 (태그 간섭 없는 유일한 디자인 표준)
+       ========================================================================== */
+    .ai-title-l1 { 
+        font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; 
+        margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E !important; 
+        padding-bottom: 5px !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; 
+    }
+    
+    .ai-title-l2 { 
+        font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; 
+        margin-top: 20px !important; margin-bottom: 8px !important; text-indent: 0 !important; 
+        font-family: 'Nanum Myeongjo', serif !important; 
+    }
+    
+    .ai-sub-item { 
+        margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; 
+        color: #2c3e50 !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; 
+    }
     .ai-sub-item strong { font-weight: 800 !important; color: #1F2937 !important; }
     
-    /* 본문 16px + 들여쓰기 1em */
     .ai-body-p { 
-        margin-bottom: 14px !important; 
-        line-height: 1.85 !important; 
-        text-indent: 1em !important; 
-        font-size: 16px !important; 
-        color: #2c3e50 !important; 
-        font-weight: normal !important; 
-        text-align: justify !important; 
-        font-family: 'Nanum Myeongjo', serif !important;
+        margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; 
+        font-size: 16px !important; color: #2c3e50 !important; font-weight: normal !important; 
+        text-align: justify !important; font-family: 'Nanum Myeongjo', serif !important; 
     }
 
     /* 버튼 스타일 및 만세력 표 스타일 유지 */
@@ -58,7 +78,7 @@ def get_global_css():
     .result-table { width: 100%; border-collapse: collapse; border: 2px solid #444 !important; margin-bottom: 5px !important; }
     .result-table td { border: 1px solid #444 !important; padding: 4px 2px !important; text-align: center; vertical-align: middle; font-weight: 900 !important; }
 
-    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000000; font-family: 'Nanum Myeongjo', serif !important; }
+    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000000; }
 
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
