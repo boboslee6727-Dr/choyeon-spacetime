@@ -753,23 +753,26 @@ if st.session_state.get('app_running', False):
                             u_name_val = name
                             u_gender_val = gender
                             u_age_val = age
+                            u_marital_val = u_marital if 'u_marital' in locals() else (marital if 'marital' in locals() else "미혼")
+                            
                             b_y = sol_y
                             b_m = sol_m
                             b_d = sol_d
-                            b_t = b_time
+                            b_t = b_time  # 사이드바 선택 한자 시간대 매칭
                             
                             g_list = gans
                             j_list = jjis
                             pillar_str = f"{g_list[3]}{j_list[3]}년 {g_list[2]}{j_list[2]}월 {g_list[1]}{j_list[1]}일 {g_list[0]}{j_list[0]}시" if len(g_list) >= 4 else ""
                             calc_daewun = calc_d
 
-                            saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
+                            saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세, {u_marital_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            # 🚨 [나이(age) 포함 전수 전달] KeyError 완벽 방지 및 연령별 맞춤 분석 강화
+                            # 🚨 [KeyError 완전 방지] COMMON_SYSTEM_HEADER 호환용 전 인자 완제 전달
                             comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
                                 name=name,
                                 age=age,
                                 gender=gender,
+                                marital=u_marital_val,
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=saju_fact_summary
@@ -792,8 +795,6 @@ if st.session_state.get('app_running', False):
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
-                    else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
                 
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
