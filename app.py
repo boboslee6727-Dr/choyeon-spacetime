@@ -781,7 +781,7 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 기본 텍스트 정화
+                                # 1. AI 응답 기본 텍스트 정화 (마크다운 백틱, HTML 주석 완전 차단)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
@@ -790,9 +790,12 @@ if st.session_state.get('app_running', False):
                                 # 2. html_views 전용 뷰 함수를 거쳐 계층별 HTML 변환
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 3. [핵심] 대제목 + 둥근 사각 테두리 박스로 완벽 출력
+                                # 3. [핵심] 주석 제거 및 Pure HTML 렌더링 박스 결합
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
-                                st.markdown(c_res_html, unsafe_allow_html=True)
+                                
+                                # Streamlit 마크다운 파서 오류 우회를 위해 주석 완전 제거 후 렌더링
+                                final_clean_html = re.sub(r'<!--.*?-->', '', c_res_html, flags=re.DOTALL)
+                                st.markdown(final_clean_html, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
