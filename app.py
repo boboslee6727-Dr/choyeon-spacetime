@@ -717,12 +717,6 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
-                    # [0단계 PAGE] 타 감명서 비교 대제목 표기
-                    # ------------------------------------------------------------------
-                    if hasattr(html_views, 'get_final_report_header'):
-                        st.markdown(html_views.get_final_report_header("📄 타 감명서 비교 (사주)"), unsafe_allow_html=True)
-                    
-                    # ------------------------------------------------------------------
                     # [1단계 PAGE] 오리지널 사주풀이
                     # ------------------------------------------------------------------
                     first_stage_html = str(final_report_base or "") + str(ai_output_html or "")
@@ -796,7 +790,7 @@ if st.session_state.get('app_running', False):
                                 # 2. html_views 전용 뷰 함수를 거쳐 계층별 HTML 변환
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 3. [핵심 복원] 대제목 포함 완벽 렌더링 박스 출력
+                                # 3. [핵심] 대제목 + 둥근 사각 테두리 박스로 완벽 출력
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
