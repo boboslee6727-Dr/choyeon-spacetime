@@ -649,11 +649,11 @@ def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
 </div>"""
 
 def format_ai_text_to_html(ai_raw_text):
-    """AI 통변 텍스트를 수평 스크롤바 없이 완벽한 P 태그 문단으로 변환하는 함수"""
+    """[본문 글자색 및 폰트 두께 완벽 정상화] AI 통변 HTML 변환 함수"""
     if not ai_raw_text:
         return ""
     
-    lines = ai_raw_text.split('\n')
+    lines = str(ai_raw_text).split('\n')
     formatted_html = []
     
     for line in lines:
@@ -661,27 +661,25 @@ def format_ai_text_to_html(ai_raw_text):
         if not line_str:
             continue
             
-        # 대제목 (1., 2., 3. ...)
+        # 1. 대제목 (1., 2., 3. ...)
         if re.match(r'^\d+\.\s+', line_str):
-            formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:10px !important; border-bottom:1px dashed #C5CAE9; padding-bottom:5px; word-break:break-word !important;'>{line_str}</p>")
-        # 소제목 (1), 2), ...)
+            formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{line_str}</p>")
+        # 2. 소제목 (1), 2), 1., 2. 소항목)
         elif re.match(r'^\d+\)\s+', line_str):
-            formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word !important;'>{line_str}</p>")
-        # 일반 본문 문단
+            formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{line_str}</p>")
+        # 3. 일반 본문 문단 (검은색, 기본 두께 복원)
         else:
-            # 특수 공백으로 인한 폭 넓어짐 방지
             clean_line = line_str.replace("&nbsp;", " ")
-            formatted_html.append(f"<p class='ai-body-p' style='font-size:15px !important; line-height:1.85 !important; color:#222222 !important; text-align:justify !important; margin-bottom:12px !important; word-break:break-word !important; white-space:normal !important;'>{clean_line}</p>")
+            formatted_html.append(f"<p class='ai-body-p' style='font-size:15px !important; font-weight:normal !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{clean_line}</p>")
             
     return "".join(formatted_html)
 
-
 def get_final_report_box(content_html):
-    """[2단계와 100% 동일한 vip-inset-frame 방식 이식] 3단계 프리미엄 리포트 박스"""
+    """[표준 메인 프레임] 1, 2, 3단계 리포트 전용 고급 둥근 테두리 박스"""
     return f"""
-    <div class='report-page' style='margin-top:20px; width:100% !important; box-sizing:border-box !important;'>
-        <div class='vip-inset-frame' style='border:2.5px solid #3E2723 !important; padding:30px 25px !important; background:#FFFFFF !important; border-radius:12px !important; box-shadow:0 4px 12px rgba(62, 39, 35, 0.1) !important; width:100% !important; box-sizing:border-box !important; word-break:break-word !important;'>
-            <div style='font-family:"Nanum Myeongjo", serif; font-size:15px; color:#111111; text-align:justify; width:100% !important; word-break:break-word !important;'>
+    <div class='report-page' style='margin-top:20px;'>
+        <div class='vip-inset-frame' style='border:2px solid #3E2723 !important; padding:30px 25px !important; background:#FFFFFF !important; border-radius:12px !important; box-shadow:0 4px 10px rgba(0,0,0,0.05) !important;'>
+            <div style='font-family: "Nanum Myeongjo", serif; font-size:15px; color:#111111; text-align:justify;'>
                 {content_html}
             </div>
         </div>
@@ -689,13 +687,8 @@ def get_final_report_box(content_html):
     """
 
 def get_ai_report_box(content):
-    """5. 기본 AI 통변용 감싸기 카드"""
-    return f"""
-    <div style='margin-top:20px; padding:20px; border: 2px solid #1A237E; border-radius:10px; background-color:#F9F9F9;'>
-        <h3 style='color:#1A237E; margin-bottom:15px; border-bottom:none;'>🔍 초연 시공명리 AI 정밀 통변</h3>
-        <div class='content-box-loose'>
-            {content}
-        </div>
-    </div>
-    """
+    """[레거시 호환용] get_final_report_box로 일원화 처리하여 스타일 충돌 원천 차단"""
+    return get_final_report_box(content)
+
+
 
