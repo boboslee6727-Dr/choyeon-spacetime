@@ -781,7 +781,7 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 기본 텍스트 정화 (백틱 및 소스코드 마크다운 태그 완전 제거)
+                                # 1. AI 응답 기본 텍스트 정화
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
@@ -790,9 +790,12 @@ if st.session_state.get('app_running', False):
                                 # 2. html_views 전용 뷰 함수를 거쳐 계층별 HTML 변환
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 3. 스크롤바 없는 100% 높이 자동 박스로 최종 출력
+                                # 3. [핵심] A4 용지 규격(report-page) 상위 박스로 감싸서 완벽 안착 출력
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
-                                st.markdown(c_res_html, unsafe_allow_html=True)
+                                
+                                # report-page 컨테이너로 감싸 A4 용지 규격 밖 이탈 원천 방지
+                                final_a4_wrapper = f"<div class='report-page'>{c_res_html}</div>"
+                                st.markdown(final_a4_wrapper, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                 
