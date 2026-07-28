@@ -746,7 +746,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (헤더를 박스 내부로 안착)
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (수평 스크롤바 완전 차단)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
@@ -779,7 +779,7 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 정화 (마크다운 백틱 및 주석 차단)
+                                # 1. AI 응답 정화
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
@@ -787,14 +787,13 @@ if st.session_state.get('app_running', False):
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 2. [핵심] 헤더 HTML을 박스 내부로 합쳐서 한 번에 렌더링
-                                section_header_html = """
-                                <div style='margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #3E2723;'>
-                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; margin: 0 !important;'>
+                                # 2. [완벽 안착] 단일 헤더 결합 및 스크롤바 원천 차단
+                                section_header_html = """<div style='margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #3E2723;'>
+                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:800 !important; color:#1A237E !important; margin:0 !important;'>
                                         📜 타 감명서 1:1 상세 분석
                                     </h2>
-                                </div>
-                                """
+                                </div>"""
+                                
                                 full_stage3_html = section_header_html + formatted_comp
                                 st.markdown(html_views.get_final_report_box(full_stage3_html), unsafe_allow_html=True)
                             else:
@@ -1028,7 +1027,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
 
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (헤더를 박스 내부로 안착)
+                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (수평 스크롤바 완전 차단)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 궁합 1:1 상세 비교 리포트 분석 중..."):
                             gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
@@ -1052,14 +1051,13 @@ if st.session_state.get('app_running', False):
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(clean_ai)
                                 
-                                # 2. [핵심] 궁합 헤더 HTML을 박스 내부로 합쳐서 한 번에 렌더링
-                                gunghap_section_header = """
-                                <div style='margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #3E2723;'>
-                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; margin: 0 !important;'>
+                                # 2. [완벽 안착] 단일 헤더 결합 및 스크롤바 원천 차단
+                                gunghap_section_header = """<div style='margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #3E2723;'>
+                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:800 !important; color:#1A237E !important; margin:0 !important;'>
                                         📜 타 궁합 감명서 1:1 상세 분석
                                     </h2>
-                                </div>
-                                """
+                                </div>"""
+                                
                                 full_gunghap_stage3_html = gunghap_section_header + formatted_comp
                                 st.markdown(html_views.get_final_report_box(full_gunghap_stage3_html), unsafe_allow_html=True)
                             else:
