@@ -1,27 +1,39 @@
 import re
 
 def get_global_css():
-    """[Ver 46.7 사주원국표 완벽 복원 & 사이드바 고딕 / 메인 명조 격리 CSS]"""
+    """[사이드바 화살표 겹침 완벽 방지 & Ver 46.7 사주원국표 완벽 복원 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
 
     .stApp { background-color: #FFF8E1 !important; }
 
-    /* 1. 사이드바 및 모든 입력 폼 : 고딕체 고정 */
-    [data-testid="stSidebar"], 
-    [data-testid="stSidebar"] *,
-    [data-testid="stSidebar"] label,
+    /* ==========================================================================
+       1. 사이드바 내부 텍스트 폼 : 고딕체 고정 (화살표 아이콘 간섭 원천 차단)
+       ========================================================================== */
     [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] span:not([data-baseweb="icon"] *),
     [data-testid="stSidebar"] input,
     [data-testid="stSidebar"] select,
-    [data-testid="stSidebar"] button,
-    [data-testid="stSidebar"] [data-baseweb="select"],
-    [data-testid="stSidebar"] [data-baseweb="radio"],
-    [data-testid="stSidebar"] [data-baseweb="calendar"] { 
+    [data-testid="stSidebar"] button { 
         font-family: 'Nanum Gothic', -apple-system, sans-serif !important; 
+    }
+
+    /* Streamlit 화살표 및 아이콘 영역 레이아웃 정상화 (겹침 방지) */
+    [data-testid="stSidebar"] svg,
+    [data-testid="stSidebar"] [data-baseweb="icon"],
+    [data-testid="stSidebar"] div[class*="arrow"] {
+        font-family: inherit !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+
+    /* 사이드바 알림 상자 */
+    [data-testid="stSidebar"] div[data-testid="stNotification"] { padding: 3px 3px !important; }
+    [data-testid="stSidebar"] div[data-testid="stNotification"] p {
+        font-size: 11px !important; line-height: 1.5 !important; letter-spacing: -0.5px !important;
+        font-family: 'Nanum Gothic', sans-serif !important; white-space: pre-wrap !important;
     }
 
     /* 메인 버튼류 : 고딕체 */
@@ -31,7 +43,9 @@ def get_global_css():
         font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important;
     }
 
-    /* 2. 감명서 리포트 및 표지 영역 : 명조체 강제 고정 */
+    /* ==========================================================================
+       2. 감명서 리포트 및 표지 영역 : 명조체 강제 고정
+       ========================================================================== */
     .report-page, 
     .cover-page, 
     div.cover-page *,
@@ -39,7 +53,9 @@ def get_global_css():
         font-family: 'Nanum Myeongjo', serif !important; 
     }
 
-    /* 3. AI 통변 전용 계층 클래스 */
+    /* ==========================================================================
+       3. AI 통변 전용 계층 클래스
+       ========================================================================== */
     .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; }
     .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 20px !important; margin-bottom: 8px !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; }
     .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; }
@@ -54,16 +70,14 @@ def get_global_css():
     .color-수 { background-color: #212121 !important; color: #FFFFFF !important; }
 
     /* ==========================================================================
-       4. 🚨 [Ver 46.7 완벽 복원] 웅장한 사주원국표 전용 CSS
+       4. 웅장한 사주원국표 전용 CSS (Ver 46.7 완벽 복원사양)
        ========================================================================== */
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 1px 0px !important; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; word-wrap: break-word; }
     
-    /* 최상단 헤더 (구분, 시주, 일주, 월주, 년주) : 진한 남색 바탕 + 흰색 글씨 */
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
     
-    /* 구분 열 스타일 */
     .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 14px !important; border: 1px solid #444 !important; }
     .header-cell-sub { background-color: #f5f5f5 !important; color: #111111 !important; font-weight: 900 !important; font-size: 14px !important; border: 1px solid #444 !important; }
 
@@ -75,7 +89,8 @@ def get_global_css():
         body, .stApp { background-color: white !important; -webkit-print-color-adjust: exact !important; }
         .report-page { box-shadow: none; margin: 0 auto; page-break-after: always; width: 100%; padding: 0; }
     }
-    </style>"""
+    </style>
+    """
 
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
     """[Ver 70.1 원본] 표지 커버 - 시간 표시 영역 빨간색(#D50000) 수정본"""
