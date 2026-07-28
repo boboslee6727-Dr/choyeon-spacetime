@@ -677,11 +677,13 @@ def format_ai_text_to_html(ai_raw_text):
 
 
 def get_final_report_box(content_html):
-    """[둥근 사각 테두리 완벽 복원 & A4 규격 안착] 프리미엄 리포트 박스"""
+    """[2단계와 100% 동일한 vip-inset-frame 방식 이식] 3단계 프리미엄 리포트 박스"""
     return f"""
-    <div class='report-page' style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; border:2.5px solid #3E2723 !important; border-radius:14px !important; padding:30px 25px !important; background-color:#FFFFFF !important; margin-top:15px !important; margin-bottom:25px !important; box-shadow:0 4px 12px rgba(62, 39, 35, 0.08) !important; overflow-x:hidden !important; overflow-y:visible !important; word-break:break-word !important;'>
-        <div style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; overflow-x:hidden !important; word-break:break-word !important; white-space:normal !important;'>
-            {content_html}
+    <div class='report-page' style='margin-top:20px; width:100% !important; box-sizing:border-box !important;'>
+        <div class='vip-inset-frame' style='border:2.5px solid #3E2723 !important; padding:30px 25px !important; background:#FFFFFF !important; border-radius:12px !important; box-shadow:0 4px 12px rgba(62, 39, 35, 0.1) !important; width:100% !important; box-sizing:border-box !important; word-break:break-word !important;'>
+            <div style='font-family:"Nanum Myeongjo", serif; font-size:15px; color:#111111; text-align:justify; width:100% !important; word-break:break-word !important;'>
+                {content_html}
+            </div>
         </div>
     </div>
     """
