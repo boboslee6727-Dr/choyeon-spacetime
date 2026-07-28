@@ -703,23 +703,24 @@ if st.session_state.get('app_running', False):
                 if raw_response and isinstance(raw_response, str):
                     # 1. AI 응답 기본 마크다운 및 불필요 문구 정화
                     cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    cleaned = re.sub(r'(?s)1\.\s*신청자 기본 정보.*?2\.\s*사주 원국 정밀 분석 팩트.*?(?=1\.\s*성격 분석)', '', cleaned)
-                    cleaned = re.sub(r'분석 지시 사항', '', cleaned)
+                    cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL) # HTML 주석 제거 추가
                     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)  # ###, ## 마크다운 기호 정화
+                    
+                    # 🚨 [박사님 지시 반영] 서두의 모든 인사말, 안내 멘트, 불필요한 메타데이터를 통째로 삭제하고 '1.' 대제목부터 즉시 시작
+                    cleaned = re.sub(r'^(.*?)(?=\d+\.\s*)', '', cleaned, flags=re.DOTALL).strip()
                     
                     # 2. html_views 통변 전용 뷰 함수로 계층별(대/소/소소제목/본문) HTML 일괄 변환
                     ai_output_html = html_views.format_ai_text_to_html(cleaned)
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
-
             st.markdown(cover_html, unsafe_allow_html=True) 
             
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
-                    # [1단계 PAGE] 초연 오리지널 사주풀이
+                    # [1단계 PAGE] 초연 오리지널 사주풀이 (완벽한 둥근 테두리 적용)
                     # ------------------------------------------------------------------
-                    first_stage_html = str(final_report_base or "") + str(ai_output_html or "")
+                    first_stage_html = str(final_report_base or "") + str(ai_output_html or "") + str(closing_part or "")
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
                     # ------------------------------------------------------------------
@@ -746,7 +747,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (수평 스크롤바 완전 차단)
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (헤더 박스 안착 & 테두리 완제)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
@@ -779,17 +780,20 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 정화
+                                # 1. AI 응답 완전 정화 (마크다운 백틱, 주석, 헤더 기호 제어 및 서론 원천 차단)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
-                                c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
+                                c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
+                                
+                                # 🚨 [박사님 지시 반영] 서두의 모든 인사말/서론을 완전히 삭제하고 '1.' 대제목부터 즉시 시작
+                                c_res_clean = re.sub(r'^(.*?)(?=\d+\.\s*)', '', c_res_clean, flags=re.DOTALL).strip()
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 2. [완벽 안착] 단일 헤더 결합 및 스크롤바 원천 차단
-                                section_header_html = """<div style='margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #3E2723;'>
-                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:800 !important; color:#1A237E !important; margin:0 !important;'>
+                                # 2. [완벽 안착] 3단계 내부 상단 헤더
+                                section_header_html = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
+                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; text-align:center;'>
                                         📜 타 감명서 1:1 상세 분석
                                     </h2>
                                 </div>"""
@@ -1027,7 +1031,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
 
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (수평 스크롤바 완전 차단)
+                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (헤더 박스 안착 & 테두리 완제)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 궁합 1:1 상세 비교 리포트 분석 중..."):
                             gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
@@ -1043,17 +1047,20 @@ if st.session_state.get('app_running', False):
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
-                                # 1. AI 응답 정화
+                                # 1. AI 응답 완전 정화 (마크다운 백틱, 주석, 헤더 기호 제어 및 서론 원천 차단)
                                 clean_ai = re.sub(r'<!--.*?-->', '', ai_compare_result, flags=re.DOTALL)
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', clean_ai).replace("```", "").strip()
-                                clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
+                                clean_ai = re.sub(r'#{1,6}\s*', '', clean_ai)
                                 clean_ai = clean_ai.replace("&lt;", "<").replace("&gt;", ">")
+                                
+                                # 🚨 [박사님 지시 반영] 서두의 모든 인사말/서론을 완전히 삭제하고 '1.' 대제목부터 즉시 시작
+                                clean_ai = re.sub(r'^(.*?)(?=\d+\.\s*)', '', clean_ai, flags=re.DOTALL).strip()
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(clean_ai)
                                 
-                                # 2. [완벽 안착] 단일 헤더 결합 및 스크롤바 원천 차단
-                                gunghap_section_header = """<div style='margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #3E2723;'>
-                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:800 !important; color:#1A237E !important; margin:0 !important;'>
+                                # 2. [완벽 안착] 궁합 3단계 헤더 및 테두리 박스 직결
+                                gunghap_section_header = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
+                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; text-align:center;'>
                                         📜 타 궁합 감명서 1:1 상세 분석
                                     </h2>
                                 </div>"""
