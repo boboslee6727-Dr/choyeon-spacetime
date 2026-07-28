@@ -1,74 +1,59 @@
 import re
 
 def get_global_css():
+    """[구버전 잔재 청소 및 AI 통변 클래스 전용 개편 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
 
     html, body, [class*="css"] { font-family: 'Nanum Gothic', sans-serif; }
     .stApp { background-color: #FFF8E1 !important; }
-    p, h1, h2, h3, h4, h5, h6, table, tr, td, div.report-page { font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; }
+    
+    /* [구버전 잔재 철거] 감명서 기본 폰트만 지정 (전역 태그 강제 속성 제거) */
+    div.report-page, .choyeon-premium-report { font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; }
+
     [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
 
-    /* 사이드바 알림 상자 : 단 두 줄 완벽 고정 스타일 */
-    [data-testid="stSidebar"] div[data-testid="stNotification"] {
-        padding: 3px 3px !important;
-    }
+    /* 사이드바 알림 상자 */
+    [data-testid="stSidebar"] div[data-testid="stNotification"] { padding: 3px 3px !important; }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
-        font-size: 11px !important;
-        line-height: 1.5 !important;
-        letter-spacing: -0.5px !important;
-        font-family: 'Nanum Gothic', sans-serif !important;
-        white-space: pre-wrap !important; /* 줄바꿈 100% 보장 */
+        font-size: 11px !important; line-height: 1.5 !important; letter-spacing: -0.5px !important;
+        font-family: 'Nanum Gothic', sans-serif !important; white-space: pre-wrap !important;
+    }
+
+    /* 모든 버튼 공통 스타일 */
+    div.stButton > button { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
+        font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important;
     }
 
     /* ==========================================================================
-       🔴🟢 [버튼 전용 명확한 보색 대비 스타일]
+       🔴🟢 AI 통변 전용 정교화 계층 클래스 (충돌 원천 차단)
        ========================================================================== */
-    /* 모든 버튼 공통 폰트 및 굵은 글씨 지정 */
-    div.stButton > button { 
-        font-family: 'Nanum Gothic', sans-serif !important; 
-        font-weight: 900 !important; 
-        font-size: 16px !important;
-        border-radius: 8px !important;
+    .ai-title-l1 { font-size: 17px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 22px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 4px !important; text-indent: 0 !important; }
+    .ai-title-l2 { font-size: 15px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 16px !important; margin-bottom: 6px !important; text-indent: 0 !important; }
+    .ai-sub-item { margin: 6px 0 !important; line-height: 1.85 !important; font-size: 14px !important; color: #2c3e50 !important; text-indent: 0 !important; }
+    .ai-sub-item strong { font-weight: 800 !important; color: #1F2937 !important; }
+    
+    /* ★ 본문 첫 줄 들여쓰기(text-indent: 1em) 및 문단 간격 강제 보장 ★ */
+    .ai-body-p { 
+        margin-bottom: 12px !important; 
+        line-height: 1.85 !important; 
+        text-indent: 1em !important; 
+        font-size: 14px !important; 
+        color: #2c3e50 !important; 
+        font-weight: normal !important; 
+        text-align: justify !important; 
     }
 
-    /* AI 통변 전용 계층 스타일 */
-    .ai-title-l1 { font-size: 18px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #1A237E; padding-bottom: 5px; }
-    .ai-title-l2 { font-size: 16px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 18px; margin-bottom: 8px; }
-    .ai-sub-item { margin: 6px 0; line-height: 1.85; font-size: 15px; color: #2c3e50; text-indent: 0.5em; }
-    .ai-sub-item strong { font-weight: 700 !important; color: #1F2937; }
-    .ai-body-p { margin-bottom: 12px; line-height: 1.85; text-indent: 1em; font-size: 15px; color: #2c3e50; font-weight: normal !important; }
+    /* 버튼 전용 보색 스타일 */
+    div.stButton > button[kind="primary"] { background-color: #D50000 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }
+    div.stButton > button[kind="primary"]:hover { background-color: #B71C1C !important; color: #FFFFFF !important; }
+    div.stButton > button[kind="secondary"] { background-color: #00A843 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; }
+    div.stButton > button[kind="secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
 
-    /* 🔴 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
-    div.stButton > button[kind="primary"] { 
-        background-color: #D50000 !important; 
-        color: #FFFFFF !important; 
-        border: none !important; 
-        height: 50px !important; 
-        font-weight: 900 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-    }
-    div.stButton > button[kind="primary"]:hover {
-        background-color: #B71C1C !important;
-        color: #FFFFFF !important;
-    }
-
-    /* 🟢 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 완벽 보색 녹색 바탕 + 흰색 굵은 글자 */
-    div.stButton > button[kind="secondary"] { 
-        background-color: #00A843 !important; 
-        color: #FFFFFF !important; 
-        border: none !important; 
-        height: 50px !important;
-        font-weight: 900 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important;
-    }
-    div.stButton > button[kind="secondary"]:hover {
-        background-color: #008937 !important;
-        color: #FFFFFF !important;
-    }
-
+    /* 오행/신살/만세력 표 스타일 */
     .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
     .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
     .color-토 { background-color: #F9A825 !important; color: #000000 !important; text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important; }
@@ -92,7 +77,6 @@ def get_global_css():
     .top-header-cell td { font-size: 15px !important; color: #FFFFFF !important; border: 1px solid #444 !important; font-weight: 900 !important; }
     .header-cell-main { background-color: #f5f5f5 !important; font-weight: 900 !important; white-space: nowrap; color: #1A237E !important; font-size: 15px !important; }
 
-    /* Ver 70.0 원본 기반 가독성 최적화 CSS */
     .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; color: #000000; font-family: 'Nanum Myeongjo', serif; }
     .report-page h1, .report-page h3 { color: #1A237E !important; } 
     .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif; }
@@ -663,78 +647,60 @@ def get_comparison_result_box_html(comp_clean_text, member_info_str=""):
     """
 
 def format_ai_text_to_html(raw_text):
-    """[황금 비율 가독성 완성] 대제목 16px / 소제목 15px / 본문 14px(들여쓰기 1em) 정밀 교정 함수"""
+    """[.ai- 전용 클래스 완벽 매핑] 구버전 간섭 없이 들여쓰기 및 단락 구분 적용 함수"""
     import re
     if not raw_text or not isinstance(raw_text, str):
-        return "<p style='padding:20px; color:#666;'>분석 결과를 불러오지 못했습니다.</p>"
+        return "<p class='ai-body-p' style='padding:20px; color:#666;'>분석 결과를 불러오지 못했습니다.</p>"
         
     paragraphs = [p.strip() for p in str(raw_text).split('\n') if p.strip()]
     formatted = []
     
     for p in paragraphs:
-        # 0. 머리말 불필요 레이블([제목], [내용]) 원천 제거
+        # 0. 불필요 머리말 제거
         if p.startswith('[제목]') or p.startswith('[내용]'):
             p = re.sub(r'^\[(제목|내용)\]\s*', '', p)
             if not p: continue
             
         p_clean = re.sub(r'font-size:\s*\d+px;?', '', p)
         
-        # 1. 대제목 (예: 1. 성격 분석) -> 16px (부담스럽지 않은 적정 크기 + 굵게)
+        # 1. 대제목 -> .ai-title-l1 클래스 부여
         if '<h3' in p_clean or re.match(r'^\d+\.\s+[^\)]+', p_clean):
             title_text = re.sub(r'<[^>]+>', '', p_clean).strip()
-            formatted.append(
-                f"<h3 style='font-size:16px !important; font-weight:900 !important; color:#1A237E !important; margin-top:22px !important; margin-bottom:8px !important; border-bottom:2px solid #1A237E !important; padding-bottom:4px !important;'>{title_text}</h3>"
-            )
+            formatted.append(f"<p class='ai-title-l1'>{title_text}</p>")
             
-        # 2. 소제목 (예: 1) 내 삶의 무대와 타고난 기본 성향:) -> 본문(14px)보다 큰 15px 굵게
+        # 2. 소제목 -> .ai-title-l2 클래스 부여
         elif "sub-title" in p_clean or re.match(r'^\d+\)', p_clean):
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             if ':' in text_only:
                 title, content = text_only.split(':', 1)
                 formatted.append(
-                    f"<p style='margin:8px 0 !important; line-height:1.85 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:14px !important; color:#2c3e50 !important; text-indent:0 !important;'>"
-                    f"<strong style='font-size:15px !important; font-weight:800 !important; color:#2E7D32 !important;'>{title.strip()}:</strong>"
-                    f"<span style='font-weight:normal !important; color:#2c3e50 !important;'>{content}</span>"
+                    f"<p class='ai-sub-item'>"
+                    f"<strong>{title.strip()}:</strong> {content}"
                     f"</p>"
                 )
             else:
-                formatted.append(
-                    f"<h4 style='font-size:15px !important; font-weight:800 !important; color:#2E7D32 !important; margin-top:16px !important; margin-bottom:6px !important;'>{text_only}</h4>"
-                )
+                formatted.append(f"<p class='ai-title-l2'>{text_only}</p>")
                 
-        # 3. 섹션 헤더 (▷, ▶, ■, ●) -> 15px 굵게
-        elif any(p_clean.startswith(symbol) for symbol in ['▷', '▶', '■', '●']):
-            text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
-            formatted.append(
-                f"<h5 style='font-size:15px !important; font-weight:800 !important; color:#0D47A1 !important; margin-top:12px !important; margin-bottom:4px !important; text-indent:0 !important;'>{text_only}</h5>"
-            )
-            
-        # 4. 소소제목 및 불릿 (-, •) -> 14px (제목부만 굵게)
-        elif any(p_clean.startswith(symbol) for symbol in ['-', ' -', '•', '*']):
+        # 3. 불릿 및 소소제목 -> .ai-sub-item 클래스 부여
+        elif any(p_clean.startswith(symbol) for symbol in ['-', ' -', '•', '*', '▷', '▶', '■', '●']):
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             if ':' in text_only:
                 title, content = text_only.split(':', 1)
                 formatted.append(
-                    f"<p style='margin:5px 0 !important; line-height:1.85 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:14px !important; color:#2c3e50 !important; text-indent:0 !important;'>"
-                    f"<strong style='font-size:14px !important; font-weight:800 !important; color:#1F2937 !important;'>{title.strip()}:</strong>"
-                    f"<span style='font-weight:normal !important; color:#2c3e50 !important;'>{content}</span>"
+                    f"<p class='ai-sub-item'>"
+                    f"<strong>{title.strip()}:</strong> {content}"
                     f"</p>"
                 )
             else:
-                formatted.append(
-                    f"<p style='margin:5px 0 !important; line-height:1.85 !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:14px !important; color:#2c3e50 !important; text-indent:0 !important;'><strong style='font-size:14px !important; font-weight:800 !important; color:#1F2937 !important;'>{text_only}</strong></p>"
-                )
+                formatted.append(f"<p class='ai-sub-item'><strong>{text_only}</strong></p>")
                 
-        # 5. 일반 AI 통변 본문 문단 -> 14px 보통체 + 원고지식 첫 줄 들여쓰기(text-indent: 1em)
+        # 4. 일반 AI 통변 본문 -> .ai-body-p 클래스 + 물리적 공백(&nbsp;&nbsp;) 조합으로 들여쓰기 100% 보장
         else:
             text_only = re.sub(r'<[^>]+>', '', p_clean).strip()
             if text_only:
-                formatted.append(
-                    f"<p style='margin-bottom:10px !important; line-height:1.85 !important; text-indent:1em !important; font-family:\"Nanum Myeongjo\", serif !important; font-size:14px !important; color:#2c3e50 !important; font-weight:normal !important;'>{text_only}</p>"
-                )
+                formatted.append(f"<p class='ai-body-p'>&nbsp;&nbsp;{text_only}</p>")
             
     return "".join(formatted)
-
 def get_ai_report_box(content):
     """5. 기본 AI 통변용 감싸기 카드"""
     return f"""
