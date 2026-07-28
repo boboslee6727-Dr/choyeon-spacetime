@@ -242,9 +242,8 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    # 빈 값이나 누락된 값(-) 방어 처리
-    u_val = unsung if unsung and unsung.strip() else "-"
-    s_val = shinsal if shinsal and shinsal.strip() else "-"
+    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
+    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px;'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:13px; height:25px; line-height:25px;'>{title_str}</div>
@@ -281,8 +280,8 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
             display_title = title_str.replace(hangul, hanja)
             break
             
-    u_val = unsung if unsung and unsung.strip() else "-"
-    s_val = shinsal if shinsal and shinsal.strip() else "-"
+    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "-"
+    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "-"
     
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; line-height:1.2;'>
@@ -305,8 +304,8 @@ def get_wolun_layout(title, content):
     """
 
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    u_val = unsung if unsung and unsung.strip() else "-"
-    s_val = shinsal if shinsal and shinsal.strip() else "-"
+    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "-"
+    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "-"
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; line-height:1.2;'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:13px; border-bottom:1px solid #ccc; height:25px; line-height:25px;'>{tm}월</div>
@@ -675,14 +674,14 @@ def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
 </div>"""
 
 def format_ai_text_to_html(ai_raw_text):
-    """[소제목 녹색 복원 & 꼬리표 절대 사살 완제본]"""
+    """[1번 항목 생략 원천 차단 & 소제목 녹색 고정 완제본]"""
     if not ai_raw_text:
         return ""
     
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
     
-    # 지시문 찌꺼기 삭제
+    # 🚨 AI가 뱉어낸 프롬프트 지시어 찌꺼기만 정밀 타격하여 제거 (대제목은 절대 건드리지 않음)
     clean_raw = re.sub(r'최소\s*\d+~\d+문장\s*이상으로\s*(상세히\s*)?분석하십시오\.?', '', clean_raw)
     clean_raw = re.sub(r'드라마틱한\s*에세이로\s*서술하십시오\.?', '', clean_raw)
     clean_raw = re.sub(r'재성의\s*유무와\s*식상의\s*생조\s*여부를\s*바탕으로\s*분석하십시오\.?', '', clean_raw)
@@ -697,21 +696,20 @@ def format_ai_text_to_html(ai_raw_text):
         if not line_str:
             continue
         
-        # 🚨 [해결] 별표(**) 마크다운을 미리 제거하여 정규식이 100% 인식하도록 조치
         clean_line_str = line_str.replace("**", "")
             
+        # 1. 메인 대제목 (1. 사주팔자 구조분석 등) -> 무조건 남기고 파란색(#1A237E) 적용
         if re.match(r'^\d+\.\s+', clean_line_str):
             formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{clean_line_str}</p>")
-        # 🚨 [해결] 녹색 적용 강제화
+        # 2. 소제목 (1) 내 삶의 리듬과...) -> 녹색(#2E7D32) 적용
         elif re.match(r'^\d+\)\s+', clean_line_str):
             formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{clean_line_str}</p>")
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
-            safe_line = safe_line.replace("</div>", "") # 꼬리표 생성 원천 차단
+            safe_line = safe_line.replace("</div>", "") 
             formatted_html.append(f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{safe_line}</p>")
             
     final_html = "".join(formatted_html)
-    # 🚨 최후의 꼬리표 텍스트까지 강제 삭제
     return final_html.replace("</div></div>", "")
 
 def get_final_report_box(content_html):
