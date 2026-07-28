@@ -717,7 +717,7 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
-                    # [1단계 PAGE] 오리지널 사주풀이
+                    # [1단계 PAGE] 초연 오리지널 사주풀이
                     # ------------------------------------------------------------------
                     first_stage_html = str(final_report_base or "") + str(ai_output_html or "")
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
@@ -730,24 +730,23 @@ if st.session_state.get('app_running', False):
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         u_name_str = name
                         p_icon_str = p_icon
-                        
                         sol_val = sol_str_fmt
                         lun_val = lun_str_fmt
                         time_val = b_time
                         today_val = today_str
                         
-                        # 1. 표지 출력
+                        # 2-1. 타 감명서 원본 표지
                         other_cover_html = html_views.get_comparison_saju_cover(
                             APP_VERSION, p_icon_str, u_name_str, sol_val, lun_val, time_val, today_val
                         )
                         st.markdown(other_cover_html, unsafe_allow_html=True)
                         
-                        # 2. 타 감명서 원문 단독 출력
+                        # 2-2. 타 감명서 원문 단독 출력
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 출력
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (독립 표지 + info_header + AI 통변)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
@@ -767,7 +766,7 @@ if st.session_state.get('app_running', False):
 
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세, {u_marital_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            # COMPARE_PERSONAL_PROMPT 포맷팅
+                            # 프롬프트 포맷팅
                             comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
                                 name=name,
                                 age=age,
@@ -781,21 +780,25 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 기본 텍스트 정화 (마크다운 백틱, HTML 주석 완전 차단)
+                                # 3-1. [박사님의 지시] 3단계 독립 비교 표지 출력
+                                comp_cover_html = html_views.get_comparison_saju_cover(
+                                    APP_VERSION, "⚖️", f"{u_name_str} (1:1 비교분석)", sol_val, lun_val, time_val, today_val
+                                )
+                                st.markdown(comp_cover_html, unsafe_allow_html=True)
+                                
+                                # 3-2. 상단 기본 명조 info_header 출력
+                                if hasattr(html_views, 'get_info_header'):
+                                    st.markdown(html_views.get_info_header(saju_fact_summary), unsafe_allow_html=True)
+                                
+                                # 3-3. AI 응답 정화 (마크다운 백틱 및 주석 완전 차단)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                # 2. html_views 전용 뷰 함수를 거쳐 계층별 HTML 변환
+                                # 3-4. 표준 계층별 HTML 변환 후 안전한 기본 리포트 박스(get_final_report_box)로 깔끔하게 통출력
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
-                                
-                                # 3. [핵심] 주석 제거 및 Pure HTML 렌더링 박스 결합
-                                c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
-                                
-                                # Streamlit 마크다운 파서 오류 우회를 위해 주석 완전 제거 후 렌더링
-                                final_clean_html = re.sub(r'<!--.*?-->', '', c_res_html, flags=re.DOTALL)
-                                st.markdown(final_clean_html, unsafe_allow_html=True)
+                                st.markdown(html_views.get_final_report_box(formatted_comp), unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
@@ -1014,7 +1017,7 @@ if st.session_state.get('app_running', False):
                     if other_text_input and len(str(other_text_input).strip()) > 0:
                         today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
                         
-                        # 1. 궁합 타 감명서 독립 표지 생성 및 출력 (인자 포맷 교정)
+                        # 2-1. 궁합 타 감명서 독립 표지 생성 및 출력
                         gunghap_other_cover = html_views.get_comparison_gunghap_cover(
                             APP_VERSION, male_name, male_age, male_sol, male_lun, male_time,  
                             female_name, female_age, female_sol, female_lun, female_time, 
@@ -1022,15 +1025,16 @@ if st.session_state.get('app_running', False):
                         )
                         st.markdown(gunghap_other_cover, unsafe_allow_html=True)
                         
-                        # 2. 타 감명서 원문 단독 출력 (이중 박스 해제)
+                        # 2-2. 타 감명서 원문 단독 출력
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         st.markdown(report_2_html, unsafe_allow_html=True)
 
-                        # 3. 1:1 상세비교 AI 리포트 출력
-                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
+                        # ------------------------------------------------------------------
+                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (독립 표지 + info_header + AI 통변)
+                        # ------------------------------------------------------------------
+                        with st.spinner("⚖️ 궁합 1:1 상세 비교 리포트 분석 중..."):
                             gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
                             
-                            # 🚨 [정석 변수명 교정] COMPARE_PROMPT -> COMPARE_GUNGHAP_PROMPT 매핑
                             comp_prompt = prompts.COMPARE_GUNGHAP_PROMPT.format(
                                 m_name=male_name,
                                 f_name=female_name,
@@ -1042,18 +1046,27 @@ if st.session_state.get('app_running', False):
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
-                                # 🚨 [태그 노출 방지 정화 구문 완벽 탑재]
+                                # 3-1. 궁합 1:1 비교 전용 독립 표지 출력
+                                gunghap_comp_cover = html_views.get_comparison_gunghap_cover(
+                                    APP_VERSION, f"{male_name}(비교)", male_age, male_sol, male_lun, male_time,  
+                                    f"{female_name}(비교)", female_age, female_sol, female_lun, female_time, 
+                                    today_val
+                                )
+                                st.markdown(gunghap_comp_cover, unsafe_allow_html=True)
+                                
+                                # 3-2. 상단 기본 명조 info_header 출력
+                                if hasattr(html_views, 'get_info_header'):
+                                    st.markdown(html_views.get_info_header(gunghap_fact_summary), unsafe_allow_html=True)
+                                
+                                # 3-3. AI 응답 정화
                                 clean_ai = re.sub(r'<!--.*?-->', '', ai_compare_result, flags=re.DOTALL)
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', clean_ai).replace("```", "").strip()
                                 clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                                 clean_ai = clean_ai.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                formatted_comp = clean_ai.replace("\n", "<br>")
-                                formatted_comp = re.sub(r'###\s*(.*?)(<br>|$)', r"<h3 style='color:#2E7D32; font-size:20px; font-weight:800; border-bottom:1px solid #2E7D32; padding-bottom:5px; margin-top:25px; margin-bottom:10px;'>\1</h3>", formatted_comp)
-                                formatted_comp = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_comp)
-                                
-                                c_res_html = html_views.get_comparison_result_box_html(formatted_comp, gunghap_fact_summary)
-                                st.markdown(c_res_html, unsafe_allow_html=True)
+                                # 3-4. 표준 계층별 HTML 변환 후 안전한 기본 리포트 박스(get_final_report_box)로 깔끔하게 통출력
+                                formatted_comp = html_views.format_ai_text_to_html(clean_ai)
+                                st.markdown(html_views.get_final_report_box(formatted_comp), unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
