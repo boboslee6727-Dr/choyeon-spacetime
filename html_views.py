@@ -624,15 +624,15 @@ def get_other_report_original_html(other_text_input):
     """
 
 def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
-    """[수평 스크롤바 원천 차단 & 소스코드 노출 제거] 1:1 상세 비교 리포트 전용 렌더링 박스"""
+    """[A4 용지 규격 완전 안착 & 수평 이탈 방지] 1:1 상세 비교 리포트 전용 렌더링 박스"""
     return f"""
-    <div style='background-color:#F5F7FA; border:1px solid #D1D5DB; border-radius:8px; padding:15px 20px; margin-bottom:25px; text-align:center;'>
-        <div style='font-size:15px; font-weight:800; color:#1F2937; line-height:1.6;'>
+    <div style='width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; background-color: #F5F7FA; border: 1px solid #D1D5DB; border-radius: 8px; padding: 12px 15px; margin-top: 10px; margin-bottom: 20px; text-align: center; word-break: break-word;'>
+        <div style='font-size: 15px; font-weight: 800; color: #1F2937; line-height: 1.6; word-break: break-word;'>
             {saju_fact_summary}
         </div>
     </div>
     
-    <div class='choyeon-premium-report' style='font-family: "Nanum Myeongjo", serif !important; font-size:16px; line-height:1.9; color:#111111 !important; text-align:justify; width:100% !important; max-width:100% !important; box-sizing:border-box !important; overflow:visible !important; word-break:break-word !important; white-space:normal !important;'>
+    <div class='choyeon-premium-report' style='font-family: "Nanum Myeongjo", serif !important; font-size: 16px; line-height: 1.9; color: #111111 !important; text-align: justify; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow: visible !important; word-break: break-word !important; white-space: normal !important;'>
         {formatted_comp}
     </div>
     """
