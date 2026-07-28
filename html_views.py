@@ -1,111 +1,86 @@
 import re
 
 def get_global_css():
-    """[구버전 잔재 청소 및 AI 통변 클래스 전용 개편 CSS]"""
+    """[나눔명조체 우선 적용 및 폰트 크기 개편 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
 
-    html, body, [class*="css"] { font-family: 'Nanum Gothic', sans-serif; }
-    .stApp { background-color: #FFF8E1 !important; }
+    /* 기본 바탕 폰트를 나눔명조체로 변경 */
+    html, body, .stApp { 
+        font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; 
+        background-color: #FFF8E1 !important; 
+    }
     
-    /* [구버전 잔재 철거] 감명서 기본 폰트만 지정 (전역 태그 강제 속성 제거) */
-    div.report-page, .choyeon-premium-report { font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; }
-
-    [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
-
-    /* 사이드바 알림 상자 */
-    [data-testid="stSidebar"] div[data-testid="stNotification"] { padding: 3px 3px !important; }
-    [data-testid="stSidebar"] div[data-testid="stNotification"] p {
-        font-size: 11px !important; line-height: 1.5 !important; letter-spacing: -0.5px !important;
-        font-family: 'Nanum Gothic', sans-serif !important; white-space: pre-wrap !important;
+    div.report-page, .choyeon-premium-report { 
+        font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; 
     }
 
-    /* 모든 버튼 공통 스타일 */
+    /* 사이드바 및 버튼만 고딕체 유지 */
+    [data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
+    }
+
     div.stButton > button { 
         font-family: 'Nanum Gothic', sans-serif !important; 
         font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important;
     }
 
-    /* ==========================================================================
-       🔴🟢 AI 통변 전용 정교화 계층 클래스 (충돌 원천 차단)
-       ========================================================================== */
-    .ai-title-l1 { font-size: 18px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 22px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 4px !important; text-indent: 0 !important; }
-    .ai-title-l2 { font-size: 16px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 16px !important; margin-bottom: 6px !important; text-indent: 0 !important; }
-    .ai-sub-item { margin: 6px 0 !important; line-height: 1.85 !important; font-size: 15px !important; color: #2c3e50 !important; text-indent: 0 !important; }
+    /* AI 통변 계층 클래스 (본문 16px 기준 재정돈) */
+    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; text-indent: 0 !important; }
+    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 20px !important; margin-bottom: 8px !important; text-indent: 0 !important; }
+    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; text-indent: 0 !important; }
     .ai-sub-item strong { font-weight: 800 !important; color: #1F2937 !important; }
     
-    /* ★ 본문 첫 줄 들여쓰기(text-indent: 1em) 및 문단 간격 강제 보장 ★ */
+    /* 본문 16px + 들여쓰기 1em */
     .ai-body-p { 
-        margin-bottom: 12px !important; 
+        margin-bottom: 14px !important; 
         line-height: 1.85 !important; 
         text-indent: 1em !important; 
-        font-size: 15px !important; 
+        font-size: 16px !important; 
         color: #2c3e50 !important; 
         font-weight: normal !important; 
         text-align: justify !important; 
+        font-family: 'Nanum Myeongjo', serif !important;
     }
 
-    /* 버튼 전용 보색 스타일 */
-    div.stButton > button[kind="primary"] { background-color: #D50000 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }
-    div.stButton > button[kind="primary"]:hover { background-color: #B71C1C !important; color: #FFFFFF !important; }
-    div.stButton > button[kind="secondary"] { background-color: #00A843 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; }
-    div.stButton > button[kind="secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
+    /* 버튼 스타일 및 만세력 표 스타일 유지 */
+    div.stButton > button[kind="primary"] { background-color: #D50000 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; }
+    div.stButton > button[kind="secondary"] { background-color: #00A843 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; }
 
-    /* 오행/신살/만세력 표 스타일 */
-    .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
-    .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
-    .color-토 { background-color: #F9A825 !important; color: #000000 !important; text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important; }
-    .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
-    .color-수 { background-color: #212121 !important; color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; }
-    .color-무 { background-color: transparent !important; color: #000000 !important; }
-
-    .color-unsung, td[style*="0D47A1"], div[style*="0D47A1"] { color: #0D47A1 !important; font-weight: 900 !important; }
-    .color-shinsal, td[style*="C62828"], div[style*="C62828"] { color: #C62828 !important; font-weight: 900 !important; }
+    .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; }
+    .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; }
+    .color-토 { background-color: #F9A825 !important; color: #000000 !important; }
+    .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; }
+    .color-수 { background-color: #212121 !important; color: #FFFFFF !important; }
 
     .result-table { width: 100%; border-collapse: collapse; border: 2px solid #444 !important; margin-bottom: 5px !important; }
-    .result-table td { border: 1px solid #444 !important; padding: 4px 2px !important; text-align: center; vertical-align: middle; font-weight: 900 !important; line-height: 1.3 !important; }
-    .result-table tr:has(.ganji-cell) td { font-size: 24px !important; font-weight: 900 !important; padding: 10px 4px !important; -webkit-text-stroke: 0.5px rgba(0,0,0,0.3); }
-    .result-table td:has(.unsung), .result-table td:has(.shinsal), .result-table td:has(.gen-shinsal) { font-weight: 900 !important; }
+    .result-table td { border: 1px solid #444 !important; padding: 4px 2px !important; text-align: center; vertical-align: middle; font-weight: 900 !important; }
 
-    .master-bar { padding: 1px 0 !important; margin: 1px 0 2px 0 !important; }
-    .un-table td { padding: 1px 0 !important; line-height: 1.0 !important; }
-    .ganji-cell { font-size: 18px !important; font-weight: 900 !important; }
-
-    .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
-    .top-header-cell td { font-size: 15px !important; color: #FFFFFF !important; border: 1px solid #444 !important; font-weight: 900 !important; }
-    .header-cell-main { background-color: #f5f5f5 !important; font-weight: 900 !important; white-space: nowrap; color: #1A237E !important; font-size: 15px !important; }
-
-    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-shadow: 0 0 20px rgba(0,0,0,0.15); border-radius: 20px; box-sizing: border-box; color: #000000; font-family: 'Nanum Myeongjo', serif; }
-    .report-page h1, .report-page h3 { color: #1A237E !important; } 
-    .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif; }
-    .content-box-loose { line-height: 1.85; font-size: 16px; text-align: justify; word-break: keep-all; padding: 0 !important; color: #111111; }
+    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000000; font-family: 'Nanum Myeongjo', serif !important; }
 
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
-        body, .stApp { background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        .block-container { padding: 0 !important; margin: 0 !important; }
-        .report-page { box-shadow: none; margin: 0 auto; page-break-after: always; width: 100%; border-radius: 0; padding: 0; }
-        .report-page:last-of-type { page-break-after: auto; }
-        .page-break-before { page-break-before: always; }
+        body, .stApp { background-color: white !important; -webkit-print-color-adjust: exact !important; }
+        .report-page { box-shadow: none; margin: 0 auto; page-break-after: always; width: 100%; padding: 0; }
     }
     </style>"""
 
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
-    """표지 커버 HTML 렌더링 함수 - 타이틀/신청인 명조체 적용 및 시간 빨간색 강조 완제본"""
+    """표지 커버 - 명조체 인라인 강제 고정 및 시간 빨간색 표시 완제본"""
     return f"""
-    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+    <div class='report-page cover-page' style="font-family: 'Nanum Myeongjo', serif !important; padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;">
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 style="font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; font-size: 28px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;">🏮 초연 시공명리 사주풀이</h1>
+                <h1 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 28px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;">🏮 초연 시공명리 사주풀이</h1>
                 <div style='text-align: right; margin-top: 10px;'>
                     <span style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style="font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;">{p_icon} 신청인 : {name} 님</h2>
+                <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;">{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
                     <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
                         <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
@@ -113,8 +88,8 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
                     </div>
                 </div>
             </div>
-            <p style="font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; font-size: 18px; margin-top: 50px; font-weight: 900;">{today_str}</p>
-            <p style="font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;">초연 시공명리 연구소</p>
+            <p style="font-family: 'Nanum Myeongjo', serif !important; font-size: 18px; margin-top: 50px; font-weight: 900;">{today_str}</p>
+            <p style="font-family: 'Nanum Myeongjo', serif !important; font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;">초연 시공명리 연구소</p>
         </div>
     </div>
     <div class="page-break-before"></div>
