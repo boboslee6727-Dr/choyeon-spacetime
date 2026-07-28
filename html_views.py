@@ -308,7 +308,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 def get_closing_html(name):
-    """[본문 폰트 크기 16px 완벽 통일] 리포트 맺음말 HTML"""
+    """[본문 폰트 크기 16px 완벽 통일 & 하단 중복 닫기 태그 정리] 리포트 맺음말 HTML"""
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
         <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px; color: #111111;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
@@ -318,7 +318,6 @@ def get_closing_html(name):
         <div style='text-align: right; margin-top: 30px;'>
             <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
         </div>
-    </div>
     """
 
 def get_final_report_box(content_html):
