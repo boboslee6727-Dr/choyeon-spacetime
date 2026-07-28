@@ -31,9 +31,9 @@ def get_global_css():
     /* ==========================================================================
        🔴🟢 AI 통변 전용 정교화 계층 클래스 (충돌 원천 차단)
        ========================================================================== */
-    .ai-title-l1 { font-size: 17px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 22px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 4px !important; text-indent: 0 !important; }
-    .ai-title-l2 { font-size: 15px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 16px !important; margin-bottom: 6px !important; text-indent: 0 !important; }
-    .ai-sub-item { margin: 6px 0 !important; line-height: 1.85 !important; font-size: 14px !important; color: #2c3e50 !important; text-indent: 0 !important; }
+    .ai-title-l1 { font-size: 18px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 22px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 4px !important; text-indent: 0 !important; }
+    .ai-title-l2 { font-size: 16px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 16px !important; margin-bottom: 6px !important; text-indent: 0 !important; }
+    .ai-sub-item { margin: 6px 0 !important; line-height: 1.85 !important; font-size: 15px !important; color: #2c3e50 !important; text-indent: 0 !important; }
     .ai-sub-item strong { font-weight: 800 !important; color: #1F2937 !important; }
     
     /* ★ 본문 첫 줄 들여쓰기(text-indent: 1em) 및 문단 간격 강제 보장 ★ */
@@ -41,7 +41,7 @@ def get_global_css():
         margin-bottom: 12px !important; 
         line-height: 1.85 !important; 
         text-indent: 1em !important; 
-        font-size: 14px !important; 
+        font-size: 15px !important; 
         color: #2c3e50 !important; 
         font-weight: normal !important; 
         text-align: justify !important; 
@@ -702,6 +702,7 @@ def format_ai_text_to_html(raw_text):
                 formatted.append(f"<p class='ai-body-p'>&nbsp;&nbsp;{text_only}</p>")
             
     return "".join(formatted)
+
 def get_ai_report_box(content):
     """5. 기본 AI 통변용 감싸기 카드"""
     return f"""
