@@ -717,6 +717,12 @@ if st.session_state.get('app_running', False):
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     # ------------------------------------------------------------------
+                    # [0단계 PAGE] 타 감명서 비교 대제목 표기
+                    # ------------------------------------------------------------------
+                    if hasattr(html_views, 'get_final_report_header'):
+                        st.markdown(html_views.get_final_report_header("📄 타 감명서 비교 (사주)"), unsafe_allow_html=True)
+                    
+                    # ------------------------------------------------------------------
                     # [1단계 PAGE] 오리지널 사주풀이
                     # ------------------------------------------------------------------
                     first_stage_html = str(final_report_base or "") + str(ai_output_html or "")
@@ -733,7 +739,7 @@ if st.session_state.get('app_running', False):
                         
                         sol_val = sol_str_fmt
                         lun_val = lun_str_fmt
-                        time_val = b_time  # 사이드바 선택 한자 시간대 매칭
+                        time_val = b_time
                         today_val = today_str
                         
                         # 1. 표지 출력
@@ -758,7 +764,7 @@ if st.session_state.get('app_running', False):
                             b_y = sol_y
                             b_m = sol_m
                             b_d = sol_d
-                            b_t = b_time  # 사이드바 선택 한자 시간대 매칭
+                            b_t = b_time
                             
                             g_list = gans
                             j_list = jjis
@@ -767,7 +773,7 @@ if st.session_state.get('app_running', False):
 
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세, {u_marital_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            # 🚨 [KeyError 완전 방지] COMMON_SYSTEM_HEADER 호환용 전 인자 완제 전달
+                            # COMPARE_PERSONAL_PROMPT 포맷팅
                             comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
                                 name=name,
                                 age=age,
@@ -790,14 +796,13 @@ if st.session_state.get('app_running', False):
                                 # 2. html_views 전용 뷰 함수를 거쳐 계층별 HTML 변환
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 3. [핵심] A4 용지 규격(report-page) 상위 박스로 감싸서 완벽 안착 출력
+                                # 3. [핵심 복원] 대제목 포함 완벽 렌더링 박스 출력
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
-                                
-                                # report-page 컨테이너로 감싸 A4 용지 규격 밖 이탈 원천 방지
-                                final_a4_wrapper = f"<div class='report-page'>{c_res_html}</div>"
-                                st.markdown(final_a4_wrapper, unsafe_allow_html=True)
+                                st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
+                    else:
+                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
                 
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
