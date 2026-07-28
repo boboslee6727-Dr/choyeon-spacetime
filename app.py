@@ -781,16 +781,16 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 1. AI 응답 기본 텍스트 정화 (마크다운 및 백틱, 인삿말 제거)
+                                # 1. AI 응답 기본 텍스트 정화 (백틱 및 소스코드 마크다운 태그 완전 제거)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                # 2. html_views 전용 뷰 함수를 거쳐 계층별 UI 할당
+                                # 2. html_views 전용 뷰 함수를 거쳐 계층별 HTML 변환
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                # 3. 높이 제한이 풀린 렌더링 박스로 최종 출력
+                                # 3. 스크롤바 없는 100% 높이 자동 박스로 최종 출력
                                 c_res_html = html_views.get_comparison_result_box_html(formatted_comp, saju_fact_summary)
                                 st.markdown(c_res_html, unsafe_allow_html=True)
                             else:
