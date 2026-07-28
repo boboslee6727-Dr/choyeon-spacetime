@@ -731,10 +731,9 @@ if st.session_state.get('app_running', False):
                         u_name_str = name
                         p_icon_str = p_icon
                         
-                        # 🚨 [김집사의 실수 완전 수정]: 상단 연산부의 정확한 음력 변수(lun_str_fmt) 바인딩
                         sol_val = sol_str_fmt
                         lun_val = lun_str_fmt
-                        time_val = time_str_fmt
+                        time_val = b_time  # 사이드바 선택 한자 시간대 매칭
                         today_val = today_str
                         
                         # 1. 표지 출력
@@ -756,7 +755,7 @@ if st.session_state.get('app_running', False):
                             b_y = sol_y
                             b_m = sol_m
                             b_d = sol_d
-                            b_t = time_str_fmt
+                            b_t = b_time  # 사이드바 선택 한자 시간대 매칭
                             
                             g_list = gans
                             j_list = jjis
@@ -765,7 +764,8 @@ if st.session_state.get('app_running', False):
 
                             saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
                             
-                            comp_prompt = prompts.COMPARE_PROMPT.format(
+                            # 🚨 [정석 변수명 교정] COMPARE_PROMPT -> COMPARE_PERSONAL_PROMPT
+                            comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=saju_fact_summary
@@ -1020,7 +1020,10 @@ if st.session_state.get('app_running', False):
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
                             
-                            comp_prompt = prompts.COMPARE_PROMPT.format(
+                            # 🚨 [정석 변수명 교정] COMPARE_PROMPT -> COMPARE_GUNGHAP_PROMPT 매핑
+                            comp_prompt = prompts.COMPARE_GUNGHAP_PROMPT.format(
+                                m_name=male_name,
+                                f_name=female_name,
                                 full_content_clean=str(locals().get('ai_output_html', '')).strip(),
                                 other_report=str(other_text_input).strip(),
                                 fact_reference=gunghap_fact_summary
