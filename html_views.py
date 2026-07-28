@@ -308,14 +308,16 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 def get_closing_html(name):
+    """[본문 폰트 크기 16px 완벽 통일] 리포트 맺음말 HTML"""
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: 900; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px; color: #111111;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
+        <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px; color: #111111;'>따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px; color: #111111;'>앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
+        <p style='font-size: 16px !important; text-indent: 15px; font-weight: 900; line-height: 1.8; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
             <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+        </div>
     </div>
     """
 
