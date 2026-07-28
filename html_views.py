@@ -1,28 +1,39 @@
 import re
 
 def get_global_css():
-    """[구버전 태그 완전히 삭제 및 .ai- 클래스 단일화 정돈 CSS]"""
+    """[사이드바 입력폼 전수 고딕화 & 메인 명조 완전 격리 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
 
-    /* 배경색 지정 */
     .stApp { background-color: #FFF8E1 !important; }
 
     /* ==========================================================================
-       1. 사이드바 및 버튼 영역 : 고딕체(Nanum Gothic) 강제 고정
+       1. 사이드바 내부 모든 입력 폼(라디오, 달력, 셀렉트박스 등) : 고딕체 완벽 고정
        ========================================================================== */
     [data-testid="stSidebar"], 
-    [data-testid="stSidebar"] * { 
-        font-family: 'Nanum Gothic', sans-serif !important; 
+    [data-testid="stSidebar"] *,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] select,
+    [data-testid="stSidebar"] button,
+    [data-testid="stSidebar"] [data-baseweb="select"],
+    [data-testid="stSidebar"] [data-baseweb="radio"],
+    [data-testid="stSidebar"] [data-baseweb="calendar"] { 
+        font-family: 'Nanum Gothic', -apple-system, sans-serif !important; 
     }
 
+    /* 사이드바 알림 상자 */
     [data-testid="stSidebar"] div[data-testid="stNotification"] { padding: 3px 3px !important; }
     [data-testid="stSidebar"] div[data-testid="stNotification"] p {
         font-size: 11px !important; line-height: 1.5 !important; letter-spacing: -0.5px !important;
         font-family: 'Nanum Gothic', sans-serif !important; white-space: pre-wrap !important;
     }
 
+    /* 메인 화면 버튼류 : 고딕체 고정 */
     div.stButton > button, 
     div.stButton > button * { 
         font-family: 'Nanum Gothic', sans-serif !important; 
@@ -30,39 +41,39 @@ def get_global_css():
     }
 
     /* ==========================================================================
-       2. 감명서 리포트 및 표지 영역 : 나눔명조체(Nanum Myeongjo) 고정
+       2. 감명서 리포트 및 표지 영역 : 명조체 고정
        ========================================================================== */
     .report-page, 
     .cover-page, 
     .choyeon-premium-report { 
-        font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif !important; 
+        font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; 
     }
 
     /* ==========================================================================
-       3. AI 통변 전용 계층 클래스 (태그 간섭 없는 유일한 디자인 표준)
+       3. AI 통변 전용 계층 클래스
        ========================================================================== */
     .ai-title-l1 { 
         font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; 
         margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E !important; 
-        padding-bottom: 5px !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; 
+        padding-bottom: 5px !important; text-indent: 0 !important; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; 
     }
     
     .ai-title-l2 { 
         font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; 
         margin-top: 20px !important; margin-bottom: 8px !important; text-indent: 0 !important; 
-        font-family: 'Nanum Myeongjo', serif !important; 
+        font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; 
     }
     
     .ai-sub-item { 
         margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; 
-        color: #2c3e50 !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; 
+        color: #2c3e50 !important; text-indent: 0 !important; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; 
     }
     .ai-sub-item strong { font-weight: 800 !important; color: #1F2937 !important; }
     
     .ai-body-p { 
         margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; 
         font-size: 16px !important; color: #2c3e50 !important; font-weight: normal !important; 
-        text-align: justify !important; font-family: 'Nanum Myeongjo', serif !important; 
+        text-align: justify !important; font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; 
     }
 
     /* 버튼 스타일 및 만세력 표 스타일 유지 */
@@ -89,27 +100,27 @@ def get_global_css():
     </style>"""
 
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
-    """표지 커버 - 명조체 인라인 강제 고정 및 시간 빨간색 표시 완제본"""
+    """표지 커버 - Noto Serif KR / Nanum Myeongjo 이중 명조체 강제 고정 완제본"""
     return f"""
-    <div class='report-page cover-page' style="font-family: 'Nanum Myeongjo', serif !important; padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;">
+    <div class='report-page cover-page' style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;">
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 28px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;">🏮 초연 시공명리 사주풀이</h1>
+                <h1 style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; font-size: 28px !important; margin:0 !important; font-weight: 900; color: #1A237E; white-space: nowrap;">🏮 초연 시공명리 사주풀이</h1>
                 <div style='text-align: right; margin-top: 10px;'>
-                    <span style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
+                    <span style="font-family: 'Nanum Gothic', sans-serif !important; font-size: 14px; letter-spacing: 1px; color:#555;">{version}</span>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;">{p_icon} 신청인 : {name} 님</h2>
+                <h2 style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; font-size: 24px !important; font-weight: 900; color: #1A237E; margin-bottom: 20px;">{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
                     <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
-                        <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                        <p style='margin: 5px 0 0 0; color: #D50000 !important; font-weight: 800; white-space: nowrap;'>{time_str}</p>
+                        <p style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; margin: 0; white-space: nowrap;">[양력] {sol_str} | [음력] {lun_str}</p>
+                        <p style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; margin: 5px 0 0 0; color: #D50000 !important; font-weight: 800; white-space: nowrap;">{time_str}</p>
                     </div>
                 </div>
             </div>
-            <p style="font-family: 'Nanum Myeongjo', serif !important; font-size: 18px; margin-top: 50px; font-weight: 900;">{today_str}</p>
-            <p style="font-family: 'Nanum Myeongjo', serif !important; font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;">초연 시공명리 연구소</p>
+            <p style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; font-size: 18px; margin-top: 50px; font-weight: 900;">{today_str}</p>
+            <p style="font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif !important; font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;">초연 시공명리 연구소</p>
         </div>
     </div>
     <div class="page-break-before"></div>
