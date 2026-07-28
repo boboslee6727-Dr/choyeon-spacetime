@@ -662,11 +662,15 @@ def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
 </div>"""
 
 def format_ai_text_to_html(ai_raw_text):
-    """[본문 글자색 및 폰트 두께 완벽 정상화] AI 통변 HTML 변환 함수"""
+    """[태그 누수 및 하단 꼬리표 노출 원천 차단] AI 통변 HTML 변환 함수"""
     if not ai_raw_text:
         return ""
     
-    lines = str(ai_raw_text).split('\n')
+    # 1. 태그 파손 및 꼬리표 텍스트 노출의 원인이 되는 AI 텍스트 내 잔여 기호 1차 정화
+    clean_raw = str(ai_raw_text).replace("```html", "").replace("```", "").strip()
+    clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL) # 주석 제거
+    
+    lines = clean_raw.split('\n')
     formatted_html = []
     
     for line in lines:
@@ -674,15 +678,16 @@ def format_ai_text_to_html(ai_raw_text):
         if not line_str:
             continue
             
-        # 1. 대제목 (1., 2., 3. ...)
+        # 2. 대제목 (1., 2., 3. ...)
         if re.match(r'^\d+\.\s+', line_str):
             formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{line_str}</p>")
-        # 2. 소제목 (1), 2) 형태만 제한적으로 소제목 적용)
+        # 3. 소제목 (1), 2) 형태)
         elif re.match(r'^\d+\)\s+', line_str):
             formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{line_str}</p>")
-        # 3. 일반 본문 문단 (검은색 #111111, 기본 두께, 1em 들여쓰기 100% 고정)
+        # 4. 일반 본문 문단 (검은색, 기본 두께)
         else:
-            clean_line = line_str.replace("&nbsp;", " ")
+            # HTML 문법 파손을 유발하는 꺾쇠 기호 안전 변환
+            clean_line = line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
             formatted_html.append(f"<p class='ai-body-p' style='font-size:15px !important; font-weight:normal !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{clean_line}</p>")
             
     return "".join(formatted_html)
