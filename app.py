@@ -120,8 +120,8 @@ with st.sidebar:
         f_val = st.session_state.get("f_g", "여성")
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
-    # ==============================================================================
-    # 🔍 신청인 사주간지 역산 (접이식 숨김 상태)
+# ==============================================================================
+    # 🔍 신청인 사주간지 역산 (시간 자동입력 완벽 연동 완제본)
     # ==============================================================================
     with st.sidebar.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -177,12 +177,18 @@ with st.sidebar:
                                 st.session_state['s_y'] = curr_dt.year
                                 st.session_state['s_m'] = curr_dt.month
                                 st.session_state['s_d'] = curr_dt.day
+                                
+                                # 🚨 [박사님 지시 반영] 시간 세션 및 셀렉트박스 위젯 전용 키 동시 업데이트
                                 if u_rt:
                                     ji_char_u = u_rt[-1]
                                     u_rt_h = safe_ji.get(ji_char_u, ji_char_u)
-                                    st.session_state['s_t'] = time_map.get(u_rt_h, "시간 모름")
+                                    target_time_str = time_map.get(u_rt_h, "시간 모름")
                                 else:
-                                    st.session_state['s_t'] = "시간 모름"
+                                    target_time_str = "시간 모름"
+                                
+                                st.session_state['s_t'] = target_time_str
+                                st.session_state['s_t_select'] = target_time_str # 위젯 전용 키 동기화
+                                
                                 found = True
                                 
                                 s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
@@ -222,11 +228,11 @@ with st.sidebar:
         with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
         
         # 태어난 시간 안전한 인덱스 매핑
-        t_idx = idx_list.index(st.session_state["s_t"]) if st.session_state["s_t"] in idx_list else 0
+        curr_t_val = st.session_state.get("s_t", idx_list[0])
+        t_idx = idx_list.index(curr_t_val) if curr_t_val in idx_list else 0
+        
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select")
-        # 스렉트박스 선택값을 메인 세션변수에 동기화
         st.session_state["s_t"] = b_time
-
     # ==============================================================================
     # 📌 특화 상품별 추가 옵션
     # ==============================================================================
