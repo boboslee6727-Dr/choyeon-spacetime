@@ -624,26 +624,27 @@ def get_other_report_original_html(other_text_input):
     """
 
 def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
-    """[대제목 복원 & 둥근 사각 박스 프레임 완전 적용 완제본]"""
-    return f"""<div class='report-page' style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; border:2px solid #3E2723 !important; border-radius:12px !important; padding:25px 20px !important; background-color:#FFFFFF !important; margin-top:15px !important; margin-bottom:25px !important; box-shadow:0 4px 10px rgba(0,0,0,0.05) !important;'>
+    """[수평 스크롤바 원천 차단 & Clean HTML 완제본]"""
+    # 1. HTML 주석 및 마크다운 오인 요소 완벽 정화
+    clean_summary = str(saju_fact_summary).replace("<!--", "").replace("-->", "").strip()
+    clean_body = str(formatted_comp).replace("<!--", "").replace("-->", "").strip()
     
-    <!-- 1. 메인 대제목 타이틀 바 -->
+    return f"""<div class='report-page' style='width:100% !important; max-width:100% !important; box-sizing:border-box !important; border:2px solid #3E2723 !important; border-radius:12px !important; padding:25px 20px !important; background-color:#FFFFFF !important; margin-top:15px !important; margin-bottom:25px !important; box-shadow:0 4px 10px rgba(0,0,0,0.05) !important; overflow:visible !important;'>
+    
     <div style='text-align:center; margin-bottom:20px; padding-bottom:12px; border-bottom:3px double #3E2723;'>
         <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:24px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; letter-spacing:-0.5px;'>
             📄 타 감명서 1:1 비교 분석 리포트
         </h2>
     </div>
 
-    <!-- 2. 신청인 사주명식 팩트 상자 -->
-    <div style='background-color:#F5F7FA; border:1px solid #D1D5DB; border-radius:8px; padding:12px 15px; margin-bottom:25px; text-align:center;'>
+    <div style='background-color:#F5F7FA; border:1px solid #D1D5DB; border-radius:8px; padding:12px 15px; margin-bottom:25px; text-align:center; width:100% !important; box-sizing:border-box !important;'>
         <div style='font-size:15px; font-weight:800; color:#1F2937; line-height:1.6; word-break:break-word !important;'>
-            {saju_fact_summary}
+            {clean_summary}
         </div>
     </div>
 
-    <!-- 3. AI 상세 통변 내용 -->
-    <div class='choyeon-premium-report' style='font-family:"Nanum Myeongjo", serif !important; font-size:16px; line-height:1.9; color:#111111 !important; text-align:justify; width:100% !important; word-break:break-word !important; white-space:normal !important;'>
-        {formatted_comp}
+    <div class='choyeon-premium-report' style='font-family:"Nanum Myeongjo", serif !important; font-size:16px; line-height:1.9; color:#111111 !important; text-align:justify; width:100% !important; max-width:100% !important; box-sizing:border-box !important; word-break:break-word !important; white-space:normal !important; overflow:visible !important;'>
+        {clean_body}
     </div>
 </div>"""
 
