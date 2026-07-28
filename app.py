@@ -743,7 +743,9 @@ if st.session_state.get('app_running', False):
                         report_2_html = html_views.get_other_report_original_html(other_text_input)
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트
+                        # ------------------------------------------------------------------
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (1번 항목 복원 및 꼬리표 완벽 차단)
+                        # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
                             u_gender_val = gender
@@ -775,14 +777,22 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
+                                # 1. 기본 불필요 기호 정화
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
-                                c_res_clean = re.sub(r'^(.*?)(?=\d+\.\s*)', '', c_res_clean, flags=re.DOTALL).strip()
+                                
+                                # 🚨 [1번 항목 복원] '1.' 대제목 '앞부분 인사말'만 정밀 자르기 (1. 목차 제목 자체는 유지)
+                                if re.search(r'\n\s*1\.\s*', c_res_clean):
+                                    c_res_clean = re.sub(r'^(.*?)(?=\n\s*1\.\s*)', '', c_res_clean, flags=re.DOTALL).strip()
+                                elif re.search(r'1\.\s*', c_res_clean):
+                                    # 만약 맨 처음에 '1.'이 온다면 인사말이 없는 것이므로 유지
+                                    pass
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
+                                # 2. 3단계 상단 전용 헤더
                                 section_header_html = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
                                     <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; text-align:center;'>
                                         📜 타 감명서 1:1 상세 분석
@@ -790,6 +800,10 @@ if st.session_state.get('app_running', False):
                                 </div>"""
                                 
                                 full_stage3_html = section_header_html + formatted_comp
+                                
+                                # 🚨 [하단 </div></div> 꼬리표 원천 차단] 방탄 텍스트 클리닝
+                                full_stage3_html = full_stage3_html.replace("</div></div>", "").strip()
+                                
                                 st.markdown(html_views.get_final_report_box(full_stage3_html), unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
