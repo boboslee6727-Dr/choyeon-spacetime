@@ -197,27 +197,26 @@ def get_styled_td(ganji, oh_class):
     return f"<td class='{oh_class} ganji-cell'>{ganji}</td>"
 
 def get_intro_html():
+    """초연 시공명리 도입부 설명 HTML 렌더링 함수"""
     return """
     <div style='font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 10px; padding: 0 10px;'>
         <p style='text-indent: 15px; margin: 0 0 5px 0;'><b>"초연 시공 명리학"</b>는 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.</p> 
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'>따라서, <b>"본 초연 시공 명리학"</b>는 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBT와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.</p>
+        <p style='text-indent: 15px; margin: 0 0 5px 0;'>따라서, <b>"본 초연 시공 명리학"</b>는 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.</p>
     </div>
     """
 
 def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
-    """초연 시공명리 고유 선언문(골든 텍스트) 렌더링 함수 - 첫 줄 들여쓰기 및 가독성 최적화 완제본"""
+    """초연 시공명리 고유 선언문(골든 텍스트) - 내담자 맞춤형 단독 선언문"""
     return f"""
     <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.85; color: #000000; 
                 margin: 25px 0; border-top: 2px solid #1A237E; border-bottom: 2px solid #1A237E; 
                 padding: 20px; background-color: #FAFAFA;'>
-        <p style='text-indent: 0px; margin: 0 0 12px 0;'>
-            "초연 시공 명리학"은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 3,600개 유형으로 분류하지만, "기존의 전통 명리학"은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 720개 유형으로 분류하여 풀이합니다. 따라서, "본 초연 시공 명리학"는 기존 전통명리학에 비하여 5배, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 225배 더 정확한 사주풀이입니다.
-        </p>
-        <p style='text-indent: 1em !important; margin: 0;'>
-            초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
+        <p style='text-indent: 0px; margin: 0;'>
+            &nbsp;&nbsp;&nbsp;&nbsp;초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
         </p>
     </div>
     """
+
 def get_un_layout(title, content):
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
