@@ -133,28 +133,32 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         for ci in range(4):
             if ci == r_idx:
                 # 자기 자신 위치일 경우 화살표 양식 교정
-                if r_idx == 0:   # 시지 (0단/0번째)
+                if r_idx == 0:   # 시지 (0단/0번째, 맨 왼쪽)
                     lbl_txt = f"({jjis[r_idx]})→"
-                elif r_idx == 3: # 년지 (3단/3번째)
+                elif r_idx == 3: # 년지 (3단/3번째, 맨 오른쪽)
                     lbl_txt = f"←({jjis[r_idx]})"
                 else:            # 일지(1), 월지(2)
                     lbl_txt = f"←({jjis[r_idx]})→"
                 
-                cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{lbl_txt}</td>")
+                # 🚨 화살표 기준점: 빨간색 강제 지정 (red !important) 및 표 높이(35px) 고정
+                cells.append(f"<td style='color: red !important; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
-                txt_color = "#000000" if rel_val != "-" else "#BBBBBB"
-                cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{rel_val}</td>")
+                txt_color = "#000000 !important" if rel_val != "-" else "#BBBBBB !important"
+                cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
                 
-        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx == 0 else ""
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
 
-    # 5. 십이운성, 십이신살, 일반신살
-    unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    shinsal = "".join([f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important;'>{engine.get_12_shinsal(gans[3], jjis[i])}</td>" for i in range(4)])
+    # 5. 십이운성, 십이신살, 일반신살 (색상 강제 및 표 높이 고정)
+    # 🚨 12운성: 파란색 강제 (blue !important)
+    unsung = "".join([f"<td style='color: blue !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+    
+    # 🚨 12신살: 빨간색 강제 (red !important)
+    shinsal = "".join([f"<td style='color: red !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_12_shinsal(gans[3], jjis[i])}</td>" for i in range(4)])
     
     filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
-    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
+    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:4px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
 
@@ -238,15 +242,18 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+    # 빈 값이나 누락된 값(-) 방어 처리
+    u_val = unsung if unsung and unsung.strip() else "-"
+    s_val = shinsal if shinsal and shinsal.strip() else "-"
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:13px;'>{title_str}</div>
-        <div style='padding:3px 0; font-size:13px; font-weight:900; color:#333 !important;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:18px; font-weight:900; padding:3px 0;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:18px; font-weight:900; padding:3px 0;'>{ji}</div>
-        <div style='padding:3px 0; font-size:13px; font-weight:900; color:#333 !important;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; border-top:1px solid #ccc; padding-top:3px;'>{unsung}</div>
-        <div class='color-shinsal' style='font-size:12px; border-top:1px solid #ccc; padding-top:3px;'>{shinsal}</div>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:13px; height:25px; line-height:25px;'>{title_str}</div>
+        <div style='padding:3px 0; font-size:13px; font-weight:900; color:#333 !important; height:24px; line-height:24px;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:18px; font-weight:900; padding:3px 0; height:30px; line-height:30px;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:18px; font-weight:900; padding:3px 0; height:30px; line-height:30px;'>{ji}</div>
+        <div style='padding:3px 0; font-size:13px; font-weight:900; color:#333 !important; height:24px; line-height:24px;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:12px; border-top:1px solid #ccc; padding-top:3px; height:24px; line-height:24px; overflow:hidden;'>{u_val}</div>
+        <div class='color-shinsal' style='font-size:12px; border-top:1px solid #ccc; padding-top:3px; height:24px; line-height:24px; overflow:hidden;'>{s_val}</div>
     </div>
     """
 
@@ -274,15 +281,18 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
             display_title = title_str.replace(hangul, hanja)
             break
             
+    u_val = unsung if unsung and unsung.strip() else "-"
+    s_val = shinsal if shinsal and shinsal.strip() else "-"
+    
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; line-height:1.2;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{display_title}<br>({tage}세)</div>
-        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:16px; font-weight:900; padding:3px 0;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:16px; font-weight:900; padding:3px 0;'>{ji}</div>
-        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px;'>{unsung}</div>
-        <div class='color-shinsal' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px;'>{shinsal}</div>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc; height:32px; line-height:14px; box-sizing:border-box;'>{display_title}<br>({tage}세)</div>
+        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000; height:22px; line-height:22px;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:16px; font-weight:900; padding:3px 0; height:28px; line-height:28px;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:16px; font-weight:900; padding:3px 0; height:28px; line-height:28px;'>{ji}</div>
+        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000; height:22px; line-height:22px;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px; height:22px; line-height:22px; overflow:hidden;'>{u_val}</div>
+        <div class='color-shinsal' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px; height:22px; line-height:22px; overflow:hidden;'>{s_val}</div>
     </div>
     """
 
@@ -295,15 +305,17 @@ def get_wolun_layout(title, content):
     """
 
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+    u_val = unsung if unsung and unsung.strip() else "-"
+    s_val = shinsal if shinsal and shinsal.strip() else "-"
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; line-height:1.2;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:13px; border-bottom:1px solid #ccc;'>{tm}월</div>
-        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:16px; font-weight:900; padding:3px 0;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:16px; font-weight:900; padding:3px 0;'>{ji}</div>
-        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px;'>{unsung}</div>
-        <div class='color-shinsal' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px;'>{shinsal}</div>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:13px; border-bottom:1px solid #ccc; height:25px; line-height:25px;'>{tm}월</div>
+        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000; height:22px; line-height:22px;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:16px; font-weight:900; padding:3px 0; height:28px; line-height:28px;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:16px; font-weight:900; padding:3px 0; height:28px; line-height:28px;'>{ji}</div>
+        <div style='padding:3px 0; font-size:12px; font-weight:900; color:#000000; height:22px; line-height:22px;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px; height:22px; line-height:22px; overflow:hidden;'>{u_val}</div>
+        <div class='color-shinsal' style='font-size:11px; border-top:1px solid #ccc; padding-top:2px; height:22px; line-height:22px; overflow:hidden;'>{s_val}</div>
     </div>
     """
 
@@ -663,18 +675,18 @@ def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
 </div>"""
 
 def format_ai_text_to_html(ai_raw_text):
-    """[프롬프트 지시문 완벽 제거 & 태그 누수 원천 차단] AI 통변 HTML 변환 함수"""
+    """[소제목 녹색 복원 & 꼬리표 절대 사살 완제본]"""
     if not ai_raw_text:
         return ""
     
-    # 1. 마크다운 및 불필요 주석 제거
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
     
-    # 🚨 [박사님 지시 반영] AI가 출력 결과에 섞어 넣은 프롬프트 지시어(메타 텍스트) 원천 삭제
-    clean_raw = re.sub(r'최소\s*\d+~\d+문장\s*이상으로\s*', '', clean_raw)
-    clean_raw = re.sub(r'상세히\s*분석하십시오\.?', '', clean_raw)
+    # 지시문 찌꺼기 삭제
+    clean_raw = re.sub(r'최소\s*\d+~\d+문장\s*이상으로\s*(상세히\s*)?분석하십시오\.?', '', clean_raw)
     clean_raw = re.sub(r'드라마틱한\s*에세이로\s*서술하십시오\.?', '', clean_raw)
+    clean_raw = re.sub(r'재성의\s*유무와\s*식상의\s*생조\s*여부를\s*바탕으로\s*분석하십시오\.?', '', clean_raw)
+    clean_raw = re.sub(r'바탕으로\s*분석하십시오\.?', '', clean_raw)
     clean_raw = re.sub(r'분석지시\s*사항:?', '', clean_raw)
     
     lines = clean_raw.split('\n')
@@ -684,19 +696,23 @@ def format_ai_text_to_html(ai_raw_text):
         line_str = line.strip()
         if not line_str:
             continue
+        
+        # 🚨 [해결] 별표(**) 마크다운을 미리 제거하여 정규식이 100% 인식하도록 조치
+        clean_line_str = line_str.replace("**", "")
             
-        # 대제목 (1., 2., 3. ...)
-        if re.match(r'^\d+\.\s+', line_str):
-            formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{line_str}</p>")
-        # 소제목 (1), 2) 형태)
-        elif re.match(r'^\d+\)\s+', line_str):
-            formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{line_str}</p>")
-        # 일반 본문 문단
+        if re.match(r'^\d+\.\s+', clean_line_str):
+            formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{clean_line_str}</p>")
+        # 🚨 [해결] 녹색 적용 강제화
+        elif re.match(r'^\d+\)\s+', clean_line_str):
+            formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{clean_line_str}</p>")
         else:
-            clean_line = line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
-            formatted_html.append(f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{clean_line}</p>")
+            safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
+            safe_line = safe_line.replace("</div>", "") # 꼬리표 생성 원천 차단
+            formatted_html.append(f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{safe_line}</p>")
             
-    return "".join(formatted_html)
+    final_html = "".join(formatted_html)
+    # 🚨 최후의 꼬리표 텍스트까지 강제 삭제
+    return final_html.replace("</div></div>", "")
 
 def get_final_report_box(content_html):
     """[2단계 vip-inset-frame과 100% 동일] 1단계 및 3단계 메인 리포트 전용 둥근 테두리 박스"""
