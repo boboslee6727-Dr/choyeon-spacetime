@@ -746,7 +746,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
                         
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (HTML 섹션헤더 + AI 통변 직결)
+                        # [3단계 PAGE] 1:1 상세비교 AI 리포트 (헤더를 박스 내부로 안착)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
                             u_name_val = name
@@ -779,25 +779,24 @@ if st.session_state.get('app_running', False):
                             c_res = call_gemini_api(comp_prompt)
                             
                             if c_res:
-                                # 3-1. 3단계 HTML 섹션 헤더 출력 (밑줄 포함)
-                                section_header_html = """
-                                <div style='margin-top: 40px; margin-bottom: 20px;'>
-                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; border-bottom: 2px solid #3E2723 !important; padding-bottom: 8px !important; margin: 0 !important;'>
-                                        📜 타 감명서 1:1 상세 분석
-                                    </h2>
-                                </div>
-                                """
-                                st.markdown(section_header_html, unsafe_allow_html=True)
-                                
-                                # 3-2. AI 응답 정화 (마크다운 백틱 및 주석 완전 차단)
+                                # 1. AI 응답 정화 (마크다운 백틱 및 주석 차단)
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', c_res_clean, flags=re.MULTILINE)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                # 3-3. 표준 리포트 박스로 AI 통변 직결 출력 (info_header 제거)
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
-                                st.markdown(html_views.get_final_report_box(formatted_comp), unsafe_allow_html=True)
+                                
+                                # 2. [핵심] 헤더 HTML을 박스 내부로 합쳐서 한 번에 렌더링
+                                section_header_html = """
+                                <div style='margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #3E2723;'>
+                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; margin: 0 !important;'>
+                                        📜 타 감명서 1:1 상세 분석
+                                    </h2>
+                                </div>
+                                """
+                                full_stage3_html = section_header_html + formatted_comp
+                                st.markdown(html_views.get_final_report_box(full_stage3_html), unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
@@ -1029,7 +1028,7 @@ if st.session_state.get('app_running', False):
                         st.markdown(report_2_html, unsafe_allow_html=True)
 
                         # ------------------------------------------------------------------
-                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (HTML 섹션헤더 + AI 통변 직결)
+                        # [3단계 PAGE] 궁합 1:1 상세비교 AI 리포트 (헤더를 박스 내부로 안착)
                         # ------------------------------------------------------------------
                         with st.spinner("⚖️ 궁합 1:1 상세 비교 리포트 분석 중..."):
                             gunghap_fact_summary = f"♂️ 남명: <b>{male_name}</b> 님 ({m_ys}{m_yb}년 {m_ms}{m_mb}월 {m_ds}{m_db}일 {m_hs}{m_hb}시)<br>♀️ 여명: <b>{female_name}</b> 님 ({f_ys}{f_yb}년 {f_ms}{f_mb}월 {f_ds}{f_db}일 {f_hs}{f_hb}시)"
@@ -1045,25 +1044,24 @@ if st.session_state.get('app_running', False):
                             ai_compare_result = call_gemini_api(comp_prompt)
 
                             if ai_compare_result:
-                                # 3-1. 3단계 HTML 섹션 헤더 출력 (밑줄 포함)
-                                gunghap_section_header = """
-                                <div style='margin-top: 40px; margin-bottom: 20px;'>
-                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; border-bottom: 2px solid #3E2723 !important; padding-bottom: 8px !important; margin: 0 !important;'>
-                                        📜 타 궁합 감명서 1:1 상세 분석
-                                    </h2>
-                                </div>
-                                """
-                                st.markdown(gunghap_section_header, unsafe_allow_html=True)
-                                
-                                # 3-2. AI 응답 정화 (마크다운 백틱 및 주석 차단)
+                                # 1. AI 응답 정화
                                 clean_ai = re.sub(r'<!--.*?-->', '', ai_compare_result, flags=re.DOTALL)
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', clean_ai).replace("```", "").strip()
                                 clean_ai = re.sub(r'^(안녕하세요|반갑습니다|저는|AI).*?\n', '', clean_ai, flags=re.MULTILINE)
                                 clean_ai = clean_ai.replace("&lt;", "<").replace("&gt;", ">")
                                 
-                                # 3-3. 표준 리포트 박스로 궁합 AI 통변 직결 출력 (info_header 제거)
                                 formatted_comp = html_views.format_ai_text_to_html(clean_ai)
-                                st.markdown(html_views.get_final_report_box(formatted_comp), unsafe_allow_html=True)
+                                
+                                # 2. [핵심] 궁합 헤더 HTML을 박스 내부로 합쳐서 한 번에 렌더링
+                                gunghap_section_header = """
+                                <div style='margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #3E2723;'>
+                                    <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 22px !important; font-weight: 800 !important; color: #1A237E !important; margin: 0 !important;'>
+                                        📜 타 궁합 감명서 1:1 상세 분석
+                                    </h2>
+                                </div>
+                                """
+                                full_gunghap_stage3_html = gunghap_section_header + formatted_comp
+                                st.markdown(html_views.get_final_report_box(full_gunghap_stage3_html), unsafe_allow_html=True)
                             else:
                                 st.error("⚠️ 타 감명서 궁합 비교 분석 AI 응답을 불러오지 못했습니다.")
                     else:
