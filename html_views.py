@@ -1,7 +1,7 @@
 import re
 
 def get_global_css():
-    """[사이드바 고딕 / 메인 명조 & 화살표 겹침 방지 초압축 CSS]"""
+    """[사이드바 고딕 / 메인 명조 & 화살표 겹침 방지 & vip-inset-frame 테두리 완제 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 
@@ -15,11 +15,23 @@ def get_global_css():
     /* 2. 메인 리포트 & 표지 : 명조체 고정 */
     .report-page, .cover-page, div.cover-page *, .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif !important; }
 
+    /* 🚨 [핵심 추가] 1, 2, 3단계 공통 VIP 둥근 테두리 프레임 전역 보장 */
+    .vip-inset-frame {
+        border: 2px solid #3E2723 !important;
+        border-radius: 12px !important;
+        padding: 30px 25px !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        word-break: break-word !important;
+    }
+
     /* 3. AI 통변 계층 */
-    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin: 25px 0 10px 0 !important; border-bottom: 2px solid #1A237E !important; }
-    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin: 20px 0 8px 0 !important; }
-    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; }
-    .ai-body-p { margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; font-size: 16px !important; color: #2c3e50 !important; text-align: justify !important; }
+    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin: 25px 0 10px 0 !important; border-bottom: 2px solid #1A237E !important; word-break: break-word !important; }
+    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin: 20px 0 8px 0 !important; word-break: break-word !important; }
+    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; word-break: break-word !important; }
+    .ai-body-p { margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; font-size: 16px !important; color: #111111 !important; font-weight: normal !important; text-align: justify !important; word-break: break-word !important; }
 
     /* 4. 오행 색상 및 Ver 46.7 사주원국표 (압축) */
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
@@ -664,10 +676,10 @@ def format_ai_text_to_html(ai_raw_text):
         # 1. 대제목 (1., 2., 3. ...)
         if re.match(r'^\d+\.\s+', line_str):
             formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{line_str}</p>")
-        # 2. 소제목 (1), 2), 1., 2. 소항목)
+        # 2. 소제목 (1), 2) 형태만 제한적으로 소제목 적용)
         elif re.match(r'^\d+\)\s+', line_str):
             formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{line_str}</p>")
-        # 3. 일반 본문 문단 (검은색, 기본 두께 복원)
+        # 3. 일반 본문 문단 (검은색 #111111, 기본 두께, 1em 들여쓰기 100% 고정)
         else:
             clean_line = line_str.replace("&nbsp;", " ")
             formatted_html.append(f"<p class='ai-body-p' style='font-size:15px !important; font-weight:normal !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{clean_line}</p>")
@@ -675,7 +687,7 @@ def format_ai_text_to_html(ai_raw_text):
     return "".join(formatted_html)
 
 def get_final_report_box(content_html):
-    """[표준 메인 프레임] 1, 2, 3단계 리포트 전용 고급 둥근 테두리 박스"""
+    """[2단계 vip-inset-frame과 100% 동일] 1단계 및 3단계 메인 리포트 전용 둥근 테두리 박스"""
     return f"""
     <div class='report-page' style='margin-top:20px;'>
         <div class='vip-inset-frame' style='border:2px solid #3E2723 !important; padding:30px 25px !important; background:#FFFFFF !important; border-radius:12px !important; box-shadow:0 4px 10px rgba(0,0,0,0.05) !important;'>
@@ -687,7 +699,7 @@ def get_final_report_box(content_html):
     """
 
 def get_ai_report_box(content):
-    """[레거시 호환용] get_final_report_box로 일원화 처리하여 스타일 충돌 원천 차단"""
+    """[스타일 충돌 방지] get_final_report_box 단원화 연결 함수"""
     return get_final_report_box(content)
 
 
