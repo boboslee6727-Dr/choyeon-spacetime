@@ -1,87 +1,41 @@
 import re
 
 def get_global_css():
-    """[사이드바 화살표 겹침 완벽 방지 & Ver 46.7 사주원국표 완벽 복원 CSS]"""
+    """[사이드바 고딕 / 메인 명조 & 화살표 겹침 방지 초압축 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
-    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
 
     .stApp { background-color: #FFF8E1 !important; }
 
-    /* ==========================================================================
-       1. 사이드바 내부 텍스트 폼 : 고딕체 고정 (화살표 아이콘 간섭 원천 차단)
-       ========================================================================== */
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] span:not([data-baseweb="icon"] *),
-    [data-testid="stSidebar"] input,
-    [data-testid="stSidebar"] select,
-    [data-testid="stSidebar"] button { 
-        font-family: 'Nanum Gothic', -apple-system, sans-serif !important; 
-    }
+    /* 1. 사이드바 고딕체 & stExpander 화살표 겹침 방지 (초압축) */
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] input, [data-testid="stSidebar"] select, [data-testid="stSidebar"] button { font-family: 'Nanum Gothic', sans-serif !important; }
+    [data-testid="stExpander"] summary { display: flex !important; justify-content: space-between !important; align-items: center !important; font-family: 'Nanum Gothic', sans-serif !important; }
+    [data-testid="stExpander"] svg { flex-shrink: 0 !important; margin-left: 8px !important; }
 
-    /* Streamlit 화살표 및 아이콘 영역 레이아웃 정상화 (겹침 방지) */
-    [data-testid="stSidebar"] svg,
-    [data-testid="stSidebar"] [data-baseweb="icon"],
-    [data-testid="stSidebar"] div[class*="arrow"] {
-        font-family: inherit !important;
-        display: inline-block !important;
-        vertical-align: middle !important;
-    }
+    /* 2. 메인 리포트 & 표지 : 명조체 고정 */
+    .report-page, .cover-page, div.cover-page *, .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif !important; }
 
-    /* 사이드바 알림 상자 */
-    [data-testid="stSidebar"] div[data-testid="stNotification"] { padding: 3px 3px !important; }
-    [data-testid="stSidebar"] div[data-testid="stNotification"] p {
-        font-size: 11px !important; line-height: 1.5 !important; letter-spacing: -0.5px !important;
-        font-family: 'Nanum Gothic', sans-serif !important; white-space: pre-wrap !important;
-    }
+    /* 3. AI 통변 계층 */
+    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin: 25px 0 10px 0 !important; border-bottom: 2px solid #1A237E !important; }
+    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin: 20px 0 8px 0 !important; }
+    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; }
+    .ai-body-p { margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; font-size: 16px !important; color: #2c3e50 !important; text-align: justify !important; }
 
-    /* 메인 버튼류 : 고딕체 */
-    div.stButton > button, 
-    div.stButton > button * { 
-        font-family: 'Nanum Gothic', sans-serif !important; 
-        font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important;
-    }
+    /* 4. 오행 색상 및 Ver 46.7 사주원국표 (압축) */
+    .color-목 { background: #2E7D32 !important; color: #FFF !important; }
+    .color-화 { background: #C62828 !important; color: #FFF !important; }
+    .color-토 { background: #F9A825 !important; color: #000 !important; }
+    .color-금 { background: #9E9E9E !important; color: #FFF !important; }
+    .color-수 { background: #212121 !important; color: #FFF !important; }
 
-    /* ==========================================================================
-       2. 감명서 리포트 및 표지 영역 : 명조체 강제 고정
-       ========================================================================== */
-    .report-page, 
-    .cover-page, 
-    div.cover-page *,
-    .choyeon-premium-report { 
-        font-family: 'Nanum Myeongjo', serif !important; 
-    }
-
-    /* ==========================================================================
-       3. AI 통변 전용 계층 클래스
-       ========================================================================== */
-    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 25px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; }
-    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin-top: 20px !important; margin-bottom: 8px !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; }
-    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; text-indent: 0 !important; font-family: 'Nanum Myeongjo', serif !important; }
-    .ai-sub-item strong { font-weight: 800 !important; color: #1F2937 !important; }
-    .ai-body-p { margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; font-size: 16px !important; color: #2c3e50 !important; font-weight: normal !important; text-align: justify !important; font-family: 'Nanum Myeongjo', serif !important; }
-
-    /* 오행 색상 클래스 */
-    .color-목 { background-color: #2E7D32 !important; color: #FFFFFF !important; }
-    .color-화 { background-color: #C62828 !important; color: #FFFFFF !important; }
-    .color-토 { background-color: #F9A825 !important; color: #000000 !important; }
-    .color-금 { background-color: #9E9E9E !important; color: #FFFFFF !important; }
-    .color-수 { background-color: #212121 !important; color: #FFFFFF !important; }
-
-    /* ==========================================================================
-       4. 웅장한 사주원국표 전용 CSS (Ver 46.7 완벽 복원사양)
-       ========================================================================== */
     .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
-    .result-table td { border: 1px solid #444 !important; padding: 1px 0px !important; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; word-wrap: break-word; }
-    
+    .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; }
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
-    .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
-    
-    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 14px !important; border: 1px solid #444 !important; }
-    .header-cell-sub { background-color: #f5f5f5 !important; color: #111111 !important; font-weight: 900 !important; font-size: 14px !important; border: 1px solid #444 !important; }
+    .top-header-cell td { background-color: #1A237E !important; color: #FFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
+    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 14px !important; }
+    .header-cell-sub { background-color: #f5f5f5 !important; color: #111 !important; font-weight: 900 !important; font-size: 14px !important; }
 
-    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFFFFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000000; }
+    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
 
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
