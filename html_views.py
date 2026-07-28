@@ -100,7 +100,7 @@ def get_global_css():
     </style>"""
 
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
-    """표지 커버 - Nanum Myeongjo 단일 강제 고정 완제본"""
+    """표지 커버 - 명조체 고정 및 출생시간(한자 포함) 빨간색 강조 완제본"""
     return f"""
     <div class='report-page cover-page' style="font-family: 'Nanum Myeongjo', serif !important; padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;">
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
@@ -115,7 +115,10 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
                     <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
                         <p style="font-family: 'Nanum Myeongjo', serif !important; margin: 0; white-space: nowrap;">[양력] {sol_str} | [음력] {lun_str}</p>
+                        
+                        <!-- 👇 출생 시간(time_str)을 빨간색(#D50000) 굵은 글씨로 출력하는 핵심 태그 -->
                         <p style="font-family: 'Nanum Myeongjo', serif !important; margin: 5px 0 0 0; color: #D50000 !important; font-weight: 800; white-space: nowrap;">{time_str}</p>
+                        
                     </div>
                 </div>
             </div>
@@ -125,6 +128,7 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     </div>
     <div class="page-break-before"></div>
     """
+
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
     <div style='text-align:center; margin-bottom:25px; line-height:1.6;'>
