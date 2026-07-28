@@ -308,16 +308,17 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 def get_closing_html(name):
-    """[본문 폰트 크기 16px 완벽 통일 & 하단 중복 닫기 태그 정리] 리포트 맺음말 HTML"""
+    """[본문 폰트 16px 완벽 동일화 & 하단 태그 완전 정돈] 리포트 맺음말 HTML"""
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
-        <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px; color: #111111;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px; color: #111111;'>따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style='font-size: 16px !important; text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px; color: #111111;'>앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style='font-size: 16px !important; text-indent: 15px; font-weight: 900; line-height: 1.8; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 15px; color: #111111;'>앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
+        <p style='font-size: 16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
-            <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+            <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
         </div>
+    </div>
     """
 
 def get_final_report_box(content_html):
@@ -662,13 +663,19 @@ def get_comparison_result_box_html(formatted_comp, saju_fact_summary):
 </div>"""
 
 def format_ai_text_to_html(ai_raw_text):
-    """[태그 누수 및 하단 꼬리표 노출 원천 차단] AI 통변 HTML 변환 함수"""
+    """[프롬프트 지시문 완벽 제거 & 태그 누수 원천 차단] AI 통변 HTML 변환 함수"""
     if not ai_raw_text:
         return ""
     
-    # 1. 태그 파손 및 꼬리표 텍스트 노출의 원인이 되는 AI 텍스트 내 잔여 기호 1차 정화
-    clean_raw = str(ai_raw_text).replace("```html", "").replace("```", "").strip()
-    clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL) # 주석 제거
+    # 1. 마크다운 및 불필요 주석 제거
+    clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+    clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
+    
+    # 🚨 [박사님 지시 반영] AI가 출력 결과에 섞어 넣은 프롬프트 지시어(메타 텍스트) 원천 삭제
+    clean_raw = re.sub(r'최소\s*\d+~\d+문장\s*이상으로\s*', '', clean_raw)
+    clean_raw = re.sub(r'상세히\s*분석하십시오\.?', '', clean_raw)
+    clean_raw = re.sub(r'드라마틱한\s*에세이로\s*서술하십시오\.?', '', clean_raw)
+    clean_raw = re.sub(r'분석지시\s*사항:?', '', clean_raw)
     
     lines = clean_raw.split('\n')
     formatted_html = []
@@ -678,17 +685,16 @@ def format_ai_text_to_html(ai_raw_text):
         if not line_str:
             continue
             
-        # 2. 대제목 (1., 2., 3. ...)
+        # 대제목 (1., 2., 3. ...)
         if re.match(r'^\d+\.\s+', line_str):
             formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:800 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{line_str}</p>")
-        # 3. 소제목 (1), 2) 형태)
+        # 소제목 (1), 2) 형태)
         elif re.match(r'^\d+\)\s+', line_str):
             formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:700 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{line_str}</p>")
-        # 4. 일반 본문 문단 (검은색, 기본 두께)
+        # 일반 본문 문단
         else:
-            # HTML 문법 파손을 유발하는 꺾쇠 기호 안전 변환
             clean_line = line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
-            formatted_html.append(f"<p class='ai-body-p' style='font-size:15px !important; font-weight:normal !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{clean_line}</p>")
+            formatted_html.append(f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{clean_line}</p>")
             
     return "".join(formatted_html)
 
