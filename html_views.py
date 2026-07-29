@@ -87,7 +87,7 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """Ver 46.7 오리지널 사주원국표 완벽 복원 함수 (24px 웅장한 간지 적용 및 2-3단 연회색 줄눈)"""
+    """Ver 46.7 오리지널 사주원국표 완벽 복원 함수 (24px 웅장한 간지 적용 및 2-3단 연회색 줄눈 완벽 분리)"""
     
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     
@@ -111,9 +111,9 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        # 🚨 [핵심 수정] l_idx == 1 (2단)의 하단만 연회색(#E0E0E0)으로, 나머지는 진한 선(#444)으로 고정
-        b_bot = "1px solid #E0E0E0 !important" if l_idx == 1 else "1px solid #444 !important"
-        b_top = "0px solid transparent !important"
+        # 🚨 [테두리 겹침 방어 핵심 코드] 2단 하단과 3단 상단 양쪽 모두에 연회색(#BDBDBD)을 발라버림
+        b_bot = "1px solid #BDBDBD !important" if l_idx == 1 else "1px solid #444 !important"
+        b_top = "1px solid #BDBDBD !important" if l_idx == 2 else "0px solid transparent !important"
         
         cells = []
         for ci in range(4):
