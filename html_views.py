@@ -1,79 +1,30 @@
 import re # html_views.py (ver 3.0)
 
 def get_global_css():
-    """[Ver 46.7 오리지널 Noto Serif KR 폰트 및 굵고 힘찬 한자 감성 완벽 복원 CSS]"""
+    """[Ver 46.7 핵심 정돈 CSS]"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
 
     .stApp { background-color: #FFF8E1 !important; }
+    [data-testid="stSidebar"] *, [data-testid="stExpander"] summary { font-family: 'Nanum Gothic', sans-serif !important; }
+    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { font-family: 'Noto Serif KR', serif !important; }
 
-    /* 1. 사이드바 고딕체 & stExpander 화살표 겹침 방지 */
-    [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] input, [data-testid="stSidebar"] select, [data-testid="stSidebar"] button { font-family: 'Nanum Gothic', sans-serif !important; }
-    [data-testid="stExpander"] summary { display: flex !important; justify-content: space-between !important; align-items: center !important; font-family: 'Nanum Gothic', sans-serif !important; }
-    [data-testid="stExpander"] svg { flex-shrink: 0 !important; margin-left: 8px !important; }
+    .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-    /* 2. 메인 리포트 & 표지 : 구버전 오리지널 Noto Serif KR 900 굵은 명조체 고정 */
-    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
-        font-family: 'Noto Serif KR', serif !important; 
-    }
-
-    /* 3. VIP 둥근 테두리 프레임 */
-    .vip-inset-frame {
-        border: 2px solid #3E2723 !important;
-        border-radius: 12px !important;
-        padding: 30px 25px !important;
-        background-color: #FFFFFF !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
-        box-sizing: border-box !important;
-        width: 100% !important;
-        word-break: break-word !important;
-    }
-
-    /* 4. 오행 색상 */
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
     .color-토 { background: #F9A825 !important; color: #000 !important; }
     .color-금 { background: #9E9E9E !important; color: #FFF !important; }
     .color-수 { background: #212121 !important; color: #FFF !important; }
 
-    /* 🚨 [Ver 46.7 완벽 복원] 원국표 밀착 & 굵은체 & 이중선 제거 CSS */
-    .result-table { 
-        width: 100%; 
-        border-collapse: collapse !important; 
-        border: 3px solid #3E2723 !important; 
-        margin-bottom: 15px; 
-        table-layout: fixed; 
-    }
-    .result-table td { 
-        border: 1px solid #444444 !important; 
-        padding: 1px 0 !important; 
-        text-align: center; 
-        vertical-align: middle; 
-        font-weight: 900 !important; 
-        font-size: 13px; 
-        line-height: 1.2 !important; 
-    }
-    
-    .top-header-cell { 
-        background-color: #1A237E !important; 
-        height: 30px !important; 
-    }
-    .top-header-cell td { 
-        background-color: #1A237E !important; 
-        color: #FFFFFF !important; 
-        font-weight: 900 !important; 
-        font-size: 16px !important; 
-        border: 1px solid #444444 !important; 
-    }
-    
-    /* 🚨 세로 구분 칸 (천간합충 ~ 합충형파해) 배경색 및 굵은 검정색 글씨 통일 */
-    .header-cell-main, .header-cell-sub { 
-        background-color: #E8EAF6 !important; 
-        color: #000000 !important; 
-        font-weight: 900 !important; 
-        font-size: 14px !important; 
-    }
+    .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
+    .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 13px; line-height: 1.2 !important; }
+    .ganji-cell-24 { font-size: 24px !important; font-weight: 900 !important; }
+
+    .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
+    .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
+    .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 900 !important; font-size: 14px !important; }
 
     .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
 
