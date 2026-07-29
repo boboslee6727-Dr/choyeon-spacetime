@@ -87,7 +87,7 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """Ver 46.7 오리지널 사주원국표 완벽 복원 (2-3단 가로선 연회색 100% 강제 적용)"""
+    """Ver 46.7 오리지널 사주원국표 (포기 금지! 2-3단 연회색 줄눈 2px 강제 돌파)"""
     
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     
@@ -111,10 +111,17 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        # 🚨 [석두의 최종 진화] 모든 셀의 천장(b_top)을 '0px'로 날려버려 글로벌 CSS 개입을 원천 차단하고,
-        # 오직 2단(l_idx == 1)의 바닥(b_bot)에만 확실한 연회색(#999999)을 발라 무조건 승리하게 만듭니다.
-        b_bot = "1px solid #999999 !important" if l_idx == 1 else "1px solid #444 !important"
-        b_top = "0px !important"
+        # 🚨 [최종 무력 진압] 1px 흑색선을 이기기 위해 2단(l_idx==1) 하단을 2px 두꺼운 연회색으로 덮어버림
+        if l_idx == 1:
+            b_bot = "2px solid #CCCCCC !important" 
+            b_top = "0px !important"
+        elif l_idx == 2:
+            # 3단 상단은 완전히 비워줘서 위쪽 2단의 2px 연회색 선이 침범받지 않게 함
+            b_bot = "1px solid #444 !important"
+            b_top = "0px !important"
+        else:
+            b_bot = "1px solid #444 !important"
+            b_top = "1px solid #444 !important"
         
         cells = []
         for ci in range(4):
@@ -128,7 +135,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
                 txt_color = "#000" if rel_val != "-" else "#BBB"
                 cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{rel_val}</td>")
                 
-        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px !important; font-size:14px !important; vertical-align: middle; padding:0 !important;'>합충형파해</td>" if l_idx == 0 else ""
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle; padding:0 !important;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none; height:auto;'>{lbl}{''.join(cells)}</tr>"
 
     unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
