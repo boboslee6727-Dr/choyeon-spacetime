@@ -171,14 +171,14 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
                 if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
                 elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
                 else:            lbl_txt = f"←({jjis[r_idx]})→"
-                cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
+                cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
                 txt_color = "#000" if rel_val != "-" else "#BBB"
-                cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
+                cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{rel_val}</td>")
                 
-        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
-        ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle; padding:0 !important;'>합충형파해</td>" if l_idx == 0 else ""
+        ji_rel_rows += f"<tr style='border:none; height:auto;'>{lbl}{''.join(cells)}</tr>"
 
     unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
     shinsal = "".join([f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
