@@ -1,13 +1,13 @@
 import re
 
 def get_global_css():
-    """[사이드바 고딕 / 메인 명조 & 화살표 겹침 방지 & vip-inset-frame 테두리 완제 CSS]"""
+    """[Ver 46.7 스타일 완벽 복원 : 원국표 밀착 & 합충형파해 검정색 통일 & 이중선 제거 CSS]"""
     return """<style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 
     .stApp { background-color: #FFF8E1 !important; }
 
-    /* 1. 사이드바 고딕체 & stExpander 화살표 겹침 방지 (초압축) */
+    /* 1. 사이드바 고딕체 & stExpander 화살표 겹침 방지 */
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] input, [data-testid="stSidebar"] select, [data-testid="stSidebar"] button { font-family: 'Nanum Gothic', sans-serif !important; }
     [data-testid="stExpander"] summary { display: flex !important; justify-content: space-between !important; align-items: center !important; font-family: 'Nanum Gothic', sans-serif !important; }
     [data-testid="stExpander"] svg { flex-shrink: 0 !important; margin-left: 8px !important; }
@@ -15,7 +15,7 @@ def get_global_css():
     /* 2. 메인 리포트 & 표지 : 명조체 고정 */
     .report-page, .cover-page, div.cover-page *, .choyeon-premium-report { font-family: 'Nanum Myeongjo', serif !important; }
 
-    /* 🚨 [핵심 추가] 1, 2, 3단계 공통 VIP 둥근 테두리 프레임 전역 보장 */
+    /* 3. VIP 둥근 테두리 프레임 */
     .vip-inset-frame {
         border: 2px solid #3E2723 !important;
         border-radius: 12px !important;
@@ -27,25 +27,50 @@ def get_global_css():
         word-break: break-word !important;
     }
 
-    /* 3. AI 통변 계층 */
-    .ai-title-l1 { font-size: 20px !important; font-weight: 900 !important; color: #1A237E !important; margin: 25px 0 10px 0 !important; border-bottom: 2px solid #1A237E !important; word-break: break-word !important; }
-    .ai-title-l2 { font-size: 18px !important; font-weight: 800 !important; color: #2E7D32 !important; margin: 20px 0 8px 0 !important; word-break: break-word !important; }
-    .ai-sub-item { margin: 8px 0 !important; line-height: 1.85 !important; font-size: 16px !important; color: #2c3e50 !important; word-break: break-word !important; }
-    .ai-body-p { margin-bottom: 14px !important; line-height: 1.85 !important; text-indent: 1em !important; font-size: 16px !important; color: #111111 !important; font-weight: normal !important; text-align: justify !important; word-break: break-word !important; }
-
-    /* 4. 오행 색상 및 Ver 46.7 사주원국표 (압축) */
+    /* 4. 오행 색상 */
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
     .color-토 { background: #F9A825 !important; color: #000 !important; }
     .color-금 { background: #9E9E9E !important; color: #FFF !important; }
     .color-수 { background: #212121 !important; color: #FFF !important; }
 
-    .result-table { width: 100%; border-collapse: collapse; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
-    .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900; font-size: 13px; line-height: 1.2; }
-    .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
-    .top-header-cell td { background-color: #1A237E !important; color: #FFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
-    .header-cell-main { background-color: #E8EAF6 !important; color: #1A237E !important; font-weight: 900 !important; font-size: 14px !important; }
-    .header-cell-sub { background-color: #f5f5f5 !important; color: #111 !important; font-weight: 900 !important; font-size: 14px !important; }
+    /* 🚨 [Ver 46.7 완벽 복원] 원국표 밀착 & 굵은체 & 이중선 제거 CSS */
+    .result-table { 
+        width: 100%; 
+        border-collapse: collapse !important; 
+        border: 3px solid #3E2723 !important; 
+        margin-bottom: 15px; 
+        table-layout: fixed; 
+    }
+    .result-table td { 
+        border: 1px solid #444444 !important; 
+        padding: 1px 0 !important; 
+        text-align: center; 
+        vertical-align: middle; 
+        font-weight: 900 !important; 
+        font-size: 13px; 
+        line-height: 1.2 !important; 
+    }
+    
+    .top-header-cell { 
+        background-color: #1A237E !important; 
+        height: 30px !important; 
+    }
+    .top-header-cell td { 
+        background-color: #1A237E !important; 
+        color: #FFFFFF !important; 
+        font-weight: 900 !important; 
+        font-size: 16px !important; 
+        border: 1px solid #444444 !important; 
+    }
+    
+    /* 🚨 세로 구분 칸 (천간합충 ~ 합충형파해) 배경색 및 굵은 검정색 글씨 통일 */
+    .header-cell-main, .header-cell-sub { 
+        background-color: #E8EAF6 !important; 
+        color: #000000 !important; 
+        font-weight: 900 !important; 
+        font-size: 14px !important; 
+    }
 
     .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
 
@@ -162,26 +187,26 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
     return get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
 
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
-    """[Ver 46.7 사주원국표 HTML 테이블 구조 완벽 복원]"""
+    """[Ver 46.7 가시성 밀착 & 합충형파해 검정색 통일 사주원국표 HTML]"""
     return f"""
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center; margin-top:10px; table-layout:fixed;'>
         <tr class='top-header-cell'>
-            <td style='width:15%;'>구분</td>
-            <td style='width:21.25%;'>시주</td>
-            <td style='width:21.25%;'>일주</td>
-            <td style='width:21.25%;'>월주</td>
-            <td style='width:21.25%;'>년주</td>
+            <td style='width:15%; color:#FFFFFF !important; font-weight:900;'>구분</td>
+            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900;'>시주</td>
+            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900;'>일주</td>
+            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900;'>월주</td>
+            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900;'>년주</td>
         </tr>
-        <tr><td class='header-cell-sub'>천간합충</td>{gan_rel}</tr>
-        <tr><td class='header-cell-sub'>천간십성</td>{gan_ss}</tr>
-        <tr><td class='header-cell-main' style='font-size:16px !important;'>천간</td>{gan_row}</tr>
-        <tr><td class='header-cell-main' style='font-size:16px !important;'>지지</td>{ji_row}</tr>
-        <tr><td class='header-cell-sub'>지지십성</td>{ji_ss}</tr>
-        <tr><td class='header-cell-sub'>지장간</td>{jijanggan}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>천간합충</td>{gan_rel}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>천간십성</td>{gan_ss}</tr>
+        <tr><td class='header-cell-main' style='font-size:16px !important; color:#000000 !important; font-weight:900 !important;'>천간</td>{gan_row}</tr>
+        <tr><td class='header-cell-main' style='font-size:16px !important; color:#000000 !important; font-weight:900 !important;'>지지</td>{ji_row}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>지지십성</td>{ji_ss}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
-        <tr><td class='header-cell-sub' style='color:#0D47A1 !important;'>십이운성</td>{unsung}</tr>
-        <tr><td class='header-cell-sub' style='color:#C62828 !important;'>십이신살</td>{shinsal}</tr>
-        <tr><td class='header-cell-sub'>일반신살</td>{gen_shinsal}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>십이운성</td>{unsung}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>십이신살</td>{shinsal}</tr>
+        <tr><td class='header-cell-main' style='color:#000000 !important; font-weight:900 !important;'>일반신살</td>{gen_shinsal}</tr>
     </table>
     """
 def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color, cur_samjae):
