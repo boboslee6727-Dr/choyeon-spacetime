@@ -125,42 +125,34 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     # 4. 합충형파해 지지 관계 4단 화살표 정밀 조정 ([좌->우] = 시(0), 일(1), 월(2), 년(3))
     ji_rel_rows = ""
-    
-    # 행 순서: 화면 위에서 아래로 쌓이는 순서 (시주, 일주, 월주, 년주 행 순서)
     for l_idx in [0, 1, 2, 3]: # 0:시지, 1:일지, 2:월지, 3:년지
         b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
         b_top = "0px solid transparent !important"
         
         cells = []
-        for ci in range(4): # 열 순서 (0:시, 1:일, 2:월, 3:년)
+        for ci in range(4): # 0:시, 1:일, 2:월, 3:년
             if ci == l_idx:
-                # 🚨 화면 좌측이 시주(0), 우측이 년주(3)이므로 방향을 이에 맞춤
-                if l_idx == 0:     # 시지 (맨 왼쪽 / 0번째 열) -> 우측으로만 뻗음 (X)→
+                if l_idx == 0:     # 시지 (맨 왼쪽) -> (지지)→
                     lbl_txt = f"({jjis[l_idx]})→"
-                elif l_idx == 3:   # 년지 (맨 오른쪽 / 3번째 열) -> 좌측으로만 뻗음 ←(X)
+                elif l_idx == 3:   # 년지 (맨 오른쪽) -> ←(지지)
                     lbl_txt = f"←({jjis[l_idx]})"
-                else:              # 일지(1), 월지(2) (중앙) -> 양쪽으로 뻗음 ←(X)→
+                else:              # 일지(1), 월지(2) -> ←(지지)→
                     lbl_txt = f"←({jjis[l_idx]})→"
                 
-                # 기준점: 빨간색 강제 지정 및 표 높이 35px 고정
                 cells.append(f"<td style='color: red !important; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[l_idx], jjis[ci])
                 txt_color = "#000000 !important" if rel_val != "-" else "#BBBBBB !important"
                 cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
                 
-        # 맨 왼쪽에 세로 병합된 '합충형파해' 제목 셀 삽입 (첫 번째 행인 l_idx == 0 일 때만)
         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
                 
-    # 5. 십이운성, 십이신살, 일반신살 (색상 강제 및 표 높이 고정)
-    # 🚨 12운성: 파란색 강제 (blue !important)
+    # 5. 십이운성(파란색), 십이신살(빨간색) 색상 강제 및 높이 35px 고정
     unsung = "".join([f"<td style='color: blue !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    
-    # 🚨 12신살: 빨간색 강제 (red !important)
-    shinsal = "".join([f"<td style='color: red !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_12_shinsal(gans[3], jjis[i])}</td>" for i in range(4)])
-    
+    shinsal = "".join([f"<td style='color: red !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
     filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
+
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:4px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
