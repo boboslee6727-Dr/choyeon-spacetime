@@ -8,12 +8,30 @@ def get_global_css():
 
     .stApp { background-color: #FFF8E1 !important; }
     
-    /* 1. 사이드바 내부 요소는 간섭 없이 안전한 나눔고딕 적용 */
+    /* 🚨 사이드바 토글(>>) 및 익스팬더 화살표 겹침 원천 차단 CSS */
     [data-testid="stSidebar"] * { font-family: 'Nanum Gothic', sans-serif !important; }
 
-    /* 2. 메인 리포트 전용 Noto Serif KR 명조체 고정 (사이드바 제외) */
-    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
-        font-family: 'Noto Serif KR', serif !important; 
+    /* 사이드바 열기/닫기 토글 버튼(>>)과 상단 영역 강제 분리 */
+    [data-testid="stSidebarNav"] { padding-top: 10px !important; }
+    
+    /* 사이드바 익스팬더 헤더 영역 레이아웃 격리 */
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    
+    /* 익스팬더 내부 텍스트와 SVG 화살표 간격 확보 */
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary p {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        margin-right: 10px !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
+        flex-shrink: 0 !important;
     }
 
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
