@@ -120,65 +120,89 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """Ver 46.7 사주원국표 완벽 복원 (최종 영점 조절 완료)"""
+    """Ver 46.7 오리지널 사주원국표 완벽 복원 함수"""
     
-    gan_rel = "".join([f"<td style='border:1px solid #444 !important;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-    gan_ss = f"<td style='border:1px solid #444 !important;'>{engine.get_ss(ds, gans[0])}</td><td style='border:1px solid #444 !important;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, gans[2])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, gans[3])}</td>"
+    # 1. 각 셀 데이터 및 관계 연산 (구버전 방식 100% 일치)
+    gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     
-    gan_row = "".join([f"<td class='color-{engine.get_color(g)}' style='font-size:24px !important; font-weight:900 !important; border:1px solid #444 !important; width:21.25%;'>{g}</td>" for g in gans])
-    ji_row = "".join([f"<td class='color-{engine.get_color(j)}' style='font-size:24px !important; font-weight:900 !important; border:1px solid #444 !important; width:21.25%;'>{j}</td>" for j in jjis])
-    
-    ji_ss = f"<td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[0])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[1])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[2])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[3])}</td>"
-    
-    jijanggan = "".join([f"<td style='padding:0 !important; border:1px solid #444 !important;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+    # 천간 십성
+    hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
+    gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td>" \
+             f"<td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td>" \
+             f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td>" \
+             f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
 
+    # 천간 / 지지 행 렌더링 (구버전 td 함수 방식 준용)
+    def td_func(val):
+        oh = engine.get_color(val)
+        cls_str = f"color-{oh}" if oh != '무' else ""
+        return f"<td class='{cls_str}' style='border:1px solid #444; font-size:20px; font-weight:900;'>{val}</td>"
+
+    hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
+    
+    gan_row_html = "".join([td_func(g) for g in gans])
+    ji_row_html = "".join([td_func(j) for j in jjis])
+
+    # 지지 십성
+    ji_ss_html = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hb)}</td>" \
+                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, db)}</td>" \
+                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, mb)}</td>" \
+                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, yb)}</td>"
+
+    # 지장간
+    jijanggan_html = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+
+    # 합충형파해 4단 행 생성 (구버전 오리지널 로직)
     ji_rel_rows = ""
-    for l_idx, r_idx in enumerate([1, 2, 0, 3]): 
+    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
         b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
         b_top = "0px solid transparent !important"
         
         cells = []
-        for ci in range(4): 
+        for ci in range(4):
             if ci == r_idx:
                 if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
                 elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
                 else:            lbl_txt = f"←({jjis[r_idx]})→"
-                
-                cells.append(f"<td style='color: #D50000 !important; font-weight:900 !important; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
+                cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
-                txt_color = "#000000 !important" if rel_val != "-" else "#BBBBBB !important"
-                cells.append(f"<td style='color:{txt_color}; font-weight:900 !important; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
+                txt_color = "#000" if rel_val != "-" else "#BBB"
+                cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'>{rel_val}</td>")
                 
-        lbl = f"<td rowspan='4' style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border: 1px solid #444 !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
 
-    unsung = "".join([f"<td style='color: #0D47A1 !important; font-weight:900 !important; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    shinsal = "".join([f"<td style='color: #C62828 !important; font-weight:900 !important; border:1px solid #444 !important;'>{engine.get_12_shinsal(jjis[3], jjis[i])}</td>" for i in range(4)])
-    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px !important; border:1px solid #444 !important; font-weight:900 !important; font-size:13px;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</td>" for i in range(4)])
+    # 십이운성, 십이신살, 일반신살
+    unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+    shinsal = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+    
+    gen_shinsals = []
+    for i in range(4):
+        filtered = engine.get_general_shinsal_filtered(i, gans, jjis, gender)
+        gen_shinsals.append("<br>".join(filtered) if filtered else "-")
+    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
 
-    return get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
-
-def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
+    # 구버전 오리지널 HTML 템플릿 반환
     return f"""
-    <table class='result-table' style='width:100%; border-collapse:collapse !important; border: 3px solid #3E2723 !important; text-align:center; margin-bottom:15px; table-layout:fixed;'>
-        <tr class='top-header-cell' style='background-color: #1A237E !important; height: 30px !important;'>
-            <td style='width:15%; color:#FFFFFF !important; font-weight:900 !important; border:1px solid #444 !important;'>구분</td>
-            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900 !important; border:1px solid #444 !important;'>시주</td>
-            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900 !important; border:1px solid #444 !important;'>일주</td>
-            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900 !important; border:1px solid #444 !important;'>월주</td>
-            <td style='width:21.25%; color:#FFFFFF !important; font-weight:900 !important; border:1px solid #444 !important;'>년주</td>
+    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
+        <tr class='top-header-cell'>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
+            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
         </tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>천간합충</td>{gan_rel}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>천간십성</td>{gan_ss}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>천간</td>{gan_row}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>지지</td>{ji_row}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>지지십성</td>{ji_ss}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important; padding:0 !important;'>지장간</td>{jijanggan}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{gan_rel}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td>{gan_ss}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>천간</td>{gan_row_html}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>지지</td>{ji_row_html}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td>{ji_ss_html}</tr>
+        <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{jijanggan_html}</tr>
         {ji_rel_rows}
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>십이운성</td>{unsung}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>십이신살</td>{shinsal}</tr>
-        <tr><td style='background:#E8EAF6 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border:1px solid #444 !important;'>일반신살</td>{gen_shinsal}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>{unsung}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이신살</td>{shinsal}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{gen_shinsal}</tr>
     </table>
     """
 
