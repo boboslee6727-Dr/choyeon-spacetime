@@ -87,74 +87,7 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """Ver 46.7 오리지널 사주원국표 완벽 복원 함수 (Noto Serif KR 900 적용)"""
-    
-    gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
-    
-    hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
-    gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td>" \
-             f"<td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td>" \
-             f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td>" \
-             f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
-
-    def td_func(val):
-        oh = engine.get_color(val)
-        cls_str = f"color-{oh}" if oh != '무' else ""
-        return f"<td class='{cls_str}' style='border:1px solid #444; font-size:24px !important; font-weight:900 !important; width:21.25%;'> {val} </td>"
-
-    hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
-    
-    gan_row_html = "".join([td_func(g) for g in gans])
-    ji_row_html = "".join([td_func(j) for j in jjis])
-
-    ji_ss_html = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hb)}</td>" \
-                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, db)}</td>" \
-                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, mb)}</td>" \
-                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, yb)}</td>"
-
-    jijanggan_html = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
-
-    ji_rel_rows = ""
-    for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        # l_idx 0: 1단, 1: 2단, 2: 3단, 3: 4단
-        # 2단과 3단을 나누는 2단의 하단(b_bot)만 연회색으로 설정
-        b_bot = "1px solid #E0E0E0 !important" if l_idx == 1 else "1px solid #444 !important"
-        b_top = "0px solid transparent !important"
-        
-        cells = []
-        for ci in range(4):
-            if ci == r_idx:
-                if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
-                elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
-                else:            lbl_txt = f"←({jjis[r_idx]})→"
-                cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
-            else:
-                rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
-                txt_color = "#000" if rel_val != "-" else "#BBB"
-                cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
-                
-        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
-        ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
-
-    unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    shinsal = "".join([f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-    
-    gen_shinsals = []
-    for i in range(4):
-        filtered = engine.get_general_shinsal_filtered(i, gans, jjis, gender)
-        gen_shinsals.append("<br>".join(filtered[:6]) if filtered else "-")
-    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:900; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
-
-    return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
-
-def td_func(val, engine):
-    """사주원국 본체 천간/지지 간지 전용 24px 웅장한 폰트 및 오행 색상 적용"""
-    oh = engine.get_color(val)
-    cls_str = f"color-{oh}" if oh != '무' else ""
-    return f"<td class='{cls_str} ganji-cell-24' style='border:1px solid #444 !important; width:21.25%;'>{val}</td>"
-
-def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """Ver 46.7 오리지널 사주원국표 완벽 복원 함수 (24px 웅장한 간지 적용)"""
+    """Ver 46.7 오리지널 사주원국표 완벽 복원 함수 (24px 웅장한 간지 적용 및 2-3단 연회색 줄눈)"""
     
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     
@@ -178,7 +111,8 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        b_bot = "1px solid #444 !important" if l_idx == 3 else "1px solid #D3D3D3 !important"
+        # 🚨 [핵심 수정] l_idx == 1 (2단)의 하단만 연회색(#E0E0E0)으로, 나머지는 진한 선(#444)으로 고정
+        b_bot = "1px solid #E0E0E0 !important" if l_idx == 1 else "1px solid #444 !important"
         b_top = "0px solid transparent !important"
         
         cells = []
@@ -206,6 +140,12 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:900; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
 
     return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
+
+def td_func(val, engine):
+    """사주원국 본체 천간/지지 간지 전용 24px 웅장한 폰트 및 오행 색상 적용"""
+    oh = engine.get_color(val)
+    cls_str = f"color-{oh}" if oh != '무' else ""
+    return f"<td class='{cls_str} ganji-cell-24' style='border:1px solid #444 !important; width:21.25%;'>{val}</td>"
 
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
     """소스코드 노출 원천 차단 및 오직 간지만 24px로 출력하는 안전한 템플릿"""
