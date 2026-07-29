@@ -95,7 +95,7 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """Ver 46.7과 완벽히 동일하게 세밀 처리된 원국표 데이터 생성기"""
+    """Ver 46.7 엔진 연산 체계 100% 호환 & Ver 70.1 화살표·색상 완전 교정본"""
     
     # 1. 천간 관계 및 십성
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
@@ -107,13 +107,11 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
     
     ji_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[0])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[1])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[2])}</td><td style='border:1px solid #444;'>{engine.get_ss(ds, jjis[3])}</td>"
     
-    # 3. 지장간 ( 3단계 등간격 높이 통일 및 중기 '-' 무색 처리 )
+    # 3. 지장간 ( 3단계 등간격 높이 통일 )
     jijanggan_list = []
     for i in range(4):
-        # engine에서 지장간 배열을 받아옵니다 (예: ['甲(20%)', '-', '丙(80%)'])
         raw_jjg = engine.get_jijanggan_full_list(ds, jjis[i]) if hasattr(engine, 'get_jijanggan_full_list') else engine.get_jijanggan_full(ds, jjis[i]).split('<br>')
         
-        # 3단계 높이 구성을 위한 3행 미니 테이블 생성
         jjg_rows = ""
         for item in raw_jjg:
             display_item = "&nbsp;" if item.strip() == "-" or item.strip() == "" else item
@@ -123,40 +121,45 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         jijanggan_list.append(cell_html)
     jijanggan = "".join(jijanggan_list)
 
-    # 4. 합충형파해 지지 관계 4단 화살표 정밀 조정 ([좌->우] = 시(0), 일(1), 월(2), 년(3))
+    # 4. 합충형파해 지지 관계 4단 화살표 정밀 조정 (engine.py 구버전 행 순서 [1, 2, 0, 3] 완벽 이식)
     ji_rel_rows = ""
-    for l_idx in [0, 1, 2, 3]: # 0:시지, 1:일지, 2:월지, 3:년지
+    # l_idx: 출력 행 순서 (0번째~3번째 행)
+    # r_idx: 주인공 지지 인덱스 (1:일지, 2:월지, 0:시지, 3:년지)
+    for l_idx, r_idx in enumerate([1, 2, 0, 3]): 
         b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
         b_top = "0px solid transparent !important"
         
         cells = []
-        for ci in range(4): # 0:시, 1:일, 2:월, 3:년
-            if ci == l_idx:
-                if l_idx == 0:     # 시지 (맨 왼쪽) -> (지지)→
-                    lbl_txt = f"({jjis[l_idx]})→"
-                elif l_idx == 3:   # 년지 (맨 오른쪽) -> ←(지지)
-                    lbl_txt = f"←({jjis[l_idx]})"
-                else:              # 일지(1), 월지(2) -> ←(지지)→
-                    lbl_txt = f"←({jjis[l_idx]})→"
+        for ci in range(4): # ci: 화면 열 순서 (0:시, 1:일, 2:월, 3:년)
+            if ci == r_idx:
+                # 주인공 지지의 위치(ci)에 맞추어 화살표 모양 정밀 지정
+                if r_idx == 0:   # 시지 (0번 열, 맨 왼쪽) -> 우측 화살표 (지지)→
+                    lbl_txt = f"({jjis[r_idx]})→"
+                elif r_idx == 3: # 년지 (3번 열, 맨 오른쪽) -> 좌측 화살표 ←(지지)
+                    lbl_txt = f"←({jjis[r_idx]})"
+                else:            # 일지(1번 열), 월지(2번 열) -> 양방향 화살표 ←(지지)→
+                    lbl_txt = f"←({jjis[r_idx]})→"
                 
-                cells.append(f"<td style='color: red !important; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
+                # 기준점 셀: 빨간색 강제 지정 (#D50000) 및 높이 35px 고정
+                cells.append(f"<td style='color: #D50000 !important; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
             else:
-                rel_val = engine.get_ji_rel_set(jjis[l_idx], jjis[ci])
+                # 행의 주인공 지지(jjis[r_idx])와 열 지지(jjis[ci]) 간의 관계 계산
+                rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
                 txt_color = "#000000 !important" if rel_val != "-" else "#BBBBBB !important"
                 cells.append(f"<td style='color:{txt_color}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
                 
+        # 맨 왼쪽 세로 병합 헤더 셀 (첫 번째 출력 행 l_idx == 0 일 때만 생성)
         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
-                
-    # 5. 십이운성(파란색), 십이신살(빨간색) 색상 강제 및 높이 35px 고정
-    unsung = "".join([f"<td style='color: blue !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    shinsal = "".join([f"<td style='color: red !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-    filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
 
+    # 5. 십이운성(파란색), 십이신살(빨간색, jjis[3]=년지 기준) 색상 강제 및 높이 35px 고정
+    unsung = "".join([f"<td style='color: blue !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+    shinsal = "".join([f"<td style='color: red !important; font-weight:900; border:1px solid #444 !important; height: 35px; vertical-align: middle;'>{engine.get_12_shinsal(jjis[3], jjis[i])}</td>" for i in range(4)])
+    
+    filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:4px; border:1px solid #444 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
-
 
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
     """[Ver 46.7 사주원국표 HTML 테이블 구조 완벽 복원]"""
