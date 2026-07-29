@@ -1,14 +1,20 @@
 import re # html_views.py (ver 3.0)
 
 def get_global_css():
-    """[Ver 46.7 핵심 정돈 CSS]"""
+    """[Ver 46.7 사이드바 글자 겹침 완벽 차단 정돈 CSS]"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
 
     .stApp { background-color: #FFF8E1 !important; }
-    [data-testid="stSidebar"] *, [data-testid="stExpander"] summary { font-family: 'Nanum Gothic', sans-serif !important; }
-    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { font-family: 'Noto Serif KR', serif !important; }
+    
+    /* 1. 사이드바 내부 요소는 간섭 없이 안전한 나눔고딕 적용 */
+    [data-testid="stSidebar"] * { font-family: 'Nanum Gothic', sans-serif !important; }
+
+    /* 2. 메인 리포트 전용 Noto Serif KR 명조체 고정 (사이드바 제외) */
+    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
+        font-family: 'Noto Serif KR', serif !important; 
+    }
 
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
