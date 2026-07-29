@@ -16,7 +16,11 @@ import html_views
 # 🚨 [여기서부터 3줄을 꼭 추가해 주십시오!]
 import importlib
 importlib.reload(html_views)  # html_views.py를 강제로 새로 읽어오라는 명령!
-importlib.reload(engine)      # engine.py를 강제로 새로 읽어오라는 명령!
+importlib.reload(engine)     # engine.py를 강제로 새로 읽어오라는 명령!
+
+# ⬇️ [바로 이곳에 이 두 줄을 삽입해 주십시오!]
+import sys
+import importlib
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
