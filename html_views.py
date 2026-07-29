@@ -126,16 +126,16 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
     gan_rel = "".join([f"<td style='border:1px solid #444 !important;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     gan_ss = f"<td style='border:1px solid #444 !important;'>{engine.get_ss(ds, gans[0])}</td><td style='border:1px solid #444 !important;'><span style='color:#D50000; font-weight:900;'>日元</span></td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, gans[2])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, gans[3])}</td>"
     
-    # 2. 천간 / 지지 글자 ( 🚨 Ver 46.7 원본: font-weight:900, font-size:24px 웅장하게 복원 )
+    # 2. 천간 / 지지 글자 ( font-weight:900, font-size:24px 웅장하게 복원 )
     gan_row = "".join([f"<td class='color-{engine.get_color(g)}' style='font-size:24px !important; font-weight:900 !important; border:1px solid #444 !important;'>{g}</td>" for g in gans])
     ji_row = "".join([f"<td class='color-{engine.get_color(j)}' style='font-size:24px !important; font-weight:900 !important; border:1px solid #444 !important;'>{j}</td>" for j in jjis])
     
     ji_ss = f"<td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[0])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[1])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[2])}</td><td style='border:1px solid #444 !important;'>{engine.get_ss(ds, jjis[3])}</td>"
     
-    # 3. 지장간 ( 🚨 Ver 46.7 원본: 이중선 방지를 위해 중첩 table 제거, 단일 td에 밀착 )
+    # 3. 지장간 ( 이중선 방지를 위해 중첩 table 제거, 단일 td에 밀착 )
     jijanggan = "".join([f"<td style='padding:1px 0 !important; border:1px solid #444 !important; font-size:13px; font-weight:900;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
 
-    # 4. 합충형파해 지지 관계 4단 화살표 (🚨 빨간색 복원 완료)
+    # 4. 합충형파해 지지 관계 4단 화살표
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]): 
         b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -148,26 +148,25 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
                 elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
                 else:            lbl_txt = f"←({jjis[r_idx]})→"
                 
-                # 기준점 화살표는 무조건 빨간색(#D50000) 강제 지정!
                 cells.append(f"<td style='color: #D50000 !important; font-weight:900 !important; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
                 txt_color = "#000000 !important" if rel_val != "-" else "#BBBBBB !important"
                 cells.append(f"<td style='color:{txt_color}; font-weight:900 !important; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; height: 35px; vertical-align: middle;'>{rel_val}</td>")
                 
-        # 합충형파해 구분 칸: 무조건 굵은체, 검정색 통일
         lbl = f"<td rowspan='4' style='background:#f5f5f5 !important; color:#000000 !important; font-weight:900 !important; font-size:14px !important; border: 1px solid #444 !important; vertical-align: middle;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{''.join(cells)}</tr>"
 
-    # 5. 십이운성, 십이신살, 일반신살 (Ver 46.7 오리지널 굵기 및 색상)
+    # 5. 십이운성, 십이신살, 일반신살
     unsung = "".join([f"<td style='color: #0D47A1 !important; font-weight:900 !important; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    shinsal = "".join([f"<td style='color: #C62828 !important; font-weight:900 !important; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
+    
+    # 🚨 [치명적 버그 수정 완료] yb -> jjis[3] 으로 교체하여 NameError 원천 차단!
+    shinsal = "".join([f"<td style='color: #C62828 !important; font-weight:900 !important; border:1px solid #444 !important;'>{engine.get_12_shinsal(jjis[3], jjis[i])}</td>" for i in range(4)])
     
     filtered_shinsals = ["<br>".join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)[:6]) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else "-" for i in range(4)]
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px !important; border:1px solid #444 !important; font-weight:900 !important;'>{filtered_shinsals[i]}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal)
-
 
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
     """Ver 46.7 사주원국표 HTML 뼈대 (구분칸 모두 굵고 시커멓게 완전 무장)"""
