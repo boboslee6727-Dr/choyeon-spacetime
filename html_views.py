@@ -1,4 +1,4 @@
-import re # html_views.py (ver 3.0)
+import re
 
 def get_global_css():
     """[Ver 46.7 사이드바 글자 겹침 완벽 차단 정돈 CSS]"""
