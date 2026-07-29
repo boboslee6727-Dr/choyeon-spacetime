@@ -181,19 +181,25 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
     return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
 
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
+    """구분 난(천간, 지지)과 원국 간지 모두 24px 웅장하게 확대 적용한 사주원국표"""
     return f"""
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
         <tr class='top-header-cell'>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
-            <td style='border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
+            <td style='width:15%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
+            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
+            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
+            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
+            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
         </tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{gan_rel}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td>{gan_ss}</tr>
+        
+        <!-- 🚨 천간 행: 왼쪽 '천간' 라벨과 오른쪽 간지 모두 24px 강제 타격 -->
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>천간</td>{gan_row}</tr>
+        
+        <!-- 🚨 지지 행: 왼쪽 '지지' 라벨과 오른쪽 간지 모두 24px 강제 타격 -->
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>지지</td>{ji_row}</tr>
+        
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td>{ji_ss}</tr>
         <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
