@@ -180,8 +180,14 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
 
+def td_func(val):
+        oh = engine.get_color(val)
+        cls_str = f"color-{oh}" if oh != '무' else ""
+        # 🚨 인라인 스타일로 24px와 900 굵기를 강력하게 재주입하여 CSS 간섭을 원천 차단합니다.
+        return f"<td class='{cls_str}' style='border:1px solid #444 !important; font-size: 24px !important; font-weight: 900 !important; width: 21.25%;'>{val}</td>"
+
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
-    """구분 난(천간, 지지)과 원국 간지 모두 24px 웅장하게 확대 적용한 사주원국표"""
+    """소스코드 노출 원천 차단 및 오직 간지만 24px로 출력하는 안전한 템플릿"""
     return f"""
     <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
         <tr class='top-header-cell'>
@@ -193,13 +199,8 @@ def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_ro
         </tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간합충</td>{gan_rel}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>천간십성</td>{gan_ss}</tr>
-        
-        <!-- 🚨 천간 행: 왼쪽 '천간' 라벨과 오른쪽 간지 모두 24px 강제 타격 -->
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>천간</td>{gan_row}</tr>
-        
-        <!-- 🚨 지지 행: 왼쪽 '지지' 라벨과 오른쪽 간지 모두 24px 강제 타격 -->
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>지지</td>{ji_row}</tr>
-        
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td>{ji_ss}</tr>
         <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
