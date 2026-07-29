@@ -1,16 +1,27 @@
+import re 
+
 def get_global_css():
-    """[Ver 46.7 사이드바 글자 겹침 완벽 차단 정돈 CSS]"""
+    """[Ver 46.7 사이드바 토글 버튼 및 익스팬더 겹침 완벽 차단 정돈 CSS]"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
 
     .stApp { background-color: #FFF8E1 !important; }
     
-    /* 🚨 사이드바 토글(>>) 및 익스팬더 화살표 겹침 원천 차단 CSS */
+    /* 🚨 스트림릿 좌측 상단 토글 버튼(>>)과 상단 겹침 현상 원천 차단 */
+    [data-testid="collapsedControl"] {
+        top: 12px !important;
+        z-index: 999999 !important;
+    }
+    header[data-testid="stHeader"] {
+        background-color: transparent !important;
+    }
+
+    /* 사이드바 전체 나눔고딕 고정 */
     [data-testid="stSidebar"] * { font-family: 'Nanum Gothic', sans-serif !important; }
 
     /* 사이드바 열기/닫기 토글 버튼(>>)과 상단 영역 강제 분리 */
-    [data-testid="stSidebarNav"] { padding-top: 10px !important; }
+    [data-testid="stSidebarNav"] { padding-top: 15px !important; }
     
     /* 사이드바 익스팬더 헤더 영역 레이아웃 격리 */
     [data-testid="stSidebar"] [data-testid="stExpander"] summary {
@@ -27,6 +38,7 @@ def get_global_css():
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
         margin-right: 10px !important;
+        margin-bottom: 0 !important;
     }
     [data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
         flex-shrink: 0 !important;
