@@ -162,7 +162,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+        b_bot = "1px solid #444 !important" if l_idx == 3 else "1px solid #D3D3D3 !important"
         b_top = "0px solid transparent !important"
         
         cells = []
