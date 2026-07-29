@@ -116,7 +116,9 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
+        # l_idx 0: 1단, 1: 2단, 2: 3단, 3: 4단
+        # 2단과 3단을 나누는 2단의 하단(b_bot)만 연회색으로 설정
+        b_bot = "1px solid #E0E0E0 !important" if l_idx == 1 else "1px solid #444 !important"
         b_top = "0px solid transparent !important"
         
         cells = []
