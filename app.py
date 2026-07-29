@@ -99,12 +99,17 @@ with st.sidebar:
     def stop_ai():
         st.session_state['app_running'] = False
 
-    st.markdown(f"""<div style="text-align: center;"><h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin-bottom: 5px;">🏮 초연 시공명리 연구소</h1></div>""", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #555555; font-family: sans-serif; font-size: 12px;'>{APP_VERSION} Master (Base + Gunghap)</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    # 🚨 [수정안] 사이드바 토글 버튼(>>)과의 겹침 방지를 위한 상단 여백 및 격리 블록 적용
+    st.markdown(f"""
+        <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
+            <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin: 0 0 5px 0;">🏮 초연 시공명리 연구소</h1>
+            <p style="color: #555555; font-family: sans-serif; font-size: 12px; margin: 0;">{APP_VERSION} Master (Base + Gunghap)</p>
+        </div>
+        <hr style="margin: 10px 0 15px 0;">
+    """, unsafe_allow_html=True)
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
-    
+
     main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
     # 💡 u_product 변수 사전 안전 초기화 (NameError 및 렌더링 충돌 원천 방지)
@@ -129,7 +134,7 @@ with st.sidebar:
         f_val = st.session_state.get("f_g", "여성")
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
-# ==============================================================================
+    # ==============================================================================
     # 🔍 신청인 사주간지 역산 (시간 자동입력 완벽 연동 완제본)
     # ==============================================================================
     with st.sidebar.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -242,6 +247,7 @@ with st.sidebar:
         
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select")
         st.session_state["s_t"] = b_time
+
     # ==============================================================================
     # 📌 특화 상품별 추가 옵션
     # ==============================================================================
