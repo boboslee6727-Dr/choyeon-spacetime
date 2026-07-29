@@ -1,47 +1,27 @@
 import re 
 
 def get_global_css():
-    """[Ver 46.7 사이드바 토글 버튼 및 익스팬더 겹침 완벽 차단 정돈 CSS]"""
+    """[Ver 70.3 아이콘 글자 깨짐(arrow_) 완벽 해결본]"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
 
     .stApp { background-color: #FFF8E1 !important; }
     
-    /* 🚨 스트림릿 좌측 상단 토글 버튼(>>)과 상단 겹침 현상 원천 차단 */
-    [data-testid="collapsedControl"] {
-        top: 12px !important;
-        z-index: 999999 !important;
-    }
-    header[data-testid="stHeader"] {
-        background-color: transparent !important;
+    /* 🚨 범인은 사라졌다! 아이콘 폰트를 깨뜨리는 와일드카드(*) 사용 금지 */
+    /* 아이콘(svg, icon 클래스)은 제외하고 오직 텍스트 관련 태그에만 나눔고딕 적용 */
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] span[data-testid="stMarkdownContainer"] { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
     }
 
-    /* 사이드바 전체 나눔고딕 고정 */
-    [data-testid="stSidebar"] * { font-family: 'Nanum Gothic', sans-serif !important; }
-
-    /* 사이드바 열기/닫기 토글 버튼(>>)과 상단 영역 강제 분리 */
-    [data-testid="stSidebarNav"] { padding-top: 15px !important; }
-    
-    /* 사이드바 익스팬더 헤더 영역 레이아웃 격리 */
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        width: 100% !important;
-    }
-    
-    /* 익스팬더 내부 텍스트와 SVG 화살표 간격 확보 */
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary p {
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        margin-right: 10px !important;
-        margin-bottom: 0 !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
-        flex-shrink: 0 !important;
+    /* 메인 리포트 전용 명조체 고정 */
+    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
+        font-family: 'Noto Serif KR', serif !important; 
     }
 
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
