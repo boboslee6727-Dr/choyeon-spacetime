@@ -557,7 +557,7 @@ if st.session_state.get('app_running', False):
 
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
-            # 💡 [중요] 세운표를 그리기 위한 기준 년도(start_year) 계산 (지난번 누락시킨 연결 고리 복원)
+            # 💡 [중요] 세운표를 그리기 위한 기준 년도(start_year) 계산 연결 고리
             try:
                 current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
                 start_year = int(sol_y) + current_daewun_age - 1
@@ -565,7 +565,7 @@ if st.session_state.get('app_running', False):
                 current_daewun_age = max(0, int(age))
                 start_year = curr_year
 
-            # 🚨 [4. 세운표 생성 - 한자 인자 직접 전달로 "-" 누락 원천 해결]
+            # 🚨 [4. 세운표 생성 - (00세) 삭제 및 한자 직결]
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -589,6 +589,29 @@ if st.session_state.get('app_running', False):
                 
             dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
             sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
+
+            # 🚨 [5. 월운표 생성 - 동적 연산(시한폭탄 제거) 및 한자 직결 복구]
+            wol_content = ""
+            for i in range(12):
+                tm = i + 1
+                # 💡 핵심: 매월 15일 기준으로 엔진에서 그 해의 정확한 월건 추출
+                _, m_pillar, _ = engine.get_true_year_month_pillar(curr_year, tm, 15, 12, 0)
+                
+                wc_hanja = m_pillar[0]
+                wj_hanja = m_pillar[1]
+                
+                bg_col = "#E8F5E9" if tm == curr_m else "transparent"
+                b_left = "1px solid #ccc"
+                
+                wol_content += html_views.get_wolun_cell(
+                    tm, 
+                    engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
+                    wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
+                    engine.get_unsung(ds_hanja, wj_hanja), 
+                    engine.get_12_shinsal(yb, wj_hanja), 
+                    bg_col, b_left
+                )
+            wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
             # 초연 시공명리 풀이 (골든 텍스트)
             choyeon_db = load_choyeon_db()
