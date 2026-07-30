@@ -526,91 +526,51 @@ if st.session_state.get('app_running', False):
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             
-            # 🚨 [3. 대운표 생성 완벽 복구 - 엔진 연산 직접 연결]
+            # 🚨 [3. 대운표 생성 - 한자 인자 직접 전달로 "-" 누락 원천 해결]
             daewun_data_list = []
             for i in range(10):
                 val = i * 10 + calc_d
-                c = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
-                j = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
+                c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
+                j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
+                c_hanja = engine.K2H_GAN.get(c_hangul, c_hangul)
+                j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
                 is_active = (val <= age < val + 10)
                 
                 daewun_data_list.append({
-                    "age_range": f"{val}~{val+9}세",  # CSS로 nowrap/간격 압축 처리했으므로 두 줄 안 됨
-                    "ss_gan": engine.get_ss(ds, c),
-                    "c_hanja": engine.K2H_GAN.get(c, c),
-                    "c_hangul": c,
-                    "j_hanja": engine.K2H_JI.get(j, j),
-                    "j_hangul": j,
-                    "ss_ji": engine.get_ss(ds, j),
-                    "un_sung": engine.get_unsung(ds, j),       # 💡 엔진 직접 연결! 누락 완전 차단
-                    "shin_sal": engine.get_12_shinsal(yb, j),  # 💡 엔진 직접 연결! 누락 완전 차단
+                    "age_range": f"{val}~{val+9}세",
+                    "ss_gan": engine.get_ss(ds_hanja, c_hanja),
+                    "c_hanja": c_hanja,
+                    "c_hangul": c_hangul,
+                    "j_hanja": j_hanja,
+                    "j_hangul": j_hangul,
+                    "ss_ji": engine.get_ss(ds_hanja, j_hanja),
+                    "un_sung": engine.get_unsung(ds_hanja, j_hanja),       # 💡 한자(j_hanja) 직결
+                    "shin_sal": engine.get_12_shinsal(yb, j_hanja),        # 💡 한자(j_hanja) 직결
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
-            
-            try:
-                all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
-            except:
-                pass 
 
-            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
-
-            try:
-                current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
-                start_year = int(sol_y) + current_daewun_age - 1
-            except:
-                current_daewun_age = max(0, int(age))
-                start_year = curr_year
-
-            # 🚨 [4. 세운표 생성 완벽 복구 - 엔진 연산 직접 연결]
+            # 🚨 [4. 세운표 생성 - 한자 인자 직접 전달로 "-" 누락 원천 해결]
             se_content = ""
             for i in range(10):
                 ty = start_year + i
                 tage = current_daewun_age + i
                 base = (ty - 1984) % 60
                 tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
-                tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
-                tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
+                tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)  # 한자 천간
+                tj = engine.K2H_JI.get(tj_hangul, tj_hangul)  # 한자 지지
                 
                 bg_col = "#E1F5FE" if ty == curr_year else "transparent"
-                b_left = "1px solid #ccc"  # 💡 세로줄 무조건 강제 고정!
+                b_left = "1px solid #ccc"
                 
                 se_content += html_views.get_sewun_cell(
                     f"{ty}년", tage, 
-                    engine.get_ss(ds, tc_hangul), tc, get_oh_class(tc), 
-                    tj, get_oh_class(tj), engine.get_ss(ds, tj_hangul), 
-                    engine.get_unsung(ds, tj_hangul),       # 💡 엔진 직접 연결
-                    engine.get_12_shinsal(yb, tj_hangul),   # 💡 엔진 직접 연결
+                    engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
+                    tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
+                    engine.get_unsung(ds_hanja, tj),       # 💡 한자(tj) 직결
+                    engine.get_12_shinsal(yb, tj),         # 💡 한자(tj) 직결
                     bg_col, b_left
                 )
-                
-            # 엔진의 K2H 매핑으로 세운 타이틀의 '무오' 같은 대운을 한자 '戊午'로 깔끔하게 치환
-            dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
-            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
-            
-            # 🚨 [5. 월운표 생성 완벽 복구 - 꼼수 하드코딩 제거 및 엔진 동적 연산]
-            wol_content = ""
-            for i in range(12):
-                tm = i + 1
-                
-                # 💡 핵심: 매월 15일을 기준으로 엔진에서 '그 해 해당 월'의 정확한 월건을 추출 (시한폭탄 제거)
-                _, m_pillar, _ = engine.get_true_year_month_pillar(curr_year, tm, 15, 12, 0)
-                
-                wc_hanja = m_pillar[0] # 추출된 월간 (예: '庚')
-                wj_hanja = m_pillar[1] # 추출된 월지 (예: '寅')
-                
-                bg_col = "#E8F5E9" if tm == curr_m else "transparent"
-                b_left = "1px solid #ccc"
-                
-                wol_content += html_views.get_wolun_cell(
-                    tm, 
-                    engine.get_ss(ds, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
-                    wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds, wj_hanja), 
-                    engine.get_unsung(ds, wj_hanja), 
-                    engine.get_12_shinsal(yb, wj_hanja), 
-                    bg_col, b_left
-                )
-            wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
             # 초연 시공명리 풀이 (골든 텍스트)
             choyeon_db = load_choyeon_db()
