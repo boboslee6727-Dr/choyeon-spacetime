@@ -1,7 +1,7 @@
 import re 
 
 def get_global_css():
-    """[Ver 70.4 운성/신살 색상 지정 및 아이콘 보존 CSS]"""
+    """[Ver 71.0 프로모델 최종 최적화본]"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
@@ -28,10 +28,6 @@ def get_global_css():
     .color-토 { background: #F9A825 !important; color: #000 !important; }
     .color-금 { background: #9E9E9E !important; color: #FFF !important; }
     .color-수 { background: #212121 !important; color: #FFF !important; }
-
-    /* 🚨 십이운성(파란색) 및 십이신살(빨간색) 전용 클래스 추가 */
-    .color-unsung { color: #0D47A1 !important; font-weight: 900 !important; }
-    .color-shinsal { color: #C62828 !important; font-weight: 900 !important; }
 
     .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 13px; line-height: 1.2 !important; }
@@ -109,15 +105,12 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
+        # 합충형파해 2/3단 가로선 연회색 완벽 처리 (윗선을 0px로 날려 테두리 충돌 원천 차단)
+        b_top = "0px !important"
         if l_idx == 1:
             b_bot = "2px solid #CCCCCC !important" 
-            b_top = "0px !important"
-        elif l_idx == 2:
-            b_bot = "1px solid #444 !important"
-            b_top = "0px !important"
         else:
             b_bot = "1px solid #444 !important"
-            b_top = "1px solid #444 !important"
         
         cells = []
         for ci in range(4):
@@ -226,22 +219,19 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     return f"""
-    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; box-sizing:border-box;'>
-            <span>{title_str}</span>
-            <span style='font-size:11px; font-weight:normal; opacity:0.9;'>({tage}세)</span>
-        </div>
-        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div style='font-size:11px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
-        <div style='font-size:11px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
+    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column;'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center;'>{title_str}</div>
+        <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
+        <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
+        <div style='font-size:12px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
+        <div style='font-size:12px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
     </div>
     """
 
@@ -267,27 +257,16 @@ def get_sewun_layout(title, content):
     """
 
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    hanja_map = {
-        "갑자": "甲子", "을축": "乙丑", "병인": "丙寅", "정묘": "丁卯", "무진": "戊辰", "기사": "己巳", "경오": "庚午", "신미": "辛未", "임신": "壬申", "계유": "癸酉",
-        "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅", "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
-        "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子", "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
-        "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌", "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
-        "갑진": "甲辰", "을사": "乙巳", "병오": "丙午", "정미": "丁未", "무신": "戊申", "기유": "己酉", "경술": "庚戌", "신해": "辛亥", "임자": "壬子", "계축": "癸丑",
-        "갑인": "甲寅", "을묘": "乙卯", "병진": "丙辰", "정사": "丁巳", "무오": "戊午", "기미": "己未", "경신": "庚申", "신유": "辛酉", "임술": "壬戌", "계해": "癸亥"
-    }
-    display_title = title_str
-    for hangul, hanja in hanja_map.items():
-        if hangul in title_str:
-            display_title = title_str.replace(hangul, hanja)
-            break
-            
-    # 🚨 누락 원인 차단 및 파란색/빨간색 직접 주입
-    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
-    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
+    # 군더더기 hanja_map 제거 완료. 순수 데이터만 처리합니다.
+    u_val = unsung if unsung and str(unsung).strip() else "-"
+    s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:32px; display:flex; align-items:center; justify-content:center; box-sizing:border-box;'>{display_title}<br>({tage}세)</div>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; box-sizing:border-box;'>
+            <span>{title_str}</span>
+            <span style='font-size:11px; font-weight:normal; opacity:0.9;'>({tage}세)</span>
+        </div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
@@ -306,9 +285,9 @@ def get_wolun_layout(title, content):
     """
 
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    # 🚨 누락 원인 차단 및 파란색/빨간색 직접 주입
-    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
-    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
+    u_val = unsung if unsung and str(unsung).strip() else "-"
+    s_val = shinsal if shinsal and str(shinsal).strip() else "-"
+    
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; border-bottom:1px solid #ccc; height:25px; display:flex; align-items:center; justify-content:center;'>{tm}월</div>
@@ -369,6 +348,7 @@ def get_gunghap_cover(version, m_name, m_age, m_sol, m_lun, m_time, f_name, f_ag
             <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class="page-break-before"></div>
     """
 
 def get_gunghap_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, shinsal, gen_shinsal):
