@@ -224,46 +224,34 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     return f"""
-    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center;'>{title_str}</div>
+    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column; box-sizing:border-box;'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div style='font-size:12px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
-        <div style='font-size:12px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
+        <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
 
 def get_sewun_layout(title, content):
-    hanja_60_map = {
-        "갑자": "甲子", "을축": "乙丑", "병인": "丙寅", "정묘": "丁卯", "무진": "戊辰", "기사": "己巳", "경오": "庚午", "신미": "辛未", "임신": "壬申", "계유": "癸酉",
-        "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅", "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
-        "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子", "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
-        "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌", "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
-        "갑진": "甲辰", "을사": "乙巳", "병오": "丙午", "정미": "丁未", "무신": "戊申", "기유": "己酉", "경술": "庚戌", "신해": "辛亥", "임자": "壬子", "계축": "癸丑",
-        "갑인": "甲寅", "을묘": "乙卯", "병진": "丙辰", "정사": "丁巳", "무오": "戊午", "기미": "己未", "경신": "庚申", "신유": "辛酉", "임술": "壬戌", "계해": "癸亥"
-    }
-    display_title = title
-    for hg, hj in hanja_60_map.items():
-        if hg in display_title:
-            display_title = display_title.replace(hg, hj)
-            
+    # 본체(app.py)에서 이미 엔진을 통해 戊午 등으로 완벽히 변환된 title을 넘겨주므로,
+    # 뷰(html_views)에서는 아무런 조작 없이 그대로 화면에 뿌려주기만 합니다.
     return f"""
-    <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{display_title}</div>
+    <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
     <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
         {content}
     </div>
     """
 
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    # 군더더기 hanja_map 제거 완료. 순수 데이터만 처리합니다.
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     return f"""
-    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; box-sizing:border-box;'>
+    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; box-sizing:border-box; white-space:nowrap; letter-spacing:-0.5px;'>
             <span>{title_str}</span>
             <span style='font-size:11px; font-weight:normal; opacity:0.9;'>({tage}세)</span>
         </div>
@@ -271,11 +259,10 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div style='font-size:11px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
-        <div style='font-size:11px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
+        <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
-
 def get_wolun_layout(title, content):
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
@@ -289,14 +276,14 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     return f"""
-    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; border-bottom:1px solid #ccc; height:25px; display:flex; align-items:center; justify-content:center;'>{tm}월</div>
+    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; border-bottom:1px solid #ccc; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div style='font-size:11px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
-        <div style='font-size:11px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
+        <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
 
