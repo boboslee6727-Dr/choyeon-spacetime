@@ -1,7 +1,7 @@
 import re 
 
 def get_global_css():
-    """[Ver 70.3 아이콘 글자 깨짐(arrow_) 완벽 해결본]"""
+    """[Ver 70.4 운성/신살 색상 지정 및 아이콘 보존 CSS]"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
@@ -28,6 +28,10 @@ def get_global_css():
     .color-토 { background: #F9A825 !important; color: #000 !important; }
     .color-금 { background: #9E9E9E !important; color: #FFF !important; }
     .color-수 { background: #212121 !important; color: #FFF !important; }
+
+    /* 🚨 십이운성(파란색) 및 십이신살(빨간색) 전용 클래스 추가 */
+    .color-unsung { color: #0D47A1 !important; font-weight: 900 !important; }
+    .color-shinsal { color: #C62828 !important; font-weight: 900 !important; }
 
     .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 13px; line-height: 1.2 !important; }
@@ -273,8 +277,9 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
             display_title = title_str.replace(hangul, hanja)
             break
             
-    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "-"
-    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "-"
+    # 🚨 누락 원인 차단 및 파란색/빨간색 직접 주입
+    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
+    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
     
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
@@ -297,8 +302,9 @@ def get_wolun_layout(title, content):
     """
 
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "-"
-    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "-"
+    # 🚨 누락 원인 차단 및 파란색/빨간색 직접 주입
+    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
+    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; border-bottom:1px solid #ccc; height:25px; display:flex; align-items:center; justify-content:center;'>{tm}월</div>
