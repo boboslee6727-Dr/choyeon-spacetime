@@ -235,28 +235,14 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
     u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
     s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
-    
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column;'>
-        <!-- 최상단 연령 표시 (상하좌우 완벽 중앙정렬) -->
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center;'>{title_str}</div>
-        
-        <!-- 천간 십성 -->
         <div style='font-size:13px; font-weight:900; color:#333 !important; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        
-        <!-- 천간 간지 -->
         <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        
-        <!-- 지지 간지 -->
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        
-        <!-- 지지 십성 -->
         <div style='font-size:13px; font-weight:900; color:#333 !important; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        
-        <!-- 십이운성 (파란색 굵은체) -->
         <div style='font-size:12px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
-        
-        <!-- 십이신살 (빨간색 굵은체) -->
         <div style='font-size:12px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
     </div>
     """
