@@ -6,21 +6,19 @@ import os
 import re
 from google import genai
 import time
-import engine
-import prompts
 import json
 import math
 import pytz
-import html_views
-
-# 🚨 [여기서부터 3줄을 꼭 추가해 주십시오!]
-import importlib
-importlib.reload(html_views)  # html_views.py를 강제로 새로 읽어오라는 명령!
-importlib.reload(engine)     # engine.py를 강제로 새로 읽어오라는 명령!
-
-# ⬇️ [바로 이곳에 이 두 줄을 삽입해 주십시오!]
 import sys
 import importlib
+
+import engine
+import prompts
+import html_views
+
+# 🔄 서브 모듈 변경 사항 즉시 반영을 위한 강제 리로드 설정
+importlib.reload(engine)
+importlib.reload(html_views)
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
