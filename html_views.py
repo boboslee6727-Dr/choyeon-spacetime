@@ -251,9 +251,8 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
     
     return f"""
     <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; box-sizing:border-box; white-space:nowrap; letter-spacing:-0.5px;'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:28px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
             <span>{title_str}</span>
-            <span style='font-size:11px; font-weight:normal; opacity:0.9;'>({tage}세)</span>
         </div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
@@ -263,6 +262,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
+
 def get_wolun_layout(title, content):
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
