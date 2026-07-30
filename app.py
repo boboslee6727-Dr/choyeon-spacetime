@@ -544,11 +544,26 @@ if st.session_state.get('app_running', False):
                     "j_hanja": j_hanja,
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hanja),
-                    "un_sung": engine.get_unsung(ds_hanja, j_hanja),       # 💡 한자(j_hanja) 직결
-                    "shin_sal": engine.get_12_shinsal(yb, j_hanja),        # 💡 한자(j_hanja) 직결
+                    "un_sung": engine.get_unsung(ds_hanja, j_hanja),       # 💡 한자 직결
+                    "shin_sal": engine.get_12_shinsal(yb, j_hanja),        # 💡 한자 직결
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
+
+            try:
+                all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
+            except:
+                pass 
+
+            un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+
+            # 💡 [중요] 세운표를 그리기 위한 기준 년도(start_year) 계산 (지난번 누락시킨 연결 고리 복원)
+            try:
+                current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
+                start_year = int(sol_y) + current_daewun_age - 1
+            except:
+                current_daewun_age = max(0, int(age))
+                start_year = curr_year
 
             # 🚨 [4. 세운표 생성 - 한자 인자 직접 전달로 "-" 누락 원천 해결]
             se_content = ""
@@ -567,10 +582,13 @@ if st.session_state.get('app_running', False):
                     f"{ty}년", tage, 
                     engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                     tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
-                    engine.get_unsung(ds_hanja, tj),       # 💡 한자(tj) 직결
-                    engine.get_12_shinsal(yb, tj),         # 💡 한자(tj) 직결
+                    engine.get_unsung(ds_hanja, tj),       # 💡 한자 직결
+                    engine.get_12_shinsal(yb, tj),         # 💡 한자 직결
                     bg_col, b_left
                 )
+                
+            dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
+            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
 
             # 초연 시공명리 풀이 (골든 텍스트)
             choyeon_db = load_choyeon_db()
