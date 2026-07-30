@@ -226,18 +226,22 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
-    u_val = unsung if unsung and str(unsung).strip() and str(unsung).strip() != "-" else "십이운성"
-    s_val = shinsal if shinsal and str(shinsal).strip() and str(shinsal).strip() != "-" else "신살"
+def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+    u_val = unsung if unsung and str(unsung).strip() else "-"
+    s_val = shinsal if shinsal and str(shinsal).strip() else "-"
+    
     return f"""
-    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center;'>{title_str}</div>
-        <div style='font-size:13px; font-weight:900; color:#333 !important; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:13px; font-weight:900; color:#333 !important; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div style='font-size:12px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
-        <div style='font-size:12px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
+    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column;'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; box-sizing:border-box;'>
+            <span>{title_str}</span>
+            <span style='font-size:11px; font-weight:normal; opacity:0.9;'>({tage}세)</span>
+        </div>
+        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
+        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
+        <div style='font-size:11px; color:#0D47A1 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{u_val}</div>
+        <div style='font-size:11px; color:#C62828 !important; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'>{s_val}</div>
     </div>
     """
 
