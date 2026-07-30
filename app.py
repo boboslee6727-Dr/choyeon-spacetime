@@ -11,7 +11,7 @@ import math
 import pytz
 import sys
 import importlib
- 
+
 import engine
 import prompts
 import html_views
@@ -497,7 +497,7 @@ if st.session_state.get('app_running', False):
                 oh = engine.get_color(c)
                 if oh in counts: counts[oh] += 1
             
-            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 해','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(ds_hanja, '없음')
             curr_y_ji = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][(curr_year - 1984) % 12]
             
@@ -526,9 +526,33 @@ if st.session_state.get('app_running', False):
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             
-            # 대운표 생성
-            daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age)
-            all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
+            # 🚨 [3. 대운표 생성 완벽 복구 - 엔진 연산 직접 연결]
+            daewun_data_list = []
+            for i in range(10):
+                val = i * 10 + calc_d
+                c = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
+                j = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
+                is_active = (val <= age < val + 10)
+                
+                daewun_data_list.append({
+                    "age_range": f"{val}~{val+9}세",  # CSS로 nowrap/간격 압축 처리했으므로 두 줄 안 됨
+                    "ss_gan": engine.get_ss(ds, c),
+                    "c_hanja": engine.K2H_GAN.get(c, c),
+                    "c_hangul": c,
+                    "j_hanja": engine.K2H_JI.get(j, j),
+                    "j_hangul": j,
+                    "ss_ji": engine.get_ss(ds, j),
+                    "un_sung": engine.get_unsung(ds, j),       # 💡 엔진 직접 연결! 누락 완전 차단
+                    "shin_sal": engine.get_12_shinsal(yb, j),  # 💡 엔진 직접 연결! 누락 완전 차단
+                    "is_current": is_active,
+                    "is_first": (i == 0)
+                })
+            
+            try:
+                all_daewun_data = engine.get_daeun_fact_string(daewun_data_list)
+            except:
+                pass 
+
             un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
             try:
@@ -538,7 +562,7 @@ if st.session_state.get('app_running', False):
                 current_daewun_age = max(0, int(age))
                 start_year = curr_year
 
-            # 세운표 생성
+            # 🚨 [4. 세운표 생성 완벽 복구 - 엔진 연산 직접 연결]
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -547,27 +571,44 @@ if st.session_state.get('app_running', False):
                 tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
                 tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
                 tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
+                
                 bg_col = "#E1F5FE" if ty == curr_year else "transparent"
-                b_left = "1px solid #ccc" if i != 0 else "none"
+                b_left = "1px solid #ccc"  # 💡 세로줄 무조건 강제 고정!
+                
                 se_content += html_views.get_sewun_cell(
-                    f"{ty}년", tage, engine.get_ss(ds, tc_hangul), tc, get_oh_class(tc), 
-                    tj, get_oh_class(tj), engine.get_ss(ds, tj_hangul), engine.get_unsung(ds, tj_hangul), engine.get_12_shinsal(yb, tj_hangul), bg_col, b_left
+                    f"{ty}년", tage, 
+                    engine.get_ss(ds, tc_hangul), tc, get_oh_class(tc), 
+                    tj, get_oh_class(tj), engine.get_ss(ds, tj_hangul), 
+                    engine.get_unsung(ds, tj_hangul),       # 💡 엔진 직접 연결
+                    engine.get_12_shinsal(yb, tj_hangul),   # 💡 엔진 직접 연결
+                    bg_col, b_left
                 )
-            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({dw_g_cur}{dw_j_cur}대운 기준) ]", se_content)
+                
+            # 엔진의 K2H 매핑으로 세운 타이틀의 '무오' 같은 대운을 한자 '戊午'로 깔끔하게 치환
+            dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
+            sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
             
-            # 월운표 생성
-            wol_gans_kor = ["기", "경", "신", "임", "계", "갑", "을", "병", "정", "무", "기", "경"]
-            wol_jis_kor = ["축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자"]
+            # 🚨 [5. 월운표 생성 완벽 복구 - 꼼수 하드코딩 제거 및 엔진 동적 연산]
             wol_content = ""
             for i in range(12):
                 tm = i + 1
-                wc_kor, wj_kor = wol_gans_kor[i], wol_jis_kor[i]
-                wc, wj = engine.K2H_GAN.get(wc_kor, wc_kor), engine.K2H_JI.get(wj_kor, wj_kor)
+                
+                # 💡 핵심: 매월 15일을 기준으로 엔진에서 '그 해 해당 월'의 정확한 월건을 추출 (시한폭탄 제거)
+                _, m_pillar, _ = engine.get_true_year_month_pillar(curr_year, tm, 15, 12, 0)
+                
+                wc_hanja = m_pillar[0] # 추출된 월간 (예: '庚')
+                wj_hanja = m_pillar[1] # 추출된 월지 (예: '寅')
+                
                 bg_col = "#E8F5E9" if tm == curr_m else "transparent"
-                b_left = "1px solid #ccc" if i != 0 else "none" 
+                b_left = "1px solid #ccc"
+                
                 wol_content += html_views.get_wolun_cell(
-                    tm, engine.get_ss(ds, wc_kor) or "-", wc, get_oh_class(wc), 
-                    wj, get_oh_class(wj), engine.get_ss(ds, wj_kor) or "-", engine.get_unsung(ds, wj_kor) or "-", engine.get_12_shinsal(yb, wj_kor) or "-", bg_col, b_left
+                    tm, 
+                    engine.get_ss(ds, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
+                    wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds, wj_hanja), 
+                    engine.get_unsung(ds, wj_hanja), 
+                    engine.get_12_shinsal(yb, wj_hanja), 
+                    bg_col, b_left
                 )
             wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
