@@ -219,16 +219,16 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-# 1. 대운 셀
+# 1. 대운 셀 (5px 딥 오렌지 초강력 테두리)
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [핵심] 활성화 시 바탕색 + 상단바 오렌지 + 안쪽 3px 강제 테두리(box-shadow) 3연합 주입
+    # 💡 [보완] 5px 인셋 테두리 + 입체감 그림자 주입
     if is_current:
-        active_style = "box-shadow: inset 0 0 0 3px #E65100 !important; border: 1px solid #E65100 !important;"
+        active_style = "box-shadow: inset 0 0 0 5px #E65100 !important; border: 1px solid #E65100 !important; position: relative; z-index: 10;"
         header_bg = "#E65100"
-        bg_col = "#FFF9C4" # 파스텔 노랑
+        bg_col = "#FFF9C4"
     else:
         active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
@@ -255,16 +255,16 @@ def get_sewun_layout(title, content):
     </div>
     """
 
-# 2. 세운 셀
+# 2. 세운 셀 (5px 딥 블루 초강력 테두리)
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [핵심] 활성화 시 바탕색 + 상단바 블루 + 안쪽 3px 강제 테두리(box-shadow)
+    # 💡 [보완] 5px 인셋 테두리 + 입체감 그림자 주입
     if is_current:
-        active_style = "box-shadow: inset 0 0 0 3px #0277BD !important; border: 1px solid #0277BD !important;"
+        active_style = "box-shadow: inset 0 0 0 5px #0277BD !important; border: 1px solid #0277BD !important; position: relative; z-index: 10;"
         header_bg = "#0277BD"
-        bg_col = "#E1F5FE" # 파스텔 하늘
+        bg_col = "#E1F5FE"
     else:
         active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
@@ -291,16 +291,16 @@ def get_wolun_layout(title, content):
     </div>
     """
 
-# 3. 월운 셀
+# 3. 월운 셀 (5px 딥 그린 초강력 테두리)
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [핵심] 활성화 시 바탕색 + 상단바 그린 + 안쪽 3px 강제 테두리(box-shadow)
+    # 💡 [보완] 5px 인셋 테두리 + 입체감 그림자 주입
     if is_current:
-        active_style = "box-shadow: inset 0 0 0 3px #2E7D32 !important; border: 1px solid #2E7D32 !important;"
+        active_style = "box-shadow: inset 0 0 0 5px #2E7D32 !important; border: 1px solid #2E7D32 !important; position: relative; z-index: 10;"
         header_bg = "#2E7D32"
-        bg_col = "#E8F5E9" # 파스텔 연녹
+        bg_col = "#E8F5E9"
     else:
         active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
@@ -316,6 +316,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
         <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
+
 def get_closing_html(name):
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
