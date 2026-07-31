@@ -223,16 +223,16 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 활성화 대운 강조 스타일 (딥 오렌지 3px 테두리 및 입체감)
+    # 💡 [강력 수정] border 대신 outline + box-shadow로 테두리 무조건 100% 표출
     if is_current:
-        border_style = "border: 3px solid #E65100 !important; z-index: 10;"
+        active_style = "outline: 3px solid #E65100 !important; outline-offset: -3px; box-shadow: inset 0 0 0 1px #E65100; z-index: 99;"
         header_bg = "#E65100"
     else:
-        border_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+        active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
         
     return f"""
-    <div style='flex:1; {border_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column; box-sizing:border-box;'>
+    <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column; box-sizing:border-box; position:relative;'>
         <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
@@ -257,16 +257,15 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 활성화 세운 강조 스타일 (진한 블루 3px 테두리 및 입체감)
     if is_current:
-        border_style = "border: 3px solid #0277BD !important; z-index: 10;"
+        active_style = "outline: 3px solid #0277BD !important; outline-offset: -3px; box-shadow: inset 0 0 0 1px #0277BD; z-index: 99;"
         header_bg = "#0277BD"
     else:
-        border_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+        active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
     
     return f"""
-    <div style='flex:1; {border_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+    <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; position:relative;'>
         <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:28px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
             <span>{title_str}</span>
         </div>
@@ -291,16 +290,15 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 활성화 월운 강조 스타일 (진한 그린 3px 테두리 및 입체감)
     if is_current:
-        border_style = "border: 3px solid #2E7D32 !important; z-index: 10;"
+        active_style = "outline: 3px solid #2E7D32 !important; outline-offset: -3px; box-shadow: inset 0 0 0 1px #2E7D32; z-index: 99;"
         header_bg = "#2E7D32"
     else:
-        border_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+        active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
     
     return f"""
-    <div style='flex:1; {border_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+    <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; position:relative;'>
         <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
