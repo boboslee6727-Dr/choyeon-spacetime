@@ -23,7 +23,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 70.1"
+APP_VERSION = "ver 70.2"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용 (html_views 모듈 호출)
