@@ -219,14 +219,14 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-# 1. 대운 셀 (5px 딥 오렌지 초강력 테두리)
+# 1. 대운 셀 (진짜 5px 딥 오렌지 실선)
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [보완] 5px 인셋 테두리 + 입체감 그림자 주입
+    # 💡 [핵심] 그림자가 아닌 '진짜 5px outline' + z-index로 3px 외곽선 위로 완전 돌출
     if is_current:
-        active_style = "box-shadow: inset 0 0 0 5px #E65100 !important; border: 1px solid #E65100 !important; position: relative; z-index: 10;"
+        active_style = "outline: 5px solid #E65100 !important; outline-offset: -5px; position: relative; z-index: 50;"
         header_bg = "#E65100"
         bg_col = "#FFF9C4"
     else:
@@ -255,14 +255,13 @@ def get_sewun_layout(title, content):
     </div>
     """
 
-# 2. 세운 셀 (5px 딥 블루 초강력 테두리)
+# 2. 세운 셀 (진짜 5px 딥 블루 실선)
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [보완] 5px 인셋 테두리 + 입체감 그림자 주입
     if is_current:
-        active_style = "box-shadow: inset 0 0 0 5px #0277BD !important; border: 1px solid #0277BD !important; position: relative; z-index: 10;"
+        active_style = "outline: 5px solid #0277BD !important; outline-offset: -5px; position: relative; z-index: 50;"
         header_bg = "#0277BD"
         bg_col = "#E1F5FE"
     else:
@@ -291,14 +290,13 @@ def get_wolun_layout(title, content):
     </div>
     """
 
-# 3. 월운 셀 (5px 딥 그린 초강력 테두리)
+# 3. 월운 셀 (진짜 5px 딥 그린 실선)
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [보완] 5px 인셋 테두리 + 입체감 그림자 주입
     if is_current:
-        active_style = "box-shadow: inset 0 0 0 5px #2E7D32 !important; border: 1px solid #2E7D32 !important; position: relative; z-index: 10;"
+        active_style = "outline: 5px solid #2E7D32 !important; outline-offset: -5px; position: relative; z-index: 50;"
         header_bg = "#2E7D32"
         bg_col = "#E8F5E9"
     else:
