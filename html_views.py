@@ -219,13 +219,21 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
+    # 활성화 대운 강조 스타일 (딥 오렌지 3px 테두리 및 입체감)
+    if is_current:
+        border_style = "border: 3px solid #E65100 !important; z-index: 10;"
+        header_bg = "#E65100"
+    else:
+        border_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+        header_bg = "#3E2723"
+        
     return f"""
-    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
+    <div style='flex:1; {border_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column; box-sizing:border-box;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
@@ -245,13 +253,21 @@ def get_sewun_layout(title, content):
     </div>
     """
 
-def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
+    # 활성화 세운 강조 스타일 (진한 블루 3px 테두리 및 입체감)
+    if is_current:
+        border_style = "border: 3px solid #0277BD !important; z-index: 10;"
+        header_bg = "#0277BD"
+    else:
+        border_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+        header_bg = "#3E2723"
+    
     return f"""
-    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:12px; border-bottom:1px solid #ccc; height:28px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
+    <div style='flex:1; {border_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:28px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
             <span>{title_str}</span>
         </div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
@@ -271,13 +287,21 @@ def get_wolun_layout(title, content):
     </div>
     """
 
-def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left):
+def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
+    # 활성화 월운 강조 스타일 (진한 그린 3px 테두리 및 입체감)
+    if is_current:
+        border_style = "border: 3px solid #2E7D32 !important; z-index: 10;"
+        header_bg = "#2E7D32"
+    else:
+        border_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+        header_bg = "#3E2723"
+    
     return f"""
-    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; font-size:13px; border-bottom:1px solid #ccc; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
+    <div style='flex:1; {border_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
@@ -600,6 +624,7 @@ def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: return ""
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
+    # 불필요한 AI 안내문구 삭제
     clean_raw = re.sub(r'최소\s*\d+~\d+문장\s*이상으로\s*(상세히\s*)?분석하십시오\.?', '', clean_raw)
     clean_raw = re.sub(r'드라마틱한\s*에세이로\s*서술하십시오\.?', '', clean_raw)
     clean_raw = re.sub(r'재성의\s*유무와\s*식상의\s*생조\s*여부를\s*바탕으로\s*분석하십시오\.?', '', clean_raw)
@@ -608,18 +633,44 @@ def format_ai_text_to_html(ai_raw_text):
     
     lines = clean_raw.split('\n')
     formatted_html = []
+    
     for line in lines:
         line_str = line.strip()
         if not line_str: continue
+        
+        # AI가 혹시라도 **(볼드) 기호를 썼다면 제거
         clean_line_str = line_str.replace("**", "")
+        
+        # 🚨 [대제목 제어 구간] 예: "1. 성격 분석"
         if re.match(r'^\d+\.\s+', clean_line_str):
-            formatted_html.append(f"<p class='ai-title-l1' style='font-size:18px !important; font-weight:900 !important; color:#1A237E !important; margin-top:25px !important; margin-bottom:12px !important; border-bottom:2px solid #1A237E; padding-bottom:6px; word-break:break-word;'>{clean_line_str}</p>")
+            # 폰트를 22px로 키우고 굵기 900 유지, 배경을 살짝 주어 완벽히 돋보이게 처리
+            formatted_html.append(
+                f"<p class='ai-title-l1' style='font-size:22px !important; font-weight:900 !important; "
+                f"color:#1A237E !important; background-color:#E8EAF6; padding:8px 12px; border-radius:6px; "
+                f"margin-top:35px !important; margin-bottom:15px !important; border-left:5px solid #1A237E; word-break:break-word;'>"
+                f"{clean_line_str}</p>"
+            )
+            
+        # 🚨 [소제목 제어 구간] 예: "1) 내 삶의 무대와 타고난 기본 성향:"
         elif re.match(r'^\d+\)\s+', clean_line_str):
-            formatted_html.append(f"<p class='ai-title-l2' style='font-size:16px !important; font-weight:900 !important; color:#2E7D32 !important; margin-top:18px !important; margin-bottom:8px !important; word-break:break-word;'>{clean_line_str}</p>")
+            # 폰트를 18px로 키우고 굵기 900 유지, 진한 초록색으로 확실한 구분
+            formatted_html.append(
+                f"<p class='ai-title-l2' style='font-size:18px !important; font-weight:900 !important; "
+                f"color:#1B5E20 !important; margin-top:20px !important; margin-bottom:10px !important; word-break:break-word;'>"
+                f"{clean_line_str}</p>"
+            )
+            
+        # 🚨 [일반 본문 제어 구간] 통변 내용
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
             safe_line = safe_line.replace("</div>", "") 
-            formatted_html.append(f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; line-height:1.85 !important; color:#111111 !important; text-align:justify !important; margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>{safe_line}</p>")
+            formatted_html.append(
+                f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; "
+                f"line-height:1.85 !important; color:#111111 !important; text-align:justify !important; "
+                f"margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>"
+                f"{safe_line}</p>"
+            )
+            
     return "".join(formatted_html).replace("</div></div>", "")
 
 def get_ai_report_box(content):
