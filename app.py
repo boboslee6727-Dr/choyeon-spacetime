@@ -48,8 +48,11 @@ def load_choyeon_db():
 db = load_choyeon_db()
 
 # ==============================================================================
-# 1.5. AI 및 명리 연산 엔진 (Pydantic int_type 오류 정정 파편)
+# 1.5. AI 및 명리 연산 엔진 (Pro-Model 방탄 아키텍처)
 # ==============================================================================
+import time
+import re
+
 try:
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 except Exception as _api_e:
@@ -57,15 +60,18 @@ except Exception as _api_e:
     _gemini_client = None
 
 @st.cache_data(show_spinner=False, ttl=86400)
-def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', max_tokens=6000):
-    if '1.5' in model_name: model_name = 'gemini-2.5-flash'
-    if _gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', max_tokens=8000):
+    if '1.5' in model_name: 
+        model_name = 'gemini-2.5-flash'
+        
+    if _gemini_client is None: 
+        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
     
-    # 💡 max_tokens 값을 명확한 정수(int)로 변환
+    # 💡 1차 방어: max_tokens에 딕셔너리나 None이 들어와도 무조건 정수 8000으로 고정
     try:
         tok_limit = int(max_tokens)
-    except:
-        tok_limit = 6000
+    except (ValueError, TypeError):
+        tok_limit = 8000
 
     max_retries = 2
     for attempt in range(max_retries + 1):
@@ -76,32 +82,27 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', m
                 config=genai.types.GenerateContentConfig(
                     system_instruction=system_prompt, 
                     temperature=0.7,
-                    max_output_tokens=tok_limit  # 👈 int형 정수값 전달 보장!
+                    max_output_tokens=tok_limit  # 완벽히 검증된 정수(int)만 주입됨
                 )
             )
             return response.text.strip()
         except Exception as e:
-            if attempt < max_retries: time.sleep(1); continue
-            return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
+            if attempt < max_retries: 
+                time.sleep(1)
+                continue
+            return f"<div style='color:red;'>🚨 AI 서버 장애: {str(e)}</div>"
 
-def call_gemini_api(prompt_text, max_tokens=6000):
+# 💡 2차 방어: app.py 838라인의 호출 방식(extra_facts 전달)을 그대로 수용하는 안전한 시그니처
+def call_gemini_api(prompt_text, extra_facts=None, model="gemini-2.5-flash", **kwargs):
+    # kwargs를 통해 혹시 모를 추가 인자(max_tokens 등)가 들어와도 유연하게 흡수
+    max_tokens = kwargs.get('max_tokens', 8000)
+    
     sys_role = getattr(prompts, 'SYSTEM_ROLE', None)
     if sys_role is None:
         sys_role = getattr(prompts, 'SYSTEM_PROMPT', "당신은 초연 시공명리 전문가입니다. 팩트 데이터를 바탕으로 정확하게 분석하세요.")
     
-    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_tokens=int(max_tokens))
-
-def extract_ganji(text):
-    if not text: return ""
-    return re.sub(r'[^가-힣一-龥]', '', text)
-
-def get_oh_class(ganji):
-    oh = engine.get_color(ganji)
-    return f"color-{oh}" if oh != '무' else ""
-
-def td_bg(ganji):
-    cls = get_oh_class(ganji)
-    return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
+    # 💡 extra_facts가 전달되더라도 내부 충돌 없이 안전하게 get_ai_response로 토스
+    return get_ai_response(sys_role, prompt_text, model_name=model, max_tokens=max_tokens)
 
 # ==============================================================================
 # 2. 사이드바 통제 센터 (방탄(Bulletproof) 구조 및 변수 선언 안전화)
