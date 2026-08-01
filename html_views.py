@@ -624,7 +624,9 @@ def get_other_report_original_html(other_text_input):
     """
 
 def format_ai_text_to_html(ai_raw_text):
-    if not ai_raw_text: return ""
+    if not ai_raw_text: 
+        return ""
+    
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
     
@@ -633,27 +635,29 @@ def format_ai_text_to_html(ai_raw_text):
     
     for line in lines:
         line_str = line.strip()
-        if not line_str: continue
+        if not line_str: 
+            continue
         
         clean_line_str = line_str.replace("**", "")
         
-        # 🚨 [대제목 파싱] 예: "1. 성격 분석" 또는 "2. 사주팔자 구조분석"
-        if re.match(r'^\d+\.\s*[\uac00-\ud7a3a-zA-Z0-9\s]+', clean_line_str) and not re.match(r'^\d+\)\s*', clean_line_str):
+        # 🚨 [대제목 - 순수 검정색 22px] 예: "1. 성격 분석", "2. 사주팔자 구조분석"
+        if re.match(r'^\d+\.\s+', clean_line_str) and not re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(
                 f"<p class='ai-title-l1' style='font-size:22px !important; font-weight:900 !important; "
-                f"color:#1A237E !important; margin-top:35px !important; margin-bottom:15px !important; word-break:break-word;'>"
+                f"color:#000000 !important; margin-top:35px !important; margin-bottom:15px !important; word-break:break-word; "
+                f"border-bottom:2px solid #000000; padding-bottom:5px;'>"
                 f"{clean_line_str}</p>"
             )
             
-        # 🚨 [소제목 파싱] 예: "1) 내 삶의 무대와 타고난 기본 성향:"
+        # 🚨 [소제목 - 순수 검정색 18px] 예: "1) 내 삶의 무대와 타고난 기본 성향:"
         elif re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(
                 f"<p class='ai-title-l2' style='font-size:18px !important; font-weight:900 !important; "
-                f"color:#1B5E20 !important; margin-top:20px !important; margin-bottom:10px !important; word-break:break-word;'>"
+                f"color:#000000 !important; margin-top:22px !important; margin-bottom:10px !important; word-break:break-word;'>"
                 f"{clean_line_str}</p>"
             )
             
-        # 🚨 [본문 내용 파싱]
+        # 🚨 [본문 내용 - 검정색 15px]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
             formatted_html.append(
