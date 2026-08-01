@@ -348,6 +348,55 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     </div>
     """
 
+def generate_weekly_daily_layout(weekly_ganji_list, today_day, ds, db, m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal):
+    """
+    주간 간지 흐름 및 오늘의 일운(오전/오후 체용 파동) HTML 표 생성 함수
+    """
+    html = f"""
+    <div style="margin-top: 25px; margin-bottom: 25px; background: #FFFDF9; border: 1px solid #D7CCC8; border-radius: 8px; padding: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <h3 style="font-family: 'Nanum Myeongjo', serif; font-size: 18px; font-weight: bold; color: #3E2723; margin-top: 0; margin-bottom: 12px; border-bottom: 2px solid #8D6E63; padding-bottom: 6px;">
+            📅 주간 간지 흐름 및 오늘의 일진(日進) 체용(體用) 분석
+        </h3>
+        
+        <!-- 1. 주간 간지 흐름 요약 -->
+        <div style="margin-bottom: 15px; background-color: #F5F5F5; padding: 10px 14px; border-radius: 5px; font-size: 14px; color: #333; border-left: 4px solid #8D6E63;">
+            <b>📌 이번 주 간지 흐름 (월~일):</b> {weekly_ganji_list}
+        </div>
+
+        <!-- 2. 오늘의 일운 체용 상세 표 -->
+        <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 14px;">
+            <thead>
+                <tr style="background-color: #EFEBE9; color: #4E342E;">
+                    <th style="padding: 8px; border: 1px solid #D7CCC8;">구분</th>
+                    <th style="padding: 8px; border: 1px solid #D7CCC8;">오늘의 일진</th>
+                    <th style="padding: 8px; border: 1px solid #D7CCC8;">12운성 / 12신살</th>
+                    <th style="padding: 8px; border: 1px solid #D7CCC8;">시공간 무대(體)</th>
+                    <th style="padding: 8px; border: 1px solid #D7CCC8;">실전 사건(用)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #E0E0E0; font-weight: bold; background-color: #FAFAFA;">오전 (전반부)</td>
+                    <td rowspan="2" style="padding: 10px; border: 1px solid #E0E0E0; font-weight: bold; font-size: 16px; color: #2E7D32;">
+                        {ds}{db}일<br><span style="font-size: 12px; color: #666;">({today_day}일)</span>
+                    </td>
+                    <td rowspan="2" style="padding: 10px; border: 1px solid #E0E0E0; font-size: 13px;">
+                        <b>{day_wunseong}</b><br><span style="color: #C62828;">({day_12shinsal})</span>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #E0E0E0; color: #1565C0; font-weight: bold;">{m_che_first}</td>
+                    <td style="padding: 10px; border: 1px solid #E0E0E0; color: #D84315; font-weight: bold;">{am_yong}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #E0E0E0; font-weight: bold; background-color: #FAFAFA;">오후 (후반부)</td>
+                    <td style="padding: 10px; border: 1px solid #E0E0E0; color: #1565C0; font-weight: bold;">{m_che_second}</td>
+                    <td style="padding: 10px; border: 1px solid #E0E0E0; color: #D84315; font-weight: bold;">{pm_yong}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    """
+    return html
+
 def get_closing_html(name):
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
