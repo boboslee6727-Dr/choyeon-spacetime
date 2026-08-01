@@ -1,4 +1,7 @@
-import re 
+# ==============================================================================
+# html_views.py (Pro-Model 최종 검토 및 방탄 최적화 완결본)
+# ==============================================================================
+import re
 
 def get_global_css():
     """[Ver 71.0 프로모델 최종 최적화본]"""
@@ -520,7 +523,7 @@ def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     <div class="page-break-before"></div>
     """
 
-def get_comparison_gumhap_report_html(m_name, f_name, other_report):
+def get_comparison_gunghap_report_html(m_name, f_name, other_report):
     return f"""<div style='margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
 <div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>💕 남성({m_name}) & 여성({f_name}) 타 감명서 원문 (의뢰인 제공)</div>
 <div style='white-space: pre-wrap; font-family: Noto Serif KR; line-height: 1.6; color:#444;'>{other_report}</div>
@@ -542,6 +545,10 @@ def get_comparison_html(comp_fmt):
 """
 
 def get_gunghap_score_visual_html(gh_engine):
+    """
+    🚨 [프로모델 정밀 수정] 중복 맺음말(closing_original)을 제거하여 
+    최종 리포트 상자 하단에 Closing이 2번 중복 노출되는 현상을 완벽히 차단했습니다.
+    """
     sky_blue = "#38B6FF"
     bars = "".join([
         f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
@@ -551,14 +558,6 @@ def get_gunghap_score_visual_html(gh_engine):
         f"</div>" 
         for d in gh_engine.details
     ])
-    
-    closing_original = (
-        f"<div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>\n"
-        f"<p style='font-family: \"Noto Serif KR\", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'셀 수 없이 많은 시간 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 바코드지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 바코드가 만나 그려내는 새로운 <b style='color:#1A237E;'>'하모니(harmonie)'</b>입니다.</p>\n"
-        f"<p style='font-family: \"Noto Serif KR\", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 다름을 이해하고 채워주는 든든한 <b style='color:#1A237E;'>'동반자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 시공간의 축복이 가득하시길 소망합니다. </p>\n"
-        f"<div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: \"Noto Serif KR\", serif;'>- 초연 시공명리 연구소 드림 -</span></div>\n"
-        f"</div>"
-    )
 
     score_chart_html = (
         f"<h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>\n"
@@ -571,22 +570,21 @@ def get_gunghap_score_visual_html(gh_engine):
         f"</div>\n"
         f"</div>\n"
         f"<div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{sky_blue}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>\n"
-        f"<div style='max-width:500px; margin:0 auto;'>\n{bars}\n</div>\n"
-        f"{closing_original}"
+        f"<div style='max-width:500px; margin:0 auto; margin-bottom:25px;'>\n{bars}\n</div>\n"
     )
     return score_chart_html
 
 def get_gunghap_closing(name1, name2):
     return f"""
-    <div style='margin-top: 20px;'>
-        <p style='font-size:16px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>
-        {name1}님과 {name2}님의 소중한 인연이 하늘의 뜻과 부모님의 깊은 사랑 속에서 찬란하게 빛을 발하기를 진심으로 기원합니다.</p>
-        <p style='font-size:16px; text-indent: 15px; text-align: justify; line-height: 1.8; margin-top: 0px; margin-bottom: 8px;'>두 분의 앞날에 건강과 행복이 가득하시기를 간절히 축원합니다.</p>
-        <div style='text-align: right; margin-top: 25px;'>
-            <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>초연 시공명리 연구소</span>
+    <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
+        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>
+        <b>{name1}님</b>과 <b>{name2}님</b>의 소중한 인연이 하늘의 뜻과 깊은 기운 속에서 찬란하게 빛을 발하기를 진심으로 기원합니다.</p>
+        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>두 분이 서로의 다름을 이해하고 채워주는 든든한 동반자가 되어 삶이라는 길을 함께 걸어가시기를 소망합니다.</p>
+        <p style='font-size:16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <div style='text-align: right; margin-top: 30px;'>
+            <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
         </div>
     </div>
-    <div class='page-break-before'></div>
     """
 
 def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b_time_pillar, gestation_warning, conception_title, conception_str, conception_msg, baby_saju_html, ai_output_html):
@@ -712,7 +710,7 @@ def get_other_report_original_html(other_text_input):
     </div>
     """
 
-# 🚨 [통합 AI 통변 파서: 이름 굵은체 + 간지 한자 자동 치환 보완]
+# 🚨 [통합 AI 통변 파서: 범용 성함 굵은체 + 60갑자 대운/세운 자동 정규식 변환 완비]
 def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: 
         return ""
@@ -720,14 +718,27 @@ def format_ai_text_to_html(ai_raw_text):
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
     
-    # 🚨 [하드코딩 보완 1] 한글 대운 표기를 정통 한자로 강제 자동 치환
-    daewun_map = {
-        "정사대운": "丁巳대운", "갑진대운": "甲辰대운", "을사대운": "乙巳대운", "병오대운": "丙午대운",
-        "무미대운": "戊未대운", "기신대운": "己申대운", "경유대운": "庚酉대운", "신술대운": "辛戌대운",
-        "임해대운": "壬亥대운", "계축대운": "癸丑대운", "정사 대운": "丁巳 대운", "갑진 세운": "甲辰 세운"
-    }
-    for h_gyl, h_han in daewun_map.items():
-        clean_raw = clean_raw.replace(h_gyl, h_han)
+    # 🚨 [범용 정규식 1] 한글 2글자 간지+대운/세운 표기를 한자 60갑자로 자동 정밀 변환
+    def replace_ganji_un(match):
+        stem = match.group(1)
+        suffix = match.group(2)
+        # 간지 음독 -> 한자 변환 테이블
+        g_map = {
+            "갑자": "甲子", "을축": "乙丑", "병인": "丙寅", "정묘": "丁卯", "무진": "戊辰",
+            "기사": "己巳", "경오": "庚午", "신미": "辛未", "임신": "壬申", "계유": "癸酉",
+            "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅",
+            "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
+            "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子",
+            "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
+            "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌",
+            "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
+            "갑진": "甲辰", "을사": "乙巳", "병오": "丙午", "정미": "丁未", "무신": "戊申",
+            "기유": "己酉", "경술": "庚戌", "신해": "辛亥", "임자": "壬子", "계축": "癸丑"
+        }
+        hanja_ganji = g_map.get(stem, stem)
+        return f"{hanja_ganji}{suffix}"
+
+    clean_raw = re.sub(r'([가-힠]{2})(대운|세운|월운)', replace_ganji_un, clean_raw)
 
     lines = clean_raw.split('\n')
     formatted_html = []
@@ -758,12 +769,12 @@ def format_ai_text_to_html(ai_raw_text):
                 f"{clean_line_str}</div>"
             )
             
-        # 🚨 [본문 - 전역 클래스 .ai-body-p 적용 & 성함 굵은체 강제 적용]
+        # 🚨 [본문 - 전역 클래스 .ai-body-p 적용 & 성함 굵은체 강제 범용 적용]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
             
-            # 🚨 [하드코딩 보완 2] 본문 내 '손기철님' 언급 시 100% 굵은체(<b>) 주입
-            safe_line = re.sub(r'([가-힣]+님)', r'<b>\1</b>', safe_line)
+            # 🚨 [범용 정규식 2] 본문 내 모든 내담자 성함 언급(예: 'OOO님') 시 100% 굵은체(<b>) 주입
+            safe_line = re.sub(r'([가-힣]{2,4}님)', r'<b>\1</b>', safe_line)
             
             formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
