@@ -668,12 +668,13 @@ def format_ai_text_to_html(ai_raw_text):
     lines = clean_raw.split('\n')
     formatted_html = []
     
-    for line in lines:
+for line in lines:
         line_str = line.strip()
         if not line_str: 
             continue
         
-        clean_line_str = line_str.replace("**", "")
+        # 🚨 [모든 별표(**) 및 마크다운 샵(#) 원천 박멸 정화]
+        clean_line_str = line_str.replace("**", "").replace("*", "")
         clean_line_str = re.sub(r'#{1,6}\s*', '', clean_line_str).strip()
         
         # 🚨 [대제목 - 클래스 .ai-title-l1 사용 (22px 검정 굵은체)] 예: "1. 성격 분석"
@@ -683,6 +684,15 @@ def format_ai_text_to_html(ai_raw_text):
         # 🚨 [소제목 - 클래스 .ai-title-l2 사용 (18px 검정 굵은체)] 예: "1) 내 삶의 무대..."
         elif re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(f"<div class='ai-title-l2'>{clean_line_str}</div>")
+
+        # 🚨 [소소제목 - 별표 없이 16px 검정 굵은체] 예: "- 4대 영역(직업·재물·애정·건강) 변화:"
+        elif clean_line_str.startswith("- ") and clean_line_str.endswith(":"):
+            formatted_html.append(
+                f"<div style='font-size:16px !important; font-weight:900 !important; "
+                f"color:#000000 !important; margin-top:14px !important; margin-bottom:6px !important; "
+                f"line-height:1.6 !important; font-family:sans-serif !important; text-indent:1.0em;'>"
+                f"{clean_line_str}</div>"
+            )
             
         # 🚨 [본문 - 전역 클래스 .ai-body-p 적용]
         else:
@@ -690,6 +700,5 @@ def format_ai_text_to_html(ai_raw_text):
             formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
     return "".join(formatted_html)
-
 def get_ai_report_box(content):
     return get_final_report_box(content)
