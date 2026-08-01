@@ -21,6 +21,33 @@ def get_global_css():
         font-family: 'Noto Serif KR', serif !important; 
     }
 
+    /* 🚨 [AI 제목 스타일 최우선 강제 규정] */
+    .ai-title-l1 {
+        font-size: 22px !important;
+        font-weight: 900 !important;
+        color: #000000 !important;
+        margin-top: 35px !important;
+        margin-bottom: 15px !important;
+        border-bottom: 2px solid #000000 !important;
+        padding-bottom: 5px !important;
+        line-height: 1.4 !important;
+        font-family: sans-serif !important;
+        word-break: break-word !important;
+        display: block !important;
+    }
+
+    .ai-title-l2 {
+        font-size: 18px !important;
+        font-weight: 900 !important;
+        color: #000000 !important;
+        margin-top: 22px !important;
+        margin-bottom: 10px !important;
+        line-height: 1.4 !important;
+        font-family: sans-serif !important;
+        word-break: break-word !important;
+        display: block !important;
+    }
+
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
@@ -105,7 +132,6 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        # 합충형파해 2/3단 가로선 연회색 완벽 처리 (윗선을 0px로 날려 테두리 충돌 원천 차단)
         b_top = "0px !important"
         if l_idx == 1:
             b_bot = "2px solid #CCCCCC !important" 
@@ -210,16 +236,15 @@ def get_un_layout(title, content):
 def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
     un_content = ""
     for data in daewun_list:
-        bg_col = "#FFF9C4" if data["is_current"] else "transparent"
-        b_left = "none" if data["is_first"] else "1px solid #ccc"
+        bg_col = "#FFF9C4" if data.get("is_current", False) else "transparent"
+        b_left = "none" if data.get("is_first", False) else "1px solid #ccc"
         un_content += get_un_cell(
             data["age_range"], data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
-            data["un_sung"], data["shin_sal"], bg_col, b_left
+            data["un_sung"], data["shin_sal"], bg_col, b_left, data.get("is_current", False)
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-# 1. 대운 셀 (딥 오렌지 3px 테두리)
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
@@ -245,8 +270,6 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
     """
 
 def get_sewun_layout(title, content):
-    # 본체(app.py)에서 이미 엔진을 통해 戊午 등으로 완벽히 변환된 title을 넘겨주므로,
-    # 뷰(html_views)에서는 아무런 조작 없이 그대로 화면에 뿌려주기만 합니다.
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
     <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
@@ -254,7 +277,6 @@ def get_sewun_layout(title, content):
     </div>
     """
 
-# 2. 세운 셀 (진한 블루 3px 테두리)
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
@@ -289,7 +311,6 @@ def get_wolun_layout(title, content):
     </div>
     """
 
-# 3. 월운 셀 (진한 그린 3px 테두리)
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
@@ -623,6 +644,7 @@ def get_other_report_original_html(other_text_input):
     </div>
     """
 
+# 🚨 [통합 AI 통변 파서: 글로벌 CSS 클래스와 연동하여 100% 굵은체 강제 주입]
 def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: 
         return ""
@@ -639,29 +661,21 @@ def format_ai_text_to_html(ai_raw_text):
             continue
         
         clean_line_str = line_str.replace("**", "")
+        clean_line_str = re.sub(r'#{1,6}\s*', '', clean_line_str).strip()
         
-        # 🚨 [대제목 - 순수 검정색 22px] 예: "1. 성격 분석", "2. 사주팔자 구조분석"
+        # 🚨 [대제목 - 클래스 .ai-title-l1 사용 (22px 검정 굵은체)] 예: "1. 성격 분석"
         if re.match(r'^\d+\.\s+', clean_line_str) and not re.match(r'^\d+\)\s*', clean_line_str):
-            formatted_html.append(
-                f"<p class='ai-title-l1' style='font-size:22px !important; font-weight:900 !important; "
-                f"color:#000000 !important; margin-top:35px !important; margin-bottom:15px !important; word-break:break-word; "
-                f"border-bottom:2px solid #000000; padding-bottom:5px;'>"
-                f"{clean_line_str}</p>"
-            )
+            formatted_html.append(f"<div class='ai-title-l1'>{clean_line_str}</div>")
             
-        # 🚨 [소제목 - 순수 검정색 18px] 예: "1) 내 삶의 무대와 타고난 기본 성향:"
+        # 🚨 [소제목 - 클래스 .ai-title-l2 사용 (18px 검정 굵은체)] 예: "1) 내 삶의 무대..."
         elif re.match(r'^\d+\)\s*', clean_line_str):
-            formatted_html.append(
-                f"<p class='ai-title-l2' style='font-size:18px !important; font-weight:900 !important; "
-                f"color:#000000 !important; margin-top:22px !important; margin-bottom:10px !important; word-break:break-word;'>"
-                f"{clean_line_str}</p>"
-            )
+            formatted_html.append(f"<div class='ai-title-l2'>{clean_line_str}</div>")
             
-        # 🚨 [본문 내용 - 검정색 15px]
+        # 🚨 [본문 - 15px 일반]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
             formatted_html.append(
-                f"<p class='ai-body-p' style='font-size:15px !important; font-weight:400 !important; "
+                f"<p style='font-size:15px !important; font-weight:400 !important; "
                 f"line-height:1.85 !important; color:#222222 !important; text-align:justify !important; "
                 f"margin-bottom:12px !important; text-indent:0.5em; word-break:break-word;'>"
                 f"{safe_line}</p>"
