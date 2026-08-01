@@ -762,16 +762,20 @@ if st.session_state.get('app_running', False):
                 if raw_response and isinstance(raw_response, str):
                     # 1. AI 응답 기본 마크다운 및 불필요 문구 정화
                     cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL) # HTML 주석 제거 추가
+                    cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL) # HTML 주석 제거
                     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)  # ###, ## 마크다운 기호 정화
                     
-                    # 🚨 [박사님 지시 반영] 서두의 모든 인사말, 안내 멘트, 불필요한 메타데이터를 통째로 삭제하고 '1.' 대제목부터 즉시 시작
-                    cleaned = re.sub(r'^(.*?)(?=\d+\.\s*)', '', cleaned, flags=re.DOTALL).strip()
+                    # 💡 [핵심 교정] "1." 대제목이 유실되지 않도록 서두 인사말만 안전 정화
+                    # '1.' 목차 기호가 존재하는 위치를 찾아 그 이전의 인사말만 정밀하게 잘라냅니다.
+                    match_first = re.search(r'(?m)^1\.\s+', cleaned)
+                    if match_first:
+                        cleaned = cleaned[match_first.start():].strip()
                     
                     # 2. html_views 통변 전용 뷰 함수로 계층별(대/소/소소제목/본문) HTML 일괄 변환
                     ai_output_html = html_views.format_ai_text_to_html(cleaned)
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
+
             st.markdown(cover_html, unsafe_allow_html=True) 
             
             # ------------------------------------------------------------------
