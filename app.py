@@ -111,12 +111,26 @@ with st.sidebar:
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
-    main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
+main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
     u_product = "1-1. 사주팔자 및 대운 분석"
 
     if main_category == "1. 사주팔자 및 운세 풀이":
-        u_product = st.radio("상세 분석 항목:", ["1-1. 사주팔자 및 대운 분석", "1-2. 올 해의 운세 상세 분석", "1-3. 이번 달의 운세 상세 분석", "1-4. 재물운 특화 분석", "1-5. 직업/진학운 특화 분석", "1-6. 건강운 특화 분석", "1-7. 이사 및 방위 특화 분석"], key="sub_category_1", on_change=stop_ai)
+        u_product = st.radio(
+            "상세 분석 항목:", 
+            [
+                "1-1. 사주팔자 및 대운 분석", 
+                "1-2. 올 해의 운세 상세 분석", 
+                "1-3. 이번 달의 운세 상세 분석", 
+                "1-4. 주간 및 오늘의 일운(일진) 분석",  # 👈 추가!
+                "1-5. 재물운 특화 분석", 
+                "1-6. 직업/진학운 특화 분석", 
+                "1-7. 건강운 특화 분석", 
+                "1-8. 이사 및 방위 특화 분석"
+            ], 
+            key="sub_category_1", 
+            on_change=stop_ai
+        )
     elif main_category == "2. 연애/결혼운 (궁합) 풀이":
         u_product = st.radio("상세 분석 항목:", ["2-0. 연애/결혼운 (궁합) 기본 풀이", "2-1. 결혼 택일", "2-2. 출산 택일"], key="sub_category_2", on_change=stop_ai)
     else:
@@ -412,7 +426,7 @@ with st.sidebar:
 # ==============================================================================
 if st.session_state.get('app_running', False):
     # ---------------------------------------------------------
-    # [1-1 ~ 1-7번 + 3-1번 상품 통합 블록] 
+    # [1-1 ~ 1-8번 + 3-1번 상품 통합 블록] 
     # ---------------------------------------------------------
     if any(x in u_product for x in ["1-", "3-1."]): 
  
@@ -597,6 +611,32 @@ if st.session_state.get('app_running', False):
 
             wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
+            # ------------------------------------------------------------------
+            # 💡 [주간 및 일운(일진) 전용 HTML 연산 및 변수 선언 영역]
+            # ------------------------------------------------------------------
+            weekly_daily_html = ""
+            weekly_ganji_list = "월~일 주간 간지 데이터"
+            m_che_first, am_yong = "오전 체", "오전 용"
+            m_che_second, pm_yong = "오후 체", "오후 용"
+            day_wunseong, day_12shinsal = "건록", "망신살"
+
+            if "1-4." in u_product:
+                # engine.py에서 오늘 일진 및 주간 간지 체용 팩트 도출
+                w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, dt_mod.datetime.now().day) if hasattr(engine, 'get_weekly_daily_facts') else {}
+                weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
+                m_che_first = w_d_res.get('m_che_first', m_che_first)
+                am_yong = w_d_res.get('am_yong', am_yong)
+                m_che_second = w_d_res.get('m_che_second', m_che_second)
+                pm_yong = w_d_res.get('pm_yong', pm_yong)
+                day_wunseong = w_d_res.get('day_wunseong', day_wunseong)
+                day_12shinsal = w_d_res.get('day_12shinsal', day_12shinsal)
+                
+                # HTML 표 레이아웃 생성 (html_views.py)
+                weekly_daily_html = html_views.generate_weekly_daily_layout(
+                    weekly_ganji_list, dt_mod.datetime.now().day, ds, db, 
+                    m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal
+                ) if hasattr(html_views, 'generate_weekly_daily_layout') else ""
+
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
@@ -612,6 +652,7 @@ if st.session_state.get('app_running', False):
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
                 str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
+                str(weekly_daily_html or "") +  # 👈 주간/일운 HTML 표 포함!
                 str(intro_html or "") + str(golden_text_html or "")
             )
 
@@ -624,12 +665,15 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
                 target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 이번 달(월운)의 핵심 흐름과 인과관계, 행동 지침만 집중적으로 출력하라.]"
             elif "1-4." in u_product:
-                target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
+                target_prompt = getattr(prompts, 'WEEKLY_DAILY_PROMPT', "")
+                target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운, 월운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 주간 총평 및 오늘의 일운(오전/오후 체용 파동) 흐름만 짧고 명쾌하게 집중적으로 출력하라.]"
             elif "1-5." in u_product:
-                target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
+                target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
             elif "1-6." in u_product:
-                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
+                target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
             elif "1-7." in u_product:
+                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
+            elif "1-8." in u_product:
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
             elif "3-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -696,14 +740,11 @@ if st.session_state.get('app_running', False):
                 health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
                 question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
-                # 🚨 [중복 제거 및 완벽 통합] 상단에 선언된 struct_data 재사용
                 ilju_structure_str = f"{s_name} ({s_type} - {s_desc})"
 
-                # 2. engine.py에서 지장간 좌법 및 미노출 오행 인종법 연산 팩트 도출
                 universal_res = engine.get_universal_analysis(ds, mb, db, [hs, ds, ms, ys], [hb, db, mb, yb])
                 universal_str = " / ".join(universal_res)
 
-                # 3. 연령대/성별/육친 맞춤형 지침 바인딩
                 age_prompt = ""
                 if age < 20:
                     age_prompt = "내담자는 청소년기(10대)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
@@ -717,7 +758,6 @@ if st.session_state.get('app_running', False):
                 gender_prompt = "남성 내담자입니다. 배우자운(재성)과 자식운(관성)을 남명 이론에 입각하여 해석하십시오." if gender == "남성" else "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
                 yukchin_rule = engine.get_yukchin_rule(gender, u_marital) if hasattr(engine, 'get_yukchin_rule') else ""
 
-                # 4. 전체 대운 팩트 및 행운 묘고 팩트 보완
                 all_daewun_data = engine.get_daeun_fact_string(daewun_data_list) if 'daewun_data_list' in locals() else "대운 전체 흐름 제공됨"
                 dw_fact_str = engine.get_dw_fact_str(dw_g_cur, dw_j_cur) if hasattr(engine, 'get_dw_fact_str') and dw_g_cur and dw_j_cur else f"현재 {dw_g_cur}{dw_j_cur}대운 작용 중"
                 hang_un_vaults_str = engine.get_hang_un_vaults_str(dw_j_cur, [yb, mb, db, hb]) if hasattr(engine, 'get_hang_un_vaults_str') and dw_j_cur else "대운 입고 작용 없음"
@@ -747,8 +787,6 @@ if st.session_state.get('app_running', False):
                     "user_query": career_val,
                     "wealth_issue": wealth_val,
                     "u_question": question_val,
-
-                    # 🚨 통합 바인딩 완료
                     "ilju_structure_str": ilju_structure_str,
                     "universal_str": universal_str,
                     "age_prompt": age_prompt,
@@ -758,7 +796,20 @@ if st.session_state.get('app_running', False):
                     "dw_fact_str": dw_fact_str,
                     "hang_un_vaults_str": hang_un_vaults_str,
                     "dw_start_age": age,
-                    "dw_end_age": age + 9
+                    "dw_end_age": age + 9,
+
+                    # 🚨 [주간 및 일운(일진) 상단 연산 변수 완벽 매핑]
+                    "weekly_ganji_list": weekly_ganji_list,
+                    "t_month": curr_m,
+                    "t_day": dt_mod.datetime.now().day,
+                    "m_ilgan": ds,
+                    "m_ilji": db,
+                    "m_che_first": m_che_first,
+                    "am_yong": am_yong,
+                    "m_che_second": m_che_second,
+                    "pm_yong": pm_yong,
+                    "day_wunseong": day_wunseong,
+                    "day_12shinsal": day_12shinsal,
                 }
 
                 class SafeDict(dict):
