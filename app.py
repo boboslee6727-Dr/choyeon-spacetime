@@ -696,6 +696,34 @@ if st.session_state.get('app_running', False):
                 health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
                 question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
+                # 🚨 [1] choyeon_db.json 일주 구조 팩트 추출
+                ilju_key = f"{ds}{db}"
+                ilju_struct = db_data.get("ilju_structure", {}).get(ilju_key, ["구조정보없음", "유형정보없음", "성격정보없음"])
+                ilju_structure_str = f"{ilju_struct[0]} ({ilju_struct[1]} - {ilju_struct[2]})"
+
+                # 🚨 [2] engine.py 지장간 좌법 및 미노출 오행 인종법 연산 팩트 도출
+                universal_res = engine.get_universal_analysis(ds, mb, db, [hs, ds, ms, ys], [hb, db, mb, yb])
+                universal_str = " / ".join(universal_res)
+
+                # 🚨 [3] 연령대/성별/육친 맞춤형 지침 바인딩
+                age_prompt = ""
+                if age < 20:
+                    age_prompt = "내담자는 청소년기(10대)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
+                elif 20 <= age < 40:
+                    age_prompt = "내담자는 청년기(20~30대) MZ세대입니다. 고리타분한 명리 용어를 버리고 직업은 '스타트업, 프리랜서, 워라밸, 퍼스널 브랜딩', 연애는 '소개팅, 썸, 연인 간의 소통' 등 2030 청년들이 100% 공감할 수 있는 세련되고 트렌디한 어휘로 통변하십시오."
+                elif 40 <= age < 60:
+                    age_prompt = "내담자는 중장년기(40~50대)입니다. 재성운과 관직 명예운에 집중하여 현실적인 자산 관리와 사회적 성취를 중심으로 서술하십시오."
+                else:
+                    age_prompt = "내담자는 노년기(60대 이상)입니다. 건강운 및 심리적 평안, 노후 자산 안정을 최우선으로 깊이 다루십시오."
+
+                gender_prompt = "남성 내담자입니다. 배우자운(재성)과 자식운(관성)을 남명 이론에 입각하여 해석하십시오." if gender == "남성" else "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
+                yukchin_rule = engine.get_yukchin_rule(gender, u_marital) if hasattr(engine, 'get_yukchin_rule') else ""
+
+                # 🚨 [4] 전체 대운 팩트 및 행운 묘고 팩트 보완
+                all_daewun_data = engine.get_daeun_fact_string(daewun_data_list) if 'daewun_data_list' in locals() else "대운 전체 흐름 제공됨"
+                dw_fact_str = engine.get_dw_fact_str(dw_g_cur, dw_j_cur) if hasattr(engine, 'get_dw_fact_str') and dw_g_cur and dw_j_cur else f"현재 {dw_g_cur}{dw_j_cur}대운 작용 중"
+                hang_un_vaults_str = engine.get_hang_un_vaults_str(dw_j_cur, [yb, mb, db, hb]) if hasattr(engine, 'get_hang_un_vaults_str') and dw_j_cur else "대운 입고 작용 없음"
+
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
@@ -720,7 +748,19 @@ if st.session_state.get('app_running', False):
                     "career_fact_str": career_fact_str if 'career_fact_str' in _current_locals else "직업/진학 핵심 십성 분석",
                     "user_query": career_val,
                     "wealth_issue": wealth_val,
-                    "u_question": question_val
+                    "u_question": question_val,
+
+                    # 🚨 [신규 추가] prompts.py에서 요구하는 핵심 팩트 변수 완전 바인딩
+                    "ilju_structure_str": ilju_structure_str,
+                    "universal_str": universal_str,
+                    "age_prompt": age_prompt,
+                    "gender_prompt": gender_prompt,
+                    "yukchin_rule": yukchin_rule,
+                    "all_daewun_data": all_daewun_data,
+                    "dw_fact_str": dw_fact_str,
+                    "hang_un_vaults_str": hang_un_vaults_str,
+                    "dw_start_age": age,
+                    "dw_end_age": age + 9
                 }
 
                 class SafeDict(dict):
