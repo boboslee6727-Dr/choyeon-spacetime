@@ -50,6 +50,19 @@ def get_global_css():
 
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
+    /* 🚨 [AI 본문 양쪽정렬/들여쓰기/행간 최우선 강제 규정] */
+    .ai-body-p {
+        font-size: 15px !important;
+        font-weight: 400 !important;
+        line-height: 2.1 !important;
+        color: #222222 !important;
+        text-align: justify !important;
+        text-justify: inter-character !important;
+        text-indent: 1.5em !important;
+        margin-bottom: 16px !important;
+        word-break: break-all !important;
+    }
+
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
     .color-토 { background: #F9A825 !important; color: #000 !important; }
@@ -208,19 +221,19 @@ def get_styled_td(ganji, oh_class):
 
 def get_intro_html():
     return """
-    <div style='font-size: 16px; font-weight: 600; color: #333; text-align: justify; line-height: 1.8; margin-bottom: 10px; padding: 0 10px;'>
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'><b>"초연 시공 명리학"</b>는 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.</p> 
-        <p style='text-indent: 15px; margin: 0 0 5px 0;'>따라서, <b>"본 초연 시공 명리학"</b>는 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.</p>
+    <div style='width: 100% !important; box-sizing: border-box !important; margin: 25px 0 !important; padding: 0 !important;'>
+        <p class='ai-body-p' style='margin-bottom: 8px !important;'><b>"초연 시공 명리학"</b>은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.</p> 
+        <p class='ai-body-p' style='margin-bottom: 0 !important;'>따라서, <b>"본 초연 시공 명리학"</b>은 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.</p>
     </div>
     """
 
 def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
     return f"""
-    <div style='font-family: "Noto Serif KR", serif; font-size: 16px; line-height: 1.85; color: #000000; 
-                margin: 25px 0; border-top: 2px solid #1A237E; border-bottom: 2px solid #1A237E; 
-                padding: 20px; background-color: #FAFAFA;'>
-        <p style='text-indent: 0px; margin: 0;'>
-            &nbsp;&nbsp;&nbsp;&nbsp;초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
+    <div style='width: 100% !important; box-sizing: border-box !important; margin: 25px 0 !important; 
+                border-top: 2px solid #1A237E !important; border-bottom: 2px solid #1A237E !important; 
+                padding: 18px 0 !important; background-color: #FAFAFA !important;'>
+        <p class='ai-body-p' style='margin: 0 !important; color: #000000 !important;'>
+            초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
         </p>
     </div>
     """
@@ -671,16 +684,10 @@ def format_ai_text_to_html(ai_raw_text):
         elif re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(f"<div class='ai-title-l2'>{clean_line_str}</div>")
             
-        # 🚨 [본문 - 양쪽정렬/들여쓰기/행간 완벽 정돈]
+        # 🚨 [본문 - 전역 클래스 .ai-body-p 적용]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
-            formatted_html.append(
-                f"<p style='font-size:15px !important; font-weight:400 !important; "
-                f"line-height:2.05 !important; color:#222222 !important; text-align:justify !important; "
-                f"word-break:keep-all !important; word-wrap:break-word !important; "
-                f"margin-bottom:16px !important; text-indent:1.3em !important;'>"
-                f"{safe_line}</p>"
-            )
+            formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
     return "".join(formatted_html)
 
