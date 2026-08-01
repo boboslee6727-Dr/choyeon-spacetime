@@ -219,14 +219,13 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
-# 1. 대운 셀 (진짜 5px 딥 오렌지 실선)
+# 1. 대운 셀 (딥 오렌지 3px 테두리)
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 💡 [핵심] 그림자가 아닌 '진짜 5px outline' + z-index로 3px 외곽선 위로 완전 돌출
     if is_current:
-        active_style = "outline: 5px solid #E65100 !important; outline-offset: -5px; position: relative; z-index: 50;"
+        active_style = "border: 3px solid #E65100 !important;"
         header_bg = "#E65100"
         bg_col = "#FFF9C4"
     else:
@@ -255,13 +254,13 @@ def get_sewun_layout(title, content):
     </div>
     """
 
-# 2. 세운 셀 (진짜 5px 딥 블루 실선)
+# 2. 세운 셀 (진한 블루 3px 테두리)
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     if is_current:
-        active_style = "outline: 5px solid #0277BD !important; outline-offset: -5px; position: relative; z-index: 50;"
+        active_style = "border: 3px solid #0277BD !important;"
         header_bg = "#0277BD"
         bg_col = "#E1F5FE"
     else:
@@ -290,13 +289,13 @@ def get_wolun_layout(title, content):
     </div>
     """
 
-# 3. 월운 셀 (진짜 5px 딥 그린 실선)
+# 3. 월운 셀 (진한 그린 3px 테두리)
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
     if is_current:
-        active_style = "outline: 5px solid #2E7D32 !important; outline-offset: -5px; position: relative; z-index: 50;"
+        active_style = "border: 3px solid #2E7D32 !important;"
         header_bg = "#2E7D32"
         bg_col = "#E8F5E9"
     else:
@@ -645,13 +644,11 @@ def format_ai_text_to_html(ai_raw_text):
         # AI가 혹시라도 **(볼드) 기호를 썼다면 제거
         clean_line_str = line_str.replace("**", "")
         
-        # 🚨 [대제목 제어 구간] 예: "1. 성격 분석"
+        # 대제목 제어 (예: "1. 성격 분석") - 회색 바탕/세로줄 제거 및 순수 굵은 글씨로 정리
         if re.match(r'^\d+\.\s+', clean_line_str):
-            # 폰트를 22px로 키우고 굵기 900 유지, 배경을 살짝 주어 완벽히 돋보이게 처리
             formatted_html.append(
-                f"<p class='ai-title-l1' style='font-size:22px !important; font-weight:900 !important; "
-                f"color:#1A237E !important; background-color:#E8EAF6; padding:8px 12px; border-radius:6px; "
-                f"margin-top:35px !important; margin-bottom:15px !important; border-left:5px solid #1A237E; word-break:break-word;'>"
+                f"<p class='ai-title-l1' style='font-size:20px !important; font-weight:900 !important; "
+                f"color:#1A237E !important; margin-top:30px !important; margin-bottom:12px !important; word-break:break-word;'>"
                 f"{clean_line_str}</p>"
             )
             
