@@ -649,7 +649,7 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "").strip()
 
-            # 8. 상단 팩트 상자 묶음 (박사님 아이디어 적용: 부품별 완전 분리)
+            # 8. 상단 팩트 상자 묶음 (레고 블록 변수 할당)
             part_1_fact = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -660,6 +660,7 @@ if st.session_state.get('app_running', False):
             part_3_golden = str(golden_text_html or "")
             part_5_closing = str(closing_part or "")
 
+            # 9. AI 통변 프롬프트 셋팅 및 호출
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -788,153 +789,6 @@ if st.session_state.get('app_running', False):
                     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
                     cleaned = re.sub(r'^(.*?)(?=\d+\.\s*)', '', cleaned, flags=re.DOTALL).strip()
                     
-                    # 💡 불필요한 바깥 <div> 태그 없이 순수 변환 함수만 호출하여 DOM 구조 오염 방지!
-                    ai_output_html = html_views.format_ai_text_to_html(cleaned)
-                else:
-                    ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
-
-            st.markdown(cover_html, unsafe_allow_html=True) 
-
-            # 8. 상단 팩트 상자 묶음 (박사님 아이디어 적용: 부품별 완전 분리)
-            part_1_fact = (
-                str(info_h or "") + 
-                str(table_html or "") + str(master_bar_html or "") + 
-                str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                str(weekly_daily_html or "")
-            )
-            part_2_intro = str(intro_html or "")
-            part_3_golden = str(golden_text_html or "")
-            part_5_closing = str(closing_part or "")
-
-            extra_facts = {}
-            if "1-1." in u_product:
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-            elif "1-2." in u_product:
-                target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
-            elif "1-3." in u_product:
-                target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
-                target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 이번 달(월운)의 핵심 흐름과 인과관계, 행동 지침만 집중적으로 출력하라.]"
-            elif "1-4." in u_product:
-                target_prompt = getattr(prompts, 'WEEKLY_DAILY_PROMPT', "")
-                target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운, 월운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 주간 총평 및 오늘의 일운(오전/오후 체용 파동) 흐름만 짧고 명쾌하게 집중적으로 출력하라.]"
-            elif "1-5." in u_product:
-                target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
-            elif "1-6." in u_product:
-                target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
-            elif "1-7." in u_product:
-                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
-            elif "1-8." in u_product:
-                target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
-            elif "3-1." in u_product:
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-            else:
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-
-            ai_output_html = ""
-            if True: 
-                gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
-                
-                ss_unsung_str = (
-                    f"년주:{engine.get_ss(ds, ys)}{engine.get_ss(ds, yb)}({engine.get_unsung(ds, yb)}) / "
-                    f"월주:{engine.get_ss(ds, ms)}{engine.get_ss(ds, mb)}({engine.get_unsung(ds, mb)}) / "
-                    f"일주:{ds}(본인){engine.get_ss(ds, db)}({engine.get_unsung(ds, db)}) / "
-                    f"시주:{engine.get_ss(ds, hs)}{engine.get_ss(ds, hb)}({engine.get_unsung(ds, hb)})"
-                )
-                
-                won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
-                won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
-                if not won_guk_vaults_str:
-                    won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
-                    
-                hap_chung_hyoung_pa_hae = (
-                    f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, "
-                    f"일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
-                )
-                
-                s12_str = engine.get_all_12_shinsal(yb, mb, db, hb)
-                shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
-                shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
-                
-                try:
-                    current_sewun_base = (curr_year - 1984) % 60
-                    cur_sewun_gan = engine.GAN[current_sewun_base % 10]
-                    cur_sewun_ji = engine.JI[current_sewun_base % 12]
-                except:
-                    cur_sewun_gan, cur_sewun_ji = "", ""
-
-                try:
-                    cur_wol_g, cur_wol_j = engine.get_current_wolun_gan_ji() 
-                except Exception:
-                    cur_wol_g = getattr(engine, 'cur_wol_g', '')
-                    cur_wol_j = getattr(engine, 'cur_wol_j', '')
-
-                _current_locals = locals()
-                _current_globals = globals()
-                
-                def get_val(*keys):
-                    for k in keys:
-                        if 'st' in _current_globals and hasattr(_current_globals['st'], 'session_state'):
-                            if k in _current_globals['st'].session_state and _current_globals['st'].session_state[k]:
-                                v = str(_current_globals['st'].session_state[k]).strip()
-                                if v: return v
-                        if k in _current_locals and _current_locals[k]:
-                            v = str(_current_locals[k]).strip()
-                            if v: return v
-                        if k in _current_globals and _current_globals[k]:
-                            v = str(_current_globals[k]).strip()
-                            if v: return v
-                    return None
-
-                career_val = get_val('u_career_issue', 'u_job', 'user_query', 'u_question') or "특별히 제시된 고민 내용 없음"
-                wealth_val = get_val('u_wealth_issue', 'u_wealth_goal', 'u_money_issue') or "특별히 제시된 고민 내용 없음"
-                health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
-                question_val = get_val('u_question') or "특별히 제시된 질문 없음"
-
-                prompt_data = {
-                    "name": name, "age": age, "gender": gender, "marital": u_marital,
-                    "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
-                    "gyukgook_detail": gyukgook_detail, "gongmang_actual": i_gong, "year_gongmang": n_gong,
-                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
-                    "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
-                    "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
-                    "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
-                    "curr_y": curr_year,
-                    "sewun_gan": cur_sewun_gan,
-                    "sewun_ji": cur_sewun_ji,
-                    "dw_g_cur": dw_g_cur,
-                    "dw_j_cur": dw_j_cur,
-                    "cur_wol_g": cur_wol_g,
-                    "cur_wol_j": cur_wol_j,
-                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)",
-                    "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in _current_locals else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
-                    "weak_health_str": weak_health_str if 'weak_health_str' in _current_locals else "취약 장기 및 신체 부위 분석 팩트",
-                    "health_goal": health_val,
-                    "jaeseong_str": jaeseong_str if 'jaeseong_str' in _current_locals else "재성 세력 분석 팩트",
-                    "wealth_fact_str": wealth_fact_str if 'wealth_fact_str' in _current_locals else "금전 흐름 체용 매트릭스",
-                    "career_fact_str": career_fact_str if 'career_fact_str' in _current_locals else "직업/진학 핵심 십성 분석",
-                    "user_query": career_val,
-                    "wealth_issue": wealth_val,
-                    "u_question": question_val
-                }
-
-                class SafeDict(dict):
-                    def __missing__(self, key):
-                        return '{' + key + '}'
-                
-                formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-                
-                try:
-                    raw_response = call_gemini_api(formatted_prompt, extra_facts, model="gemini-2.5-flash")
-                except TypeError:
-                    raw_response = call_gemini_api(formatted_prompt, extra_facts)
-                
-                if raw_response and isinstance(raw_response, str):
-                    cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL)
-                    cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
-                    cleaned = re.sub(r'^(.*?)(?=\d+\.\s*)', '', cleaned, flags=re.DOTALL).strip()
-                    
-                    # 💡 불필요한 바깥 <div> 태그 없이 순수 변환 함수만 호출하여 DOM 구조 오염 방지!
                     ai_output_html = html_views.format_ai_text_to_html(cleaned)
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
@@ -942,11 +796,10 @@ if st.session_state.get('app_running', False):
             st.markdown(cover_html, unsafe_allow_html=True) 
 
             # ------------------------------------------------------------------
-            # [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 레고 조립
+            # 10. [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
             # ------------------------------------------------------------------
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
-                    # 💡 [3-1 상품 1단계 조립] 박사님의 레고식 순차 조립 적용
                     part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                     first_stage_html = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
@@ -1024,7 +877,6 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
 
             else:
-                # 💡 [일반 1-1~1-8 상품 조립] 박사님의 레고식 순차 조립 완벽 적용
                 part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                 final_report = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
