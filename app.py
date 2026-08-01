@@ -48,7 +48,7 @@ def load_choyeon_db():
 db = load_choyeon_db()
 
 # ==============================================================================
-# 1.5. AI 및 명리 연산 엔진
+# 1.5. AI 및 명리 연산 엔진 (Pydantic int_type 오류 정정 파편)
 # ==============================================================================
 try:
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -60,6 +60,13 @@ except Exception as _api_e:
 def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', max_tokens=6000):
     if '1.5' in model_name: model_name = 'gemini-2.5-flash'
     if _gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+    
+    # 💡 max_tokens 값을 명확한 정수(int)로 변환
+    try:
+        tok_limit = int(max_tokens)
+    except:
+        tok_limit = 6000
+
     max_retries = 2
     for attempt in range(max_retries + 1):
         try:
@@ -69,7 +76,7 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', m
                 config=genai.types.GenerateContentConfig(
                     system_instruction=system_prompt, 
                     temperature=0.7,
-                    max_output_tokens=max_tokens  # 👈 토큰 상한선 전달 완료!
+                    max_output_tokens=tok_limit  # 👈 int형 정수값 전달 보장!
                 )
             )
             return response.text.strip()
@@ -82,8 +89,7 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     if sys_role is None:
         sys_role = getattr(prompts, 'SYSTEM_PROMPT', "당신은 초연 시공명리 전문가입니다. 팩트 데이터를 바탕으로 정확하게 분석하세요.")
     
-    # 💡 max_tokens 인자가 get_ai_response로 차질 없이 전달됩니다.
-    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_tokens=max_tokens)
+    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_tokens=int(max_tokens))
 
 def extract_ganji(text):
     if not text: return ""
@@ -653,11 +659,7 @@ if st.session_state.get('app_running', False):
             golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
 
             closing_html = html_views.get_closing_html(name)            
-            closing_part = str(closing_html or "")
-
-            divider_html = """
-            <div style="margin-top: 30px; margin-bottom: 30px; border-bottom: 2px solid #3E2723; opacity: 0.8;"></div>
-            """
+            closing_part = str(closing_html or "").strip()
 
             final_report_base = (
                 str(info_h or "") + 
@@ -665,8 +667,8 @@ if st.session_state.get('app_running', False):
                 str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
                 str(weekly_daily_html or "") + 
                 str(intro_html or "") + 
-                str(divider_html or "") +  # 👈 실선 추가!
-                str(golden_text_html or "")
+                str(golden_text_html or "") +  # 👈 황금문구(golden_text) 상단에 자동 실선이 포함되어 출력됩니다!
+                str(closing_part or "")
             )
 
             extra_facts = {}
