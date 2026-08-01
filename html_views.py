@@ -671,13 +671,14 @@ def format_ai_text_to_html(ai_raw_text):
         elif re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(f"<div class='ai-title-l2'>{clean_line_str}</div>")
             
-        # 🚨 [본문 - 15px 일반]
+        # 🚨 [본문 - 양쪽정렬/들여쓰기/행간 완벽 정돈]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
             formatted_html.append(
                 f"<p style='font-size:15px !important; font-weight:400 !important; "
-                f"line-height:1.85 !important; color:#222222 !important; text-align:justify !important; "
-                f"margin-bottom:12px !important; text-indent:0.5em; word-break:break-word;'>"
+                f"line-height:2.05 !important; color:#222222 !important; text-align:justify !important; "
+                f"word-break:keep-all !important; word-wrap:break-word !important; "
+                f"margin-bottom:16px !important; text-indent:1.3em !important;'>"
                 f"{safe_line}</p>"
             )
             
