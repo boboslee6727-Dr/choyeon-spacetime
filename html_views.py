@@ -668,7 +668,7 @@ def format_ai_text_to_html(ai_raw_text):
     lines = clean_raw.split('\n')
     formatted_html = []
     
-for line in lines:
+    for line in lines:
         line_str = line.strip()
         if not line_str: 
             continue
@@ -700,5 +700,6 @@ for line in lines:
             formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
     return "".join(formatted_html)
+
 def get_ai_report_box(content):
     return get_final_report_box(content)
