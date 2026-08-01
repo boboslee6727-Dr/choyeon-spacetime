@@ -111,7 +111,7 @@ with st.sidebar:
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
-main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
+    main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
     u_product = "1-1. 사주팔자 및 대운 분석"
 
