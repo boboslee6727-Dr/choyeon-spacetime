@@ -219,14 +219,11 @@ def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color,
 def get_styled_td(ganji, oh_class):
     return f"<td class='{oh_class} ganji-cell'>{ganji}</td>"
 
-def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
-    return f"""
-    <div style='width: 100% !important; margin: 20px 0 !important; padding: 15px 0 !important; 
-                border-top: 2px solid #1A237E !important; border-bottom: 2px solid #1A237E !important; 
-                box-sizing: border-box !important;'>
-        <p class='ai-body-p' style='margin: 0 !important; color: #000000 !important;'>
-            초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
-        </p>
+def get_intro_html():
+    return """
+    <div style='width: 100% !important; margin: 15px 0 !important; padding: 0 !important; box-sizing: border-box !important;'>
+        <p class='ai-body-p' style='margin-bottom: 4px !important; font-weight: 600 !important;'><b>"초연 시공 명리학"</b>은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.</p> 
+        <p class='ai-body-p' style='margin-bottom: 0 !important; font-weight: 600 !important;'>따라서, <b>"본 초연 시공 명리학"</b>은 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.</p>
     </div>
     """
 
