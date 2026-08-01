@@ -696,16 +696,14 @@ if st.session_state.get('app_running', False):
                 health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
                 question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
-                # 🚨 [1] choyeon_db.json 일주 구조 팩트 추출
-                ilju_key = f"{ds}{db}"
-                ilju_struct = db_data.get("ilju_structure", {}).get(ilju_key, ["구조정보없음", "유형정보없음", "성격정보없음"])
-                ilju_structure_str = f"{ilju_struct[0]} ({ilju_struct[1]} - {ilju_struct[2]})"
+                # 🚨 [중복 제거 및 완벽 통합] 상단에 선언된 struct_data 재사용
+                ilju_structure_str = f"{s_name} ({s_type} - {s_desc})"
 
-                # 🚨 [2] engine.py 지장간 좌법 및 미노출 오행 인종법 연산 팩트 도출
+                # 2. engine.py에서 지장간 좌법 및 미노출 오행 인종법 연산 팩트 도출
                 universal_res = engine.get_universal_analysis(ds, mb, db, [hs, ds, ms, ys], [hb, db, mb, yb])
                 universal_str = " / ".join(universal_res)
 
-                # 🚨 [3] 연령대/성별/육친 맞춤형 지침 바인딩
+                # 3. 연령대/성별/육친 맞춤형 지침 바인딩
                 age_prompt = ""
                 if age < 20:
                     age_prompt = "내담자는 청소년기(10대)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
@@ -719,7 +717,7 @@ if st.session_state.get('app_running', False):
                 gender_prompt = "남성 내담자입니다. 배우자운(재성)과 자식운(관성)을 남명 이론에 입각하여 해석하십시오." if gender == "남성" else "여성 내담자입니다. 배우자운(관성)과 자식운(식상)을 여명 이론에 입각하여 해석하십시오."
                 yukchin_rule = engine.get_yukchin_rule(gender, u_marital) if hasattr(engine, 'get_yukchin_rule') else ""
 
-                # 🚨 [4] 전체 대운 팩트 및 행운 묘고 팩트 보완
+                # 4. 전체 대운 팩트 및 행운 묘고 팩트 보완
                 all_daewun_data = engine.get_daeun_fact_string(daewun_data_list) if 'daewun_data_list' in locals() else "대운 전체 흐름 제공됨"
                 dw_fact_str = engine.get_dw_fact_str(dw_g_cur, dw_j_cur) if hasattr(engine, 'get_dw_fact_str') and dw_g_cur and dw_j_cur else f"현재 {dw_g_cur}{dw_j_cur}대운 작용 중"
                 hang_un_vaults_str = engine.get_hang_un_vaults_str(dw_j_cur, [yb, mb, db, hb]) if hasattr(engine, 'get_hang_un_vaults_str') and dw_j_cur else "대운 입고 작용 없음"
@@ -750,7 +748,7 @@ if st.session_state.get('app_running', False):
                     "wealth_issue": wealth_val,
                     "u_question": question_val,
 
-                    # 🚨 [신규 추가] prompts.py에서 요구하는 핵심 팩트 변수 완전 바인딩
+                    # 🚨 통합 바인딩 완료
                     "ilju_structure_str": ilju_structure_str,
                     "universal_str": universal_str,
                     "age_prompt": age_prompt,
@@ -765,7 +763,7 @@ if st.session_state.get('app_running', False):
 
                 class SafeDict(dict):
                     def __missing__(self, key): return '{' + key + '}'
-                
+
                 formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
                 
                 try:
