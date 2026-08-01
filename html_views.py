@@ -627,12 +627,6 @@ def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: return ""
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
-    # 불필요한 AI 안내문구 삭제
-    clean_raw = re.sub(r'최소\s*\d+~\d+문장\s*이상으로\s*(상세히\s*)?분석하십시오\.?', '', clean_raw)
-    clean_raw = re.sub(r'드라마틱한\s*에세이로\s*서술하십시오\.?', '', clean_raw)
-    clean_raw = re.sub(r'재성의\s*유무와\s*식상의\s*생조\s*여부를\s*바탕으로\s*분석하십시오\.?', '', clean_raw)
-    clean_raw = re.sub(r'바탕으로\s*분석하십시오\.?', '', clean_raw)
-    clean_raw = re.sub(r'분석지시\s*사항:?', '', clean_raw)
     
     lines = clean_raw.split('\n')
     formatted_html = []
@@ -641,38 +635,35 @@ def format_ai_text_to_html(ai_raw_text):
         line_str = line.strip()
         if not line_str: continue
         
-        # AI가 혹시라도 **(볼드) 기호를 썼다면 제거
         clean_line_str = line_str.replace("**", "")
         
-        # 대제목 제어 (예: "1. 성격 분석") - 회색 바탕/세로줄 제거 및 순수 굵은 글씨로 정리
-        if re.match(r'^\d+\.\s+', clean_line_str):
+        # 🚨 [대제목 파싱] 예: "1. 성격 분석" 또는 "2. 사주팔자 구조분석"
+        if re.match(r'^\d+\.\s*[\uac00-\ud7a3a-zA-Z0-9\s]+', clean_line_str) and not re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(
-                f"<p class='ai-title-l1' style='font-size:20px !important; font-weight:900 !important; "
-                f"color:#1A237E !important; margin-top:30px !important; margin-bottom:12px !important; word-break:break-word;'>"
+                f"<p class='ai-title-l1' style='font-size:22px !important; font-weight:900 !important; "
+                f"color:#1A237E !important; margin-top:35px !important; margin-bottom:15px !important; word-break:break-word;'>"
                 f"{clean_line_str}</p>"
             )
             
-        # 🚨 [소제목 제어 구간] 예: "1) 내 삶의 무대와 타고난 기본 성향:"
-        elif re.match(r'^\d+\)\s+', clean_line_str):
-            # 폰트를 18px로 키우고 굵기 900 유지, 진한 초록색으로 확실한 구분
+        # 🚨 [소제목 파싱] 예: "1) 내 삶의 무대와 타고난 기본 성향:"
+        elif re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(
                 f"<p class='ai-title-l2' style='font-size:18px !important; font-weight:900 !important; "
                 f"color:#1B5E20 !important; margin-top:20px !important; margin-bottom:10px !important; word-break:break-word;'>"
                 f"{clean_line_str}</p>"
             )
             
-        # 🚨 [일반 본문 제어 구간] 통변 내용
+        # 🚨 [본문 내용 파싱]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
-            safe_line = safe_line.replace("</div>", "") 
             formatted_html.append(
-                f"<p class='ai-body-p' style='font-size:16px !important; font-weight:400 !important; "
-                f"line-height:1.85 !important; color:#111111 !important; text-align:justify !important; "
-                f"margin-bottom:12px !important; text-indent:1em; word-break:break-word;'>"
+                f"<p class='ai-body-p' style='font-size:15px !important; font-weight:400 !important; "
+                f"line-height:1.85 !important; color:#222222 !important; text-align:justify !important; "
+                f"margin-bottom:12px !important; text-indent:0.5em; word-break:break-word;'>"
                 f"{safe_line}</p>"
             )
             
-    return "".join(formatted_html).replace("</div></div>", "")
+    return "".join(formatted_html)
 
 def get_ai_report_box(content):
     return get_final_report_box(content)
