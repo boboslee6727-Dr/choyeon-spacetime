@@ -398,7 +398,7 @@ def generate_weekly_daily_layout(weekly_ganji_list, today_day, ds, db, m_che_fir
     return html
 
 def get_closing_html(name):
-    return f"""
+    html_content = f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
         <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
         <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
@@ -407,8 +407,14 @@ def get_closing_html(name):
         <div style='text-align: right; margin-top: 30px;'>
             <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
         </div>
-    </div>
     """
+    
+    # 🚨 최하단의 닫는 </div> 태그를 완벽히 감지하여 강제 잘라내기
+    cleaned_html = html_content.strip()
+    if cleaned_html.endswith("</div>"):
+        cleaned_html = cleaned_html[:-6].strip()
+        
+    return cleaned_html
 
 def get_final_report_box(content_html):
     return f"""
