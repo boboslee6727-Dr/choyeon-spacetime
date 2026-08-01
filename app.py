@@ -648,12 +648,18 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "")
 
+            divider_html = """
+            <div style="margin-top: 30px; margin-bottom: 30px; border-bottom: 2px solid #3E2723; opacity: 0.8;"></div>
+            """
+
             final_report_base = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
                 str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                str(weekly_daily_html or "") +  # 👈 주간/일운 HTML 표 포함!
-                str(intro_html or "") + str(golden_text_html or "")
+                str(weekly_daily_html or "") + 
+                str(intro_html or "") + 
+                str(divider_html or "") +  # 👈 실선 추가!
+                str(golden_text_html or "")
             )
 
             extra_facts = {}
