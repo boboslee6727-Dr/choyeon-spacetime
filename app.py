@@ -94,8 +94,12 @@ def td_bg(ganji):
 # 2. 사이드바 통제 센터 (방탄(Bulletproof) 구조 및 변수 선언 안전화)
 # ==============================================================================
 with st.sidebar:
+    # 💡 카테고리를 '실제로 바꿨을 때'만 이전 실행 결과를 끄도록 안전 검증
     def stop_ai():
-        st.session_state['app_running'] = False
+        # 상품 변경 시에만 화면 초기화
+        if st.session_state.get("prev_category") != st.session_state.get("main_category"):
+            st.session_state['app_running'] = False
+            st.session_state["prev_category"] = st.session_state.get("main_category")
 
     st.markdown(f"""
         <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
@@ -215,26 +219,21 @@ with st.sidebar:
             del st.session_state['rev_success_msg']
 
     # ==============================================================================
-    # 👤 신청인 기본 정보
+    # 👤 신청인 기본 정보 (Rerun 시 기존 입력값 100% 영구 유지 방탄 처리)
     # ==============================================================================
-    if "u_n" not in st.session_state: st.session_state["u_n"] = ""
-    if "s_y" not in st.session_state: st.session_state["s_y"] = 1980
-    if "s_m" not in st.session_state: st.session_state["s_m"] = 1
-    if "s_d" not in st.session_state: st.session_state["s_d"] = 1
-    if "s_t" not in st.session_state: st.session_state["s_t"] = idx_list[0]
-
     u_box = st.sidebar.container()
     with u_box:
         st.subheader("👤 신청인 기본 정보")
-        name = st.text_input("이름", placeholder="홍길동", key="u_n")
+        # 세션에 값이 이미 있으면 그대로 유지하고, 없을 때만 초기값 할당
+        name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n")
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c")
-        
+
         col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, key="s_y")
-        with col_m: b_month = st.number_input("월", 1, 12, key="s_m")
-        with col_d: b_day = st.number_input("일", 1, 31, key="s_d")
+        with col_y: b_year = st.number_input("년도", 1900, 2050, value=st.session_state.get("s_y", 1980), key="s_y")
+        with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get("s_m", 1), key="s_m")
+        with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get("s_d", 1), key="s_d")
         
         curr_t_val = st.session_state.get("s_t", idx_list[0])
         t_idx = idx_list.index(curr_t_val) if curr_t_val in idx_list else 0
