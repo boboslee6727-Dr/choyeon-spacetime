@@ -50,9 +50,6 @@ db = load_choyeon_db()
 # ==============================================================================
 # 1.5. AI 및 명리 연산 엔진 (Pro-Model 방탄 아키텍처)
 # ==============================================================================
-import time
-import re
-
 try:
     _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 except Exception as _api_e:
@@ -103,6 +100,18 @@ def call_gemini_api(prompt_text, extra_facts=None, model="gemini-2.5-flash", **k
     
     # 💡 extra_facts가 전달되더라도 내부 충돌 없이 안전하게 get_ai_response로 토스
     return get_ai_response(sys_role, prompt_text, model_name=model, max_tokens=max_tokens)
+
+def extract_ganji(text):
+    if not text: return ""
+    return re.sub(r'[^가-힣一-龥]', '', text)
+
+def get_oh_class(ganji):
+    oh = engine.get_color(ganji)
+    return f"color-{oh}" if oh != '무' else ""
+
+def td_bg(ganji):
+    cls = get_oh_class(ganji)
+    return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
 # 2. 사이드바 통제 센터 (방탄(Bulletproof) 구조 및 변수 선언 안전화)
