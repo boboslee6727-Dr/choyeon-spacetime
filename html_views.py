@@ -657,7 +657,7 @@ def get_other_report_original_html(other_text_input):
     </div>
     """
 
-# 🚨 [통합 AI 통변 파서: 글로벌 CSS 클래스와 연동하여 100% 굵은체 강제 주입]
+# 🚨 [통합 AI 통변 파서: 이름 굵은체 + 간지 한자 자동 치환 보완]
 def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: 
         return ""
@@ -665,6 +665,15 @@ def format_ai_text_to_html(ai_raw_text):
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
     
+    # 🚨 [하드코딩 보완 1] 한글 대운 표기를 정통 한자로 강제 자동 치환
+    daewun_map = {
+        "정사대운": "丁巳대운", "갑진대운": "甲辰대운", "을사대운": "乙巳대운", "병오대운": "丙午대운",
+        "무미대운": "戊未대운", "기신대운": "己申대운", "경유대운": "庚酉대운", "신술대운": "辛戌대운",
+        "임해대운": "壬亥대운", "계축대운": "癸丑대운", "정사 대운": "丁巳 대운", "갑진 세운": "甲辰 세운"
+    }
+    for h_gyl, h_han in daewun_map.items():
+        clean_raw = clean_raw.replace(h_gyl, h_han)
+
     lines = clean_raw.split('\n')
     formatted_html = []
     
@@ -694,9 +703,13 @@ def format_ai_text_to_html(ai_raw_text):
                 f"{clean_line_str}</div>"
             )
             
-        # 🚨 [본문 - 전역 클래스 .ai-body-p 적용]
+        # 🚨 [본문 - 전역 클래스 .ai-body-p 적용 & 성함 굵은체 강제 적용]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
+            
+            # 🚨 [하드코딩 보완 2] 본문 내 '손기철님' 언급 시 100% 굵은체(<b>) 주입
+            safe_line = re.sub(r'([가-힣]+님)', r'<b>\1</b>', safe_line)
+            
             formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
     return "".join(formatted_html)
