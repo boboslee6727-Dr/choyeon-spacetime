@@ -57,15 +57,20 @@ except Exception as _api_e:
     _gemini_client = None
 
 @st.cache_data(show_spinner=False, ttl=86400)
-def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
+def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', max_tokens=6000):
     if '1.5' in model_name: model_name = 'gemini-2.5-flash'
     if _gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
     max_retries = 2
     for attempt in range(max_retries + 1):
         try:
             response = _gemini_client.models.generate_content(
-                model=model_name, contents=prompt_text,
-                config=genai.types.GenerateContentConfig(system_instruction=system_prompt, temperature=0.7)
+                model=model_name, 
+                contents=prompt_text,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=system_prompt, 
+                    temperature=0.7,
+                    max_output_tokens=max_tokens  # 👈 토큰 상한선 전달 완료!
+                )
             )
             return response.text.strip()
         except Exception as e:
@@ -76,7 +81,9 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = getattr(prompts, 'SYSTEM_ROLE', None)
     if sys_role is None:
         sys_role = getattr(prompts, 'SYSTEM_PROMPT', "당신은 초연 시공명리 전문가입니다. 팩트 데이터를 바탕으로 정확하게 분석하세요.")
-    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
+    
+    # 💡 max_tokens 인자가 get_ai_response로 차질 없이 전달됩니다.
+    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_tokens=max_tokens)
 
 def extract_ganji(text):
     if not text: return ""
