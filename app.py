@@ -693,6 +693,7 @@ if st.session_state.get('app_running', False):
             part_3_golden = str(golden_text_html or "")
             part_5_closing = str(closing_part or "")
 
+            # 💡 [핵심 보완] 월운에서와 같이 파트1, 2, 3을 캐시에 온전히 담아 기본 출력 보장
             if main_category == "1. 개인 사주팔자 풀이":
                 st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
             else:
@@ -876,8 +877,6 @@ if st.session_state.get('app_running', False):
                     cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL)
                     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
                     
-                    # 💡 [핵심 정비] 1번 제목을 강제로 지워버리던 문제의 정규식 완전 제거 완료!
-                    
                     ai_output_html = html_views.format_ai_text_to_html(cleaned)
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
@@ -966,6 +965,7 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
 
             else:
+                # 💡 [핵심 보완] 파트1(팩트+주간운표) + 파트2(소개) + 파트3(황금문구) + 파트4(AI통변) + 파트5(클로징) 완벽 결합 조립
                 part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                 final_report = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
