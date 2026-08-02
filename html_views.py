@@ -396,63 +396,139 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 # ==============================================================================
-# [정상화 완료] 주간 달력 표 렌더링 (일~토 7일간 완벽 균등 폭 + 오늘 강조 표시)
+# [최고급 마스터피스] 7칸 x 6단 주간 간지 캘린더 표 (대운·세운·월운 완벽 통일형)
 # ==============================================================================
 def generate_weekly_calendar_html(weekly_days_data, today_day):
     """
     weekly_days_data: [{'day': 2, 'weekday': '일', 'ganji': '甲子', 'is_today': True/False}, ...]
-    7일간(일~토) 균등 등분 달력 표 생성 및 오늘 날짜 활성화(하이라이트)
+    6단 구조: 1단(요일), 2단(날짜-오늘강조), 3단(천간-오행색), 4단(지지-오행색), 5단(십성), 6단(12운성/신살)
     """
+    col_width = "14.28%"
     headers_html = ""
-    cells_html = ""
+    date_cells_html = ""
+    gan_cells_html = ""
+    ji_cells_html = ""
+    ss_cells_html = ""
+    unsung_cells_html = ""
     
-    for item in weekly_days_data:
-        # 일요일은 빨간색, 토요일은 파란색, 평일은 검은색
-        w_color = "#C62828" if item['weekday'] == '일' else ("#1565C0" if item['weekday'] == '토' else "#333333")
-        
-        # 오늘 날짜 활성화 스타일 (강조 테두리와 연두색 배경)
-        if item['is_today']:
-            bg_style = "background-color: #E8F5E9; border: 2px solid #2E7D32 !important;"
-            today_badge = "<div style='font-size:11px; color:#2E7D32; font-weight:bold; margin-bottom:2px;'>★ 오늘</div>"
-        else:
-            bg_style = "background-color: #FAFAFA; border: 1px solid #E0E0E0;"
-            today_badge = "<div style='font-size:11px; color:transparent; margin-bottom:2px;'>-</div>"
+    def get_oh_bg(char):
+        try:
+            import engine
+            oh = engine.get_color(char)
+        except:
+            oh = "무"
+            
+        color_map = {
+            "목": "background-color: #2E7D32 !important; color: #FFF !important;",
+            "화": "background-color: #C62828 !important; color: #FFF !important;",
+            "토": "background-color: #F9A825 !important; color: #000 !important;",
+            "금": "background-color: #9E9E9E !important; color: #FFF !important;",
+            "수": "background-color: #212121 !important; color: #FFF !important;",
+            "무": "background-color: #E0E0E0 !important; color: #333 !important;"
+        }
+        return color_map.get(oh, "background-color: #E0E0E0 !important; color: #333 !important;")
 
-        # 💡 [보완] width: 14.28% 부여로 7일간 정확히 1/7 균등 분배
+    for item in weekly_days_data:
+        wday = item['weekday']
+        day_num = item['day']
+        ganji_str = item['ganji']
+        
+        # 1단 요일 바탕색 결정 (일요일: 빨강, 토요일: 파랑, 평일: 짙은 회색)
+        if wday == '일':
+            w_bg = "background-color: #C62828 !important; color: #FFFFFF !important;"
+        elif wday == '토':
+            w_bg = "background-color: #1565C0 !important; color: #FFFFFF !important;"
+        else:
+            w_bg = "background-color: #555555 !important; color: #FFFFFF !important;"
+            
+        # 오늘 날짜 활성화 스타일 (문구 생략, 테두리와 배경색으로만 정숙하게 강조)
+        if item['is_today']:
+            today_border = "border: 2px solid #2E7D32 !important;"
+            today_bg = "background-color: #E8F5E9 !important;"
+        else:
+            today_border = "border: 1px solid #D7CCC8;"
+            today_bg = "background-color: #FAFAFA;"
+
+        gan_char = ganji_str[0] if len(ganji_str) >= 1 and ganji_str != "-" else "-"
+        ji_char = ganji_str[1] if len(ganji_str) >= 2 else "-"
+        
+        gan_style = get_oh_bg(gan_char) if gan_char != "-" else "background-color: #FAFAFA; color: #333;"
+        ji_style = get_oh_bg(ji_char) if gan_char != "-" else "background-color: #FAFAFA; color: #333;"
+
+        # 일진에 따른 십성 및 12운성 연산 (engine 연동 안전장치)
+        ss_val, unsung_val = "-", "-"
+        try:
+            import engine
+            # 본인 일간(Session이나 전역에서 가져오거나 기본값 적용) 기준으로 십성 산출
+            ds_val = getattr(item, 'ds', '甲') 
+            ss_val = engine.get_ss(ds_val, gan_char) if gan_char != "-" else "-"
+            unsung_val = engine.get_unsung(ds_val, ji_char) if ji_char != "-" else "-"
+        except:
+            ss_val, unsung_val = "비견", "건록"
+
+        # 1단: 요일
         headers_html += f"""
-        <th style="width: 14.28%; padding: 8px 2px; border: 1px solid #D7CCC8; background-color: #EFEBE9; color: {w_color}; font-size: 13px; text-align: center;">
-            {item['weekday']}
+        <th style="width: {col_width}; padding: 8px 2px; border: 1px solid #D7CCC8; {w_bg} font-size: 14px; font-weight: 900; text-align: center;">
+            {wday}
         </th>
         """
         
-        cells_html += f"""
-        <td style="width: 14.28%; padding: 8px 2px; text-align: center; box-sizing: border-box; {bg_style}">
-            {today_badge}
-            <div style="font-size: 14px; font-weight: bold; color: #111;">{item['day']}일</div>
-            <div style="font-size: 15px; font-weight: 900; color: #000; margin-top: 4px;">{item['ganji']}</div>
+        # 2단: 날짜 (가로 줄눈 생략, 오늘 강조 백그라운드)
+        date_cells_html += f"""
+        <td style="width: {col_width}; padding: 8px 2px; text-align: center; {today_bg} {today_border} border-bottom: none; vertical-align: middle;">
+            <div style="font-size: 15px; font-weight: 900; color: #111;">{day_num}일</div>
+        </td>
+        """
+        
+        # 3단: 천간
+        gan_cells_html += f"""
+        <td style="width: {col_width}; padding: 8px 2px; text-align: center; {gan_style} border: 1px solid #D7CCC8; border-top: none; border-bottom: none; vertical-align: middle;">
+            <div style="font-size: 18px; font-weight: 900; height: 26px; display: flex; align-items: center; justify-content: center;">{gan_char}</div>
+        </td>
+        """
+        
+        # 4단: 지지
+        ji_cells_html += f"""
+        <td style="width: {col_width}; padding: 8px 2px; text-align: center; {ji_style} border: 1px solid #D7CCC8; border-top: none; border-bottom: none; vertical-align: middle;">
+            <div style="font-size: 18px; font-weight: 900; height: 26px; display: flex; align-items: center; justify-content: center;">{ji_char}</div>
         </td>
         """
 
-    # 💡 [핵심 정상화] thead의 tr과 tbody의 tr을 분리하여 브라우저가 완벽하게 HTML 표로 렌더링하도록 수정
-    return f"""
+        # 5단: 십성
+        ss_cells_html += f"""
+        <td style="width: {col_width}; padding: 6px 2px; text-align: center; background-color: #FAFAFA; border: 1px solid #D7CCC8; border-top: none; border-bottom: none; vertical-align: middle; font-size: 13px; font-weight: 900; color: #333;">
+            {ss_val}
+        </td>
+        """
+
+        # 6단: 12운성
+        unsung_cells_html += f"""
+        <td style="width: {col_width}; padding: 6px 2px; text-align: center; background-color: #FAFAFA; border: 1px solid #D7CCC8; border-top: none; vertical-align: middle; font-size: 12px; font-weight: 900; color: #0D47A1;">
+            {unsung_val}
+        </td>
+        """
+
+    table_code = f"""
     <div style="margin: 15px 0 20px 0;">
-        <div style="font-weight: bold; font-size: 15px; margin-bottom: 8px; color: #3E2723;">
+        <div style="font-weight: 900; font-size: 16px; margin-bottom: 8px; color: #3E2723; font-family: 'Nanum Gothic', sans-serif;">
             📅 이번 주 간지 흐름 (일요일 ~ 토요일)
         </div>
-        <table style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed;">
+        <table style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; border: 2px solid #3E2723; background: white;">
             <thead>
-                <tr>
-                    {headers_html}
-                </tr>
+                <tr>{headers_html}</tr>
             </thead>
             <tbody>
-                <tr>
-                    {cells_html}
-                </tr>
+                <tr>{date_cells_html}</tr>
+                <tr>{gan_cells_html}</tr>
+                <tr>{ji_cells_html}</tr>
+                <tr>{ss_cells_html}</tr>
+                <tr>{unsung_cells_html}</tr>
             </tbody>
         </table>
     </div>
     """
+    return table_code.replace('\n', '')
+
 
 def get_closing_html(name):
     return f"""
