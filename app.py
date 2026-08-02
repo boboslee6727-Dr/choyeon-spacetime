@@ -612,7 +612,7 @@ if st.session_state.get('app_running', False):
 
             wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
-            # 6. 주간 및 일운(일진) 전용 연산 (1-4 상품일 경우)
+            # 6. 주간 및 일운(일진) 전용 연산 및 7일 달력 HTML 표 생성 (1-4 상품일 경우)
             weekly_daily_html = ""
             weekly_ganji_list = "월~일 주간 간지 데이터"
             m_che_first, am_yong = "오전 체", "오전 용"
@@ -620,7 +620,34 @@ if st.session_state.get('app_running', False):
             day_wunseong, day_12shinsal = "건록", "망신살"
 
             if "1-4." in u_product:
-                w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, dt_mod.datetime.now().day) if hasattr(engine, 'get_weekly_daily_facts') else {}
+                now_dt = dt_mod.datetime.now()
+                today_day = now_dt.day
+                
+                # 💡 [보완 1] 일요일~토요일 7일간 달력 데이터 연산
+                idx_from_sun = (now_dt.weekday() + 1) % 7
+                sunday_dt = now_dt - dt_mod.timedelta(days=idx_from_sun)
+                
+                weekdays_str = ['일', '월', '화', '수', '목', '금', '토']
+                weekly_days_data = []
+                
+                for i in range(7):
+                    target_dt = sunday_dt + dt_mod.timedelta(days=i)
+                    _, _, d_pillar = engine.get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day) if hasattr(engine, 'get_ganji_from_date') else ("", "", ("",""))
+                    ganji_str = f"{d_pillar[0]}{d_pillar[1]}" if d_pillar and len(d_pillar)>=2 else "-"
+                    is_today = (target_dt.date() == now_dt.date())
+                    
+                    weekly_days_data.append({
+                        'day': target_dt.day,
+                        'weekday': weekdays_str[i],
+                        'ganji': ganji_str,
+                        'is_today': is_today
+                    })
+                
+                # 일~토 7일 달력 HTML 생성
+                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+
+                # 일진 체용 팩트 연산
+                w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
                 weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
                 m_che_first = w_d_res.get('m_che_first', m_che_first)
                 am_yong = w_d_res.get('am_yong', am_yong)
@@ -629,14 +656,18 @@ if st.session_state.get('app_running', False):
                 day_wunseong = w_d_res.get('day_wunseong', day_wunseong)
                 day_12shinsal = w_d_res.get('day_12shinsal', day_12shinsal)
                 
-                weekly_daily_html = html_views.generate_weekly_daily_layout(
-                    weekly_ganji_list, dt_mod.datetime.now().day, ds, db, 
+                # 오늘의 일운 표 HTML 생성
+                daily_table_html = html_views.generate_weekly_daily_layout(
+                    weekly_ganji_list, today_day, ds, db, 
                     m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal
                 ) if hasattr(html_views, 'generate_weekly_daily_layout') else ""
 
+                # 💡 [결합] 상단 7일 달력 표 + 하단 오늘의 일진 체용 표 결합
+                weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
+
             # 7. 골든 텍스트 및 클로징 멘트 생성
             choyeon_db = load_choyeon_db()
-            w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() 
+            w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
             i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
             struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
@@ -665,10 +696,8 @@ if st.session_state.get('app_running', False):
                 target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
             elif "1-3." in u_product:
                 target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
-                target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 이번 달(월운)의 핵심 흐름과 인과관계, 행동 지침만 집중적으로 출력하라.]"
             elif "1-4." in u_product:
                 target_prompt = getattr(prompts, 'WEEKLY_DAILY_PROMPT', "")
-                target_prompt += "\n\n[🚨 극비 강제 지시사항: 사주 원국, 대운, 세운, 월운에 대한 기본 설명이나 도입부는 완전히 생략하고, 즉시 주간 총평 및 오늘의 일운(오전/오후 체용 파동) 흐름만 짧고 명쾌하게 집중적으로 출력하라.]"
             elif "1-5." in u_product:
                 target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
             elif "1-6." in u_product:
@@ -720,6 +749,10 @@ if st.session_state.get('app_running', False):
                     cur_wol_g = getattr(engine, 'cur_wol_g', '')
                     cur_wol_j = getattr(engine, 'cur_wol_j', '')
 
+                # 💡 [보완 2] 용신/희신/기신 및 고신/과숙 정밀 연산 바인딩
+                yongshin_str = engine.get_yongshin_analysis(counts, mb, ds) if hasattr(engine, 'get_yongshin_analysis') else f"격국: {gyukgook_detail}"
+                goshin_gwasook_str = engine.get_goshin_gwasook(yb, gender) if hasattr(engine, 'get_goshin_gwasook') else "특이 고신/과숙 없음"
+
                 _current_locals = locals()
                 _current_globals = globals()
                 
@@ -742,10 +775,14 @@ if st.session_state.get('app_running', False):
                 health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
                 question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
+                # 💡 [보완 3] 프롬프트 바인딩 딕셔너리에 용신 및 고신/과숙, 체용 파동 키워드 완전 주입
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
-                    "gyukgook_detail": gyukgook_detail, "gongmang_actual": i_gong, "year_gongmang": n_gong,
+                    "gyukgook_detail": gyukgook_detail, 
+                    "yongshin_str": yongshin_str,                  # 👈 용신/희신/기신 팩트
+                    "goshin_gwasook_str": goshin_gwasook_str,      # 👈 고신/과숙살 팩트
+                    "gongmang_actual": i_gong, "year_gongmang": n_gong,
                     "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
@@ -757,6 +794,16 @@ if st.session_state.get('app_running', False):
                     "dw_j_cur": dw_j_cur,
                     "cur_wol_g": cur_wol_g,
                     "cur_wol_j": cur_wol_j,
+                    
+                    # 주간/일운 체용 팩트 프롬프트 변수
+                    "weekly_ganji_list": weekly_ganji_list,
+                    "t_month": curr_m,
+                    "t_day": dt_mod.datetime.now().day,
+                    "m_ilgan": ds, "m_ilji": db,
+                    "m_che_first": m_che_first, "am_yong": am_yong,
+                    "m_che_second": m_che_second, "pm_yong": pm_yong,
+                    "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
+                    
                     "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)",
                     "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in _current_locals else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
                     "weak_health_str": weak_health_str if 'weak_health_str' in _current_locals else "취약 장기 및 신체 부위 분석 팩트",
@@ -790,7 +837,7 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            st.markdown(cover_html, unsafe_allow_html=True) 
+            st.markdown(cover_html, unsafe_allow_html=True)
 
             # ------------------------------------------------------------------
             # 10. [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
