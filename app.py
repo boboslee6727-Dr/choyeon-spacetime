@@ -94,12 +94,9 @@ def td_bg(ganji):
 # 2. 사이드바 통제 센터 (방탄(Bulletproof) 구조 및 변수 선언 안전화)
 # ==============================================================================
 with st.sidebar:
-    # 💡 카테고리를 '실제로 바꿨을 때'만 이전 실행 결과를 끄도록 안전 검증
+    # 💡 대분류든 소분류든 클릭하는 즉시 화면을 끄고 [풀이 가동] 버튼 클릭을 대기하도록 초기화
     def stop_ai():
-        # 상품 변경 시에만 화면 초기화
-        if st.session_state.get("prev_category") != st.session_state.get("main_category"):
-            st.session_state['app_running'] = False
-            st.session_state["prev_category"] = st.session_state.get("main_category")
+        st.session_state['app_running'] = False
 
     st.markdown(f"""
         <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
