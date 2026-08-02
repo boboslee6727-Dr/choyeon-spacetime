@@ -108,18 +108,18 @@ with st.sidebar:
 
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
-    main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 사주팔자 및 운세 풀이", "2. 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
+    main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 개인 사주팔자 풀이", "2. 커플 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
     u_product = "1-1. 사주팔자 및 대운 분석"
 
-    if main_category == "1. 사주팔자 및 운세 풀이":
+    if main_category == "1. 개인 사주팔자 풀이":
         u_product = st.radio(
             "상세 분석 항목:", 
             [
                 "1-1. 사주팔자 및 대운 분석", 
                 "1-2. 올 해의 운세 상세 분석", 
                 "1-3. 이번 달의 운세 상세 분석", 
-                "1-4. 주간 및 오늘의 일운(일진) 분석",  # 👈 추가!
+                "1-4. 주간 및 오늘의 일운(일진) 분석", 
                 "1-5. 재물운 특화 분석", 
                 "1-6. 직업/진학운 특화 분석", 
                 "1-7. 건강운 특화 분석", 
@@ -128,8 +128,8 @@ with st.sidebar:
             key="sub_category_1", 
             on_change=stop_ai
         )
-    elif main_category == "2. 연애/결혼운 (궁합) 풀이":
-        u_product = st.radio("상세 분석 항목:", ["2-0. 연애/결혼운 (궁합) 기본 풀이", "2-1. 결혼 택일", "2-2. 출산 택일"], key="sub_category_2", on_change=stop_ai)
+    elif main_category == "2. 커플 연애/결혼운 (궁합) 풀이":
+        u_product = st.radio("상세 분석 항목:", ["2-1. 연애/결혼운 (궁합) 풀이", "2-2. 결혼 택일", "2-3. 출산 택일"], key="sub_category_2", on_change=stop_ai)
     else:
         u_product = st.radio("비교 분석 대상:", ["3-1. 타 감명서 비교 (사주)", "3-2. 타 감명서 비교 (궁합)"], key="sub_category_3", on_change=stop_ai)
     st.markdown("---")
@@ -258,23 +258,26 @@ with st.sidebar:
     if "1-1." in u_product:
         run_iljin_calc = st.sidebar.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
         
-    elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7.", "3-1."]):
-        if "1-4." in u_product: 
+    elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
+        if "1-4." in u_product:
+            # 💡 [보완] 1-4 선택 시 일운 연산 기준일 선택 옵션 제공 (기본값: 오늘)
+            daily_calc_date = st.sidebar.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
+        if "1-5." in u_product: 
             wealth_goal = st.sidebar.text_input("고민되는 금전 문제는?", key="wealth_goal")
-        elif "1-5." in u_product: 
-            career_goal = st.sidebar.text_input("고민되는 직업/진학 분야는?", key="career_goal")
         elif "1-6." in u_product: 
+            career_goal = st.sidebar.text_input("고민되는 직업/진학 분야는?", key="career_goal")
+        elif "1-7." in u_product: 
             health_goal = st.sidebar.text_input("관리할 건강 부위는?", key="health_goal")
-        elif "1-7." in u_product:
+        elif "1-8." in u_product:
             moving_date = st.sidebar.date_input("이사 희망일", key="moving_date")
             moving_dir = st.sidebar.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
         elif "3-1." in u_product:
             other_report = st.sidebar.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 정보 입력부
+    # 👥 상대방 정보 입력부 (2-1 궁합 및 3-2 궁합비교 전용)
     # ==============================================================================
-    if any(x in u_product for x in ["2-", "3-2."]):
+    if any(x in u_product for x in ["2-1.", "3-2."]):
         with st.sidebar.expander("🔍 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
@@ -374,7 +377,10 @@ with st.sidebar:
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=p_t_idx, key="p_t_select")
             st.session_state["p_t_key"] = f_t
 
-    if "2-1." in u_product:
+    # ==============================================================================
+    # 📌 택일 및 타 감명서 특화 옵션 조건문
+    # ==============================================================================
+    if "2-2." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
         if date_mode == "기간 선택":
             col_start, col_end = st.columns(2)
@@ -383,7 +389,7 @@ with st.sidebar:
         else:
             target_date = st.date_input("결혼 예정일 선택", key="target_date_m")
             
-    elif "2-2." in u_product:
+    elif "2-3." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc")
         
         if run_delivery_calc:
@@ -926,9 +932,9 @@ if st.session_state.get('app_running', False):
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     # ==============================================================================
-    # [2번 카테고리] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
+    # [2-1] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
     # ==============================================================================
-    elif any(x in u_product for x in ["2-0", "3-2"]):
+    elif any(x in u_product for x in ["2-1", "3-2"]):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
@@ -1175,9 +1181,9 @@ if st.session_state.get('app_running', False):
                 st.error(f"🚨 궁합 및 타 감명서 비교 처리 중 오류 발생: {e}")
 
     # ==============================================================================
-    # 💍 [2-1번 카테고리] 결혼 택일
+    # 💍 [2-2번 카테고리] 결혼 택일
     # ==============================================================================
-    elif "2-1." in u_product:
+    elif "2-2." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
             st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
         if 'cached_gunghap_report' in st.session_state:
@@ -1276,9 +1282,9 @@ if st.session_state.get('app_running', False):
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
 
     # ==============================================================================
-    # 👶 [2-2번 카테고리] 출산 택일
+    # 👶 [2-3번 카테고리] 출산 택일
     # ==============================================================================
-    elif "2-2." in u_product:
+    elif "2-3." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
             st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
         if 'cached_gunghap_report' in st.session_state:
