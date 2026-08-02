@@ -23,7 +23,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 70.4"
+APP_VERSION = "ver 70.5"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용 (html_views 모듈 호출)
@@ -552,8 +552,8 @@ if st.session_state.get('app_running', False):
                     "j_hanja": j_hanja,
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
-                    "un_sung": engine.get_unsung(ds_hanja, j_hanja),
-                    "shin_sal": engine.get_12_shinsal(yb, j_hanja),
+                    "un_sung": engine.get_unsung(ds_hanja, j_hangul),
+                    "shin_sal": engine.get_12_shinsal(yb, j_hangul),
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
@@ -695,6 +695,9 @@ if st.session_state.get('app_running', False):
             else:
                 st.session_state['base_fact_cache'] = part_1_fact
 
+            # ==============================================================================
+            # 💡 [정밀 수정] 상품별 전용 프롬프트 완벽 분기 매핑
+            # ==============================================================================
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -869,7 +872,8 @@ if st.session_state.get('app_running', False):
                     cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
                     cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL)
                     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
-                    cleaned = re.sub(r'^(.*?)(?=\d+\.\s*)', '', cleaned, flags=re.DOTALL).strip()
+                    
+                    # 💡 [핵심 정비] 1번 제목을 강제로 지워버리던 문제의 정규식 완전 제거 완료!
                     
                     ai_output_html = html_views.format_ai_text_to_html(cleaned)
                 else:
@@ -939,9 +943,6 @@ if st.session_state.get('app_running', False):
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
                                 c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
-                                
-                                if re.search(r'\n\s*1\.\s*', c_res_clean):
-                                    c_res_clean = re.sub(r'^(.*?)(?=\n\s*1\.\s*)', '', c_res_clean, flags=re.DOTALL).strip()
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
@@ -1184,9 +1185,6 @@ if st.session_state.get('app_running', False):
                                 clean_ai = re.sub(r'```[a-zA-Z]*', '', clean_ai).replace("```", "").strip()
                                 clean_ai = re.sub(r'#{1,6}\s*', '', clean_ai)
                                 clean_ai = clean_ai.replace("&lt;", "<").replace("&gt;", ">")
-                                
-                                if re.search(r'\n\s*1\.\s*', clean_ai):
-                                    clean_ai = re.sub(r'^(.*?)(?=\n\s*1\.\s*)', '', clean_ai, flags=re.DOTALL).strip()
                                 
                                 formatted_comp = html_views.format_ai_text_to_html(clean_ai)
                                 
