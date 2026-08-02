@@ -682,6 +682,9 @@ if st.session_state.get('app_running', False):
                 ) if hasattr(html_views, 'generate_weekly_daily_layout') else ""
 
                 weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
+                
+                # 🚨 [최종 암살] 스트림릿이 "들여쓰기"를 "소스코드"로 착각하지 못하도록 모든 줄바꿈 강제 삭제!
+                weekly_daily_html = weekly_daily_html.replace('\n', '')
 
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
