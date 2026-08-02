@@ -148,7 +148,7 @@ with st.sidebar:
     # ==============================================================================
     # 🔍 신청인 사주간지 역산
     # ==============================================================================
-    with st.sidebar.expander("🔍 신청인 사주간지 역산", expanded=False):
+    with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: u_ry = st.text_input("년주", key="u_ry_rev")
         with col_g2: u_rm = st.text_input("월주", key="u_rm_rev")
@@ -232,10 +232,9 @@ with st.sidebar:
     # ==============================================================================
     # 👤 신청인 기본 정보 (Rerun 시 기존 입력값 100% 영구 유지 방탄 처리)
     # ==============================================================================
-    u_box = st.sidebar.container()
+    u_box = st.container()
     with u_box:
         st.subheader("👤 신청인 기본 정보")
-        # 세션에 값이 이미 있으면 그대로 유지하고, 없을 때만 초기값 할당
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n")
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat")
@@ -253,29 +252,28 @@ with st.sidebar:
         st.session_state["s_t"] = b_time
 
     # ==============================================================================
-    # 📌 특화 상품별 추가 옵션 (1-1 군더더기 옵션 제거 및 if-elif 분기 완벽 교정)
+    # 📌 특화 상품별 추가 옵션
     # ==============================================================================
     if any(x in u_product for x in ["1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
         if "1-4." in u_product:
-            # 💡 1-4 선택 시 일운 연산 기준일 선택 옵션 제공 (기본값: 오늘)
-            daily_calc_date = st.sidebar.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
+            daily_calc_date = st.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
         elif "1-5." in u_product: 
-            wealth_goal = st.sidebar.text_input("고민되는 금전 문제는?", key="wealth_goal")
+            wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "1-6." in u_product: 
-            career_goal = st.sidebar.text_input("고민되는 직업/진학 분야는?", key="career_goal")
+            career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal")
         elif "1-7." in u_product: 
-            health_goal = st.sidebar.text_input("관리할 건강 부위는?", key="health_goal")
+            health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
         elif "1-8." in u_product:
-            moving_date = st.sidebar.date_input("이사 희망일", key="moving_date")
-            moving_dir = st.sidebar.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
+            moving_date = st.date_input("이사 희망일", key="moving_date")
+            moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
         elif "3-1." in u_product:
-            other_report = st.sidebar.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
     # 👥 상대방 정보 입력부 (2-1 궁합 및 3-2 궁합비교 전용)
     # ==============================================================================
-    if any(x in u_product for x in ["2-1.", "3-2."]):
-        with st.sidebar.expander("🔍 상대방 사주간지 역산", expanded=False):
+    if any(x in u_product for x in ["2-1.", "2-2.", "2-3.", "3-2."]):
+        with st.expander("🔍 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry")
             with p_col_g2: p_rm = st.text_input("상대방 월주", key="p_rm")
@@ -357,7 +355,7 @@ with st.sidebar:
         if 'p_d_in' not in st.session_state: st.session_state['p_d_in'] = 1
         if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
 
-        p_box = st.sidebar.container()
+        p_box = st.container()
         with p_box:
             st.subheader("👥 상대방 기본 정보")
             f_name = st.text_input("상대방 이름", key="f_n")
@@ -411,29 +409,28 @@ with st.sidebar:
 
     elif "3-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        other_report = st.sidebar.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key=f"text_{u_product}")
+        other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key=f"text_{u_product}")
 
     st.markdown("---")
 
     # ==============================================================================
-    # 👑 VIP 종합 패키지 모드 사이드바 제어 (불필요한 빈 공간 및 실선 완전 제거본)
+    # 👑 VIP 종합 패키지 모드 사이드바 제어 (단정하게 정돈)
     # ==============================================================================
-    st.sidebar.markdown("---")
-    is_vip_package = st.sidebar.checkbox(
+    is_vip_package = st.checkbox(
         "👑 VIP 종합 패키지 모드 (누적 출력)", 
         value=False, 
         key="is_vip_package",
         help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
     )
-    st.sidebar.markdown("---")
+    st.markdown("---")
 
-    # 💡 [보완] 입력 변수를 활용하여 NameError를 방지하는 안전한 내담자 식별 키 생성
+    # 💡 내담자 변경 시 캐시 세션 초기화용 키 생성
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
     u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
     u_m = st.session_state.get('u_m_stat', u_marital if 'u_marital' in locals() else "")
-    u_y = st.session_state.get('u_y_in', "")
-    u_mo = st.session_state.get('u_m_in', "")
-    u_d = st.session_state.get('u_d_in', "")
+    u_y = st.session_state.get('s_y', "")
+    u_mo = st.session_state.get('s_m', "")
+    u_d = st.session_state.get('s_d', "")
     
     current_user_key = f"{main_category}_{u_n}_{u_g}_{u_m}_{u_y}_{u_mo}_{u_d}"
     
@@ -444,77 +441,36 @@ with st.sidebar:
         st.session_state['app_running'] = False
 
     # ------------------------------------------------------------------------------
-    # ✨ [초연 시공명리 풀이 가동] 버튼 클릭 시 연산 및 저장
+    # ✨ [초연 시공명리 풀이 가동] 버튼 (사이드바 맨 밑 핵심 스위치)
     # ------------------------------------------------------------------------------
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
-        
-        # 1. 선택된 상품의 AI 통변 프롬프트 호출 및 Gemini 연산 (cleaned 정제)
-        # (박사님의 기존 call_gemini_api 호출 및 cleaned 정제 코드 위치)
-        current_ai_essay = html_views.format_ai_text_to_html(cleaned)
 
-        # 2. 상단 공통 팩트 상자 캐싱 (part_1_fact 등 변수가 생성된 직후 저장)
-        if main_category == "1. 개인 사주팔자 풀이":
-            st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
-        else:
-            # 2번 궁합 및 3번 비교 상품용 상단 팩트 상자
-            st.session_state['base_fact_cache'] = part_1_fact
-
-        # 3. 💡 VIP 모드 vs 일반 단품 모드 분기 저장
-        if is_vip_package:
-            # 👑 VIP 모드: 기존 가동 항목 유지 + 현재 상품 추가/갱신
-            st.session_state['report_essays'][u_product] = current_ai_essay
-        else:
-            # 👤 일반 단품 모드: 기존 항목 싹 비우고 현재 선택된 상품 1개만 단독 저장
-            st.session_state['report_essays'] = {u_product: current_ai_essay}
-
-    # ------------------------------------------------------------------------------
-    # 🖨️ 화면 및 PDF 인쇄용 종합 렌더링
-    # ------------------------------------------------------------------------------
-    if st.session_state.get('app_running') and st.session_state.get('base_fact_cache'):
-        
-        # (1) 상단 공통 팩트 상자 배치
-        combined_html = st.session_state['base_fact_cache']
-        
-        # (2) 가동된 상품들의 AI 통변 에세이 순차적 결합 (단품은 1개, VIP는 가동한 N개)
-        for prod_title, essay_content in st.session_state['report_essays'].items():
-            combined_html += f"""
-            <div style="margin-top: 35px; margin-bottom: 25px; page-break-before: always;">
-                <div style="font-size: 18px; font-weight: 900; color: #1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 8px; margin-bottom: 15px;">
-                    📌 분석 항목: {prod_title}
-                </div>
-                {essay_content}
-            </div>
-            """
-        
-        # (3) 클로징 멘트 결합
-        combined_html += part_5_closing
-        
-        # (4) 화면 출력
-        st.markdown(combined_html, unsafe_allow_html=True)
-
-        # 사이드바 최하단: VIP 모드 제어 (위아래 여백 없이 단정하게 정돈)
-        st.sidebar.markdown("---")
-        is_vip_package = st.sidebar.checkbox(
+    # ==============================================================================
+    # 👑 VIP 종합 패키지 모드 & 가동/인쇄 버튼 (사이드바 최하단 완벽 동선)
+    # ==============================================================================
+    st.markdown("---")
+    is_vip_package = st.checkbox(
         "👑 VIP 종합 패키지 모드 (누적 출력)", 
-            value=False, 
-            key="is_vip_package",
-            help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
-        )
-        st.sidebar.markdown("---")
+        value=False, 
+        key="is_vip_package",
+        help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
+    )
+    st.markdown("---")
 
-        # 최하단 인쇄 버튼 (상단 버튼 보색 그린 적용)
-        st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
-        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
-            components.html("<script>window.parent.print();</script>", height=0)
+    # 1. 메인 풀이 가동 버튼 (1개만 단독 유지)
+    if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
+        st.session_state['app_running'] = True
+
+    # 2. 최하단 인쇄 / PDF 저장 버튼 (상단 버튼 보색 숲속 그린 적용)
+    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; margin-top: 5px; }</style>", unsafe_allow_html=True)
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+        components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
-# 3. 메인 화면 출력부 (ver 70.2 원본 기반 완벽 정돈본)
+# 3. 메인 화면 연산 및 출력부 (1-1 ~ 1-8번 + 3-1번 개인 사주팔자 통합 구역)
 # ==============================================================================
 if st.session_state.get('app_running', False):
-    # ---------------------------------------------------------
-    # [1-1 ~ 1-8번 + 3-1번 상품 통합 블록] 
-    # ---------------------------------------------------------
     if any(x in u_product for x in ["1-", "3-1."]): 
 
         # --- (A) 기본 사주 원국 및 대운 연산 ---
@@ -612,7 +568,7 @@ if st.session_state.get('app_running', False):
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             
-            # 3. 대운표 생성
+            # 대운표 생성
             daewun_data_list = []
             for i in range(10):
                 val = i * 10 + calc_d
@@ -650,7 +606,7 @@ if st.session_state.get('app_running', False):
                 current_daewun_age = max(0, int(age))
                 start_year = curr_year
 
-            # 4. 세운표 생성
+            # 세운표 생성
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -677,7 +633,7 @@ if st.session_state.get('app_running', False):
             dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
             sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
 
-            # 5. 월운표 생성
+            # 월운표 생성
             wol_content = ""
             for i in range(12):
                 tm = i + 1
@@ -702,7 +658,7 @@ if st.session_state.get('app_running', False):
 
             wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
-            # 6. 주간 및 일운(일진) 전용 연산 및 7일 달력 HTML 표 생성 (1-4 상품일 경우)
+            # 주간 및 일운 전용 연산
             weekly_daily_html = ""
             weekly_ganji_list = "월~일 주간 간지 데이터"
             m_che_first, am_yong = "오전 체", "오전 용"
@@ -713,7 +669,6 @@ if st.session_state.get('app_running', False):
                 now_dt = dt_mod.datetime.now()
                 today_day = now_dt.day
                 
-                # 💡 [보완 1] 일요일~토요일 7일간 달력 데이터 연산
                 idx_from_sun = (now_dt.weekday() + 1) % 7
                 sunday_dt = now_dt - dt_mod.timedelta(days=idx_from_sun)
                 
@@ -733,10 +688,8 @@ if st.session_state.get('app_running', False):
                         'is_today': is_today
                     })
                 
-                # 일~토 7일 달력 HTML 생성
                 weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
 
-                # 일진 체용 팩트 연산
                 w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
                 weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
                 m_che_first = w_d_res.get('m_che_first', m_che_first)
@@ -746,16 +699,14 @@ if st.session_state.get('app_running', False):
                 day_wunseong = w_d_res.get('day_wunseong', day_wunseong)
                 day_12shinsal = w_d_res.get('day_12shinsal', day_12shinsal)
                 
-                # 오늘의 일운 표 HTML 생성
                 daily_table_html = html_views.generate_weekly_daily_layout(
                     weekly_ganji_list, today_day, ds, db, 
                     m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal
                 ) if hasattr(html_views, 'generate_weekly_daily_layout') else ""
 
-                # 💡 [결합] 상단 7일 달력 표 + 하단 오늘의 일진 체용 표 결합
                 weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
 
-            # 7. 골든 텍스트 및 클로징 멘트 생성
+            # 골든 텍스트 및 클로징 멘트 생성
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
@@ -767,7 +718,7 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "").strip()
 
-            # 8. 상단 팩트 상자 묶음 (레고 블록 변수 할당)
+            # 상단 팩트 상자 묶음 (레고 블록 변수 할당)
             part_1_fact = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -778,13 +729,13 @@ if st.session_state.get('app_running', False):
             part_3_golden = str(golden_text_html or "")
             part_5_closing = str(closing_part or "")
 
-            # 💡 [핵심 보완 1] 상단 팩트 상자 안전 캐싱 (part_1_fact 등 정의 직후 대입)
+            # 💡 [핵심 보완 1] 상단 팩트 상자 안전 캐싱
             if main_category == "1. 개인 사주팔자 풀이":
                 st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
             else:
                 st.session_state['base_fact_cache'] = part_1_fact
 
-            # 9. AI 통변 프롬프트 셋팅 및 호출
+            # AI 통변 프롬프트 셋팅 및 호출
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -845,7 +796,6 @@ if st.session_state.get('app_running', False):
                     cur_wol_g = getattr(engine, 'cur_wol_g', '')
                     cur_wol_j = getattr(engine, 'cur_wol_j', '')
 
-                # 💡 [보완 2] 용신/희신/기신 및 고신/과숙 정밀 연산 바인딩
                 yongshin_str = engine.get_yongshin_analysis(counts, mb, ds) if hasattr(engine, 'get_yongshin_analysis') else f"격국: {gyukgook_detail}"
                 goshin_gwasook_str = engine.get_goshin_gwasook(yb, gender) if hasattr(engine, 'get_goshin_gwasook') else "특이 고신/과숙 없음"
 
@@ -871,10 +821,8 @@ if st.session_state.get('app_running', False):
                 health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
                 question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
-                # 💡 [ver 6.0 정밀 보완] 지장간 좌법/인종법 연산 팩트 산출
                 universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
 
-                # 💡 프롬프트 바인딩 딕셔너리에 universal_str 완전 주입
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
@@ -895,7 +843,6 @@ if st.session_state.get('app_running', False):
                     "cur_wol_g": cur_wol_g,
                     "cur_wol_j": cur_wol_j,
                     
-                    # 주간/일운 체용 팩트 변수
                     "weekly_ganji_list": weekly_ganji_list,
                     "t_month": curr_m,
                     "t_day": dt_mod.datetime.now().day,
@@ -937,21 +884,14 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            # 💡 [핵심 보완 2] VIP 모드 vs 일반 모드 분기 및 AI 통변 세션 저장
+            # 💡 VIP 모드 vs 일반 모드 분기 세션 저장
             if is_vip_package:
                 st.session_state['report_essays'][u_product] = ai_output_html
             else:
                 st.session_state['report_essays'] = {u_product: ai_output_html}
 
-    # ==============================================================================
-    # 🖨️ 최하단 [풀이 결과 인쇄 / PDF 저장] 버튼 (보색 숲속 그린 적용)
-    # ==============================================================================
-    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
-    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
-        components.html("<script>window.parent.print();</script>", height=0)
-
             # ------------------------------------------------------------------
-            # 10. [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
+            # [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
             # ------------------------------------------------------------------
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
@@ -1035,6 +975,13 @@ if st.session_state.get('app_running', False):
                 part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                 final_report = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+
+    # ------------------------------------------------------------------------------
+    # 🖨️ 최하단 [풀이 결과 인쇄 / PDF 저장] 버튼 (보색 숲속 그린 적용)
+    # ------------------------------------------------------------------------------
+    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+        components.html("<script>window.parent.print();</script>", height=0)
 
     # ==============================================================================
     # [2-1] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
