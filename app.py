@@ -264,9 +264,13 @@ with st.sidebar:
         
         # 각 세부 항목별 추가 입력 필드 분기
         if "1-4." in u_product:
+            # 💡 [핵심] 서버 위치와 상관없이 한국 표준시(KST) 기준의 진짜 오늘 날짜를 실시간 강제 할당
+            kst_tz = pytz.timezone('Asia/Seoul')
+            today_kst_date = dt_mod.datetime.now(kst_tz).date()
+            
             daily_calc_date = st.date_input(
                 "일운 분석 기준일 선택", 
-                value=st.session_state.get("daily_calc_date", dt_mod.date.today()), 
+                value=st.session_state.get("daily_calc_date", today_kst_date), 
                 key="daily_calc_date"
             )
         elif "1-5." in u_product: 
@@ -636,7 +640,10 @@ if st.session_state.get('app_running', False):
             day_wunseong, day_12shinsal = "건록", "망신살"
 
             if "1-4." in u_product:
-                now_dt = dt_mod.datetime.now()
+                # 💡 [핵심 단속] 메인 화면 연산부에서도 서버 타임존 오차를 없애고 한국 표준시(KST) 기준 현재 시각을 강제 적용
+                kst_tz = pytz.timezone('Asia/Seoul')
+                now_dt = dt_mod.datetime.now(kst_tz)
+                
                 today_day = now_dt.day
                 
                 idx_from_sun = (now_dt.weekday() + 1) % 7
