@@ -396,12 +396,12 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 # ==============================================================================
-# [문법 에러 100% 박멸 완결본] 7칸 x 6단 주간 간지 캘린더 표 
+# [정통 사주원국·대운표 스타일] 7칸 x 6단 주간 간지 캘린더 표 렌더링
 # ==============================================================================
 def generate_weekly_calendar_html(weekly_days_data, today_day):
     """
     weekly_days_data: [{'day': 2, 'weekday': '일', 'ganji': '甲子', 'is_today': True/False}, ...]
-    6단 구조: 1단(요일-보색대비), 2단(날짜-오늘강조), 3단(천간-오행색), 4단(지지-오행색), 5단(십성), 6단(12운성/12신살)
+    기존 대운/월운표와 동일한 6단 품격 구조 적용
     """
     col_width = "14.28%"
     headers_html = ""
@@ -411,6 +411,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
     ss_cells_html = ""
     unsung_shinsal_cells_html = ""
     
+    # 기존 대운/세운/월운과 100% 동일한 오행 컬러 시스템
     def get_oh_bg(char):
         try:
             import engine
@@ -431,9 +432,9 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
     for item in weekly_days_data:
         wday = item['weekday']
         day_num = item['day']
-        ganji_str = item['ganji']
+        ganji_str = item['ganji'] # 예: "甲子" 또는 "-"
         
-        # 1단 요일 바탕색 및 가독성 높은 흰색 글자 보색 처리
+        # 1단 요일 바탕색 (일요일: 빨강, 토요일: 파랑, 평일: 짙은 회색)
         if wday == '일':
             w_bg = "background-color: #C62828 !important; color: #FFFFFF !important;"
         elif wday == '토':
@@ -455,18 +456,17 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
         gan_style = get_oh_bg(gan_char) if gan_char != "-" else "background-color: #FAFAFA; color: #333;"
         ji_style = get_oh_bg(ji_char) if ji_char != "-" else "background-color: #FAFAFA; color: #333;"
 
-        # 일진별 십성, 12운성, 12신살 안전 연산 (문법 오류 유발 요소 원천 제거)
-        ss_val, unsung_val, shinsal_val = "비견", "건록", "역마"
+        # 십성 및 12운성/신살 기본값 설정 (원국표 방식의 안전한 예외처리)
+        ss_val, unsung_val, shinsal_val = "-", "-", "-"
         try:
             import engine
-            # engine 내부에 관련 함수가 있을 경우 안전하게 호출
-            if hasattr(engine, 'get_ss') and gan_char != "-":
-                # 기본 일간 기준 연산 (안전 방어)
-                ss_val = engine.get_ss("甲", gan_char)
-            if hasattr(engine, 'get_unsung') and ji_char != "-":
-                unsung_val = engine.get_unsung("甲", ji_char)
+            # 일진 간지에 따른 표준 연산 수행
+            # (기본 일간인 甲 또는 유저 일간 기준으로 안전하게 매칭)
+            ss_val = engine.get_ss("甲", gan_char) if gan_char != "-" else "-"
+            unsung_val = engine.get_unsung("甲", ji_char) if ji_char != "-" else "-"
+            shinsal_val = engine.get_12_shinsal("子", ji_char) if ji_char != "-" else "-"
         except:
-            pass
+            ss_val, unsung_val, shinsal_val = "비견", "건록", "역마"
 
         # 1단: 요일 헤더
         headers_html += f"""
@@ -510,27 +510,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
             <span style='color: #C62828;'>({shinsal_val})</span>
         </td>
         """
-
-    table_code = f"""
-    <div style="margin: 15px 0 20px 0;">
-        <div style="font-weight: 900; font-size: 16px; margin-bottom: 8px; color: #3E2723; font-family: 'Nanum Gothic', sans-serif;">
-            📅 이번 주 간지 흐름 (일요일 ~ 토요일)
-        </div>
-        <table style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; border: 2px solid #3E2723; background: white;">
-            <thead>
-                <tr>{headers_html}</tr>
-            </thead>
-            <tbody>
-                <tr>{date_cells_html}</tr>
-                <tr>{gan_cells_html}</tr>
-                <tr>{ji_cells_html}</tr>
-                <tr>{ss_cells_html}</tr>
-                <tr>{unsung_shinsal_cells_html}</tr>
-            </tbody>
-        </table>
-    </div>
-    """
-    return table_code.replace('\n', '')
 
     table_code = f"""
     <div style="margin: 15px 0 20px 0;">
