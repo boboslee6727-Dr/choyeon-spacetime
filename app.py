@@ -436,15 +436,9 @@ with st.sidebar:
         st.session_state['report_essays'] = {}      # 상품별 AI 통변 저장 딕셔너리
         st.session_state['app_running'] = False
 
-    # ------------------------------------------------------------------------------
-    # 1. ✨ [초연 시공명리 풀이 가동] 버튼 (type="primary" 🔴 강렬한 레드 적용)
-    # ------------------------------------------------------------------------------
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
 
-    # ------------------------------------------------------------------------------
-    # 2. 🖨️ 최하단 인쇄 / PDF 저장 버튼 (type="secondary" 🟢 품격 있는 숲속 그린 적용)
-    # ------------------------------------------------------------------------------
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
         components.html("<script>window.parent.print();</script>", height=0)
 
@@ -804,8 +798,34 @@ if st.session_state.get('app_running', False):
 
                 universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
 
+                # ==============================================================================
+                # 💡 [진짜 연동] 연령대, 성별, 육친 규칙 3대 지침 완성 및 대입
+                # ==============================================================================
+                # 1. age_prompt 생성
+                if age < 20:
+                    age_p = f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
+                elif age < 40:
+                    age_p = f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
+                elif age < 60:
+                    age_p = f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
+                else:
+                    age_p = f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
+
+                # 2. gender_prompt 생성
+                if gender == "여성":
+                    gender_p = "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
+                else:
+                    gender_p = "남성 내담자(남명)이므로 육친 적용 시 재성(財星)을 배우자/아내로, 관성(官星)을 자식으로 엄격히 적용하십시오."
+
+                # 3. yukchin_rule 엔진 함수에서 직접 호출
+                yukchin_r = engine.get_yukchin_rule(gender, u_marital)
+
+                # 4. prompt_data 딕셔너리에 바인딩
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
+                    "age_prompt": age_p,                  # 👈 전달 확인
+                    "gender_prompt": gender_p,            # 👈 전달 확인
+                    "yukchin_rule": yukchin_r,            # 👈 전달 확인
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                     "gyukgook_detail": gyukgook_detail, 
                     "yongshin_str": yongshin_str,
