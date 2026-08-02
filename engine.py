@@ -834,19 +834,6 @@ def get_yukchin_rule(gender, marital):
 4. 상태별 타겟팅: 내담자 상태({marital})에 따라 남편/재혼/이성 인연을 구분하여 통변할 것.
 """
 
-def get_true_year_month_pillar(year, month, day, hour, minute=0):
-    """
-    생년월일시를 받아 절기 및 연주, 월주, 그리고 경도 보정 등을 처리하여 반환합니다.
-    (프로그램 구동에 필요한 표준 연산 함수)
-    """
-    # 기존 엔진 내에 구현되어 있는 연주/월주 산출 로직과 연동하거나 
-    # 사주 명식 산출 기준에 맞춘 간지 리턴 값을 반환하도록 구성합니다.
-    # 예시 구조:
-    y_gan, y_ji = get_year_pillar(year, month, day)  # 기존 연주 함수 연동
-    m_gan, m_ji = get_month_pillar(year, month, day) # 기존 월주 함수 연동
-    
-    return y_gan, y_ji, 127.5  # 표준 경도 및 간지 반환
-
 def get_execution_yong(upper_group, lower_group):
     """
     상위 그룹(행운)과 하위 그룹(일간 기준 일지 십성)을 교차하여 
