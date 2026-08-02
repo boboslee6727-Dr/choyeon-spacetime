@@ -437,16 +437,15 @@ with st.sidebar:
         st.session_state['app_running'] = False
 
     # ------------------------------------------------------------------------------
-    # 1. ✨ [초연 시공명리 풀이 가동] 버튼 (메인 스위치)
+    # 1. ✨ [초연 시공명리 풀이 가동] 버튼 (type="primary" 🔴 강렬한 레드 적용)
     # ------------------------------------------------------------------------------
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
 
     # ------------------------------------------------------------------------------
-    # 2. 🖨️ 최하단 인쇄 / PDF 저장 버튼 (보색 숲속 그린 적용)
+    # 2. 🖨️ 최하단 인쇄 / PDF 저장 버튼 (type="secondary" 🟢 품격 있는 숲속 그린 적용)
     # ------------------------------------------------------------------------------
-    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; margin-top: 5px; }</style>", unsafe_allow_html=True)
-    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
         components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
