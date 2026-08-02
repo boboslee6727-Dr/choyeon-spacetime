@@ -445,9 +445,10 @@ with st.sidebar:
 # ==============================================================================
 # 3. 메인 화면 연산 및 출력부 (1-1 ~ 1-8번 + 3-1번 개인 사주팔자 통합 구역)
 # ==============================================================================
-if st.session_state.get('app_running', False):
-    if any(x in u_product for x in ["1-", "3-1."]): 
+has_cached_report = bool(st.session_state.get('report_essays', {})) or st.session_state.get('base_fact_cache') is not None
 
+if st.session_state.get('app_running', False) or has_cached_report:
+    if any(x in u_product for x in ["1-", "3-1."]):
         # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
 
@@ -820,12 +821,31 @@ if st.session_state.get('app_running', False):
                 # 3. yukchin_rule 엔진 함수에서 직접 호출
                 yukchin_r = engine.get_yukchin_rule(gender, u_marital)
 
+                # ==============================================================================
+                # 💡 내담자 맞춤 지침 3대 변수 동적 생성 및 대입
+                # ==============================================================================
+                if age < 20:
+                    age_p = f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
+                elif age < 40:
+                    age_p = f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
+                elif age < 60:
+                    age_p = f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
+                else:
+                    age_p = f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
+
+                if gender == "여성":
+                    gender_p = "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
+                else:
+                    gender_p = "남성 내담자(남명)이므로 육친 적용 시 재성(財星)을 배우자/아내로, 관성(官星)을 자식으로 엄격히 적용하십시오."
+
+                yukchin_r = engine.get_yukchin_rule(gender, u_marital)
+
                 # 4. prompt_data 딕셔너리에 바인딩
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
-                    "age_prompt": age_p,                  # 👈 전달 확인
-                    "gender_prompt": gender_p,            # 👈 전달 확인
-                    "yukchin_rule": yukchin_r,            # 👈 전달 확인
+                    "age_prompt": age_p,
+                    "gender_prompt": gender_p,
+                    "yukchin_rule": yukchin_r,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                     "gyukgook_detail": gyukgook_detail, 
                     "yongshin_str": yongshin_str,
