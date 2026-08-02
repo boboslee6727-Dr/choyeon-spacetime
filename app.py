@@ -844,12 +844,30 @@ if st.session_state.get('app_running', False) or has_cached_report:
 
                 yukchin_r = engine.get_yukchin_rule(gender, u_marital)
 
-                # 4. prompt_data 딕셔너리에 바인딩
+                # ==============================================================================
+                # 💡 [신규 탑재] 체용 매트릭스 운세 분석 전용 신규 엔진 함수 호출
+                # ==============================================================================
+                now_dt = dt_mod.datetime.now()
+                _, _, d_pillar_today = engine.get_ganji_from_date(now_dt.year, now_dt.month, now_dt.day)
+                i_gan, i_ji = d_pillar_today[0], d_pillar_today[1]  # 오늘의 일운 간지
+                
+                # engine.py의 신규 함수 호출 (체용 파동 팩트 및 5x5 매트릭스 키워드 도출)
+                w_facts = engine.get_woonse_analysis_facts(
+                    ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g, cur_wol_j, i_gan, i_ji
+                )
+
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "age_prompt": age_p,
                     "gender_prompt": gender_p,
                     "yukchin_rule": yukchin_r,
+                    # ★ 신규 체용 매트릭스 바인딩 변수 추가 ★
+                    "woonse_fact_str": w_facts["woonse_fact_str"],
+                    "dw_che": w_facts["dw_che"],
+                    "sewun_kw": w_facts["sewun_kw"],
+                    "wolun_kw": w_facts["wolun_kw"],
+                    "ilun_kw": w_facts["ilun_kw"],
+                    
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                     "gyukgook_detail": gyukgook_detail, 
                     "yongshin_str": yongshin_str,
@@ -867,7 +885,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                     "dw_j_cur": dw_j_cur,
                     "cur_wol_g": cur_wol_g,
                     "cur_wol_j": cur_wol_j,
-                    
                     "weekly_ganji_list": weekly_ganji_list,
                     "t_month": curr_m,
                     "t_day": dt_mod.datetime.now().day,
@@ -875,19 +892,19 @@ if st.session_state.get('app_running', False) or has_cached_report:
                     "m_che_first": m_che_first, "am_yong": am_yong,
                     "m_che_second": m_che_second, "pm_yong": pm_yong,
                     "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
-                    
-                    "sewun_fact_str": "올해의 흐름(사주 원국과 대운의 연계 작용)",
-                    "ohang_balance_str": ohang_balance_str if 'ohang_balance_str' in _current_locals else f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
-                    "weak_health_str": weak_health_str if 'weak_health_str' in _current_locals else "취약 장기 및 신체 부위 분석 팩트",
+                    "sewun_fact_str": f"올해 체용 키워드: [{w_facts['sewun_kw']}]",
+                    "wol_fact_str": f"이번달 체용 키워드: [{w_facts['wolun_kw']}]",
+                    "dw_fact_str": f"대운 체용 키워드: [{w_facts['dw_kw']}]",
+                    "ohang_balance_str": f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
+                    "weak_health_str": "취약 장기 및 신체 부위 분석 팩트",
                     "health_goal": health_val,
-                    "jaeseong_str": jaeseong_str if 'jaeseong_str' in _current_locals else "재성 세력 분석 팩트",
-                    "wealth_fact_str": wealth_fact_str if 'wealth_fact_str' in _current_locals else "금전 흐름 체용 매트릭스",
-                    "career_fact_str": career_fact_str if 'career_fact_str' in _current_locals else "직업/진학 핵심 십성 분석",
+                    "jaeseong_str": "재성 세력 분석 팩트",
+                    "wealth_fact_str": "금전 흐름 체용 매트릭스",
+                    "career_fact_str": "직업/진학 핵심 십성 분석",
                     "user_query": career_val,
                     "wealth_issue": wealth_val,
                     "u_question": question_val
                 }
-
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return '{' + key + '}'
