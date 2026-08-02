@@ -449,21 +449,20 @@ with st.sidebar:
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
         
-        # 1. 상단 공통 팩트 상자(표지 ~ 골든 텍스트) 최초 1회만 캐싱 (재연산 방지 / 토큰 절감)
-        if not st.session_state.get('base_fact_cache'):
-            if main_category == "1. 개인 사주팔자 풀이":
-                st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
-            else:
-                # 2번 궁합 및 3번 비교 상품용 상단 팩트 상자
-                st.session_state['base_fact_cache'] = part_1_fact
-
-        # 2. 선택된 상품(1-1~1-8, 2-1~2-3, 3-1~3-2)의 AI 통변 프롬프트 호출 및 생성
-        # (formatted_prompt 전달 및 call_gemini_api 호출 후 cleaned 정제 과정)
+        # 1. 선택된 상품의 AI 통변 프롬프트 호출 및 Gemini 연산 (cleaned 정제)
+        # (박사님의 기존 call_gemini_api 호출 및 cleaned 정제 코드 위치)
         current_ai_essay = html_views.format_ai_text_to_html(cleaned)
+
+        # 2. 상단 공통 팩트 상자 캐싱 (part_1_fact 등 변수가 생성된 직후 저장)
+        if main_category == "1. 개인 사주팔자 풀이":
+            st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
+        else:
+            # 2번 궁합 및 3번 비교 상품용 상단 팩트 상자
+            st.session_state['base_fact_cache'] = part_1_fact
 
         # 3. 💡 VIP 모드 vs 일반 단품 모드 분기 저장
         if is_vip_package:
-            # 👑 VIP 모드: 기존 가동 항목 유지 + 현재 상품 추가/갱신 (1-1~1-7 등 가동한 것만 누적)
+            # 👑 VIP 모드: 기존 가동 항목 유지 + 현재 상품 추가/갱신
             st.session_state['report_essays'][u_product] = current_ai_essay
         else:
             # 👤 일반 단품 모드: 기존 항목 싹 비우고 현재 선택된 상품 1개만 단독 저장
@@ -493,11 +492,21 @@ with st.sidebar:
         
         # (4) 화면 출력
         st.markdown(combined_html, unsafe_allow_html=True)
-        
-    # 최하단 인쇄 버튼 (상단 버튼 보색 그린 적용)
-    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
-    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
-        components.html("<script>window.parent.print();</script>", height=0)
+
+        # 사이드바 최하단: VIP 모드 제어 (위아래 여백 없이 단정하게 정돈)
+        st.sidebar.markdown("---")
+        is_vip_package = st.sidebar.checkbox(
+        "👑 VIP 종합 패키지 모드 (누적 출력)", 
+            value=False, 
+            key="is_vip_package",
+            help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
+        )
+        st.sidebar.markdown("---")
+
+        # 최하단 인쇄 버튼 (상단 버튼 보색 그린 적용)
+        st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
+        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+            components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
 # 3. 메인 화면 출력부 (ver 70.2 원본 기반 완벽 정돈본)
@@ -769,6 +778,12 @@ if st.session_state.get('app_running', False):
             part_3_golden = str(golden_text_html or "")
             part_5_closing = str(closing_part or "")
 
+            # 💡 [핵심 보완 1] 상단 팩트 상자 안전 캐싱 (part_1_fact 등 정의 직후 대입)
+            if main_category == "1. 개인 사주팔자 풀이":
+                st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
+            else:
+                st.session_state['base_fact_cache'] = part_1_fact
+
             # 9. AI 통변 프롬프트 셋팅 및 호출
             extra_facts = {}
             if "1-1." in u_product:
@@ -859,7 +874,7 @@ if st.session_state.get('app_running', False):
                 # 💡 [ver 6.0 정밀 보완] 지장간 좌법/인종법 연산 팩트 산출
                 universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
 
-                # 💡 프롬프트 바인딩 딕셔너리에 universal_str 완전 주입 (치환 오류 차단)
+                # 💡 프롬프트 바인딩 딕셔너리에 universal_str 완전 주입
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
@@ -867,7 +882,7 @@ if st.session_state.get('app_running', False):
                     "yongshin_str": yongshin_str,
                     "goshin_gwasook_str": goshin_gwasook_str,
                     "gongmang_actual": i_gong, "year_gongmang": n_gong,
-                    "universal_str": universal_str,                # 👈 [핵심 보완] universal_str 변수 완벽 바인딩!
+                    "universal_str": universal_str,
                     "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
@@ -922,7 +937,18 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            st.markdown(cover_html, unsafe_allow_html=True)
+            # 💡 [핵심 보완 2] VIP 모드 vs 일반 모드 분기 및 AI 통변 세션 저장
+            if is_vip_package:
+                st.session_state['report_essays'][u_product] = ai_output_html
+            else:
+                st.session_state['report_essays'] = {u_product: ai_output_html}
+
+    # ==============================================================================
+    # 🖨️ 최하단 [풀이 결과 인쇄 / PDF 저장] 버튼 (보색 숲속 그린 적용)
+    # ==============================================================================
+    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
+    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
+        components.html("<script>window.parent.print();</script>", height=0)
 
             # ------------------------------------------------------------------
             # 10. [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
