@@ -250,18 +250,20 @@ with st.sidebar:
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select")
         st.session_state["s_t"] = b_time
 
+   # ==============================================================================
+    # 📌 특화 상품별 추가 옵션 (1번대 모든 상품에서 VIP 체크박스 및 전용 옵션 활성화)
     # ==============================================================================
-    # 📌 특화 상품별 추가 옵션
-    # ==============================================================================
-    if any(x in u_product for x in ["1-1.", "1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
-        if "1-1." in u_product:
-            is_vip_package = st.checkbox(
-                "👑 VIP 패키지 모드 (누적 출력)", 
-                value=st.session_state.get("is_vip_package_val", False), 
-                key="is_vip_package_val",
-                help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
-            )
-        elif "1-4." in u_product:
+    if u_product.startswith("1-"):
+        # 1번대 상품 전체에서 VIP 패키지 모드 체크박스 노출
+        is_vip_package = st.checkbox(
+            "👑 VIP 패키지 모드 (누적 출력)", 
+            value=st.session_state.get("is_vip_package_val", False), 
+            key="is_vip_package_val",
+            help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
+        )
+        
+        # 각 세부 항목별 추가 입력 필드 분기
+        if "1-4." in u_product:
             daily_calc_date = st.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
         elif "1-5." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
@@ -272,8 +274,9 @@ with st.sidebar:
         elif "1-8." in u_product:
             moving_date = st.date_input("이사 희망일", key="moving_date")
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
-        elif "3-1." in u_product:
-            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+
+    elif "3-1." in u_product:
+        other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
     # 👥 상대방 정보 입력부 (2-1 궁합 및 3-2 궁합비교 전용)
