@@ -253,16 +253,13 @@ with st.sidebar:
         st.session_state["s_t"] = b_time
 
     # ==============================================================================
-    # 📌 특화 상품별 추가 옵션
+    # 📌 특화 상품별 추가 옵션 (1-1 군더더기 옵션 제거 및 if-elif 분기 완벽 교정)
     # ==============================================================================
-    if "1-1." in u_product:
-        run_iljin_calc = st.sidebar.checkbox("🔮 일진 시공간 분석 추가 가동", value=False, key="sb_run_iljin")
-        
-    elif any(x in u_product for x in ["1-2.", "1-3.", "1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
+    if any(x in u_product for x in ["1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
         if "1-4." in u_product:
-            # 💡 [보완] 1-4 선택 시 일운 연산 기준일 선택 옵션 제공 (기본값: 오늘)
+            # 💡 1-4 선택 시 일운 연산 기준일 선택 옵션 제공 (기본값: 오늘)
             daily_calc_date = st.sidebar.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
-        if "1-5." in u_product: 
+        elif "1-5." in u_product: 
             wealth_goal = st.sidebar.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "1-6." in u_product: 
             career_goal = st.sidebar.text_input("고민되는 직업/진학 분야는?", key="career_goal")
@@ -418,8 +415,76 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # ==============================================================================
+    # 👑 VIP 종합 패키지 모드 사이드바 제어 및 세션 관리 (ver 6.0 완벽 반영)
+    # ==============================================================================
+    st.sidebar.markdown("---")
+    is_vip_package = st.sidebar.checkbox(
+        "👑 VIP / 가족 종합 패키지 모드 (누적 출력)", 
+        value=False, 
+        key="is_vip_package",
+        help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
+    )
+
+    # 내담자 및 카테고리 식별 키 생성 (내담자나 대분류 변경 시 자동 초기화)
+    current_user_key = f"{main_category}_{name}_{gender}_{u_marital}_{ys}{yb}{ms}{mb}{ds}{db}{hs}{hb}"
+    
+    if st.session_state.get('user_key') != current_user_key:
+        st.session_state['user_key'] = current_user_key
+        st.session_state['base_fact_cache'] = None   # 상단 공통 팩트 상자 캐시
+        st.session_state['report_essays'] = {}      # 상품별 AI 통변 저장 딕셔너리
+        st.session_state['app_running'] = False
+
+    # ------------------------------------------------------------------------------
+    # ✨ [초연 시공명리 풀이 가동] 버튼 클릭 시 연산 및 저장
+    # ------------------------------------------------------------------------------
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
+        
+        # 1. 상단 공통 팩트 상자(표지 ~ 골든 텍스트) 최초 1회만 캐싱 (재연산 방지 / 토큰 절감)
+        if not st.session_state.get('base_fact_cache'):
+            if main_category == "1. 개인 사주팔자 풀이":
+                st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
+            else:
+                # 2번 궁합 및 3번 비교 상품용 상단 팩트 상자
+                st.session_state['base_fact_cache'] = part_1_fact
+
+        # 2. 선택된 상품(1-1~1-8, 2-1~2-3, 3-1~3-2)의 AI 통변 프롬프트 호출 및 생성
+        # (formatted_prompt 전달 및 call_gemini_api 호출 후 cleaned 정제 과정)
+        current_ai_essay = html_views.format_ai_text_to_html(cleaned)
+
+        # 3. 💡 VIP 모드 vs 일반 단품 모드 분기 저장
+        if is_vip_package:
+            # 👑 VIP 모드: 기존 가동 항목 유지 + 현재 상품 추가/갱신 (1-1~1-7 등 가동한 것만 누적)
+            st.session_state['report_essays'][u_product] = current_ai_essay
+        else:
+            # 👤 일반 단품 모드: 기존 항목 싹 비우고 현재 선택된 상품 1개만 단독 저장
+            st.session_state['report_essays'] = {u_product: current_ai_essay}
+
+    # ------------------------------------------------------------------------------
+    # 🖨️ 화면 및 PDF 인쇄용 종합 렌더링
+    # ------------------------------------------------------------------------------
+    if st.session_state.get('app_running') and st.session_state.get('base_fact_cache'):
+        
+        # (1) 상단 공통 팩트 상자 배치
+        combined_html = st.session_state['base_fact_cache']
+        
+        # (2) 가동된 상품들의 AI 통변 에세이 순차적 결합 (단품은 1개, VIP는 가동한 N개)
+        for prod_title, essay_content in st.session_state['report_essays'].items():
+            combined_html += f"""
+            <div style="margin-top: 35px; margin-bottom: 25px; page-break-before: always;">
+                <div style="font-size: 18px; font-weight: 900; color: #1A237E; border-bottom: 2px solid #1A237E; padding-bottom: 8px; margin-bottom: 15px;">
+                    📌 분석 항목: {prod_title}
+                </div>
+                {essay_content}
+            </div>
+            """
+        
+        # (3) 클로징 멘트 결합
+        combined_html += part_5_closing
+        
+        # (4) 화면 출력
+        st.markdown(combined_html, unsafe_allow_html=True)
         
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
@@ -781,14 +846,18 @@ if st.session_state.get('app_running', False):
                 health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
                 question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
-                # 💡 [보완 3] 프롬프트 바인딩 딕셔너리에 용신 및 고신/과숙, 체용 파동 키워드 완전 주입
+                # 💡 [ver 6.0 정밀 보완] 지장간 좌법/인종법 연산 팩트 산출
+                universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
+
+                # 💡 프롬프트 바인딩 딕셔너리에 universal_str 완전 주입 (치환 오류 차단)
                 prompt_data = {
                     "name": name, "age": age, "gender": gender, "marital": u_marital,
                     "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                     "gyukgook_detail": gyukgook_detail, 
-                    "yongshin_str": yongshin_str,                  # 👈 용신/희신/기신 팩트
-                    "goshin_gwasook_str": goshin_gwasook_str,      # 👈 고신/과숙살 팩트
+                    "yongshin_str": yongshin_str,
+                    "goshin_gwasook_str": goshin_gwasook_str,
                     "gongmang_actual": i_gong, "year_gongmang": n_gong,
+                    "universal_str": universal_str,                # 👈 [핵심 보완] universal_str 변수 완벽 바인딩!
                     "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
                     "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
                     "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
@@ -801,7 +870,7 @@ if st.session_state.get('app_running', False):
                     "cur_wol_g": cur_wol_g,
                     "cur_wol_j": cur_wol_j,
                     
-                    # 주간/일운 체용 팩트 프롬프트 변수
+                    # 주간/일운 체용 팩트 변수
                     "weekly_ganji_list": weekly_ganji_list,
                     "t_month": curr_m,
                     "t_day": dt_mod.datetime.now().day,
