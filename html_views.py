@@ -396,83 +396,86 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 # ==============================================================================
-# [오류 완벽 박멸본] 7칸 x 6단 주간 간지 캘린더 표
+# [최종 마스터피스] 대운/세운/월운과 100% 동일한 Flex 구조의 주간 간지 캘린더
 # ==============================================================================
 def generate_weekly_calendar_html(weekly_days_data, today_day):
-    col_width = "14.28%"
-    headers_html = ""
-    date_cells_html = ""
-    gan_cells_html = ""
-    ji_cells_html = ""
-    ss_cells_html = ""
-    unsung_shinsal_cells_html = ""
+    content = ""
     
-    def get_oh_bg(char):
+    # 기존 대운표에서 쓰던 CSS 클래스 호출 방식
+    def get_oh_class_local(char):
         try:
             import engine
             oh = engine.get_color(char)
+            return f"color-{oh}" if oh != '무' else ""
         except:
-            oh = "무"
-            
-        color_map = {
-            "목": "background-color: #2E7D32 !important; color: #FFF !important;",
-            "화": "background-color: #C62828 !important; color: #FFF !important;",
-            "토": "background-color: #F9A825 !important; color: #000 !important;",
-            "금": "background-color: #9E9E9E !important; color: #FFF !important;",
-            "수": "background-color: #212121 !important; color: #FFF !important;",
-            "무": "background-color: #E0E0E0 !important; color: #333 !important;"
-        }
-        return color_map.get(oh, "background-color: #E0E0E0 !important; color: #333 !important;")
+            return ""
 
     for item in weekly_days_data:
         wday = item['weekday']
         day_num = item['day']
         ganji_str = item['ganji']
+        is_today = item['is_today']
         
-        # 1단 요일 바탕색
-        if wday == '일':
-            w_bg = "background-color: #C62828 !important; color: #FFFFFF !important;"
-        elif wday == '토':
-            w_bg = "background-color: #1565C0 !important; color: #FFFFFF !important;"
-        else:
-            w_bg = "background-color: #555555 !important; color: #FFFFFF !important;"
-            
-        # 2단 오늘 강조
-        if item['is_today']:
-            today_border = "border: 2px solid #2E7D32 !important;"
-            today_bg = "background-color: #E8F5E9 !important;"
-        else:
-            today_border = "border: 1px solid #D7CCC8;"
-            today_bg = "background-color: #FAFAFA;"
-
         gan_char = ganji_str[0] if len(ganji_str) >= 1 and ganji_str != "-" else "-"
         ji_char = ganji_str[1] if len(ganji_str) >= 2 else "-"
         
-        gan_style = get_oh_bg(gan_char) if gan_char != "-" else "background-color: #FAFAFA; color: #333;"
-        ji_style = get_oh_bg(ji_char) if ji_char != "-" else "background-color: #FAFAFA; color: #333;"
-
-        # 십성 및 12운성 안전 연산 (오류 원천 차단)
+        gan_cls = get_oh_class_local(gan_char)
+        ji_cls = get_oh_class_local(ji_char)
+        
         ss_val, unsung_val, shinsal_val = "-", "-", "-"
         try:
             import engine
-            ss_val = engine.get_ss("甲", gan_char) if gan_char != "-" else "-"
+            # 엔진을 통한 안전한 십성/12운성 추출
+            ss_val = engine.get_ss("甲", ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung("甲", ji_char) if ji_char != "-" else "-"
             shinsal_val = engine.get_12_shinsal("子", ji_char) if ji_char != "-" else "-"
         except:
-            ss_val, unsung_val, shinsal_val = "비견", "건록", "역마"
+            pass
+            
+        # 기존 대운/월운 방식의 헤더 및 백그라운드 컬러 세팅
+        if is_today:
+            active_style = "border: 3px solid #2E7D32 !important;"
+            header_bg = "#2E7D32"
+            bg_col = "#E8F5E9"
+        elif wday == '일':
+            active_style = "border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+            header_bg = "#C62828"
+            bg_col = "#FAFAFA"
+        elif wday == '토':
+            active_style = "border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+            header_bg = "#1565C0"
+            bg_col = "#FAFAFA"
+        else:
+            active_style = "border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
+            header_bg = "#555555"
+            bg_col = "#FAFAFA"
+            
+        u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
+        s_val = f"<span style='color:#C62828;'>{shinsal_val}</span>" if shinsal_val != "-" else "-"
+        
+        # get_sewun_cell 과 완벽하게 동일한 HTML Flexbox 구조
+        content += f"""
+        <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
+            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:28px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
+                {day_num}일 ({wday})
+            </div>
+            <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_val}</div>
+            <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
+            <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
+            <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
+            <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{s_val}</div>
+        </div>
+        """
 
-        # HTML 셀 조립 (줄바꿈 없이 한 줄로 처리하여 스트림릿 파싱 오류 방지)
-        headers_html += f"<th style='width: {col_width}; padding: 8px 2px; border: 1px solid #D7CCC8; {w_bg} font-size: 14px; font-weight: 900; text-align: center;'>{wday}</th>"
-        date_cells_html += f"<td style='width: {col_width}; padding: 8px 2px; text-align: center; {today_bg} {today_border} border-bottom: none; vertical-align: middle;'><div style='font-size: 15px; font-weight: 900; color: #111;'>{day_num}일</div></td>"
-        gan_cells_html += f"<td style='width: {col_width}; padding: 8px 2px; text-align: center; {gan_style} border: 1px solid #D7CCC8; border-top: none; border-bottom: none; vertical-align: middle;'><div style='font-size: 18px; font-weight: 900; height: 26px; display: flex; align-items: center; justify-content: center;'>{gan_char}</div></td>"
-        ji_cells_html += f"<td style='width: {col_width}; padding: 8px 2px; text-align: center; {ji_style} border: 1px solid #D7CCC8; border-top: none; border-bottom: none; vertical-align: middle;'><div style='font-size: 18px; font-weight: 900; height: 26px; display: flex; align-items: center; justify-content: center;'>{ji_char}</div></td>"
-        ss_cells_html += f"<td style='width: {col_width}; padding: 6px 2px; text-align: center; background-color: #FAFAFA; border: 1px solid #D7CCC8; border-top: none; border-bottom: none; vertical-align: middle; font-size: 13px; font-weight: 900; color: #333;'>{ss_val}</td>"
-        unsung_shinsal_cells_html += f"<td style='width: {col_width}; padding: 6px 2px; text-align: center; background-color: #FAFAFA; border: 1px solid #D7CCC8; border-top: none; vertical-align: middle; font-size: 11px; font-weight: 900; line-height: 1.3;'><span style='color: #0D47A1;'>{unsung_val}</span><br><span style='color: #C62828;'>({shinsal_val})</span></td>"
-
-    # 테이블 뼈대 결합
-    table_code = f"""<div style="margin: 15px 0 20px 0;"><div style="font-weight: 900; font-size: 16px; margin-bottom: 8px; color: #3E2723; font-family: 'Nanum Gothic', sans-serif;">📅 이번 주 간지 흐름 (일요일 ~ 토요일)</div><table style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; border: 2px solid #3E2723; background: white;"><thead><tr>{headers_html}</tr></thead><tbody><tr>{date_cells_html}</tr><tr>{gan_cells_html}</tr><tr>{ji_cells_html}</tr><tr>{ss_cells_html}</tr><tr>{unsung_shinsal_cells_html}</tr></tbody></table></div>"""
+    # get_sewun_layout 과 완벽하게 동일한 컨테이너 구조 (가로 배열 flex-direction: row)
+    layout = f"""
+    <div style='margin-top:20px; margin-bottom:10px; font-size:16px; font-weight:900; color:#3E2723; font-family:"Nanum Gothic", sans-serif;'>📅 이번 주 간지 흐름 (일요일 ~ 토요일)</div>
+    <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
+        {content}
+    </div>
+    """
     
-    return table_code
+    return layout
 
 def get_closing_html(name):
     return f"""
