@@ -32,31 +32,34 @@ JIJANGGAN = {
     '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] 
 }
 
-CHE_YONG_MATRIX_TEXT = """- 체(비겁)+용(비겁): 주체성 강화 및 동료/경쟁자와의 연대
-- 체(비겁)+용(식상): 창의적 활동 및 기운의 발산
-- 체(비겁)+용(재성): 현실적 결실 취득 및 재물 확장
-- 체(비겁)+용(관성): 조직 책임 완수 및 명예 상승
-- 체(비겁)+용(인성): 수용성 증대 및 학문/자격의 성취
-- 체(식상)+용(비겁): 기운의 보충 및 행동력 강화
-- 체(식상)+용(식상): 전문성 극대화 및 활발한 표현
-- 체(식상)+용(재성): 식상생재 발현 및 사업적 성공
-- 체(식상)+용(관성): 규범과의 마찰 및 조직 내 조율
-- 체(식상)+용(인성): 정서적 안점감 및 브레이크 작용
-- 체(재성)+용(비겁): 재물 분탈 주의 및 소유권 경쟁
-- 체(재성)+용(식상): 재물 창출의 근원 확보
-- 체(재성)+용(재성): 시장 확대 및 결과물 집중
-- 체(재성)+용(관성): 재생관 발현 및 사회적 신분 상승
-- 체(재성)+용(인성): 문서 자산화 및 자격 가치 상승
-- 체(관성)+용(비겁): 조직 내 주도권 확보 및 리더십
-- 체(관성)+용(식상): 관살제어 및 문제 해결 능력
-- 체(관성)+용(재성): 조직 자금 확보 및 세력 확장
-- 체(관성)+용(관성): 권위 및 책임감의 배가
-- 체(관성)+용(인성): 관인상생 발현 및 승진/인정
-- 체(인성)+용(비겁): 지식의 현실 적용 및 신념 강화
-- 체(인성)+용(식상): 도모하던 일의 실행 및 창작
-- 체(인성)+용(재성): 재극인 발현 및 문서 자산 매매
-- 체(인성)+용(관성): 사회적 체면 및 조직의 후원
-- 체(인성)+용(인성): 깊은 학문적 성취 및 권위 유지"""
+# ==============================================================================
+# 초연 시공명리 5x5 체용(體用) 임상 키워드 매트릭스 (박사님 원본)
+# ==============================================================================
+CHE_YONG_MATRIX_TEXT = """- 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
+- 체(비겁)+용(식상): 업무원만, 진취력, 건강호조, 원행(遠行), 발표, 여행
+- 체(비겁)+용(재성): 손재, 소비, 이성난, 가정불화, 부친반목
+- 체(비겁)+용(관성): 설화, 관재, 가족불화, 직장문제, 공명심
+- 체(비겁)+용(인성): 의식주안정, 스카우트, 계약, 학업순성, 합격, 가정화목
+- 체(식상)+용(비겁): 사업원만, 결과만족, 명진(名振), 의기투합, 긍정심
+- 체(식상)+용(식상): 재성발흥, 재적성취, 이성운, 가정원만, 재물입고, 환대
+- 체(식상)+용(재성): 이재순성, 사업원만, 인연, 가족화목, 건강, 횡재
+- 체(식상)+용(관성): 건강악화, 직업불안, 직주이동, 관재, 설화, 가족불화
+- 체(식상)+용(인성): 직업불안, 건강문제, 계약파기, 학문불안, 의식주 불안
+- 체(재성)+용(비겁): 일득삼재, 손재, 부부갈등, 과소비, 업무지연
+- 체(재성)+용(식상): 여행, 결과만족, 횡재수, 가정화목, 득자운
+- 체(재성)+용(재성): 관성발흥, 직업운 상승, 이성운 순성, 가정원만
+- 체(재성)+용(관성): 신분상승, 출마, 천거, 장기출장, 가정화목, 이성운
+- 체(재성)+용(인성): 매사불성, 소비지출, 가족불화, 계약파기, 손재, 흉사
+- 체(관성)+용(비겁): 업무지연, 관재, 설화, 다툼, 허언, 선민의식
+- 체(관성)+용(식상): 명예훼손, 직업이동, 질책, 가족불화, 이성난
+- 체(관성)+용(재성): 사업운 원만, 이성운 순성, 가정원만, 취업, 명예
+- 체(관성)+용(관성): 인성발흥, 승진승급, 계약성사, 자식운 원만
+- 체(관성)+용(인성): 합격, 승진, 계약, 스카우트, 의식주 안정, 당선
+- 체(인성)+용(비겁): 건강호조, 학업원만, 신분상승, 당선, 명예, 안정
+- 체(인성)+용(식상): 불안정, 계약파기, 학업불성, 구설, 육친흉사, 자식불효
+- 체(인성)+용(재성): 지출, 탈재, 파재, 사기수, 손재, 분주다망, 시성종패
+- 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
+- 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취"""
 
 def _to_hanja(char):
     if not char: return char
@@ -173,16 +176,6 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
-def get_group_ss(ss_name):
-    """십성 명칭을 5대 그룹(비겁, 식상, 재성, 관성, 인성)으로 매핑합니다."""
-    if not ss_name or ss_name in ["?", "-", " "]: return "비겁"
-    if "비" in ss_name or "겁" in ss_name: return "비겁"
-    if "식" in ss_name or "상" in ss_name: return "식상"
-    if "재" in ss_name: return "재성"
-    if "관" in ss_name: return "관성"
-    if "인" in ss_name: return "인성"
-    return "비겁"
-
 def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, **kwargs):
     ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
     gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
@@ -192,6 +185,9 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
 
     ilju_lower_group = get_group_ss(get_ss(ds, db))
     
+    # ------------------------------------------------------------------
+    # 1. 폭포수 체용(體用) 파동 팩트 텍스트 생성 (대운 -> 세운 -> 월운)
+    # ------------------------------------------------------------------
     dw_fact_str = "대운 정보 없음"
     if dw_g_cur and dw_j_cur:
         dw_che = get_group_ss(get_ss(ds, dw_g_cur))
@@ -213,36 +209,66 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         w_che = get_group_ss(get_ss(ds, curr_y_ganji[1][0])) if curr_y_ganji else "비겁"
         wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
 
-    # 💡 [미반영 변수 정밀 보완 계산]
-    # 1. 삼재 텍스트 (년지 기준 현재 일지/세운 지지와의 삼재 여부)
-    samjae_val = get_samjae(yb, db) if 'get_samjae' in globals() else "해당 없음"
+    # 💡 [박사님 지적 반영] 2. 주간운/일운 체용 파동 팩트 연산 및 가공
+    now_dt = dt_mod.datetime.now()
+    weekly_daily_res = get_weekly_daily_facts(ds, db, yb, now_dt.year, now_dt.month, now_dt.day) if 'get_weekly_daily_facts' in globals() else {}
     
-    # 2. 대운 종료 연령 (현재 나이 기준 10년 대운 마감 나이)
-    dw_end_val = age + 9
+    am_che = weekly_daily_res.get('m_che_first', '오전 체(무대)')
+    am_yong = weekly_daily_res.get('am_yong', '오전 용(사건)')
+    pm_che = weekly_daily_res.get('m_che_second', '오후 체(무대)')
+    pm_yong = weekly_daily_res.get('pm_yong', '오후 용(사건)')
+    
+    daily_fact_str = f"오전 체용: [{am_che} + {am_yong}] / 오후 체용: [{pm_che} + {pm_yong}] (12운성: {weekly_daily_res.get('day_wunseong', '건록')}, 12신살: {weekly_daily_res.get('day_12shinsal', '망신살')})"
 
-    # 3. 행운(대운) 묘고 작용 텍스트
+    # 💡 3. 용신/희신/기신 및 고신/과숙살 정밀 연산
+    yongshin_str = get_yongshin_analysis(counts, mb, ds)
+    goshin_gwasook_str = get_goshin_gwasook(yb, gender)
+
+    # 💡 4. 기타 보완 변수 산출
+    samjae_val = get_samjae(yb, db) if 'get_samjae' in globals() else "해당 없음"
+    dw_end_val = age + 9
     hang_un_vaults_val = get_hang_un_vaults_str(dw_j_cur, [yb, mb, db, hb]) if (dw_j_cur and 'get_hang_un_vaults_str' in globals()) else "대운 입고 작용 없음"
 
+    # ------------------------------------------------------------------
+    # 5. 팩트 데이터 딕셔너리 바인딩 (프롬프트 전달용)
+    # ------------------------------------------------------------------
     fact_data = {
         "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
         "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
+        "yongshin_str": yongshin_str,
+        "goshin_gwasook_str": goshin_gwasook_str,
         "gongmang_actual": calculate_gongmang(ds, db),
         "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
         "s12_str": get_all_12_shinsal(yb, mb, db, hb),
         "won_guk_vaults_str": " ".join(check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)),
         "oheng_counts_str": oheng_str,
         
-        # 💡 미반영 변수 100% 바인딩 완료
         "samjae_str": samjae_val,
         "dw_end_age": dw_end_val,
         "hang_un_vaults_str": hang_un_vaults_val,
         
+        # 주간/일운 팩트 바인딩
+        "weekly_ganji_list": weekly_daily_res.get('weekly_ganji_list', '월~일 주간 간지 데이터'),
+        "t_month": now_dt.month,
+        "t_day": now_dt.day,
+        "m_ilgan": ds,
+        "m_ilji": db,
+        "m_che_first": am_che,
+        "am_yong": am_yong,
+        "m_che_second": pm_che,
+        "pm_yong": pm_yong,
+        "day_wunseong": weekly_daily_res.get('day_wunseong', '건록'),
+        "day_12shinsal": weekly_daily_res.get('day_12shinsal', '망신살'),
+        "daily_fact_str": daily_fact_str,
+
         "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
-        "curr_y": dt_mod.datetime.now().year,
-        "curr_m": dt_mod.datetime.now().month,
+        "curr_y": now_dt.year,
+        "curr_m": now_dt.month,
         "disp_name": name, "u_age": age, "u_gender": gender, "u_marital": marital,
         "yukchin_rule": get_yukchin_rule(gender, marital),
-        "dw_fact_str": dw_fact_str, "sewun_fact_str": sewun_fact_str, "wol_fact_str": wol_fact_str
+        "dw_fact_str": dw_fact_str, 
+        "sewun_fact_str": sewun_fact_str, 
+        "wol_fact_str": wol_fact_str
     }
     fact_data.update(kwargs)
     return fact_data
