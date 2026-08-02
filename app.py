@@ -976,12 +976,15 @@ if st.session_state.get('app_running', False):
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
 
             else:
-                # 💡 [핵심 단속] 파트1~5가 조립된 final_report를 반드시 unsafe_allow_html=True로 렌더링하여 소스코드 노출 원천 차단
+                # 💡 [핵심 단속] 파트1~5가 조립된 final_report 결합
                 part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                 final_report = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                 
-                # 🛠️ 소스코드가 텍스트로 노출되지 않고 HTML 표로 완벽히 렌더링되도록 강제 적용
-                st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                # 🛠️ 1-4번 주간운표/일운표가 소스코드로 깨져 나오는 현상을 막기 위한 완벽 방어 분기
+                if "1-4." in u_product:
+                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
+                else:
+                    st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
     elif any(x in u_product for x in ["2-1", "3-2"]):
         st.markdown("---")
