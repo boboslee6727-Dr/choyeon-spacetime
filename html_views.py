@@ -24,6 +24,45 @@ def get_global_css():
         font-family: 'Noto Serif KR', serif !important; 
     }
 
+    /* ==========================================================================
+       🔴🟢 [버튼 전용 명확한 보색 대비 스타일]
+       ========================================================================== */
+    /* 모든 버튼 공통 폰트 및 굵은 글씨 지정 */
+    div.stButton > button { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
+        font-weight: 900 !important; 
+        font-size: 16px !important;
+        border-radius: 8px !important;
+    }
+
+    /* 🔴 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
+    div.stButton > button[kind="primary"] { 
+        background-color: #D50000 !important; 
+        color: #FFFFFF !important; 
+        border: none !important; 
+        height: 50px !important; 
+        font-weight: 900 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #B71C1C !important;
+        color: #FFFFFF !important;
+    }
+
+    /* 🟢 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 완벽 보색 녹색 바탕 + 흰색 굵은 글자 */
+    div.stButton > button[kind="secondary"] { 
+        background-color: #00A843 !important; 
+        color: #FFFFFF !important; 
+        border: none !important; 
+        height: 50px !important;
+        font-weight: 900 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important;
+    }
+    div.stButton > button[kind="secondary"]:hover {
+        background-color: #008937 !important;
+        color: #FFFFFF !important;
+    }
+
     /* 🚨 [AI 제목 스타일 최우선 강제 규정] */
     .ai-title-l1 {
         font-size: 22px !important;
