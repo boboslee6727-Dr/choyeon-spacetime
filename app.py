@@ -1005,9 +1005,6 @@ if st.session_state.get('app_running', False):
                     # 일반 모드: 현재 단일 상품만 리셋 저장
                     st.session_state['report_essays'] = {u_product: current_ai_block}
 
-                # 표지 출력
-                st.markdown(cover_html, unsafe_allow_html=True)
-
                 # 📚 [최종 종합 보고서 조립 및 렌더링]
                 # 1. 앞단에 웅장한 사주 명식 및 대운·기본 팩트 단 1회 고정 배치
                 master_composite_report = st.session_state['vip_base_fact']
