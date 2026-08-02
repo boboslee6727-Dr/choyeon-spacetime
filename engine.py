@@ -835,6 +835,10 @@ def get_yukchin_rule(gender, marital):
 """
 
 def get_execution_yong(upper_group, lower_group):
+    """
+    상위 그룹(행운)과 하위 그룹(일간 기준 일지 십성)을 교차하여 
+    실행 용운(用運) 그룹을 도출하는 5x5 매트릭스 연산 함수입니다.
+    """
     matrix = {
         '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
         '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
@@ -844,40 +848,54 @@ def get_execution_yong(upper_group, lower_group):
     }
     return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
+def get_matrix_keyword(che_group, yong_group):
+    """
+    체(體) 그룹과 용(用) 그룹 조합에 해당하는 임상 키워드를 텍스트에서 매핑합니다.
+    """
+    target_str = f"- 체({che_group})+용({yong_group}):"
+    for line in CHE_YONG_MATRIX_TEXT.splitlines():
+        if line.startswith(target_str):
+            return line.split(":", 1)[1].strip()
+    return "변화 감지"
+
 # ==============================================================================
-# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진 (정통 교재 원칙 적용본)
+# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진 (폭포수 체계 정밀 연동완료)
 # ==============================================================================
 def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolun_g, wolun_j, ilun_g, ilun_j):
     """
     일주(ds, db)와 대운/세운/월운/일운 간지를 바탕으로
     체운(體運), 용운(用運), 임상 키워드를 연쇄 도출합니다.
     """
-    # [하위십성]: 일주(일지 db)가 가지는 십성 그룹 (예: 辛亥일주 -> 상관 -> 식상그룹)
+    # 1. 하위 그룹 (일간 기준 일지의 십성 그룹) - 고정값
     ilju_ss = get_ss(ds, db)
     ilju_lower_group = get_group_ss(ilju_ss)
     
-    # 1. 대운 체용 (대운천간 = 體, 대운 전체 실행 用)
-    dw_che = get_group_ss(get_ss(ds, dw_g_cur))
-    dw_upper_ss = get_ss(ds, dw_g_cur) # 상위십성
-    dw_yong = get_execution_yong(get_group_ss(dw_upper_ss), ilju_lower_group)
+    # 2. 대운 체용 연산 (10년 환경 무대)
+    dw_upper_ss = get_ss(ds, dw_g_cur)
+    dw_che = get_group_ss(dw_upper_ss) # 대운 천간의 체(體) 그룹
+    dw_yong = get_execution_yong(dw_che, ilju_lower_group) # 대운 실행 用
     dw_kw = get_matrix_keyword(dw_che, dw_yong)
     
-    # 2. 세운 체용 (대운 체운 상위 體 + 세운 실행 用)
-    sewun_upper_ss = get_ss(ds, sewun_g) # 상위십성
-    s_yong = get_execution_yong(get_group_ss(sewun_upper_ss), ilju_lower_group)
-    sewun_kw = get_matrix_keyword(dw_che, s_yong)
+    # 3. 세운 체용 연산 (대운 체운 무대 위에서 올해 세운 실행)
+    sewun_upper_ss = get_ss(ds, sewun_g)
+    sewun_che = get_group_ss(sewun_upper_ss) # 세운 자체의 기운을 체로 활용
+    s_upper_group = sewun_che
+    s_yong = get_execution_yong(s_upper_group, ilju_lower_group)
+    sewun_kw = get_matrix_keyword(dw_che, s_yong) # 대운 무대(dw_che) 위에서의 세운 실행
     
-    # 3. 월운 체용 (세운 시기 體 + 월운 실행 用)
-    wolun_upper_ss = get_ss(ds, wolun_g) # 상위십성
-    w_yong = get_execution_yong(get_group_ss(wolun_upper_ss), ilju_lower_group)
-    sewun_che = get_group_ss(get_ss(ds, sewun_g))
-    wolun_kw = get_matrix_keyword(sewun_che, w_yong)
+    # 4. 월운 체용 연산 (세운 기운을 무대 體로 삼고, 월운 실행)
+    wolun_upper_ss = get_ss(ds, wolun_g)
+    wolun_che = get_group_ss(wolun_upper_ss)
+    w_upper_group = wolun_che
+    w_yong = get_execution_yong(w_upper_group, ilju_lower_group)
+    wolun_kw = get_matrix_keyword(sewun_che, w_yong) # 세운 무대(sewun_che) 위에서의 월운 실행
     
-    # 4. 일운 체용 (월운 시기 體 + 일운 실행 用)
-    ilun_upper_ss = get_ss(ds, ilun_g) # 상위십성
-    i_yong = get_execution_yong(get_group_ss(ilun_upper_ss), ilju_lower_group)
-    wolun_che = get_group_ss(get_ss(ds, wolun_g))
-    ilun_kw = get_matrix_keyword(wolun_che, i_yong)
+    # 5. 일운 체용 연산 (월운 기운을 무대 體로 삼고, 일운 실행)
+    ilun_upper_ss = get_ss(ds, ilun_g)
+    ilun_che = get_group_ss(ilun_upper_ss)
+    i_upper_group = ilun_che
+    i_yong = get_execution_yong(i_upper_group, ilju_lower_group)
+    ilun_kw = get_matrix_keyword(wolun_che, i_yong) # 월운 무대(wolun_che) 위에서의 일운 실행
     
     # 팩트 스트링 조립
     woonse_fact_str = f"""
@@ -888,18 +906,11 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
 """
     return {
         "dw_che": dw_che, "dw_yong": dw_yong, "dw_kw": dw_kw,
-        "sewun_che": dw_che, "sewun_yong": s_yong, "sewun_kw": sewun_kw,
-        "wolun_che": sewun_che, "wolun_yong": w_yong, "wolun_kw": wolun_kw,
-        "ilun_che": wolun_che, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
+        "sewun_che": sewun_che, "sewun_yong": s_yong, "sewun_kw": sewun_kw,
+        "wolun_che": wolun_che, "wolun_yong": w_yong, "wolun_kw": wolun_kw,
+        "ilun_che": ilun_che, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
         "woonse_fact_str": woonse_fact_str.strip()
     }
-
-def get_matrix_keyword(che_group, yong_group):
-    target_str = f"- 체({che_group})+용({yong_group}):"
-    for line in CHE_YONG_MATRIX_TEXT.splitlines():
-        if line.startswith(target_str):
-            return line.split(":", 1)[1].strip()
-    return "변화 감지"
 
 def get_won_guk_vaults_str(jjis):
     vaults = [j for j in jjis if j in ['辰', '戌', '丑', '未']]
