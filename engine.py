@@ -844,6 +844,53 @@ def get_execution_yong(upper_group, lower_group):
     }
     return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
+# ==============================================================================
+# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진
+# ==============================================================================
+def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolun_g, wolun_j, ilun_g, ilun_j):
+    """
+    일주(ds, db)와 대운/세운/월운/일운 간지를 바탕으로
+    체운(體運), 용운(用運), 임상 키워드를 연쇄 도출합니다.
+    """
+    ilju_lower_group = get_group_ss(get_ss(ds, db)) # 하위십성(일주)
+    
+    # 1. 대운 체용 (대운천간 = 體, 대운지지의 용운)
+    dw_che = get_group_ss(get_ss(ds, dw_g_cur))
+    dw_yong = get_execution_yong(get_group_ss(get_ss(dw_g_cur, dw_j_cur)), ilju_lower_group)
+    dw_kw = get_matrix_keyword(dw_che, dw_yong)
+    
+    # 2. 세운 체용 (대운 체운 상위 體 + 세운 실행 用)
+    s_upper = get_group_ss(get_ss(sewun_g, sewun_j))
+    s_yong = get_execution_yong(s_upper, ilju_lower_group)
+    sewun_kw = get_matrix_keyword(dw_che, s_yong)
+    
+    # 3. 월운 체용 (세운 시기 體 + 월운 실행 用)
+    w_upper = get_group_ss(get_ss(wolun_g, wolun_j))
+    w_yong = get_execution_yong(w_upper, ilju_lower_group)
+    sewun_che = get_group_ss(get_ss(ds, sewun_g))
+    wolun_kw = get_matrix_keyword(sewun_che, w_yong)
+    
+    # 4. 일운 체용 (월운 시기 體 + 일운 실행 用)
+    i_upper = get_group_ss(get_ss(ilun_g, ilun_j))
+    i_yong = get_execution_yong(i_upper, ilju_lower_group)
+    wolun_che = get_group_ss(get_ss(ds, wolun_g))
+    ilun_kw = get_matrix_keyword(wolun_che, i_yong)
+    
+    # 팩트 스트링 조립
+    woonse_fact_str = f"""
+- [대운 체용 파동]: 體({dw_che}) + 用({dw_yong}) ➔ 핵심 키워드: [{dw_kw}]
+- [세운 체용 파동]: 體({dw_che}) + 用({s_yong}) ➔ 핵심 키워드: [{sewun_kw}]
+- [월운 체용 파동]: 體({sewun_che}) + 用({w_yong}) ➔ 핵심 키워드: [{wolun_kw}]
+- [일운 체용 파동]: 體({wolun_che}) + 用({i_yong}) ➔ 핵심 키워드: [{ilun_kw}]
+"""
+    return {
+        "dw_che": dw_che, "dw_yong": dw_yong, "dw_kw": dw_kw,
+        "sewun_che": dw_che, "sewun_yong": s_yong, "sewun_kw": sewun_kw,
+        "wolun_che": sewun_che, "wolun_yong": w_yong, "wolun_kw": wolun_kw,
+        "ilun_che": wolun_che, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
+        "woonse_fact_str": woonse_fact_str.strip()
+    }
+
 def get_matrix_keyword(che_group, yong_group):
     target_str = f"- 체({che_group})+용({yong_group}):"
     for line in CHE_YONG_MATRIX_TEXT.splitlines():
