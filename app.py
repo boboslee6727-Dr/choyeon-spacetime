@@ -94,7 +94,6 @@ def td_bg(ganji):
 # 2. 사이드바 통제 센터 (방탄(Bulletproof) 구조 및 변수 선언 안전화)
 # ==============================================================================
 with st.sidebar:
-    # 💡 대분류든 소분류든 클릭하는 즉시 화면을 끄고 [풀이 가동] 버튼 클릭을 대기하도록 초기화
     def stop_ai():
         st.session_state['app_running'] = False
 
@@ -111,10 +110,6 @@ with st.sidebar:
     main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 개인 사주팔자 풀이", "2. 커플 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
 
     u_product = "1-1. 사주팔자 및 대운 분석"
-
-    # 💡 상품 변경 즉시 AI 가동 멈춤 스위치
-    def stop_ai():
-        st.session_state['app_running'] = False
 
     if main_category == "1. 개인 사주팔자 풀이":
         u_product = st.radio(
@@ -234,7 +229,7 @@ with st.sidebar:
             del st.session_state['rev_success_msg']
 
     # ==============================================================================
-    # 👤 신청인 기본 정보 (Rerun 시 기존 입력값 100% 영구 유지 방탄 처리)
+    # 👤 신청인 기본 정보
     # ==============================================================================
     u_box = st.container()
     with u_box:
@@ -415,8 +410,6 @@ with st.sidebar:
             col_d1, col_d2 = st.columns(2)
             delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date")
             delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date")
-            
-            st.caption("💡 탐색 시작일 ~ 탐색 종료일 기간 내 출산 길일을 정밀 탐색합니다.")
 
     elif "3-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
@@ -424,7 +417,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # 💡 내담자 변경 시 캐시 세션 초기화용 키 생성
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
     u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
     u_m = st.session_state.get('u_m_stat', u_marital if 'u_marital' in locals() else "")
@@ -436,8 +428,8 @@ with st.sidebar:
     
     if st.session_state.get('user_key') != current_user_key:
         st.session_state['user_key'] = current_user_key
-        st.session_state['base_fact_cache'] = None   # 상단 공통 팩트 상자 캐시
-        st.session_state['report_essays'] = {}      # 상품별 AI 통변 저장 딕셔너리
+        st.session_state['base_fact_cache'] = None
+        st.session_state['report_essays'] = {}
         st.session_state['app_running'] = False
 
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
@@ -447,13 +439,10 @@ with st.sidebar:
         components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
-# 3. 메인 화면 연산 및 출력부 (1-1 ~ 1-8번 + 3-1번 개인 사주팔자 통합 구역)
+# 3. 메인 화면 연산 및 출력부 (철저하게 [풀이 가동] 버튼 클릭 시에만 진입)
 # ==============================================================================
-has_cached_report = bool(st.session_state.get('report_essays', {})) or st.session_state.get('base_fact_cache') is not None
-
-if st.session_state.get('app_running', False) or has_cached_report:
+if st.session_state.get('app_running', False):
     if any(x in u_product for x in ["1-", "3-1."]):
-        # --- (A) 기본 사주 원국 및 대운 연산 ---
         klc = KoreanLunarCalendar()
 
         b_year = st.session_state.get("s_y", 1980)
@@ -529,7 +518,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
             cur_samjae = engine.get_samjae(yb, curr_y_ji)
             samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
             
-            # --- (B) 공통 UI 렌더링 (원국, 마스터바) ---
             sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
             lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
             time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
@@ -541,14 +529,12 @@ if st.session_state.get('app_running', False) or has_cached_report:
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
             intro_html = html_views.get_intro_html()
             
-            # --- (C) 대운/세운 기준점 연산 ---
             c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
             j_idx = engine.JI.index(mb) if mb in engine.JI else 0
             cur_dw_idx = max(0, (age - calc_d) // 10)
             dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
             dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
             
-            # 대운표 생성
             daewun_data_list = []
             for i in range(10):
                 val = i * 10 + calc_d
@@ -560,12 +546,12 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 
                 daewun_data_list.append({
                     "age_range": f"{val}~{val+9}세",
-                    "ss_gan": engine.get_ss(ds_hanja, c_hanja),
+                    "ss_gan": engine.get_ss(ds_hanja, c_hangul),
                     "c_hanja": c_hanja,
                     "c_hangul": c_hangul,
                     "j_hanja": j_hanja,
                     "j_hangul": j_hangul,
-                    "ss_ji": engine.get_ss(ds_hanja, j_hanja),
+                    "ss_ji": engine.get_ss(ds_hanja, j_hangul),
                     "un_sung": engine.get_unsung(ds_hanja, j_hanja),
                     "shin_sal": engine.get_12_shinsal(yb, j_hanja),
                     "is_current": is_active,
@@ -586,7 +572,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 current_daewun_age = max(0, int(age))
                 start_year = curr_year
 
-            # 세운표 생성
             se_content = ""
             for i in range(10):
                 ty = start_year + i
@@ -613,7 +598,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
             dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
             sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
 
-            # 월운표 생성
             wol_content = ""
             for i in range(12):
                 tm = i + 1
@@ -638,7 +622,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
 
             wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
-            # 주간 및 일운 전용 연산
             weekly_daily_html = ""
             weekly_ganji_list = "월~일 주간 간지 데이터"
             m_che_first, am_yong = "오전 체", "오전 용"
@@ -686,7 +669,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
 
                 weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
 
-            # 골든 텍스트 및 클로징 멘트 생성
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
@@ -698,7 +680,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "").strip()
 
-            # 8. 상단 팩트 상자 묶음 (레고 블록 변수 할당)
             part_1_fact = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -709,13 +690,11 @@ if st.session_state.get('app_running', False) or has_cached_report:
             part_3_golden = str(golden_text_html or "")
             part_5_closing = str(closing_part or "")
 
-            # 💡 [핵심 추가] 변수 생성 직후 상단 팩트 상자 캐싱 (NameError 원천 차단)
             if main_category == "1. 개인 사주팔자 풀이":
                 st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
             else:
                 st.session_state['base_fact_cache'] = part_1_fact
 
-            # 9. AI 통변 프롬프트 셋팅 및 호출
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -803,31 +782,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
 
                 universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
 
-                # ==============================================================================
-                # 💡 [진짜 연동] 연령대, 성별, 육친 규칙 3대 지침 완성 및 대입
-                # ==============================================================================
-                # 1. age_prompt 생성
-                if age < 20:
-                    age_p = f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
-                elif age < 40:
-                    age_p = f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
-                elif age < 60:
-                    age_p = f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
-                else:
-                    age_p = f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
-
-                # 2. gender_prompt 생성
-                if gender == "여성":
-                    gender_p = "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
-                else:
-                    gender_p = "남성 내담자(남명)이므로 육친 적용 시 재성(財星)을 배우자/아내로, 관성(官星)을 자식으로 엄격히 적용하십시오."
-
-                # 3. yukchin_rule 엔진 함수에서 직접 호출
-                yukchin_r = engine.get_yukchin_rule(gender, u_marital)
-
-                # ==============================================================================
-                # 💡 내담자 맞춤 지침 3대 변수 동적 생성 및 대입
-                # ==============================================================================
                 if age < 20:
                     age_p = f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
                 elif age < 40:
@@ -844,14 +798,10 @@ if st.session_state.get('app_running', False) or has_cached_report:
 
                 yukchin_r = engine.get_yukchin_rule(gender, u_marital)
 
-                # ==============================================================================
-                # 💡 [신규 탑재] 체용 매트릭스 운세 분석 전용 신규 엔진 함수 호출
-                # ==============================================================================
                 now_dt = dt_mod.datetime.now()
                 _, _, d_pillar_today = engine.get_ganji_from_date(now_dt.year, now_dt.month, now_dt.day)
-                i_gan, i_ji = d_pillar_today[0], d_pillar_today[1]  # 오늘의 일운 간지
+                i_gan, i_ji = d_pillar_today[0], d_pillar_today[1] 
                 
-                # engine.py의 신규 함수 호출 (체용 파동 팩트 및 5x5 매트릭스 키워드 도출)
                 w_facts = engine.get_woonse_analysis_facts(
                     ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g, cur_wol_j, i_gan, i_ji
                 )
@@ -861,7 +811,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                     "age_prompt": age_p,
                     "gender_prompt": gender_p,
                     "yukchin_rule": yukchin_r,
-                    # ★ 신규 체용 매트릭스 바인딩 변수 추가 ★
                     "woonse_fact_str": w_facts["woonse_fact_str"],
                     "dw_che": w_facts["dw_che"],
                     "sewun_kw": w_facts["sewun_kw"],
@@ -926,7 +875,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            # 💡 [핵심 수술] VIP 패키지 세션 안전 바인딩 (NameError 및 토큰 낭비 방지)
             is_vip_active = st.session_state.get("is_vip_package_val", False) if "1-1." in u_product else False
 
             if is_vip_active:
@@ -935,9 +883,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 st.session_state['report_essays'] = {u_product: ai_output_html}
             st.markdown(cover_html, unsafe_allow_html=True)
 
-            # ------------------------------------------------------------------
-            # [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
-            # ------------------------------------------------------------------
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
@@ -1021,9 +966,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 final_report = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-    # ==============================================================================
-    # [2-1] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
-    # ==============================================================================
     elif any(x in u_product for x in ["2-1", "3-2"]):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
@@ -1170,7 +1112,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 prompt_text = prompts.GUNGHAP_ESSAY_PROMPT.format_map(safe_facts)
                 prompt_text += f"\n\n🚨 [주의]: 프롬프트 지시문 안의 '<...>' 예시 텍스트 문구를 그대로 복사하여 출력하지 말고, 주어진 사주팔자 팩트를 바탕으로 실제 완성된 통변 문장만 작성하십시오."
 
-                # 1차 궁합 통변 AI 호출
                 ai_result = call_gemini_api(prompt_text)
                 
                 if ai_result:
@@ -1189,11 +1130,9 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 score_visual_html = html_views.get_gunghap_score_visual_html(gh_engine)
                 ai_box_html = f'<div style="margin-top:20px; padding:20px; background-color:#ffffff; border-radius:10px; border:1px solid #E0E0E0;">{ai_output_html}</div>'
 
-                # 💡 [클로징 멘트 생성] 두 사람의 이름을 함께 담아 정갈하게 마무리
                 closing_html = html_views.get_closing_html(f"{male_name} 님 & {female_name}") if hasattr(html_views, 'get_closing_html') else ""
                 closing_part = str(closing_html or "").strip()
 
-                # 🚨 [프로모델 정밀 순서 배치]: [남녀 원국/마스터바/대운/황금문구] -> [intro] -> [AI 통변] -> [점수 비주얼] -> [Closing]
                 full_inner_content = "".join([
                     str(m_info or ''), str(m_table or ''), str(m_master_html or ''), str(m_un or ''), str(m_golden_html or ''),
                     str(w_info or ''), str(w_table or ''), str(w_master_html or ''), str(w_un or ''), str(f_golden_html or ''),
@@ -1212,9 +1151,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 st.markdown(cover_html, unsafe_allow_html=True)
                 st.markdown(report_box, unsafe_allow_html=True)
 
-                # ------------------------------------------------------------------
-                # [2단계 & 3단계 PAGE] 타 감명서 (궁합 3-2)
-                # ------------------------------------------------------------------
                 if "3-2" in u_product:
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
@@ -1270,9 +1206,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
             except Exception as e:
                 st.error(f"🚨 궁합 및 타 감명서 비교 처리 중 오류 발생: {e}")
 
-    # ==============================================================================
-    # 💍 [2-2번 카테고리] 결혼 택일
-    # ==============================================================================
     elif "2-2." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
             st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
@@ -1371,9 +1304,6 @@ if st.session_state.get('app_running', False) or has_cached_report:
             except Exception as e:
                 st.error(f"🚨 결혼 택일 분석 중 오류 발생: {e}")
 
-    # ==============================================================================
-    # 👶 [2-3번 카테고리] 출산 택일
-    # ==============================================================================
     elif "2-3." in u_product:
         if 'cached_gunghap_cover' in st.session_state:
             st.markdown(st.session_state['cached_gunghap_cover'], unsafe_allow_html=True)
