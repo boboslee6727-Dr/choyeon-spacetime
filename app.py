@@ -112,6 +112,10 @@ with st.sidebar:
 
     u_product = "1-1. 사주팔자 및 대운 분석"
 
+    # 💡 상품 변경 즉시 AI 가동 멈춤 스위치
+    def stop_ai():
+        st.session_state['app_running'] = False
+
     if main_category == "1. 개인 사주팔자 풀이":
         u_product = st.radio(
             "상세 분석 항목:", 
@@ -905,12 +909,13 @@ if st.session_state.get('app_running', False) or has_cached_report:
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            # 💡 [핵심 추가] VIP 누적 저장 vs 일반 단품 저장 세션 대입
-            if is_vip_package:
+            # 💡 [핵심 수술] VIP 패키지 세션 안전 바인딩 (NameError 및 토큰 낭비 방지)
+            is_vip_active = st.session_state.get("is_vip_package_val", False) if "1-1." in u_product else False
+
+            if is_vip_active:
                 st.session_state['report_essays'][u_product] = ai_output_html
             else:
                 st.session_state['report_essays'] = {u_product: ai_output_html}
-
             st.markdown(cover_html, unsafe_allow_html=True)
 
             # ------------------------------------------------------------------
