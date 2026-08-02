@@ -976,13 +976,6 @@ if st.session_state.get('app_running', False):
                 final_report = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                 st.markdown(html_views.get_final_report_box(final_report), unsafe_allow_html=True)
 
-    # ------------------------------------------------------------------------------
-    # 🖨️ 최하단 [풀이 결과 인쇄 / PDF 저장] 버튼 (보색 숲속 그린 적용)
-    # ------------------------------------------------------------------------------
-    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
-    if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
-        components.html("<script>window.parent.print();</script>", height=0)
-
     # ==============================================================================
     # [2-1] 연애/궁합 풀이 및 [3-2] 타 감명서 비교
     # ==============================================================================
