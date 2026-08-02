@@ -416,7 +416,7 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 👑 VIP 종합 패키지 모드 사이드바 제어 및 세션 관리 (ver 6.0 완벽 반영)
+    # 👑 VIP 종합 패키지 모드 사이드바 제어 및 세션 관리 (안전 키 생성 방식)
     # ==============================================================================
     st.sidebar.markdown("---")
     is_vip_package = st.sidebar.checkbox(
@@ -426,8 +426,15 @@ with st.sidebar:
         help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
     )
 
-    # 내담자 및 카테고리 식별 키 생성 (내담자나 대분류 변경 시 자동 초기화)
-    current_user_key = f"{main_category}_{name}_{gender}_{u_marital}_{ys}{yb}{ms}{mb}{ds}{db}{hs}{hb}"
+    # 💡 [보완] 입력 변수를 활용하여 NameError를 방지하는 안전한 내담자 식별 키 생성
+    u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
+    u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
+    u_m = st.session_state.get('u_m_stat', u_marital if 'u_marital' in locals() else "")
+    u_y = st.session_state.get('u_y_in', "")
+    u_mo = st.session_state.get('u_m_in', "")
+    u_d = st.session_state.get('u_d_in', "")
+    
+    current_user_key = f"{main_category}_{u_n}_{u_g}_{u_m}_{u_y}_{u_mo}_{u_d}"
     
     if st.session_state.get('user_key') != current_user_key:
         st.session_state['user_key'] = current_user_key
