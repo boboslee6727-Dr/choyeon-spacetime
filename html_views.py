@@ -356,6 +356,60 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     </div>
     """
 
+# ==============================================================================
+# [신규 추가] 주간 달력 표 렌더링 (일~토 7일간 완벽 균등 폭 + 오늘 강조 표시)
+# ==============================================================================
+def generate_weekly_calendar_html(weekly_days_data, today_day):
+    """
+    weekly_days_data: [{'day': 2, 'weekday': '일', 'ganji': '甲子', 'is_today': True/False}, ...]
+    7일간(일~토) 균등 등분 달력 표 생성 및 오늘 날짜 활성화(하이라이트)
+    """
+    headers_html = ""
+    cells_html = ""
+    
+    for item in weekly_days_data:
+        # 일요일은 빨간색, 토요일은 파란색, 평일은 검은색
+        w_color = "#C62828" if item['weekday'] == '일' else ("#1565C0" if item['weekday'] == '토' else "#333333")
+        
+        # 오늘 날짜 활성화 스타일 (강조 테두리와 연두색 배경)
+        if item['is_today']:
+            bg_style = "background-color: #E8F5E9; border: 2px solid #2E7D32 !important;"
+            today_badge = "<div style='font-size:11px; color:#2E7D32; font-weight:bold; margin-bottom:2px;'>★ 오늘</div>"
+        else:
+            bg_style = "background-color: #FAFAFA; border: 1px solid #E0E0E0;"
+            today_badge = "<div style='font-size:11px; color:transparent; margin-bottom:2px;'>-</div>"
+
+        # 💡 [보완] width: 14.28% 부여로 7일간 정확히 1/7 균등 분배
+        headers_html += f"""
+        <th style="width: 14.28%; padding: 8px 2px; border: 1px solid #D7CCC8; background-color: #EFEBE9; color: {w_color}; font-size: 13px; text-align: center;">
+            {item['weekday']}
+        </th>
+        """
+        
+        cells_html += f"""
+        <td style="width: 14.28%; padding: 8px 2px; text-align: center; box-sizing: border-box; {bg_style}">
+            {today_badge}
+            <div style="font-size: 14px; font-weight: bold; color: #111;">{item['day']}일</div>
+            <div style="font-size: 15px; font-weight: 900; color: #000; margin-top: 4px;">{item['ganji']}</div>
+        </td>
+        """
+
+    return f"""
+    <div style="margin: 15px 0 20px 0;">
+        <div style="font-weight: bold; font-size: 15px; margin-bottom: 8px; color: #3E2723;">
+            📅 이번 주 간지 흐름 (일요일 ~ 토요일)
+        </div>
+        <table style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed;">
+            <thead>
+                <tr>{headers_html}</tr>
+            </thead>
+            <tbody>
+                <tr>{cells_html}</tr>
+            </tbody>
+        </table>
+    </div>
+    """
+
 def generate_weekly_daily_layout(weekly_ganji_list, today_day, ds, db, m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal):
     """
     주간 간지 흐름 및 오늘의 일운(오전/오후 체용 파동) HTML 표 생성 함수
