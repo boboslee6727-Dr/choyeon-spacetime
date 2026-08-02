@@ -264,7 +264,11 @@ with st.sidebar:
         
         # 각 세부 항목별 추가 입력 필드 분기
         if "1-4." in u_product:
-            daily_calc_date = st.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
+            daily_calc_date = st.date_input(
+                "일운 분석 기준일 선택", 
+                value=st.session_state.get("daily_calc_date", dt_mod.date.today()), 
+                key="daily_calc_date"
+            )
         elif "1-5." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "1-6." in u_product: 
