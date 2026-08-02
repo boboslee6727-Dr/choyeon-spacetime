@@ -254,8 +254,15 @@ with st.sidebar:
     # ==============================================================================
     # 📌 특화 상품별 추가 옵션
     # ==============================================================================
-    if any(x in u_product for x in ["1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
-        if "1-4." in u_product:
+    if any(x in u_product for x in ["1-1.", "1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
+        if "1-1." in u_product:
+            is_vip_package = st.checkbox(
+                "👑 VIP 종합 패키지 모드 (누적 출력)", 
+                value=st.session_state.get("is_vip_package_val", False), 
+                key="is_vip_package_val",
+                help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
+            )
+        elif "1-4." in u_product:
             daily_calc_date = st.date_input("일운 분석 기준일 선택", dt_mod.datetime.now(), key="daily_calc_date")
         elif "1-5." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
