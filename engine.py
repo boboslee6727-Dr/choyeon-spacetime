@@ -845,34 +845,37 @@ def get_execution_yong(upper_group, lower_group):
     return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
 # ==============================================================================
-# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진
+# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진 (정통 교재 원칙 적용본)
 # ==============================================================================
 def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolun_g, wolun_j, ilun_g, ilun_j):
     """
     일주(ds, db)와 대운/세운/월운/일운 간지를 바탕으로
     체운(體運), 용운(用運), 임상 키워드를 연쇄 도출합니다.
     """
-    ilju_lower_group = get_group_ss(get_ss(ds, db)) # 하위십성(일주)
+    # [하위십성]: 일주(일지 db)가 가지는 십성 그룹 (예: 辛亥일주 -> 상관 -> 식상그룹)
+    ilju_ss = get_ss(ds, db)
+    ilju_lower_group = get_group_ss(ilju_ss)
     
-    # 1. 대운 체용 (대운천간 = 體, 대운지지의 용운)
+    # 1. 대운 체용 (대운천간 = 體, 대운 전체 실행 用)
     dw_che = get_group_ss(get_ss(ds, dw_g_cur))
-    dw_yong = get_execution_yong(get_group_ss(get_ss(dw_g_cur, dw_j_cur)), ilju_lower_group)
+    dw_upper_ss = get_ss(ds, dw_g_cur) # 상위십성
+    dw_yong = get_execution_yong(get_group_ss(dw_upper_ss), ilju_lower_group)
     dw_kw = get_matrix_keyword(dw_che, dw_yong)
     
     # 2. 세운 체용 (대운 체운 상위 體 + 세운 실행 用)
-    s_upper = get_group_ss(get_ss(sewun_g, sewun_j))
-    s_yong = get_execution_yong(s_upper, ilju_lower_group)
+    sewun_upper_ss = get_ss(ds, sewun_g) # 상위십성
+    s_yong = get_execution_yong(get_group_ss(sewun_upper_ss), ilju_lower_group)
     sewun_kw = get_matrix_keyword(dw_che, s_yong)
     
     # 3. 월운 체용 (세운 시기 體 + 월운 실행 用)
-    w_upper = get_group_ss(get_ss(wolun_g, wolun_j))
-    w_yong = get_execution_yong(w_upper, ilju_lower_group)
+    wolun_upper_ss = get_ss(ds, wolun_g) # 상위십성
+    w_yong = get_execution_yong(get_group_ss(wolun_upper_ss), ilju_lower_group)
     sewun_che = get_group_ss(get_ss(ds, sewun_g))
     wolun_kw = get_matrix_keyword(sewun_che, w_yong)
     
     # 4. 일운 체용 (월운 시기 體 + 일운 실행 用)
-    i_upper = get_group_ss(get_ss(ilun_g, ilun_j))
-    i_yong = get_execution_yong(i_upper, ilju_lower_group)
+    ilun_upper_ss = get_ss(ds, ilun_g) # 상위십성
+    i_yong = get_execution_yong(get_group_ss(ilun_upper_ss), ilju_lower_group)
     wolun_che = get_group_ss(get_ss(ds, wolun_g))
     ilun_kw = get_matrix_keyword(wolun_che, i_yong)
     
