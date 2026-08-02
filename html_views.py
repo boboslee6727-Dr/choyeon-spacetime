@@ -452,6 +452,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
             </tbody>
         </table>
     </div>
+    """
 
 def get_closing_html(name):
     return f"""
