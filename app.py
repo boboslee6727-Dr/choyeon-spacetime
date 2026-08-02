@@ -257,7 +257,7 @@ with st.sidebar:
     if any(x in u_product for x in ["1-1.", "1-4.", "1-5.", "1-6.", "1-7.", "1-8.", "3-1."]):
         if "1-1." in u_product:
             is_vip_package = st.checkbox(
-                "👑 VIP 종합 패키지 모드 (누적 출력)", 
+                "👑 VIP 패키지 모드 (누적 출력)", 
                 value=st.session_state.get("is_vip_package_val", False), 
                 key="is_vip_package_val",
                 help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
