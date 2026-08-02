@@ -413,17 +413,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # ==============================================================================
-    # 👑 VIP 종합 패키지 모드 사이드바 제어 (단정하게 정돈)
-    # ==============================================================================
-    is_vip_package = st.checkbox(
-        "👑 VIP 종합 패키지 모드 (누적 출력)", 
-        value=False, 
-        key="is_vip_package",
-        help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
-    )
-    st.markdown("---")
-
     # 💡 내담자 변경 시 캐시 세션 초기화용 키 생성
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
     u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
@@ -441,28 +430,14 @@ with st.sidebar:
         st.session_state['app_running'] = False
 
     # ------------------------------------------------------------------------------
-    # ✨ [초연 시공명리 풀이 가동] 버튼 (사이드바 맨 밑 핵심 스위치)
+    # 1. ✨ [초연 시공명리 풀이 가동] 버튼 (메인 스위치)
     # ------------------------------------------------------------------------------
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
 
-    # ==============================================================================
-    # 👑 VIP 종합 패키지 모드 & 가동/인쇄 버튼 (사이드바 최하단 완벽 동선)
-    # ==============================================================================
-    st.markdown("---")
-    is_vip_package = st.checkbox(
-        "👑 VIP 종합 패키지 모드 (누적 출력)", 
-        value=False, 
-        key="is_vip_package",
-        help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
-    )
-    st.markdown("---")
-
-    # 1. 메인 풀이 가동 버튼 (1개만 단독 유지)
-    if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
-        st.session_state['app_running'] = True
-
-    # 2. 최하단 인쇄 / PDF 저장 버튼 (상단 버튼 보색 숲속 그린 적용)
+    # ------------------------------------------------------------------------------
+    # 2. 🖨️ 최하단 인쇄 / PDF 저장 버튼 (보색 숲속 그린 적용)
+    # ------------------------------------------------------------------------------
     st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; margin-top: 5px; }</style>", unsafe_allow_html=True)
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
@@ -718,7 +693,7 @@ if st.session_state.get('app_running', False):
             closing_html = html_views.get_closing_html(name)            
             closing_part = str(closing_html or "").strip()
 
-            # 상단 팩트 상자 묶음 (레고 블록 변수 할당)
+            # 8. 상단 팩트 상자 묶음 (레고 블록 변수 할당)
             part_1_fact = (
                 str(info_h or "") + 
                 str(table_html or "") + str(master_bar_html or "") + 
@@ -729,13 +704,13 @@ if st.session_state.get('app_running', False):
             part_3_golden = str(golden_text_html or "")
             part_5_closing = str(closing_part or "")
 
-            # 💡 [핵심 보완 1] 상단 팩트 상자 안전 캐싱
+            # 💡 [핵심 추가] 변수 생성 직후 상단 팩트 상자 캐싱 (NameError 원천 차단)
             if main_category == "1. 개인 사주팔자 풀이":
                 st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
             else:
                 st.session_state['base_fact_cache'] = part_1_fact
 
-            # AI 통변 프롬프트 셋팅 및 호출
+            # 9. AI 통변 프롬프트 셋팅 및 호출
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -884,11 +859,13 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            # 💡 VIP 모드 vs 일반 모드 분기 세션 저장
+            # 💡 [핵심 추가] VIP 누적 저장 vs 일반 단품 저장 세션 대입
             if is_vip_package:
                 st.session_state['report_essays'][u_product] = ai_output_html
             else:
                 st.session_state['report_essays'] = {u_product: ai_output_html}
+
+            st.markdown(cover_html, unsafe_allow_html=True)
 
             # ------------------------------------------------------------------
             # [3-1. 타 감명서 비교] 및 일반 상품(1-1~1-8) 최종 화면 조립
