@@ -416,15 +416,16 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 👑 VIP 종합 패키지 모드 사이드바 제어 및 세션 관리 (안전 키 생성 방식)
+    # 👑 VIP 종합 패키지 모드 사이드바 제어 (불필요한 빈 공간 및 실선 완전 제거본)
     # ==============================================================================
     st.sidebar.markdown("---")
     is_vip_package = st.sidebar.checkbox(
-        "👑 VIP / 가족 종합 패키지 모드 (누적 출력)", 
+        "👑 VIP 종합 패키지 모드 (누적 출력)", 
         value=False, 
         key="is_vip_package",
         help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
     )
+    st.sidebar.markdown("---")
 
     # 💡 [보완] 입력 변수를 활용하여 NameError를 방지하는 안전한 내담자 식별 키 생성
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
@@ -493,6 +494,8 @@ with st.sidebar:
         # (4) 화면 출력
         st.markdown(combined_html, unsafe_allow_html=True)
         
+    # 최하단 인쇄 버튼 (상단 버튼 보색 그린 적용)
+    st.markdown("<style>div.stButton > button[key='btn_print'] { background-color: #1E6B44 !important; color: white !important; font-weight: bold; }</style>", unsafe_allow_html=True)
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
 
