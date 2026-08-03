@@ -23,7 +23,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 70.5"
+APP_VERSION = "ver 70.5 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용 (html_views 모듈 호출)
@@ -91,7 +91,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (방탄(Bulletproof) 구조 및 변수 선언 안전화)
+# 2. 사이드바 통제 센터 (방탄(Bulletproof) 범용 구조)
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -100,7 +100,7 @@ with st.sidebar:
     st.markdown(f"""
         <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
             <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin: 0 0 5px 0;">🏮 초연 시공명리 연구소</h1>
-            <p style="color: #555555; font-family: sans-serif; font-size: 12px; margin: 0;">{APP_VERSION} Master (Base + Gunghap)</p>
+            <p style="color: #555555; font-family: sans-serif; font-size: 12px; margin: 0;">{APP_VERSION}</p>
         </div>
         <hr style="margin: 10px 0 15px 0;">
     """, unsafe_allow_html=True)
@@ -145,7 +145,7 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
     # ==============================================================================
-    # 🔍 신청인 사주간지 역산
+    # 🔍 범용 사주간지 역산 입력부
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
@@ -250,8 +250,8 @@ with st.sidebar:
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select")
         st.session_state["s_t"] = b_time
 
-   # ==============================================================================
-    # 📌 특화 상품별 추가 옵션 (1번대 모든 상품에서 VIP 체크박스 및 전용 옵션 활성화)
+    # ==============================================================================
+    # 📌 특화 상품별 옵션
     # ==============================================================================
     if u_product.startswith("1-"):
         is_vip_package = st.checkbox(
@@ -284,7 +284,7 @@ with st.sidebar:
         other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
-    # 👥 상대방 정보 입력부 (2-1 궁합 및 3-2 궁합비교 전용)
+    # 👥 상대방 정보 입력부 (궁합)
     # ==============================================================================
     if any(x in u_product for x in ["2-1.", "2-2.", "2-3.", "3-2."]):
         with st.expander("🔍 상대방 사주간지 역산", expanded=False):
@@ -387,7 +387,7 @@ with st.sidebar:
             st.session_state["p_t_key"] = f_t
 
     # ==============================================================================
-    # 📌 택일 및 타 감명서 특화 옵션 조건문
+    # 📌 택일 및 기타 특화 옵션
     # ==============================================================================
     if "2-2." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
@@ -447,7 +447,7 @@ with st.sidebar:
         components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
-# 3. 메인 화면 연산 및 출력부 (철저하게 [풀이 가동] 버튼 클릭 시에만 진입)
+# 3. 메인 화면 범용 연산 및 AI 통변 엔진 실행부
 # ==============================================================================
 if st.session_state.get('app_running', False):
     if any(x in u_product for x in ["1-", "3-1."]):
@@ -480,8 +480,10 @@ if st.session_state.get('app_running', False):
             match = re.search(r'(\d{2}):(\d{2})', time_str)
             return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
-        with st.spinner(f"⏳ [{u_product.strip()}] 정밀 분석 중...."):
+        with st.spinner(f"⏳ [{u_product.strip()}] 범용 시공명리 연산 및 정밀 분석 중...."):
             h, m = extract_time(b_time)
+            
+            # engine.py: -30분 동경시차 및 태양 황경(Ephem) 적용 연주/월주 선언
             y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
             is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
@@ -707,7 +709,7 @@ if st.session_state.get('app_running', False):
                 st.session_state['base_fact_cache'] = part_1_fact
 
             # ==============================================================================
-            # 💡 [정수보완] 선언 순서 안전 확보 ➔ engine.py 정밀 연산 ➔ prompts.py 치환 ➔ AI
+            # 💡 [범용 완전 정돈본] 변수선언 안전확보 ➔ engine.py 5x5 연산 ➔ prompts.py
             # ==============================================================================
             
             # 1. 오늘 기준 KST 날짜 및 동경시차(-30분) 반영 일간/일지 안전 추출
@@ -734,7 +736,7 @@ if st.session_state.get('app_running', False):
             cur_wol_g_val = locals().get('cur_wol_g', c_w_g)
             cur_wol_j_val = locals().get('cur_wol_j', c_w_j)
 
-            # 3. engine.py에서 -30분 동경시차 및 Ephem 절기가 정밀 반영된 100% 진품 팩트 연산 (乙未월 보장)
+            # 3. engine.py에서 -30분 동경시차 및 Ephem 절기가 정밀 반영된 범용 5x5 체용 팩트 연산
             w_facts = engine.get_woonse_analysis_facts(
                 ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g_val, cur_wol_j_val, i_gan, i_ji
             )
@@ -826,13 +828,13 @@ if st.session_state.get('app_running', False):
 
             yukchin_r = engine.get_yukchin_rule(gender, u_marital)
 
-            # 5. prompts.py 전용 바인딩 딕셔너리 완벽 바인딩 (누더기 덧붙이기 원천 차단)
+            # 5. prompts.py 전용 범용 바인딩 딕셔너리 세팅
             prompt_data = {
                 # 기본 내담자 프로필
                 "name": name, "age": age, "gender": gender, "marital": u_marital,
                 "age_prompt": age_p, "gender_prompt": gender_p, "yukchin_rule": yukchin_r,
                 
-                # engine.py에서 -30분 시차 및 절기로 완벽 계산된 100% 팩트 (폭포수 파동 포함)
+                # engine.py에서 -30분 시차 및 절기로 완벽 계산된 범용 팩트
                 "woonse_fact_str": w_facts["woonse_fact_str"],
                 "dw_che": w_facts["dw_che"], "sewun_kw": w_facts["sewun_kw"],
                 "wolun_kw": w_facts["wolun_kw"], "ilun_kw": w_facts["ilun_kw"],
@@ -872,7 +874,7 @@ if st.session_state.get('app_running', False):
             
             formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
             
-            # 7. 깔끔한 API 호출 (체인 누더기 덧붙이기 없이 단일 정돈 전달)
+            # 7. 단일 정돈 Gemini API 호출
             try:
                 raw_response = call_gemini_api(formatted_prompt, extra_facts, model="gemini-2.5-flash")
             except TypeError:
@@ -894,11 +896,9 @@ if st.session_state.get('app_running', False):
             if 'vip_base_fact' not in st.session_state:
                 st.session_state['vip_base_fact'] = ""
 
-            # 최초 1회 또는 비-VIP 모드일 때 사주 명식/대운 팩트 박스 고정 저장
             if not st.session_state['vip_base_fact'] or not is_vip_active:
                 st.session_state['vip_base_fact'] = part_1_fact + part_2_intro + part_3_golden
 
-            # 현재 상품의 AI 통변 포장 (1-4번 주간표는 깨짐 방지 예외 적용)
             if "1-4." in u_product:
                 current_ai_block = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
             else:
