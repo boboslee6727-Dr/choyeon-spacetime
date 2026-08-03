@@ -631,396 +631,117 @@ if st.session_state.get('app_running', False):
                     is_cur_m
                 )
 
-            wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
+            # ==============================================================================
+            # 💡 [초연 정통 정돈본] engine.py (-30분 동경시차/절기 연산) ➔ prompts.py ➔ Gemini
+            # ==============================================================================
+            
+            # 1. engine.py 기반 오늘 일진 및 동경시차(-30분) 적용 일간/일지 추출
+            now_dt = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
+            _, _, d_pillar_today = engine.get_ganji_from_date(now_dt.year, now_dt.month, now_dt.day)
+            i_gan, i_ji = d_pillar_today[0], d_pillar_today[1] 
 
-            weekly_daily_html = ""
-            weekly_ganji_list = "월~일 주간 간지 데이터"
-            m_che_first, am_yong = "오전 체", "오전 용"
-            m_che_second, pm_yong = "오후 체", "오후 용"
-            day_wunseong, day_12shinsal = "건록", "망신살"
-
-            if "1-4." in u_product:
-                # 💡 [핵심 단속] 메인 화면 연산부에서도 서버 타임존 오차를 없애고 한국 표준시(KST) 기준 현재 시각을 강제 적용
-                kst_tz = pytz.timezone('Asia/Seoul')
-                now_dt = dt_mod.datetime.now(kst_tz)
-                
-                today_day = now_dt.day
-                
-                idx_from_sun = (now_dt.weekday() + 1) % 7
-                sunday_dt = now_dt - dt_mod.timedelta(days=idx_from_sun)
-                
-                weekdays_str = ['일', '월', '화', '수', '목', '금', '토']
-                weekly_days_data = []
-                
-                for i in range(7):
-                    target_dt = sunday_dt + dt_mod.timedelta(days=i)
-                    _, _, d_pillar = engine.get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day) if hasattr(engine, 'get_ganji_from_date') else ("", "", ("",""))
-                    ganji_str = f"{d_pillar[0]}{d_pillar[1]}" if d_pillar and len(d_pillar)>=2 else "-"
-                    is_today = (target_dt.date() == now_dt.date())
-                    
-                    weekly_days_data.append({
-                        'day': target_dt.day,
-                        'weekday': weekdays_str[i],
-                        'ganji': ganji_str,
-                        'is_today': is_today
-                    })
-                
-                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
-
-                w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
-                weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
-                m_che_first = w_d_res.get('m_che_first', m_che_first)
-                am_yong = w_d_res.get('am_yong', am_yong)
-                m_che_second = w_d_res.get('m_che_second', m_che_second)
-                pm_yong = w_d_res.get('pm_yong', pm_yong)
-                day_wunseong = w_d_res.get('day_wunseong', day_wunseong)
-                day_12shinsal = w_d_res.get('day_12shinsal', day_12shinsal)
-                
-                daily_table_html = html_views.generate_weekly_daily_layout(
-                    weekly_ganji_list, today_day, ds, db, 
-                    m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal
-                ) if hasattr(html_views, 'generate_weekly_daily_layout') else ""
-
-                weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
-                
-                # 🚨 [최종 암살] 스트림릿이 "들여쓰기"를 "소스코드"로 착각하지 못하도록 모든 줄바꿈 강제 삭제!
-                weekly_daily_html = weekly_daily_html.replace('\n', '')
-
-            choyeon_db = load_choyeon_db()
-            w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
-            w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-            i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-            struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-            s_name, s_type, s_desc = struct_data[0], struct_data[1], struct_data[2]
-            golden_text_html = html_views.get_golden_text(name, w_val, i_val, s_name, s_type, s_desc)
-
-            closing_html = html_views.get_closing_html(name)            
-            closing_part = str(closing_html or "").strip()
-
-            part_1_fact = (
-                str(info_h or "") + 
-                str(table_html or "") + str(master_bar_html or "") + 
-                str(un_html or "") + str(sewun_html or "") + str(wolun_html or "") + 
-                str(weekly_daily_html or "")
+            # 2. engine.py에서 -30분 동경시차 및 Ephem 절기가 정밀 반영된 100% 진품 팩트 연산 (乙未월 보장)
+            w_facts = engine.get_woonse_analysis_facts(
+                ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g, cur_wol_j, i_gan, i_ji
             )
-            part_2_intro = str(intro_html or "")
-            part_3_golden = str(golden_text_html or "")
-            part_5_closing = str(closing_part or "")
 
-            # 💡 [핵심 보완] 월운에서와 같이 파트1, 2, 3을 캐시에 온전히 담아 기본 출력 보장
-            if main_category == "1. 개인 사주팔자 풀이":
-                st.session_state['base_fact_cache'] = part_1_fact + part_2_intro + part_3_golden
+            # 3. prompts.py 전용 바인딩 딕셔너리 완벽 바인딩 (누더기 덧붙이기 원천 차단)
+            prompt_data = {
+                # 기본 내담자 프로필
+                "name": name, "age": age, "gender": gender, "marital": u_marital,
+                "age_prompt": age_p, "gender_prompt": gender_p, "yukchin_rule": yukchin_r,
+                
+                # engine.py에서 -30분 시차 및 절기로 완벽 계산된 100% 팩트 (폭포수 파동 포함)
+                "woonse_fact_str": w_facts["woonse_fact_str"],
+                "dw_che": w_facts["dw_che"], "sewun_kw": w_facts["sewun_kw"],
+                "wolun_kw": w_facts["wolun_kw"], "ilun_kw": w_facts["ilun_kw"],
+                
+                # 사주 원국 및 신살/격국/용신
+                "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
+                "gyukgook_detail": gyukgook_detail, "yongshin_str": yongshin_str,
+                "goshin_gwasook_str": goshin_gwasook_str, "gongmang_actual": i_gong, "year_gongmang": n_gong,
+                "universal_str": universal_str,
+                "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', 0),
+                "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
+                "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
+                "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
+                
+                # 행운(대운/세운/월운/일운) 간지
+                "curr_y": curr_year, "sewun_gan": cur_sewun_gan, "sewun_ji": cur_sewun_ji,
+                "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, "cur_wol_g": cur_wol_g, "cur_wol_j": cur_wol_j,
+                "weekly_ganji_list": weekly_ganji_list, "t_month": curr_m, "t_day": now_dt.day,
+                "m_ilgan": ds, "m_ilji": db, "m_che_first": m_che_first, "am_yong": am_yong,
+                "m_che_second": m_che_second, "pm_yong": pm_yong, "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
+                "sewun_fact_str": f"올해 체용 키워드: [{w_facts['sewun_kw']}]",
+                "wol_fact_str": f"이번달 체용 키워드: [{w_facts['wolun_kw']}]",
+                "dw_fact_str": f"대운 체용 키워드: [{w_facts['dw_kw']}]",
+                
+                # 기타 특화 상담 입력 데이터
+                "ohang_balance_str": f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
+                "weak_health_str": "취약 장기 및 신체 부위 분석 팩트", "health_goal": health_val,
+                "jaeseong_str": "재성 세력 분석 팩트", "wealth_fact_str": "금전 흐름 체용 매트릭스",
+                "career_fact_str": "직업/진학 핵심 십성 분석", "user_query": career_val,
+                "wealth_issue": wealth_val, "u_question": question_val
+            }
+            
+            # 4. 프롬프트 안전 치환
+            class SafeDict(dict):
+                def __missing__(self, key):
+                    return '{' + key + '}'
+            
+            formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
+            
+            # 5. 깔끔한 API 호출 (체인 누더기 덧붙이기 없이 단일 정돈 전달)
+            try:
+                raw_response = call_gemini_api(formatted_prompt, extra_facts, model="gemini-2.5-flash")
+            except TypeError:
+                raw_response = call_gemini_api(formatted_prompt, extra_facts)
+            
+            if raw_response and isinstance(raw_response, str):
+                cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL)
+                cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
+                ai_output_html = html_views.format_ai_text_to_html(cleaned)
             else:
-                st.session_state['base_fact_cache'] = part_1_fact
+                ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            # ==============================================================================
-            # 💡 [정밀 수정] 상품별 전용 프롬프트 완벽 분기 매핑
-            # ==============================================================================
-            extra_facts = {}
-            if "1-1." in u_product:
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-            elif "1-2." in u_product:
-                target_prompt = getattr(prompts, 'SEWUN_PROMPT', "")
-            elif "1-3." in u_product:
-                target_prompt = getattr(prompts, 'WOLWUN_PROMPT', "")
-            elif "1-4." in u_product:
-                target_prompt = getattr(prompts, 'WEEKLY_DAILY_PROMPT', "")
-            elif "1-5." in u_product:
-                target_prompt = getattr(prompts, 'WEALTH_PROMPT', "")
-            elif "1-6." in u_product:
-                target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
-            elif "1-7." in u_product:
-                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
-            elif "1-8." in u_product:
-                target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
-            elif "3-1." in u_product:
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-            else:
-                target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
-
-            ai_output_html = ""
-            if True: 
-                gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
-                
-                ss_unsung_str = (
-                    f"년주:{engine.get_ss(ds, ys)}{engine.get_ss(ds, yb)}({engine.get_unsung(ds, yb)}) / "
-                    f"월주:{engine.get_ss(ds, ms)}{engine.get_ss(ds, mb)}({engine.get_unsung(ds, mb)}) / "
-                    f"일주:{ds}(본인){engine.get_ss(ds, db)}({engine.get_unsung(ds, db)}) / "
-                    f"시주:{engine.get_ss(ds, hs)}{engine.get_ss(ds, hb)}({engine.get_unsung(ds, hb)})"
-                )
-                
-                won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
-                won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
-                if not won_guk_vaults_str:
-                    won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
-                    
-                hap_chung_hyoung_pa_hae = (
-                    f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, "
-                    f"일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
-                )
-                
-                s12_str = engine.get_all_12_shinsal(yb, mb, db, hb)
-                shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
-                shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', s) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
-                
-                try:
-                    current_sewun_base = (curr_year - 1984) % 60
-                    cur_sewun_gan = engine.GAN[current_sewun_base % 10]
-                    cur_sewun_ji = engine.JI[current_sewun_base % 12]
-                except:
-                    cur_sewun_gan, cur_sewun_ji = "", ""
-
-                try:
-                    cur_wol_g, cur_wol_j = engine.get_current_wolun_gan_ji() 
-                except Exception:
-                    cur_wol_g = getattr(engine, 'cur_wol_g', '')
-                    cur_wol_j = getattr(engine, 'cur_wol_j', '')
-
-                yongshin_str = engine.get_yongshin_analysis(counts, mb, ds) if hasattr(engine, 'get_yongshin_analysis') else f"격국: {gyukgook_detail}"
-                goshin_gwasook_str = engine.get_goshin_gwasook(yb, gender) if hasattr(engine, 'get_goshin_gwasook') else "특이 고신/과숙 없음"
-
-                _current_locals = locals()
-                _current_globals = globals()
-                
-                def get_val(*keys):
-                    for k in keys:
-                        if 'st' in _current_globals and hasattr(_current_globals['st'], 'session_state'):
-                            if k in _current_globals['st'].session_state and _current_globals['st'].session_state[k]:
-                                v = str(_current_globals['st'].session_state[k]).strip()
-                                if v: return v
-                        if k in _current_locals and _current_locals[k]:
-                            v = str(_current_locals[k]).strip()
-                            if v: return v
-                        if k in _current_globals and _current_globals[k]:
-                            v = str(_current_globals[k]).strip()
-                            if v: return v
-                    return None
-
-                career_val = get_val('u_career_issue', 'u_job', 'user_query', 'u_question') or "특별히 제시된 고민 내용 없음"
-                wealth_val = get_val('u_wealth_issue', 'u_wealth_goal', 'u_money_issue') or "특별히 제시된 고민 내용 없음"
-                health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
-                question_val = get_val('u_question') or "특별히 제시된 질문 없음"
-
-                universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
-
-                if age < 20:
-                    age_p = f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
-                elif age < 40:
-                    age_p = f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
-                elif age < 60:
-                    age_p = f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
-                else:
-                    age_p = f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
-
-                if gender == "여성":
-                    gender_p = "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
-                else:
-                    gender_p = "남성 내담자(남명)이므로 육친 적용 시 재성(財星)을 배우자/아내로, 관성(官星)을 자식으로 엄격히 적용하십시오."
-
-                yukchin_r = engine.get_yukchin_rule(gender, u_marital)
-
-                now_dt = dt_mod.datetime.now()
-                _, _, d_pillar_today = engine.get_ganji_from_date(now_dt.year, now_dt.month, now_dt.day)
-                i_gan, i_ji = d_pillar_today[0], d_pillar_today[1] 
-                
-                w_facts = engine.get_woonse_analysis_facts(
-                    ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g, cur_wol_j, i_gan, i_ji
-                )
-
-                prompt_data = {
-                    "name": name, "age": age, "gender": gender, "marital": u_marital,
-                    "age_prompt": age_p,
-                    "gender_prompt": gender_p,
-                    "yukchin_rule": yukchin_r,
-                    "woonse_fact_str": w_facts["woonse_fact_str"],
-                    "dw_che": w_facts["dw_che"],
-                    "sewun_kw": w_facts["sewun_kw"],
-                    "wolun_kw": w_facts["wolun_kw"],
-                    "ilun_kw": w_facts["ilun_kw"],
-                    
-                    "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
-                    "gyukgook_detail": gyukgook_detail, 
-                    "yongshin_str": yongshin_str,
-                    "goshin_gwasook_str": goshin_gwasook_str,
-                    "gongmang_actual": i_gong, "year_gongmang": n_gong,
-                    "universal_str": universal_str,
-                    "mok": counts['목'], "hwa": counts['화'], "to": counts['토'], "geum": counts['금'], "su": counts.get('수', counts.get('su', 0)),
-                    "oheng_total": sum(counts.values()), "ss_unsung_str": ss_unsung_str, "won_guk_vaults_str": won_guk_vaults_str,
-                    "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
-                    "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
-                    "curr_y": curr_year,
-                    "sewun_gan": cur_sewun_gan,
-                    "sewun_ji": cur_sewun_ji,
-                    "dw_g_cur": dw_g_cur,
-                    "dw_j_cur": dw_j_cur,
-                    "cur_wol_g": cur_wol_g,
-                    "cur_wol_j": cur_wol_j,
-                    "weekly_ganji_list": weekly_ganji_list,
-                    "t_month": curr_m,
-                    "t_day": dt_mod.datetime.now().day,
-                    "m_ilgan": ds, "m_ilji": db,
-                    "m_che_first": m_che_first, "am_yong": am_yong,
-                    "m_che_second": m_che_second, "pm_yong": pm_yong,
-                    "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
-                    "sewun_fact_str": f"올해 체용 키워드: [{w_facts['sewun_kw']}]",
-                    "wol_fact_str": f"이번달 체용 키워드: [{w_facts['wolun_kw']}]",
-                    "dw_fact_str": f"대운 체용 키워드: [{w_facts['dw_kw']}]",
-                    "ohang_balance_str": f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
-                    "weak_health_str": "취약 장기 및 신체 부위 분석 팩트",
-                    "health_goal": health_val,
-                    "jaeseong_str": "재성 세력 분석 팩트",
-                    "wealth_fact_str": "금전 흐름 체용 매트릭스",
-                    "career_fact_str": "직업/진학 핵심 십성 분석",
-                    "user_query": career_val,
-                    "wealth_issue": wealth_val,
-                    "u_question": question_val
-                }
-                class SafeDict(dict):
-                    def __missing__(self, key):
-                        return '{' + key + '}'
-                
-                formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-                
-                try:
-                    raw_response = call_gemini_api(formatted_prompt, extra_facts, model="gemini-2.5-flash")
-                except TypeError:
-                    raw_response = call_gemini_api(formatted_prompt, extra_facts)
-                
-                if raw_response and isinstance(raw_response, str):
-                    cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                    cleaned = re.sub(r'<!--.*?-->', '', cleaned, flags=re.DOTALL)
-                    cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
-                    
-                    ai_output_html = html_views.format_ai_text_to_html(cleaned)
-                else:
-                    ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
-
+            # 6. VIP 스마트 누적 모드 및 일반 모드 저장 아키텍처
             is_vip_active = st.session_state.get("is_vip_package_val", False) if "1-1." in u_product else False
 
-            if is_vip_active:
-                st.session_state['report_essays'][u_product] = ai_output_html
+            if 'report_essays' not in st.session_state:
+                st.session_state['report_essays'] = {}
+            if 'vip_base_fact' not in st.session_state:
+                st.session_state['vip_base_fact'] = ""
+
+            # 최초 1회 또는 비-VIP 모드일 때 사주 명식/대운 팩트 박스 고정 저장
+            if not st.session_state['vip_base_fact'] or not is_vip_active:
+                st.session_state['vip_base_fact'] = part_1_fact + part_2_intro + part_3_golden
+
+            # 현재 상품의 AI 통변 포장 (1-4번 주간표는 깨짐 방지 예외 적용)
+            if "1-4." in u_product:
+                current_ai_block = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
             else:
-                st.session_state['report_essays'] = {u_product: ai_output_html}
+                cleaned_ai = re.sub(r'>\s+<', '><', ai_output_html.replace('\n', '')).strip() if ai_output_html and 're' in globals() else ai_output_html
+                current_ai_block = f"<div style='margin-top: 20px;'>{cleaned_ai}</div>" if cleaned_ai else ""
+
+            if is_vip_active:
+                st.session_state['report_essays'][u_product] = current_ai_block
+            else:
+                st.session_state['report_essays'] = {u_product: current_ai_block}
+
+            # 표지 단 1회 출력
             st.markdown(cover_html, unsafe_allow_html=True)
 
-            if "3-1." in u_product or u_product == "타 감명서":
-                try:
-                    part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
-                    first_stage_html = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
-                    st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
-                    
-                    other_text_input = st.session_state.get(f"text_{u_product}", "")
-                    
-                    if other_text_input and len(str(other_text_input).strip()) > 0:
-                        u_name_str = name
-                        p_icon_str = p_icon
-                        sol_val = sol_str_fmt
-                        lun_val = lun_str_fmt
-                        time_val = b_time
-                        today_val = today_str
-                        
-                        other_cover_html = html_views.get_comparison_saju_cover(
-                            APP_VERSION, p_icon_str, u_name_str, sol_val, lun_val, time_val, today_val
-                        )
-                        st.markdown(other_cover_html, unsafe_allow_html=True)
-                        
-                        report_2_html = html_views.get_other_report_original_html(other_text_input)
-                        st.markdown(report_2_html, unsafe_allow_html=True)
-                        
-                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            u_name_val = name
-                            u_gender_val = gender
-                            u_age_val = age
-                            u_marital_val = u_marital if 'u_marital' in locals() else (marital if 'marital' in locals() else "미혼")
-                            
-                            b_y = sol_y
-                            b_m = sol_m
-                            b_d = sol_d
-                            b_t = b_time
-                            
-                            g_list = gans
-                            j_list = jjis
-                            pillar_str = f"{g_list[3]}{j_list[3]}년 {g_list[2]}{j_list[2]}월 {g_list[1]}{j_list[1]}일 {g_list[0]}{j_list[0]}시" if len(g_list) >= 4 else ""
-                            calc_daewun = calc_d
+            # 📚 [최종 종합 보고서 조립 및 렌더링]
+            master_composite_report = st.session_state['vip_base_fact']
 
-                            saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세, {u_marital_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
-                            
-                            comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
-                                name=name, age=age, gender=gender, marital=u_marital_val,
-                                full_content_clean=str(locals().get('ai_output_html', '')).strip(),
-                                other_report=str(other_text_input).strip(),
-                                fact_reference=saju_fact_summary
-                            )
-                            
-                            c_res = call_gemini_api(comp_prompt)
-                            
-                            if c_res:
-                                c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
-                                c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
-                                c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
-                                c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
-                                
-                                formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
-                                
-                                section_header_html = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
-                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#000000 !important; margin:0 !important; text-align:center;'>
-                                        📜 타 감명서 1:1 상세 분석
-                                    </h2>
-                                </div>"""
-                                
-                                full_stage3_html = section_header_html + f"<div style='text-align: left !important;'>{formatted_comp}</div>"
-                                st.markdown(html_views.get_final_report_box(full_stage3_html), unsafe_allow_html=True)
-                            else:
-                                st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
-                    else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
-                
-                except Exception as e:
-                    st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
+            for prod_name, essay_block in st.session_state['report_essays'].items():
+                master_composite_report += essay_block
 
-            else:
-                # 💡 [VIP 스마트 누적 아키텍처 적용]
-                is_vip_active = st.session_state.get("is_vip_package_val", False)
-                
-                if 'report_essays' not in st.session_state:
-                    st.session_state['report_essays'] = {}
-                if 'vip_base_fact' not in st.session_state:
-                    st.session_state['vip_base_fact'] = ""
+            master_composite_report += part_5_closing
 
-                # 최초 1회 또는 비-VIP 모드일 때 사주 명식/대운 팩트 박스 고정 저장
-                if not st.session_state['vip_base_fact'] or not is_vip_active:
-                    st.session_state['vip_base_fact'] = part_1_fact + part_2_intro + part_3_golden
-
-                # 현재 상품의 AI 통변 포장 (1-4번은 표 깨짐 방지 압축 예외 처리 적용)
-                if "1-4." in u_product:
-                    current_ai_block = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
-                else:
-                    cleaned_ai = re.sub(r'>\s+<', '><', ai_output_html.replace('\n', '')).strip() if ai_output_html and 're' in globals() else ai_output_html
-                    current_ai_block = f"<div style='margin-top: 20px;'>{cleaned_ai}</div>" if cleaned_ai else ""
-
-                if is_vip_active:
-                    # VIP 모드: 기존 항목은 유지하고 현재 선택한 상품의 통변 내용만 추가/갱신
-                    st.session_state['report_essays'][u_product] = current_ai_block
-                else:
-                    # 일반 모드: 현재 단일 상품만 리셋 저장
-                    st.session_state['report_essays'] = {u_product: current_ai_block}
-
-                # 📚 [최종 종합 보고서 조립 및 렌더링]
-                # 1. 앞단에 웅장한 사주 명식 및 대운·기본 팩트 단 1회 고정 배치
-                master_composite_report = st.session_state['vip_base_fact']
-
-                # 2. 사용자가 가동한 모든 세부 통변 항목들을 아래로 차곡차곡 결합
-                for prod_name, essay_block in st.session_state['report_essays'].items():
-                    master_composite_report += essay_block
-
-                # 3. 마지막에 클로징 맺음말 장착
-                master_composite_report += part_5_closing
-
-                # 4. 최종 완성본 단일 상자에 담아 렌더링 (1-4번 표 깨짐 방지 분기 포함)
-                if "1-4." in u_product:
-                    st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
-                else:
-                    st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
+            # 단일 보고서 상자에 담아 깔끔하게 출력
+            st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
 
     elif any(x in u_product for x in ["2-1", "3-2"]):
         st.markdown("---")
