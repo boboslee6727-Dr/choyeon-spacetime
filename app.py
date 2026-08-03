@@ -828,16 +828,20 @@ if st.session_state.get('app_running', False):
 
             yukchin_r = engine.get_yukchin_rule(gender, u_marital)
 
-            # 5. prompts.py 전용 범용 바인딩 딕셔너리 세팅
+            # ==============================================================================
+            # 5. prompts.py 전용 범용 바인딩 딕셔너리 세팅 (노하우 보안 및 운세풀이 정돈본)
+            # ==============================================================================
             prompt_data = {
-                # 기본 내담자 프로필
+                # 기본 내담자 프로필 및 현실적 맥락
                 "name": name, "age": age, "gender": gender, "marital": u_marital,
                 "age_prompt": age_p, "gender_prompt": gender_p, "yukchin_rule": yukchin_r,
                 
-                # engine.py에서 -30분 시차 및 절기로 완벽 계산된 범용 팩트
-                "woonse_fact_str": w_facts["woonse_fact_str"],
-                "dw_che": w_facts["dw_che"], "sewun_kw": w_facts["sewun_kw"],
-                "wolun_kw": w_facts["wolun_kw"], "ilun_kw": w_facts["ilun_kw"],
+                # engine.py에서 -30분 시차 및 절기로 완벽 계산된 범용 운세 팩트
+                "woonse_fact_str": w_facts.get("woonse_fact_str", ""),
+                "dw_che": w_facts.get("dw_che", "대운 시공간 환경"), 
+                "sewun_kw": w_facts.get("sewun_kw", "올해 운세 파동"),
+                "wolun_kw": w_facts.get("wolun_kw", "이달의 운세 파동"), 
+                "ilun_kw": w_facts.get("ilun_kw", "오늘의 운세 파동"),
                 
                 # 사주 원국 및 신살/격국/용신
                 "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
@@ -850,24 +854,34 @@ if st.session_state.get('app_running', False):
                 "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
                 
                 # 행운(대운/세운/월운/일운) 간지
+                "all_daewun_data": all_daewun_data if 'all_daewun_data' in locals() else "",
                 "curr_y": curr_year, "sewun_gan": cur_sewun_gan, "sewun_ji": cur_sewun_ji,
                 "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, "cur_wol_g": cur_wol_g_val, "cur_wol_j": cur_wol_j_val,
-                "weekly_ganji_list": weekly_ganji_list, "t_month": curr_m, "t_day": now_dt.day,
-                "m_ilgan": ds, "m_ilji": db, "m_che_first": m_che_first, "am_yong": am_yong,
-                "m_che_second": m_che_second, "pm_yong": pm_yong, "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
-                "sewun_fact_str": f"올해 체용 키워드: [{w_facts['sewun_kw']}]",
-                "wol_fact_str": f"이번달 체용 키워드: [{w_facts['wolun_kw']}]",
-                "dw_fact_str": f"대운 체용 키워드: [{w_facts['dw_kw']}]",
+                "weekly_ganji_list": weekly_ganji_list if 'weekly_ganji_list' in locals() else "", 
+                "t_month": curr_m, "t_day": now_dt.day,
+                "m_ilgan": ds, "m_ilji": db, 
+                "m_che_first": m_che_first if 'm_che_first' in locals() else "", 
+                "am_yong": am_yong if 'am_yong' in locals() else "",
+                "m_che_second": m_che_second if 'm_che_second' in locals() else "", 
+                "pm_yong": pm_yong if 'pm_yong' in locals() else "", 
+                "day_wunseong": day_wunseong if 'day_wunseong' in locals() else "", 
+                "day_12shinsal": day_12shinsal if 'day_12shinsal' in locals() else "",
+                "hang_un_vaults_str": "행운 묘고 작용 팩트",
+                
+                # 운세풀이 팩트 요약 (영업비밀 명칭 노출 은닉)
+                "sewun_fact_str": f"올해 운세 키워드: [{w_facts.get('sewun_kw', '')}]",
+                "wol_fact_str": f"이번달 운세 키워드: [{w_facts.get('wolun_kw', '')}]",
+                "dw_fact_str": f"현재 대운 무대: [{w_facts.get('dw_che', '')}]",
                 
                 # 기타 특화 상담 입력 데이터
                 "ohang_balance_str": f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
                 "weak_health_str": "취약 장기 및 신체 부위 분석 팩트", "health_goal": health_val,
-                "jaeseong_str": "재성 세력 분석 팩트", "wealth_fact_str": "금전 흐름 체용 매트릭스",
+                "jaeseong_str": "재성 세력 분석 팩트", "wealth_fact_str": "금전 흐름 운세 매트릭스",
                 "career_fact_str": "직업/진학 핵심 십성 분석", "user_query": career_val,
                 "wealth_issue": wealth_val, "u_question": question_val
             }
             
-            # 6. 프롬프트 안전 치환
+            # 6. 프롬프트 안전 치환 (KeyError 방지)
             class SafeDict(dict):
                 def __missing__(self, key):
                     return '{' + key + '}'
