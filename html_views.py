@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (Pro-Model 듀얼 12신살 2단 정렬 및 가독성 대폭 강화 완결본) ver 7.1
+# html_views.py (Pro-Model 듀얼 12신살 2단 정렬 & 12px 빨간색 완전 통일 최종본) ver 7.2
 # ==============================================================================
 import re
 
@@ -125,6 +125,30 @@ def get_global_css():
     </style>
     """
 
+# ==============================================================================
+# 🎯 [방탄 파서] 년지기준 12신살 및 (일지기준 12신살) 빨간색 12px 2단 정렬 파서
+# ==============================================================================
+def parse_dual_shinsal_html(shinsal_raw):
+    """
+    년지기준 12신살과 일지기준 12신살을 
+    모두 빨간색(#C62828) 12px 굵은 글씨의 위아래 2단 수직 정렬 HTML로 안전 변환합니다.
+    """
+    if not shinsal_raw or str(shinsal_raw).strip() in ["-", "", "None"]:
+        return "<span style='font-size:12px; color:#C62828; font-weight:900;'>-</span>"
+        
+    raw_str = str(shinsal_raw).strip().replace("（", "(").replace("）", ")")
+    
+    if "(" in raw_str:
+        try:
+            parts = raw_str.split("(")
+            y_part = parts[0].strip()
+            d_part = parts[1].replace(")", "").strip()
+            return f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:12px; color:#C62828; font-weight:900;'>({d_part})</span>"
+        except:
+            return f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{raw_str}</span>"
+    else:
+        return f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{raw_str}</span>"
+
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
@@ -203,28 +227,22 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle; padding:0 !important;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none; height:auto;'>{lbl}{''.join(cells)}</tr>"
 
+    unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
+
     gen_shinsals = []
     for i in range(4):
         filtered = engine.get_general_shinsal_filtered(i, gans, jjis, gender)
         gen_shinsals.append("<br>".join(filtered[:6]) if filtered else "-")
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:900; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
 
-    # 🎯 [사주원국표 듀얼 12신살 폰트 확장(12px) 및 위아래 선명 2단 수직 분리 적용]
+    # 🎯 [사주원국표 듀얼 12신살 빨간색 12px 위아래 2단 정렬 적용]
     shinsal_tds = []
     for i in range(4):
         dual_str = engine.get_dual_12_shinsal(yb, db, jjis[i])
-        if "(" in str(dual_str):
-            parts = str(dual_str).split("(")
-            y_part = parts[0].strip()
-            d_part = f"({parts[1].strip()}"
-            cell_content = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
-        else:
-            cell_content = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{dual_str}</span>"
-            
-        shinsal_tds.append(f"<td style='border:1px solid #444 !important; line-height:1.3; padding:3px 0;'>{cell_content}</td>")
+        cell_content = parse_dual_shinsal_html(dual_str)
+        shinsal_tds.append(f"<td style='border:1px solid #444 !important; line-height:1.3; padding:3px 0; vertical-align:middle;'>{cell_content}</td>")
     
     shinsal = "".join(shinsal_tds)
-    unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
 
@@ -316,16 +334,7 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
 
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
-    s_val = shinsal if shinsal and str(shinsal).strip() else "-"
-    
-    # 🎯 [대운 듀얼 12신살 폰트 확장(12px/11px) 및 괄호 분리 출력 보정]
-    if "(" in str(s_val):
-        parts = str(s_val).split("(")
-        y_part = parts[0].strip()
-        d_part = f"({parts[1].strip()}"
-        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
-    else:
-        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val}</span>"
+    s_display = parse_dual_shinsal_html(shinsal)
     
     if is_current:
         active_style = "border: 3px solid #E65100 !important;"
@@ -343,7 +352,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
+        <div class='color-shinsal' style='border-top:1px solid #ccc; min-height:34px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
     </div>
     """
 
@@ -357,16 +366,7 @@ def get_sewun_layout(title, content):
 
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
-    s_val = shinsal if shinsal and str(shinsal).strip() else "-"
-    
-    # 🎯 [세운 듀얼 12신살 폰트 확장 및 괄호 분리 출력 보정]
-    if "(" in str(s_val):
-        parts = str(s_val).split("(")
-        y_part = parts[0].strip()
-        d_part = f"({parts[1].strip()}"
-        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
-    else:
-        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val}</span>"
+    s_display = parse_dual_shinsal_html(shinsal)
     
     if is_current:
         active_style = "border: 3px solid #0277BD !important;"
@@ -386,7 +386,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
+        <div class='color-shinsal' style='border-top:1px solid #ccc; min-height:34px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
     </div>
     """
 
@@ -400,16 +400,7 @@ def get_wolun_layout(title, content):
 
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
-    s_val = shinsal if shinsal and str(shinsal).strip() else "-"
-    
-    # 🎯 [월운 듀얼 12신살 폰트 확장 및 괄호 분리 출력 보정]
-    if "(" in str(s_val):
-        parts = str(s_val).split("(")
-        y_part = parts[0].strip()
-        d_part = f"({parts[1].strip()}"
-        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
-    else:
-        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val}</span>"
+    s_display = parse_dual_shinsal_html(shinsal)
     
     if is_current:
         active_style = "border: 3px solid #2E7D32 !important;"
@@ -427,13 +418,10 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
+        <div class='color-shinsal' style='border-top:1px solid #ccc; min-height:34px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
     </div>
     """
 
-# ==============================================================================
-# [최종 마스터피스] 주간 간지 캘린더 (듀얼 신살 2단 정렬 및 폰트 대폭 가독성 강화)
-# ==============================================================================
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
     content = ""
     
@@ -472,15 +460,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         except:
             pass
             
-        # 🎯 [주간 캘린더 듀얼 12신살 폰트 확장 및 괄호 분리 출력 보정]
-        s_val_str = str(shinsal_val) if shinsal_val and str(shinsal_val).strip() else "-"
-        if "(" in s_val_str:
-            parts = s_val_str.split("(")
-            y_part = parts[0].strip()
-            d_part = f"({parts[1].strip()}"
-            s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
-        else:
-            s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val_str}</span>"
+        s_display = parse_dual_shinsal_html(shinsal_val)
             
         if is_today:
             active_style = "border: 3px solid #2E7D32 !important;"
@@ -510,7 +490,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
             <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
             <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
             <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
+            <div class='color-shinsal' style='border-top:1px solid #ccc; min-height:34px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
         </div>
         """
 
@@ -841,7 +821,7 @@ def format_ai_text_to_html(ai_raw_text):
             "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅",
             "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
             "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子",
-            "기축": "己丑", "경인": "庚寅", "신묘": "辛묘", "임진": "壬辰", "계사": "癸巳",
+            "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
             "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌",
             "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
             "갑진": "甲辰", "을사": "乙巳", "병오": "丙午", "정미": "丁未", "무신": "戊申",
