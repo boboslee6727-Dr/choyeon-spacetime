@@ -577,9 +577,11 @@ if st.session_state.get('app_running', False):
                 j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
                 is_active = (val <= age < val + 10)
                 
-                # 🎯 [보정] 한자 지지(j_hanja) 및 듀얼 12신살(yb, db) 적용
+                # 🎯 [완벽 보정] 년지와 일지 12신살을 각각 정확히 추출하여 딕셔너리에 명확히 장착
                 u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
-                shin_sal_val = engine.get_dual_12_shinsal(yb, db, j_hanja) if j_hanja != "-" else "-"
+                
+                y_shin_val = engine.get_12_shinsal(yb, j_hanja) if j_hanja != "-" else "-"
+                d_shin_val = engine.get_12_shinsal(db, j_hanja) if j_hanja != "-" else "-"
                 
                 daewun_data_list.append({
                     "age_range": f"{val}~{val+9}세",
@@ -589,8 +591,9 @@ if st.session_state.get('app_running', False):
                     "j_hanja": j_hanja,
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
-                    "un_sung": engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-",
-                    "shin_sal": engine.get_dual_12_shinsal(yb, db, j_hanja) if j_hanja != "-" else "-", # 🎯 yb(년지), db(일지) 듀얼 전달
+                    "un_sung": u_sung_val,
+                    "y_shinsal": y_shin_val,  # ⭕ 년지신살 정확히 전달
+                    "d_shinsal": d_shin_val,  # ⭕ 일지신살 정확히 전달 (괄호 렌더링 완료)
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
@@ -627,9 +630,9 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                     tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
                     engine.get_unsung(ds_hanja, tj), 
-                    engine.get_dual_12_shinsal(yb, db, tj), # 🎯 yb(년지), db(일지) 듀얼 전달
-                    bg_col, b_left,
-                    is_cur_yr
+                    engine.get_12_shinsal(yb, tj), 
+                    engine.get_12_shinsal(db, tj), # 🎯 일지신살 추가 전달
+                    bg_col, b_left, is_cur_yr
                 )
                 
             dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
@@ -652,9 +655,9 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
                     wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                     engine.get_unsung(ds_hanja, wj_hanja), 
-                    engine.get_dual_12_shinsal(yb, db, wj_hanja), # 🎯 yb(년지), db(일지) 듀얼 전달
-                    bg_col, b_left,
-                    is_cur_m
+                    engine.get_12_shinsal(yb, wj_hanja), 
+                    engine.get_12_shinsal(db, wj_hanja), # 🎯 일지신살 추가 전달
+                    bg_col, b_left, is_cur_m
                 )
 
             wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
@@ -688,8 +691,8 @@ if st.session_state.get('app_running', False):
                         'is_today': is_today
                     })
                 
-                # 🎯 [주간 캘린더 듀얼 신살 적용] 년지(yb)와 일지(db) 인자 추가 전달
-                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day, yb=yb, db=db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+                # 🎯 [수정] yb(년지)와 db(일지)를 모두 전달하여 주간 캘린더 2단 행 완벽 구현
+                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, t_day, yb=yb, db=db)
 
                 w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
                 weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
@@ -698,16 +701,21 @@ if st.session_state.get('app_running', False):
                 m_che_second = w_d_res.get('m_che_second', m_che_second)
                 pm_yong = w_d_res.get('pm_yong', pm_yong)
                 day_wunseong = w_d_res.get('day_wunseong', day_wunseong)
-                day_12shinsal = w_d_res.get('day_12shinsal', day_12shinsal)
                 
+                # 🚨 [핵심 수정] 단일 day_12shinsal을 버리고, 오늘 일진(today_ji)에 대해 년지/일지 각각 추출
+                today_ji = w_d_res.get('today_ji', '-') # (또는 weekly_ganji_list 등에서 오늘 지지 추출)
+                day_y_shinsal = engine.get_12_shinsal(yb, today_ji) if today_ji != "-" else "-"
+                day_d_shinsal = engine.get_12_shinsal(db, today_ji) if today_ji != "-" else "-"
+                
+                # 🚨 [매개변수 2개로 분리 전달] day_12shinsal 1개 -> day_y_shinsal, day_d_shinsal 2개로 
                 daily_table_html = html_views.generate_weekly_daily_layout(
                     weekly_ganji_list, today_day, ds, db, 
-                    m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, day_12shinsal
+                    m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, 
+                    day_y_shinsal, day_d_shinsal 
                 ) if hasattr(html_views, 'generate_weekly_daily_layout') else ""
 
                 weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
                 weekly_daily_html = weekly_daily_html.replace('\n', '')
-
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
