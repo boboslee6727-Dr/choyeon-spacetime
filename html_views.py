@@ -208,14 +208,15 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important; vertical-align: middle; padding:0 !important;'>합충형파해</td>" if l_idx == 0 else ""
         ji_rel_rows += f"<tr style='border:none; height:auto;'>{lbl}{''.join(cells)}</tr>"
 
-    unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-    shinsal = "".join([f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important;'>{engine.get_12_shinsal(yb, jjis[i])}</td>" for i in range(4)])
-    
     gen_shinsals = []
     for i in range(4):
         filtered = engine.get_general_shinsal_filtered(i, gans, jjis, gender)
         gen_shinsals.append("<br>".join(filtered[:6]) if filtered else "-")
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:900; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
+
+    # 🎯 [듀얼 12신살 적용: 년지기준(yb) + 일지기준(db) 병기]
+    shinsal = "".join([f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important; font-size:11px;'>{engine.get_dual_12_shinsal(yb, db, jjis[i])}</td>" for i in range(4)])
+    unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
 
@@ -325,7 +326,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
 
@@ -359,7 +360,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
 
@@ -391,7 +392,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
     </div>
     """
 
@@ -401,7 +402,6 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
 def generate_weekly_calendar_html(weekly_days_data, today_day):
     content = ""
     
-    # 기존 대운표에서 쓰던 CSS 클래스 호출 방식
     def get_oh_class_local(char):
         try:
             import engine
@@ -425,14 +425,13 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
         ss_val, unsung_val, shinsal_val = "-", "-", "-"
         try:
             import engine
-            # 엔진을 통한 안전한 십성/12운성 추출
             ss_val = engine.get_ss("甲", ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung("甲", ji_char) if ji_char != "-" else "-"
+            # 주간 캘린더 등에서도 필요시 get_dual_12_shinsal 적용 가능 (현재는 단일 또는 필요에 맞게 연동)
             shinsal_val = engine.get_12_shinsal("子", ji_char) if ji_char != "-" else "-"
         except:
             pass
             
-        # 기존 대운/월운 방식의 헤더 및 백그라운드 컬러 세팅
         if is_today:
             active_style = "border: 3px solid #2E7D32 !important;"
             header_bg = "#2E7D32"
@@ -453,7 +452,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
         u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
         s_val = f"<span style='color:#C62828;'>{shinsal_val}</span>" if shinsal_val != "-" else "-"
         
-        # get_sewun_cell 과 완벽하게 동일한 HTML Flexbox 구조
         content += f"""
         <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
             <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:28px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
@@ -463,11 +461,10 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
             <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
             <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
             <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{s_val}</div>
+            <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{s_val}</div>
         </div>
         """
 
-    # get_sewun_layout 과 완벽하게 동일한 컨테이너 구조 (가로 배열 flex-direction: row)
     layout = f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:16px; font-weight:900; color:#3E2723; font-family:"Nanum Gothic", sans-serif;'>📅 이번 주 간지 흐름 (일요일 ~ 토요일)</div>
     <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
