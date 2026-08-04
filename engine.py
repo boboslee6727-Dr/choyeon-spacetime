@@ -1023,9 +1023,9 @@ def get_weekly_daily_facts(ds, db, yb, year, month, day):
     _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
     i_gan, i_ji = d_pillar[0], d_pillar[1]
     
-    # 지정일 12운성 및 12신살
+    # 지정일 12운성 및 듀얼 12신살 (년지+일지)
     day_wunseong = get_unsung(ds, i_ji)
-    day_12shinsal = get_12_shinsal(yb, i_ji)
+    day_12shinsal = get_dual_12_shinsal(yb, db, i_ji)  # 🎯 듀얼 신살(yb, db)로 교체
     
     # 오전/오후 체용 구분을 위한 간지 파동
     ilju_lower_group = get_group_ss(get_ss(ds, db))
