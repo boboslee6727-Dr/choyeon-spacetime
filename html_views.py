@@ -451,15 +451,15 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         
         content += f"""
         <div style='flex:1; width:14.28%; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
-            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:28px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
+            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:16px; height:28px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
                 {day_num}일 ({wday})
             </div>
-            <div style='font-size:11px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_val}</div>
-            <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
-            <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
-            <div class='color-unsung' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{y_val}</div>
-            <div class='color-shinsal-day' style='font-size:11px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
+            <div style='font-size:12px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_val}</div>
+            <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
+            <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
+            <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
+            <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{y_val}</div>
+            <div class='color-shinsal-day' style='font-size:12px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
         </div>
         """
 
