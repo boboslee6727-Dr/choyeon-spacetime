@@ -23,7 +23,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 70.5 Master"
+APP_VERSION = "ver 71.0 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용 (html_views 모듈 호출)
@@ -105,6 +105,23 @@ with st.sidebar:
         <hr style="margin: 10px 0 15px 0;">
     """, unsafe_allow_html=True)
 
+    # --------------------------------------------------------------------------
+    # 📅 [수정/추가] 운세 분석 기준 시점 선택 (달력 위젯)
+    # --------------------------------------------------------------------------
+    st.markdown("<div style='font-size: 15px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📅 분석 기준 시점 선택</div>", unsafe_allow_html=True)
+    kst_tz = pytz.timezone('Asia/Seoul')
+    default_date_today = dt_mod.datetime.now(kst_tz).date()
+    
+    selected_target_date = st.date_input(
+        "조회할 연/월/일 선택",
+        value=st.session_state.get("target_calc_date", default_date_today),
+        key="target_calc_date",
+        help="기본값은 오늘 날짜이며, 원하는 특정 연/월/일을 선택하여 시뮬레이션할 수 있습니다.",
+        on_change=stop_ai
+    )
+    st.caption(f"💡 현재 지정 기준일: **{selected_target_date.year}년 {selected_target_date.month}월 {selected_target_date.day}일**")
+    st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
+
     st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
     main_category = st.selectbox("어떤 상담을 원하십니까?", ["1. 개인 사주팔자 풀이", "2. 커플 연애/결혼운 (궁합) 풀이", "3. 타 감명서 비교"], key="main_category", on_change=stop_ai)
@@ -116,13 +133,14 @@ with st.sidebar:
             "상세 분석 항목:", 
             [
                 "1-1. 사주팔자 및 대운 분석", 
-                "1-2. 올 해의 운세 상세 분석", 
-                "1-3. 이번 달의 운세 상세 분석", 
-                "1-4. 주간 및 오늘의 일운(일진) 분석", 
+                "1-2. 올해 및 특정연도 운세 상세분석", 
+                "1-3. 이번 달 및 특정월 운세 상세분석", 
+                "1-4. 특정 주간 및 특정일운 상세분석", 
                 "1-5. 재물운 특화 분석", 
                 "1-6. 직업/진학운 특화 분석", 
-                "1-7. 건강운 특화 분석", 
-                "1-8. 이사 및 방위 특화 분석"
+                "1-7. 연애운 특화 분석",
+                "1-8. 건강운 특화 분석", 
+                "1-9. 이사 및 방위 특화 분석"
             ], 
             key="sub_category_1", 
             on_change=stop_ai
@@ -262,21 +280,20 @@ with st.sidebar:
         )
         
         if "1-4." in u_product:
-            kst_tz = pytz.timezone('Asia/Seoul')
-            today_kst_date = dt_mod.datetime.now(kst_tz).date()
-            
             daily_calc_date = st.date_input(
                 "일운 분석 기준일 선택", 
-                value=st.session_state.get("daily_calc_date", today_kst_date), 
+                value=selected_target_date, 
                 key="daily_calc_date"
             )
         elif "1-5." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "1-6." in u_product: 
             career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal")
-        elif "1-7." in u_product: 
+        elif "1-7." in u_product:
+            love_goal = st.text_input("고민되는 연애/이성 문제는?", key="love_goal")
+        elif "1-8." in u_product: 
             health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
-        elif "1-8." in u_product:
+        elif "1-9." in u_product:
             moving_date = st.date_input("이사 희망일", key="moving_date")
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
 
@@ -432,7 +449,7 @@ with st.sidebar:
     u_mo = st.session_state.get('s_m', "")
     u_d = st.session_state.get('s_d', "")
     
-    current_user_key = f"{main_category}_{u_n}_{u_g}_{u_m}_{u_y}_{u_mo}_{u_d}"
+    current_user_key = f"{main_category}_{u_n}_{u_g}_{u_m}_{u_y}_{u_mo}_{u_d}_{selected_target_date}"
     
     if st.session_state.get('user_key') != current_user_key:
         st.session_state['user_key'] = current_user_key
@@ -469,11 +486,16 @@ if st.session_state.get('app_running', False):
             lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
             leap_str = "윤달" if klc.isIntercalation else "평달"
             
-        curr_year = dt_mod.datetime.now().year
-        curr_m = dt_mod.datetime.now().month
+        # ----------------------------------------------------------------------
+        # 🗓️ [수정/연동] 선택된 분석 기준 날짜 오버라이딩 적용
+        # ----------------------------------------------------------------------
+        curr_year = selected_target_date.year
+        curr_m = selected_target_date.month
+        curr_d = selected_target_date.day
+        
         age = curr_year - sol_y + 1
         p_icon = "♂️" if gender == "남성" else "♀️"
-        today_str = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+        today_str = selected_target_date.strftime("%Y년 %m월 %d일")
 
         def extract_time(time_str):
             if "모름" in time_str: return 0, 0
@@ -639,13 +661,11 @@ if st.session_state.get('app_running', False):
             day_wunseong, day_12shinsal = "건록", "망신살"
 
             if "1-4." in u_product:
-                kst_tz = pytz.timezone('Asia/Seoul')
-                now_dt = dt_mod.datetime.now(kst_tz)
+                target_dt_obj = dt_mod.datetime(curr_year, curr_m, curr_d)
+                today_day = curr_d
                 
-                today_day = now_dt.day
-                
-                idx_from_sun = (now_dt.weekday() + 1) % 7
-                sunday_dt = now_dt - dt_mod.timedelta(days=idx_from_sun)
+                idx_from_sun = (target_dt_obj.weekday() + 1) % 7
+                sunday_dt = target_dt_obj - dt_mod.timedelta(days=idx_from_sun)
                 
                 weekdays_str = ['일', '월', '화', '수', '목', '금', '토']
                 weekly_days_data = []
@@ -654,7 +674,7 @@ if st.session_state.get('app_running', False):
                     target_dt = sunday_dt + dt_mod.timedelta(days=i)
                     _, _, d_pillar = engine.get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day) if hasattr(engine, 'get_ganji_from_date') else ("", "", ("",""))
                     ganji_str = f"{d_pillar[0]}{d_pillar[1]}" if d_pillar and len(d_pillar)>=2 else "-"
-                    is_today = (target_dt.date() == now_dt.date())
+                    is_today = (target_dt.date() == target_dt_obj.date())
                     
                     weekly_days_data.append({
                         'day': target_dt.day,
@@ -709,15 +729,14 @@ if st.session_state.get('app_running', False):
                 st.session_state['base_fact_cache'] = part_1_fact
 
             # ==============================================================================
-            # 💡 [범용 완전 정돈본] 변수선언 안전확보 ➔ engine.py 5x5 연산 ➔ prompts.py
+            # 💡 [범용 완전 정돈본] 선택한 기준 날짜 연동 ➔ engine.py 5x5 연산 ➔ prompts.py
             # ==============================================================================
             
-            # 1. 오늘 기준 KST 날짜 및 동경시차(-30분) 반영 일간/일지 안전 추출
-            now_dt = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
-            _, _, d_pillar_today = engine.get_ganji_from_date(now_dt.year, now_dt.month, now_dt.day)
-            i_gan, i_ji = d_pillar_today[0], d_pillar_today[1]
+            # 1. 선택된 기준 날짜(curr_year, curr_m, curr_d) 기준 일간/일지 안전 추출
+            _, _, d_pillar_target = engine.get_ganji_from_date(curr_year, curr_m, curr_d)
+            i_gan, i_ji = d_pillar_target[0], d_pillar_target[1]
 
-            # 2. 올해 세운 및 현재 월운 간지 안전 확보 (순서 역전 방지)
+            # 2. 선택된 연도/월 세운 및 월운 간지 안전 확보
             try:
                 current_sewun_base = (curr_year - 1984) % 60
                 c_s_g = engine.GAN[current_sewun_base % 10]
@@ -725,23 +744,24 @@ if st.session_state.get('app_running', False):
             except:
                 c_s_g, c_s_j = "丙", "午"
 
-            cur_sewun_gan = locals().get('cur_sewun_gan', c_s_g)
-            cur_sewun_ji = locals().get('cur_sewun_ji', c_s_j)
+            cur_sewun_gan = c_s_g
+            cur_sewun_ji = c_s_j
             
             try:
-                c_w_g, c_w_j = engine.get_current_wolun_gan_ji()
+                _, m_p_target, _ = engine.get_true_year_month_pillar(curr_year, curr_m, curr_d, 12, 0)
+                c_w_g, c_w_j = m_p_target[0], m_p_target[1]
             except:
                 c_w_g, c_w_j = "乙", "未"
 
-            cur_wol_g_val = locals().get('cur_wol_g', c_w_g)
-            cur_wol_j_val = locals().get('cur_wol_j', c_w_j)
+            cur_wol_g_val = c_w_g
+            cur_wol_j_val = c_w_j
 
-            # 3. engine.py에서 -30분 동경시차 및 Ephem 절기가 정밀 반영된 범용 5x5 체용 팩트 연산
+            # 3. engine.py 5x5 체용 팩트 연산 (선택 날짜 반영)
             w_facts = engine.get_woonse_analysis_facts(
                 ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g_val, cur_wol_j_val, i_gan, i_ji
             )
 
-            # 4. 상품별 프롬프트 분기 정의
+            # 4. 상품별 프롬프트 분기 정의 (신규 1-7 연애운 매핑 포함)
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -756,8 +776,10 @@ if st.session_state.get('app_running', False):
             elif "1-6." in u_product:
                 target_prompt = getattr(prompts, 'CAREER_PROMPT', "")
             elif "1-7." in u_product:
-                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
+                target_prompt = getattr(prompts, 'LOVE_PROMPT', getattr(prompts, 'PERSONAL_SAJU_PROMPT', ""))
             elif "1-8." in u_product:
+                target_prompt = getattr(prompts, 'HEALTH_PROMPT', "")
+            elif "1-9." in u_product:
                 target_prompt = getattr(prompts, 'MOVING_DIRECTION_PROMPT', "")
             else:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -805,9 +827,10 @@ if st.session_state.get('app_running', False):
                         if v: return v
                 return None
 
-            career_val = get_val('u_career_issue', 'u_job', 'user_query', 'u_question') or "특별히 제시된 고민 내용 없음"
-            wealth_val = get_val('u_wealth_issue', 'u_wealth_goal', 'u_money_issue') or "특별히 제시된 고민 내용 없음"
-            health_val = get_val('u_health_goal') or "전반적인 건강 체질 관리"
+            career_val = get_val('u_career_issue', 'u_job', 'career_goal', 'u_question') or "특별히 제시된 고민 내용 없음"
+            wealth_val = get_val('u_wealth_issue', 'wealth_goal', 'u_money_issue') or "특별히 제시된 고민 내용 없음"
+            health_val = get_val('u_health_goal', 'health_goal') or "전반적인 건강 체질 관리"
+            love_val = get_val('love_goal', 'u_love_issue') or "전반적인 이성/애정운 흐름"
             question_val = get_val('u_question') or "특별히 제시된 질문 없음"
 
             universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
@@ -829,14 +852,14 @@ if st.session_state.get('app_running', False):
             yukchin_r = engine.get_yukchin_rule(gender, u_marital)
 
             # ==============================================================================
-            # 5. prompts.py 전용 범용 바인딩 딕셔너리 세팅 (노하우 보안 및 운세풀이 정돈본)
+            # 5. prompts.py 전용 범용 바인딩 딕셔너리 세팅 (선택된 연/월/일 파라미터 전달)
             # ==============================================================================
             prompt_data = {
                 # 기본 내담자 프로필 및 현실적 맥락
                 "name": name, "age": age, "gender": gender, "marital": u_marital,
                 "age_prompt": age_p, "gender_prompt": gender_p, "yukchin_rule": yukchin_r,
                 
-                # engine.py에서 -30분 시차 및 절기로 완벽 계산된 범용 운세 팩트
+                # engine.py 5x5 범용 운세 팩트
                 "woonse_fact_str": w_facts.get("woonse_fact_str", ""),
                 "dw_che": w_facts.get("dw_che", "대운 시공간 환경"), 
                 "sewun_kw": w_facts.get("sewun_kw", "올해 운세 파동"),
@@ -853,12 +876,12 @@ if st.session_state.get('app_running', False):
                 "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
                 "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
                 
-                # 행운(대운/세운/월운/일운) 간지
+                # 선택된 기준 날짜(연/월/일) 파라미터
                 "all_daewun_data": all_daewun_data if 'all_daewun_data' in locals() else "",
                 "curr_y": curr_year, "sewun_gan": cur_sewun_gan, "sewun_ji": cur_sewun_ji,
                 "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, "cur_wol_g": cur_wol_g_val, "cur_wol_j": cur_wol_j_val,
                 "weekly_ganji_list": weekly_ganji_list if 'weekly_ganji_list' in locals() else "", 
-                "t_month": curr_m, "t_day": now_dt.day,
+                "t_month": curr_m, "t_day": curr_d,
                 "m_ilgan": ds, "m_ilji": db, 
                 "m_che_first": m_che_first if 'm_che_first' in locals() else "", 
                 "am_yong": am_yong if 'am_yong' in locals() else "",
@@ -868,9 +891,9 @@ if st.session_state.get('app_running', False):
                 "day_12shinsal": day_12shinsal if 'day_12shinsal' in locals() else "",
                 "hang_un_vaults_str": "행운 묘고 작용 팩트",
                 
-                # 운세풀이 팩트 요약 (영업비밀 명칭 노출 은닉)
-                "sewun_fact_str": f"올해 운세 키워드: [{w_facts.get('sewun_kw', '')}]",
-                "wol_fact_str": f"이번달 운세 키워드: [{w_facts.get('wolun_kw', '')}]",
+                # 운세풀이 팩트 요약
+                "sewun_fact_str": f"지정 연도({curr_year}년) 운세 키워드: [{w_facts.get('sewun_kw', '')}]",
+                "wol_fact_str": f"지정 월({curr_m}월) 운세 키워드: [{w_facts.get('wolun_kw', '')}]",
                 "dw_fact_str": f"현재 대운 무대: [{w_facts.get('dw_che', '')}]",
                 
                 # 기타 특화 상담 입력 데이터
@@ -878,6 +901,7 @@ if st.session_state.get('app_running', False):
                 "weak_health_str": "취약 장기 및 신체 부위 분석 팩트", "health_goal": health_val,
                 "jaeseong_str": "재성 세력 분석 팩트", "wealth_fact_str": "금전 흐름 운세 매트릭스",
                 "career_fact_str": "직업/진학 핵심 십성 분석", "user_query": career_val,
+                "love_issue": love_val,
                 "wealth_issue": wealth_val, "u_question": question_val
             }
             
@@ -1018,7 +1042,7 @@ if st.session_state.get('app_running', False):
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
             try:
                 user_gender = st.session_state.get("u_g", gender)
-                curr_y = dt_mod.datetime.now().year
+                curr_y = selected_target_date.year
                 m_age = curr_y - int(b_year) + 1
                 p_age = curr_y - int(f_y) + 1
                 
@@ -1085,7 +1109,7 @@ if st.session_state.get('app_running', False):
                 cover_html = html_views.get_gunghap_cover(
                     APP_VERSION, male_name, male_age, male_sol, male_lun, male_time,  
                     female_name, female_age, female_sol, female_lun, female_time, 
-                    dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                    selected_target_date.strftime("%Y년 %m월 %d일")
                 )
                 
                 intro_h = html_views.get_intro_html() 
@@ -1106,8 +1130,8 @@ if st.session_state.get('app_running', False):
 
                 s_gan = cur_sewun_gan if 'cur_sewun_gan' in locals() else "丙"
                 s_ji = cur_sewun_ji if 'cur_sewun_ji' in locals() else "午"
-                w_gan = cur_wol_g if 'cur_wol_g' in locals() else "壬"
-                w_ji = cur_wol_j if 'cur_wol_j' in locals() else "寅"
+                w_gan = cur_wol_g_val if 'cur_wol_g_val' in locals() else "壬"
+                w_ji = cur_wol_j_val if 'cur_wol_j_val' in locals() else "寅"
                 
                 male_pillars = [f"{m_ys}{m_yb}", f"{m_ms}{m_mb}", f"{m_ds}{m_db}", f"{m_hs}{m_hb}"]
                 female_pillars = [f"{f_ys}{f_yb}", f"{f_ms}{f_mb}", f"{f_ds}{f_db}", f"{f_hs}{f_hb}"]
@@ -1202,7 +1226,7 @@ if st.session_state.get('app_running', False):
                     other_text_input = st.session_state.get(f"text_{u_product}", "")
                     
                     if other_text_input and len(str(other_text_input).strip()) > 0:
-                        today_val = dt_mod.datetime.now().strftime("%Y년 %m월 %d일")
+                        today_val = selected_target_date.strftime("%Y년 %m월 %d일")
                         
                         gunghap_other_cover = html_views.get_comparison_gunghap_cover(
                             APP_VERSION, male_name, male_age, male_sol, male_lun, male_time,  
