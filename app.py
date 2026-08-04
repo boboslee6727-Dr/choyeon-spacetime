@@ -589,8 +589,8 @@ if st.session_state.get('app_running', False):
                     "j_hanja": j_hanja,
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
-                    "un_sung": u_sung_val,
-                    "shin_sal": shin_sal_val,
+                    "un_sung": engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-",
+                    "shin_sal": engine.get_dual_12_shinsal(yb, db, j_hanja) if j_hanja != "-" else "-", # 🎯 yb(년지), db(일지) 듀얼 전달
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
@@ -627,7 +627,7 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                     tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
                     engine.get_unsung(ds_hanja, tj), 
-                    engine.get_dual_12_shinsal(yb, db, tj),  # 🎯 듀얼 12신살(yb, db) 연동
+                    engine.get_dual_12_shinsal(yb, db, tj), # 🎯 yb(년지), db(일지) 듀얼 전달
                     bg_col, b_left,
                     is_cur_yr
                 )
@@ -652,7 +652,7 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
                     wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                     engine.get_unsung(ds_hanja, wj_hanja), 
-                    engine.get_dual_12_shinsal(yb, db, wj_hanja),  # 🎯 듀얼 12신살(yb, db) 연동
+                    engine.get_dual_12_shinsal(yb, db, wj_hanja), # 🎯 yb(년지), db(일지) 듀얼 전달
                     bg_col, b_left,
                     is_cur_m
                 )
