@@ -585,7 +585,7 @@ if st.session_state.get('app_running', False):
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
                     "un_sung": engine.get_unsung(ds_hanja, j_hangul),
-                    "shin_sal": engine.get_12_shinsal(yb, j_hangul),
+                    "shin_sal": engine.get_dual_12_shinsal(yb, db, j_hangul),  # 🎯 [듀얼 12신살 연동]
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
@@ -622,7 +622,7 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                     tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
                     engine.get_unsung(ds_hanja, tj), 
-                    engine.get_12_shinsal(yb, tj), 
+                    engine.get_dual_12_shinsal(yb, db, tj),  # 🎯 [듀얼 12신살 연동]
                     bg_col, b_left,
                     is_cur_yr
                 )
@@ -647,7 +647,7 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
                     wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                     engine.get_unsung(ds_hanja, wj_hanja), 
-                    engine.get_12_shinsal(yb, wj_hanja), 
+                    engine.get_dual_12_shinsal(yb, db, wj_hanja),  # 🎯 [듀얼 12신살 연동]
                     bg_col, b_left,
                     is_cur_m
                 )
@@ -683,7 +683,7 @@ if st.session_state.get('app_running', False):
                         'is_today': is_today
                     })
                 
-                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day, yb=yb, db=db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
 
                 w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
                 weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
