@@ -544,46 +544,33 @@ def get_unsung(dg, ji):
         return unsung_names[idx]
     return "-"
 
-def get_12_shinsal(year_ji, target_ji):
+# ==============================================================================
+# 🎯 [듀얼 12신살 연산 모듈 - 년지 기준(환경) & 일지 기준(내면·심리)]
+# ==============================================================================
+def get_dual_12_shinsal(yb, db, target_ji):
     """
-    년지(year_ji)의 삼합(三合) 생지/묘고 궤도를 기준으로 
-    대상 지지(target_ji)의 12신살(겁·재·천·지·년·월·망·장·반·역·육·화)을 정밀 연산합니다.
-    (한글/한자 혼용 완벽 수용 및 예외 완벽 방어)
+    년지(yb) 기준 신살과 일지(db) 기준 신살을 동시에 연산하여
+    '년지신살 (일지신살)' 형태로 깔끔하게 결합하여 반환합니다.
     """
-    yj_h = _to_hanja(year_ji)
-    tj_h = _to_hanja(target_ji)
-    
-    if not yj_h or not tj_h: return "-"
-    
-    ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-    
-    if yj_h not in ji_list or tj_h not in ji_list: return "-"
-    
     try:
-        t_idx = ji_list.index(tj_h)
+        y_shinsal = get_12_shinsal(yb, target_ji)  # 년지 기준 (사회적 환경)
+        d_shinsal = get_12_shinsal(db, target_ji)  # 일지 기준 (내면 및 실전 파동)
         
-        # 년지 삼합 그룹별 12신살 첫 번째 [겁살(劫殺)] 발동 지지 매핑
-        # 신자진(申子辰) 수국 ➔ 巳시작 / 인오술(寅午戌) 화국 ➔ 亥시작
-        # 사유축(巳酉丑) 금국 ➔ 寅시작 / 해묘미(亥卯未) 목국 ➔ 申시작
-        s_map = {
-            "申": "巳", "子": "巳", "辰": "巳",
-            "寅": "亥", "午": "亥", "戌": "亥",
-            "巳": "寅", "酉": "寅", "丑": "寅",
-            "亥": "申", "卯": "申", "未": "申"
-        }
+        if not y_shinsal or y_shinsal == "-": y_shinsal = "-"
+        if not d_shinsal or d_shinsal == "-": d_shinsal = "-"
         
-        s_start = s_map.get(yj_h, "巳")
-        s_start_idx = ji_list.index(s_start)
-        
-        # 시계 방향 정순(順行) 12신살 순환 오프셋 연산
-        s_idx = (t_idx - s_start_idx + 12) % 12
-        shinsal_names = [
-            "겁살", "재살", "천살", "지살", "년살", "월살", 
-            "망신살", "장성살", "반안살", "역마살", "육해살", "화개살"
-        ]
-        return shinsal_names[s_idx]
+        # 만약 두 신살이 완벽히 동일하면 중복 표기 방지
+        if y_shinsal == d_shinsal:
+            return f"{y_shinsal}"
+        else:
+            return f"{y_shinsal} ({d_shinsal})"
     except Exception:
         return "-"
+
+def get_all_dual_12_shinsal(yb, db, target_list):
+    """원국 4주(년/월/일/시) 또는 행운 리스트 전체에 대한 듀얼 신살 일괄 추출"""
+    results = [get_dual_12_shinsal(yb, db, t_ji) for t_ji in target_list]
+    return results
 
 def get_all_12_shinsal(yb, mb, db, hb):
     """
@@ -600,6 +587,17 @@ def get_all_12_shinsal(yb, mb, db, hb):
         return ", ".join(results)
     except Exception:
         return "년지 기준 12신살 연산 보정 완료"
+
+def get_all_dual_12_shinsal(yb, db, jjis):
+    """
+    [신규 추가] 년지(yb)와 일지(db)를 교차하여 원국 지지 전체의 
+    듀얼 12신살('년지신살 (일지신살)') 리스트를 일괄 추출합니다.
+    """
+    try:
+        results = [get_dual_12_shinsal(yb, db, j) for j in jjis]
+        return results
+    except Exception:
+        return ["-", "-", "-", "-"]
 
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
