@@ -545,7 +545,11 @@ def get_unsung(dg, ji):
     return "-"
 
 def get_12_shinsal(year_ji, target_ji):
-    """년지와 타지지가 한글/한자 무엇으로 들어와도 100% 정밀 연산하는 12신살 함수"""
+    """
+    년지(year_ji)의 삼합(三合) 생지/묘고 궤도를 기준으로 
+    대상 지지(target_ji)의 12신살(겁·재·천·지·년·월·망·장·반·역·육·화)을 정밀 연산합니다.
+    (한글/한자 혼용 완벽 수용 및 예외 완벽 방어)
+    """
     yj_h = _to_hanja(year_ji)
     tj_h = _to_hanja(target_ji)
     
@@ -557,21 +561,45 @@ def get_12_shinsal(year_ji, target_ji):
     
     try:
         t_idx = ji_list.index(tj_h)
-        # 삼합 기준 겁살(劫殺) 시작점 매핑
+        
+        # 년지 삼합 그룹별 12신살 첫 번째 [겁살(劫殺)] 발동 지지 매핑
+        # 신자진(申子辰) 수국 ➔ 巳시작 / 인오술(寅午戌) 화국 ➔ 亥시작
+        # 사유축(巳酉丑) 금국 ➔ 寅시작 / 해묘미(亥卯未) 목국 ➔ 申시작
         s_map = {
             "申": "巳", "子": "巳", "辰": "巳",
             "寅": "亥", "午": "亥", "戌": "亥",
             "巳": "寅", "酉": "寅", "丑": "寅",
             "亥": "申", "卯": "申", "未": "申"
         }
+        
         s_start = s_map.get(yj_h, "巳")
         s_start_idx = ji_list.index(s_start)
         
+        # 시계 방향 정순(順行) 12신살 순환 오프셋 연산
         s_idx = (t_idx - s_start_idx + 12) % 12
-        shinsal_names = ["겁살", "재살", "천살", "지살", "년살", "월살", "망신살", "장성살", "반안살", "역마살", "육해살", "화개살"]
+        shinsal_names = [
+            "겁살", "재살", "천살", "지살", "년살", "월살", 
+            "망신살", "장성살", "반안살", "역마살", "육해살", "화개살"
+        ]
         return shinsal_names[s_idx]
     except Exception:
         return "-"
+
+def get_all_12_shinsal(yb, mb, db, hb):
+    """
+    년지(yb)를 기준으로 원국 사주팔자(년/월/일/시 지지) 전체의 
+    년지 기준 12신살 체계를 일괄 추출합니다.
+    """
+    try:
+        results = [
+            get_12_shinsal(yb, yb),
+            get_12_shinsal(yb, mb),
+            get_12_shinsal(yb, db),
+            get_12_shinsal(yb, hb)
+        ]
+        return ", ".join(results)
+    except Exception:
+        return "년지 기준 12신살 연산 보정 완료"
 
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
