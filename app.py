@@ -692,8 +692,8 @@ if st.session_state.get('app_running', False):
                         'is_today': is_today
                     })
                 
-                # 🎯 [수정] yb(년지)와 db(일지)를 모두 전달하여 주간 캘린더 2단 행 완벽 구현
-                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, t_day, yb=yb, db=db)
+                # 🎯 [최종 보정] t_day를 올바른 변수명인 today_day로 교체
+                weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day, yb=yb, db=db)
 
                 w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
                 weekly_ganji_list = w_d_res.get('weekly_ganji_list', weekly_ganji_list)
