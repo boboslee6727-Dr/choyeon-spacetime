@@ -268,10 +268,15 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
     for data in daewun_list:
         bg_col = "#FFF9C4" if data.get("is_current", False) else "transparent"
         b_left = "none" if data.get("is_first", False) else "1px solid #ccc"
+        
+        # 🎯 [완벽 보정] shin_sal과 y_shinSal 키 모두를 안전하게 호환하도록 수정
+        y_s_val = data.get("y_shinsal", data.get("shin_sal", "-"))
+        d_s_val = data.get("d_shinsal", "-")
+        
         un_content += get_un_cell(
             data["age_range"], data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
-            data["un_sung"], data.get("shin_sal", "-"), data.get("d_shinsal", "-"), bg_col, b_left, data.get("is_current", False)
+            data["un_sung"], y_s_val, d_s_val, bg_col, b_left, data.get("is_current", False)
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
