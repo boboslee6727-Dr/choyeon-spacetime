@@ -717,6 +717,7 @@ if st.session_state.get('app_running', False):
 
                 weekly_daily_html = str(weekly_calendar_html) + str(daily_table_html)
                 weekly_daily_html = weekly_daily_html.replace('\n', '')
+
             choyeon_db = load_choyeon_db()
             w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{d_pillar[1]}".strip() if 'd_pillar' in locals() and len(d_pillar)>=2 else f"{ds}{db}".strip()
             w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
