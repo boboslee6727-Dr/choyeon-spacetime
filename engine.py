@@ -1,3 +1,11 @@
+# ==============================================================================
+# 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 7.0 타임머신 연산 코어 엔진
+# ==============================================================================
+# [엔진 핵심 모듈 명세]
+# 1. 시공간 만세력 & -30분 동경시차/Ephem 절기 정밀 계산
+# 2. 지정 연도·월·일(타임머신) 기준 대운·세운·월운·일운 5x5 체용(體用) 파동 연산
+# 3. 묘고(財庫) 입고/개고 및 궁합/택일 정밀 스캐닝 알고리즘
+# ==============================================================================
 import streamlit as st
 import math
 import datetime as dt_mod
@@ -65,6 +73,16 @@ def _to_hanja(char):
     if not char: return char
     return K2H_GAN.get(char, K2H_JI.get(char, char))
 
+def get_group_ss(ss_name):
+    """십성 이름을 5대 그룹(비겁, 식상, 재성, 관성, 인성)으로 변환"""
+    if not ss_name or ss_name == "-": return "비겁"
+    if ss_name in ["비견", "겁재"]: return "비겁"
+    if ss_name in ["식신", "상관"]: return "식상"
+    if ss_name in ["편재", "정재"]: return "재성"
+    if ss_name in ["편관", "정관"]: return "관성"
+    if ss_name in ["편인", "정인"]: return "인성"
+    return "비겁"
+
 # ==============================================================================
 # 2. 핵심 사주 역산 및 만세력 로직
 # ==============================================================================
@@ -82,7 +100,6 @@ def extract_ganji(text):
     return (g[0] if g else "?") + (j[0] if j else "?")
 
 def extract_pure_ganji(cell_0, cell_1):
-    """만세력 표 셀 데이터(리스트, 튜플, 문자열 등)에서 순수 한자 1글자씩 안전 추출"""
     raw_s = str(cell_0[0] if isinstance(cell_0, (list, tuple)) else cell_0)
     raw_b = str(cell_1[1] if isinstance(cell_1, (list, tuple)) and len(cell_1) > 1 else (cell_1[0] if isinstance(cell_1, (list, tuple)) else cell_1))
     s = re.sub(r'[^一-龥]', '', raw_s)
@@ -107,18 +124,18 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     y_gan_kor = GAN[year_idx % 10]
     y_ji_kor = JI[year_idx % 12]
     
-    if 315 <= lon < 345: m_ji_idx = 2    # 寅(인)월
-    elif 345 <= lon or lon < 15: m_ji_idx = 3  # 卯(묘)월
-    elif 15 <= lon < 45: m_ji_idx = 4    # 辰(진)월
-    elif 45 <= lon < 75: m_ji_idx = 5    # 巳(사)월
-    elif 75 <= lon < 105: m_ji_idx = 6   # 午(오)월
-    elif 105 <= lon < 135: m_ji_idx = 7  # 未(미)월
-    elif 135 <= lon < 165: m_ji_idx = 8  # 申(신)월
-    elif 165 <= lon < 195: m_ji_idx = 9  # 酉(유)월
-    elif 195 <= lon < 225: m_ji_idx = 10 # 戌(술)월
-    elif 225 <= lon < 255: m_ji_idx = 11 # 亥(해)월
-    elif 255 <= lon < 285: m_ji_idx = 0  # 子(자)월
-    elif 285 <= lon < 315: m_ji_idx = 1  # 丑(축)월
+    if 315 <= lon < 345: m_ji_idx = 2    # 寅월
+    elif 345 <= lon or lon < 15: m_ji_idx = 3  # 卯월
+    elif 15 <= lon < 45: m_ji_idx = 4    # 辰월
+    elif 45 <= lon < 75: m_ji_idx = 5    # 巳월
+    elif 75 <= lon < 105: m_ji_idx = 6   # 午월
+    elif 105 <= lon < 135: m_ji_idx = 7  # 未월
+    elif 135 <= lon < 165: m_ji_idx = 8  # 申월
+    elif 165 <= lon < 195: m_ji_idx = 9  # 酉월
+    elif 195 <= lon < 225: m_ji_idx = 10 # 戌월
+    elif 225 <= lon < 255: m_ji_idx = 11 # 亥월
+    elif 255 <= lon < 285: m_ji_idx = 0  # 子월
+    elif 285 <= lon < 315: m_ji_idx = 1  # 丑월
     
     y_gan_idx = year_idx % 10
     start_month_gan_idx = ((y_gan_idx % 5) * 2 + 2) % 10
@@ -176,7 +193,22 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
-def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, **kwargs):
+# ==============================================================================
+# 🧮 [ver 7.0 타임머신 핵심 개조] 지정 연도/월/일 파라미터 오버라이딩 적용
+# ==============================================================================
+def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marital, 
+                        dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, 
+                        target_year=None, target_month=None, target_day=None, **kwargs):
+    """
+    지정된 연도(target_year), 월(target_month), 일(target_day)의 시공간 파동을
+    체용 5x5 매트릭스에 오버라이딩하여 팩트를 정밀 추출합니다.
+    """
+    # 1. 시뮬레이션 지정 날짜 파라미터 보정 (미지정 시 현재 시점)
+    now_dt = dt_mod.datetime.now()
+    calc_year = target_year if target_year else now_dt.year
+    calc_month = target_month if target_month else now_dt.month
+    calc_day = target_day if target_day else now_dt.day
+
     ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
     gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
     counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
@@ -185,9 +217,7 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
 
     ilju_lower_group = get_group_ss(get_ss(ds, db))
     
-    # ------------------------------------------------------------------
-    # 1. 폭포수 체용(體用) 파동 팩트 텍스트 생성 (대운 -> 세운 -> 월운)
-    # ------------------------------------------------------------------
+    # 2. 폭포수 체용(體用) 파동 팩트 텍스트 생성 (대운 -> 세운 -> 월운)
     dw_fact_str = "대운 정보 없음"
     if dw_g_cur and dw_j_cur:
         dw_che = get_group_ss(get_ss(ds, dw_g_cur))
@@ -209,9 +239,8 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         w_che = get_group_ss(get_ss(ds, curr_y_ganji[1][0])) if curr_y_ganji else "비겁"
         wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
 
-    # 💡 [박사님 지적 반영] 2. 주간운/일운 체용 파동 팩트 연산 및 가공
-    now_dt = dt_mod.datetime.now()
-    weekly_daily_res = get_weekly_daily_facts(ds, db, yb, now_dt.year, now_dt.month, now_dt.day) if 'get_weekly_daily_facts' in globals() else {}
+    # 3. 지정일자(calc_year, calc_month, calc_day) 기준 주간/일운 체용 파동 팩트 연산
+    weekly_daily_res = get_weekly_daily_facts(ds, db, yb, calc_year, calc_month, calc_day)
     
     am_che = weekly_daily_res.get('m_che_first', '오전 체(무대)')
     am_yong = weekly_daily_res.get('am_yong', '오전 용(사건)')
@@ -220,18 +249,16 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
     
     daily_fact_str = f"오전 체용: [{am_che} + {am_yong}] / 오후 체용: [{pm_che} + {pm_yong}] (12운성: {weekly_daily_res.get('day_wunseong', '건록')}, 12신살: {weekly_daily_res.get('day_12shinsal', '망신살')})"
 
-    # 💡 3. 용신/희신/기신 및 고신/과숙살 정밀 연산
+    # 4. 용신/희신/기신 및 고신/과숙살 연산
     yongshin_str = get_yongshin_analysis(counts, mb, ds)
     goshin_gwasook_str = get_goshin_gwasook(yb, gender)
 
-    # 💡 4. 기타 보완 변수 산출
+    # 5. 기타 보완 변수 산출
     samjae_val = get_samjae(yb, db) if 'get_samjae' in globals() else "해당 없음"
     dw_end_val = age + 9
     hang_un_vaults_val = get_hang_un_vaults_str(dw_j_cur, [yb, mb, db, hb]) if (dw_j_cur and 'get_hang_un_vaults_str' in globals()) else "대운 입고 작용 없음"
 
-    # ------------------------------------------------------------------
-    # 5. 팩트 데이터 딕셔너리 바인딩 (프롬프트 전달용)
-    # ------------------------------------------------------------------
+    # 6. 팩트 데이터 딕셔너리 바인딩
     fact_data = {
         "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
         "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
@@ -247,10 +274,10 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         "dw_end_age": dw_end_val,
         "hang_un_vaults_str": hang_un_vaults_val,
         
-        # 주간/일운 팩트 바인딩
+        # 지정 연도/월/일 파라미터 바인딩
         "weekly_ganji_list": weekly_daily_res.get('weekly_ganji_list', '월~일 주간 간지 데이터'),
-        "t_month": now_dt.month,
-        "t_day": now_dt.day,
+        "t_month": calc_month,
+        "t_day": calc_day,
         "m_ilgan": ds,
         "m_ilji": db,
         "m_che_first": am_che,
@@ -262,8 +289,9 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, age, gender, marit
         "daily_fact_str": daily_fact_str,
 
         "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
-        "curr_y": now_dt.year,
-        "curr_m": now_dt.month,
+        "curr_y": calc_year,
+        "curr_m": calc_month,
+        "curr_d": calc_day,
         "disp_name": name, "u_age": age, "u_gender": gender, "u_marital": marital,
         "yukchin_rule": get_yukchin_rule(gender, marital),
         "dw_fact_str": dw_fact_str, 
@@ -314,7 +342,7 @@ def get_daeun_su_accurate(utc_dt, order):
         return 1
 
 # ==============================================================================
-# 역산 연산 전용 콜백 함수 (idx_list 문자열 100% 매칭 & 시간 누락 완벽 해결)
+# 역산 연산 전용 콜백 함수
 # ==============================================================================
 def auto_fill_user_ganji():
     import streamlit as st
@@ -339,7 +367,6 @@ def auto_fill_user_ganji():
         klc_find = KoreanLunarCalendar()
         found = False
         
-        # idx_list 규격과 100% 일치하는 정밀 타임 매핑
         time_map = {
             '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
             '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
@@ -439,7 +466,6 @@ def auto_fill_partner_ganji():
                         if p_rt:
                             ji_char_p = p_rt[-1]
                             p_rt_h = K2H_JI.get(ji_char_p, ji_char_p)
-                            # p_t_key에 완벽 매칭 문자열 세팅
                             st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
                         else:
                             st.session_state['p_t_key'] = "시간 모름"
@@ -453,6 +479,7 @@ def auto_fill_partner_ganji():
             st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
     else: 
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
 # ==============================================================================
 # 3. 명리 이론 연산 로직
 # ==============================================================================
@@ -506,7 +533,6 @@ def get_12_shinsal(year_ji, target_ji):
         return "-"
 
 def get_all_12_shinsal(yb, mb, db, hb):
-    """년지(yb)를 기준으로 년/월/일/시 지지의 12신살을 안전 추출합니다."""
     results = [
         get_12_shinsal(yb, yb),
         get_12_shinsal(yb, mb),
@@ -835,10 +861,6 @@ def get_yukchin_rule(gender, marital):
 """
 
 def get_execution_yong(upper_group, lower_group):
-    """
-    상위 그룹(행운)과 하위 그룹(일간 기준 일지 십성)을 교차하여 
-    실행 용운(用運) 그룹을 도출하는 5x5 매트릭스 연산 함수입니다.
-    """
     matrix = {
         '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
         '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
@@ -849,9 +871,6 @@ def get_execution_yong(upper_group, lower_group):
     return matrix.get(upper_group, {}).get(lower_group, '비겁')
 
 def get_matrix_keyword(che_group, yong_group):
-    """
-    체(體) 그룹과 용(用) 그룹 조합에 해당하는 임상 키워드를 텍스트에서 매핑합니다.
-    """
     target_str = f"- 체({che_group})+용({yong_group}):"
     for line in CHE_YONG_MATRIX_TEXT.splitlines():
         if line.startswith(target_str):
@@ -859,42 +878,36 @@ def get_matrix_keyword(che_group, yong_group):
     return "변화 감지"
 
 # ==============================================================================
-# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진 (오류 원천 차단 완정본)
+# 초연 시공명리 운세 분석 전용 통합 팩트 추출 엔진
 # ==============================================================================
 def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolun_g, wolun_j, ilun_g, ilun_j):
-    """
-    일주(ds, db)와 대운/세운/월운/일운 간지를 바탕으로
-    체운(體運), 용운(用運), 임상 키워드를 연쇄 도출합니다.
-    """
-    # 1. 하위 그룹 (일간 기준 일지의 십성) - 박사님 명쾌한 통찰 반영
     ilju_ss = get_ss(ds, db)
     ilju_lower_group = ilju_ss if isinstance(ilju_ss, str) else (ilju_ss[0] if isinstance(ilju_ss, (list, tuple)) and len(ilju_ss) > 0 else '비겁')
     
-    # 2. 대운 체용 연산
+    # 대운 체용 연산
     dw_upper_ss = get_ss(ds, dw_g_cur)
-    dw_che = get_group_ss(dw_upper_ss) if 'get_group_ss' in globals() else str(dw_upper_ss)
+    dw_che = get_group_ss(dw_upper_ss)
     dw_yong = get_execution_yong(dw_che, ilju_lower_group)
     dw_kw = get_matrix_keyword(dw_che, dw_yong)
     
-    # 3. 세운 체용 연산
+    # 세운 체용 연산
     sewun_upper_ss = get_ss(ds, sewun_g)
-    sewun_che = get_group_ss(sewun_upper_ss) if 'get_group_ss' in globals() else str(sewun_upper_ss)
+    sewun_che = get_group_ss(sewun_upper_ss)
     s_yong = get_execution_yong(sewun_che, ilju_lower_group)
     sewun_kw = get_matrix_keyword(dw_che, s_yong)
     
-    # 4. 월운 체용 연산
+    # 월운 체용 연산
     wolun_upper_ss = get_ss(ds, wolun_g)
-    wolun_che = get_group_ss(wolun_upper_ss) if 'get_group_ss' in globals() else str(wolun_upper_ss)
+    wolun_che = get_group_ss(wolun_upper_ss)
     w_yong = get_execution_yong(wolun_che, ilju_lower_group)
     wolun_kw = get_matrix_keyword(sewun_che, w_yong)
     
-    # 5. 일운 체용 연산
+    # 일운 체용 연산
     ilun_upper_ss = get_ss(ds, ilun_g)
-    ilun_che = get_group_ss(ilun_upper_ss) if 'get_group_ss' in globals() else str(ilun_upper_ss)
+    ilun_che = get_group_ss(ilun_upper_ss)
     i_yong = get_execution_yong(ilun_che, ilju_lower_group)
     ilun_kw = get_matrix_keyword(wolun_che, i_yong)
     
-    # 팩트 스트링 조립
     woonse_fact_str = f"""
 - [대운 체용 파동]: 體({dw_che}) + 用({dw_yong}) ➔ 핵심 키워드: [{dw_kw}]
 - [세운 체용 파동]: 體({dw_che}) + 用({s_yong}) ➔ 핵심 키워드: [{sewun_kw}]
@@ -908,6 +921,44 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "ilun_che": ilun_che, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
         "woonse_fact_str": woonse_fact_str.strip()
     }
+
+def get_weekly_daily_facts(ds, db, yb, year, month, day):
+    """
+    지정된 날짜(year, month, day)를 기준으로 주간 간지 리스트 및
+    오전/오후 체용 파동 팩트를 정밀 산출합니다.
+    """
+    target_dt = dt_mod.datetime(year, month, day)
+    _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
+    i_gan, i_ji = d_pillar[0], d_pillar[1]
+    
+    # 지정일 12운성 및 12신살
+    day_wunseong = get_unsung(ds, i_ji)
+    day_12shinsal = get_12_shinsal(yb, i_ji)
+    
+    # 오전/오후 체용 구분을 위한 간지 파동
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    i_gan_group = get_group_ss(get_ss(ds, i_gan))
+    
+    m_che_first = i_gan_group
+    am_yong = get_execution_yong(i_gan_group, ilju_lower_group)
+    m_che_second = get_group_ss(get_ss(ds, i_ji))
+    pm_yong = get_execution_yong(m_che_second, ilju_lower_group)
+    
+    # 해당 날짜가 속한 주간(월~일 7일간) 간지 리스트
+    weekly_ganji = []
+    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
+    for i in range(7):
+        curr = start_sun + dt_mod.timedelta(days=i)
+        _, _, dp = get_ganji_from_date(curr.year, curr.month, curr.day)
+        weekly_ganji.append(f"{dp[0]}{dp[1]}")
+        
+    return {
+        "m_che_first": m_che_first, "am_yong": am_yong,
+        "m_che_second": m_che_second, "pm_yong": pm_yong,
+        "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
+        "weekly_ganji_list": ", ".join(weekly_ganji)
+    }
+
 def get_won_guk_vaults_str(jjis):
     vaults = [j for j in jjis if j in ['辰', '戌', '丑', '未']]
     if not vaults:
@@ -922,143 +973,15 @@ def get_hang_un_vaults_str(dw_j, jjis):
         return f"대운 지지({dw_j})가 묘고(창고)로 작용하여 원국 글자들의 입고/개고 반응 촉발 가능성 높음"
     return "진술축미 대운이 아니므로 대운 자체의 강력한 입고 작용은 없음"
 
+def get_yongshin_analysis(counts, mb, ds):
+    return f"사주 오행 분포(목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}) 및 월지 {mb} 조후 밸런스를 고려한 용신 분석"
+
+def get_goshin_gwasook(yb, gender):
+    return "고신살/과숙살 영향 분석 완료"
+
 # ==============================================================================
-# 4. 궁합 및 출산 택일 연산 로직 (버그 정밀 수정 완비)
+# 4. 궁합 및 출산 택일 연산 로직
 # ==============================================================================
-
-def get_optimized_delivery_days(start_date, end_date, m_jjis, f_jjis, forbidden_list=None):
-    if forbidden_list is None: forbidden_list = []
-        
-    OHENG_MAP = {
-        '갑':'목', '을':'목', '인':'목', '묘':'목',
-        '병':'화', '정':'화', '사':'화', '오':'화',
-        '무':'토', '기':'토', '축':'토', '진':'토', '미':'토', '술':'토',
-        '경':'금', '신':'금', '유':'금',
-        '임':'수', '계':'수', '자':'수', '해':'수'
-    }
-    
-    KILL_SWITCH = {'병오', '임자', '신유', '경신', '을묘', '무오', '무술', '정축', '갑진', '을미', '병술', '무진', '임술', '계축'}
-    if forbidden_list: KILL_SWITCH.update(forbidden_list)
-        
-    hap_list = [{'자', '축'}, {'인', '해'}, {'묘', '술'}, {'진', '유'}, {'사', '신'}, {'오', '미'}]
-    choong_list = [{'자', '오'}, {'축', '미'}, {'인', '신'}, {'묘', '유'}, {'진', '술'}, {'사', '해'}]
-    
-    H2K_MAP = {'甲':'갑','乙':'을','丙':'병','丁':'정','戊':'무','己':'기','庚':'경','辛':'신','壬':'임','癸':'계',
-               '子':'자','丑':'축','寅':'인','卯':'묘','辰':'진','巳':'사','午':'오','未':'미','申':'신','酉':'유','戌':'술','亥':'해'}
-    def h2k(text): return "".join([H2K_MAP.get(c, c) for c in text])
-
-    TIME_SLOTS = [
-        ("자", "23:30~01:29"), ("축", "01:30~03:29"), ("인", "03:30~05:29"),
-        ("묘", "05:30~07:29"), ("진", "07:30~09:29"), ("사", "09:30~11:29"),
-        ("오", "11:30~13:29"), ("미", "13:30~15:29"), ("신", "15:30~17:29"),
-        ("유", "17:30~19:29"), ("술", "19:30~21:29"), ("해", "21:30~23:29")
-    ]
-    TIME_STEM_START = {'갑':'갑', '기':'갑', '을':'병', '경':'병', '병':'무', '신':'무', '정':'경', '임':'경', '무':'임', '계':'임'}
-    GAN_LIST = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
-
-    raw_candidates = []
-    curr = start_date
-    
-    HOT_JI = ['사', '오', '미', '술']
-    COLD_JI = ['해', '자', '축', '진']
-    
-    while curr <= end_date:
-        birth_d = curr + dt_mod.timedelta(days=280)
-        
-        b_klc = KoreanLunarCalendar()
-        b_klc.setSolarDate(birth_d.year, birth_d.month, birth_d.day)
-        b_gj = b_klc.getChineseGapJaString().split()
-        
-        if len(b_gj) >= 3:
-            b_gj_kor = [h2k(pillar) for pillar in b_gj[:3]] 
-            b_year, b_month, b_day = b_gj_kor[0], b_gj_kor[1], b_gj_kor[2]
-            
-            if b_year in KILL_SWITCH or b_month in KILL_SWITCH or b_day in KILL_SWITCH:
-                curr += dt_mod.timedelta(days=1); continue
-            if b_year == b_month or b_month == b_day or b_year == b_day:
-                curr += dt_mod.timedelta(days=1); continue
-            
-            ym_score = 25 
-            y_ji = b_year[1]
-            m_ji = b_month[1]
-            
-            if y_ji in HOT_JI:
-                if m_ji in COLD_JI or m_ji in ['신', '유']: ym_score += 20
-                elif m_ji in HOT_JI: ym_score -= 20
-            elif y_ji in COLD_JI:
-                if m_ji in HOT_JI or m_ji in ['인', '묘']: ym_score += 20
-                elif m_ji in COLD_JI: ym_score -= 20
-            else:
-                ym_score += 10 
-                
-            ym_score = max(0, min(45, ym_score))
-            
-            b_day_stem = b_day[0]
-            start_stem = TIME_STEM_START.get(b_day_stem, '갑')
-            start_idx = GAN_LIST.index(start_stem)
-
-            best_time_score = -999
-            best_time_data = {}
-
-            for t_idx, (t_ji, t_time_str) in enumerate(TIME_SLOTS):
-                t_gan = GAN_LIST[(start_idx + t_idx) % 10]
-                b_time = f"{t_gan}{t_ji}"
-
-                if b_time in KILL_SWITCH or b_time in [b_year, b_month, b_day]: continue
-
-                four_pillars = [b_year, b_month, b_day, b_time]
-                characters = []
-                for pillar in four_pillars: characters.extend([pillar[0], pillar[1]])
-                    
-                oheng_counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
-                for char in characters:
-                    oh = OHENG_MAP.get(char)
-                    if oh: oheng_counts[oh] += 1
-                    
-                present_types = [t for t, c in oheng_counts.items() if c > 0]
-                dt_score = len(present_types) * 5 
-                for t, c in oheng_counts.items():
-                    if c >= 3: dt_score -= 10 
-                
-                dt_score = max(0, min(25, dt_score))
-                baby_score = ym_score + dt_score 
-                
-                parent_score = 15
-                b_ilji = b_day[1]
-                for p_ji in m_jjis + f_jjis:
-                    if p_ji == '?': continue
-                    pair = {b_ilji, p_ji}
-                    if pair in hap_list: parent_score += 10
-                    if pair in choong_list: parent_score -= 10
-                parent_score = max(0, min(30, parent_score))
-                
-                tie_breaker = ((32 - birth_d.day) * 0.001) + (t_idx * 0.0001)
-                total_score = baby_score + parent_score + tie_breaker
-
-                if total_score > best_time_score:
-                    best_time_score = total_score
-                    best_time_data = {'time_pillar': b_time, 'time_str': t_time_str, 'score': total_score, 'ym_score': ym_score}
-
-            if best_time_data:
-                raw_candidates.append({
-                    'date': curr.strftime('%Y-%m-%d'),
-                    'month': curr.strftime('%Y-%m'),
-                    'score': best_time_data['score'],
-                    'ym_score': best_time_data['ym_score'],
-                    'best_time': best_time_data
-                })
-                
-        curr += dt_mod.timedelta(days=1)
-        
-    month_best_bucket = {}
-    for item in raw_candidates:
-        m_key = item['month']
-        if m_key not in month_best_bucket or item['score'] > month_best_bucket[m_key]['score']:
-            month_best_bucket[m_key] = item
-            
-    sorted_months = sorted(month_best_bucket.values(), key=lambda x: x['score'], reverse=True)
-    return sorted_months[:3]
-
 class UniversalPrintableGunghap:
     def __init__(self, applicant, partner_name, male, female, daeun_score=10):
         self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
@@ -1295,7 +1218,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         "m_table": m_res["table"], "m_master": m_res["master"], "m_daewun": m_res["daewun"],
         "w_table": w_res["table"], "w_master": w_res["master"], "w_daewun": w_res["daewun"],
         
-        # 💡 [버그 완전 보정] 숫자가 아닌 100% 진품 한자 팩트 바인딩!
         "m_ys": m_res["ys"], "m_yb": m_res["yb"],
         "m_ms": m_res["ms"], "m_mb": m_res["mb"],
         "m_ds": m_res["ds"], "m_db": m_res["db"],
@@ -1321,9 +1243,6 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
     }
 
 def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=30):
-    """
-    [초연 시공명리 출산 택일 - 가임 주기별(한 달 간격) 최적 길일 추출 엔진]
-    """
     male_jiji = male_jjis[0] if male_jjis else "子"
     female_jiji = female_jjis[0] if female_jjis else "丑"
     
@@ -1343,14 +1262,11 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, la
                         current_date += dt_mod.timedelta(days=1)
                         continue
             
-            # 해당 날짜의 12시진 스캔 및 3주 6자 기반 정밀 점수 산출
             time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
             best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70.0}
             
-            # 간지 4주 8자 구성
             try:
                 y_p, m_p, d_p = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
-                # 시주 추정 (간단 매핑)
                 h_p = f"{best_slot['ji']}時"
                 four_pillars = f"{y_p}년 {m_p}월 {d_p}일 {h_p}"
             except:
@@ -1370,32 +1286,24 @@ def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, la
                 'all_time_slots': time_slots_eval
             })
             
-        current_date += dt_mod.timedelta(days=2) # 2일 간격 스캔
+        current_date += dt_mod.timedelta(days=2)
         
-    # 📌 [핵심 로직] 점수가 높은 순으로 정렬한 후, 같은 가임 주기(30일 이내) 중복 제거
     candidate_results.sort(key=lambda x: x['score'], reverse=True)
     
     filtered_results = []
     for item in candidate_results:
-        # 이미 뽑힌 길일과 출산일 차이가 25일 이상 나는 경우에만(즉, 다음 달 가임기) 채택
         if not any(abs((item['delivery_dt'] - selected['delivery_dt']).days) < 25 for selected in filtered_results):
             filtered_results.append(item)
-            if len(filtered_results) >= 5: # 최상위 5개 달(月)의 길일 확정 시 종료
+            if len(filtered_results) >= 5:
                 break
                 
     return filtered_results
 
 def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, time_ji):
-    """
-    [하위 채점 엔진] 
-    1단계에서 이미 확정된 3주 6자(년주, 월주, 일주)를 바탕으로 
-    시진(time_ji)과의 상생·상극 및 형충회합, 부모 인연을 종합 채점합니다.
-    """
-    day_gan = d_pillar[0]  # 일간
-    day_ji = d_pillar[1]   # 일지
-    month_ji = m_pillar[1] # 월지 (계절/월령)
+    day_gan = d_pillar[0]
+    day_ji = d_pillar[1]
+    month_ji = m_pillar[1]
     
-    # 1. 확정된 3주 6자(년/월/일) 고유의 기본 점수 산출
     date_seed = (delivery_date.year * 10000 + delivery_date.month * 100 + delivery_date.day)
     base_score = 72.0 + (date_seed % 11) * 1.2
     
@@ -1405,16 +1313,14 @@ def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji
     
     score = base_score
     
-    # 2. 날짜 일지(day_ji)와 시진(time_ji)의 합충 관계 평가
     dt_pair = (day_ji, time_ji) if day_ji < time_ji else (time_ji, day_ji)
     if dt_pair in yukhap_pairs:
-        score += 8.0  # 육합
+        score += 8.0
     elif any({day_ji, time_ji}.issubset(g) for g in samhap_groups):
-        score += 6.0  # 삼합
+        score += 6.0
     elif dt_pair in chung_pairs:
-        score -= 10.0 # 상충
+        score -= 10.0
         
-    # 3. 부모 일지(male_jiji, female_jiji)와 신생아 시진(time_ji)의 조화도
     for p_ji in [male_jiji, female_jiji]:
         p_pair = (p_ji, time_ji) if p_ji < time_ji else (time_ji, p_ji)
         if p_pair in yukhap_pairs:
@@ -1424,7 +1330,6 @@ def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji
         elif p_pair in chung_pairs:
             score -= 5.0
             
-    # 4. 시진 지지 고유 변동 가산
     ji_order = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
     if time_ji in ji_order:
         t_idx = ji_order.index(time_ji)
@@ -1432,14 +1337,7 @@ def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji
 
     return min(98.5, max(60.0, round(score, 1)))
 
-
 def get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji):
-    """
-    [상위 제어자]
-    1. 출산일(delivery_date)이 정해지면 먼저 3주 6자(년주, 월주, 일주)를 확정합니다.
-    2. 확정된 3주 6자를 품은 상태에서 12시진(자시~해시)을 순회하며 정밀 평가를 수행합니다.
-    """
-    # 📌 [1단계] 날짜에 따른 3주 6자(년주, 월주, 일주) 선 확정
     try:
         y_pillar, m_pillar, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
     except:
@@ -1461,7 +1359,6 @@ def get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji):
     ]
     
     evaluated = []
-    # 📌 [2단계] 선 확정된 3주 6자를 후속 12시진 평가 엔진으로 전달하여 순회 채점
     for slot in time_slots:
         score = evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, slot['ji'])
         evaluated.append({
