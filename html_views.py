@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (Pro-Model 12신살 칸 완전 분리 및 괄호 방탄 보장 최종본) ver 7.3
+# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 7.3
 # ==============================================================================
 import re
 
@@ -258,7 +258,7 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
 def get_un_layout(title, content):
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
-    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
+    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px; table-layout:fixed;'>
         {content}
     </div>
     """
@@ -271,7 +271,7 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         un_content += get_un_cell(
             data["age_range"], data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
-            data["un_sung"], data.get("y_shinsal", "-"), data.get("d_shinsal", "-"), bg_col, b_left, data.get("is_current", False)
+            data["un_sung"], data.get("shin_sal", "-"), data.get("d_shinsal", "-"), bg_col, b_left, data.get("is_current", False)
         )
     return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
 
@@ -291,22 +291,22 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
         header_bg = "#3E2723"
         
     return f"""
-    <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:50px; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
-        <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
+    <div style='flex:1; width:10%; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; min-width:0; display:flex; flex-direction:column; box-sizing:border-box; overflow:hidden;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
+        <div style='font-size:12px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
+        <div style='font-size:12px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
+        <div class='color-shinsal-day' style='font-size:11px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
     </div>
     """
 
 def get_sewun_layout(title, content):
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
-    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
+    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px; table-layout:fixed;'>
         {content}
     </div>
     """
@@ -327,24 +327,24 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         header_bg = "#3E2723"
     
     return f"""
-    <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:28px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
+    <div style='flex:1; width:8.33%; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:11px; height:28px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
             <span>{title_str}</span>
         </div>
-        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
+        <div style='font-size:11px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
+        <div style='font-size:11px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
+        <div class='color-shinsal-day' style='font-size:10px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
     </div>
     """
 
 def get_wolun_layout(title, content):
     return f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
-    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
+    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px; table-layout:fixed;'>
         {content}
     </div>
     """
@@ -365,15 +365,15 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
         header_bg = "#3E2723"
     
     return f"""
-    <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
-        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
+    <div style='flex:1; width:8.33%; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:25px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
+        <div style='font-size:11px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
+        <div style='font-size:11px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
+        <div class='color-shinsal-day' style='font-size:10px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
     </div>
     """
 
@@ -436,22 +436,22 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
         
         content += f"""
-        <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
-            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:13px; height:28px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
+        <div style='flex:1; width:14.28%; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
+            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; font-size:12px; height:28px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
                 {day_num}일 ({wday})
             </div>
-            <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_val}</div>
-            <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
-            <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
-            <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{y_val}</div>
-            <div class='color-shinsal-day' style='font-size:12px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
+            <div style='font-size:11px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_val}</div>
+            <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
+            <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
+            <div class='color-unsung' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
+            <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{y_val}</div>
+            <div class='color-shinsal-day' style='font-size:11px; font-weight:900; border-top:1px dashed #ccc; height:24px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
         </div>
         """
 
     layout = f"""
     <div style='margin-top:20px; margin-bottom:10px; font-size:16px; font-weight:900; color:#3E2723; font-family:"Nanum Gothic", sans-serif;'>📅 이번 주 간지 흐름 (일요일 ~ 토요일)</div>
-    <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px;'>
+    <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px; table-layout:fixed;'>
         {content}
     </div>
     """
@@ -760,7 +760,6 @@ def get_other_report_original_html(other_text_input):
     </div>
     """
 
-# 🚨 [통합 AI 통변 파서]
 def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: 
         return ""
@@ -818,7 +817,7 @@ def format_ai_text_to_html(ai_raw_text):
             safe_line = re.sub(r'([가-힣]{2,4}님)', r'<b>\1</b>', safe_line)
             formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
-        return "".join(formatted_html)
+    return "".join(formatted_html)
 
 def get_ai_report_box(content):
     return get_final_report_box(content)
