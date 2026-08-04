@@ -703,6 +703,7 @@ if st.session_state.get('app_running', False):
                         'is_today': is_today
                     })
                 
+                # 🎯 [주간 캘린더 듀얼 신살 적용] 년지(yb)와 일지(db) 인자 추가 전달
                 weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day, yb=yb, db=db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
 
                 w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
