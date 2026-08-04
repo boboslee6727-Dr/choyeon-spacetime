@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (Pro-Model 최종 검토 및 방탄 최적화 완결본)
+# html_views.py (Pro-Model 듀얼 12신살 2단 정렬 및 가독성 대폭 강화 완결본) ver 7.1
 # ==============================================================================
 import re
 
@@ -24,9 +24,6 @@ def get_global_css():
         font-family: 'Noto Serif KR', serif !important; 
     }
 
-    /* ==========================================================================
-       🔴🟢 [버튼 전용 명확한 보색 대비 스타일]
-       ========================================================================== */
     /* 모든 버튼 공통 폰트 및 굵은 글씨 지정 */
     div.stButton > button { 
         font-family: 'Nanum Gothic', sans-serif !important; 
@@ -35,7 +32,7 @@ def get_global_css():
         border-radius: 8px !important;
     }
 
-    /* 🔴 1. ✨ [초연 시공명리 풀이 가동] 버튼 : 강렬한 빨간색 바탕 + 흰색 굵은 글자 */
+    /* 🔴 1. ✨ [초연 시공명리 풀이 가동] 버튼 */
     div.stButton > button[kind="primary"] { 
         background-color: #D50000 !important; 
         color: #FFFFFF !important; 
@@ -49,7 +46,7 @@ def get_global_css():
         color: #FFFFFF !important;
     }
 
-    /* 🟢 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 : 완벽 보색 녹색 바탕 + 흰색 굵은 글자 */
+    /* 🟢 2. 🖨️ [풀이 결과 인쇄 / PDF 저장] 버튼 */
     div.stButton > button[kind="secondary"] { 
         background-color: #00A843 !important; 
         color: #FFFFFF !important; 
@@ -63,7 +60,6 @@ def get_global_css():
         color: #FFFFFF !important;
     }
 
-    /* 🚨 [AI 제목 스타일 최우선 강제 규정] */
     .ai-title-l1 {
         font-size: 22px !important;
         font-weight: 900 !important;
@@ -92,7 +88,6 @@ def get_global_css():
 
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-    /* 🚨 [AI 본문 양쪽정렬/들여쓰기/행간 최우선 강제 규정] */
     .ai-body-p {
         font-size: 16px !important;
         font-weight: 400 !important;
@@ -214,19 +209,19 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         gen_shinsals.append("<br>".join(filtered[:6]) if filtered else "-")
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:900; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
 
-    # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 렌더링 적용]
+    # 🎯 [사주원국표 듀얼 12신살 폰트 확장(12px) 및 위아래 선명 2단 수직 분리 적용]
     shinsal_tds = []
     for i in range(4):
         dual_str = engine.get_dual_12_shinsal(yb, db, jjis[i])
-        if "(" in dual_str:
-            parts = dual_str.split("(")
+        if "(" in str(dual_str):
+            parts = str(dual_str).split("(")
             y_part = parts[0].strip()
             d_part = f"({parts[1].strip()}"
-            cell_content = f"{y_part}<br><span style='font-size:10px; color:#555;'>{d_part}</span>"
+            cell_content = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
         else:
-            cell_content = dual_str
+            cell_content = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{dual_str}</span>"
             
-        shinsal_tds.append(f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important; line-height:1.2; padding:2px 0;'>{cell_content}</td>")
+        shinsal_tds.append(f"<td style='border:1px solid #444 !important; line-height:1.3; padding:3px 0;'>{cell_content}</td>")
     
     shinsal = "".join(shinsal_tds)
     unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
@@ -323,14 +318,14 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 파싱 적용]
-    if "(" in s_val:
-        parts = s_val.split("(")
+    # 🎯 [대운 듀얼 12신살 폰트 확장(12px/11px) 및 괄호 분리 출력 보정]
+    if "(" in str(s_val):
+        parts = str(s_val).split("(")
         y_part = parts[0].strip()
         d_part = f"({parts[1].strip()}"
-        s_display = f"{y_part}<br><span style='font-size:9px; color:#555;'>{d_part}</span>"
+        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
     else:
-        s_display = s_val
+        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val}</span>"
     
     if is_current:
         active_style = "border: 3px solid #E65100 !important;"
@@ -348,7 +343,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:26px; display:flex; align-items:center; justify-content:center; line-height:1.1; overflow:hidden;'><span style='color:#C62828;'>{s_display}</span></div>
+        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
     </div>
     """
 
@@ -364,14 +359,14 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
-    # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 파싱 적용]
-    if "(" in s_val:
-        parts = s_val.split("(")
+    # 🎯 [세운 듀얼 12신살 폰트 확장 및 괄호 분리 출력 보정]
+    if "(" in str(s_val):
+        parts = str(s_val).split("(")
         y_part = parts[0].strip()
         d_part = f"({parts[1].strip()}"
-        s_display = f"{y_part}<br><span style='font-size:9px; color:#555;'>{d_part}</span>"
+        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
     else:
-        s_display = s_val
+        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val}</span>"
     
     if is_current:
         active_style = "border: 3px solid #0277BD !important;"
@@ -391,7 +386,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:26px; display:flex; align-items:center; justify-content:center; line-height:1.1; overflow:hidden;'><span style='color:#C62828;'>{s_display}</span></div>
+        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
     </div>
     """
 
@@ -406,6 +401,15 @@ def get_wolun_layout(title, content):
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
+    
+    # 🎯 [월운 듀얼 12신살 폰트 확장 및 괄호 분리 출력 보정]
+    if "(" in str(s_val):
+        parts = str(s_val).split("(")
+        y_part = parts[0].strip()
+        d_part = f"({parts[1].strip()}"
+        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
+    else:
+        s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val}</span>"
     
     if is_current:
         active_style = "border: 3px solid #2E7D32 !important;"
@@ -423,12 +427,12 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
+        <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
     </div>
     """
 
 # ==============================================================================
-# [최종 마스터피스] 대운/세운/월운과 100% 동일한 Flex 구조의 주간 간지 캘린더 (듀얼 신살 2단 적용)
+# [최종 마스터피스] 주간 간지 캘린더 (듀얼 신살 2단 정렬 및 폰트 대폭 가독성 강화)
 # ==============================================================================
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
     content = ""
@@ -459,7 +463,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
             ss_val = engine.get_ss("甲", ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung("甲", ji_char) if ji_char != "-" else "-"
             
-            # 🎯 [듀얼 12신살 연동 적용] yb와 db가 존재하면 듀얼 연산, 아니면 기본 단일 연산
             if yb and db and ji_char != "-":
                 shinsal_val = engine.get_dual_12_shinsal(yb, db, ji_char)
             elif yb and ji_char != "-":
@@ -469,15 +472,15 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         except:
             pass
             
-        # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 파싱 적용]
+        # 🎯 [주간 캘린더 듀얼 12신살 폰트 확장 및 괄호 분리 출력 보정]
         s_val_str = str(shinsal_val) if shinsal_val and str(shinsal_val).strip() else "-"
         if "(" in s_val_str:
             parts = s_val_str.split("(")
             y_part = parts[0].strip()
             d_part = f"({parts[1].strip()}"
-            s_display = f"{y_part}<br><span style='font-size:9px; color:#555;'>{d_part}</span>"
+            s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{y_part}</span><br><span style='font-size:11px; color:#2E7D32; font-weight:900;'>{d_part}</span>"
         else:
-            s_display = s_val_str
+            s_display = f"<span style='font-size:12px; color:#C62828; font-weight:900;'>{s_val_str}</span>"
             
         if is_today:
             active_style = "border: 3px solid #2E7D32 !important;"
@@ -497,7 +500,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
             bg_col = "#FAFAFA"
             
         u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
-        s_val = f"<span style='color:#C62828;'>{s_display}</span>" if s_display != "-" else "-"
         
         content += f"""
         <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
@@ -508,7 +510,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
             <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
             <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
             <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:26px; display:flex; align-items:center; justify-content:center; line-height:1.1; overflow:hidden;'>{s_val}</div>
+            <div class='color-shinsal' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; min-height:30px; display:flex; align-items:center; justify-content:center; line-height:1.2; padding:2px 0;'>{s_display}</div>
         </div>
         """
 
@@ -661,10 +663,6 @@ def get_comparison_html(comp_fmt):
 """
 
 def get_gunghap_score_visual_html(gh_engine):
-    """
-    🚨 [프로모델 정밀 수정] 중복 맺음말(closing_original)을 제거하여 
-    최종 리포트 상자 하단에 Closing이 2번 중복 노출되는 현상을 완벽히 차단했습니다.
-    """
     sky_blue = "#38B6FF"
     bars = "".join([
         f"<div style='display:flex; align-items:center; margin-bottom:12px;'>"
@@ -826,7 +824,7 @@ def get_other_report_original_html(other_text_input):
     </div>
     """
 
-# 🚨 [통합 AI 통변 파서: 범용 성함 굵은체 + 60갑자 대운/세운 자동 정규식 변환 완비]
+# 🚨 [통합 AI 통변 파서]
 def format_ai_text_to_html(ai_raw_text):
     if not ai_raw_text: 
         return ""
@@ -834,18 +832,16 @@ def format_ai_text_to_html(ai_raw_text):
     clean_raw = str(ai_raw_text).replace("```html", "").replace("```markdown", "").replace("```", "").strip()
     clean_raw = re.sub(r'<!--.*?-->', '', clean_raw, flags=re.DOTALL)
     
-    # 🚨 [범용 정규식 1] 한글 2글자 간지+대운/세운 표기를 한자 60갑자로 자동 정밀 변환
     def replace_ganji_un(match):
         stem = match.group(1)
         suffix = match.group(2)
-        # 간지 음독 -> 한자 변환 테이블
         g_map = {
             "갑자": "甲子", "을축": "乙丑", "병인": "丙寅", "정묘": "丁卯", "무진": "戊辰",
             "기사": "己巳", "경오": "庚午", "신미": "辛未", "임신": "壬申", "계유": "癸酉",
             "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅",
             "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
             "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子",
-            "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
+            "기축": "己丑", "경인": "庚寅", "신묘": "辛묘", "임진": "壬辰", "계사": "癸巳",
             "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌",
             "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
             "갑진": "甲辰", "을사": "乙巳", "병오": "丙午", "정미": "丁未", "무신": "戊申",
@@ -864,19 +860,15 @@ def format_ai_text_to_html(ai_raw_text):
         if not line_str: 
             continue
         
-        # 🚨 [모든 별표(**) 및 마크다운 샵(#) 원천 박멸 정화]
         clean_line_str = line_str.replace("**", "").replace("*", "")
         clean_line_str = re.sub(r'#{1,6}\s*', '', clean_line_str).strip()
         
-        # 🚨 [대제목 - 클래스 .ai-title-l1 사용 (22px 검정 굵은체)] 예: "1. 성격 분석"
         if re.match(r'^\d+\.\s+', clean_line_str) and not re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(f"<div class='ai-title-l1'>{clean_line_str}</div>")
             
-        # 🚨 [소제목 - 클래스 .ai-title-l2 사용 (18px 검정 굵은체)] 예: "1) 내 삶의 무대..."
         elif re.match(r'^\d+\)\s*', clean_line_str):
             formatted_html.append(f"<div class='ai-title-l2'>{clean_line_str}</div>")
 
-        # 🚨 [소소제목 - 별표 없이 16px 검정 굵은체] 예: "- 4대 영역(직업·재물·애정·건강) 변화:"
         elif clean_line_str.startswith("- ") and clean_line_str.endswith(":"):
             formatted_html.append(
                 f"<div style='font-size:16px !important; font-weight:900 !important; "
@@ -885,13 +877,9 @@ def format_ai_text_to_html(ai_raw_text):
                 f"{clean_line_str}</div>"
             )
             
-        # 🚨 [본문 - 전역 클래스 .ai-body-p 적용 & 성함 굵은체 강제 범용 적용]
         else:
             safe_line = clean_line_str.replace("&nbsp;", " ").replace("<", "&lt;").replace(">", "&gt;")
-            
-            # 🚨 [범용 정규식 2] 본문 내 모든 내담자 성함 언급(예: 'OOO님') 시 100% 굵은체(<b>) 주입
             safe_line = re.sub(r'([가-힣]{2,4}님)', r'<b>\1</b>', safe_line)
-            
             formatted_html.append(f"<p class='ai-body-p'>{safe_line}</p>")
             
     return "".join(formatted_html)
