@@ -577,11 +577,12 @@ if st.session_state.get('app_running', False):
                 j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
                 is_active = (val <= age < val + 10)
                 
-                # 🎯 [완벽 보정] 년지와 일지 12신살을 각각 정확히 추출하여 딕셔너리에 명확히 장착
+                # 🎯 [최종 완벽 보정] 대운 데이터 딕셔너리 키값 일치화 완료
                 u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
                 
-                y_shin_val = engine.get_12_shinsal(yb, j_hanja) if j_hanja != "-" else "-"
-                d_shin_val = engine.get_12_shinsal(db, j_hanja) if j_hanja != "-" else "-"
+                # 년지 기준 신살과 일지 기준 신살 각각 정확히 추출
+                y_shin_val = engine.get_12_shinsal(yb, j_hangul) if j_hangul != "-" else "-"
+                d_shin_val = engine.get_12_shinsal(db, j_hangul) if j_hangul != "-" else "-"
                 
                 daewun_data_list.append({
                     "age_range": f"{val}~{val+9}세",
@@ -592,8 +593,8 @@ if st.session_state.get('app_running', False):
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
                     "un_sung": u_sung_val,
-                    "y_shinsal": y_shin_val,  # ⭕ 년지신살 정확히 전달
-                    "d_shinsal": d_shin_val,  # ⭕ 일지신살 정확히 전달 (괄호 렌더링 완료)
+                    "y_shinsal": y_shin_val,  # ⭕ 년지신살 데이터 정상 주입 완료!
+                    "d_shinsal": d_shin_val,  # ⭕ 일지신살 데이터 정상 주입 완료!
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
