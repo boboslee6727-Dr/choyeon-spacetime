@@ -557,6 +557,22 @@ if st.session_state.get('app_running', False):
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str)
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, b_time)
             
+            # 🎯 [사주원국표 듀얼 12신살 위아래 2단 적용]
+            shinsal_tds = []
+            for i in range(4):
+                dual_str = engine.get_dual_12_shinsal(yb, db, jjis[i])
+                if "(" in dual_str:
+                    parts = dual_str.split("(")
+                    y_part = parts[0].strip()
+                    d_part = f"({parts[1].strip()}"
+                    cell_content = f"{y_part}<br><span style='font-size:10px; color:#555;'>{d_part}</span>"
+                else:
+                    cell_content = dual_str
+                    
+                shinsal_tds.append(f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important; line-height:1.2; padding:2px 0;'>{cell_content}</td>")
+            
+            shinsal = "".join(shinsal_tds)
+            
             table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
             intro_html = html_views.get_intro_html()
@@ -576,6 +592,10 @@ if st.session_state.get('app_running', False):
                 j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
                 is_active = (val <= age < val + 10)
                 
+                # 🎯 [보정] 한자 지지(j_hanja) 및 듀얼 12신살(yb, db) 적용
+                u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
+                shin_sal_val = engine.get_dual_12_shinsal(yb, db, j_hanja) if j_hanja != "-" else "-"
+                
                 daewun_data_list.append({
                     "age_range": f"{val}~{val+9}세",
                     "ss_gan": engine.get_ss(ds_hanja, c_hangul),
@@ -584,8 +604,8 @@ if st.session_state.get('app_running', False):
                     "j_hanja": j_hanja,
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
-                    "un_sung": engine.get_unsung(ds_hanja, j_hangul),
-                    "shin_sal": engine.get_dual_12_shinsal(yb, db, j_hangul),  # 🎯 [듀얼 12신살 연동]
+                    "un_sung": u_sung_val,
+                    "shin_sal": shin_sal_val,
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
@@ -622,7 +642,7 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                     tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
                     engine.get_unsung(ds_hanja, tj), 
-                    engine.get_dual_12_shinsal(yb, db, tj),  # 🎯 [듀얼 12신살 연동]
+                    engine.get_dual_12_shinsal(yb, db, tj),  # 🎯 듀얼 12신살(yb, db) 연동
                     bg_col, b_left,
                     is_cur_yr
                 )
@@ -647,7 +667,7 @@ if st.session_state.get('app_running', False):
                     engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
                     wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                     engine.get_unsung(ds_hanja, wj_hanja), 
-                    engine.get_dual_12_shinsal(yb, db, wj_hanja),  # 🎯 [듀얼 12신살 연동]
+                    engine.get_dual_12_shinsal(yb, db, wj_hanja),  # 🎯 듀얼 12신살(yb, db) 연동
                     bg_col, b_left,
                     is_cur_m
                 )
