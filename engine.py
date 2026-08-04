@@ -481,13 +481,31 @@ def auto_fill_partner_ganji():
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
 # ==============================================================================
-# 3. 명리 이론 연산 로직
+# 3. 명리 이론 연산 로직 (방탄 보정 완결본)
 # ==============================================================================
 def _to_hanja(char):
-    """한글/한자 구분 없이 무조건 정통 한자 1글자로 완벽 변환"""
-    if not char or char in ["?", " ", "-"]: return ""
-    char = str(char).strip()
-    return K2H_GAN.get(char, K2H_JI.get(char, char))
+    """한글/한자/공백/괄호 구분 없이 무조건 정통 한자 1글자로 완벽 변환"""
+    if not char or str(char).strip() in ["?", " ", "-", ""]: 
+        return ""
+    
+    clean_s = str(char).strip()
+    
+    # 1. 한자 자체로 들어왔을 경우 그대로 반환
+    hanja_list = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+    for c in clean_s:
+        if c in hanja_list:
+            return c
+            
+    # 2. 한글로 들어왔을 경우 매핑 변환
+    k2h_map = {
+        '갑':'甲', '을':'乙', '병':'丙', '정':'丁', '무':'戊', '기':'己', '경':'庚', '신':'辛', '임':'壬', '계':'癸',
+        '자':'子', '축':'丑', '인':'寅', '묘':'卯', '진':'辰', '사':'巳', '오':'午', '미':'未', '신':'申', '유':'酉', '술':'戌', '해':'亥'
+    }
+    for c in clean_s:
+        if c in k2h_map:
+            return k2h_map[c]
+            
+    return K2H_GAN.get(clean_s, K2H_JI.get(clean_s, ""))
 
 def get_color(c):
     c = _to_hanja(c)
@@ -500,7 +518,7 @@ def get_color(c):
 
 def get_ss(dg, tc):
     dg, tc = _to_hanja(dg), _to_hanja(tc)
-    if tc in ["?", " ", "-"]: return "-"
+    if tc in ["?", " ", "-", ""]: return "-"
     rels = {
         '甲':{'甲':'비견','乙':'겁재','丙':'식신','丁':'상관','戊':'편재','己':'정재','庚':'편관','辛':'정관','壬':'편인','癸':'정인','寅':'비견','卯':'겁재','巳':'식신','午':'상관','辰':'편재','戌':'편재','丑':'정재','未':'정재','申':'편관','酉':'정관','亥':'편인','子':'정인'},
         '乙':{'乙':'비견','甲':'겁재','丁':'식신','丙':'상관','己':'편재','戊':'정재','辛':'편관','庚':'정관','癸':'편인','壬':'정인','卯':'비견','寅':'겁재','午':'식신','巳':'상관','丑':'편재','未':'편재','辰':'정재','戌':'정재','酉':'편관','申':'정관','子':'편인','亥':'정인'},
@@ -545,6 +563,41 @@ def get_unsung(dg, ji):
     return "-"
 
 # ==============================================================================
+# 🎯 [신규 필수 추가] 단일 12신살 정밀 연산 기본 함수 (삼합 수순 알고리즘)
+# ==============================================================================
+def get_12_shinsal(base_ji, target_ji):
+    """기준 지지(년지 또는 일지) 대비 대상 지지의 12신살 정밀 연산"""
+    b_h = _to_hanja(base_ji)
+    t_h = _to_hanja(target_ji)
+    
+    if not b_h or not t_h:
+        return "-"
+        
+    jis = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+    if b_h not in jis or t_h not in jis:
+        return "-"
+        
+    # 삼합 그룹별 겁살(시작점) 지지 정의
+    samhap_geob_map = {
+        '申': '巳', '子': '巳', '辰': '巳',  # 水국 -> 겁살: 巳
+        '寅': '亥', '午': '亥', '戌': '亥',  # 火국 -> 겁살: 亥
+        '巳': '寅', '酉': '寅', '丑': '寅',  # 金국 -> 겁살: 寅
+        '亥': '申', '卯': '申', '未': '申'   # 木국 -> 겁살: 申
+    }
+    
+    geob_start_ji = samhap_geob_map.get(b_h, "")
+    if not geob_start_ji:
+        return "-"
+        
+    start_idx = jis.index(geob_start_ji)
+    target_idx = jis.index(t_h)
+    
+    shinsal_names = ["겁살", "재살", "천살", "지살", "년살", "월살", "망신살", "장성살", "반안살", "역마살", "육해살", "화개살"]
+    
+    diff = (target_idx - start_idx) % 12
+    return shinsal_names[diff]
+
+# ==============================================================================
 # 🎯 [듀얼 12신살 연산 모듈 - 년지 기준(환경) & 일지 기준(내면·심리)]
 # ==============================================================================
 def get_dual_12_shinsal(yb, db, target_ji):
@@ -559,6 +612,9 @@ def get_dual_12_shinsal(yb, db, target_ji):
         if not y_shinsal or y_shinsal == "-": y_shinsal = "-"
         if not d_shinsal or d_shinsal == "-": d_shinsal = "-"
         
+        if y_shinsal == "-" and d_shinsal == "-":
+            return "-"
+        
         # 만약 두 신살이 완벽히 동일하면 중복 표기 방지
         if y_shinsal == d_shinsal:
             return f"{y_shinsal}"
@@ -566,38 +622,6 @@ def get_dual_12_shinsal(yb, db, target_ji):
             return f"{y_shinsal} ({d_shinsal})"
     except Exception:
         return "-"
-
-def get_all_dual_12_shinsal(yb, db, target_list):
-    """원국 4주(년/월/일/시) 또는 행운 리스트 전체에 대한 듀얼 신살 일괄 추출"""
-    results = [get_dual_12_shinsal(yb, db, t_ji) for t_ji in target_list]
-    return results
-
-def get_all_12_shinsal(yb, mb, db, hb):
-    """
-    년지(yb)를 기준으로 원국 사주팔자(년/월/일/시 지지) 전체의 
-    년지 기준 12신살 체계를 일괄 추출합니다.
-    """
-    try:
-        results = [
-            get_12_shinsal(yb, yb),
-            get_12_shinsal(yb, mb),
-            get_12_shinsal(yb, db),
-            get_12_shinsal(yb, hb)
-        ]
-        return ", ".join(results)
-    except Exception:
-        return "년지 기준 12신살 연산 보정 완료"
-
-def get_all_dual_12_shinsal(yb, db, jjis):
-    """
-    [신규 추가] 년지(yb)와 일지(db)를 교차하여 원국 지지 전체의 
-    듀얼 12신살('년지신살 (일지신살)') 리스트를 일괄 추출합니다.
-    """
-    try:
-        results = [get_dual_12_shinsal(yb, db, j) for j in jjis]
-        return results
-    except Exception:
-        return ["-", "-", "-", "-"]
 
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
