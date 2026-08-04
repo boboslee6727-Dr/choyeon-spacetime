@@ -214,8 +214,21 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         gen_shinsals.append("<br>".join(filtered[:6]) if filtered else "-")
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:900; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
 
-    # 🎯 [듀얼 12신살 적용: 년지기준(yb) + 일지기준(db) 병기]
-    shinsal = "".join([f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important; font-size:11px;'>{engine.get_dual_12_shinsal(yb, db, jjis[i])}</td>" for i in range(4)])
+    # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 렌더링 적용]
+    shinsal_tds = []
+    for i in range(4):
+        dual_str = engine.get_dual_12_shinsal(yb, db, jjis[i])
+        if "(" in dual_str:
+            parts = dual_str.split("(")
+            y_part = parts[0].strip()
+            d_part = f"({parts[1].strip()}"
+            cell_content = f"{y_part}<br><span style='font-size:10px; color:#555;'>{d_part}</span>"
+        else:
+            cell_content = dual_str
+            
+        shinsal_tds.append(f"<td style='color:#C62828; font-weight:900; border:1px solid #444 !important; line-height:1.2; padding:2px 0;'>{cell_content}</td>")
+    
+    shinsal = "".join(shinsal_tds)
     unsung = "".join([f"<td style='color:#0D47A1; font-weight:900; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
 
     return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, shinsal, gen_shinsal)
@@ -310,6 +323,15 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
     
+    # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 파싱 적용]
+    if "(" in s_val:
+        parts = s_val.split("(")
+        y_part = parts[0].strip()
+        d_part = f"({parts[1].strip()}"
+        s_display = f"{y_part}<br><span style='font-size:9px; color:#555;'>{d_part}</span>"
+    else:
+        s_display = s_val
+    
     if is_current:
         active_style = "border: 3px solid #E65100 !important;"
         header_bg = "#E65100"
@@ -326,7 +348,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shin
         <div class='{ji_cls}' style='font-size:18px; font-weight:900; height:30px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:13px; font-weight:900; color:#000000; height:24px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:12px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:26px; display:flex; align-items:center; justify-content:center; line-height:1.1; overflow:hidden;'><span style='color:#C62828;'>{s_display}</span></div>
     </div>
     """
 
@@ -341,6 +363,15 @@ def get_sewun_layout(title, content):
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     s_val = shinsal if shinsal and str(shinsal).strip() else "-"
+    
+    # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 파싱 적용]
+    if "(" in s_val:
+        parts = s_val.split("(")
+        y_part = parts[0].strip()
+        d_part = f"({parts[1].strip()}"
+        s_display = f"{y_part}<br><span style='font-size:9px; color:#555;'>{d_part}</span>"
+    else:
+        s_display = s_val
     
     if is_current:
         active_style = "border: 3px solid #0277BD !important;"
@@ -360,7 +391,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
         <div style='font-size:12px; font-weight:900; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
         <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{s_val}</span></div>
+        <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:26px; display:flex; align-items:center; justify-content:center; line-height:1.1; overflow:hidden;'><span style='color:#C62828;'>{s_display}</span></div>
     </div>
     """
 
@@ -397,9 +428,9 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, shinsal,
     """
 
 # ==============================================================================
-# [최종 마스터피스] 대운/세운/월운과 100% 동일한 Flex 구조의 주간 간지 캘린더
+# [최종 마스터피스] 대운/세운/월운과 100% 동일한 Flex 구조의 주간 간지 캘린더 (듀얼 신살 2단 적용)
 # ==============================================================================
-def generate_weekly_calendar_html(weekly_days_data, today_day):
+def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
     content = ""
     
     def get_oh_class_local(char):
@@ -427,10 +458,26 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
             import engine
             ss_val = engine.get_ss("甲", ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung("甲", ji_char) if ji_char != "-" else "-"
-            # 주간 캘린더 등에서도 필요시 get_dual_12_shinsal 적용 가능 (현재는 단일 또는 필요에 맞게 연동)
-            shinsal_val = engine.get_12_shinsal("子", ji_char) if ji_char != "-" else "-"
+            
+            # 🎯 [듀얼 12신살 연동 적용] yb와 db가 존재하면 듀얼 연산, 아니면 기본 단일 연산
+            if yb and db and ji_char != "-":
+                shinsal_val = engine.get_dual_12_shinsal(yb, db, ji_char)
+            elif yb and ji_char != "-":
+                shinsal_val = engine.get_12_shinsal(yb, ji_char)
+            else:
+                shinsal_val = engine.get_12_shinsal("子", ji_char) if ji_char != "-" else "-"
         except:
             pass
+            
+        # 🎯 [듀얼 12신살 위아래 2단 수직 분리형 파싱 적용]
+        s_val_str = str(shinsal_val) if shinsal_val and str(shinsal_val).strip() else "-"
+        if "(" in s_val_str:
+            parts = s_val_str.split("(")
+            y_part = parts[0].strip()
+            d_part = f"({parts[1].strip()}"
+            s_display = f"{y_part}<br><span style='font-size:9px; color:#555;'>{d_part}</span>"
+        else:
+            s_display = s_val_str
             
         if is_today:
             active_style = "border: 3px solid #2E7D32 !important;"
@@ -450,7 +497,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
             bg_col = "#FAFAFA"
             
         u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
-        s_val = f"<span style='color:#C62828;'>{shinsal_val}</span>" if shinsal_val != "-" else "-"
+        s_val = f"<span style='color:#C62828;'>{s_display}</span>" if s_display != "-" else "-"
         
         content += f"""
         <div style='flex:1; {active_style} text-align:center; padding-bottom:5px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box;'>
@@ -461,7 +508,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day):
             <div class='{gan_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
             <div class='{ji_cls}' style='font-size:16px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
             <div class='color-unsung' style='font-size:11px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{s_val}</div>
+            <div class='color-shinsal' style='font-size:10px; font-weight:900; border-top:1px solid #ccc; height:26px; display:flex; align-items:center; justify-content:center; line-height:1.1; overflow:hidden;'>{s_val}</div>
         </div>
         """
 
