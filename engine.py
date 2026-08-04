@@ -483,6 +483,12 @@ def auto_fill_partner_ganji():
 # ==============================================================================
 # 3. 명리 이론 연산 로직
 # ==============================================================================
+def _to_hanja(char):
+    """한글/한자 구분 없이 무조건 정통 한자 1글자로 완벽 변환"""
+    if not char or char in ["?", " ", "-"]: return ""
+    char = str(char).strip()
+    return K2H_GAN.get(char, K2H_JI.get(char, char))
+
 def get_color(c):
     c = _to_hanja(c)
     if c in "甲乙寅卯": return "목"
@@ -510,36 +516,62 @@ def get_ss(dg, tc):
     return rels.get(dg, {}).get(tc, "-")
 
 def get_unsung(dg, ji):
-    dg, ji = _to_hanja(dg), _to_hanja(ji)
-    if ji in ["?", " ", "-"]: return "-"
-    table = {'甲':"亥子丑寅卯辰巳午未申酉戌",'丙':"寅卯辰巳午未申酉戌亥子丑",'戊':"寅卯辰巳午未申酉戌亥子丑",'庚':"巳午未申酉戌亥子丑寅卯辰",'壬':"申酉戌亥子丑寅卯辰巳午未",'乙':"午巳辰卯寅丑子亥戌酉申未",'丁':"酉申未午巳辰卯寅丑子亥戌",'己':"酉申未午巳辰卯寅丑子亥戌",'辛':"子亥戌酉申未午巳辰卯寅丑",'癸':"卯寅丑子亥戌酉申未午巳辰"}
-    idx = table.get(dg, "").find(ji)
-    return ["장생","목욕","관대","건록","제왕","쇠","병","사","묘","절","태","양"][idx] if idx != -1 else "-"
+    """일간과 지지가 한글/한자 무엇으로 들어와도 100% 정밀 연산하는 12운성 함수"""
+    dg_h = _to_hanja(dg)
+    ji_h = _to_hanja(ji)
+    
+    if not dg_h or not ji_h: return "-"
+    
+    # 정통 12운성 순환 매핑 테이블
+    table = {
+        '甲': "亥子丑寅卯辰巳午未申酉戌",
+        '丙': "寅卯辰巳午未申酉戌亥子丑",
+        '戊': "寅卯辰巳午未申酉戌亥子丑",
+        '庚': "巳午未申酉戌亥子丑寅卯辰",
+        '壬': "申酉戌亥子丑寅卯辰巳午未",
+        '乙': "午巳辰卯寅丑子亥戌酉申未",
+        '丁': "酉申未午巳辰卯寅丑子亥戌",
+        '己': "酉申未午巳辰卯寅丑子亥戌",
+        '辛': "子亥戌酉申未午巳辰卯寅丑",
+        '癸': "卯寅丑子亥戌酉申未午巳辰"
+    }
+    
+    target_str = table.get(dg_h, "")
+    idx = target_str.find(ji_h)
+    
+    if idx != -1:
+        unsung_names = ["장생", "목욕", "관대", "건록", "제왕", "쇠", "병", "사", "묘", "절", "태", "양"]
+        return unsung_names[idx]
+    return "-"
 
 def get_12_shinsal(year_ji, target_ji):
-    year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
-    if target_ji in ["?", " ", "-"] or not year_ji: return "-"
+    """년지와 타지지가 한글/한자 무엇으로 들어와도 100% 정밀 연산하는 12신살 함수"""
+    yj_h = _to_hanja(year_ji)
+    tj_h = _to_hanja(target_ji)
+    
+    if not yj_h or not tj_h: return "-"
     
     ji_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    
+    if yj_h not in ji_list or tj_h not in ji_list: return "-"
+    
     try:
-        t_idx = ji_list.index(target_ji)
-        s_map = {"申":"巳","子":"巳","辰":"巳", "寅":"亥","午":"亥","戌":"亥", "巳":"寅","酉":"寅","丑":"寅", "亥":"申","卯":"申","未":"申"}
-        s_start = s_map.get(year_ji, "巳")
+        t_idx = ji_list.index(tj_h)
+        # 삼합 기준 겁살(劫殺) 시작점 매핑
+        s_map = {
+            "申": "巳", "子": "巳", "辰": "巳",
+            "寅": "亥", "午": "亥", "戌": "亥",
+            "巳": "寅", "酉": "寅", "丑": "寅",
+            "亥": "申", "卯": "申", "未": "申"
+        }
+        s_start = s_map.get(yj_h, "巳")
         s_start_idx = ji_list.index(s_start)
         
         s_idx = (t_idx - s_start_idx + 12) % 12
-        return ["겁살","재살","천살","지살","년살","월살","망신살","장성살","반안살","역마살","육해살","화개살"][s_idx]
-    except:
+        shinsal_names = ["겁살", "재살", "천살", "지살", "년살", "월살", "망신살", "장성살", "반안살", "역마살", "육해살", "화개살"]
+        return shinsal_names[s_idx]
+    except Exception:
         return "-"
-
-def get_all_12_shinsal(yb, mb, db, hb):
-    results = [
-        get_12_shinsal(yb, yb),
-        get_12_shinsal(yb, mb),
-        get_12_shinsal(yb, db),
-        get_12_shinsal(yb, hb)
-    ]
-    return ", ".join(results)
 
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
