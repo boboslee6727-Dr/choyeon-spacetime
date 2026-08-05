@@ -184,12 +184,10 @@ with st.sidebar:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
             elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-                safe_gan = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
-                safe_ji = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
-                
-                ry_h = safe_gan.get(_ry[0], _ry[0]) + safe_ji.get(_ry[1], _ry[1])
-                rm_h = safe_gan.get(_rm[0], _rm[0]) + safe_ji.get(_rm[1], _rm[1])
-                rd_h = safe_gan.get(_rd[0], _rd[0]) + safe_ji.get(_rd[1], _rd[1])
+                # 🎯 [정석 단일화] engine.py의 표준 변환 상수(K2H_GAN, K2H_JI)만 깔끔하게 사용
+                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
+                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
+                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
                 
                 klc_find = KoreanLunarCalendar()
                 found = False
