@@ -114,7 +114,7 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
-    <div style='text-align:center; margin-bottom:25px; line-height:1.6;'>
+    <div style='text-align:center; margin-bottom:5px; line-height:1.6;'>
         <span style='font-size:22px; font-weight:900; color:{p_color}; letter-spacing:1px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
         <span style='font-size:15px; font-weight:400; color:#444444; letter-spacing:0.5px; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span>
     </div>
