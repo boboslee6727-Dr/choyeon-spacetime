@@ -380,7 +380,7 @@ with st.sidebar:
 
             if 'rev_p_success_msg' in st.session_state:
                 st.markdown(
-                    f"<div style='background-color:#E8F5E9; border-left:5px solid #2E7D32; padding:8px 12px; border-radius:4px; font-size:13px; font-weight:bold; color:#1B5E20; line-height:1.4; margin-top:8px;'>"
+                    f"<div style='background-color:#E8F5E9; border-left:5px solid #2E7D32; padding:8px 12px; border-radius:4px; font-size:15px; font-weight:bold; color:#1B5E20; line-height:1.4; margin-top:8px;'>"
                     f"{st.session_state['rev_p_success_msg']}"
                     f"</div>", 
                     unsafe_allow_html=True
