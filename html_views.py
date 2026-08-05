@@ -22,13 +22,13 @@ def get_global_css():
 
     /* 🎯 [사이드바 컨트롤 요소 폰트 14px 정밀 타겟팅 고정] */
     div[data-testid="stSidebar"] * {
-        font-size: 12px !important;
+        font-size: 14px !important;
     }
     div[data-testid="stRadio"] label p {
-        font-size: 12px !important;
+        font-size: 14px !important;
     }
     div[data-testid="stCheckbox"] label p {
-        font-size: 12px !important;
+        font-size: 14px !important;
     }
 
     .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
