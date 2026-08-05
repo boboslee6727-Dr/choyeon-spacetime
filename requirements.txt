@@ -1,7 +1,6 @@
-streamlit==1.35.0
+streamlit
 pandas
 korean_lunar_calendar
 ephem
 google-genai
 pytz
-starlette==0.37.2
