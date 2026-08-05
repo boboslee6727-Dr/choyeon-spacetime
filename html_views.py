@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 7.3
+# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 7.3 (수정본)
 # ==============================================================================
 import re
 
@@ -21,6 +21,18 @@ def get_global_css():
 
     .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
         font-family: 'Noto Serif KR', serif !important; 
+    }
+
+    /* 🎯 [굵은체 전용 클래스 추가 - Noto Serif 900 강제 적용] */
+    .b-text {
+        font-weight: 900 !important;
+        color: #000000 !important;
+        display: inline-block;
+    }
+    .b-text-red {
+        font-weight: 900 !important;
+        color: #D50000 !important;
+        display: inline-block;
     }
 
     div.stButton > button { 
@@ -99,9 +111,9 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                 <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <div style='font-size: 16px; color: #555; line-height: 1.8; font-weight: 600;'>
-                        <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                        <p style='margin: 5px 0 0 0; color: #D50000; white-space: nowrap;'>{time_str}</p>
+                    <div style='font-size: 16px; color: #555; line-height: 1.8;'>
+                        <p style='margin: 0; white-space: nowrap;'>[양력] <span class='b-text'>{sol_str}</span> | [음력] <span class='b-text'>{lun_str}</span></p>
+                        <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{time_str}</span></p>
                     </div>
                 </div>
             </div>
@@ -113,10 +125,11 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
+    # 🎯 [수정] margin-bottom을 8px로 축소 및 .b-text 클래스로 굵은체(font-weight: 900) 확실히 고정
     return f"""
     <div style='text-align:center; margin-bottom:8px; line-height:1.6;'>
         <span style='font-size:22px; font-weight:900; color:{p_color}; letter-spacing:1px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
-        <span style='font-size:15px; font-weight:400; color:#444444; letter-spacing:0.5px; white-space:nowrap;'>[양력: <b style='font-weight:800; color:#000;'>{sol_str}</b> | 음력: <b style='font-weight:800; color:#000;'>{lun_str}</b> <b style='font-weight:800; color:#000;'>{time_str}</b>]</span>
+        <span style='font-size:15px; color:#444444; letter-spacing:0.5px; white-space:nowrap;'>[양력: <span class='b-text'>{sol_str}</span> | 음력: <span class='b-text'>{lun_str}</span> <span class='b-text'>{time_str}</span>]</span>
     </div>
     """
 
@@ -154,7 +167,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
             if ci == r_idx:
                 if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
                 elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
-                else:            lbl_txt = f"←({jjis[r_idx]})→"
+                else:           lbl_txt = f"←({jjis[r_idx]})→"
                 cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
