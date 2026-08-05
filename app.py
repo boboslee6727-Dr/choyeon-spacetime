@@ -1,6 +1,3 @@
-# ==============================================================================
-# Streamlit Cloud Starlette GZipMiddleware 호환성 패치 (app.py 최상단 반영용)
-# ==============================================================================
 import starlette.middleware.gzip as _gz
 
 _orig_gzip_init = _gz.GZipResponder.__init__
