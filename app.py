@@ -1,19 +1,3 @@
-import starlette.middleware.gzip as _gz
-_old_init = _gz.GZipResponder.__init__
-
-def _new_init(self, app, dispatch=None, **kwargs):
-    kwargs.pop('thread_minimum_size', None)
-    if dispatch is not None:
-        return _old_init(self, app, dispatch=dispatch, **kwargs)
-    return _old_init(self, app, **kwargs)
-    
-_gz.GZipResponder.__init__ = _new_init
-
-import starlette.middleware.gzip
-if hasattr(starlette.middleware.gzip, "GZipResponder"):
-    _orig_init = starlette.middleware.gzip.GZipResponder.__init__
-    starlette.middleware.gzip.GZipResponder.__init__ = lambda self, *args, **kwargs: _orig_init(self, *args, **{k: v for k, v in kwargs.items() if k != 'thread_minimum_size'})
-
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
