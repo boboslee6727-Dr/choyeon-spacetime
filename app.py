@@ -162,7 +162,7 @@ with st.sidebar:
         f_val = st.session_state.get("f_g", "여성")
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
-    # ==============================================================================
+# ==============================================================================
     # 🔍 범용 사주간지 역산 입력부
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -230,7 +230,7 @@ with st.sidebar:
                                 found = True
                                 s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                 s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                st.session_state['rev_success_msg'] = f"✅ <small>양력 {s_sol_fmt}<br>&nbsp;&nbsp;&nbsp;&nbsp;음력 {s_lun_fmt}</small>"
+                                st.session_state['rev_success_msg'] = f"✅ 양력 {s_sol_fmt}\n 음력 {s_lun_fmt}"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -239,12 +239,7 @@ with st.sidebar:
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
         if 'rev_success_msg' in st.session_state:
-            st.markdown(
-                f"<div style='background-color:#E8F5E9; border-left:5px solid #2E7D32; padding:8px 12px; border-radius:4px; font-size:13px; font-weight:bold; color:#1B5E20; line-height:1.4; margin-top:8px;'>"
-                f"{st.session_state['rev_success_msg']}"
-                f"</div>", 
-                unsafe_allow_html=True
-            )
+            st.success(st.session_state['rev_success_msg'])
             del st.session_state['rev_success_msg']
 
     # ==============================================================================
@@ -370,7 +365,7 @@ with st.sidebar:
                                     found = True
                                     s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                     s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                    st.session_state['rev_p_success_msg'] = f"✅ <small>양력 {s_sol_fmt}<br>&nbsp;&nbsp;&nbsp;&nbsp;음력 {s_lun_fmt}</small>"
+                                    st.session_state['rev_p_success_msg'] = f"✅ 양력 {s_sol_fmt}\n 음력 {s_lun_fmt}"
                                     st.rerun()
                                     break
                                 curr_dt -= dt_mod.timedelta(days=1)
@@ -379,12 +374,7 @@ with st.sidebar:
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
             if 'rev_p_success_msg' in st.session_state:
-                st.markdown(
-                    f"<div style='background-color:#E8F5E9; border-left:5px solid #2E7D32; padding:8px 12px; border-radius:4px; font-size:15px; font-weight:bold; color:#1B5E20; line-height:1.4; margin-top:8px;'>"
-                    f"{st.session_state['rev_p_success_msg']}"
-                    f"</div>", 
-                    unsafe_allow_html=True
-                )
+                st.success(st.session_state['rev_p_success_msg'])
                 del st.session_state['rev_p_success_msg']
 
         if 'f_n' not in st.session_state: st.session_state['f_n'] = ""
@@ -493,9 +483,6 @@ if st.session_state.get('app_running', False):
             lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
             leap_str = "윤달" if klc.isIntercalation else "평달"
             
-        # ----------------------------------------------------------------------
-        # 🗓️ [수정/연동] 선택된 분석 기준 날짜 오버라이딩 적용
-        # ----------------------------------------------------------------------
         curr_year = selected_target_date.year
         curr_m = selected_target_date.month
         curr_d = selected_target_date.day
@@ -512,7 +499,6 @@ if st.session_state.get('app_running', False):
         with st.spinner(f"⏳ [{u_product.strip()}] 범용 시공명리 연산 및 정밀 분석 중...."):
             h, m = extract_time(b_time)
             
-            # engine.py: -30분 동경시차 및 태양 황경(Ephem) 적용 연주/월주 선언
             y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
             is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
