@@ -184,7 +184,7 @@ with st.sidebar:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
             elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-                # 🎯 [정석 단일화] engine.py의 표준 변환 상수(K2H_GAN, K2H_JI)만 깔끔하게 사용
+                # 🎯 [engine.py 표준 변환 일원화]
                 ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
                 rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
                 rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
@@ -205,38 +205,39 @@ with st.sidebar:
                     '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
                     '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
                 }
-                for y in range(2026, 1899, -1):
-                    klc_find.setSolarDate(y, 7, 1)
-                    gj_y = klc_find.getChineseGapJaString().split()
-                    if gj_y and gj_y[0][:2] == ry_h:
-                        curr_dt = dt_mod.date(y+1, 2, 28)
-                        while curr_dt >= dt_mod.date(y, 1, 1):
-                            klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                            gj = klc_find.getChineseGapJaString().split()
-                            if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                                st.session_state['s_y'] = curr_dt.year
-                                st.session_state['s_m'] = curr_dt.month
-                                st.session_state['s_d'] = curr_dt.day
-                                
-                                if u_rt:
-                                    ji_char_u = u_rt[-1]
-                                    u_rt_h = safe_ji.get(ji_char_u, ji_char_u)
-                                    target_time_str = time_map.get(u_rt_h, "시간 모름")
-                                else:
-                                    target_time_str = "시간 모름"
-                                
-                                st.session_state['s_t'] = target_time_str
-                                st.session_state['s_t_select'] = target_time_str
-                                
-                                found = True
-                                
-                                s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                                s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt}\n 음력{s_lun_fmt}\n"
-                                st.rerun()
-                                break
-                            curr_dt -= dt_mod.timedelta(days=1)
+                
+                # 🎯 [탐색 알고리즘 방탄 보정] 2050년부터 1900년까지 전년도 및 절기 완벽 스캔
+                for y in range(2050, 1899, -1):
+                    # 년도별 1월 1일부터 12월 31일까지 일진 역산 대조
+                    curr_dt = dt_mod.date(y, 12, 31)
+                    end_dt = dt_mod.date(y, 1, 1)
+                    while curr_dt >= end_dt:
+                        klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                        gj = klc_find.getChineseGapJaString().split()
+                        if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                            st.session_state['s_y'] = curr_dt.year
+                            st.session_state['s_m'] = curr_dt.month
+                            st.session_state['s_d'] = curr_dt.day
+                            
+                            if u_rt:
+                                ji_char_u = u_rt[-1]
+                                u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u)
+                                target_time_str = time_map.get(u_rt_h, "시간 모름")
+                            else:
+                                target_time_str = "시간 모름"
+                            
+                            st.session_state['s_t'] = target_time_str
+                            st.session_state['s_t_select'] = target_time_str
+                            
+                            found = True
+                            s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                            s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
+                            st.session_state['rev_success_msg'] = f"✅ 양력 {s_sol_fmt} | 음력 {s_lun_fmt}"
+                            st.rerun()
+                            break
+                        curr_dt -= dt_mod.timedelta(days=1)
                     if found: break
+                
                 if not found: st.error("일치하는 날짜가 없습니다.")
             else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
@@ -321,12 +322,10 @@ with st.sidebar:
                     if 'rev_p_success_msg' in st.session_state: del st.session_state['rev_p_success_msg']
                     st.rerun()
                 elif len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
-                    safe_gan = {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸'}
-                    safe_ji = {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥'}
-                    
-                    p_ry_h = safe_gan.get(_p_ry[0], _p_ry[0]) + safe_ji.get(_p_ry[1], _p_ry[1])
-                    p_rm_h = safe_gan.get(_p_rm[0], _p_rm[0]) + safe_ji.get(_p_rm[1], _p_rm[1])
-                    p_rd_h = safe_gan.get(_p_rd[0], _p_rd[0]) + safe_ji.get(_p_rd[1], _p_rd[1])
+                    # 🎯 [engine.py 표준 변환 일원화]
+                    p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
+                    p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
+                    p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _rd_h[1] if 'rd_h' in locals() else _p_rd[1])
                     
                     klc_find = KoreanLunarCalendar()
                     found = False
@@ -344,33 +343,37 @@ with st.sidebar:
                         '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
                         '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
                     }
-                    for y in range(2026, 1899, -1):
-                        klc_find.setSolarDate(y, 7, 1)
-                        gj_y = klc_find.getChineseGapJaString().split()
-                        if gj_y and gj_y[0][:2] == p_ry_h:
-                            curr_dt = dt_mod.date(y+1, 2, 28)
-                            while curr_dt >= dt_mod.date(y, 1, 1):
-                                klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                                gj = klc_find.getChineseGapJaString().split()
-                                if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                                    st.session_state['p_y_in'] = curr_dt.year
-                                    st.session_state['p_m_in'] = curr_dt.month
-                                    st.session_state['p_d_in'] = curr_dt.day
-                                    if p_rt:
-                                        ji_char_p = p_rt[-1]
-                                        p_rt_h = safe_ji.get(ji_char_p, ji_char_p)
-                                        st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
-                                    else:
-                                        st.session_state['p_t_key'] = "시간 모름"
-                                    found = True
-                                    
-                                    p_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                                    p_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                    st.session_state['rev_p_success_msg'] = f"✅양력{p_sol_fmt}\n음력{p_lun_fmt}\n"
-                                    st.rerun()
-                                    break
-                                curr_dt -= dt_mod.timedelta(days=1)
+                    
+                    for y in range(2050, 1899, -1):
+                        curr_dt = dt_mod.date(y, 12, 31)
+                        end_dt = dt_mod.date(y, 1, 1)
+                        while curr_dt >= end_dt:
+                            klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                            gj = klc_find.getChineseGapJaString().split()
+                            if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
+                                st.session_state['p_y_in'] = curr_dt.year
+                                st.session_state['p_m_in'] = curr_dt.month
+                                st.session_state['p_d_in'] = curr_dt.day
+                                
+                                if p_rt:
+                                    ji_char_u = p_rt[-1]
+                                    u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u)
+                                    target_time_str = time_map.get(u_rt_h, "시간 모름")
+                                else:
+                                    target_time_str = "시간 모름"
+                                
+                                st.session_state['p_t_key'] = target_time_str
+                                st.session_state['p_t_select'] = target_time_str
+                                
+                                found = True
+                                s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                                s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
+                                st.session_state['rev_p_success_msg'] = f"✅ 양력 {s_sol_fmt} | 음력 {s_lun_fmt}"
+                                st.rerun()
+                                break
+                            curr_dt -= dt_mod.timedelta(days=1)
                         if found: break
+                    
                     if not found: st.error("일치하는 날짜가 없습니다.")
                 else: st.warning("간지를 2글자씩 정확히 입력하세요.")
 
