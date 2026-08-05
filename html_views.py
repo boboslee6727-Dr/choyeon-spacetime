@@ -126,11 +126,11 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
+    # 🎯 표지(Cover)와 동일하게 양력/음력 날짜는 검은색 굵은체(b-text), 시간(time_str)은 빨간색 굵은체(b-text-red) 적용
     return f"""
     <div style='text-align:center; margin-bottom:8px; line-height:1.6;'>
         <span style='font-size:22px; font-weight:900; color:{p_color}; letter-spacing:1px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
-        <!-- 🎯 [양력:, |, 음력:] 전체를 b-text 태그 안으로 이동하여 굵은체 적용 -->
-        <span style='font-size:15px; letter-spacing:0.5px; white-space:nowrap;' class='b-text'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span>
+        <span style='font-size:15px; letter-spacing:0.5px; white-space:nowrap;'>[<span class='b-text'>양력: {sol_str} | 음력: {lun_str}</span> <span class='b-text-red'>{time_str}</span>]</span>
     </div>
     """
 
@@ -521,14 +521,14 @@ def get_gunghap_cover(version, m_name, m_age, m_sol, m_lun, m_time, f_name, f_ag
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>
                 <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 15px;'>♂️ 남명 : {m_name} 님 <span style='font-size:16px; color:#555;'>( {m_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun} {m_time}</p>
+                <div style='font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[<span class='b-text'>양력: {m_sol} | 음력: {m_lun}</span> <span class='b-text-red'>{m_time}</span>]</p>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>
                 <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 15px;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun} {f_time}</p>
+                <div style='font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[<span class='b-text'>양력: {f_sol} | 음력: {f_lun}</span> <span class='b-text-red'>{f_time}</span>]</p>
                 </div>
             </div>
             <p style='font-size: 18px; margin-top: 30px; font-weight: 800;'>{today_str}</p>
@@ -746,14 +746,14 @@ def get_comparison_gunghap_cover(version, m_name, m_age, m_sol, m_lun, m_time, f
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>
                 <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 15px;'>♂️ 남명 : {m_name} 님 <span style='font-size:16px; color:#555;'>( {m_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {m_sol} | [음력] {m_lun} {m_time}</p>
+                <div style='font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[<span class='b-text'>양력: {m_sol} | 음력: {m_lun}</span> <span class='b-text-red'>{m_time}</span>]</p>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>
                 <h2 style='font-size: 24px; font-weight: 800; color: #2E7D32; margin-bottom: 15px;'>♀️ 여명 : {f_name} 님 <span style='font-size:16px; color:#555;'>( {f_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {f_sol} | [음력] {f_lun} {f_time}</p>
+                <div style='font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[<span class='b-text'>양력: {f_sol} | 음력: {f_lun}</span> <span class='b-text-red'>{f_time}</span>]</p>
                 </div>
             </div>
             <p style='font-size: 18px; margin-top: 30px; font-weight: 800;'>{today_str}</p>
