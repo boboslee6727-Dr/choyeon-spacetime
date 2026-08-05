@@ -103,7 +103,7 @@ with st.sidebar:
         st.session_state['app_running'] = False
 
     # app.py 상단 st.set_page_config() 바로 밑이나 적절한 곳에 추가
-    st.markdown("<style> * { font-size: 12px; } </style>", unsafe_allow_html=True)
+    st.markdown("<style> * { font-size: 13px; } </style>", unsafe_allow_html=True)
 
     st.markdown(f"""
         <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
