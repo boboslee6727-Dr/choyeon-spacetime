@@ -102,9 +102,6 @@ with st.sidebar:
     def stop_ai():
         st.session_state['app_running'] = False
 
-    # app.py 상단 st.set_page_config() 바로 밑이나 적절한 곳에 추가
-    st.markdown("<style> * { font-size: 13px; } </style>", unsafe_allow_html=True)
-
     st.markdown(f"""
         <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
             <h1 style="font-family: 'Nanum Gothic', sans-serif; color: #000000; font-weight: 900; font-size: 20px; margin: 0 0 5px 0;">🏮 초연 시공명리 연구소</h1>
