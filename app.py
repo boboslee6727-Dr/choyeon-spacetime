@@ -119,8 +119,8 @@ with st.sidebar:
     
     selected_target_date = st.date_input(
         "조회할 연/월/일 선택",
-        value=st.session_state.get("target_calc_date", default_date_today),
-        key="target_calc_date",
+        value=st.session_state.get("main_target_calc_date", default_date_today),
+        key="main_target_calc_date",  # 👈 [핵심 수정] 키 중복 충돌 방지를 위해 고유 키로 변경
         help="기본값은 오늘 날짜이며, 원하는 특정 연/월/일을 선택하여 시뮬레이션할 수 있습니다.",
         on_change=stop_ai
     )
