@@ -1,10 +1,12 @@
 import starlette.middleware.gzip as _gz
 _old_init = _gz.GZipResponder.__init__
+
 def _new_init(self, app, dispatch=None, **kwargs):
     kwargs.pop('thread_minimum_size', None)
     if dispatch is not None:
         return _old_init(self, app, dispatch=dispatch, **kwargs)
     return _old_init(self, app, **kwargs)
+    
 _gz.GZipResponder.__init__ = _new_init
 
 import starlette.middleware.gzip
