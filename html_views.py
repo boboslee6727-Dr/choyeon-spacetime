@@ -112,7 +112,8 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
                 <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
                     <div style='font-size: 16px; color: #555; line-height: 1.8;'>
-                        <p style='margin: 0; white-space: nowrap;'>[양력] <span class='b-text'>{sol_str}</span> | [음력] <span class='b-text'>{lun_str}</span></p>
+                        <!-- 🎯 [양력], |, [음력] 전체를 b-text 태그 안으로 이동하여 굵은체 적용 -->
+                        <p style='margin: 0; white-space: nowrap;' class='b-text'>[양력] {sol_str} | [음력] {lun_str}</p>
                         <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{time_str}</span></p>
                     </div>
                 </div>
@@ -125,11 +126,11 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
-    # 🎯 [수정] margin-bottom을 8px로 축소 및 .b-text 클래스로 굵은체(font-weight: 900) 확실히 고정
     return f"""
     <div style='text-align:center; margin-bottom:8px; line-height:1.6;'>
         <span style='font-size:22px; font-weight:900; color:{p_color}; letter-spacing:1px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
-        <span style='font-size:15px; color:#444444; letter-spacing:0.5px; white-space:nowrap;'>[양력: <span class='b-text'>{sol_str}</span> | 음력: <span class='b-text'>{lun_str}</span> <span class='b-text'>{time_str}</span>]</span>
+        <!-- 🎯 [양력:, |, 음력:] 전체를 b-text 태그 안으로 이동하여 굵은체 적용 -->
+        <span style='font-size:15px; letter-spacing:0.5px; white-space:nowrap;' class='b-text'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span>
     </div>
     """
 
