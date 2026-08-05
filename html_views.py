@@ -1,7 +1,8 @@
 # ==============================================================================
-# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 7.3 (수정본)
+# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 7.3 (수정완료본)
 # ==============================================================================
 import re
+import streamlit as st
 
 def get_global_css():
     return """<style>
@@ -23,7 +24,7 @@ def get_global_css():
         font-family: 'Noto Serif KR', serif !important; 
     }
 
-    /* 🎯 [굵은체 전용 클래스 추가 - Noto Serif 900 강제 적용] */
+    /* 🎯 [굵은체 전용 클래스 - Noto Serif 900 강제 적용] */
     .b-text {
         font-weight: 900 !important;
         color: #000000 !important;
@@ -112,7 +113,6 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
                 <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
                     <div style='font-size: 16px; color: #555; line-height: 1.8;'>
-                        <!-- 🎯 [양력], |, [음력] 전체를 b-text 태그 안으로 이동하여 굵은체 적용 -->
                         <p style='margin: 0; white-space: nowrap;' class='b-text'>[양력] {sol_str} | [음력] {lun_str}</p>
                         <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{time_str}</span></p>
                     </div>
@@ -126,7 +126,6 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
-    # 🎯 표지(Cover)와 동일하게 양력/음력 날짜는 검은색 굵은체(b-text), 시간(time_str)은 빨간색 굵은체(b-text-red) 적용
     return f"""
     <div style='text-align:center; margin-bottom:8px; line-height:1.6;'>
         <span style='font-size:22px; font-weight:900; color:{p_color}; letter-spacing:1px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
@@ -168,7 +167,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
             if ci == r_idx:
                 if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
                 elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
-                else:           lbl_txt = f"←({jjis[r_idx]})→"
+                else:            lbl_txt = f"←({jjis[r_idx]})→"
                 cells.append(f"<td style='color:#D50000; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
@@ -283,7 +282,6 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
         bg_col = "#FFF9C4" if data.get("is_current", False) else "transparent"
         b_left = "none" if data.get("is_first", False) else "1px solid #ccc"
         
-        # 🎯 [완벽 보정] shin_sal과 y_shinSal 키 모두를 안전하게 호환하도록 수정
         y_s_val = data.get("y_shinsal", data.get("shin_sal", "-"))
         d_s_val = data.get("d_shinsal", "-")
         
@@ -422,8 +420,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         ss_val, unsung_val, y_shinsal_val, d_shinsal_val = "-", "-", "-", "-"
         try:
             import engine
-            # 🎯 일간(甲 등 또는 사주 일간)에 따른 지지십성 연산 복구
-            ds_hanja = st.session_state.get('ds_hanja', '甲') if 'st_session_state' in globals() else '甲'
+            ds_hanja = st.session_state.get('ds_hanja', '甲') if hasattr(st, 'session_state') else '甲'
             ss_val = engine.get_ss(ds_hanja, ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung(ds_hanja, ji_char) if ji_char != "-" else "-"
             
@@ -555,9 +552,9 @@ def get_gunghap_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, j
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지지십성</td>{ji_ss}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; color:#0D47A1 !important; font-weight:900; font-size:14px !important;'>십이운성</td>{unsung}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; color:#C62828 !important; font-weight:900; font-size:14px !important;'>년지신살</td>{y_shinsal}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; color:#C62828 !important; font-weight:900; font-size:14px !important;'>일지신살</td>{d_shinsal}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>십이운성</td>{unsung}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>년지신살</td>{y_shinsal}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일지신살</td>{d_shinsal}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'>일반신살</td>{gen_shinsal}</tr>
     </table>
     """
@@ -803,7 +800,7 @@ def format_ai_text_to_html(ai_raw_text):
             "기사": "己巳", "경오": "庚午", "신미": "辛未", "임신": "壬申", "계유": "癸酉",
             "갑술": "甲戌", "을해": "乙亥", "병자": "丙子", "정축": "丁丑", "무인": "戊寅",
             "기묘": "己卯", "경진": "庚辰", "신사": "辛巳", "임오": "壬午", "계미": "癸未",
-            "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊子",
+            "갑신": "甲申", "을유": "乙酉", "병술": "丙戌", "정해": "丁亥", "무자": "戊자",
             "기축": "己丑", "경인": "庚寅", "신묘": "辛卯", "임진": "壬辰", "계사": "癸巳",
             "갑오": "甲午", "을미": "乙未", "병신": "丙申", "정유": "丁酉", "무술": "戊戌",
             "기해": "己亥", "경자": "庚子", "신축": "辛丑", "임인": "壬寅", "계묘": "癸卯",
