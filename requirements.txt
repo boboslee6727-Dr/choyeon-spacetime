@@ -2,5 +2,6 @@ streamlit
 pandas
 korean_lunar_calendar
 ephem
-google-generativeai
+google-genai
 pytz
+starlette==0.37.2
