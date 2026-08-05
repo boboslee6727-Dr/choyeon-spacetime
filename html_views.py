@@ -112,17 +112,11 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
     <div class="page-break-before"></div>
     """
 
-def get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, b_time, p_color="#000000"):
-    # 🎯 [간격 축소] margin-bottom을 5px로 줄여 아랫쪽 사주표와의 간격을 밀착시킴
+def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
-    <div style='margin-top: 10px; margin-bottom: 5px; padding: 12px 15px; background-color: #F5F5F5; border-left: 5px solid {p_color}; border-radius: 4px; font-family: "Nanum Gothic", sans-serif;'>
-        <div style='font-size: 16px; font-weight: 900; color: #000000; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;'>
-            <span>{p_icon} <b>{name}</b> 님 ({gender}, {u_marital}, {age}세)</span>
-            <span style='font-size: 13px; color: #555555; font-weight: bold;'>기준: {sol_str_fmt}</span>
-        </div>
-        <div style='font-size: 13px; color: #424242; font-weight: bold; line-height: 1.4;'>
-            양력: {sol_str_fmt} {b_time} &nbsp;|&nbsp; 음력: {lun_str_fmt}
-        </div>
+    <div style='text-align:center; margin-bottom:8px; line-height:1.6;'>
+        <span style='font-size:22px; font-weight:900; color:{p_color}; letter-spacing:1px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
+        <span style='font-size:15px; font-weight:400; color:#444444; letter-spacing:0.5px; white-space:nowrap;'>[양력: <b style='font-weight:800; color:#000;'>{sol_str}</b> | 음력: <b style='font-weight:800; color:#000;'>{lun_str}</b> <b style='font-weight:800; color:#000;'>{time_str}</b>]</span>
     </div>
     """
 
