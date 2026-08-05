@@ -1,12 +1,3 @@
-import starlette.middleware.gzip as _gz
-
-_orig_gzip_init = _gz.GZipResponder.__init__
-
-def _patched_gzip_init(self, app, dispatch=None, thread_minimum_size=500, **kwargs):
-    return _orig_gzip_init(self, app, dispatch=dispatch, thread_minimum_size=thread_minimum_size, **kwargs)
-
-_gz.GZipResponder.__init__ = _patched_gzip_init
-
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
