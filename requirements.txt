@@ -1,7 +1,6 @@
-starlette<0.38.0
-uvicorn<0.31.0
+streamlit
 pandas
 korean_lunar_calendar
 ephem
-google-genai
+google-generativeai
 pytz
