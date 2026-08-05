@@ -1,3 +1,8 @@
+import starlette.middleware.gzip
+if hasattr(starlette.middleware.gzip, "GZipResponder"):
+    _orig_init = starlette.middleware.gzip.GZipResponder.__init__
+    starlette.middleware.gzip.GZipResponder.__init__ = lambda self, *args, **kwargs: _orig_init(self, *args, **{k: v for k, v in kwargs.items() if k != 'thread_minimum_size'})
+
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
@@ -96,6 +101,9 @@ def td_bg(ganji):
 with st.sidebar:
     def stop_ai():
         st.session_state['app_running'] = False
+
+    # app.py 상단 st.set_page_config() 바로 밑이나 적절한 곳에 추가
+    st.markdown("<style> * { font-size: 14px; } </style>", unsafe_allow_html=True)
 
     st.markdown(f"""
         <div style="padding-top: 15px; margin-bottom: 5px; text-align: center;">
