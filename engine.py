@@ -622,6 +622,9 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
     c_idx = GAN.index(ms) % 10 if ms in GAN else 0
     j_idx = JI.index(mb) % 12 if mb in JI else 0
 
+    # 🚨 [방탄 변환] 년지(yb) 한자/한글 규격 자동 통일
+    yb_hanja = K2H_JI.get(yb, yb)
+
     for i in range(10):
         val = i * 10 + calc_d
         c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
@@ -629,14 +632,39 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
         
         c_hangul = GAN[c_idx_calc]
         j_hangul = JI[j_idx_calc]
-        c, j = K2H_GAN.get(c_hangul, c_hangul), K2H_JI.get(j_hangul, j_hangul)
         
-        ss_gan, ss_ji = get_ss(ds, c_hangul) or "-", get_ss(ds, j_hangul) or "-"
+        # 한간/한자 지지 정밀 변환
+        c = K2H_GAN.get(c_hangul, c_hangul)
+        j = K2H_JI.get(j_hangul, j_hangul)
+        
+        # 십성 연산
+        ss_gan = get_ss(ds, c_hangul) or get_ss(ds, c) or "-"
+        ss_ji = get_ss(ds, j_hangul) or get_ss(ds, j) or "-"
+        
+        # 🚨 [영구 해결] 12십이운성 및 12신살 한자/한글 이중 교차 방탄 연산
         try:
-            un_sung = get_unsung(ds, j) or "-"
-            shin_sal = get_12_shinsal(yb, j) or "-"
+            un_sung = get_unsung(ds, j) or get_unsung(ds, j_hangul) or "-"
         except:
-            un_sung, shin_sal = "-", "-"
+            un_sung = "-"
+
+        try:
+            # 1차 시도: 한자 기준 대조 (yb_hanja, j)
+            shin_sal = get_12_shinsal(yb_hanja, j)
+            
+            # 2차 시도: 만약 실패나 "-"인 경우 한글 기준 대조 (yb, j_hangul)
+            if not shin_sal or shin_sal == "-":
+                shin_sal = get_12_shinsal(yb, j_hangul)
+                
+            # 3차 시도: 일지 기준 재검증
+            if not shin_sal or shin_sal == "-":
+                db_hanja = K2H_JI.get(db, db) if 'db' in locals() or 'db' in globals() else ""
+                if db_hanja:
+                    shin_sal = get_12_shinsal(db_hanja, j)
+                    
+            if not shin_sal:
+                shin_sal = "-"
+        except Exception:
+            shin_sal = "-"
             
         daewun_list.append({
             "age_range": f"{val}~{val+9}세", "ss_gan": ss_gan, "c_hanja": c, "c_hangul": c_hangul,
