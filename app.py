@@ -94,7 +94,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터
+# 2. 사이드바 통제 센터 (정돈 및 대조 모드 통합 완료)
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -108,6 +108,7 @@ with st.sidebar:
         <hr style="margin: 10px 0 15px 0;">
     """, unsafe_allow_html=True)
 
+    # 📅 운세 분석 기준 시점 선택
     st.markdown("<div style='font-size: 15px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📅 분석 기준 시점 선택</div>", unsafe_allow_html=True)
     kst_tz = pytz.timezone('Asia/Seoul')
     default_date_today = dt_mod.datetime.now(kst_tz).date()
@@ -150,6 +151,46 @@ with st.sidebar:
     else:
         u_product = st.radio("비교 분석 대상:", ["3-1. 타 감명서 비교 (사주)", "3-2. 타 감명서 비교 (궁합)"], key="sub_category_3", on_change=stop_ai)
     st.markdown("---")
+
+    # ==============================================================================
+    # 🌟 [최상단 배치] 3-1. 사주 타 감명서 비교 선택 시 팝업될 대조 방식 라디오
+    # ==============================================================================
+    if "3-1." in u_product:
+        st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>⚖️ 사주 대조 방식 선택</div>", unsafe_allow_html=True)
+        saju_comp_mode = st.radio(
+            "비교 유형",
+            ["1) 전통 명리학과 1:1 자동 대조 분석", "2) 외부 타 감명서 원문 입력 대조"],
+            key="saju_comp_mode_radio",
+            on_change=stop_ai
+        )
+        if saju_comp_mode == "2) 외부 타 감명서 원문 입력 대조":
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+        st.markdown("---")
+
+    # ==============================================================================
+    # 📌 특화 상품별 옵션 (VIP 패키지 모드 등)
+    # ==============================================================================
+    if u_product.startswith("1-"):
+        is_vip_package = st.checkbox(
+            "👑 VIP 패키지 모드 (누적 출력)", 
+            value=st.session_state.get("is_vip_package_val", False), 
+            key="is_vip_package_val",
+            help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
+        )
+        
+        if "1-4." in u_product:
+            daily_calc_date = st.date_input("일운 분석 기준일 선택", value=selected_target_date, key="daily_calc_date")
+        elif "1-5." in u_product: 
+            wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
+        elif "1-6." in u_product: 
+            career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal")
+        elif "1-7." in u_product:
+            love_goal = st.text_input("고민되는 연애/이성 문제는?", key="love_goal")
+        elif "1-8." in u_product: 
+            health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
+        elif "1-9." in u_product:
+            moving_date = st.date_input("이사 희망일", key="moving_date")
+            moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
 
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
@@ -265,44 +306,7 @@ with st.sidebar:
         st.session_state["s_t"] = b_time
 
     # ==============================================================================
-    # 📌 특화 상품별 옵션 (사이드바)
-    # ==============================================================================
-    if u_product.startswith("1-"):
-        is_vip_package = st.checkbox(
-            "👑 VIP 패키지 모드 (누적 출력)", 
-            value=st.session_state.get("is_vip_package_val", False), 
-            key="is_vip_package_val",
-            help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
-        )
-        
-        if "1-4." in u_product:
-            daily_calc_date = st.date_input("일운 분석 기준일 선택", value=selected_target_date, key="daily_calc_date")
-        elif "1-5." in u_product: 
-            wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
-        elif "1-6." in u_product: 
-            career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal")
-        elif "1-7." in u_product:
-            love_goal = st.text_input("고민되는 연애/이성 문제는?", key="love_goal")
-        elif "1-8." in u_product: 
-            health_goal = st.text_input("관리할 건강 부위는?", key="health_goal")
-        elif "1-9." in u_product:
-            moving_date = st.date_input("이사 희망일", key="moving_date")
-            moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
-
-    # 🚨 [좌표 교체 구역] 3-1. 타 감명서 비교 (사주) 선택 시 대조 방식 라디오 버튼 노출
-    elif "3-1." in u_product:
-        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-        saju_comp_mode = st.radio(
-            "⚖️ 사주 대조 방식 선택:",
-            ["1) 전통 명리학과 1:1 자동 대조 분석", "2) 외부 타 감명서 원문 입력 대조"],
-            key="saju_comp_mode_radio",
-            on_change=stop_ai
-        )
-        if saju_comp_mode == "2) 외부 타 감명서 원문 입력 대조":
-            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
-
-    # ==============================================================================
-    # 👥 상대방 정보 입력부 (궁합)
+    # 👥 상대방 정보 입력부 (궁합 등)
     # ==============================================================================
     if any(x in u_product for x in ["2-1.", "2-2.", "2-3.", "3-2."]):
         with st.expander("🔍 상대방 사주간지 역산", expanded=False):
@@ -405,9 +409,7 @@ with st.sidebar:
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=p_t_idx, key="p_t_select")
             st.session_state["p_t_key"] = f_t
 
-    # ==============================================================================
-    # 📌 택일 및 기타 특화 옵션
-    # ==============================================================================
+    # 택일 및 기타 특화 옵션
     if "2-2." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode")
         if date_mode == "기간 선택":
