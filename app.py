@@ -153,25 +153,15 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 📌 특화 상품별 옵션 및 👑 VIP 패키지 모드 (원상복구 완료)
+    # 📌 특화 상품별 옵션 (사이드바) - 신청인 정보 하단 위치 원상복구
     # ==============================================================================
     if u_product.startswith("1-"):
-        # 🌟 [최적의 자리] VIP 패키지 바로 상단에 장착된 [전통 명리 운세풀이 대조] 체크박스!
-        enable_traditional_compare = st.checkbox(
-            "⚖️ 전통 명리 운세풀이 대조 병행",
-            value=st.session_state.get("enable_trad_comp_val", False),
-            key="enable_trad_comp_val",
-            help="체크 시 초연시공명리 체용 분석과 함께 [A. 전통 명리 단식 풀이]를 1:1로 함께 대조 분석합니다.",
-            on_change=stop_ai
-        )
-
         is_vip_package = st.checkbox(
             "👑 VIP 패키지 모드 (누적 출력)", 
             value=st.session_state.get("is_vip_package_val", False), 
             key="is_vip_package_val",
             help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
         )
-        
         if "1-4." in u_product:
             daily_calc_date = st.date_input("일운 분석 기준일 선택", value=selected_target_date, key="daily_calc_date")
         elif "1-5." in u_product: 
@@ -186,10 +176,17 @@ with st.sidebar:
             moving_date = st.date_input("이사 희망일", key="moving_date")
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
 
-    # 3-1. 타 감명서 비교 (사주) 선택 시 기존 외부 감명서 텍스트 상자 노출
+    # 3-1. 타 감명서 비교 선택 시 원문 입력창 (신청인 정보 하단 원상복구 위치)
     elif "3-1." in u_product:
-        st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력 대조</div>", unsafe_allow_html=True)
-        other_report = st.text_area("타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+        st.markdown("<div style='font-weight:900; color:#2E7D32; margin-top:10px; margin-bottom:5px;'>📄 타 감명서 원문 입력</div>", unsafe_allow_html=True)
+        saju_comp_mode = st.radio(
+            "비교 유형 선택:",
+            ["1) 전통 명리학과 1:1 자동 대조 분석", "2) 타 감명서 원문 입력"],
+            key="saju_comp_mode_radio",
+            on_change=stop_ai
+        )
+        if saju_comp_mode == "2) 타 감명서 원문 입력":
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
         st.markdown("---")
 
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
@@ -938,7 +935,7 @@ if st.session_state.get('app_running', False):
             # ------------------------------------------------------------------
             # [2단계] 타 감명서 / 비교 분석 모듈 (ver 71.0 모듈화 분기)
             # ------------------------------------------------------------------
-            if "3-1." in u_product or u_product == "타 감명서":
+            if "3-1." in u_product or u_product == "타 감명서 비교 (사주)":
                 try:
                     part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                     first_stage_html = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
@@ -946,14 +943,15 @@ if st.session_state.get('app_running', False):
                     
                     saju_comp_mode = st.session_state.get("saju_comp_mode_radio", "1) 전통 명리학과 1:1 자동 대조 분석")
                     
-                    # 🌟 [모드 A] 전통 명리학과 1:1 자동 대조 분석 (모듈 연동)
+                    # 🌟 [모드 A] 전통명리와 시공명리 1:1 자동 대조 분석 (모듈 연동)
                     if saju_comp_mode == "1) 전통 명리학과 1:1 자동 대조 분석":
+                        # 🚨 b_time (태어난 시간 변수) 인자 추가 반영
                         other_cover_html = html_views.get_auto_comparison_cover(
-                            APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, today_str
+                            APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str
                         )
                         st.markdown(other_cover_html, unsafe_allow_html=True)
                         
-                        with st.spinner("⚖️ 전통 명리 vs 초연시공명리 1:1 학술 대조 리포트 생성 중..."):
+                        with st.spinner("⚖️ 전통 명리 vs 시공 명리 1:1 비교 리포트 생성 중..."):
                             saju_fact_summary = f"👤 신청인: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; <b>{sol_y}년 {sol_m}월 {sol_d}일 {b_time}</b><br>📜 사주명식: <b>{ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시</b> (대운수: {calc_d})"
                             
                             comp_data = {
