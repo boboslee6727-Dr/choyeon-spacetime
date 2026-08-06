@@ -1,3 +1,6 @@
+# ==============================================================================
+# 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 71.0 Master 메인 컨트롤러
+# ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
@@ -106,7 +109,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # 📅 [수정/추가] 운세 분석 기준 시점 선택 (달력 위젯)
+    # 📅 운세 분석 기준 시점 선택 (달력 위젯)
     # --------------------------------------------------------------------------
     st.markdown("<div style='font-size: 15px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📅 분석 기준 시점 선택</div>", unsafe_allow_html=True)
     kst_tz = pytz.timezone('Asia/Seoul')
@@ -115,7 +118,7 @@ with st.sidebar:
     selected_target_date = st.date_input(
         "조회할 연/월/일 선택",
         value=st.session_state.get("main_target_calc_date", default_date_today),
-        key="main_target_calc_date",  # 👈 [핵심 수정] 키 중복 충돌 방지를 위해 고유 키로 변경
+        key="main_target_calc_date",
         help="기본값은 오늘 날짜이며, 원하는 특정 연/월/일을 선택하여 시뮬레이션할 수 있습니다.",
         on_change=stop_ai
     )
@@ -162,7 +165,7 @@ with st.sidebar:
         f_val = st.session_state.get("f_g", "여성")
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
-# ==============================================================================
+    # ==============================================================================
     # 🔍 범용 사주간지 역산 입력부
     # ==============================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
@@ -230,7 +233,7 @@ with st.sidebar:
                                 found = True
                                 s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                 s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt}\n 음력{s_lun_fmt}"
+                                st.session_state['rev_success_msg'] = f"✅양력 {s_sol_fmt}\n 음력 {s_lun_fmt}"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
@@ -550,7 +553,6 @@ if st.session_state.get('app_running', False):
             cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str)
             info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, b_time)
             
-            # 🎯 사주원국 표 생성 (html_views.py 내부에서 듀얼 12신살 2단 분리 자동 처리)
             table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
             master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
             intro_html = html_views.get_intro_html()
@@ -570,10 +572,7 @@ if st.session_state.get('app_running', False):
                 j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
                 is_active = (val <= age < val + 10)
                 
-                # 🎯 [최종 완벽 보정] 대운 데이터 딕셔너리 키값 일치화 완료
                 u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
-                
-                # 년지 기준 신살과 일지 기준 신살 각각 정확히 추출
                 y_shin_val = engine.get_12_shinsal(yb, j_hangul) if j_hangul != "-" else "-"
                 d_shin_val = engine.get_12_shinsal(db, j_hangul) if j_hangul != "-" else "-"
                 
@@ -586,8 +585,8 @@ if st.session_state.get('app_running', False):
                     "j_hangul": j_hangul,
                     "ss_ji": engine.get_ss(ds_hanja, j_hangul),
                     "un_sung": u_sung_val,
-                    "y_shinsal": y_shin_val,  # ⭕ 년지신살 데이터 정상 주입 완료!
-                    "d_shinsal": d_shin_val,  # ⭕ 일지신살 데이터 정상 주입 완료!
+                    "y_shinsal": y_shin_val,
+                    "d_shinsal": d_shin_val,
                     "is_current": is_active,
                     "is_first": (i == 0)
                 })
@@ -625,7 +624,7 @@ if st.session_state.get('app_running', False):
                     tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
                     engine.get_unsung(ds_hanja, tj), 
                     engine.get_12_shinsal(yb, tj), 
-                    engine.get_12_shinsal(db, tj), # 🎯 일지신살 추가 전달
+                    engine.get_12_shinsal(db, tj),
                     bg_col, b_left, is_cur_yr
                 )
                 
@@ -650,7 +649,7 @@ if st.session_state.get('app_running', False):
                     wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                     engine.get_unsung(ds_hanja, wj_hanja), 
                     engine.get_12_shinsal(yb, wj_hanja), 
-                    engine.get_12_shinsal(db, wj_hanja), # 🎯 일지신살 추가 전달
+                    engine.get_12_shinsal(db, wj_hanja),
                     bg_col, b_left, is_cur_m
                 )
 
@@ -685,7 +684,6 @@ if st.session_state.get('app_running', False):
                         'is_today': is_today
                     })
                 
-                # 🎯 [최종 보정] t_day를 올바른 변수명인 today_day로 교체
                 weekly_calendar_html = html_views.generate_weekly_calendar_html(weekly_days_data, today_day, yb=yb, db=db)
 
                 w_d_res = engine.get_weekly_daily_facts(ds, db, yb, curr_year, curr_m, today_day) if hasattr(engine, 'get_weekly_daily_facts') else {}
@@ -696,12 +694,10 @@ if st.session_state.get('app_running', False):
                 pm_yong = w_d_res.get('pm_yong', pm_yong)
                 day_wunseong = w_d_res.get('day_wunseong', day_wunseong)
                 
-                # 🚨 [핵심 수정] 단일 day_12shinsal을 버리고, 오늘 일진(today_ji)에 대해 년지/일지 각각 추출
-                today_ji = w_d_res.get('today_ji', '-') # (또는 weekly_ganji_list 등에서 오늘 지지 추출)
+                today_ji = w_d_res.get('today_ji', '-')
                 day_y_shinsal = engine.get_12_shinsal(yb, today_ji) if today_ji != "-" else "-"
                 day_d_shinsal = engine.get_12_shinsal(db, today_ji) if today_ji != "-" else "-"
                 
-                # 🚨 [매개변수 2개로 분리 전달] day_12shinsal 1개 -> day_y_shinsal, day_d_shinsal 2개로 
                 daily_table_html = html_views.generate_weekly_daily_layout(
                     weekly_ganji_list, today_day, ds, db, 
                     m_che_first, am_yong, m_che_second, pm_yong, day_wunseong, 
@@ -738,14 +734,11 @@ if st.session_state.get('app_running', False):
                 st.session_state['base_fact_cache'] = part_1_fact
 
             # ==============================================================================
-            # 💡 [범용 완전 정돈본] 선택한 기준 날짜 연동 ➔ engine.py 5x5 연산 ➔ prompts.py
+            # 💡 [범용 정돈본] engine.py 타임머신 통합 팩트 시트(get_saju_fact_sheet) 연동
             # ==============================================================================
-            
-            # 1. 선택된 기준 날짜(curr_year, curr_m, curr_d) 기준 일간/일지 안전 추출
             _, _, d_pillar_target = engine.get_ganji_from_date(curr_year, curr_m, curr_d)
             i_gan, i_ji = d_pillar_target[0], d_pillar_target[1]
 
-            # 2. 선택된 연도/월 세운 및 월운 간지 안전 확보
             try:
                 current_sewun_base = (curr_year - 1984) % 60
                 c_s_g = engine.GAN[current_sewun_base % 10]
@@ -753,8 +746,7 @@ if st.session_state.get('app_running', False):
             except:
                 c_s_g, c_s_j = "丙", "午"
 
-            cur_sewun_gan = c_s_g
-            cur_sewun_ji = c_s_j
+            cur_sewun_gan, cur_sewun_ji = c_s_g, c_s_j
             
             try:
                 _, m_p_target, _ = engine.get_true_year_month_pillar(curr_year, curr_m, curr_d, 12, 0)
@@ -762,15 +754,12 @@ if st.session_state.get('app_running', False):
             except:
                 c_w_g, c_w_j = "乙", "未"
 
-            cur_wol_g_val = c_w_g
-            cur_wol_j_val = c_w_j
+            cur_wol_g_val, cur_wol_j_val = c_w_g, c_w_j
 
-            # 3. engine.py 5x5 체용 팩트 연산 (선택 날짜 반영)
             w_facts = engine.get_woonse_analysis_facts(
                 ds, db, dw_g_cur, dw_j_cur, cur_sewun_gan, cur_sewun_ji, cur_wol_g_val, cur_wol_j_val, i_gan, i_ji
             )
 
-            # 4. 상품별 프롬프트 분기 정의 (신규 1-7 연애운 매핑 포함)
             extra_facts = {}
             if "1-1." in u_product:
                 target_prompt = getattr(prompts, 'PERSONAL_SAJU_PROMPT', "")
@@ -844,38 +833,32 @@ if st.session_state.get('app_running', False):
 
             universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
 
-            if age < 20:
-                age_p = f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
-            elif age < 40:
-                age_p = f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
-            elif age < 60:
-                age_p = f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
-            else:
-                age_p = f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
+            # 🎯 [핵심 정돈] engine.get_saju_fact_sheet를 활용하여 연령/성별/혼인/삼형살 지침을 통합 추출
+            fact_sheet_data = engine.get_saju_fact_sheet(
+                ys, yb, ms, mb, ds, db, hs, hb,
+                name=name, gender=gender, marital=u_marital,
+                birth_year=sol_y, age=age,
+                dw_g_cur=dw_g_cur, dw_j_cur=dw_j_cur,
+                curr_y_ganji=(cur_sewun_gan, cur_sewun_ji),
+                cur_wol_g=cur_wol_g_val, cur_wol_j=cur_wol_j_val,
+                target_year=curr_year, target_month=curr_m, target_day=curr_d
+            )
 
-            if gender == "여성":
-                gender_p = "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
-            else:
-                gender_p = "남성 내담자(남명)이므로 육친 적용 시 재성(財星)을 배우자/아내로, 관성(官星)을 자식으로 엄격히 적용하십시오."
-
-            yukchin_r = engine.get_yukchin_rule(gender, u_marital)
-
-            # ==============================================================================
-            # 5. prompts.py 전용 범용 바인딩 딕셔너리 세팅 (선택된 연/월/일 파라미터 전달)
-            # ==============================================================================
+            # 🎯 prompts.py 바인딩용 통합 딕셔너리 구축 (중복 구문 정돈)
             prompt_data = {
-                # 기본 내담자 프로필 및 현실적 맥락
                 "name": name, "age": age, "gender": gender, "marital": u_marital,
-                "age_prompt": age_p, "gender_prompt": gender_p, "yukchin_rule": yukchin_r,
+                "age_prompt": fact_sheet_data.get("age_prompt", ""),
+                "gender_prompt": fact_sheet_data.get("gender_prompt", ""),
+                "marital_prompt": fact_sheet_data.get("marital_prompt", ""),
+                "yukchin_rule": fact_sheet_data.get("yukchin_rule", ""),
+                "samhyung_fact_str": fact_sheet_data.get("samhyung_fact_str", "삼형살 특이 파동 없음"),
                 
-                # engine.py 5x5 범용 운세 팩트
                 "woonse_fact_str": w_facts.get("woonse_fact_str", ""),
                 "dw_che": w_facts.get("dw_che", "대운 시공간 환경"), 
                 "sewun_kw": w_facts.get("sewun_kw", "올해 운세 파동"),
                 "wolun_kw": w_facts.get("wolun_kw", "이달의 운세 파동"), 
                 "ilun_kw": w_facts.get("ilun_kw", "오늘의 운세 파동"),
                 
-                # 사주 원국 및 신살/격국/용신
                 "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
                 "gyukgook_detail": gyukgook_detail, "yongshin_str": yongshin_str,
                 "goshin_gwasook_str": goshin_gwasook_str, "gongmang_actual": i_gong, "year_gongmang": n_gong,
@@ -885,7 +868,6 @@ if st.session_state.get('app_running', False):
                 "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "cheon_eul": guiin_str, "s12_str": s12_str, 
                 "shinsal_str": shinsal_str, "cur_samjae": cur_samjae,
                 
-                # 선택된 기준 날짜(연/월/일) 파라미터
                 "all_daewun_data": all_daewun_data if 'all_daewun_data' in locals() else "",
                 "curr_y": curr_year, "sewun_gan": cur_sewun_gan, "sewun_ji": cur_sewun_ji,
                 "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, "cur_wol_g": cur_wol_g_val, "cur_wol_j": cur_wol_j_val,
@@ -898,14 +880,12 @@ if st.session_state.get('app_running', False):
                 "pm_yong": pm_yong if 'pm_yong' in locals() else "", 
                 "day_wunseong": day_wunseong if 'day_wunseong' in locals() else "", 
                 "day_12shinsal": day_12shinsal if 'day_12shinsal' in locals() else "",
-                "hang_un_vaults_str": "행운 묘고 작용 팩트",
+                "hang_un_vaults_str": fact_sheet_data.get("hang_un_vaults_str", "대운 묘고 작용 없음"),
                 
-                # 운세풀이 팩트 요약
                 "sewun_fact_str": f"지정 연도({curr_year}년) 운세 키워드: [{w_facts.get('sewun_kw', '')}]",
                 "wol_fact_str": f"지정 월({curr_m}월) 운세 키워드: [{w_facts.get('wolun_kw', '')}]",
                 "dw_fact_str": f"현재 대운 무대: [{w_facts.get('dw_che', '')}]",
                 
-                # 기타 특화 상담 입력 데이터
                 "ohang_balance_str": f"목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts.get('수', 0)}",
                 "weak_health_str": "취약 장기 및 신체 부위 분석 팩트", "health_goal": health_val,
                 "jaeseong_str": "재성 세력 분석 팩트", "wealth_fact_str": "금전 흐름 운세 매트릭스",
@@ -914,14 +894,12 @@ if st.session_state.get('app_running', False):
                 "wealth_issue": wealth_val, "u_question": question_val
             }
             
-            # 6. 프롬프트 안전 치환 (KeyError 방지)
             class SafeDict(dict):
                 def __missing__(self, key):
                     return '{' + key + '}'
             
             formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
             
-            # 7. 단일 정돈 Gemini API 호출
             try:
                 raw_response = call_gemini_api(formatted_prompt, extra_facts, model="gemini-2.5-flash")
             except TypeError:
@@ -935,7 +913,6 @@ if st.session_state.get('app_running', False):
             else:
                 ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다. 다시 시도해 주십시오.</p>"
 
-            # 8. VIP 스마트 누적 모드 및 일반 모드 저장 아키텍처
             is_vip_active = st.session_state.get("is_vip_package_val", False) if "1-1." in u_product else False
 
             if 'report_essays' not in st.session_state:
@@ -957,10 +934,8 @@ if st.session_state.get('app_running', False):
             else:
                 st.session_state['report_essays'] = {u_product: current_ai_block}
 
-            # 표지 단 1회 출력
             st.markdown(cover_html, unsafe_allow_html=True)
 
-            # 📚 [최종 종합 보고서 조립 및 렌더링]
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
