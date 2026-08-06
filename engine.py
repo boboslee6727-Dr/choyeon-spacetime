@@ -1043,13 +1043,18 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
     sewun_fact_str = "세운 정보 없음"
     sewun_ji_val = None
     if curr_y_ganji:
-        s_gan, s_ji = curr_y_ganji[1][0], curr_y_ganji[1][1]
+        if isinstance(curr_y_ganji, (list, tuple)) and len(curr_y_ganji) >= 2:
+            s_gan, s_ji = str(curr_y_ganji[0]), str(curr_y_ganji[1])
+        elif isinstance(curr_y_ganji, str) and len(curr_y_ganji) >= 2:
+            s_gan, s_ji = curr_y_ganji[0], curr_y_ganji[1]
+        else:
+            s_gan, s_ji = "丙", "午"
+
         sewun_ji_val = s_ji
         s_upper = get_group_ss(get_ss(s_gan, s_ji))
         s_yong = get_execution_yong(s_upper, ilju_lower_group)
         sewun_che = get_group_ss(get_ss(ds, dw_g_cur)) if dw_g_cur else "비겁"
         sewun_fact_str = f"체운(무대): {sewun_che} / 용운(사건): {s_yong} ➔ 도출 키워드: {get_matrix_keyword(sewun_che, s_yong)}"
-
     wol_fact_str = "월운 정보 없음"
     if cur_wol_g and cur_wol_j:
         w_upper = get_group_ss(get_ss(cur_wol_g, cur_wol_j))
