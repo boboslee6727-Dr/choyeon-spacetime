@@ -486,7 +486,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         """
 
     layout = f"""
-    <div style='margin-top:20px; margin-bottom:10px; font-size:16px; font-weight:900; color:#3E2723; font-family:"Nanum Gothic", sans-serif;'>📅 이번 주 간지 흐름 (일요일 ~ 토요일)</div>
+    <div style='margin-top:20px; margin-bottom:10px; font-size:16px; font-weight:900; color:#3E2723; font-family:"Nanum Gothic", sans-serif;'>📅 이번 주 운세 흐름 (일요일 ~ 토요일)</div>
     <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:15px; table-layout:fixed;'>
         {content}
     </div>
