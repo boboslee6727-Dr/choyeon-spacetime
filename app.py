@@ -1,8 +1,3 @@
-import starlette.middleware.gzip
-if hasattr(starlette.middleware.gzip, "GZipResponder"):
-    _orig_init = starlette.middleware.gzip.GZipResponder.__init__
-    starlette.middleware.gzip.GZipResponder.__init__ = lambda self, *args, **kwargs: _orig_init(self, *args, **{k: v for k, v in kwargs.items() if k != 'thread_minimum_size'})
-
 import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt_mod
