@@ -94,7 +94,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (방탄(Bulletproof) 범용 구조)
+# 2. 사이드바 통제 센터
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -108,9 +108,6 @@ with st.sidebar:
         <hr style="margin: 10px 0 15px 0;">
     """, unsafe_allow_html=True)
 
-    # --------------------------------------------------------------------------
-    # 📅 운세 분석 기준 시점 선택 (달력 위젯)
-    # --------------------------------------------------------------------------
     st.markdown("<div style='font-size: 15px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📅 분석 기준 시점 선택</div>", unsafe_allow_html=True)
     kst_tz = pytz.timezone('Asia/Seoul')
     default_date_today = dt_mod.datetime.now(kst_tz).date()
@@ -297,7 +294,15 @@ with st.sidebar:
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
 
     elif "3-1." in u_product:
-        other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        saju_comp_mode = st.radio(
+            "⚖️ 사주 대조 방식 선택:",
+            ["1) 전통 명리학과 1:1 자동 대조 분석", "2) 외부 타 감명서 원문 입력 대조"],
+            key="saju_comp_mode_radio",
+            on_change=stop_ai
+        )
+        if saju_comp_mode == "2) 외부 타 감명서 원문 입력 대조":
+            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # ==============================================================================
     # 👥 상대방 정보 입력부 (궁합)
@@ -733,9 +738,6 @@ if st.session_state.get('app_running', False):
             else:
                 st.session_state['base_fact_cache'] = part_1_fact
 
-            # ==============================================================================
-            # 💡 [범용 정돈본] engine.py 타임머신 통합 팩트 시트(get_saju_fact_sheet) 연동
-            # ==============================================================================
             _, _, d_pillar_target = engine.get_ganji_from_date(curr_year, curr_m, curr_d)
             i_gan, i_ji = d_pillar_target[0], d_pillar_target[1]
 
@@ -833,7 +835,6 @@ if st.session_state.get('app_running', False):
 
             universal_str = engine.get_universal_fact_str(ds, db, mb, yb, hb) if hasattr(engine, 'get_universal_fact_str') else "지장간 좌법 및 인종법 연산 팩트"
 
-            # 🎯 [핵심 정돈] engine.get_saju_fact_sheet를 활용하여 연령/성별/혼인/삼형살 지침을 통합 추출
             fact_sheet_data = engine.get_saju_fact_sheet(
                 ys, yb, ms, mb, ds, db, hs, hb,
                 name=name, gender=gender, marital=u_marital,
@@ -844,7 +845,6 @@ if st.session_state.get('app_running', False):
                 target_year=curr_year, target_month=curr_m, target_day=curr_d
             )
 
-            # 🎯 prompts.py 바인딩용 통합 딕셔너리 구축 (중복 구문 정돈)
             prompt_data = {
                 "name": name, "age": age, "gender": gender, "marital": u_marital,
                 "age_prompt": fact_sheet_data.get("age_prompt", ""),
@@ -936,81 +936,104 @@ if st.session_state.get('app_running', False):
 
             st.markdown(cover_html, unsafe_allow_html=True)
 
+            # ------------------------------------------------------------------
+            # [2단계] 타 감명서 / 비교 분석 모듈 (ver 71.0 모듈화 분기)
+            # ------------------------------------------------------------------
             if "3-1." in u_product or u_product == "타 감명서":
                 try:
                     part_4_ai = f"<div style='margin-top: 20px;'>{ai_output_html}</div>" if ai_output_html else ""
                     first_stage_html = part_1_fact + part_2_intro + part_3_golden + part_4_ai + part_5_closing
                     st.markdown(html_views.get_final_report_box(first_stage_html), unsafe_allow_html=True)
                     
-                    other_text_input = st.session_state.get(f"text_{u_product}", "")
+                    saju_comp_mode = st.session_state.get("saju_comp_mode_radio", "1) 전통 명리학과 1:1 자동 대조 분석")
                     
-                    if other_text_input and len(str(other_text_input).strip()) > 0:
-                        u_name_str = name
-                        p_icon_str = p_icon
-                        sol_val = sol_str_fmt
-                        lun_val = lun_str_fmt
-                        time_val = b_time
-                        today_val = today_str
-                        
-                        other_cover_html = html_views.get_comparison_saju_cover(
-                            APP_VERSION, p_icon_str, u_name_str, sol_val, lun_val, time_val, today_val
+                    # 🌟 [모드 A] 전통 명리학과 1:1 자동 대조 분석 (모듈 연동)
+                    if saju_comp_mode == "1) 전통 명리학과 1:1 자동 대조 분석":
+                        other_cover_html = html_views.get_auto_comparison_cover(
+                            APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, today_str
                         )
                         st.markdown(other_cover_html, unsafe_allow_html=True)
                         
-                        report_2_html = html_views.get_other_report_original_html(other_text_input)
-                        st.markdown(report_2_html, unsafe_allow_html=True)
-                        
-                        with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
-                            u_name_val = name
-                            u_gender_val = gender
-                            u_age_val = age
-                            u_marital_val = u_marital if 'u_marital' in locals() else (marital if 'marital' in locals() else "미혼")
+                        with st.spinner("⚖️ 전통 명리 vs 초연시공명리 1:1 학술 대조 리포트 생성 중..."):
+                            saju_fact_summary = f"👤 신청인: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; <b>{sol_y}년 {sol_m}월 {sol_d}일 {b_time}</b><br>📜 사주명식: <b>{ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시</b> (대운수: {calc_d})"
                             
-                            b_y = sol_y
-                            b_m = sol_m
-                            b_d = sol_d
-                            b_t = b_time
+                            comp_data = {
+                                "name": name,
+                                "ds": ds,
+                                "s12_str": s12_str,
+                                "i_gong": i_gong,
+                                "dw_g_cur": dw_g_cur,
+                                "dw_j_cur": dw_j_cur,
+                                "curr_year": curr_year,
+                                "cur_sewun_gan": cur_sewun_gan,
+                                "cur_sewun_ji": cur_sewun_ji,
+                                "hang_un_vaults_str": hang_un_vaults_str,
+                                "samhyung_warn": samhyung_warn,
+                                "saju_fact_summary": saju_fact_summary,
+                                "ai_output_html": str(locals().get('ai_output_html', '')).strip()[:2000]
+                            }
                             
-                            g_list = gans
-                            j_list = jjis
-                            pillar_str = f"{g_list[3]}{j_list[3]}년 {g_list[2]}{j_list[2]}월 {g_list[1]}{j_list[1]}일 {g_list[0]}{j_list[0]}시" if len(g_list) >= 4 else ""
-                            calc_daewun = calc_d
-
-                            saju_fact_summary = f"👤 신청인: <b>{u_name_val}</b> 님 ({u_gender_val}, {u_age_val}세, {u_marital_val}) &nbsp;|&nbsp; <b>{b_y}년 {b_m}월 {b_d}일 {b_t}</b><br>📜 사주명식: <b>{pillar_str}</b> (대운수: {calc_daewun})"
-                            
-                            comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
-                                name=name, age=age, gender=gender, marital=u_marital_val,
-                                full_content_clean=str(locals().get('ai_output_html', '')).strip(),
-                                other_report=str(other_text_input).strip(),
-                                fact_reference=saju_fact_summary
-                            )
-                            
-                            c_res = call_gemini_api(comp_prompt)
+                            class SafeDict(dict):
+                                def __missing__(self, key): return '{' + key + '}'
+                                
+                            auto_comp_prompt = prompts.COMPARE_TRADITIONAL_VS_SIGONG_PROMPT.format_map(SafeDict(comp_data))
+                            c_res = call_gemini_api(auto_comp_prompt)
                             
                             if c_res:
                                 c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
                                 c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
                                 c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
-                                c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
-                                
                                 formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
                                 
-                                section_header_html = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
-                                    <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#000000 !important; margin:0 !important; text-align:center;'>
-                                        📜 타 감명서 1:1 상세 분석
-                                    </h2>
-                                </div>"""
-                                
+                                section_header_html = html_views.get_auto_comparison_header()
                                 full_stage3_html = section_header_html + f"<div style='text-align: left !important;'>{formatted_comp}</div>"
                                 st.markdown(html_views.get_final_report_box(full_stage3_html), unsafe_allow_html=True)
                             else:
-                                st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
+                                st.error("⚠️ 전통 명리 1:1 대조 분석 AI 응답을 불러오지 못했습니다.")
+
+                    # 🌟 [모드 B] 외부 타 감명서 원문 입력 대조 (기존 유지)
                     else:
-                        st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
+                        other_text_input = st.session_state.get(f"text_{u_product}", "")
+                        if other_text_input and len(str(other_text_input).strip()) > 0:
+                            other_cover_html = html_views.get_comparison_saju_cover(
+                                APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str
+                            )
+                            st.markdown(other_cover_html, unsafe_allow_html=True)
+                            
+                            report_2_html = html_views.get_other_report_original_html(other_text_input)
+                            st.markdown(report_2_html, unsafe_allow_html=True)
+                            
+                            with st.spinner("⚖️ 1:1 상세 비교 리포트 분석 중..."):
+                                saju_fact_summary = f"👤 신청인: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; <b>{sol_y}년 {sol_m}월 {sol_d}일 {b_time}</b><br>📜 사주명식: <b>{ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시</b> (대운수: {calc_d})"
+                                
+                                comp_prompt = prompts.COMPARE_PERSONAL_PROMPT.format(
+                                    name=name, age=age, gender=gender, marital=u_marital,
+                                    full_content_clean=str(locals().get('ai_output_html', '')).strip(),
+                                    other_report=str(other_text_input).strip(),
+                                    fact_reference=saju_fact_summary
+                                )
+                                c_res = call_gemini_api(comp_prompt)
+                                if c_res:
+                                    c_res_clean = re.sub(r'<!--.*?-->', '', c_res, flags=re.DOTALL)
+                                    c_res_clean = re.sub(r'```[a-zA-Z]*', '', c_res_clean).replace("```", "").strip()
+                                    c_res_clean = re.sub(r'#{1,6}\s*', '', c_res_clean)
+                                    c_res_clean = c_res_clean.replace("&lt;", "<").replace("&gt;", ">")
+                                    formatted_comp = html_views.format_ai_text_to_html(c_res_clean)
+                                    
+                                    section_header_html = """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #3E2723;'>
+                                        <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#000000 !important; margin:0 !important; text-align:center;'>
+                                            📜 타 감명서 1:1 상세 분석
+                                        </h2>
+                                    </div>"""
+                                    full_stage3_html = section_header_html + f"<div style='text-align: left !important;'>{formatted_comp}</div>"
+                                    st.markdown(html_views.get_final_report_box(full_stage3_html), unsafe_allow_html=True)
+                                else:
+                                    st.error("⚠️ 타 감명서 비교 분석 AI 응답을 불러오지 못했습니다.")
+                        else:
+                            st.warning("⚠️ 타 감명서 원문이 입력되지 않았습니다. 텍스트 상자에 원문을 붙여넣어 주십시오.")
                 
                 except Exception as e:
                     st.error(f"🚨 [3-1. 타 감명서 비교] 처리 중 오류 발생: {e}")
-
             else:
                 master_composite_report = st.session_state['vip_base_fact']
 
