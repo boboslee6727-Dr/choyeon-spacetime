@@ -895,6 +895,16 @@ CHE_YONG_MATRIX_TEXT = """- 체(비겁)+용(비겁): 식상발흥, 직무개척,
 - 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
 - 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취"""
 
+def get_group_ss(ss_name):
+    """십성 이름을 5대 그룹(비겁, 식상, 재성, 관성, 인성)으로 변환"""
+    if not ss_name or ss_name == "-": return "비겁"
+    if ss_name in ["비견", "겁재"]: return "비겁"
+    if ss_name in ["식신", "상관"]: return "식상"
+    if ss_name in ["편재", "정재"]: return "재성"
+    if ss_name in ["편관", "정관"]: return "관성"
+    if ss_name in ["편인", "정인"]: return "인성"
+    return "비겁"
+
 def get_execution_yong(upper_group, lower_group):
     matrix = {
         '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
