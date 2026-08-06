@@ -502,18 +502,28 @@ if st.session_state.get('app_running', False):
 
         with st.spinner(f"⏳ [{u_product.strip()}] 범용 시공명리 연산 및 정밀 분석 중...."):
             h, m = extract_time(b_time)
-            
-            y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
             is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
+            
+            # 🛡️ [수술 1] engine.py 내 함수 존재 여부 자동 감지 및 안전 우회
+            if hasattr(engine, 'get_true_year_month_pillar'):
+                y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+            else:
+                y_pillar, m_pillar, _ = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+                lon = 0
+                
             _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
             
-            ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0])
+            # 🛡️ [수술 2] 모듈 참조 오류 차단용 자체 변환 맵 백업
+            _k_gan = getattr(engine, 'K2H_GAN', {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸','甲':'甲','乙':'乙','丙':'丙','丁':'丁','戊':'戊','己':'己','庚':'庚','辛':'辛','壬':'壬','癸':'癸'})
+            _k_ji  = getattr(engine, 'K2H_JI', {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥','子':'子','丑':'丑','寅':'寅','卯':'卯','辰':'辰','巳':'巳','午':'午','未':'未','申':'申','酉':'酉','戌':'戌','亥':'亥'})
+            
+            ds_hanja = _k_gan.get(d_pillar[0], d_pillar[0])
             if "모름" in b_time:
                 t_gan, t_ji = "", ""
             else:
                 match = re.search(r'\((.*?)\)', b_time)
                 raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
-                t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
+                t_ji = _k_ji.get(raw_ji, raw_ji)
                 gan_arr, ji_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'], ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
                 if ds_hanja in gan_arr and t_ji in ji_arr:
                     d_idx, j_idx = gan_arr.index(ds_hanja), ji_arr.index(t_ji)
