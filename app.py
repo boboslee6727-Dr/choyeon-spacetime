@@ -504,16 +504,24 @@ if st.session_state.get('app_running', False):
             h, m = extract_time(b_time)
             is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
             
-            # 🛡️ [수술 1] engine.py 내 함수 존재 여부 자동 감지 및 안전 우회
-            if hasattr(engine, 'get_true_year_month_pillar'):
-                y_pillar, m_pillar, lon = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
-            else:
-                y_pillar, m_pillar, _ = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
-                lon = 0
-                
-            _, _, d_pillar = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+            # 🛡️ [수술 1] 언패킹 에러 완전 차단 (반환 개수 불일치 안전 방어)
+            ganji_res = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
+            y_pillar = ganji_res[0] if len(ganji_res) > 0 else "갑자"
+            m_pillar = ganji_res[1] if len(ganji_res) > 1 else "갑자"
+            d_pillar = ganji_res[2] if len(ganji_res) > 2 else "갑자"
+            lon = 0
             
-            # 🛡️ [수술 2] 모듈 참조 오류 차단용 자체 변환 맵 백업
+            # 🛡️ [수술 2] 진기 연산 함수 존재 시 안전 갱신
+            if hasattr(engine, 'get_true_year_month_pillar'):
+                try:
+                    t_res = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+                    if t_res and len(t_res) >= 2:
+                        y_pillar, m_pillar = t_res[0], t_res[1]
+                        lon = t_res[2] if len(t_res) > 2 else 0
+                except Exception:
+                    pass  # 실패 시 상단 기본 간지 유지
+            
+            # 🛡️ [수술 3] 변수 참조 안전 백업
             _k_gan = getattr(engine, 'K2H_GAN', {'갑':'甲','을':'乙','병':'丙','정':'丁','무':'戊','기':'己','경':'庚','신':'辛','임':'壬','계':'癸','甲':'甲','乙':'乙','丙':'丙','丁':'丁','戊':'戊','己':'己','庚':'庚','辛':'辛','壬':'壬','癸':'癸'})
             _k_ji  = getattr(engine, 'K2H_JI', {'자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥','子':'子','丑':'丑','寅':'寅','卯':'卯','辰':'辰','巳':'巳','午':'午','未':'未','申':'申','酉':'酉','戌':'戌','亥':'亥'})
             
