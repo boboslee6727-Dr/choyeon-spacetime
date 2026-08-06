@@ -320,9 +320,12 @@ with st.sidebar:
                     if 'rev_p_success_msg' in st.session_state: del st.session_state['rev_p_success_msg']
                     st.rerun()
                 elif len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
-                    p_ry_h = engine._to_hanja(_p_ry[0]) + engine._to_hanja(_p_ry[1])
-                    p_rm_h = engine._to_hanja(_p_rm[0]) + engine._to_hanja(_p_rm[1])
-                    p_rd_h = engine._to_hanja(_p_rd[0]) + engine._to_hanja(_p_rd[1])
+                    _k2h_g = {'갑':'甲', '을':'乙', '병':'丙', '정':'丁', '무':'戊', '기':'己', '경':'庚', '신':'辛', '임':'壬', '계':'癸', '甲':'甲', '乙':'乙', '丙':'丙', '丁':'丁', '戊':'戊', '己':'己', '庚':'庚', '辛':'辛', '壬':'壬', '癸':'癸'}
+                    _k2h_j = {'자':'子', '축':'丑', '인':'寅', '묘':'卯', '진':'辰', '사':'巳', '오':'午', '미':'未', '신':'申', '유':'酉', '술':'戌', '해':'亥', '子':'子', '丑':'丑', '寅':'寅', '卯':'卯', '辰':'辰', '巳':'巳', '午':'午', '未':'未', '申':'申', '酉':'酉', '戌':'戌', '亥':'亥'}
+                    
+                    p_ry_h = _k2h_g.get(_p_ry[0], _p_ry[0]) + _k2h_j.get(_p_ry[1], _p_ry[1])
+                    p_rm_h = _k2h_g.get(_p_rm[0], _p_rm[0]) + _k2h_j.get(_p_rm[1], _p_rm[1])
+                    p_rd_h = _k2h_g.get(_p_rd[0], _p_rd[0]) + _k2h_j.get(_p_rd[1], _p_rd[1])
                     
                     klc_find = KoreanLunarCalendar()
                     found = False
@@ -355,7 +358,7 @@ with st.sidebar:
                                     
                                     if p_rt:
                                         ji_char_p = p_rt[-1]
-                                        p_rt_h = engine._to_hanja(ji_char_p)
+                                        p_rt_h = _k2h_j.get(ji_char_p, ji_char_p)
                                         target_time_str = time_map.get(p_rt_h, "시간 모름")
                                     else:
                                         target_time_str = "시간 모름"
