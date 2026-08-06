@@ -222,9 +222,9 @@ with st.sidebar:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
             elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-                ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-                rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-                rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+                ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
+                rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
+                rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
                 
                 klc_find = KoreanLunarCalendar()
                 found = False
