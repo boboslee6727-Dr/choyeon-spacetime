@@ -266,13 +266,10 @@ with st.sidebar:
     # 📌 특화 상품별 옵션
     # ==============================================================================
     if u_product.startswith("1-"):
-        is_vip_package = st.checkbox(
-            "👑 VIP 패키지 모드 (누적 출력)", 
-            value=st.session_state.get("is_vip_package_val", False), 
-            key="is_vip_package_val",
-            help="체크 시 풀이를 가동한 상품들이 삭제되지 않고 아래로 차곡차곡 쌓여 한 권의 종합 보고서로 인쇄됩니다."
-        )
-        
+        is_vip_package = st.checkbox("👑 VIP 패키지 모드 (누적 출력)", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val")
+        # 🎯 [신규 추가] 전통명리 비교 체크박스
+        is_compare_traditional = st.checkbox("⚖️ 전통명리 운세풀이 (1:1 비교 분석)", value=st.session_state.get("is_compare_trad_val", False), key="is_compare_trad_val", help="체크 시 기존 시공명리 풀이 하단에 전통 명리학 단식 풀이와의 1:1 입체 비교 리포트가 추가 생성됩니다.")
+
         if "1-4." in u_product:
             daily_calc_date = st.date_input(
                 "일운 분석 기준일 선택", 
