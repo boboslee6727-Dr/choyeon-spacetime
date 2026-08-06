@@ -859,24 +859,25 @@ def get_ai_report_box(content):
     return get_final_report_box(content)
 
 # ==============================================================================
-# ⚖️ 전통 명리 vs 초연시공명리 학술 대조 뷰 렌더링 함수
+# ⚖️ [개인] 전통 명리 vs 시공명리 1:1 자동 대조 표지 HTML (html_views.py)
 # ==============================================================================
-def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, today_str):
-    """자동 대조 분석서 전용 표지 HTML 생성"""
+def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, time_str, today_str):
+    """3-1 사주 대조 분석서 전용 표지 HTML 생성"""
     return f"""
     <div class='page-break-before'></div>
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 class='title-gothic' style='font-size: 38px !important; margin:0 !important; color:#1A237E !important;'>전통 명리 vs 초연시공명리 학술 대조</h1>
+                <h1 class='title-gothic' style='font-size: 28px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important;'>전통 명리 vs 시공명리 1:1 비교</h1>
                 <div style='text-align: right; margin-top: 10px;'>
                     <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{app_version}</span>
                 </div>
             </div>
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                 <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {u_name} 님</h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                <div style='font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900; color: #000000;'>[양력] {sol_str} | [음력] {lun_str}</p>
+                    <p style='margin: 5px 0 0 0; white-space: nowrap; font-weight: 900; color: #D50000;'>{time_str}</p>
                 </div>
             </div>
             <p style='font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>
@@ -885,10 +886,51 @@ def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, tod
     </div>
     """
 
+
+# ==============================================================================
+# ⚖️ [궁합] 전통 명리 vs 시공명리 1:1 자동 대조 표지 HTML (html_views.py)
+# ==============================================================================
+def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time, f_name, f_sol, f_lun, f_time, today_str):
+    """3-2 궁합 대조 분석서 전용 표지 HTML 생성 (동일 양식 통일)"""
+    return f"""
+    <div class='page-break-before'></div>
+    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:30px;'>
+                <h1 class='title-gothic' style='font-size: 28px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
+                <div style='text-align: right; margin-top: 10px;'>
+                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{app_version}</span>
+                </div>
+            </div>
+            
+            <!-- 남명 정보 -->
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px; border-radius: 15px; margin-bottom: 15px;'>
+                <h2 style='font-size: 20px; font-weight: 800; color: #1A237E; margin-bottom: 10px;'>♂️ 남명 : {m_name} 님</h2>
+                <div style='font-size: 14px; line-height: 1.6;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900; color: #000000;'>[양력] {m_sol} | [음력] {m_lun}</p>
+                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 900; color: #D50000;'>{m_time}</p>
+                </div>
+            </div>
+            
+            <!-- 여명 정보 -->
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px; border-radius: 15px;'>
+                <h2 style='font-size: 20px; font-weight: 800; color: #D50000; margin-bottom: 10px;'>♀️ 여명 : {f_name} 님</h2>
+                <div style='font-size: 14px; line-height: 1.6;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900; color: #000000;'>[양력] {f_sol} | [음력] {f_lun}</p>
+                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 900; color: #D50000;'>{f_time}</p>
+                </div>
+            </div>
+            
+            <p style='font-size: 18px; margin-top: 35px; font-weight: 800;'>{today_str}</p>
+            <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
+        </div>
+    </div>
+    """
+
 def get_auto_comparison_header():
     """자동 대조 분석서 본문 헤더 HTML 생성"""
     return """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #1A237E;'>
-        <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; text-align:center;'>
-            ⚖️ 전통 명리 vs 초연시공명리 1:1 학술 대조 리포트
+        <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important; text-align:center; white-space:nowrap;'>
+            ⚖️ 전통 명리 vs 시공명리 1:1 비교 리포트
         </h2>
     </div>"""
