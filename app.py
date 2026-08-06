@@ -214,17 +214,19 @@ with st.sidebar:
         if st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev"):
             st.session_state['app_running'] = False
             
-            _ry = re.sub(r'[^가-힣一-龥]', '', u_ry) if u_ry else ""
-            _rm = re.sub(r'[^가-힣一-龥]', '', u_rm) if u_rm else ""
-            _rd = re.sub(r'[^가-힣一-龥]', '', u_rd) if u_rd else ""
+            # 한글/한자 순수 간지 2글자 추출
+            _ry = engine.extract_ganji(u_ry) if u_ry else ""
+            _rm = engine.extract_ganji(u_rm) if u_rm else ""
+            _rd = engine.extract_ganji(u_rd) if u_rd else ""
             
             if not _ry and not _rm and not _rd:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
             elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-                ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
-                rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
-                rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
+                # 🛡️ 한글/한자 모두 완벽 대응하는 _to_hanja 변환 적용
+                ry_h = engine._to_hanja(_ry[0]) + engine._to_hanja(_ry[1])
+                rm_h = engine._to_hanja(_rm[0]) + engine._to_hanja(_rm[1])
+                rd_h = engine._to_hanja(_rd[0]) + engine._to_hanja(_rd[1])
                 
                 klc_find = KoreanLunarCalendar()
                 found = False
@@ -257,7 +259,7 @@ with st.sidebar:
                                 
                                 if u_rt:
                                     ji_char_u = u_rt[-1]
-                                    u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u)
+                                    u_rt_h = engine._to_hanja(ji_char_u)
                                     target_time_str = time_map.get(u_rt_h, "시간 모름")
                                 else:
                                     target_time_str = "시간 모름"
@@ -268,7 +270,7 @@ with st.sidebar:
                                 found = True
                                 s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                                 s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                                st.session_state['rev_success_msg'] = f"✅양력 {s_sol_fmt}\n 음력 {s_lun_fmt}"
+                                st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt}\n 음력{s_lun_fmt}"
                                 st.rerun()
                                 break
                             curr_dt -= dt_mod.timedelta(days=1)
