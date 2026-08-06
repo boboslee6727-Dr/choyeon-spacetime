@@ -945,7 +945,7 @@ if st.session_state.get('app_running', False):
                     
                     # 🌟 [모드 A] 전통명리와 시공명리 1:1 자동 대조 분석 (모듈 연동)
                     if saju_comp_mode == "1) 전통 명리학과 1:1 자동 대조 분석":
-                        # 🚨 b_time (태어난 시간 변수) 인자 추가 반영
+                        # 🚨 [수정 반영] b_time 인자 추가 전달
                         other_cover_html = html_views.get_auto_comparison_cover(
                             APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str
                         )
