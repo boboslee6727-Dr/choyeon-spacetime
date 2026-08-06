@@ -265,7 +265,7 @@ with st.sidebar:
         st.session_state["s_t"] = b_time
 
     # ==============================================================================
-    # 📌 특화 상품별 옵션
+    # 📌 특화 상품별 옵션 (사이드바)
     # ==============================================================================
     if u_product.startswith("1-"):
         is_vip_package = st.checkbox(
@@ -276,11 +276,7 @@ with st.sidebar:
         )
         
         if "1-4." in u_product:
-            daily_calc_date = st.date_input(
-                "일운 분석 기준일 선택", 
-                value=selected_target_date, 
-                key="daily_calc_date"
-            )
+            daily_calc_date = st.date_input("일운 분석 기준일 선택", value=selected_target_date, key="daily_calc_date")
         elif "1-5." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal")
         elif "1-6." in u_product: 
@@ -293,6 +289,7 @@ with st.sidebar:
             moving_date = st.date_input("이사 희망일", key="moving_date")
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
 
+    # 🚨 [좌표 교체 구역] 3-1. 타 감명서 비교 (사주) 선택 시 대조 방식 라디오 버튼 노출
     elif "3-1." in u_product:
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         saju_comp_mode = st.radio(
