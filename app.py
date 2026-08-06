@@ -181,9 +181,13 @@ with st.sidebar:
                 if 'rev_success_msg' in st.session_state: del st.session_state['rev_success_msg']
                 st.rerun()
             elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-                ry_h = engine._to_hanja(_ry[0]) + engine._to_hanja(_ry[1])
-                rm_h = engine._to_hanja(_rm[0]) + engine._to_hanja(_rm[1])
-                rd_h = engine._to_hanja(_rd[0]) + engine._to_hanja(_rd[1])
+                # 🛡️ 외부 모듈 의존성 제거 및 자체 안전 한글->한자 변환 맵 적용
+                _k2h_g = {'갑':'甲', '을':'乙', '병':'丙', '정':'丁', '무':'戊', '기':'己', '경':'庚', '신':'辛', '임':'壬', '계':'癸', '甲':'甲', '乙':'乙', '丙':'丙', '丁':'丁', '戊':'戊', '己':'己', '庚':'庚', '辛':'辛', '壬':'壬', '癸':'癸'}
+                _k2h_j = {'자':'子', '축':'丑', '인':'寅', '묘':'卯', '진':'辰', '사':'巳', '오':'午', '미':'未', '신':'申', '유':'酉', '술':'戌', '해':'亥', '子':'子', '丑':'丑', '寅':'寅', '卯':'卯', '辰':'辰', '巳':'巳', '午':'午', '未':'未', '申':'申', '酉':'酉', '戌':'戌', '亥':'亥'}
+                
+                ry_h = _k2h_g.get(_ry[0], _ry[0]) + _k2h_j.get(_ry[1], _ry[1])
+                rm_h = _k2h_g.get(_rm[0], _rm[0]) + _k2h_j.get(_rm[1], _rm[1])
+                rd_h = _k2h_g.get(_rd[0], _rd[0]) + _k2h_j.get(_rd[1], _rd[1])
                 
                 klc_find = KoreanLunarCalendar()
                 found = False
@@ -216,7 +220,7 @@ with st.sidebar:
                                 
                                 if u_rt:
                                     ji_char_u = u_rt[-1]
-                                    u_rt_h = engine._to_hanja(ji_char_u)
+                                    u_rt_h = _k2h_j.get(ji_char_u, ji_char_u)
                                     target_time_str = time_map.get(u_rt_h, "시간 모름")
                                 else:
                                     target_time_str = "시간 모름"
