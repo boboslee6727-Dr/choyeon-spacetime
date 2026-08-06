@@ -16,7 +16,6 @@ import sys
 import importlib
 
 import engine
-from engine import K2H_GAN, K2H_JI  # 👈 이 줄을 추가해 주시면 됩니다!
 import prompts
 import html_views
 
