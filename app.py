@@ -94,7 +94,7 @@ def td_bg(ganji):
     return f"<td class='{cls}' style='border:1px solid #444 !important; width:21%; font-size:20px; font-weight:900;'>"
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (정돈 및 대조 모드 통합 완료)
+# 2. 사이드바 통제 센터 (VIP 패키지 원상복구 및 [전통 명리 운세풀이] 체크박스 최적 배치)
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -153,24 +153,18 @@ with st.sidebar:
     st.markdown("---")
 
     # ==============================================================================
-    # 🌟 [최상단 배치] 3-1. 사주 타 감명서 비교 선택 시 팝업될 대조 방식 라디오
-    # ==============================================================================
-    if "3-1." in u_product:
-        st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>⚖️ 사주 대조 방식 선택</div>", unsafe_allow_html=True)
-        saju_comp_mode = st.radio(
-            "비교 유형",
-            ["1) 전통 명리학과 1:1 자동 대조 분석", "2) 외부 타 감명서 원문 입력 대조"],
-            key="saju_comp_mode_radio",
-            on_change=stop_ai
-        )
-        if saju_comp_mode == "2) 외부 타 감명서 원문 입력 대조":
-            other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
-        st.markdown("---")
-
-    # ==============================================================================
-    # 📌 특화 상품별 옵션 (VIP 패키지 모드 등)
+    # 📌 특화 상품별 옵션 및 👑 VIP 패키지 모드 (원상복구 완료)
     # ==============================================================================
     if u_product.startswith("1-"):
+        # 🌟 [최적의 자리] VIP 패키지 바로 상단에 장착된 [전통 명리 운세풀이 대조] 체크박스!
+        enable_traditional_compare = st.checkbox(
+            "⚖️ 전통 명리 운세풀이 대조 병행",
+            value=st.session_state.get("enable_trad_comp_val", False),
+            key="enable_trad_comp_val",
+            help="체크 시 초연시공명리 체용 분석과 함께 [A. 전통 명리 단식 풀이]를 1:1로 함께 대조 분석합니다.",
+            on_change=stop_ai
+        )
+
         is_vip_package = st.checkbox(
             "👑 VIP 패키지 모드 (누적 출력)", 
             value=st.session_state.get("is_vip_package_val", False), 
@@ -191,6 +185,12 @@ with st.sidebar:
         elif "1-9." in u_product:
             moving_date = st.date_input("이사 희망일", key="moving_date")
             moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir")
+
+    # 3-1. 타 감명서 비교 (사주) 선택 시 기존 외부 감명서 텍스트 상자 노출
+    elif "3-1." in u_product:
+        st.markdown("<div style='font-weight:900; color:#2E7D32; margin-bottom:5px;'>📄 타 감명서 원문 입력 대조</div>", unsafe_allow_html=True)
+        other_report = st.text_area("타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
+        st.markdown("---")
 
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
