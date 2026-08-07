@@ -628,7 +628,7 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
 
-ef get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
+def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
     daewun_list = []
     c_idx = GAN.index(ms) % 10 if ms in GAN else 0
     j_idx = JI.index(mb) % 12 if mb in JI else 0
