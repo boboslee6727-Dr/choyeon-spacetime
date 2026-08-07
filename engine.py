@@ -1,13 +1,5 @@
 # ==============================================================================
-# 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 7.1 타임머신 연산 코어 엔진
-# ==============================================================================
-# [엔진 핵심 모듈 명세 - 논리적 6대 섹션 체계]
-# 섹션 1. 시스템 변수 및 기초 상수 정의
-# 섹션 2. 핵심 사주 역산 및 만세력 로직 (-30분 동경시차 및 Ephem 절기 연산)
-# 섹션 3. 명리 기초 연산 로직 (오행, 십성, 지장간, 합충형파해, 12운성, 듀얼 12신살, 격국, 공망 등)
-# 섹션 4. 특수 파동 및 묘고 정밀 연산 로직 (인사신/축술미 삼형살 & 수·화·금·목고 묘고 정밀 연산)
-# 섹션 5. 운세 풀이 및 체용(體用) 5x5 확장 로직 (포태법, 연령/성별/혼인 지침, 체용 매트릭스, 팩트 시트)
-# 섹션 6. 궁합 및 택일(결혼/출산/방위) 정밀 연산 로직
+# 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 7.3 완결본 (중복 완전 제거)
 # ==============================================================================
 import streamlit as st
 import math
@@ -48,6 +40,12 @@ def _to_hanja(char):
     if not char or char in ["?", " ", "-"]: return ""
     char = str(char).strip()
     return K2H_GAN.get(char, K2H_JI.get(char, char))
+
+def _to_hanja_ji(char):
+    """지지를 정통 한자로 변환할 때 한글 '신'이 천간 辛으로 튀는 현상 원천 차단"""
+    if not char or char in ["?", " ", "-"]: return ""
+    char = str(char).strip()
+    return K2H_JI.get(char, K2H_GAN.get(char, char))
 
 # ==============================================================================
 # 섹션 2. 핵심 사주 역산 및 만세력 로직
@@ -352,18 +350,6 @@ def get_unsung(dg, ji):
         return unsung_names[idx]
     return "-"
 
-# ==============================================================================
-# 1. 지지 전용 변환 보조 함수 (한글 '신' -> 지지 '申' 우선 변환)
-# ==============================================================================
-def _to_hanja_ji(char):
-    """지지를 정통 한자로 변환할 때 한글 '신'이 천간 辛으로 튀는 현상 원천 차단"""
-    if not char or char in ["?", " ", "-"]: return ""
-    char = str(char).strip()
-    return K2H_JI.get(char, K2H_GAN.get(char, char))
-
-# ==============================================================================
-# 2. 12신살 정밀 연산 함수
-# ==============================================================================
 def get_12_shinsal(base_ji, target_ji):
     """기준 지지(년지 또는 일지) 대비 대상 지지의 12신살 정밀 연산"""
     b_h = _to_hanja_ji(base_ji)
@@ -569,6 +555,14 @@ def get_jijanggan_full(dg, ji):
             res += "<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:#f9f9f9; width:95%; margin:0 auto; color:#bbb; border-radius:3px; border:1px dashed #ddd;'>-</div>"
     return res + "</div>"
 
+def get_jijanggan_pure(ji):
+    """지지의 지장간을 HTML 태그 없이 순수 한자 텍스트(예: '癸·辛·己')로 반환"""
+    ji = _to_hanja(ji)
+    if ji in ["?", "-", " "]: return "-"
+    raw = JIJANGGAN.get(ji, ['-','-','-'])
+    clean_list = [j for j in raw if j != '-']
+    return "·".join(clean_list) if clean_list else "-"
+
 def get_gyukgook_detailed(ds, ys, ms, hs, mb):
     ds, ys, ms, hs, mb = _to_hanja(ds), _to_hanja(ys), _to_hanja(ms), _to_hanja(hs), _to_hanja(mb)
     jg = JIJANGGAN.get(mb, [])
@@ -655,7 +649,6 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
         except Exception:
             un_sung = "-"
 
-        # 년지 기준 신살과 일지 기준 신살 각각 분리 연산
         y_shin = get_12_shinsal(yb_hanja, j)
         if not y_shin or y_shin == "-":
             y_shin = get_12_shinsal(yb, j_hangul)
@@ -673,9 +666,9 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
             "j_hangul": j_hangul, 
             "ss_ji": ss_ji, 
             "un_sung": un_sung, 
-            "y_shinsal": y_shin,   # ⭕ 년지신살 전용 키
-            "d_shinsal": d_shin,   # ⭕ 일지신살 전용 키
-            "shin_sal": y_shin,     # 호환성 유지용
+            "y_shinsal": y_shin, 
+            "d_shinsal": d_shin, 
+            "shin_sal": y_shin, 
             "is_current": (val <= age < val + 10), 
             "is_first": (i == 0)
         })
@@ -701,28 +694,24 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
     jjis_h = [_to_hanja(j) for j in jjis if j not in ["?", "-", " "]]
     results = []
 
-    # 1. 원국 내부 삼형살 / 가형 감지
     in_set = {'寅', '巳', '申'}
     sul_set = {'丑', '戌', '未'}
 
     won_in_present = in_set.intersection(set(jjis_h))
     won_sul_present = sul_set.intersection(set(jjis_h))
 
-    # [인사신 삼형 원국 판정]
     if len(won_in_present) == 3:
         results.append("🔥 [원국 인사신(寅巳申) 삼형살 완성] 권력, 조정, 수리, 의료, 법형, 물리적 충돌 및 강력한 개혁 에너지가 내재됨.")
     elif len(won_in_present) == 2:
         missing = list(in_set - won_in_present)[0]
         results.append(f"⚠️ [원국 인사신(寅巳申) 가형(假刑) 상태] 원국에 {','.join(won_in_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 신상·사고·조정 주의 요망.")
 
-    # [축술미 삼형 원국 판정]
     if len(won_sul_present) == 3:
         results.append("🔥 [원국 축술미(丑戌未) 삼형살 완성] 묘고의 충돌, 재물·건강·인간관계의 대대적 재편 및 정교한 조정 에너지가 내재됨.")
     elif len(won_sul_present) == 2:
         missing = list(sul_set - won_sul_present)[0]
         results.append(f"⚠️ [원국 축술미(丑戌未) 가형(假刑) 상태] 원국에 {','.join(won_sul_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 재물·건강 조정 주의 요망.")
 
-    # 2. 행운(대운/세운/월운) 결합으로 삼형살이 완성되는 외부 충격 감지
     hangun_list = []
     if dw_j and dw_j not in ["?", "-", " "]: hangun_list.append(("대운", _to_hanja(dw_j)))
     if sewun_j and sewun_j not in ["?", "-", " "]: hangun_list.append(("세운", _to_hanja(sewun_j)))
@@ -730,16 +719,16 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
 
     for u_type, u_j in hangun_list:
         combined_set = set(jjis_h + [u_j])
-        
         if len(won_in_present) == 2 and in_set.issubset(combined_set) and u_j in in_set:
-            results.append(f"🚨 [{u_type}({u_j}) 인사신 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 인사신 삼형살 발동! (수리, 법률, 건강, 수술, 직주 이동 파동 강하게 작용)")
+            results.append(f"🚨 [{u_type}({u_j}) 인사신 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 인사신 삼형살 발동!")
 
         if len(won_sul_present) == 2 and sul_set.issubset(combined_set) and u_j in sul_set:
-            results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 축술미 삼형살 발동! (재물 입고/개고, 문서/가정/지병 재정비 파동 강하게 작용)")
+            results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 축술미 삼형살 발동!")
 
     return " / ".join(results) if results else "삼형살(인사신/축술미) 특이 파동 없음"
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
+    """원국 지지 묘고 입고/개고 판별 함수"""
     base_gans = [_to_hanja(g) for g in base_gans]
     base_jjis = [_to_hanja(j) for j in base_jjis]
     attacker_ji = _to_hanja(attacker_ji)
@@ -757,9 +746,9 @@ def check_vault_status(base_gans, base_jjis, attacker_ji):
                 is_trapped = any(g in targets for g in base_gans)
                 if is_trapped:
                     trapped_chars = [g for g in targets if g in base_gans]
-                    results.append(f"🚨 <b style='color:#C62828;'>[입고(入庫) 주의]</b> {ji} 무덤이 열려 천간의 {','.join(trapped_chars)} 기운이 빨려 들어갑니다.")
+                    results.append(f"🚨 [입고(入庫) 주의] {ji} 무덤이 열려 천간의 {','.join(trapped_chars)} 기운이 수렴됩니다.")
                 else:
-                    results.append(f"💎 <b style='color:#2E7D32;'>[개고(開庫) 발현]</b> {ji} 금고가 열려 지장간의 숨은 보물이 세상에 드러납니다.")
+                    results.append(f"💎 [개고(開庫) 발현] {ji} 금고가 열려 지장간의 숨은 보물이 세상에 드러납니다.")
     return results
 
 def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
@@ -799,6 +788,7 @@ def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     return f"[{dw_j}대운 - {vault_name}] " + " / ".join(details)
 
 def get_won_guk_vaults_str(jjis):
+    """원국 내 진술축미 보유 여부 및 잠재력 분석"""
     vaults = [j for j in jjis if j in ['辰', '戌', '丑', '未']]
     if not vaults:
         return "원국 내 진술축미(묘고) 글자 없음 (특수 입고 작용 미미함)"
@@ -904,7 +894,6 @@ def get_universal_analysis(ds, mb, db, gans, jjis):
         
     return results
 
-# 체용(體用) 임상 매트릭스 및 연산 함수
 CHE_YONG_MATRIX_TEXT = """- 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
 - 체(비겁)+용(식상): 업무원만, 진취력, 건강호조, 원행(遠行), 발표, 여행
 - 체(비겁)+용(재성): 손재, 소비, 이성난, 가정불화, 부친반목
@@ -1035,7 +1024,6 @@ def get_yongshin_analysis(counts, mb, ds):
 def get_goshin_gwasook(yb, gender):
     return "고신살/과숙살 영향 분석 완료"
 
-# 타임머신 통합 팩트 시트 추출 엔진 (연령/성별/혼인 지침 자동 통합)
 def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital, 
                         birth_year=None, age=None,
                         dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, 
@@ -1056,7 +1044,6 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
     else:
         calc_age = 40
 
-    # 🎯 [엔진 통합] 연령대, 성별, 혼인 상태 지침 자동 생성
     age_p = get_age_prompt(calc_age)
     gender_p = get_gender_prompt(gender)
     marital_p = get_marital_prompt(gender, marital)
