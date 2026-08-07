@@ -352,10 +352,22 @@ def get_unsung(dg, ji):
         return unsung_names[idx]
     return "-"
 
+# ==============================================================================
+# 1. 지지 전용 변환 보조 함수 (한글 '신' -> 지지 '申' 우선 변환)
+# ==============================================================================
+def _to_hanja_ji(char):
+    """지지를 정통 한자로 변환할 때 한글 '신'이 천간 辛으로 튀는 현상 원천 차단"""
+    if not char or char in ["?", " ", "-"]: return ""
+    char = str(char).strip()
+    return K2H_JI.get(char, K2H_GAN.get(char, char))
+
+# ==============================================================================
+# 2. 12신살 정밀 연산 함수
+# ==============================================================================
 def get_12_shinsal(base_ji, target_ji):
     """기준 지지(년지 또는 일지) 대비 대상 지지의 12신살 정밀 연산"""
-    b_h = _to_hanja(base_ji)
-    t_h = _to_hanja(target_ji)
+    b_h = _to_hanja_ji(base_ji)
+    t_h = _to_hanja_ji(target_ji)
     
     if not b_h or not t_h: return "-"
         
@@ -616,13 +628,13 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
 
-def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
+ef get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
     daewun_list = []
     c_idx = GAN.index(ms) % 10 if ms in GAN else 0
     j_idx = JI.index(mb) % 12 if mb in JI else 0
 
-    # 🚨 [방탄 변환] 년지(yb) 한자/한글 규격 자동 통일
     yb_hanja = K2H_JI.get(yb, yb)
+    db_hanja = K2H_JI.get(db, db) if db else ""
 
     for i in range(10):
         val = i * 10 + calc_d
@@ -632,43 +644,40 @@ def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age):
         c_hangul = GAN[c_idx_calc]
         j_hangul = JI[j_idx_calc]
         
-        # 한간/한자 지지 정밀 변환
         c = K2H_GAN.get(c_hangul, c_hangul)
         j = K2H_JI.get(j_hangul, j_hangul)
         
-        # 십성 연산
         ss_gan = get_ss(ds, c_hangul) or get_ss(ds, c) or "-"
         ss_ji = get_ss(ds, j_hangul) or get_ss(ds, j) or "-"
         
-        # 🚨 [영구 해결] 12십이운성 및 12신살 한자/한글 이중 교차 방탄 연산
         try:
             un_sung = get_unsung(ds, j) or get_unsung(ds, j_hangul) or "-"
-        except:
+        except Exception:
             un_sung = "-"
 
-        try:
-            # 1차 시도: 한자 기준 대조 (yb_hanja, j)
-            shin_sal = get_12_shinsal(yb_hanja, j)
-            
-            # 2차 시도: 만약 실패나 "-"인 경우 한글 기준 대조 (yb, j_hangul)
-            if not shin_sal or shin_sal == "-":
-                shin_sal = get_12_shinsal(yb, j_hangul)
-                
-            # 3차 시도: 일지 기준 재검증
-            if not shin_sal or shin_sal == "-":
-                db_hanja = K2H_JI.get(db, db) if 'db' in locals() or 'db' in globals() else ""
-                if db_hanja:
-                    shin_sal = get_12_shinsal(db_hanja, j)
-                    
-            if not shin_sal:
-                shin_sal = "-"
-        except Exception:
-            shin_sal = "-"
-            
+        # 년지 기준 신살과 일지 기준 신살 각각 분리 연산
+        y_shin = get_12_shinsal(yb_hanja, j)
+        if not y_shin or y_shin == "-":
+            y_shin = get_12_shinsal(yb, j_hangul)
+
+        d_shin = get_12_shinsal(db_hanja, j) if db_hanja else "-"
+        if not d_shin or d_shin == "-":
+            d_shin = get_12_shinsal(db, j_hangul) if db else "-"
+
         daewun_list.append({
-            "age_range": f"{val}~{val+9}세", "ss_gan": ss_gan, "c_hanja": c, "c_hangul": c_hangul,
-            "j_hanja": j, "j_hangul": j_hangul, "ss_ji": ss_ji, "un_sung": un_sung, 
-            "shin_sal": shin_sal, "is_current": (val <= age < val + 10), "is_first": (i == 0)
+            "age_range": f"{val}~{val+9}세", 
+            "ss_gan": ss_gan, 
+            "c_hanja": c, 
+            "c_hangul": c_hangul,
+            "j_hanja": j, 
+            "j_hangul": j_hangul, 
+            "ss_ji": ss_ji, 
+            "un_sung": un_sung, 
+            "y_shinsal": y_shin,   # ⭕ 년지신살 전용 키
+            "d_shinsal": d_shin,   # ⭕ 일지신살 전용 키
+            "shin_sal": y_shin,     # 호환성 유지용
+            "is_current": (val <= age < val + 10), 
+            "is_first": (i == 0)
         })
     return daewun_list
 
