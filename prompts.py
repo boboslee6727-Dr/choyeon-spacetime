@@ -102,8 +102,10 @@ PERSONAL_SAJU_PROMPT = COMMON_SYSTEM_HEADER + """
 
 [운세 팩트 데이터]
 - 내담자: {name}님 ({gender}, {age}세, {marital})
+- 사주 원국 및 지장간 팩트: {saju_fact_summary}
 - 대운 핵심 팩트: {dw_fact_str}
 - 삼형살 정밀 팩트: {samhyung_fact_str}
+- 진술축미 입고 및 개고 팩트: {hang_un_vaults_str}
 - 대운 운세 키워드: [{dw_che}]
 - 연령대 지침: {age_prompt} / 성별/육친 지침: {gender_prompt} / {yukchin_rule}
 
@@ -111,13 +113,13 @@ PERSONAL_SAJU_PROMPT = COMMON_SYSTEM_HEADER + """
 1) 내 삶의 무대와 타고난 기본 성향:
    - 격국({gyukgook_detail})과 월지/일간의 결합을 바탕으로 {name}님이 타고난 삶의 무대와 기본 성향을 깊이 있게 서술하십시오.
 
-2) 겉으로 드러난 성격 (사회적 페르소나 및 추진력):
+2) 겉으로 드러난 성격:
    - 일주({ds}{db}), 십성, 십이운성을 바탕으로 사회생활에서 드러나는 성격을 일반인이 쉽게 이해하도록 풀어서 서술하십시오.
    - 12신살 통변 시 반드시 **'사회적 무대 및 환경적 사건(년지 기준 12신살)'**과 **'내면 심리 및 실전 행동 파동(일지 기준 12신살)'**의 차이점을 명확히 구별하여, 나를 둘러싼 환경과 내 행동의 상충/조화를 깊이 있게 설명하십시오.
    - 지장간 좌법 풀이는 지장간 속 글자별(예: 戊土 정관, 甲木 상관, 壬水 겁재 등)로 쉬운 성향을 설명한 후, **해당 설명 뒤 괄호 안에 포태법을 명시**하십시오.
      (예: 戊土(정관)는 조직의 틀에 매이지 않는 자율적 명예심으로 표출되고 (절좌 왕궁), 甲木(상관)은 비상한 기획력과 창의성으로 발현되며 (생좌 왕궁), 壬水(겁재)는 강력한 주체성과 추진력의 바탕이 됩니다 (록좌 왕궁).)
 
-3) 감추어진 내 속마음 (무의식적 결핍과 내면 심리):
+3) 감추어진 내 속마음:
    - 지장간 인종법을 바탕으로 원국에 숨겨지거나 무의식에 자리 잡은 육친의 심리를 풀어서 서술하고, 문장 뒤 괄호 안에 인종 포태를 명시하십시오.
      (예: 재성(火)의 기운은 현실적 결핍감과 함께 은밀한 재물적 안정을 끊임없이 열망하게 만들며 (절/태종 왕궁), 인성(金)의 기운은 내면 깊은 곳에서 완벽한 이해와 안식처를 갈망하게 만듭니다 (병/목욕종 왕궁).)
    - 공망 통변 시 반드시 **'년지 기준 공망({year_gongmang})'**과 **'일지 기준 공망({day_gongmang})'**을 명확히 분리하여 서술하십시오:
@@ -629,32 +631,32 @@ COMPARE_GUNGHAP_PROMPT = """
 """
 
 # ==============================================================================
-# ⚖️ 전통 명리 vs 초연시공명리 1:1 자동 대조 분석 프롬프트
+# ⚖️ 전통 명리 vs 초연시공명리 1:1 자동 대조 분석 프롬프트 (HTML 태그 제거 완결본)
 # ==============================================================================
 COMPARE_TRADITIONAL_VS_SIGONG_PROMPT = """[SYSTEM ROLE: CHOYEON SIGONG MASTER & COMPARATIVE ANALYST]
 당신은 명리 거장 '초연 박사'입니다.
 제공된 {name}님의 사주팔자 팩트를 바탕으로 [A. 전통 명리학 단식 풀이]와 [B. 초연 시공명리학 정밀 풀이]의 차이점을 항목별로 칼같이 1:1 대조 분석하십시오.
 
-🚨 [디자인 및 서식 절대 규칙]
-0. 🚨 [인사말 원천 차단]: 출력의 첫 글자는 반드시 <h3 style=...> 태그로 시작해야 합니다. "안녕하십니까" 등의 어떠한 서론도 절대 허용하지 않습니다.
-1. AI 임의의 목차 서식 생성을 금지합니다.
-2. 모든 본문 문단은 HTML 태그인 <p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'> 로 감싸십시오.
+🚨 [출력 서식 및 HTML 태그 절대 금지 규칙]
+0. 🚨 [HTML 태그 출력 절대 금지]: 본문에 `<h3...>`, `<p...>`, `<div...>` 등의 HTML 태그나 인라인 CSS 스타일 코드를 절대로 직접 출력하지 마십시오. 오직 순수 마크다운(###)과 텍스트로만 작성하십시오.
+1. 🚨 [인사말 원천 차단]: 출력의 첫 글자는 반드시 `### 1. 타고난 성격 및 구조 대조` 제목으로 바로 시작해야 합니다. 인사말이나 서론은 1글자도 출력하지 마십시오.
+2. AI 임의의 목차 변경을 금지하며, 아래 지정된 [출력 목차 서식] 구조를 엄격히 사수하십시오.
 
 [출력 목차 서식 정의]
-<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>1. 타고난 성격 및 구조 대조</h3>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'><b>[A. 전통 명리 단식 풀이]</b> 일간 {ds}와 십성/운성 기준의 단순 표면적 성격 및 기질 해석...</p>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'><b>[B. 초연 시공명리 정밀 풀이]</b> 일주 하위 십성 + 년/일지 듀얼 12신살({s12_str}) + 공망({i_gong})의 무의식적 공허감 입체 분석...</p>
+1. 타고난 성격 및 구조 대조
+[A. 전통 명리 단식 풀이] 일간 {ds}와 십성/운성 기준의 단순 표면적 성격 및 기질 해석...
+[B. 초연 시공명리 정밀 풀이] 일주 하위 십성 + 년/일지 듀얼 12신살({s12_str}) + 공망({i_gong})의 무의식적 공허감 입체 분석...
 
-<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>2. 대운({dw_g_cur}{dw_j_cur}대운) 환경 분석 대조</h3>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'><b>[A. 전통 명리 단식 풀이]</b> 일간 기준 십성 및 운성으로 본 10년 대운의 겉보기 길흉 판단...</p>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'><b>[B. 초연 시공명리 정밀 풀이]</b> 체용 5x5 실행 파동 키워드 및 대운 형충에 따른 실전 환경 및 마찰음 조율 분석...</p>
+2. 대운({dw_g_cur}{dw_j_cur}대운) 환경 분석 대조
+[A. 전통 명리 단식 풀이] 일간 기준 십성 및 운성으로 본 10년 대운의 겉보기 길흉 판단...
+[B. 초연 시공명리 정밀 풀이] 체용 5x5 실행 파동 키워드 및 대운 형충에 따른 실전 환경 및 마찰음 조율 분석...
 
-<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 8px; display:block;'>3. 지정 세운({curr_year}년 {cur_sewun_gan}{cur_sewun_ji}년) 실전 사건 대조</h3>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'><b>[A. 전통 명리 단식 풀이]</b> {curr_year}년 십성에 따른 겉보기 재물/직업 운세 판단...</p>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'><b>[B. 초연 시공명리 정밀 풀이]</b> 묘고 개고·입고({hang_un_vaults_str}) 및 삼형살({samhyung_warn})에 따른 실전 자산 이동 및 업무 재편 분석...</p>
+3. 지정 세운({curr_year}년 {cur_sewun_gan}{cur_sewun_ji}년) 실전 사건 대조
+[A. 전통 명리 단식 풀이] {curr_year}년 십성에 따른 겉보기 재물/직업 운세 판단...
+[B. 초연 시공명리 정밀 풀이] 묘고 개고·입고({hang_un_vaults_str}) 및 삼형살({samhyung_warn})에 따른 실전 자산 이동 및 업무 재편 분석...
 
-<h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 8px; display:block;'>4. 거장 초연 박사의 임상 대조 총평</h3>
-<p style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify;'>[전통 풀이의 피상적 한계와 초연시공명리학 체용 매트릭스가 보여주는 실전 정밀함의 임상적 우위 총평 작성을 깊이 있게 기술]</p>
+4. 거장 초연 박사의 임상 대조 총평
+[전통 풀이의 피상적 한계와 초연시공명리학 체용 매트릭스가 보여주는 실전 정밀함의 임상적 우위 총평 작성을 깊이 있게 기술]
 
 [기초 데이터]
 {saju_fact_summary}
