@@ -1049,55 +1049,33 @@ if st.session_state.get('app_running', False):
                 is_compare_trad = st.session_state.get("is_compare_trad_val", False)
                 
                 if is_compare_trad:
-                    with st.spinner("⚖️ 전통 명리 vs 초연 시공명리 1:1 비교 리포트 심층 분석 중..."):
-                        try:
-                            saju_fact_summary = f"👤 내담자: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; 📜 명조: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
-                            
-                            # prompts.COMPARE_TRADITIONAL_VS_SIGONG_PROMPT 프롬프트에 팩트 데이터 바인딩
-                            trad_comp_prompt = prompts.COMPARE_TRADITIONAL_VS_SIGONG_PROMPT.format(
-                                name=name,
-                                ds=ds,
-                                s12_str=s12_str,
-                                i_gong=i_gong,
-                                dw_g_cur=dw_g_cur,
-                                dw_j_cur=dw_j_cur,
-                                curr_year=curr_year,
-                                cur_sewun_gan=cur_sewun_gan,
-                                cur_sewun_ji=cur_sewun_ji,
-                                hang_un_vaults_str=w_facts.get("hang_un_vaults_str", "묘고 작용"),
-                                samhyung_warn=w_facts.get("samhyung_fact_str", "삼형살 파동"),
-                                saju_fact_summary=saju_fact_summary,
-                                ai_output_html=str(ai_output_html)
-                            )
-                            
-                            # Gemini AI 연속 호출 (2차 통변)
-                            trad_comp_res = call_gemini_api(trad_comp_prompt)
-                            
-                            if trad_comp_res:
-                                clean_comp = re.sub(r'<!--.*?-->', '', trad_comp_res, flags=re.DOTALL)
-                                clean_comp = re.sub(r'```[a-zA-Z]*', '', clean_comp).replace("```", "").strip()
-                                clean_comp = re.sub(r'#{1,6}\s*', '', clean_comp)
-                                
-                                formatted_trad_comp = html_views.format_ai_text_to_html(clean_comp)
-                                
-                                # 독립된 고급 HTML 상자로 감싸서 출력
-                                trad_section_html = f"""
-                                <div style='margin-top:20px; padding:25px; background-color:#FFFFFF; border-radius:10px; border:2px solid #1A237E;'>
-                                    <div style='text-align:center; margin-bottom:20px; border-bottom:2px solid #1A237E; padding-bottom:10px;'>
-                                        <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important;'>
-                                            ⚖️ 전통 명리 vs 시공명리 1:1 운세 비교 분석
-                                        </h2>
-                                    </div>
-                                    <div style='text-align:left !important; line-height:1.85;'>
-                                        {formatted_trad_comp}
-                                    </div>
-                                </div>
-                                """
-                                st.markdown(html_views.get_final_report_box(trad_section_html), unsafe_allow_html=True)
-                            else:
-                                st.error("⚠️ 전통명리 비교 분석 AI 응답을 불러오지 못했습니다.")
-                        except Exception as comp_e:
-                            st.error(f"🚨 전통명리 비교 분석 연동 중 오류 발생: {comp_e}")
+    with st.spinner("⚖️ 전통 명리 vs 초연 시공명리 1:1 비교 리포트 심층 분석 중..."):
+        try:
+            saju_fact_summary = f"👤 내담자: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; 📜 명조: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
+            
+            trad_comp_prompt = prompts.COMPARE_TRADITIONAL_VS_SIGONG_PROMPT.format(
+                name=name, ds=ds, s12_str=s12_str, i_gong=i_gong,
+                dw_g_cur=dw_g_cur, dw_j_cur=dw_j_cur, curr_year=curr_year,
+                cur_sewun_gan=cur_sewun_gan, cur_sewun_ji=cur_sewun_ji,
+                hang_un_vaults_str=w_facts.get("hang_un_vaults_str", "묘고 작용"),
+                samhyung_warn=w_facts.get("samhyung_fact_str", "삼형살 파동"),
+                saju_fact_summary=saju_fact_summary,
+                ai_output_html=str(ai_output_html)
+            )
+            
+            trad_comp_res = call_gemini_api(trad_comp_prompt)
+            
+            if trad_comp_res:
+                clean_comp = re.sub(r'<!--.*?-->', '', trad_comp_res, flags=re.DOTALL)
+                clean_comp = re.sub(r'```[a-zA-Z]*', '', clean_comp).replace("```", "").strip()
+                clean_comp = re.sub(r'color:\s*([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3});', r'color:#\1;', clean_comp)
+                
+                # 💎 html_views 모듈 함수만 호출하여 깔끔하게 렌더링
+                st.markdown(html_views.get_trad_comparison_box(clean_comp), unsafe_allow_html=True)
+            else:
+                st.error("⚠️ 전통명리 비교 분석 AI 응답을 불러오지 못했습니다.")
+        except Exception as comp_e:
+            st.error(f"🚨 전통명리 비교 분석 연동 중 오류 발생: {comp_e}")
 
     elif any(x in u_product for x in ["2-1", "3-2"]):
         st.markdown("---")
