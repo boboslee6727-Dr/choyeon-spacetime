@@ -1049,34 +1049,39 @@ if st.session_state.get('app_running', False):
                 is_compare_trad = st.session_state.get("is_compare_trad_val", False)
                 
                 if is_compare_trad:
-    with st.spinner("⚖️ 전통 명리 vs 초연 시공명리 1:1 비교 리포트 심층 분석 중..."):
-        try:
-            saju_fact_summary = f"👤 내담자: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; 📜 명조: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
-            
-            trad_comp_prompt = prompts.COMPARE_TRADITIONAL_VS_SIGONG_PROMPT.format(
-                name=name, ds=ds, s12_str=s12_str, i_gong=i_gong,
-                dw_g_cur=dw_g_cur, dw_j_cur=dw_j_cur, curr_year=curr_year,
-                cur_sewun_gan=cur_sewun_gan, cur_sewun_ji=cur_sewun_ji,
-                hang_un_vaults_str=w_facts.get("hang_un_vaults_str", "묘고 작용"),
-                samhyung_warn=w_facts.get("samhyung_fact_str", "삼형살 파동"),
-                saju_fact_summary=saju_fact_summary,
-                ai_output_html=str(ai_output_html)
-            )
-            
-            trad_comp_res = call_gemini_api(trad_comp_prompt)
-            
-            if trad_comp_res:
-                clean_comp = re.sub(r'<!--.*?-->', '', trad_comp_res, flags=re.DOTALL)
-                clean_comp = re.sub(r'```[a-zA-Z]*', '', clean_comp).replace("```", "").strip()
-                clean_comp = re.sub(r'color:\s*([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3});', r'color:#\1;', clean_comp)
-                
-                # 💎 html_views 모듈 함수만 호출하여 깔끔하게 렌더링
-                st.markdown(html_views.get_trad_comparison_box(clean_comp), unsafe_allow_html=True)
-            else:
-                st.error("⚠️ 전통명리 비교 분석 AI 응답을 불러오지 못했습니다.")
-        except Exception as comp_e:
-            st.error(f"🚨 전통명리 비교 분석 연동 중 오류 발생: {comp_e}")
-
+                    # ⭕ [수정] if 문 안쪽으로 4칸 들여쓰기 적용
+                    with st.spinner("⚖️ 전통 명리 vs 초연 시공명리 1:1 비교 리포트 심층 분석 중..."):
+                        try:
+                            saju_fact_summary = f"👤 내담자: <b>{name}</b> 님 ({gender}, {age}세, {u_marital}) &nbsp;|&nbsp; 📜 명조: {ys}{yb}년 {ms}{mb}월 {ds}{db}일 {hs}{hb}시"
+                            
+                            trad_comp_prompt = prompts.COMPARE_TRADITIONAL_VS_SIGONG_PROMPT.format(
+                                name=name,
+                                ds=ds,
+                                s12_str=s12_str,
+                                i_gong=i_gong,
+                                dw_g_cur=dw_g_cur,
+                                dw_j_cur=dw_j_cur,
+                                curr_year=curr_year,
+                                cur_sewun_gan=cur_sewun_gan,
+                                cur_sewun_ji=cur_sewun_ji,
+                                hang_un_vaults_str=w_facts.get("hang_un_vaults_str", "묘고 작용"),
+                                samhyung_warn=w_facts.get("samhyung_fact_str", "삼형살 파동"),
+                                saju_fact_summary=saju_fact_summary,
+                                ai_output_html=str(ai_output_html)
+                            )
+                            
+                            trad_comp_res = call_gemini_api(trad_comp_prompt)
+                            
+                            if trad_comp_res:
+                                clean_comp = re.sub(r'<!--.*?-->', '', trad_comp_res, flags=re.DOTALL)
+                                clean_comp = re.sub(r'```[a-zA-Z]*', '', clean_comp).replace("```", "").strip()
+                                clean_comp = re.sub(r'color:\s*([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3});', r'color:#\1;', clean_comp)
+                                
+                                st.markdown(html_views.get_trad_comparison_box(clean_comp), unsafe_allow_html=True)
+                            else:
+                                st.error("⚠️ 전통명리 비교 분석 AI 응답을 불러오지 못했습니다.")
+                        except Exception as comp_e:
+                            st.error(f"🚨 전통명리 비교 분석 연동 중 오류 발생: {comp_e}")
     elif any(x in u_product for x in ["2-1", "3-2"]):
         st.markdown("---")
         with st.spinner("⏳ 두 분의 시공간을 교차 분석 중입니다..."):
