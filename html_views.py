@@ -110,12 +110,12 @@ def get_global_css():
     </style>
     """
 
-def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
+def get_personal_cover(version, report_title, p_icon, name, sol_str, lun_str, time_str, today_str):
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮 초연 시공명리 사주풀이</h1>
+                <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>{report_title}</h1>
                 <div style='text-align: right; margin-top: 10px;'>
                     <span style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
@@ -129,6 +129,39 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
             </div>
             <p style='font-size: 18px; margin-top: 50px; font-weight: 900;'>{today_str}</p>
             <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>
+        </div>
+    </div>
+    """
+
+def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
+    return f"""
+    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
+                <h1 class='title-gothic' style='font-size: 32px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>{report_title}</h1>
+                <div style='text-align: right; margin-top: 10px;'>
+                    <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
+                </div>
+            </div>
+            
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px; margin-bottom: 20px;'>
+                <h2 style='font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 15px;'>{u_icon} {u_name} 님 <span style='font-size:16px; color:#555;'>( {u_age}세 )</span></h2>
+                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
+                    <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{u_time}</span></p>
+                </div>
+            </div>
+            
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 15px;'>
+                <h2 style='font-size: 24px; font-weight: 800; color: #D50000; margin-bottom: 15px;'>{p_icon} {p_name} 님 <span style='font-size:16px; color:#555;'>( {p_age}세 )</span></h2>
+                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {p_sol} | [음력] {p_lun}</p>
+                    <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{p_time}</span></p>
+                </div>
+            </div>
+            
+            <p style='font-size: 18px; margin-top: 40px; font-weight: 800;'>{today_str}</p>
+            <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     """
