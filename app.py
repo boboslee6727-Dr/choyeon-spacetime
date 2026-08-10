@@ -838,16 +838,24 @@ if st.session_state.get('app_running', False):
         # 🏮 [ver 72.1 표준] 표지 단독 출력 및 본문 보고서 개별 출력부 (최하단)
         # ==============================================================================
         
-        # 1. 🏮 표지(cover_html) 단독 출력 (A4 1페이지)
+        # 1. 🏮 표지(cover_html) 단독 출력
         if cover_html:
             st.markdown(html_views.get_final_report_box(cover_html), unsafe_allow_html=True)
 
-        # 2. 📋 본문 종합 보고서 데이터 합성 (수동 div 감싸기 제거하여 태그 짝 완벽 일치)
-        master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"\n{ai_output_html}\n" + part_5_closing
+        # 2. 📋 본문 종합 보고서 데이터 합성
+        raw_composite = part_1_fact + part_2_intro + part_3_golden + f"\n{ai_output_html}\n" + part_5_closing
 
-        # 3. 🚨 화면 출력 직전 텍스트 앞/뒤에 튀어나온 </div> 찌꺼기 최종 소멸 정제
-        master_composite_report = re.sub(r'^\s*</div>', '', master_composite_report)
-        master_composite_report = re.sub(r'</div>\s*$', '', master_composite_report)
+        # 3. 🚨 태그 짝 무결성 자동 교정 (화면 상 </div> 노출 원천 차단)
+        # 본문 전체에서 여는 div와 닫는 div의 개수를 세어, 남는 짝 없는 </div>를 자동 제거합니다.
+        open_divs = len(re.findall(r'<div[\s>]', raw_composite, re.IGNORECASE))
+        close_divs = len(re.findall(r'</div>', raw_composite, re.IGNORECASE))
+
+        if close_divs > open_divs:
+            # 초과된 갯수만큼 </div> 태그를 제거
+            diff = close_divs - open_divs
+            master_composite_report = re.sub(r'</div>', '', raw_composite, count=diff)
+        else:
+            master_composite_report = raw_composite
 
         # 4. 📜 본문 종합 보고서 단독 출력
         st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
