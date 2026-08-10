@@ -831,6 +831,7 @@ if st.session_state.get('app_running', False):
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
-        master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+        master_composite_report = str(cover_html or "") + part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
 
+        st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
         st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
