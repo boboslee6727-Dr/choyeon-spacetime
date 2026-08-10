@@ -191,7 +191,7 @@ with st.sidebar:
         f_val = st.session_state.get("f_g", "여성")
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
 
-    # 🔍 신청인 사주간지 역산 검색 모듈 (ver 72.1 원형)
+    # 🔍 신청인 사주간지 역산 검색 모듈 (ver 72.1 원형 및 시간연동 완벽 보완)
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: u_ry = st.text_input("년주", key="u_ry_rev")
@@ -251,6 +251,7 @@ with st.sidebar:
                                 else:
                                     target_time_str = "시간 모름"
                                 
+                                # 🎯 [교정] 시간 세션 키값 일치화
                                 st.session_state['s_t'] = target_time_str
                                 st.session_state['s_t_select'] = target_time_str
                                 
@@ -286,6 +287,7 @@ with st.sidebar:
         curr_t_val = st.session_state.get("s_t", idx_list[0])
         t_idx = idx_list.index(curr_t_val) if curr_t_val in idx_list else 0
         
+        # 🎯 [교정] index 연결을 바르게 정돈
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select")
         st.session_state["s_t"] = b_time
 
@@ -328,6 +330,9 @@ with st.sidebar:
     is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or (u_product == "4-2. 전통 궁합 vs 시공명리 궁합 대조")
     if is_2person:
         st.markdown("<hr style='border:1px dashed #C62828; margin:15px 0;'>", unsafe_allow_html=True)
+        
+        # 🎯 [교정] 상대방 초기 세션값 안전 선언
+        if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
         
         with st.expander("🔍 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
@@ -388,8 +393,8 @@ with st.sidebar:
                                     else:
                                         target_time_str = "시간 모름"
                                     
+                                    # 🎯 [교정] 상대방 시간 키값 바인딩 완벽 수정
                                     st.session_state['p_t_key'] = target_time_str
-                                    st.session_state['p_t_select'] = target_time_str
                                     
                                     found = True
                                     s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
@@ -410,7 +415,6 @@ with st.sidebar:
         if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1980
         if 'p_m_in' not in st.session_state: st.session_state['p_m_in'] = 1
         if 'p_d_in' not in st.session_state: st.session_state['p_d_in'] = 1
-        if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
 
         p_box = st.container()
         with p_box:
@@ -425,6 +429,7 @@ with st.sidebar:
             f_m = p_col2.number_input("월(상대)", 1, 12, key="p_m_in")
             f_d = p_col3.number_input("일(상대)", 1, 31, key="p_d_in")
             
+            # 🎯 [교정] 상대방 시간 선택 인덱스 연동 교정
             p_t_idx = idx_list.index(st.session_state["p_t_key"]) if st.session_state["p_t_key"] in idx_list else 0
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=p_t_idx, key="p_t_select")
             st.session_state["p_t_key"] = f_t
