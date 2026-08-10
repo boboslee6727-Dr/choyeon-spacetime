@@ -599,7 +599,57 @@ if st.session_state.get('app_running', False):
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
         time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
         
-        cover_html = html_views.get_personal_cover(APP_VERSION, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str)
+        # ==============================================================================
+        # 🎯 [추가] 상품별 리포트 메인 타이틀 분기 및 표지(Cover) 생성 로직
+        # ==============================================================================
+        if u_product == "1-1. 사주팔자와 운세풀이 (기본)":
+            report_title = "🏮 사주팔자와 운세풀이 (기본)"
+        elif u_product == "1-2. 올해 및 특정연도 운세 상세분석":
+            report_title = "🏮 올해 및 특정연도 운세 상세분석"
+        elif u_product == "1-3. 이번달 및 특정월 운세 상세분석":
+            report_title = "🏮 이번달 및 특정월 운세 상세분석"
+        elif u_product == "1-4. 특정 주간 및 특정일운 상세분석":
+            report_title = "🏮 특정 주간 및 특정일운 상세분석"
+        elif u_product == "2-1. 재물운 특화 분석":
+            report_title = "🏮 재물운 특화 정밀 분석"
+        elif u_product == "2-2. 직업/진학운 특화 분석":
+            report_title = "🏮 직업/진학운 특화 정밀 분석"
+        elif u_product == "2-3. 연애/결혼운 특화 분석":
+            report_title = "🏮 연애/결혼운 특화 정밀 분석"
+        elif u_product == "2-4. 건강운 특화 분석":
+            report_title = "🏮 건강운 특화 정밀 분석"
+        elif u_product == "2-5. 이사 및 방위 특화 분석":
+            report_title = "🏮 이사 및 방위 특화 정밀 분석"
+        elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
+            report_title = "🏮 커플 연애/결혼운 정밀 궁합 분석"
+        elif u_product == "3-2. 결혼 택일":
+            report_title = "🏮 최고의 결혼 길일 추천 리포트"
+        elif u_product == "3-3. 출산 택일":
+            report_title = "🏮 새 생명 마중 출산 길일 추천 리포트"
+        elif u_product == "4-1. 타 감명서 비교 (사주)":
+            report_title = "🏮 사주 감명서 학술 검증 및 1:1 대조 리포트"
+        elif u_product == "4-2. 타 감명서 비교 (궁합)":
+            report_title = "🏮 궁합 감명서 학술 검증 및 1:1 대조 리포트"
+        else:
+            report_title = "🏮 사주팔자 정밀 분석"
+
+        # 🏮 표지 생성 분기 (1인용 vs 2인용 궁합)
+        if is_2person:
+            # 세션 상태 및 지역 변수에서 상대방 정보 안전 추출
+            p_name_val = st.session_state.get("f_n", "상대방")
+            p_time_val = st.session_state.get("p_t_key", "시간 모름")
+            p_sol_str_val = f"{st.session_state.get('p_y_in', 1980)}년 {st.session_state.get('p_m_in', 1):02d}월 {st.session_state.get('p_d_in', 1):02d}일"
+            p_lun_str_val = p_lun_str if 'p_lun_str' in locals() else ""  # 이전 연산부에서 생성된 상대방 음력 변수 매핑
+            
+            cover_html = html_views.get_couple_cover(
+                APP_VERSION, report_title, p_icon, name, sol_str_fmt, lun_str_fmt, b_time,
+                p_name_val, p_sol_str_val, p_lun_str_val, p_time_val, today_str
+            )
+        else:
+            cover_html = html_views.get_personal_cover(
+                APP_VERSION, report_title, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str
+            )
+        
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, b_time)
         
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
