@@ -746,7 +746,22 @@ if st.session_state.get('app_running', False):
 - 삼재 여부: {cur_samjae}
 """
 
-        # 내담자의 지정 연도 세운 간지 동적 연산 (스페이스 8칸)
+        # 대운 및 운세 팩트 데이터 추출 (w_facts 선언)
+        w_facts = engine.get_woonse_analysis_facts(
+            ds, db, dw_g_cur, dw_j_cur, 
+            engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], 
+            "丙", "午", "甲", "子"
+        )
+
+        saju_fact_summary = f"""
+- 내담자 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({hs}{hb})
+- 격국 및 용신 팩트: {gyukgook_detail}
+- 원국 오행 분포: 목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}
+- 공망 궁위 팩트: [년지공망] {n_gong} / [일지공망] {i_gong}
+- 삼재 여부: {cur_samjae}
+"""
+
+        # 내담자의 지정 연도 세운 간지 동적 연산
         target_year_val = st.session_state.get('target_year_input', curr_year)
         cur_sewun_base = (target_year_val - 1984) % 60
         cur_sewun_gan_val = engine.GAN[cur_sewun_base % 10]
@@ -760,7 +775,7 @@ if st.session_state.get('app_running', False):
             "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
             "saju_fact_summary": saju_fact_summary,
             
-            # 🎯 동적 대운 간지 바인딩
+            # 동적 대운 간지 바인딩
             "dw_g_cur": dw_g_cur, 
             "dw_j_cur": dw_j_cur, 
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
@@ -782,7 +797,7 @@ if st.session_state.get('app_running', False):
             "target_year": target_year_val,
             "curr_m": curr_m, 
             "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일")
-        }        
+        }
 
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
