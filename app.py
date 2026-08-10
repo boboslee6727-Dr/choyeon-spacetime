@@ -824,7 +824,7 @@ if st.session_state.get('app_running', False):
             "4-2. 전통 궁합 vs 시공명리 궁합 대조": "프롬프트_4_2_궁합대조"
         }
 
-# AI 프롬프트 바인딩 및 Gemini API 호출
+        # AI 프롬프트 바인딩 및 Gemini API 호출
         prompt_var_name = target_prompt_map.get(u_product, "프롬프트_1_1_기본")
         target_prompt = getattr(prompts, prompt_var_name, getattr(prompts, "프롬프트_1_1_기본", ""))
         
@@ -832,33 +832,32 @@ if st.session_state.get('app_running', False):
         raw_response = call_gemini_api(formatted_prompt)
         
         if raw_response and isinstance(raw_response, str):
-            # AI 텍스트 내 잔존 div 태그 사전 제거 정제
             clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            clean_raw = re.sub(r'</?div[^>]*>', '', clean_raw) # 짝이 안 맞는 AI 내 div 태그 소멸
             ai_output_html = html_views.format_ai_text_to_html(clean_raw)
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
         # ==============================================================================
-        # 🏮 [ver 72.1 표준] 표지 단독 출력 및 본문 보고서 개별 출력부 (최하단)
+        # 🏮 [ver 72.1 원본 사수] 표지 및 본문 보고서 완벽 출력부 (오류 원천 차단)
         # ==============================================================================
         
-        # 1. 🏮 표지(cover_html) 단독 출력 (A4 첫 페이지)
+        # 1. 표지(cover_html) 단독 출력 (A4 1페이지)
         if 'cover_html' in locals() and cover_html:
-            st.markdown(html_views.get_final_report_box(cover_html), unsafe_allow_html=True)
+            # Streamlit이 4칸 공백을 소스코드로 인식하지 못하도록 모든 들여쓰기 완전 제거
+            safe_cover = re.sub(r'\n\s+', '\n', cover_html)
+            st.markdown(safe_cover, unsafe_allow_html=True)
 
-        # 2. 📋 본문 종합 보고서 데이터 합성
-        master_composite_report = (
-            str(part_1_fact or "") + "\n" +
-            str(part_2_intro or "") + "\n" +
-            str(part_3_golden or "") + "\n" +
-            str(ai_output_html or "") + "\n" +
-            str(part_5_closing or "")
-        )
+        # 2. 본문 종합 보고서 데이터 합성 (ver 72.1 원본 결합 방식)
+        master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
 
-        # 3. 🚨 화면 출력 직전 텍스트 앞/뒤의 불필요한 </div> 찌꺼기 정제
-        master_composite_report = re.sub(r'^\s*</div>', '', master_composite_report, flags=re.IGNORECASE)
-        master_composite_report = re.sub(r'</div>\s*$', '', master_composite_report, flags=re.IGNORECASE)
+        # 3. 🚨 화면 최상단에 나타나는 </div> 찌꺼기만 안전하게 도려냄 (내부 HTML 파괴 없음)
+        master_composite_report = master_composite_report.strip()
+        if master_composite_report.startswith("</div>"):
+            master_composite_report = master_composite_report[6:].strip()
 
-        # 4. 📜 본문 종합 보고서 단독 출력
-        st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
+        # 4. 박스 디자인 적용 및 들여쓰기 공백 전면 제거 (소스코드 렌더링 오작동 100% 차단)
+        final_html = html_views.get_final_report_box(master_composite_report)
+        final_html = re.sub(r'\n\s+', '\n', final_html)
+
+        # 5. 본문 종합 보고서 단독 최종 출력
+        st.markdown(final_html, unsafe_allow_html=True)
