@@ -635,19 +635,33 @@ if st.session_state.get('app_running', False):
 
         # 🏮 표지 생성 분기 (1인용 vs 2인용 궁합)
         if is_2person:
+            # 상대방 나이 계산 (현재 연도 기준)
+            curr_yr_for_age = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).year
+            p_birth_year = st.session_state.get('p_y_in', 1980)
+            p_age_val = curr_yr_for_age - p_birth_year + 1
+            
+            # 성별에 따른 명칭(남명/여명) 세팅
+            f_gender_val = st.session_state.get("f_g", "여성")
+            u_icon_str = "♂️ 남명 :" if gender == "남성" else "♀️ 여명 :"
+            p_icon_str = "♀️ 여명 :" if f_gender_val == "여성" else "♂️ 남명 :"
+            
             # 세션 상태 및 지역 변수에서 상대방 정보 안전 추출
             p_name_val = st.session_state.get("f_n", "상대방")
             p_time_val = st.session_state.get("p_t_key", "시간 모름")
-            p_sol_str_val = f"{st.session_state.get('p_y_in', 1980)}년 {st.session_state.get('p_m_in', 1):02d}월 {st.session_state.get('p_d_in', 1):02d}일"
-            p_lun_str_val = p_lun_str if 'p_lun_str' in locals() else ""  # 이전 연산부에서 생성된 상대방 음력 변수 매핑
+            p_sol_str_val = f"{p_birth_year}년 {st.session_state.get('p_m_in', 1):02d}월 {st.session_state.get('p_d_in', 1):02d}일"
+            p_lun_str_val = p_lun_str if 'p_lun_str' in locals() else ""
             
             cover_html = html_views.get_couple_cover(
-                APP_VERSION, report_title, p_icon, name, sol_str_fmt, lun_str_fmt, b_time,
-                p_name_val, p_sol_str_val, p_lun_str_val, p_time_val, today_str
+                APP_VERSION, report_title, 
+                u_icon_str, name, age, sol_str_fmt, lun_str_fmt, time_str_fmt,
+                p_icon_str, p_name_val, p_age_val, p_sol_str_val, p_lun_str_val, p_time_val, 
+                today_str
             )
         else:
+            # 1인용 표지용 아이콘 명칭 간소화
+            u_icon_str = f"{p_icon}" 
             cover_html = html_views.get_personal_cover(
-                APP_VERSION, report_title, p_icon, name, sol_str_fmt, lun_str_fmt, b_time, today_str
+                APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
         
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, b_time)
