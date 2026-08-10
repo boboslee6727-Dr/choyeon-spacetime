@@ -112,7 +112,7 @@ def get_global_css():
 
 def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
     return f"""
-    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>
+    <div class='report-page cover-page' style='padding:0; margin:0; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
                 <h1 style='font-size: 26px !important; margin:0 !important; font-weight: 900; white-space: nowrap;'>🏮 초연 시공명리 사주풀이</h1>
@@ -123,17 +123,14 @@ def get_personal_cover(version, p_icon, name, sol_str, lun_str, time_str, today_
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
                 <h2 style='font-size: 24px; font-weight: 900; color: #1A237E; margin-bottom: 20px;'>{p_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 16px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <div style='font-size: 16px; color: #555; line-height: 1.8;'>
-                        <p style='margin: 0; white-space: nowrap;' class='b-text'>[양력] {sol_str} | [음력] {lun_str}</p>
-                        <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{time_str}</span></p>
-                    </div>
+                    <p style='margin: 0; white-space: nowrap;' class='b-text'>[양력] {sol_str} | [음력] {lun_str}</p>
+                    <p style='margin: 5px 0 0 0; white-space: nowrap;'><span class='b-text-red'>{time_str}</span></p>
                 </div>
             </div>
             <p style='font-size: 18px; margin-top: 50px; font-weight: 900;'>{today_str}</p>
             <p style='font-size: 22px; font-weight: 900; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>
         </div>
     </div>
-    <div class="page-break-before"></div>
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
@@ -886,7 +883,6 @@ def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, tim
     </div>
     """
 
-
 # ==============================================================================
 # ⚖️ [궁합] 전통 명리 vs 시공명리 1:1 자동 대조 표지 HTML (html_views.py)
 # ==============================================================================
@@ -934,3 +930,59 @@ def get_auto_comparison_header():
             ⚖️ 전통 명리 vs 시공명리 1:1 비교 리포트
         </h2>
     </div>"""
+
+# html_views.py 내부 추가/확인 함수
+def get_trad_comparison_box(content_body):
+    return f"""
+    <div style='margin-top:30px; padding:30px; background-color:#FFFFFF; border-radius:12px; border:2px solid #1A237E; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-family: "Nanum Myeongjo", "바탕체", Batang, serif;'>
+        <div style='text-align:center; margin-bottom:25px; border-bottom:2px solid #1A237E; padding-bottom:15px;'>
+            <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:22px !important; font-weight:900 !important; color:#1A237E !important; margin:0 !important;'>
+                ⚖️ 전통 명리학 vs 초연 시공명리학 1:1 입체 비교 분석
+            </h2>
+        </div>
+        <div style='text-align:justify !important; line-height:1.85; color:#000000;'>
+            {content_body}
+        </div>
+    </div>
+    """
+
+def get_trad_comparison_box(content_text):
+    """
+    AI가 생성한 순수 마크다운 비교 분석 텍스트를
+    초연 시공명리 전용 HTML/CSS 고급 대조상자로 변환
+    """
+    # 1. ### 제목 태그를 고품격 H3 HTML 스타일로 자동 변환
+    formatted = re.sub(
+        r'###\s*4\.\s*(.*)',
+        r"<h3 style='color:#D50000; font-size: 22px; font-weight: 900; border-bottom: 2px solid #D50000; padding-bottom: 5px; margin-top: 35px; margin-bottom: 12px; display:block;'>4. \1</h3>",
+        content_text
+    )
+    formatted = re.sub(
+        r'###\s*(\d+)\.\s*(.*)',
+        r"<h3 style='color:#1A237E; font-size: 22px; font-weight: 900; border-bottom: 2px solid #1A237E; padding-bottom: 5px; margin-top: 25px; margin-bottom: 12px; display:block;'>\1. \2</h3>",
+        formatted
+    )
+
+    # 2. 문단 감지 및 바탕체 스타일 P 태그 감싸기
+    paragraphs = formatted.split('\n')
+    parsed_paragraphs = []
+    for p in paragraphs:
+        p = p.strip()
+        if p.startswith("<h3") or p.startswith("</h3"):
+            parsed_paragraphs.append(p)
+        elif p:
+            # [A. 전통...] 및 [B. 초연...] 강조 처리 및 문단 스타일 적용
+            p = p.replace("[A. 전통 명리 단식 풀이]", "<b style='color:#C62828;'>[A. 전통 명리 단식 풀이]</b>")
+            p = p.replace("[B. 초연 시공명리 정밀 풀이]", "<b style='color:#1A237E;'>[B. 초연 시공명리 정밀 풀이]</b>")
+            parsed_paragraphs.append(
+                f"<p style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000; text-indent: 1em; text-align: justify; margin-bottom: 10px;'>{p}</p>"
+            )
+
+    body_html = "\n".join(parsed_paragraphs)
+
+    # 3. 최종 독립된 대조 상자 래핑
+    return f"""
+    <div style='background-color: #F8F9FA; border: 2px solid #1A237E; border-radius: 10px; padding: 25px; margin-top: 30px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);'>
+        {body_html}
+    </div>
+    """
