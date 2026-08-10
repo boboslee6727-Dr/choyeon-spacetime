@@ -819,6 +819,7 @@ if st.session_state.get('app_running', False):
             "4-2. 전통 궁합 vs 시공명리 궁합 대조": "프롬프트_4_2_궁합대조"
         }
 
+        # AI 프롬프트 바인딩 및 Gemini API 호출
         prompt_var_name = target_prompt_map.get(u_product, "프롬프트_1_1_기본")
         target_prompt = getattr(prompts, prompt_var_name, getattr(prompts, "프롬프트_1_1_기본", ""))
         
@@ -826,19 +827,25 @@ if st.session_state.get('app_running', False):
         raw_response = call_gemini_api(formatted_prompt)
         
         if raw_response and isinstance(raw_response, str):
+            # 🚨 불필요한 마크다운 및 태그 찌꺼기 정제 (</div> 노출 원천 차단)
             cleaned = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            # AI 텍스트 상/하단에 짝이 안 맞는 </div>가 섞인 경우 자동 제거
+            cleaned = re.sub(r'^\s*</div>', '', cleaned)
+            cleaned = re.sub(r'</div>\s*$', '', cleaned)
             ai_output_html = html_views.format_ai_text_to_html(cleaned)
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
+
+        # ==============================================================================
+        # 🏮 [ver 72.1 표준] 표지 단독 출력 및 본문 보고서 개별 출력부 (최하단)
+        # ==============================================================================
         
-        # 1. 🏮 [ver 72.1 방식] 표지(cover_html)를 본문과 묶지 않고 가장 먼저 단독 A4 박스로 별도 출력
+        # 1. 표지(cover_html)를 본문과 묶지 않고 최상단에 A4 단독 박스로 가장 먼저 출력
         if cover_html:
             st.markdown(html_views.get_final_report_box(cover_html), unsafe_allow_html=True)
 
-        # 2. 📋 본문 종합 보고서 데이터 합성 (표지 제외)
+        # 2. 본문 종합 보고서 데이터 합성 (표지와 완전 분리)
         master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
 
-        # 3. 📜 본문 종합 보고서 단독 출력
+        # 3. 본문 종합 보고서 출력
         st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
-        st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
-
