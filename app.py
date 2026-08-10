@@ -830,8 +830,15 @@ if st.session_state.get('app_running', False):
             ai_output_html = html_views.format_ai_text_to_html(cleaned)
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
+        
+        # 1. 🏮 [ver 72.1 방식] 표지(cover_html)를 본문과 묶지 않고 가장 먼저 단독 A4 박스로 별도 출력
+        if cover_html:
+            st.markdown(html_views.get_final_report_box(cover_html), unsafe_allow_html=True)
 
-        master_composite_report = str(cover_html or "") + part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+        # 2. 📋 본문 종합 보고서 데이터 합성 (표지 제외)
+        master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
 
+        # 3. 📜 본문 종합 보고서 단독 출력
         st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
         st.markdown(html_views.get_final_report_box(master_composite_report), unsafe_allow_html=True)
+
