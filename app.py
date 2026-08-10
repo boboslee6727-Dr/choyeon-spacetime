@@ -746,43 +746,44 @@ if st.session_state.get('app_running', False):
 - 삼재 여부: {cur_samjae}
 """
 
-            # 내담자의 지정 연도 세운 간지 동적 연산
-            target_year_val = st.session_state.get('target_year_input', curr_year)
-            cur_sewun_base = (target_year_val - 1984) % 60
-            cur_sewun_gan_val = engine.GAN[cur_sewun_base % 10]
-            cur_sewun_ji_val = engine.JI[cur_sewun_base % 12]
+        # 내담자의 지정 연도 세운 간지 동적 연산 (스페이스 8칸)
+        target_year_val = st.session_state.get('target_year_input', curr_year)
+        cur_sewun_base = (target_year_val - 1984) % 60
+        cur_sewun_gan_val = engine.GAN[cur_sewun_base % 10]
+        cur_sewun_ji_val = engine.JI[cur_sewun_base % 12]
 
-            prompt_data = {
-                "name": name, "age": age, "gender": gender, "marital": u_marital,
-                "age_prompt": engine.get_age_prompt(age), 
-                "gender_prompt": engine.get_gender_prompt(gender), 
-                "marital_prompt": engine.get_marital_prompt(gender, u_marital), 
-                "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
-                "saju_fact_summary": saju_fact_summary,
-                
-                # 🎯 [교정 완료] 하드코딩 "丙", "午" 제거 및 들여쓰기 정렬 ➔ 실제 내담자의 동적 대운 바인딩
-                "dw_g_cur": dw_g_cur, 
-                "dw_j_cur": dw_j_cur, 
-                "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
-                
-                "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
-                "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
-                "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
-                "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
-                "year_gongmang": n_gong, "day_gongmang": i_gong,
-                "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
-                "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae,
-                "won_guk_vaults_str": won_guk_vaults_str,
-                "shinsal_str": shinsal_str,
-                "cheon_eul": guiin_str,
-                "samjae_str": cur_samjae,
-                "curr_year": target_year_val,
-                "cur_sewun_gan": cur_sewun_gan_val,
-                "cur_sewun_ji": cur_sewun_ji_val,
-                "target_year": target_year_val,
-                "curr_m": curr_m, 
-                "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일")
+        prompt_data = {
+            "name": name, "age": age, "gender": gender, "marital": u_marital,
+            "age_prompt": engine.get_age_prompt(age), 
+            "gender_prompt": engine.get_gender_prompt(gender), 
+            "marital_prompt": engine.get_marital_prompt(gender, u_marital), 
+            "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
+            "saju_fact_summary": saju_fact_summary,
+            
+            # 🎯 동적 대운 간지 바인딩
+            "dw_g_cur": dw_g_cur, 
+            "dw_j_cur": dw_j_cur, 
+            "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
+            
+            "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
+            "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
+            "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
+            "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
+            "year_gongmang": n_gong, "day_gongmang": i_gong,
+            "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
+            "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae,
+            "won_guk_vaults_str": won_guk_vaults_str,
+            "shinsal_str": shinsal_str,
+            "cheon_eul": guiin_str,
+            "samjae_str": cur_samjae,
+            "curr_year": target_year_val,
+            "cur_sewun_gan": cur_sewun_gan_val,
+            "cur_sewun_ji": cur_sewun_ji_val,
+            "target_year": target_year_val,
+            "curr_m": curr_m, 
+            "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일")
         }        
+
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
         
