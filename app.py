@@ -1114,17 +1114,17 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리
+        # 4-1. 타 감명서 비교 (사주) 전용 처리 (other_reading_text AI 파이프라인 완전 주입)
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
-            # 1. UI st.text_area(key=f"text_{u_product}")에서 제출된 원문 텍스트 완벽 수집
+            # 1. UI st.text_area(key=f"text_{u_product}")에서 제출된 원문 텍스트 확실히 수집
             dynamic_key = f"text_{u_product}"
             other_reading_text = (
                 st.session_state.get(dynamic_key, '') or 
                 st.session_state.get('other_reading_input', '')
             ).strip()
 
-            # 2. 원문 미입력 시 AI 호출 차단 및 경고 박스 출력 (html_views 경고 함수 사용)
+            # 2. 원문 미입력 시 AI 호출 중단 및 경고 박스 즉시 출력
             if not other_reading_text:
                 warn_html = html_views.get_warning_box(
                     "타 감명서 원문 미입력 경고",
@@ -1132,18 +1132,24 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                # 3. 원문이 정상 입력된 경우에만 AI 1:1 유연 학술 대조 실행 (3단 조립 / closing 제거)
+                # 3. 🚨 AI 프롬프트 변수 주입 딕셔너리에 other_reading_text 필수 바인딩!
+                prompt_kwargs['other_reading_text'] = other_reading_text
+                
+                # 4. AI 1:1 대조 통변 실행 및 3단 출력 조립
+                raw_ai_out = engine.get_completion(prompts.프롬프트_4_1_사주대조, **prompt_kwargs)
+                clean_raw = html_views.clean_ai_output_text(raw_ai_out)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
+                
                 final_render_html = html_views.render_comparison_report(
                     part_1_fact, external_raw_box, ai_comparison_html
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (동적 키 연동 및 원문 검증 강화)
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (other_reading_text AI 파이프라인 완전 주입)
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
-            # 1. UI st.text_area(key=f"text_{u_product}")에서 원문 텍스트 수집
+            # 1. UI st.text_area(key=f"text_{u_product}")에서 궁합 원문 텍스트 확실히 수집
             dynamic_key = f"text_{u_product}"
             other_reading_text = (
                 st.session_state.get(dynamic_key, '') or 
@@ -1151,10 +1157,10 @@ if st.session_state.get('app_running', False):
                 st.session_state.get('other_reading_input', '')
             ).strip()
 
-            # 2. 궁합 전용 표지(part_1_fact_gunghap) 안전 참조
+            # 2. 궁합 전용 표지 안전 참조
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
 
-            # 3. 원문 미입력 시 AI 호출 전면 차단 및 html_views 경고 박스 출력
+            # 3. 원문 미입력 시 AI 호출 중단 및 경고 처리
             if not other_reading_text:
                 warn_html = html_views.get_warning_box(
                     "타 궁합 감명서 원문 미입력 경고",
@@ -1162,9 +1168,15 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
-                # 4. 원문 정상 수집 시 2인 궁합 표지 기준 3단 순서 조립 (표지 ➔ 원본 박스 ➔ 1:1 대조)
+                # 4. 🚨 궁합 프롬프트 변수 주입 딕셔너리에 other_reading_text 필수 바인딩!
+                prompt_kwargs['other_reading_text'] = other_reading_text
+                
+                # 5. AI 궁합 1:1 대조 통변 실행 및 3단 출력 조립
+                raw_ai_out = engine.get_completion(prompts.프롬프트_4_2_궁합대조, **prompt_kwargs)
+                clean_raw = html_views.clean_ai_output_text(raw_ai_out)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
+                
                 final_render_html = html_views.render_comparison_report(
                     target_gunghap_fact, external_raw_box, ai_comparison_html
                 )
