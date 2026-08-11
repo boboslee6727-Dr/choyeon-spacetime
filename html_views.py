@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 7.3 (수정완료본)
+# html_views.py (Pro-Model 대운 10칸 / 세운 12칸 가로폭 정렬 및 12신살 2단 완결본) ver 72.2 (수정완료본)
 # ==============================================================================
 import re
 import streamlit as st
@@ -109,6 +109,65 @@ def get_global_css():
     }
     </style>
     """
+
+def format_ai_text_to_html(text):
+    """
+    AI가 생성한 순수 텍스트(1., 1), (1) 계층)를 읽어들여
+    초연명리 전용 황금비율 CSS(크기, 여백, 들여쓰기)를 자동으로 입혀주는 렌더링 엔진.
+    """
+    lines = text.split('\n')
+    html_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # AI가 혹시나 실수로 남긴 별표(*, **)나 샵(#) 찌꺼기 강제 제거
+        line = line.replace('*', '').replace('#', '')
+        
+        # '명리용어' ➔ 작은따옴표로 묶인 단어를 자동으로 굵고 진하게(Bold) 처리
+        line = re.sub(r"'([^']+)'", r"<b style='color:#000000;'>'\1'</b>", line)
+
+        # 1. 대제목 (예: 1. 성격 분석)
+        # 크기: 20px / 굵기: 900 / 색상: 검정 / 여백: 위 20px, 아래 10px
+        if re.match(r'^\d+\.\s', line):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:20px; font-weight:900; "
+                f"margin-top:20px; margin-bottom:10px;'>{line}</div>"
+            )
+        # 2. 소제목 (예: 1) 겉으로 드러난 성격)
+        # 크기: 18px / 굵기: 800 / 색상: 검정 / 여백: 위 15px, 아래 5px
+        elif re.match(r'^\d+\)\s', line):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:18px; font-weight:800; "
+                f"margin-top:15px; margin-bottom:5px;'>{line}</div>"
+            )
+        # 3. 소소제목 (예: (1) 구체적 행동 방식)
+        # 크기: 16px / 굵기: 700 / 색상: 검정 / 여백: 위 10px, 아래 5px
+        elif re.match(r'^\(\d+\)\s', line):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:16px; font-weight:700; "
+                f"margin-top:10px; margin-bottom:5px;'>{line}</div>"
+            )
+        # 4. 일반 통변 본문
+        # 크기: 16px / 굵기: 400 / 줄간격: 1.85 / 색상: 검정
+        else:
+            # 하이픈(-) 기호로 시작하는 줄의 경우 들여쓰기를 약간 조정 (선택적)
+            if line.startswith('-'):
+                html_lines.append(
+                    f"<p style='font-size:16px; font-weight:400; line-height:1.85; color:#000000; "
+                    f"text-align:justify; margin-top:4px; margin-bottom:12px; "
+                    f"text-indent:5px; padding-left:10px;'>{line}</p>"
+                )
+            else:
+                html_lines.append(
+                    f"<p style='font-size:16px; font-weight:400; line-height:1.85; color:#000000; "
+                    f"text-align:justify; margin-top:4px; margin-bottom:12px; "
+                    f"text-indent:15px;'>{line}</p>"
+                )
+            
+    return "\n".join(html_lines)
 
 def get_personal_cover(version, report_title, p_icon, name, sol_str, lun_str, time_str, today_str):
     return f"""
@@ -650,20 +709,6 @@ def get_comparison_gunghap_report_html(m_name, f_name, other_report):
 </div>
 """
 
-def get_original_report_html(other_report):
-    return f"""<div style='margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
-<div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
-<div style='white-space: pre-wrap; font-family: Noto Serif KR; line-height: 1.6; color:#444;'>{other_report}</div>
-</div>
-"""
-
-def get_comparison_html(comp_fmt):
-    return f"""<div style='margin-top: 30px; padding: 25px; border: 1px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
-<div style='font-size:21px; font-weight:900; margin-bottom: 20px; color:#B71C1C;'>🔍 초연 시공명리 vs 타 감명서 1:1 상세비교 분석</div>
-{comp_fmt}
-</div>
-"""
-
 def get_gunghap_score_visual_html(gh_engine):
     sky_blue = "#38B6FF"
     bars = "".join([
@@ -723,6 +768,7 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
     """
     return card_html
 
+
 def get_delivery_summary_box(best_days):
     summary_items = ""
     for idx, day_info in enumerate(best_days):
@@ -745,6 +791,20 @@ def get_delivery_summary_box(best_days):
         </ul>
     </div>
     """
+
+def get_comparison_html(comp_fmt):
+    return f"""<div style='margin-top: 30px; padding: 25px; border: 1px solid #B71C1C; background-color: #FFEBEE; border-radius: 10px;'>
+<div style='font-size:21px; font-weight:900; margin-bottom: 20px; color:#B71C1C;'>🔍 초연 시공명리 vs 타 감명서 1:1 상세비교 분석</div>
+{comp_fmt}
+</div>
+"""
+
+def get_original_report_html(other_report):
+    return f"""<div style='margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f5f5f5; border-radius: 8px;'>
+<div style='font-size:21px; font-weight:900; margin-bottom: 15px; color:#333;'>📄 타 감명서 원문 (의뢰인 제공)</div>
+<div style='white-space: pre-wrap; font-family: Noto Serif KR; line-height: 1.6; color:#444;'>{other_report}</div>
+</div>
+"""
 
 def get_comparison_saju_cover(version, p_icon, name, sol_str, lun_str, time_str, today_str):
     return f"""
