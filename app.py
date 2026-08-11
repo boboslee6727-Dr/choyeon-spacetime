@@ -1130,12 +1130,15 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                # 🚨 1136번 줄 NameError 완벽 소멸: saju_fact를 안전하게 복사하여 ai_kwargs 딕셔너리 생성
                 ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 
-                # 생성된 ai_kwargs를 AI 프롬프트에 통째로 주입
-                raw_ai_out = engine.get_completion(prompts.프롬프트_4_1_사주대조, **ai_kwargs)
+                # 🚨 에러 원천 차단: 1. 프롬프트 문자열에 변수를 완벽히 치환(format)합니다.
+                final_prompt = prompts.프롬프트_4_1_사주대조.format(**ai_kwargs)
+                
+                # 2. 치환이 끝난 완성형 프롬프트를 AI 엔진에 단일 문자열로 안전하게 전달합니다.
+                raw_ai_out = engine.get_completion(final_prompt)
+                
                 clean_raw = html_views.clean_ai_output_text(raw_ai_out)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
@@ -1164,11 +1167,15 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
-                # 🚨 NameError 완벽 소멸: 궁합 데이터를 안전하게 복사하여 ai_kwargs 딕셔너리 생성
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 
-                raw_ai_out = engine.get_completion(prompts.프롬프트_4_2_궁합대조, **ai_kwargs)
+                # 🚨 에러 원천 차단: 1. 궁합 프롬프트 문자열 치환
+                final_prompt = prompts.프롬프트_4_2_궁합대조.format(**ai_kwargs)
+                
+                # 2. 완성형 프롬프트 단일 전달
+                raw_ai_out = engine.get_completion(final_prompt)
+                
                 clean_raw = html_views.clean_ai_output_text(raw_ai_out)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
