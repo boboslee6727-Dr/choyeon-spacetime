@@ -1114,14 +1114,11 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리 (자체 방어 및 안전 통신 적용)
+        # 4-1. 타 감명서 비교 (사주) 전용 처리 (범용 표준 구조)
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
-            other_reading_text = (
-                st.session_state.get(dynamic_key, '') or 
-                st.session_state.get('other_reading_input', '')
-            ).strip()
+            other_reading_text = st.session_state.get(dynamic_key, '').strip()
 
             if not other_reading_text:
                 warn_html = html_views.get_warning_box(
@@ -1130,33 +1127,20 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                class SafeDict(dict):
-                    def __missing__(self, key):
-                        return ""
-
-                ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
-                ai_kwargs['other_reading_text'] = other_reading_text
-                ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
-                ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
+                # 1. 범용 데이터 팩트 딕셔너리 구성 및 원문 주입
+                prompt_data = dict(saju_fact) if 'saju_fact' in locals() else {}
+                prompt_data['other_reading_text'] = other_reading_text
                 
-                final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
-                
-                # 🚨 엔진 함수 누락 및 오류 원천 방어: engine 내 함수 호출 실패 시 대체 텍스트 반환
+                # 2. 범용 엔진 통신 호출 (엔진 내에서 포맷팅과 API 호출을 표준 처리)
                 ai_response_text = ""
                 try:
-                    if hasattr(engine, 'get_ai_completion'):
-                        ai_response_text = engine.get_ai_completion(final_prompt)
-                    elif hasattr(engine, 'get_completion'):
-                        ai_response_text = engine.get_completion(final_prompt)
+                    if hasattr(engine, 'get_completion'):
+                        ai_response_text = engine.get_completion(prompts.프롬프트_4_1_사주대조, **prompt_data)
                     else:
-                        import os
-                        from google import genai
-                        api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
-                        client = genai.Client(api_key=api_key)
-                        res = client.models.generate_content(model='gemini-2.5-flash', contents=final_prompt)
-                        ai_response_text = res.text if res else "응답 없음"
+                        final_prompt = prompts.프롬프트_4_1_사주대조.format(**prompt_data)
+                        ai_response_text = engine.get_ai_completion(final_prompt)
                 except Exception as e:
-                    ai_response_text = f"⚠️ [AI 통신 예외 발생]: {str(e)}"
+                    ai_response_text = f"⚠️ [AI 통신 오류]: {str(e)}"
                 
                 clean_raw = html_views.clean_ai_output_text(ai_response_text)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
@@ -1167,16 +1151,11 @@ if st.session_state.get('app_running', False):
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (자체 방어 및 안전 통신 적용)
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (범용 표준 구조)
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
-            other_reading_text = (
-                st.session_state.get(dynamic_key, '') or 
-                st.session_state.get('other_reading_input_gunghap', '') or
-                st.session_state.get('other_reading_input', '')
-            ).strip()
-
+            other_reading_text = st.session_state.get(dynamic_key, '').strip()
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
 
             if not other_reading_text:
@@ -1186,30 +1165,20 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
-                class SafeDict(dict):
-                    def __missing__(self, key):
-                        return ""
-
-                ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
-                ai_kwargs['other_reading_text'] = other_reading_text
+                # 1. 범용 데이터 팩트 딕셔너리 구성 및 원문 주입
+                prompt_data = dict(gunghap_data) if 'gunghap_data' in locals() else {}
+                prompt_data['other_reading_text'] = other_reading_text
                 
-                final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
-                
+                # 2. 범용 엔진 통신 호출
                 ai_response_text = ""
                 try:
-                    if hasattr(engine, 'get_ai_completion'):
-                        ai_response_text = engine.get_ai_completion(final_prompt)
-                    elif hasattr(engine, 'get_completion'):
-                        ai_response_text = engine.get_completion(final_prompt)
+                    if hasattr(engine, 'get_completion'):
+                        ai_response_text = engine.get_completion(prompts.프롬프트_4_2_궁합대조, **prompt_data)
                     else:
-                        import os
-                        from google import genai
-                        api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
-                        client = genai.Client(api_key=api_key)
-                        res = client.models.generate_content(model='gemini-2.5-flash', contents=final_prompt)
-                        ai_response_text = res.text if res else "응답 없음"
+                        final_prompt = prompts.프롬프트_4_2_궁합대조.format(**prompt_data)
+                        ai_response_text = engine.get_ai_completion(final_prompt)
                 except Exception as e:
-                    ai_response_text = f"⚠️ [AI 통신 예외 발생]: {str(e)}"
+                    ai_response_text = f"⚠️ [AI 통신 오류]: {str(e)}"
                 
                 clean_raw = html_views.clean_ai_output_text(ai_response_text)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
