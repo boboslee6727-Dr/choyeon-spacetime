@@ -13,12 +13,12 @@ import sys
 import importlib
 
 import engine
-import prompts_views
+import prompts
 import html_views
 
 # 🔄 서브 모듈 변경 사항 즉시 반영을 위한 강제 리로드 설정
 importlib.reload(engine)
-importlib.reload(prompts_views)
+importlib.reload(prompts)
 importlib.reload(html_views)
 
 # ==============================================================================
@@ -1140,8 +1140,7 @@ if st.session_state.get('app_running', False):
                 ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
                 ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
 
-                # prompts_views의 72.3 규격 프롬프트 호출 및 안전 바인딩
-                final_prompt = prompts_views.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
+                final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
                 
                 # API 호출 (Claude / Gemini 통합 대응)
                 ai_response_text = call_claude_api(final_prompt, max_tokens=10000) if 'call_claude_api' in globals() else engine.get_ai_completion(final_prompt)
