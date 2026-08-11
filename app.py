@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리 (SafeDict 안전 포맷팅 적용)
+        # 4-1. 타 감명서 비교 (사주) 전용 처리 (prompts_views 연동 표준형)
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1130,22 +1130,23 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                # 🚨 KeyError 원천 차단: 누락된 키가 있어도 에러를 내지 않고 빈 값으로 처리하는 안전 딕셔너리 클래스
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return ""
 
+                # 팩트 데이터 준비 및 원문 주입
                 ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
                 ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
+
+                # prompts_views의 72.3 규격 프롬프트 호출 및 안전 바인딩
+                final_prompt = prompts_views.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
                 
-                # format_map과 SafeDict를 사용하여 키 누락 에러 완전 소멸
-                final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
+                # API 호출 (Claude / Gemini 통합 대응)
+                ai_response_text = call_claude_api(final_prompt, max_tokens=10000) if 'call_claude_api' in globals() else engine.get_ai_completion(final_prompt)
                 
-                raw_ai_out = engine.get_completion(final_prompt)
-                
-                clean_raw = html_views.clean_ai_output_text(raw_ai_out)
+                clean_raw = html_views.clean_ai_output_text(ai_response_text)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
                 
@@ -1154,7 +1155,7 @@ if st.session_state.get('app_running', False):
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (SafeDict 안전 포맷팅 적용)
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (prompts_views 연동 표준형)
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1177,14 +1178,17 @@ if st.session_state.get('app_running', False):
                     def __missing__(self, key):
                         return ""
 
+                # 궁합 팩트 데이터 준비 및 원문 주입
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
+
+                # prompts_views의 72.3 규격 프롬프트 호출 및 안전 바인딩
+                final_prompt = prompts_views.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
                 
-                final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
+                # API 호출
+                ai_response_text = call_claude_api(final_prompt, max_tokens=10000) if 'call_claude_api' in globals() else engine.get_ai_completion(final_prompt)
                 
-                raw_ai_out = engine.get_completion(final_prompt)
-                
-                clean_raw = html_views.clean_ai_output_text(raw_ai_out)
+                clean_raw = html_views.clean_ai_output_text(ai_response_text)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
                 
