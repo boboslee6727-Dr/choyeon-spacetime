@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리
+        # 4-1. 타 감명서 비교 (사주) 전용 처리 (SafeDict 안전 포맷팅 적용)
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1130,13 +1130,19 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
+                # 🚨 KeyError 원천 차단: 누락된 키가 있어도 에러를 내지 않고 빈 값으로 처리하는 안전 딕셔너리 클래스
+                class SafeDict(dict):
+                    def __missing__(self, key):
+                        return ""
+
                 ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
+                ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
+                ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
                 
-                # 🚨 에러 원천 차단: 1. 프롬프트 문자열에 변수를 완벽히 치환(format)합니다.
-                final_prompt = prompts.프롬프트_4_1_사주대조.format(**ai_kwargs)
+                # format_map과 SafeDict를 사용하여 키 누락 에러 완전 소멸
+                final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
                 
-                # 2. 치환이 끝난 완성형 프롬프트를 AI 엔진에 단일 문자열로 안전하게 전달합니다.
                 raw_ai_out = engine.get_completion(final_prompt)
                 
                 clean_raw = html_views.clean_ai_output_text(raw_ai_out)
@@ -1148,7 +1154,7 @@ if st.session_state.get('app_running', False):
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (SafeDict 안전 포맷팅 적용)
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1167,13 +1173,15 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
+                class SafeDict(dict):
+                    def __missing__(self, key):
+                        return ""
+
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 
-                # 🚨 에러 원천 차단: 1. 궁합 프롬프트 문자열 치환
-                final_prompt = prompts.프롬프트_4_2_궁합대조.format(**ai_kwargs)
+                final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
                 
-                # 2. 완성형 프롬프트 단일 전달
                 raw_ai_out = engine.get_completion(final_prompt)
                 
                 clean_raw = html_views.clean_ai_output_text(raw_ai_out)
