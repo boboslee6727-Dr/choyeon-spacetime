@@ -898,4 +898,24 @@ def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing)
     body = f"{part_1_fact}{weekly_html}{ai_output_html}{part_5_closing}"
     return get_final_report_box(body)
 
+# ==============================================================================
+# 타 감명서 대조 전용 뷰 함수 (closing_html 제거 및 3단 순서 조립)
+# ==============================================================================
+def get_external_raw_text_box(other_text):
+    """제출된 타 감명서 원본 출력 전용 스타일 박스"""
+    return f"""
+    <div style='margin-top:25px; margin-bottom:25px; padding:20px; background-color:#F5F5F5; border:2px solid #757575; border-radius:8px;'>
+        <div style='font-size:18px; font-weight:900; color:#212121; border-bottom:2px solid #9E9E9E; padding-bottom:8px; margin-bottom:12px;'>
+            📄 [제출된 외부 타 감명서 원본]
+        </div>
+        <div style='font-size:14px; color:#424242; line-height:1.7; white-space:pre-wrap;'>{other_text}</div>
+    </div>
+    """
+
+def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
+    """타 감명서 대조 전용 3단 순서 조립 (표지 + 타 감명서 원본 + 1:1 대조 리포트)"""
+    master_comp = f"{part_1_fact}{external_raw_box}{ai_comparison_html}"
+    return get_final_report_box(master_comp)
+
+
 
