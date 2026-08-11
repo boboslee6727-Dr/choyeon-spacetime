@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리
+        # 4-1. 타 감명서 비교 (사주) 전용 처리 (자체 방어 및 안전 통신 적용)
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1141,8 +1141,22 @@ if st.session_state.get('app_running', False):
                 
                 final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
                 
-                # 🚨 정식 엔진 호출 함수명(get_ai_completion)으로 정확히 연결
-                ai_response_text = engine.get_ai_completion(final_prompt)
+                # 🚨 엔진 함수 누락 및 오류 원천 방어: engine 내 함수 호출 실패 시 대체 텍스트 반환
+                ai_response_text = ""
+                try:
+                    if hasattr(engine, 'get_ai_completion'):
+                        ai_response_text = engine.get_ai_completion(final_prompt)
+                    elif hasattr(engine, 'get_completion'):
+                        ai_response_text = engine.get_completion(final_prompt)
+                    else:
+                        import os
+                        from google import genai
+                        api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+                        client = genai.Client(api_key=api_key)
+                        res = client.models.generate_content(model='gemini-2.5-flash', contents=final_prompt)
+                        ai_response_text = res.text if res else "응답 없음"
+                except Exception as e:
+                    ai_response_text = f"⚠️ [AI 통신 예외 발생]: {str(e)}"
                 
                 clean_raw = html_views.clean_ai_output_text(ai_response_text)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
@@ -1153,7 +1167,7 @@ if st.session_state.get('app_running', False):
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (자체 방어 및 안전 통신 적용)
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1181,8 +1195,21 @@ if st.session_state.get('app_running', False):
                 
                 final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
                 
-                # 🚨 정식 엔진 호출 함수명(get_ai_completion)으로 정확히 연결
-                ai_response_text = engine.get_ai_completion(final_prompt)
+                ai_response_text = ""
+                try:
+                    if hasattr(engine, 'get_ai_completion'):
+                        ai_response_text = engine.get_ai_completion(final_prompt)
+                    elif hasattr(engine, 'get_completion'):
+                        ai_response_text = engine.get_completion(final_prompt)
+                    else:
+                        import os
+                        from google import genai
+                        api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+                        client = genai.Client(api_key=api_key)
+                        res = client.models.generate_content(model='gemini-2.5-flash', contents=final_prompt)
+                        ai_response_text = res.text if res else "응답 없음"
+                except Exception as e:
+                    ai_response_text = f"⚠️ [AI 통신 예외 발생]: {str(e)}"
                 
                 clean_raw = html_views.clean_ai_output_text(ai_response_text)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
