@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리 (prompts_views 연동 표준형)
+        # 4-1. 타 감명서 비교 (사주) 전용 처리
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1140,21 +1140,24 @@ if st.session_state.get('app_running', False):
                 ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
                 ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
 
+                # prompts.py 72.3 규격 프롬프트 호출
                 final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
                 
-                # API 호출 (Claude / Gemini 통합 대응)
-                ai_response_text = call_claude_api(final_prompt, max_tokens=10000) if 'call_claude_api' in globals() else engine.get_ai_completion(final_prompt)
+                # API 호출 (Claude 직접 호출 우선, 예외 시 engine 호출)
+                if 'call_claude_api' in globals():
+                    ai_response_text = call_claude_api(final_prompt, max_tokens=10000)
+                else:
+                    ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                clean_raw = html_views.clean_ai_output_text(ai_response_text)
+                # 없는 함수 제거 후 direct 바인딩
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-                ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
                 
                 final_render_html = html_views.render_comparison_report(
-                    part_1_fact, external_raw_box, ai_comparison_html
+                    part_1_fact, external_raw_box, ai_response_text
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (prompts_views 연동 표준형)
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1181,17 +1184,20 @@ if st.session_state.get('app_running', False):
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
 
+                # prompts.py 72.3 규격 프롬프트 호출
                 final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
                 
                 # API 호출
-                ai_response_text = call_claude_api(final_prompt, max_tokens=10000) if 'call_claude_api' in globals() else engine.get_ai_completion(final_prompt)
+                if 'call_claude_api' in globals():
+                    ai_response_text = call_claude_api(final_prompt, max_tokens=10000)
+                else:
+                    ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                clean_raw = html_views.clean_ai_output_text(ai_response_text)
+                # 없는 함수 제거 후 direct 바인딩
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-                ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
                 
                 final_render_html = html_views.render_comparison_report(
-                    target_gunghap_fact, external_raw_box, ai_comparison_html
+                    target_gunghap_fact, external_raw_box, ai_response_text
                 )
         # ==============================================================================
         # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
