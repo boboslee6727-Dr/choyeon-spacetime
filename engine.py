@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 7.3 완결본 (중복 완전 제거)
+# 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 72.3 마스터 최종본
 # ==============================================================================
 import streamlit as st
 import math
@@ -53,7 +53,21 @@ def _to_hanja_ji(char):
 def get_total_time_adjustment(dt):
     adj = -30
     if dt_mod.datetime(1954, 3, 21) <= dt <= dt_mod.datetime(1961, 8, 9, 23, 59): adj = 0
-    si = [(dt_mod.datetime(1948,5,31), dt_mod.datetime(1948,9,22)), (dt_mod.datetime(1949,3,31), dt_mod.datetime(1949,9,30)), (dt_mod.datetime(1950,4,1), dt_mod.datetime(1950,9,10)), (dt_mod.datetime(1951,5,6), dt_mod.datetime(1951,9,9)), (dt_mod.datetime(1954,3,21), dt_mod.datetime(1954,5,5)), (dt_mod.datetime(1955,4,6), dt_mod.datetime(1955,9,22)), (dt_mod.datetime(1956,5,20), dt_mod.datetime(1956,9,30)), (dt_mod.datetime(1957,5,5), dt_mod.datetime(1957,9,22)), (dt_mod.datetime(1958,5,4), dt_mod.datetime(1958,9,21)), (dt_mod.datetime(1959,5,4), dt_mod.datetime(1959,9,20)), (dt_mod.datetime(1960,5,1), dt_mod.datetime(1960,9,18)), (dt_mod.datetime(1987,5,10,2), dt_mod.datetime(1987,10,11,3)), (dt_mod.datetime(1988,5,8,2), dt_mod.datetime(1988,10,9,3))]
+    si = [
+        (dt_mod.datetime(1948,5,31), dt_mod.datetime(1948,9,22)), 
+        (dt_mod.datetime(1949,3,31), dt_mod.datetime(1949,9,30)), 
+        (dt_mod.datetime(1950,4,1), dt_mod.datetime(1950,9,10)), 
+        (dt_mod.datetime(1951,5,6), dt_mod.datetime(1951,9,9)), 
+        (dt_mod.datetime(1954,3,21), dt_mod.datetime(1954,5,5)), 
+        (dt_mod.datetime(1955,4,6), dt_mod.datetime(1955,9,22)), 
+        (dt_mod.datetime(1956,5,20), dt_mod.datetime(1956,9,30)), 
+        (dt_mod.datetime(1957,5,5), dt_mod.datetime(1957,9,22)), 
+        (dt_mod.datetime(1958,5,4), dt_mod.datetime(1958,9,21)), 
+        (dt_mod.datetime(1959,5,4), dt_mod.datetime(1959,9,20)), 
+        (dt_mod.datetime(1960,5,1), dt_mod.datetime(1960,9,18)), 
+        (dt_mod.datetime(1987,5,10,2), dt_mod.datetime(1987,10,11,3)), 
+        (dt_mod.datetime(1988,5,8,2), dt_mod.datetime(1988,10,9,3))
+    ]
     for s, e in si:
         if s <= dt <= e: adj -= 60; break
     return adj
@@ -88,7 +102,7 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     y_gan_kor = GAN[year_idx % 10]
     y_ji_kor = JI[year_idx % 12]
     
-    if 315 <= lon < 345: m_ji_idx = 2    # 寅월
+    if 315 <= lon < 345: m_ji_idx = 2     # 寅월
     elif 345 <= lon or lon < 15: m_ji_idx = 3  # 卯월
     elif 15 <= lon < 45: m_ji_idx = 4    # 辰월
     elif 45 <= lon < 75: m_ji_idx = 5    # 巳월
@@ -158,7 +172,6 @@ def get_time_ganji(day_gan, time_str, dt_obj=None):
     return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
 def auto_fill_user_ganji():
-    import streamlit as st
     st.session_state['app_running'] = False
     
     ry = st.session_state.get("u_ry_rev", "")
@@ -226,7 +239,6 @@ def auto_fill_user_ganji():
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
 def auto_fill_partner_ganji():
-    import streamlit as st
     st.session_state['app_running'] = False
     
     p_ry = st.session_state.get("p_ry_rev", "")
@@ -789,7 +801,8 @@ def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
 
 def get_won_guk_vaults_str(jjis):
     """원국 내 진술축미 보유 여부 및 잠재력 분석"""
-    vaults = [j for j in jjis if j in ['辰', '戌', '丑', '未']]
+    jjis_clean = [_to_hanja(j) for j in jjis if j not in ["?", "-", " "]]
+    vaults = [j for j in jjis_clean if j in ['辰', '戌', '丑', '未']]
     if not vaults:
         return "원국 내 진술축미(묘고) 글자 없음 (특수 입고 작용 미미함)"
     return f"원국 내 묘고 글자 보유: {', '.join(vaults)} (강력한 입고 및 개고 잠재력 내재)"
@@ -830,12 +843,10 @@ def get_opposite_gender(gender):
     return "여성" if gender == "남성" else "남성"
 
 def update_partner_gender():
-    import streamlit as st
     user_g = st.session_state.get("u_g", "남성")
     st.session_state["f_g"] = get_opposite_gender(user_g)
 
 def update_user_gender():
-    import streamlit as st
     partner_g = st.session_state.get("f_g", "여성")
     st.session_state["u_g"] = get_opposite_gender(partner_g)
 
@@ -1078,6 +1089,7 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
         s_yong = get_execution_yong(s_upper, ilju_lower_group)
         sewun_che = get_group_ss(get_ss(ds, dw_g_cur)) if dw_g_cur else "비겁"
         sewun_fact_str = f"체운(무대): {sewun_che} / 용운(사건): {s_yong} ➔ 도출 키워드: {get_matrix_keyword(sewun_che, s_yong)}"
+    
     wol_fact_str = "월운 정보 없음"
     if cur_wol_g and cur_wol_j:
         w_upper = get_group_ss(get_ss(cur_wol_g, cur_wol_j))
@@ -1109,10 +1121,16 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
         "goshin_gwasook_str": goshin_gwasook_str,
         "samhyung_fact_str": samhyung_fact_str,
         "gongmang_actual": calculate_gongmang(ds, db),
+        "year_gongmang": calculate_gongmang(ys, yb),
+        "day_gongmang": calculate_gongmang(ds, db),
         "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
         "s12_str": get_all_12_shinsal(yb, mb, db, hb),
-        "won_guk_vaults_str": " ".join(check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)),
+        "won_guk_vaults_str": get_won_guk_vaults_str([yb, mb, db, hb]),
+        
+        # 오행 왕쇠 키 명칭 호환성 보완 (3가지 키 호환 매칭)
+        "oheng_force_str": oheng_str,
         "oheng_counts_str": oheng_str,
+        "oheng_force_summary": oheng_str,
         
         "samjae_str": samjae_val,
         "dw_end_age": dw_end_val,
@@ -1135,7 +1153,8 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
         "curr_y": calc_year,
         "curr_m": calc_month,
         "curr_d": calc_day,
-        "disp_name": name, "u_age": calc_age, "u_gender": gender, "u_marital": marital,
+        "disp_name": name, "name": name, "gender": gender, "marital": marital,
+        "u_age": calc_age, "u_gender": gender, "u_marital": marital,
         "age_prompt": age_p,
         "gender_prompt": gender_p,
         "marital_prompt": marital_p,
@@ -1190,18 +1209,149 @@ def get_daeun_su_accurate(utc_dt, order):
 # ==============================================================================
 # 섹션 6. 궁합 및 택일(결혼/출산/방위) 정밀 연산 로직
 # ==============================================================================
-class UniversalPrintableGunghap:
-    def __init__(self, applicant, partner_name, male, female, daeun_score=10):
-        self.app, self.p_name, self.daeun_score = applicant, partner_name, daeun_score
+def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, time_ji):
+    day_gan = d_pillar[0]
+    day_ji = d_pillar[1]
+    month_ji = m_pillar[1]
+    
+    date_seed = (delivery_date.year * 10000 + delivery_date.month * 100 + delivery_date.day)
+    base_score = 72.0 + (date_seed % 11) * 1.2
+    
+    samhap_groups = [{'申','子','辰'}, {'巳','酉','丑'}, {'寅','午','戌'}, {'亥','卯','未'}]
+    yukhap_pairs = {('子','丑'), ('寅','亥'), ('卯','戌'), ('辰','酉'), ('巳','申'), ('午','未')}
+    chung_pairs = {('子','午'), ('丑','未'), ('寅','申'), ('卯','酉'), ('辰','戌'), ('巳','亥')}
+    
+    score = base_score
+    
+    dt_pair = (day_ji, time_ji) if day_ji < time_ji else (time_ji, day_ji)
+    if dt_pair in yukhap_pairs:
+        score += 8.0
+    elif any({day_ji, time_ji}.issubset(g) for g in samhap_groups):
+        score += 6.0
+    elif dt_pair in chung_pairs:
+        score -= 10.0
         
+    for p_ji in [male_jiji, female_jiji]:
+        p_pair = (p_ji, time_ji) if p_ji < time_ji else (time_ji, p_ji)
+        if p_pair in yukhap_pairs:
+            score += 4.0
+        elif any({p_ji, time_ji}.issubset(g) for g in samhap_groups):
+            score += 3.0
+        elif p_pair in chung_pairs:
+            score -= 5.0
+            
+    ji_order = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+    if time_ji in ji_order:
+        t_idx = ji_order.index(time_ji)
+        score += ((t_idx * 5 + delivery_date.day * 2) % 9) * 0.5
+
+    return min(98.5, max(60.0, round(score, 1)))
+
+def get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji):
+    try:
+        y_pillar, m_pillar, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
+    except:
+        y_pillar, m_pillar, d_pillar = "甲子", "丙寅", "戊辰"
+
+    time_slots = [
+        {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子'},
+        {'time_str': '01:30 ~ 03:29 (축)시', 'ji': '丑'},
+        {'time_str': '03:30 ~ 05:29 (인)시', 'ji': '寅'},
+        {'time_str': '05:30 ~ 07:29 (묘)시', 'ji': '卯'},
+        {'time_str': '07:30 ~ 09:29 (진)시', 'ji': '辰'},
+        {'time_str': '09:30 ~ 11:29 (사)시', 'ji': '巳'},
+        {'time_str': '11:30 ~ 13:29 (오)시', 'ji': '午'},
+        {'time_str': '13:30 ~ 15:29 (미)시', 'ji': '未'},
+        {'time_str': '15:30 ~ 17:29 (신)시', 'ji': '申'},
+        {'time_str': '17:30 ~ 19:29 (유)시', 'ji': '酉'},
+        {'time_str': '19:30 ~ 21:29 (술)시', 'ji': '戌'},
+        {'time_str': '21:30 ~ 23:29 (해)시', 'ji': '亥'}
+    ]
+    
+    evaluated = []
+    for slot in time_slots:
+        score = evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, slot['ji'])
+        evaluated.append({
+            'time_str': slot['time_str'],
+            'ji': slot['ji'],
+            'score': score
+        })
+    
+    evaluated.sort(key=lambda x: x['score'], reverse=True)
+    return evaluated
+
+def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=30):
+    """결혼/출산 268일 Gestation 주기 및 사주 조화도 기반 정밀 길일 산출 로직"""
+    male_jiji = male_jjis[0] if male_jjis else "子"
+    female_jiji = female_jjis[0] if female_jjis else "丑"
+    
+    candidate_results = []
+    current_date = start_date
+    
+    while current_date <= end_date:
+        conception_date = current_date 
+        delivery_date = conception_date + dt_mod.timedelta(days=268)
+        
+        if start_date <= delivery_date <= end_date:
+            if last_period_date:
+                gestation_days = (delivery_date - last_period_date).days
+                if gestation_days > 0:
+                    g_weeks = gestation_days // 7
+                    if g_weeks < 37 or g_weeks > 41:
+                        current_date += dt_mod.timedelta(days=1)
+                        continue
+            
+            time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
+            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70.0}
+            
+            try:
+                y_p, m_p, d_p = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
+                h_p = f"{best_slot['ji']}時"
+                four_pillars = f"{y_p}년 {m_p}월 {d_p}일 {h_p}"
+            except:
+                four_pillars = "사주간지 분석중"
+
+            candidate_results.append({
+                'date': delivery_date.strftime("%Y-%m-%d"),
+                'delivery_dt': delivery_date,
+                'conception_date': conception_date.strftime("%Y-%m-%d"),
+                'score': best_slot['score'],
+                'four_pillars': four_pillars,
+                'best_time': {
+                    'time_str': best_slot['time_str'],
+                    'time_pillar': f"{best_slot['ji']}時",
+                    'ji': best_slot['ji']
+                },
+                'all_time_slots': time_slots_eval
+            })
+            
+        current_date += dt_mod.timedelta(days=2)
+        
+    candidate_results.sort(key=lambda x: x['score'], reverse=True)
+    
+    filtered_results = []
+    for item in candidate_results:
+        if not any(abs((item['delivery_dt'] - selected['delivery_dt']).days) < 25 for selected in filtered_results):
+            filtered_results.append(item)
+            if len(filtered_results) >= 5:
+                break
+                
+    return filtered_results
+
+class UniversalPrintableGunghap:
+    """프리미엄 2인 궁합 정밀 점수 및 조화도 산출 엔진"""
+    def __init__(self, applicant, partner_name, male, female, daeun_score=10):
+        self.app = applicant
+        self.p_name = partner_name
+        self.daeun_score = daeun_score
         male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
         female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
         
+        # [시주, 일주, 월주, 년주] 간지 분리
         self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
         self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
         self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
         self.f_j = [female[3][1], female[2][1], female[1][1], female[0][1]]
-        
         self.logic_flags, self.details = {}, []
 
     def get_ji_rel(self, j1, j2):
@@ -1229,10 +1379,19 @@ class UniversalPrintableGunghap:
             elif c in "壬癸亥子": counts['수'] += 1
         return counts
 
+    def get_johoo_harmony(self, m_ilgan, m_ec, f_ec):
+        score = 0
+        if m_ilgan in "丙丁":
+            if f_ec['수'] >= 2: score += 5
+        elif m_ilgan in "壬癸":
+            if f_ec['화'] >= 2: score += 5
+        return score
+
     def run_universal_logic(self):
         m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
-        il_rel = self.get_ji_rel(m_j[2], f_j[2])
         
+        # 1. 일지(배우자궁) 결합력
+        il_rel = self.get_ji_rel(m_j[2], f_j[2])
         if il_rel == "육합": s1 = 25
         elif il_rel in ["방합", "반합"]: s1 = 21
         elif il_rel == "무": s1 = 17
@@ -1241,7 +1400,8 @@ class UniversalPrintableGunghap:
         elif il_rel == "충": s1 = 5
         else: s1 = 17
         p1 = int((s1 / 25) * 100)
-
+        
+        # 2. 타 궁위 조화
         s2 = 5 
         n_rel, w_rel, si_rel = self.get_ji_rel(m_j[0], f_j[0]), self.get_ji_rel(m_j[1], f_j[1]), self.get_ji_rel(m_j[3], f_j[3]) 
         if n_rel in ["육합", "방합", "반합"]: s2 += 2
@@ -1251,7 +1411,8 @@ class UniversalPrintableGunghap:
         if si_rel in ["육합", "방합", "반합"]: s2 += 1
         s2 = max(0, min(10, s2))
         p2 = int((s2 / 10) * 100)
-
+        
+        # 3. 오행 보완 (시공명리 환경 조화력)
         m_ec, f_ec = self.count_elements(m_g, m_j), self.count_elements(f_g, f_j)
         s3 = 5
         for e in ['목','화','토','금','수']:
@@ -1260,7 +1421,8 @@ class UniversalPrintableGunghap:
             if m_ec[e] >= 4 and f_ec[e] >= 4: s3 -= 2 
         s3 = max(0, min(10, s3))
         p3 = int((s3 / 10) * 100)
-
+        
+        # 4. 특수 기운 (고란/나체 등)
         s4 = 5
         bad_iljus, goran, nache = ["甲寅", "乙卯", "庚申", "辛酉", "戊辰", "戊戌"], ["甲寅", "乙巳", "丁巳", "戊申", "辛亥"], ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"] 
         m_ilju, f_ilju = m_g[2] + m_j[2], f_g[2] + f_j[2]
@@ -1268,44 +1430,47 @@ class UniversalPrintableGunghap:
         if f_ilju in bad_iljus or f_ilju in goran or f_ilju in nache: s4 -= 1
         s4 = max(0, min(5, s4))
         p4 = int((s4 / 5) * 100)
-
+        
+        # 5. 대운 기상도 조화
         s5 = min(10, self.daeun_score)
         p5 = int((s5 / 10) * 100)
-
+        
+        # 6. 리스크 방어력 (십성 과다/부족)
         risk = 0.0
         if il_rel == "충": risk += 0.10 
         elif il_rel in ["형", "원진"]: risk += 0.05 
         
-        def count_ss_groups(dc, chars):
+        def count_ss_groups_local(dc, chars):
             res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
             for c in chars:
                 if c and c not in ["?", " ", "-"]:
                     try:
-                        ss = get_group_ss(get_ss(dc, c))
-                        if ss in res: res[ss] += 1
-                    except: pass
+                        ss = get_ss(dc, c)
+                        group_ss = get_group_ss(ss)
+                        if group_ss in res: res[group_ss] += 1
+                    except Exception: pass
             return res
-        
-        m_ss, f_ss = count_ss_groups(m_g[2], m_g + m_j), count_ss_groups(f_g[2], f_g + f_j)
+            
+        m_ss, f_ss = count_ss_groups_local(m_g[2], m_g + m_j), count_ss_groups_local(f_g[2], f_g + f_j)
         if m_ss['비겁'] >= 4: risk += 0.05 
         if m_ss['재성'] == 0: risk += 0.05 
         if f_ss['식상'] >= 4: risk += 0.05 
         if f_ss['관성'] >= 4 or f_ss['관성'] == 0: risk += 0.05 
-
         risk = min(0.20, risk) 
         p6_safety = int((1.0 - risk) * 100)
-
+        
+        # 종합 점수 산출
         base_bonus = 40 
         sub_total = base_bonus + s1 + s2 + s3 + s4 + s5
         self.final_score = max(40, min(100, int(sub_total * (1.0 - risk))))
-
+        
         if self.final_score >= 90: self.grade = "천생연분 (최고의 인연)"
         elif self.final_score >= 85: self.grade = "상생연분 (함께하면 좋은 인연)"
         elif self.final_score >= 80: self.grade = "동행연분 (편안하고 안정적인 인연)"
         elif self.final_score >= 70: self.grade = "보완연분 (서로를 채워주는 인연)"
         elif self.final_score >= 60: self.grade = "성장연분 (이해하며 맞춰가는 인연)"
         else: self.grade = "조율연분 (인내와 배려가 필요한 인연)"
-
+        
         self.details = [
             {"label": "내면의 유대감", "pct": p1, "color": "#9b59b6"},
             {"label": "환경 조화", "pct": p2, "color": "#2ecc71"},
@@ -1449,131 +1614,3 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         "yukchin_rule": "육친 및 십이운성 상생법 적용",
         "marital_info": marital_status
     }
-
-def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=30):
-    male_jiji = male_jjis[0] if male_jjis else "子"
-    female_jiji = female_jjis[0] if female_jjis else "丑"
-    
-    candidate_results = []
-    current_date = start_date
-    
-    while current_date <= end_date:
-        conception_date = current_date 
-        delivery_date = conception_date + dt_mod.timedelta(days=268)
-        
-        if start_date <= delivery_date <= end_date:
-            if last_period_date:
-                gestation_days = (delivery_date - last_period_date).days
-                if gestation_days > 0:
-                    g_weeks = gestation_days // 7
-                    if g_weeks < 37 or g_weeks > 41:
-                        current_date += dt_mod.timedelta(days=1)
-                        continue
-            
-            time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
-            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70.0}
-            
-            try:
-                y_p, m_p, d_p = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
-                h_p = f"{best_slot['ji']}時"
-                four_pillars = f"{y_p}년 {m_p}월 {d_p}일 {h_p}"
-            except:
-                four_pillars = "사주간지 분석중"
-
-            candidate_results.append({
-                'date': delivery_date.strftime("%Y-%m-%d"),
-                'delivery_dt': delivery_date,
-                'conception_date': conception_date.strftime("%Y-%m-%d"),
-                'score': best_slot['score'],
-                'four_pillars': four_pillars,
-                'best_time': {
-                    'time_str': best_slot['time_str'],
-                    'time_pillar': f"{best_slot['ji']}時",
-                    'ji': best_slot['ji']
-                },
-                'all_time_slots': time_slots_eval
-            })
-            
-        current_date += dt_mod.timedelta(days=2)
-        
-    candidate_results.sort(key=lambda x: x['score'], reverse=True)
-    
-    filtered_results = []
-    for item in candidate_results:
-        if not any(abs((item['delivery_dt'] - selected['delivery_dt']).days) < 25 for selected in filtered_results):
-            filtered_results.append(item)
-            if len(filtered_results) >= 5:
-                break
-                
-    return filtered_results
-
-def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, time_ji):
-    day_gan = d_pillar[0]
-    day_ji = d_pillar[1]
-    month_ji = m_pillar[1]
-    
-    date_seed = (delivery_date.year * 10000 + delivery_date.month * 100 + delivery_date.day)
-    base_score = 72.0 + (date_seed % 11) * 1.2
-    
-    samhap_groups = [{'申','子','辰'}, {'巳','酉','丑'}, {'寅','午','戌'}, {'亥','卯','未'}]
-    yukhap_pairs = {('子','丑'), ('寅','亥'), ('卯','戌'), ('辰','酉'), ('巳','申'), ('午','未')}
-    chung_pairs = {('子','午'), ('丑','未'), ('寅','申'), ('卯','酉'), ('辰','戌'), ('巳','亥')}
-    
-    score = base_score
-    
-    dt_pair = (day_ji, time_ji) if day_ji < time_ji else (time_ji, day_ji)
-    if dt_pair in yukhap_pairs:
-        score += 8.0
-    elif any({day_ji, time_ji}.issubset(g) for g in samhap_groups):
-        score += 6.0
-    elif dt_pair in chung_pairs:
-        score -= 10.0
-        
-    for p_ji in [male_jiji, female_jiji]:
-        p_pair = (p_ji, time_ji) if p_ji < time_ji else (time_ji, p_ji)
-        if p_pair in yukhap_pairs:
-            score += 4.0
-        elif any({p_ji, time_ji}.issubset(g) for g in samhap_groups):
-            score += 3.0
-        elif p_pair in chung_pairs:
-            score -= 5.0
-            
-    ji_order = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
-    if time_ji in ji_order:
-        t_idx = ji_order.index(time_ji)
-        score += ((t_idx * 5 + delivery_date.day * 2) % 9) * 0.5
-
-    return min(98.5, max(60.0, round(score, 1)))
-
-def get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji):
-    try:
-        y_pillar, m_pillar, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
-    except:
-        y_pillar, m_pillar, d_pillar = "甲子", "丙寅", "戊辰"
-
-    time_slots = [
-        {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子'},
-        {'time_str': '01:30 ~ 03:29 (축)시', 'ji': '丑'},
-        {'time_str': '03:30 ~ 05:29 (인)시', 'ji': '寅'},
-        {'time_str': '05:30 ~ 07:29 (묘)시', 'ji': '卯'},
-        {'time_str': '07:30 ~ 09:29 (진)시', 'ji': '辰'},
-        {'time_str': '09:30 ~ 11:29 (사)시', 'ji': '巳'},
-        {'time_str': '11:30 ~ 13:29 (오)시', 'ji': '午'},
-        {'time_str': '13:30 ~ 15:29 (미)시', 'ji': '未'},
-        {'time_str': '15:30 ~ 17:29 (신)시', 'ji': '申'},
-        {'time_str': '17:30 ~ 19:29 (유)시', 'ji': '酉'},
-        {'time_str': '19:30 ~ 21:29 (술)시', 'ji': '戌'},
-        {'time_str': '21:30 ~ 23:29 (해)시', 'ji': '亥'}
-    ]
-    
-    evaluated = []
-    for slot in time_slots:
-        score = evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, slot['ji'])
-        evaluated.append({
-            'time_str': slot['time_str'],
-            'ji': slot['ji'],
-            'score': score
-        })
-    
-    evaluated.sort(key=lambda x: x['score'], reverse=True)
-    return evaluated
