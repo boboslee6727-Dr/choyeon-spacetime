@@ -106,12 +106,12 @@ with st.sidebar:
     kst_tz = pytz.timezone('Asia/Seoul')
     default_date_today = dt_mod.datetime.now(kst_tz).date()
     
+    # 루프 변수(예: idx, u_product 등)를 활용하여 동적 key 부여
     selected_target_date = st.date_input(
         "조회할 연/월/일 선택",
-        value=st.session_state.get("main_target_calc_date", default_date_today),
-        key="main_target_calc_date",
-        help="기본값은 오늘 날짜이며, 원하는 특정 연/월/일을 선택하여 시뮬레이션할 수 있습니다.",
-        on_change=stop_ai
+        value=st.session_state.get('target_date', datetime.now()),
+        on_change=stop_ai,
+        key=f"selected_target_date_{u_product}"  # 👈 동적 key 적용
     )
     st.caption(f"💡 현재 지정 기준일: **{selected_target_date.year}년 {selected_target_date.month}월 {selected_target_date.day}일**")
     st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
