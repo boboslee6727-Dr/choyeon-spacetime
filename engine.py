@@ -1,6 +1,8 @@
 # ==============================================================================
 # 🏮 초연 시공명리학 (Choyeon Spacetime Saju) - ver 72.3 마스터 최종본
 # ==============================================================================
+from google import genai
+import os
 import streamlit as st
 import math
 import datetime as dt_mod
