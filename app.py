@@ -109,9 +109,9 @@ with st.sidebar:
     # 루프 변수(예: idx, u_product 등)를 활용하여 동적 key 부여
     selected_target_date = st.date_input(
         "조회할 연/월/일 선택",
-        value=st.session_state.get('target_date', datetime.now()),
+        value=st.session_state.get('target_date', dt_mod.date.today()),  # 👈 dt_mod.date.today() 로 수정
         on_change=stop_ai,
-        key=f"selected_target_date_{u_product}"  # 👈 동적 key 적용
+        key="main_target_date_picker"
     )
     st.caption(f"💡 현재 지정 기준일: **{selected_target_date.year}년 {selected_target_date.month}월 {selected_target_date.day}일**")
     st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
