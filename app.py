@@ -1114,49 +1114,68 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리
+        # 4-1. 타 감명서 비교 (사주) 전용 처리 (원문 검증 경고 로직 포함)
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
-            # 1. 1인 사주 대조 원문 텍스트 수집
-            other_reading_text = st.session_state.get('other_reading_input', '').strip()
+            # 1. 사이드바/메인 입력 폼에서 원문 수집
+            other_reading_text = (
+                st.session_state.get('other_reading_input', '') or
+                st.session_state.get('other_reading_text', '') or
+                st.session_state.get('user_raw_input_text', '')
+            ).strip()
+
+            # 2. 원문 미입력 시 AI 호출 중단 및 경고 박스 즉시 출력
             if not other_reading_text:
-                other_reading_text = st.session_state.get('user_raw_input_text', '(제출된 타 감명서 원문이 없습니다.)')
-
-            # 2. 타 감명서 원본 박스 생성
-            external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-
-            # 3. AI 대조 리포트 본문 포맷팅
-            ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
-
-            # 4. 1인용 표지(part_1_fact) 기반 3단 조립 (closing 제거)
-            final_render_html = html_views.render_comparison_report(
-                part_1_fact, external_raw_box, ai_comparison_html
-            )
+                warn_msg = """
+                <div style='padding:20px; background-color:#FFF3E0; border:2px solid #FB8C00; border-radius:8px; margin-top:20px;'>
+                    <h3 style='color:#E65100; margin-0 0 10px 0;'>⚠️ [타 감명서 원문 미입력 경고]</h3>
+                    <p style='color:#E65100; font-size:15px; margin:0;'>
+                        비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>
+                        사이드바 또는 입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오.
+                    </p>
+                </div>
+                """
+                final_render_html = html_views.render_comparison_report(part_1_fact, warn_msg, "")
+            else:
+                # 3. 원문이 정상 입력된 경우에만 AI 학술 대조 실행
+                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+                ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
+                final_render_html = html_views.render_comparison_report(
+                    part_1_fact, external_raw_box, ai_comparison_html
+                )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (남명/여명 2인 팩트 완전 결합)
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (원문 검증 경고 로직 포함)
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
-            # 1. 궁합 대조 원문 텍스트 수집
-            other_reading_text = st.session_state.get('other_reading_input_gunghap', '').strip()
-            if not other_reading_text:
-                other_reading_text = st.session_state.get('other_reading_input', '').strip()
-            if not other_reading_text:
-                other_reading_text = st.session_state.get('user_raw_input_text', '(제출된 타 궁합 감명서 원문이 없습니다.)')
+            # 1. 궁합 대조 원문 수집
+            other_reading_text = (
+                st.session_state.get('other_reading_input_gunghap', '') or
+                st.session_state.get('other_reading_input', '') or
+                st.session_state.get('user_raw_input_text', '')
+            ).strip()
 
-            # 2. 타 궁합 감명서 원본 박스 생성
-            external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-
-            # 3. AI 대조 리포트 본문 포맷팅
-            ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
-
-            # 4. 2인 궁합 전용 표지(part_1_fact_gunghap) 기반 3단 조립 (closing 제거)
-            # ※ part_1_fact_gunghap은 app.py 상단에서 남명/여명 사주로 생성된 궁합 팩트 표지 변수입니다.
+            # 2. 원문 미입력 시 AI 호출 중단 및 경고 박스 즉시 출력
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
 
-            final_render_html = html_views.render_comparison_report(
-                target_gunghap_fact, external_raw_box, ai_comparison_html
-            )
+            if not other_reading_text:
+                warn_msg = """
+                <div style='padding:20px; background-color:#FFF3E0; border:2px solid #FB8C00; border-radius:8px; margin-top:20px;'>
+                    <h3 style='color:#E65100; margin:0 0 10px 0;'>⚠️ [타 궁합 감명서 원문 미입력 경고]</h3>
+                    <p style='color:#E65100; font-size:15px; margin:0;'>
+                        비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>
+                        사이드바 또는 입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오.
+                    </p>
+                </div>
+                """
+                final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_msg, "")
+            else:
+                # 3. 원문이 정상 입력된 경우에만 AI 학술 대조 실행
+                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+                ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
+                final_render_html = html_views.render_comparison_report(
+                    target_gunghap_fact, external_raw_box, ai_comparison_html
+                )
 
         # ==============================================================================
         # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
