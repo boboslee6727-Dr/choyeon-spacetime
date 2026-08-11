@@ -1114,38 +1114,6 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리 (other_reading_text AI 파이프라인 완전 주입)
-        # ==============================================================================
-        elif u_product == "4-1. 타 감명서 비교 (사주)":
-            # 1. UI st.text_area(key=f"text_{u_product}")에서 제출된 원문 텍스트 확실히 수집
-            dynamic_key = f"text_{u_product}"
-            other_reading_text = (
-                st.session_state.get(dynamic_key, '') or 
-                st.session_state.get('other_reading_input', '')
-            ).strip()
-
-            # 2. 원문 미입력 시 AI 호출 중단 및 경고 박스 즉시 출력
-            if not other_reading_text:
-                warn_html = html_views.get_warning_box(
-                    "타 감명서 원문 미입력 경고",
-                    "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
-                )
-                final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
-            else:
-                # 3. 🚨 AI 프롬프트 변수 주입 딕셔너리에 other_reading_text 필수 바인딩!
-                prompt_kwargs['other_reading_text'] = other_reading_text
-                
-                # 4. AI 1:1 대조 통변 실행 및 3단 출력 조립
-                raw_ai_out = engine.get_completion(prompts.프롬프트_4_1_사주대조, **prompt_kwargs)
-                clean_raw = html_views.clean_ai_output_text(raw_ai_out)
-                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-                ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
-                
-                final_render_html = html_views.render_comparison_report(
-                    part_1_fact, external_raw_box, ai_comparison_html
-                )
-
-        # ==============================================================================
         # 4-1. 타 감명서 비교 (사주) 전용 처리
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
@@ -1162,10 +1130,11 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                # 🚨 치명적 오류 완전 해결: 사주 팩트 데이터(saju_fact)를 안전하게 복사 후 원문 텍스트 바인딩
+                # 🚨 1136번 줄 NameError 완벽 소멸: saju_fact를 안전하게 복사하여 ai_kwargs 딕셔너리 생성
                 ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 
+                # 생성된 ai_kwargs를 AI 프롬프트에 통째로 주입
                 raw_ai_out = engine.get_completion(prompts.프롬프트_4_1_사주대조, **ai_kwargs)
                 clean_raw = html_views.clean_ai_output_text(raw_ai_out)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
@@ -1195,7 +1164,7 @@ if st.session_state.get('app_running', False):
                 )
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
-                # 🚨 치명적 오류 완전 해결: 궁합 팩트 데이터(gunghap_data)를 안전하게 복사 후 원문 텍스트 바인딩
+                # 🚨 NameError 완벽 소멸: 궁합 데이터를 안전하게 복사하여 ai_kwargs 딕셔너리 생성
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 
