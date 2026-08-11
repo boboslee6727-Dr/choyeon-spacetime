@@ -13,12 +13,12 @@ import sys
 import importlib
 
 import engine
-import prompts
+import prompts_views
 import html_views
 
 # 🔄 서브 모듈 변경 사항 즉시 반영을 위한 강제 리로드 설정
 importlib.reload(engine)
-importlib.reload(prompts)
+importlib.reload(prompts_views)
 importlib.reload(html_views)
 
 # ==============================================================================
