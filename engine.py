@@ -1614,3 +1614,38 @@ def get_gunghap_data(s_y, s_m, s_d, s_t, m_marital, f_y, f_m, f_d, f_t, f_marita
         "yukchin_rule": "육친 및 십이운성 상생법 적용",
         "marital_info": marital_status
     }
+
+def get_ai_completion(prompt_text):
+    """
+    초연 시공명리 R&D 및 감명서 비교 통변을 위한 Gemini AI 엔진 연동 함수
+    """
+    try:
+        # Streamlit secrets 또는 환경 변수에서 API Key 안전 확보
+        api_key = None
+        try:
+            if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+                api_key = st.secrets["GEMINI_API_KEY"]
+            elif hasattr(st, "secrets") and "GOOGLE_API_KEY" in st.secrets:
+                api_key = st.secrets["GOOGLE_API_KEY"]
+        except Exception:
+            pass
+            
+        if not api_key:
+            api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+            
+        if not api_key:
+            return "⚠️ [시스템 오류] Gemini API Key가 설정되지 않았습니다. st.secrets 또는 환경변수를 확인해 주십시오."
+
+        # 최신 google-genai 클라이언트 규격 적용 (모델명: gemini-2.5-flash 또는 기본 추천 모델)
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt_text,
+        )
+        
+        if response and response.text:
+            return response.text
+        return "⚠️ [시스템 경고] AI 엔진으로부터 응답 데이터를 수신하지 못했습니다."
+        
+    except Exception as e:
+        return f"⚠️ [엔진 통신 오류 발생]: {str(e)}"
