@@ -24,7 +24,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 72.2 Master"
+APP_VERSION = "ver 72.3 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용
@@ -88,7 +88,7 @@ def get_oh_class(ganji):
     return f"color-{oh}" if oh != '무' else ""
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (ver 72.1 원본 조건부 UI 100% 원상복구)
+# 2. 사이드바 통제 센터 (ver 72.3 원본 조건부 UI 100% 원상복구)
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -633,23 +633,61 @@ if st.session_state.get('app_running', False):
         else:
             report_title = "🏮 사주팔자 정밀 분석"
 
+        # 🌟 궁합 점수 및 등급 변수 초기화
+        gh_score = 0
+        gh_grade = ""
+        partner_bazi = ["?", "?", "?", "?"]
+
         # 🏮 표지 생성 분기 (1인용 vs 2인용 궁합)
         if is_2person:
-            # 상대방 나이 계산 (현재 연도 기준)
+            # --- 상대방 사주 원국 계산 ---
+            p_y = st.session_state.get('p_y_in', 1980)
+            p_m = st.session_state.get('p_m_in', 1)
+            p_d = st.session_state.get('p_d_in', 1)
+            p_cal_val = st.session_state.get('f_c', "양력")
+            p_is_lunar = "음력" in p_cal_val
+            p_is_leap = "윤달" in p_cal_val
+            p_time_str = st.session_state.get('p_t_key', "시간 모름")
+
+            try:
+                p_g_res = engine.get_ganji_from_date(p_y, p_m, p_d, p_is_lunar, p_is_leap)
+                p_y_p = p_g_res[0] if len(p_g_res) > 0 else "甲子"
+                p_m_p = p_g_res[1] if len(p_g_res) > 1 else "甲子"
+                p_d_p = p_g_res[2] if len(p_g_res) > 2 else "甲子"
+
+                p_ds_hanja = engine.K2H_GAN.get(p_d_p[0], p_d_p[0])
+                if "모름" in p_time_str:
+                    p_t_gan, p_t_ji = "?", "?"
+                else:
+                    match = re.search(r'\((.*?)\)', p_time_str)
+                    raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
+                    p_t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
+                    gan_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+                    ji_arr = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                    if p_ds_hanja in gan_arr and p_t_ji in ji_arr:
+                        d_idx, j_idx = gan_arr.index(p_ds_hanja), ji_arr.index(p_t_ji)
+                        p_t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
+                    else:
+                        p_t_gan = "?"
+                partner_bazi = [f"{p_t_gan}{p_t_ji}", p_d_p, p_m_p, p_y_p]
+            except Exception:
+                partner_bazi = ["甲子", "甲子", "甲子", "甲子"]
+
+            st.session_state['partner_bazi'] = partner_bazi
+
+            # --- 상대방 나이 계산 ---
             curr_yr_for_age = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).year
-            p_birth_year = st.session_state.get('p_y_in', 1980)
-            p_age_val = curr_yr_for_age - p_birth_year + 1
+            p_age_val = curr_yr_for_age - p_y + 1
             
             # 성별에 따른 명칭(남명/여명) 세팅
             f_gender_val = st.session_state.get("f_g", "여성")
             u_icon_str = "♂️ 남명 :" if gender == "남성" else "♀️ 여명 :"
             p_icon_str = "♀️ 여명 :" if f_gender_val == "여성" else "♂️ 남명 :"
             
-            # 세션 상태 및 지역 변수에서 상대방 정보 안전 추출
             p_name_val = st.session_state.get("f_n", "상대방")
-            p_time_val = st.session_state.get("p_t_key", "시간 모름")
-            p_sol_str_val = f"{p_birth_year}년 {st.session_state.get('p_m_in', 1):02d}월 {st.session_state.get('p_d_in', 1):02d}일"
-            p_lun_str_val = p_lun_str if 'p_lun_str' in locals() else ""
+            p_time_val = p_time_str
+            p_sol_str_val = f"{p_y}년 {p_m:02d}월 {p_d:02d}일"
+            p_lun_str_val = ""
             
             cover_html = html_views.get_couple_cover(
                 APP_VERSION, report_title, 
@@ -657,6 +695,27 @@ if st.session_state.get('app_running', False):
                 p_icon_str, p_name_val, p_age_val, p_sol_str_val, p_lun_str_val, p_time_val, 
                 today_str
             )
+            
+            # 🌟 [추가] 2인 사주 명조 데이터 정리 및 궁합 엔진 가동
+            male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
+            female_data_pack = partner_bazi if gender == "남성" else [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
+            
+            m_name_val = name if gender == "남성" else p_name_val
+            f_name_val = p_name_val if gender == "남성" else name
+            
+            try:
+                if hasattr(engine, 'UniversalPrintableGunghap'):
+                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, 10)
+                    gh_engine.run_universal_logic()
+                    gh_score = gh_engine.final_score
+                    gh_grade = gh_engine.grade
+                else:
+                    gh_score = 0
+                    gh_grade = "엔진 업데이트 필요"
+            except Exception as e:
+                gh_score = 0
+                gh_grade = "점수 산출 불가"
+                
         else:
             # 1인용 표지용 아이콘 명칭 간소화
             u_icon_str = f"{p_icon}" 
@@ -682,7 +741,7 @@ if st.session_state.get('app_running', False):
             c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
             j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
             c_hanja = engine.K2H_GAN.get(c_hangul, c_hangul)
-            j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
+            j_hanja = engine.K2H_JI.get(j_hangul, j_hanja)
             is_active = (val <= age < val + 10)
             
             u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
@@ -865,7 +924,9 @@ if st.session_state.get('app_running', False):
             "cur_sewun_ji": cur_sewun_ji_val,
             "target_year": target_year_val,
             "curr_m": curr_m, 
-            "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일")
+            "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
+            "gh_score": gh_score,
+            "gh_grade": gh_grade
         }
 
         class SafeDict(dict):
@@ -902,26 +963,49 @@ if st.session_state.get('app_running', False):
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
         # ==============================================================================
-        # 🏮 [ver 72.1 원본 사수] 표지 및 본문 보고서 완벽 출력부 (오류 원천 차단)
+        # 🏮 [ver 72.3 파이프라인] 표지 및 본문 보고서 완벽 출력부
         # ==============================================================================
         
         # 1. 표지(cover_html) 단독 출력 (A4 1페이지)
         if 'cover_html' in locals() and cover_html:
-            # Streamlit이 4칸 공백을 소스코드로 인식하지 못하도록 모든 들여쓰기 완전 제거
             safe_cover = re.sub(r'\n\s+', '\n', cover_html)
             st.markdown(safe_cover, unsafe_allow_html=True)
 
-        # 2. 본문 종합 보고서 데이터 합성 (ver 72.1 원본 결합 방식)
-        master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+        # 2. 택일 특화 엔진 가동 (결과 HTML 생성)
+        delivery_html = ""
+        if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
+            try:
+                s_d_val = st.session_state.get('delivery_start_date', dt_mod.date.today())
+                e_d_val = st.session_state.get('delivery_end_date', dt_mod.date.today() + dt_mod.timedelta(days=30))
+                m_jjis_val = jjis if gender == "남성" else [b[1] if len(b)>1 else "?" for b in partner_bazi]
+                f_jjis_val = [b[1] if len(b)>1 else "?" for b in partner_bazi] if gender == "남성" else jjis
+                forbidden_list = ['병오', '임자', '계해', '신유', '경신']
+                
+                if hasattr(engine, 'get_optimized_delivery_days'):
+                    delivery_days = engine.get_optimized_delivery_days(s_d_val, e_d_val, m_jjis_val, f_jjis_val, forbidden_list)
+                    del_list_str = "".join([f"<div style='margin-bottom:8px; padding:10px; background:#F8F9FA; border:1px solid #E8EAF6; border-radius:6px; color:#1A237E;'>✅ 추천 길일: <b>{d['date']}</b> (조화 점수: {d['score']}점)</div>" for d in delivery_days])
+                    delivery_html = f"<div style='margin-top:20px; padding:20px; border:2px dashed #C62828; border-radius:10px;'><h3 style='color:#C62828; margin-top:0;'>📅 시공명리 최적 택일 추천</h3>{del_list_str}</div>"
+            except Exception as e:
+                pass
 
-        # 3. 🚨 화면 최상단에 나타나는 </div> 찌꺼기만 안전하게 도려냄 (내부 HTML 파괴 없음)
+        # 3. 파이프라인 분기 (1인용 vs 2인용 vs 택일)
+        if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
+            master_composite_report = delivery_html + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+        elif is_2person:
+            # 2인용 궁합 파이프라인 (향후 M/F 3분할 뷰를 위한 뼈대)
+            master_composite_report = f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+        else:
+            # 1인용 파이프라인
+            master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+
+        # 4. 🚨 화면 최상단에 나타나는 </div> 찌꺼기 도려냄
         master_composite_report = master_composite_report.strip()
         if master_composite_report.startswith("</div>"):
             master_composite_report = master_composite_report[6:].strip()
 
-        # 4. 박스 디자인 적용 및 들여쓰기 공백 전면 제거 (소스코드 렌더링 오작동 100% 차단)
+        # 5. 박스 디자인 적용 및 들여쓰기 공백 제거
         final_html = html_views.get_final_report_box(master_composite_report)
         final_html = re.sub(r'\n\s+', '\n', final_html)
 
-        # 5. 본문 종합 보고서 단독 최종 출력
+        # 6. 본문 종합 보고서 단독 최종 출력
         st.markdown(final_html, unsafe_allow_html=True)
