@@ -877,3 +877,25 @@ def get_other_report_original_html(other_text_input):
         </div>
     </div>
     """
+
+def render_basic_report(part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing):
+    """1-1. 사주팔자 기본 풀이 조립 함수"""
+    body = f"{part_1_fact}{part_2_intro}{part_3_golden}{ai_output_html}{un_html}{sewun_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+def render_yeareun_report(part_1_fact, sewun_html, ai_output_html, part_5_closing):
+    """1-2. 연도운 풀이 조립 함수"""
+    body = f"{part_1_fact}{sewun_html}{ai_output_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+def render_wolun_report(part_1_fact, wolun_html, ai_output_html, part_5_closing):
+    """1-3. 월운 풀이 조립 함수"""
+    body = f"{part_1_fact}{wolun_html}{ai_output_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing):
+    """1-4. 일운 풀이 조립 함수"""
+    body = f"{part_1_fact}{weekly_html}{ai_output_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+
