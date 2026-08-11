@@ -1181,8 +1181,7 @@ if st.session_state.get('app_running', False):
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
 
-                # prompts_views의 72.3 규격 프롬프트 호출 및 안전 바인딩
-                final_prompt = prompts_views.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
+                final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
                 
                 # API 호출
                 ai_response_text = call_claude_api(final_prompt, max_tokens=10000) if 'call_claude_api' in globals() else engine.get_ai_completion(final_prompt)
