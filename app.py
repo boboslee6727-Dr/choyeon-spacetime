@@ -988,15 +988,79 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 pass
 
-        # 3. 파이프라인 분기 (1인용 vs 2인용 vs 택일)
+        # 3. 파이프라인 분기 (1인용 vs 3분할 2인용 vs 택일)
+        final_render_html = ""
         if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
-            master_composite_report = delivery_html + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
-        elif is_2person:
-            # 2인용 궁합 파이프라인 (향후 M/F 3분할 뷰를 위한 뼈대)
-            master_composite_report = f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+            # 택일 파이프라인
+            master_comp = delivery_html + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+            final_render_html = html_views.get_final_report_box(master_comp)
+            
+        elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
+            # 🌟 궁합 3분할 파이프라인 가동 🌟
+            m_ess, f_ess, g_ess = "", "", clean_raw
+            
+            # AI 텍스트 마커 정규식 분해
+            m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
+            if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
+            
+            f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
+            if f_match: f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
+            
+            g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
+            if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
+            
+            # 🌈 박사님의 기존 UI 함수 호출 (대운 대조표 결합)
+            # (현재는 UI 테스트를 위해 신청인 un_html을 양쪽에 매핑해두었습니다. 추후 상대방 대운 연산 로직만 추가하시면 완벽해집니다.)
+            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, un_html, f_name_val, un_html)
+            g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
+            
+            # 📊 박사님의 기존 UI 함수 호출 (점수판 및 맺음말 결합)
+            score_ui = ""
+            closing_ui = ""
+            if 'gh_engine' in locals():
+                score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
+                closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
+            g_ess += score_ui + closing_ui
+            
+            # 📄 3장 분할 래핑 (페이지 나누기 적용)
+            m_page = f"""
+            <div class='report-page' style='margin-top:20px;'>
+                <div class='vip-inset-frame' style='border-color:#1A237E; padding:20px;'>
+                    <h1 style='text-align:center; color:#1A237E; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:15px; margin-bottom:20px;'>[ ♂️ 남명 사주 요약 ]</h1>
+                    {part_1_fact}
+                    <div style='margin-top:20px;'>{m_ess}</div>
+                </div>
+            </div>
+            <div class='page-break-before' style='page-break-before: always; height: 1px;'></div>
+            """
+            
+            f_page = f"""
+            <div class='report-page' style='margin-top:20px;'>
+                <div class='vip-inset-frame' style='border-color:#D50000; padding:20px;'>
+                    <h1 style='text-align:center; color:#D50000; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid #D50000; padding-bottom:15px; margin-bottom:20px;'>[ ♀️ 여명 사주 요약 ]</h1>
+                    <div style='margin-top:20px;'>{f_ess}</div>
+                </div>
+            </div>
+            <div class='page-break-before' style='page-break-before: always; height: 1px;'></div>
+            """
+            
+            g_page = f"""
+            <div class='report-page' style='margin-top:20px;'>
+                <div class='vip-inset-frame' style='border-color:#1B5E20; padding:20px;'>
+                    <h1 style='text-align:center; color:#1B5E20; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid #1B5E20; padding-bottom:15px; margin-bottom:20px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
+                    <div style='margin-top:20px;'>{g_ess}</div>
+                </div>
+            </div>
+            """
+            
+            final_render_html = m_page + f_page + g_page
+
         else:
-            # 1인용 파이프라인
-            master_composite_report = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+            # 1인용 파이프라인 (기본) 및 타 감명서 대조용
+            master_comp = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+            if master_comp.startswith("</div>"):
+                master_comp = master_comp[6:].strip()
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         # 4. 🚨 화면 최상단에 나타나는 </div> 찌꺼기 도려냄
         master_composite_report = master_composite_report.strip()
