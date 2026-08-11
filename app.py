@@ -1053,53 +1053,73 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 pass
 
+        # ==============================================================================
         # 3. 파이프라인 분기 (1인용 vs 3분할 2인용 vs 택일)
+        # ==============================================================================
         final_render_html = ""
+        
         if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
             # 택일 파이프라인
-            master_comp = delivery_html + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
+            master_comp = f"{delivery_html}{ai_output_html}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
             
         elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
-            # 🌟 궁합 3분할 파이프라인 가동 (HTML 코드를 뷰 모듈로 완전 이관)
+            # 궁합 3분할 파이프라인
             m_ess, f_ess, g_ess = "", "", clean_raw
             
-            # AI 텍스트 마커 정규식 분해
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
-            if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
+            if m_match: 
+                m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
             
             f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
-            if f_match: f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
+            if f_match: 
+                f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
             
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
-            if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
+            if g_match: 
+                g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
             
-            # 커플 대운 대조 UI 결합
             m_daewun_html = un_html if gender == "남성" else p_un_html
             f_daewun_html = p_un_html if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
             g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
             
-            # 점수판 및 맺음말 결합
-            score_ui = ""
-            closing_ui = ""
+            score_ui, closing_ui = "", ""
             if 'gh_engine' in locals():
                 score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
             g_ess += score_ui + closing_ui
             
-            # 📄 `html_views` 함수 호출로 3장 분할 래핑 완료 (코드 대폭 축소)
             final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
 
+        # 1인용 상품군 (html_views 조립 전용 함수 호출)
+        elif u_product == "1-1. 사주팔자와 운세풀이 (기본)":
+            final_render_html = html_views.render_basic_report(
+                part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing
+            )
+            
+        elif u_product == "1-2. 연도운 상세분석":
+            final_render_html = html_views.render_yeareun_report(
+                part_1_fact, sewun_html, ai_output_html, part_5_closing
+            )
+            
+        elif u_product == "1-3. 월운 상세분석":
+            final_render_html = html_views.render_wolun_report(
+                part_1_fact, wolun_html, ai_output_html, part_5_closing
+            )
+            
+        elif u_product == "1-4. 일운 상세분석":
+            final_render_html = html_views.render_ilun_report(
+                part_1_fact, weekly_html, ai_output_html, part_5_closing
+            )
+            
         else:
-            # 1인용 파이프라인 (기본) 및 타 감명서 대조용
-            master_comp = part_1_fact + part_2_intro + part_3_golden + f"<div style='margin-top:20px;'>{ai_output_html}</div>" + part_5_closing
-            if master_comp.startswith("</div>"):
-                master_comp = master_comp[6:].strip()
+            # 기타 테마별 특성화 상담 (2-1 ~ 2-5)
+            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{ai_output_html}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         # ==============================================================================
-        # 6. 본문 종합 보고서 최종 단독 출력 (</div> 찌꺼기 제거 및 들여쓰기 정돈)
+        # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
         # ==============================================================================
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
