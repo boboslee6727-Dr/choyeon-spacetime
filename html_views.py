@@ -917,5 +917,13 @@ def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
     master_comp = f"{part_1_fact}{external_raw_box}{ai_comparison_html}"
     return get_final_report_box(master_comp)
 
+def get_warning_box(title, message):
+    """미입력 및 시스템 경고 메시지 출력 전용 뷰 함수"""
+    return f"""
+    <div style='padding:20px; background-color:#FFF3E0; border:2px solid #FB8C00; border-radius:8px; margin-top:20px;'>
+        <h3 style='color:#E65100; margin:0 0 10px 0;'>⚠️ [{title}]</h3>
+        <p style='color:#E65100; font-size:15px; margin:0;'>{message}</p>
+    </div>
+    """
 
 
