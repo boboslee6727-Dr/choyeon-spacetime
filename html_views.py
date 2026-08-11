@@ -1016,6 +1016,40 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time,
     </div>
     """
 
+def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
+    """궁합 3분할 페이지(남명, 여명, 종합 궁합)를 일괄 생성하는 HTML 뷰 함수"""
+    m_page = f"""
+    <div class='report-page' style='margin-top:20px;'>
+        <div class='vip-inset-frame' style='border-color:#1A237E; padding:20px;'>
+            <h1 style='text-align:center; color:#1A237E; font-family:"Malgun Gothic", sans-serif; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:15px; margin-bottom:20px;'>[ ♂️ 남명 사주 요약 ]</h1>
+            {part_1_fact}
+            <div style='margin-top:20px;'>{m_ess}</div>
+        </div>
+    </div>
+    <div class='page-break-before' style='page-break-before: always; height: 1px;'></div>
+    """
+    
+    f_page = f"""
+    <div class='report-page' style='margin-top:20px;'>
+        <div class='vip-inset-frame' style='border-color:#D50000; padding:20px;'>
+            <h1 style='text-align:center; color:#D50000; font-family:"Malgun Gothic", sans-serif; font-weight:900; border-bottom:2px solid #D50000; padding-bottom:15px; margin-bottom:20px;'>[ ♀️ 여명 사주 요약 ]</h1>
+            <div style='margin-top:20px;'>{f_ess}</div>
+        </div>
+    </div>
+    <div class='page-break-before' style='page-break-before: always; height: 1px;'></div>
+    """
+    
+    g_page = f"""
+    <div class='report-page' style='margin-top:20px;'>
+        <div class='vip-inset-frame' style='border-color:#1B5E20; padding:20px;'>
+            <h1 style='text-align:center; color:#1B5E20; font-family:"Malgun Gothic", sans-serif; font-weight:900; border-bottom:2px solid #1B5E20; padding-bottom:15px; margin-bottom:20px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
+            <div style='margin-top:20px;'>{g_ess}</div>
+        </div>
+    </div>
+    """
+    
+    return m_page + f_page + g_page
+
 def get_auto_comparison_header():
     """자동 대조 분석서 본문 헤더 HTML 생성"""
     return """<div style='margin-bottom:25px; padding-bottom:12px; border-bottom:2px solid #1A237E;'>
