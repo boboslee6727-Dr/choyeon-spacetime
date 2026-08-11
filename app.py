@@ -740,8 +740,12 @@ if st.session_state.get('app_running', False):
             val = i * 10 + calc_d
             c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
             j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
+            
+            # 🎯 [수정] 자기 자신을 참조하는 오류(j_hanja)를 원천 차단
+            # 찾지 못할 경우 원래 값인 c_hangul/j_hangul을 반환하도록 수정
             c_hanja = engine.K2H_GAN.get(c_hangul, c_hangul)
-            j_hanja = engine.K2H_JI.get(j_hangul, j_hanja)
+            j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
+            
             is_active = (val <= age < val + 10)
             
             u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
