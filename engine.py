@@ -1651,3 +1651,64 @@ def get_ai_completion(prompt_text):
         
     except Exception as e:
         return f"⚠️ [엔진 통신 오류 발생]: {str(e)}"
+
+def format_ai_text_to_html(text):
+    """
+    AI가 생성한 순수 텍스트(1., 1), (1) 계층)를 읽어들여
+    박사님 지정 전용 황금비율 CSS(ALL 검정색, 여백, 들여쓰기 15px)를 입히는 엔진
+    """
+    if not text:
+        return ""
+        
+    lines = str(text).split('\n')
+    html_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # 별표(*, **)나 샵(#) 찌꺼기 제거
+        line = line.replace('*', '').replace('#', '')
+        
+        # '명리용어' ➔ 작은따옴표로 묶인 단어를 자동으로 굵고 진하게(Bold) 처리
+        line = re.sub(r"'([^']+)'", r"<b style='color:#000000;'>'\1'</b>", line)
+
+        # 1. 대제목 (예: 1. 성격 분석)
+        # 크기: 20px / 굵기: 900 / 색상: 검정 / 여백: 위 20px, 아래 10px
+        if re.match(r'^\d+\.\s', line):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:20px; font-weight:900; "
+                f"margin-top:20px; margin-bottom:10px;'>{line}</div>"
+            )
+        # 2. 소제목 (예: 1) 겉으로 드러난 성격)
+        # 크기: 18px / 굵기: 800 / 색상: 검정 / 여백: 위 15px, 아래 5px
+        elif re.match(r'^\d+\)\s', line):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:18px; font-weight:800; "
+                f"margin-top:15px; margin-bottom:5px;'>{line}</div>"
+            )
+        # 3. 소소제목 (예: (1) 구체적 행동 방식)
+        # 크기: 16px / 굵기: 700 / 색상: 검정 / 여백: 위 10px, 아래 5px
+        elif re.match(r'^\(\d+\)\s', line):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:16px; font-weight:700; "
+                f"margin-top:10px; margin-bottom:5px;'>{line}</div>"
+            )
+        # 4. 일반 통변 본문
+        # 크기: 16px / 굵기: 400 / 줄간격: 1.85 / 색상: 검정 / 들여쓰기: 15px
+        else:
+            if line.startswith('-'):
+                html_lines.append(
+                    f"<p style='font-size:16px; font-weight:400; line-height:1.85; color:#000000; "
+                    f"text-align:justify; margin-top:4px; margin-bottom:12px; "
+                    f"text-indent:5px; padding-left:10px;'>{line}</p>"
+                )
+            else:
+                html_lines.append(
+                    f"<p style='font-size:16px; font-weight:400; line-height:1.85; color:#000000; "
+                    f"text-align:justify; margin-top:4px; margin-bottom:12px; "
+                    f"text-indent:15px;'>{line}</p>"
+                )
+            
+    return "\n".join(html_lines)
