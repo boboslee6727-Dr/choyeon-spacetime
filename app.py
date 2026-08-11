@@ -765,6 +765,64 @@ if st.session_state.get('app_running', False):
 
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
+        # 🌟 [최종 추가] 2인용 궁합일 경우 상대방(파트너) 대운 기상도(p_un_html) 연산 블록
+        p_un_html = ""
+        if is_2person:
+            try:
+                p_ys = partner_bazi[3][0] if len(partner_bazi[3]) > 0 else "甲"
+                p_yb = partner_bazi[3][1] if len(partner_bazi[3]) > 1 else "子"
+                p_ms = partner_bazi[2][0] if len(partner_bazi[2]) > 0 else "甲"
+                p_mb = partner_bazi[2][1] if len(partner_bazi[2]) > 1 else "子"
+                p_ds = partner_bazi[1][0] if len(partner_bazi[1]) > 0 else "甲"
+                p_db = partner_bazi[1][1] if len(partner_bazi[1]) > 1 else "子"
+                p_ds_hanja = engine.K2H_GAN.get(p_ds, p_ds)
+                
+                p_ys_idx = engine.GAN.index(p_ys) if p_ys in engine.GAN else 0
+                p_order_dir = 1 if (p_ys_idx % 2 == 0) == (f_gender_val == '남성') else -1
+                
+                p_base_dt = dt_mod.datetime(p_y, p_m, p_d, 12, 0)
+                p_adj_mins = engine.get_total_time_adjustment(p_base_dt)
+                p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=p_adj_mins)
+                
+                p_calc_d = engine.get_daeun_su_accurate(p_utc_dt, p_order_dir)
+                p_direction_str = "순행" if p_order_dir == 1 else "역행"
+                
+                p_c_idx = engine.GAN.index(p_ms) if p_ms in engine.GAN else 0
+                p_j_idx = engine.JI.index(p_mb) if p_mb in engine.JI else 0
+                
+                p_daewun_data_list = []
+                for i in range(10):
+                    p_val = i * 10 + p_calc_d
+                    p_c_hangul = engine.GAN[(p_c_idx + (i + 1) * p_order_dir) % 10] if p_ms in engine.GAN else "-"
+                    p_j_hangul = engine.JI[(p_j_idx + (i + 1) * p_order_dir) % 12] if p_mb in engine.JI else "-"
+                    p_c_hanja = engine.K2H_GAN.get(p_c_hangul, p_c_hangul)
+                    p_j_hanja = engine.K2H_JI.get(p_j_hangul, p_j_hangul)
+                    p_is_active = (p_val <= p_age_val < p_val + 10)
+                    
+                    p_u_sung_val = engine.get_unsung(p_ds_hanja, p_j_hanja) if p_j_hanja != "-" else "-"
+                    p_y_shin_val = engine.get_12_shinsal(p_yb, p_j_hangul) if p_j_hangul != "-" else "-"
+                    p_d_shin_val = engine.get_12_shinsal(p_db, p_j_hangul) if p_j_hangul != "-" else "-"
+                    
+                    p_daewun_data_list.append({
+                        "age_range": f"{p_val}~{p_val+9}세",
+                        "ss_gan": engine.get_ss(p_ds_hanja, p_c_hangul),
+                        "c_hanja": p_c_hanja,
+                        "c_hangul": p_c_hangul,
+                        "j_hanja": p_j_hanja,
+                        "j_hangul": p_j_hangul,
+                        "ss_ji": engine.get_ss(p_ds_hanja, p_j_hangul),
+                        "un_sung": p_u_sung_val,
+                        "y_shinsal": p_y_shin_val, 
+                        "d_shinsal": p_d_shin_val, 
+                        "is_current": p_is_active,
+                        "is_first": (i == 0)
+                    })
+                p_un_html = html_views.generate_daewun_layout(p_daewun_data_list, p_direction_str, p_calc_d, get_oh_class)
+            except Exception:
+                p_un_html = "<p style='text-align:center;'>상대방 대운 연산 중</p>"
+        else:
+            p_un_html = ""
+
         current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
         start_year = int(sol_y) + current_daewun_age - 1
 
@@ -996,7 +1054,7 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
             
         elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
-            # 🌟 궁합 3분할 파이프라인 가동 🌟
+            # 🌟 궁합 3분할 파이프라인 가동 (HTML 코드를 뷰 모듈로 완전 이관)
             m_ess, f_ess, g_ess = "", "", clean_raw
             
             # AI 텍스트 마커 정규식 분해
@@ -1009,12 +1067,13 @@ if st.session_state.get('app_running', False):
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
             if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
             
-            # 🌈 박사님의 기존 UI 함수 호출 (대운 대조표 결합)
-            # (현재는 UI 테스트를 위해 신청인 un_html을 양쪽에 매핑해두었습니다. 추후 상대방 대운 연산 로직만 추가하시면 완벽해집니다.)
-            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, un_html, f_name_val, un_html)
+            # 커플 대운 대조 UI 결합
+            m_daewun_html = un_html if gender == "남성" else p_un_html
+            f_daewun_html = p_un_html if gender == "남성" else un_html
+            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
             g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
             
-            # 📊 박사님의 기존 UI 함수 호출 (점수판 및 맺음말 결합)
+            # 점수판 및 맺음말 결합
             score_ui = ""
             closing_ui = ""
             if 'gh_engine' in locals():
@@ -1022,38 +1081,8 @@ if st.session_state.get('app_running', False):
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
             g_ess += score_ui + closing_ui
             
-            # 📄 3장 분할 래핑 (페이지 나누기 적용)
-            m_page = f"""
-            <div class='report-page' style='margin-top:20px;'>
-                <div class='vip-inset-frame' style='border-color:#1A237E; padding:20px;'>
-                    <h1 style='text-align:center; color:#1A237E; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid #1A237E; padding-bottom:15px; margin-bottom:20px;'>[ ♂️ 남명 사주 요약 ]</h1>
-                    {part_1_fact}
-                    <div style='margin-top:20px;'>{m_ess}</div>
-                </div>
-            </div>
-            <div class='page-break-before' style='page-break-before: always; height: 1px;'></div>
-            """
-            
-            f_page = f"""
-            <div class='report-page' style='margin-top:20px;'>
-                <div class='vip-inset-frame' style='border-color:#D50000; padding:20px;'>
-                    <h1 style='text-align:center; color:#D50000; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid #D50000; padding-bottom:15px; margin-bottom:20px;'>[ ♀️ 여명 사주 요약 ]</h1>
-                    <div style='margin-top:20px;'>{f_ess}</div>
-                </div>
-            </div>
-            <div class='page-break-before' style='page-break-before: always; height: 1px;'></div>
-            """
-            
-            g_page = f"""
-            <div class='report-page' style='margin-top:20px;'>
-                <div class='vip-inset-frame' style='border-color:#1B5E20; padding:20px;'>
-                    <h1 style='text-align:center; color:#1B5E20; font-family:\"Malgun Gothic\", sans-serif; font-weight:900; border-bottom:2px solid #1B5E20; padding-bottom:15px; margin-bottom:20px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
-                    <div style='margin-top:20px;'>{g_ess}</div>
-                </div>
-            </div>
-            """
-            
-            final_render_html = m_page + f_page + g_page
+            # 📄 `html_views` 함수 호출로 3장 분할 래핑 완료 (코드 대폭 축소)
+            final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
 
         else:
             # 1인용 파이프라인 (기본) 및 타 감명서 대조용
@@ -1061,6 +1090,10 @@ if st.session_state.get('app_running', False):
             if master_comp.startswith("</div>"):
                 master_comp = master_comp[6:].strip()
             final_render_html = html_views.get_final_report_box(master_comp)
+
+        # 6. 본문 종합 보고서 최종 출력 (들여쓰기 공백 완벽 제거)
+        final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
+        st.markdown(final_render_html, unsafe_allow_html=True)
 
         # 4. 🚨 화면 최상단에 나타나는 </div> 찌꺼기 도려냄
         master_composite_report = master_composite_report.strip()
