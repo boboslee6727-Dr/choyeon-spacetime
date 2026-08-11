@@ -172,8 +172,8 @@ with st.sidebar:
         u_product = st.radio(
             "비교 분석 대상:", 
             [
-                "4-1. 전통 명리 vs 시공명리 대조", 
-                "4-2. 전통 궁합 vs 시공명리 궁합 대조"
+                "4-1. 타 감명서 비교 (사주)", 
+                "4-2. 타 감명서 비교 (궁합)"
             ], 
             key="sub_category_4", 
             on_change=stop_ai
@@ -327,7 +327,7 @@ with st.sidebar:
         other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}")
 
     # 2인 전용 상품(궁합, 택일) 상대방 사주 역산 및 기본 정보 모듈
-    is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or (u_product == "4-2. 전통 궁합 vs 시공명리 궁합 대조")
+    is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
     if is_2person:
         st.markdown("<hr style='border:1px dashed #C62828; margin:15px 0;'>", unsafe_allow_html=True)
         
@@ -884,8 +884,8 @@ if st.session_state.get('app_running', False):
             "3-1. 연애/결혼운 (궁합) 풀이": "프롬프트_3_1_궁합",
             "3-2. 결혼 택일": "프롬프트_3_2_결혼택일",
             "3-3. 출산 택일": "프롬프트_3_3_출산택일",
-            "4-1. 전통 명리 vs 시공명리 대조": "프롬프트_4_1_사주대조",
-            "4-2. 전통 궁합 vs 시공명리 궁합 대조": "프롬프트_4_2_궁합대조"
+            "4-1. 타 감명서 비교 (사주)": "프롬프트_4_1_사주대조",
+            "4-2. 타 감명서 비교 (궁합)": "프롬프트_4_2_궁합대조"
         }
 
         # AI 프롬프트 바인딩 및 Gemini API 호출
