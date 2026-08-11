@@ -627,9 +627,9 @@ if st.session_state.get('app_running', False):
         elif u_product == "3-3. 출산 택일":
             report_title = "🏮 새 생명 마중 출산 길일 추천 리포트"
         elif u_product == "4-1. 타 감명서 비교 (사주)":
-            report_title = "🏮 사주 감명서 학술 검증 및 1:1 대조 리포트"
+            report_title = "🏮 사주 감명서 검증 및 1:1 대조 리포트"
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
-            report_title = "🏮 궁합 감명서 학술 검증 및 1:1 대조 리포트"
+            report_title = "🏮 궁합 감명서 검증 및 1:1 대조 리포트"
         else:
             report_title = "🏮 사주팔자 정밀 분석"
 
@@ -1113,10 +1113,50 @@ if st.session_state.get('app_running', False):
                 part_1_fact, weekly_html, ai_output_html, part_5_closing
             )
             
-        else:
-            # 기타 테마별 특성화 상담 (2-1 ~ 2-5)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{ai_output_html}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
+        # ==============================================================================
+        # 4-1. 타 감명서 비교 (사주) 전용 처리
+        # ==============================================================================
+        elif u_product == "4-1. 타 감명서 비교 (사주)":
+            # 1. 1인 사주 대조 원문 텍스트 수집
+            other_reading_text = st.session_state.get('other_reading_input', '').strip()
+            if not other_reading_text:
+                other_reading_text = st.session_state.get('user_raw_input_text', '(제출된 타 감명서 원문이 없습니다.)')
+
+            # 2. 타 감명서 원본 박스 생성
+            external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+
+            # 3. AI 대조 리포트 본문 포맷팅
+            ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
+
+            # 4. 1인용 표지(part_1_fact) 기반 3단 조립 (closing 제거)
+            final_render_html = html_views.render_comparison_report(
+                part_1_fact, external_raw_box, ai_comparison_html
+            )
+
+        # ==============================================================================
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (남명/여명 2인 팩트 완전 결합)
+        # ==============================================================================
+        elif u_product == "4-2. 타 감명서 비교 (궁합)":
+            # 1. 궁합 대조 원문 텍스트 수집
+            other_reading_text = st.session_state.get('other_reading_input_gunghap', '').strip()
+            if not other_reading_text:
+                other_reading_text = st.session_state.get('other_reading_input', '').strip()
+            if not other_reading_text:
+                other_reading_text = st.session_state.get('user_raw_input_text', '(제출된 타 궁합 감명서 원문이 없습니다.)')
+
+            # 2. 타 궁합 감명서 원본 박스 생성
+            external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+
+            # 3. AI 대조 리포트 본문 포맷팅
+            ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
+
+            # 4. 2인 궁합 전용 표지(part_1_fact_gunghap) 기반 3단 조립 (closing 제거)
+            # ※ part_1_fact_gunghap은 app.py 상단에서 남명/여명 사주로 생성된 궁합 팩트 표지 변수입니다.
+            target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
+
+            final_render_html = html_views.render_comparison_report(
+                target_gunghap_fact, external_raw_box, ai_comparison_html
+            )
 
         # ==============================================================================
         # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
