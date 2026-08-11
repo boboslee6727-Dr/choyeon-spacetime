@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리
+        # 4-1. 타 감명서 비교 (사주) - 박사님 지정 황금비율 CSS 표준 적용
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1123,41 +1123,46 @@ if st.session_state.get('app_running', False):
                 st.session_state.get('other_reading_input', '')
             ).strip()
 
+            daewun_html = daewun_table_html if 'daewun_table_html' in locals() and daewun_table_html else ""
+            full_fact_html = part_1_fact
+            if daewun_html and daewun_html not in full_fact_html:
+                full_fact_html = part_1_fact + "<br>" + daewun_html
+
             if not other_reading_text:
                 warn_html = html_views.get_warning_box(
                     "타 감명서 원문 미입력 경고",
                     "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
                 )
-                final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
+                final_render_html = html_views.render_comparison_report(full_fact_html, warn_html, "")
             else:
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return ""
 
-                # 팩트 데이터 준비 및 원문 주입
                 ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
                 ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
                 ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
 
-                # prompts.py 72.3 규격 프롬프트 호출
                 final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
                 
-                # API 호출 (Claude 직접 호출 우선, 예외 시 engine 호출)
                 if 'call_claude_api' in globals():
                     ai_response_text = call_claude_api(final_prompt, max_tokens=10000)
                 else:
                     ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                # 없는 함수 제거 후 direct 바인딩
-                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+                # 박사님 지정 황금비율 포맷터 적용 (원문 & AI 결과 동일 적용)
+                formatted_external_raw = html_views.format_ai_text_to_html(other_reading_text)
+                external_raw_box = html_views.get_external_raw_text_box(formatted_external_raw)
+                
+                formatted_ai_text = html_views.format_ai_text_to_html(ai_response_text)
                 
                 final_render_html = html_views.render_comparison_report(
-                    part_1_fact, external_raw_box, ai_response_text
+                    full_fact_html, external_raw_box, formatted_ai_text
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리
+        # 4-2. 타 감명서 비교 (궁합) - 박사님 지정 황금비율 CSS 표준 적용
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1168,36 +1173,41 @@ if st.session_state.get('app_running', False):
             ).strip()
 
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
+            daewun_html_gh = daewun_table_html if 'daewun_table_html' in locals() and daewun_table_html else ""
+            
+            full_gh_fact_html = target_gunghap_fact
+            if daewun_html_gh and daewun_html_gh not in full_gh_fact_html:
+                full_gh_fact_html = target_gunghap_fact + "<br>" + daewun_html_gh
 
             if not other_reading_text:
                 warn_html = html_views.get_warning_box(
                     "타 궁합 감명서 원문 미입력 경고",
                     "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
                 )
-                final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
+                final_render_html = html_views.render_comparison_report(full_gh_fact_html, warn_html, "")
             else:
                 class SafeDict(dict):
                     def __missing__(self, key):
                         return ""
 
-                # 궁합 팩트 데이터 준비 및 원문 주입
                 ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
                 ai_kwargs['other_reading_text'] = other_reading_text
 
-                # prompts.py 72.3 규격 프롬프트 호출
                 final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
                 
-                # API 호출
                 if 'call_claude_api' in globals():
                     ai_response_text = call_claude_api(final_prompt, max_tokens=10000)
                 else:
                     ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                # 없는 함수 제거 후 direct 바인딩
-                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+                # 박사님 지정 황금비율 포맷터 적용 (원문 & AI 결과 동일 적용)
+                formatted_external_raw = html_views.format_ai_text_to_html(other_reading_text)
+                external_raw_box = html_views.get_external_raw_text_box(formatted_external_raw)
+
+                formatted_ai_text = html_views.format_ai_text_to_html(ai_response_text)
                 
                 final_render_html = html_views.render_comparison_report(
-                    target_gunghap_fact, external_raw_box, ai_response_text
+                    full_gh_fact_html, external_raw_box, formatted_ai_text
                 )
         # ==============================================================================
         # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
