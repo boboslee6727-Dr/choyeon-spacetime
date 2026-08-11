@@ -627,9 +627,9 @@ if st.session_state.get('app_running', False):
         elif u_product == "3-3. 출산 택일":
             report_title = "🏮 새 생명 마중 출산 길일 추천 리포트"
         elif u_product == "4-1. 타 감명서 비교 (사주)":
-            report_title = "🏮 사주 감명서 검증 및 1:1 대조 리포트"
+            report_title = "🏮 사주 감명서 1:1 대조 리포트"
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
-            report_title = "🏮 궁합 감명서 검증 및 1:1 대조 리포트"
+            report_title = "🏮 궁합 감명서 1:1 대조 리포트"
         else:
             report_title = "🏮 사주팔자 정밀 분석"
 
