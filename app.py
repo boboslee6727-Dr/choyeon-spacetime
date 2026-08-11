@@ -1114,27 +1114,21 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) 전용 처리 (dynamic_key 동기화)
+        # 4-1. 타 감명서 비교 (사주) 전용 처리
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
-            # 1. UI st.text_area의 key=f"text_{u_product}" 키에서 원문 수집
-            dynamic_key = f"text_{u_product}"
-            other_reading_text = st.session_state.get(dynamic_key, '').strip()
+            # 1. UI st.text_area(key=f"text_{u_product}")에서 원문 수집
+            other_reading_text = st.session_state.get(f"text_{u_product}", '').strip()
 
-            # 2. 원문 미입력 시 경고 박스 출력
+            # 2. 원문 미입력 시 html_views 모듈을 통해 정갈한 경고 박스 출력
             if not other_reading_text:
-                warn_msg = """
-                <div style='padding:20px; background-color:#FFF3E0; border:2px solid #FB8C00; border-radius:8px; margin-top:20px;'>
-                    <h3 style='color:#E65100; margin:0 0 10px 0;'>⚠️ [타 감명서 원문 미입력 경고]</h3>
-                    <p style='color:#E65100; font-size:15px; margin:0;'>
-                        비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>
-                        입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오.
-                    </p>
-                </div>
-                """
-                final_render_html = html_views.render_comparison_report(part_1_fact, warn_msg, "")
+                warn_html = html_views.get_warning_box(
+                    "타 감명서 원문 미입력 경고",
+                    "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
+                )
+                final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                # 3. 원문 정상 수집 시 3단 순서 조립 (표지 ➔ 원본 박스 ➔ 1:1 대조 리포트)
+                # 3. 원문 정상 수집 시 3단 순서 조립 (표지 ➔ 원본 박스 ➔ 1:1 대조 리포트 / closing 제거)
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 ai_comparison_html = html_views.format_ai_text_to_html(clean_raw)
                 final_render_html = html_views.render_comparison_report(
@@ -1142,27 +1136,20 @@ if st.session_state.get('app_running', False):
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) 전용 처리 (dynamic_key 동기화)
+        # 4-2. 타 감명서 비교 (궁합) 전용 처리
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
-            # 1. UI st.text_area의 key=f"text_{u_product}" 키에서 원문 수집
-            dynamic_key = f"text_{u_product}"
-            other_reading_text = st.session_state.get(dynamic_key, '').strip()
-
-            # 2. 2인 궁합 전용 표지 설정 및 미입력 경고 검증
+            # 1. UI st.text_area(key=f"text_{u_product}")에서 궁합 원문 수집
+            other_reading_text = st.session_state.get(f"text_{u_product}", '').strip()
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
 
+            # 2. 원문 미입력 시 경고 처리
             if not other_reading_text:
-                warn_msg = """
-                <div style='padding:20px; background-color:#FFF3E0; border:2px solid #FB8C00; border-radius:8px; margin-top:20px;'>
-                    <h3 style='color:#E65100; margin:0 0 10px 0;'>⚠️ [타 궁합 감명서 원문 미입력 경고]</h3>
-                    <p style='color:#E65100; font-size:15px; margin:0;'>
-                        비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>
-                        입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오.
-                    </p>
-                </div>
-                """
-                final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_msg, "")
+                warn_html = html_views.get_warning_box(
+                    "타 궁합 감명서 원문 미입력 경고",
+                    "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
+                )
+                final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
                 # 3. 2인 궁합 표지 기준 3단 순서 조립
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
