@@ -795,8 +795,11 @@ if st.session_state.get('app_running', False):
                     p_val = i * 10 + p_calc_d
                     p_c_hangul = engine.GAN[(p_c_idx + (i + 1) * p_order_dir) % 10] if p_ms in engine.GAN else "-"
                     p_j_hangul = engine.JI[(p_j_idx + (i + 1) * p_order_dir) % 12] if p_mb in engine.JI else "-"
-                    p_c_hanja = engine.K2H_GAN.get(p_c_hangul, p_c_hangul)
-                    p_j_hanja = engine.K2H_JI.get(p_j_hangul, p_j_hangul)
+                    
+                    # 💡 [보완] 한자 변환 변수 미리 초기화
+                    p_c_hanja = engine.K2H_GAN.get(p_c_hangul, p_c_hangul) if p_c_hangul != "-" else "-"
+                    p_j_hanja = engine.K2H_JI.get(p_j_hangul, p_j_hangul) if p_j_hangul != "-" else "-"
+                    
                     p_is_active = (p_val <= p_age_val < p_val + 10)
                     
                     p_u_sung_val = engine.get_unsung(p_ds_hanja, p_j_hanja) if p_j_hanja != "-" else "-"
