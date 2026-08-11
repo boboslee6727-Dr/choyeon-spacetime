@@ -597,7 +597,7 @@ if st.session_state.get('app_running', False):
         
         sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
-        time_str_fmt = f"{b_time.split('(')[0].strip()}" if b_time != "시간 모름" else "시간 미상"
+        time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
         # ==============================================================================
         # 🎯 [추가] 상품별 리포트 메인 타이틀 분기 및 표지(Cover) 생성 로직
@@ -723,7 +723,7 @@ if st.session_state.get('app_running', False):
                 APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
         
-        info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, b_time)
+        info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
         master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
@@ -1098,18 +1098,18 @@ if st.session_state.get('app_running', False):
                 master_comp = master_comp[6:].strip()
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # 6. 본문 종합 보고서 최종 출력 (들여쓰기 공백 완벽 제거)
+        # ==============================================================================
+        # 6. 본문 종합 보고서 최종 단독 출력 (</div> 찌꺼기 제거 및 들여쓰기 정돈)
+        # ==============================================================================
+        if 'final_render_html' not in locals() or final_render_html is None:
+            final_render_html = ""
+
+        final_render_html = str(final_render_html).strip()
+
+        # 화면 최상단 </div> 찌꺼기 도려냄
+        if final_render_html.startswith("</div>"):
+            final_render_html = final_render_html[6:].strip()
+
+        # 들여쓰기 줄바꿈 공백 정돈 후 단 1회만 최종 출력
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
         st.markdown(final_render_html, unsafe_allow_html=True)
-
-        # 4. 🚨 화면 최상단에 나타나는 </div> 찌꺼기 도려냄
-        master_composite_report = master_composite_report.strip()
-        if master_composite_report.startswith("</div>"):
-            master_composite_report = master_composite_report[6:].strip()
-
-        # 5. 박스 디자인 적용 및 들여쓰기 공백 제거
-        final_html = html_views.get_final_report_box(master_composite_report)
-        final_html = re.sub(r'\n\s+', '\n', final_html)
-
-        # 6. 본문 종합 보고서 단독 최종 출력
-        st.markdown(final_html, unsafe_allow_html=True)
