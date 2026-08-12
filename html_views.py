@@ -91,8 +91,8 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI가 생성한 순수 텍스트(1., 1), (1) 계층)를 읽어들여
-    박사님 지정 전용 황금비율 CSS(16px 통일, ALL 검정색, 여백, 들여쓰기 15px)를 입히는 엔진
+    AI가 생성한 순수 텍스트를 읽어들여
+    박사님 지정 전용 황금비율 CSS(ALL 검정색, 여백, 들여쓰기 15px) 및 [수석보좌관...] 볼드 강조 적용
     """
     if not text:
         return ""
@@ -111,29 +111,32 @@ def format_ai_text_to_html(text):
         # '명리용어' ➔ 작은따옴표로 묶인 단어를 자동으로 굵고 진하게(Bold) 처리
         line = re.sub(r"'([^']+)'", r"<b style='color:#000000;'>'\1'</b>", line)
 
+        # 🌟 [신규 추가] '수석보좌관의 1:1 장단점 정밀 비교' 전용 볼드체 강조 스타일
+        if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
+            html_lines.append(
+                f"<div style='color:#000000; font-size:17px; font-weight:800; "
+                f"margin-top:16px; margin-bottom:8px; border-left:3px solid #000000; padding-left:8px;'>"
+                f"<b>{line}</b></div>"
+            )
         # 1. 대제목 (예: 1. 성격 분석)
-        # 크기: 20px / 굵기: 900 / 색상: 검정 / 여백: 위 20px, 아래 10px
-        if re.match(r'^\d+\.\s', line):
+        elif re.match(r'^\d+\.\s', line):
             html_lines.append(
                 f"<div style='color:#000000; font-size:20px; font-weight:900; "
                 f"margin-top:20px; margin-bottom:10px;'>{line}</div>"
             )
         # 2. 소제목 (예: 1) 겉으로 드러난 성격)
-        # 크기: 18px / 굵기: 800 / 색상: 검정 / 여백: 위 15px, 아래 5px
         elif re.match(r'^\d+\)\s', line):
             html_lines.append(
                 f"<div style='color:#000000; font-size:18px; font-weight:800; "
                 f"margin-top:15px; margin-bottom:5px;'>{line}</div>"
             )
         # 3. 소소제목 (예: (1) 구체적 행동 방식)
-        # 크기: 16px / 굵기: 700 / 색상: 검정 / 여백: 위 10px, 아래 5px
         elif re.match(r'^\(\d+\)\s', line):
             html_lines.append(
                 f"<div style='color:#000000; font-size:16px; font-weight:700; "
                 f"margin-top:10px; margin-bottom:5px;'>{line}</div>"
             )
         # 4. 일반 통변 본문
-        # 크기: 16px / 굵기: 400 / 줄간격: 1.85 / 색상: 검정 / 들여쓰기: 15px
         else:
             if line.startswith('-'):
                 html_lines.append(
@@ -149,7 +152,6 @@ def format_ai_text_to_html(text):
                 )
             
     return "\n".join(html_lines)
-
 
 # ==============================================================================
 # 2. 1인용 사주팔자 및 운세 상품 (상품 1-1 ~ 2-5)
@@ -745,7 +747,6 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
         </div>
     </div>
     """
-
 
 # ==============================================================================
 # 5. 타 감명서 대조 분석 리포트
