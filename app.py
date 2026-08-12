@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) - 박사님 지정 황금비율 CSS 표준 적용
+        # 4-1. 타 감명서 비교 (사주) - 원문 Compact 렌더링 & 구획 구분 강화
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1151,18 +1151,31 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                # 박사님 지정 황금비율 포맷터 적용 (원문 & AI 결과 동일 적용)
-                formatted_external_raw = html_views.format_ai_text_to_html(other_reading_text)
-                external_raw_box = html_views.get_external_raw_text_box(formatted_external_raw)
+                # 1) 타 감명서 원문: 포맷터 배제, 순수 원문 텍스트를 Compact 박스로 전송 (페이지 절약)
+                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 
+                # 2) AI 대조 분석서: 박사님 지정 황금비율 포맷터 적용
                 formatted_ai_text = html_views.format_ai_text_to_html(ai_response_text)
                 
+                # 3) 구획 강화를 위해 AI 통변 상단에 대제목 타이틀 및 구획선 헤더 주입
+                ai_section_header = (
+                    "<div style='margin-top: 35px; margin-bottom: 20px; border-top: 2px solid #1E3A8A; padding-top: 20px;'>"
+                    "<div style='color: #1E3A8A; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;'>"
+                    "❖ 초연시공명리 1:1 타 감명서 정밀 대조 분석서"
+                    "</div>"
+                    "<div style='color: #64748B; font-size: 14px; margin-top: 4px; font-weight: 500;'>"
+                    "본 분석은 제출된 타 역술 감명서와 초연시공명리학 원리 간의 정밀 대조 결과입니다."
+                    "</div>"
+                    "</div>"
+                )
+                full_ai_content = ai_section_header + formatted_ai_text
+                
                 final_render_html = html_views.render_comparison_report(
-                    full_fact_html, external_raw_box, formatted_ai_text
+                    full_fact_html, external_raw_box, full_ai_content
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) - 박사님 지정 황금비율 CSS 표준 적용
+        # 4-2. 타 감명서 비교 (궁합) - 원문 Compact 렌더링 & 구획 구분 강화
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1200,14 +1213,27 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                # 박사님 지정 황금비율 포맷터 적용 (원문 & AI 결과 동일 적용)
-                formatted_external_raw = html_views.format_ai_text_to_html(other_reading_text)
-                external_raw_box = html_views.get_external_raw_text_box(formatted_external_raw)
+                # 1) 타 궁합 감명서 원문: 포맷터 배제, 순수 원문 텍스트 바인딩
+                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
 
+                # 2) AI 대조 분석서: 박사님 지정 황금비율 포맷터 적용
                 formatted_ai_text = html_views.format_ai_text_to_html(ai_response_text)
                 
+                # 3) 구획 강화를 위해 AI 통변 상단에 대제목 타이틀 및 구획선 헤더 주입
+                ai_section_header = (
+                    "<div style='margin-top: 35px; margin-bottom: 20px; border-top: 2px solid #1E3A8A; padding-top: 20px;'>"
+                    "<div style='color: #1E3A8A; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;'>"
+                    "❖ 초연시공명리 1:1 타 궁합 감명서 정밀 대조 분석서"
+                    "</div>"
+                    "<div style='color: #64748B; font-size: 14px; margin-top: 4px; font-weight: 500;'>"
+                    "본 분석은 제출된 타 궁합 감명서와 초연시공명리학 원리 간의 정밀 대조 결과입니다."
+                    "</div>"
+                    "</div>"
+                )
+                full_ai_content = ai_section_header + formatted_ai_text
+                
                 final_render_html = html_views.render_comparison_report(
-                    full_gh_fact_html, external_raw_box, formatted_ai_text
+                    full_gh_fact_html, external_raw_box, full_ai_content
                 )
         # ==============================================================================
         # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
