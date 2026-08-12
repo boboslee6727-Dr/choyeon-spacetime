@@ -1054,8 +1054,7 @@ if st.session_state.get('app_running', False):
                 pass
 
         # ==============================================================================
-        # 3. 파이프라인 분기 (모든 상품의 final_render_html 변수 바인딩 구역)
-        # ※ 주의: 개별 분기 내부에서 st.markdown()을 절대 호출하지 않고 변수 할당만 수행함
+        # 3. 파이프라인 분기 (html_views.py 실제 함수 1:1 바인딩)
         # ==============================================================================
         final_render_html = ""
 
@@ -1064,39 +1063,43 @@ if st.session_state.get('app_running', False):
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
 
-            formatted_ai = ai_output_html
-            formatted_ai = formatted_ai.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
+            formatted_ai = ai_output_html.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
             formatted_ai = formatted_ai.replace('[SEWUN_TABLE_HERE]', sewun_table_code)
 
-            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         # --- 1-2. 올해 및 특정연도 운세 상세분석 ---
         elif u_product == "1-2. 올해 및 특정연도 운세 상세분석":
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = ai_output_html.replace('[SEWUN_TABLE_HERE]', sewun_table_code)
 
-            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+            master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         # --- 1-3. 이번달 및 특정월 운세 상세분석 ---
         elif u_product == "1-3. 이번달 및 특정월 운세 상세분석":
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             formatted_ai = ai_output_html.replace('[WOLUN_TABLE_HERE]', wolun_table_code)
 
-            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+            master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         # --- 1-4. 특정 주간 및 특정일운 상세분석 ---
         elif u_product == "1-4. 특정 주간 및 특정일운 상세분석":
             weekly_table_code = weekly_html if 'weekly_html' in locals() and weekly_html else (calendar_html if 'calendar_html' in locals() else "")
             formatted_ai = ai_output_html.replace('[WEEKLY_CALENDAR_HERE]', weekly_table_code)
 
-            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+            master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         # --- 2-1 ~ 2-5. 테마별 특성화 상담 모듈 ---
         elif u_product in ["2-1. 재물운 특화 분석", "2-2. 직업/진학운 특화 분석", "2-3. 연애/결혼운 특화 분석", "2-4. 건강운 특화 분석", "2-5. 이사 및 방위 특화 분석"]:
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             formatted_ai = ai_output_html.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
 
-            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+            master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         # --- 3-1. 연애/결혼운 (궁합) 풀이 ---
         elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
@@ -1114,7 +1117,7 @@ if st.session_state.get('app_running', False):
             m_daewun_html = un_html if gender == "남성" else p_un_html
             f_daewun_html = p_un_html if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-            
+
             g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
 
             score_ui, closing_ui = "", ""
@@ -1140,10 +1143,10 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-                
+
                 daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
                 sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-                
+
                 formatted_ai = ai_output_html.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
                 formatted_ai = formatted_ai.replace('[SEWUN_TABLE_HERE]', sewun_table_code)
 
