@@ -1054,197 +1054,145 @@ if st.session_state.get('app_running', False):
                 pass
 
         # ==============================================================================
-        # 3. 파이프라인 분기 (1인용 vs 3분할 2인용 vs 택일)
+        # 3. 파이프라인 분기 (모든 상품의 final_render_html 변수 바인딩 구역)
+        # ※ 주의: 개별 분기 내부에서 st.markdown()을 절대 호출하지 않고 변수 할당만 수행함
         # ==============================================================================
         final_render_html = ""
-        
-        if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
-            # 택일 파이프라인
-            master_comp = f"{delivery_html}{ai_output_html}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-            
+
+        # --- 1-1. 사주팔자와 운세풀이 ---
+        if u_product == "1-1. 사주팔자와 운세풀이":
+            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+
+            formatted_ai = ai_output_html
+            formatted_ai = formatted_ai.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
+            formatted_ai = formatted_ai.replace('[SEWUN_TABLE_HERE]', sewun_table_code)
+
+            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+
+        # --- 1-2. 올해 및 특정연도 운세 상세분석 ---
+        elif u_product == "1-2. 올해 및 특정연도 운세 상세분석":
+            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+            formatted_ai = ai_output_html.replace('[SEWUN_TABLE_HERE]', sewun_table_code)
+
+            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+
+        # --- 1-3. 이번달 및 특정월 운세 상세분석 ---
+        elif u_product == "1-3. 이번달 및 특정월 운세 상세분석":
+            wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+            formatted_ai = ai_output_html.replace('[WOLUN_TABLE_HERE]', wolun_table_code)
+
+            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+
+        # --- 1-4. 특정 주간 및 특정일운 상세분석 ---
+        elif u_product == "1-4. 특정 주간 및 특정일운 상세분석":
+            weekly_table_code = weekly_html if 'weekly_html' in locals() and weekly_html else (calendar_html if 'calendar_html' in locals() else "")
+            formatted_ai = ai_output_html.replace('[WEEKLY_CALENDAR_HERE]', weekly_table_code)
+
+            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+
+        # --- 2-1 ~ 2-5. 테마별 특성화 상담 모듈 ---
+        elif u_product in ["2-1. 재물운 특화 분석", "2-2. 직업/진학운 특화 분석", "2-3. 연애/결혼운 특화 분석", "2-4. 건강운 특화 분석", "2-5. 이사 및 방위 특화 분석"]:
+            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+            formatted_ai = ai_output_html.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
+
+            final_render_html = html_views.render_single_report(part_1_fact, formatted_ai)
+
+        # --- 3-1. 연애/결혼운 (궁합) 풀이 ---
         elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
-            # 궁합 3분할 파이프라인
             m_ess, f_ess, g_ess = "", "", clean_raw
-            
+
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
-            if m_match: 
-                m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
-            
+            if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
+
             f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
-            if f_match: 
-                f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
-            
+            if f_match: f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
+
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
-            if g_match: 
-                g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
-            
+            if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
+
             m_daewun_html = un_html if gender == "남성" else p_un_html
             f_daewun_html = p_un_html if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-            g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
             
+            g_ess = g_ess.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
+
             score_ui, closing_ui = "", ""
             if 'gh_engine' in locals():
                 score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
             g_ess += score_ui + closing_ui
-            
+
             final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
 
-        # 1인용 상품군 (html_views 조립 전용 함수 호출)
-        elif u_product == "1-1. 사주팔자와 운세풀이 (기본)":
-            final_render_html = html_views.render_basic_report(
-                part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing
-            )
-            
-        elif u_product == "1-2. 연도운 상세분석":
-            final_render_html = html_views.render_yeareun_report(
-                part_1_fact, sewun_html, ai_output_html, part_5_closing
-            )
-            
-        elif u_product == "1-3. 월운 상세분석":
-            final_render_html = html_views.render_wolun_report(
-                part_1_fact, wolun_html, ai_output_html, part_5_closing
-            )
-            
-        elif u_product == "1-4. 일운 상세분석":
-            final_render_html = html_views.render_ilun_report(
-                part_1_fact, weekly_html, ai_output_html, part_5_closing
-            )
-            
-        # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) - 불필요한 헤더 안내 문구 제거 완충판
-        # ==============================================================================
+        # --- 3-2. 결혼 택일 / 3-3. 출산 택일 ---
+        elif u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
+            master_comp = f"{delivery_html}{ai_output_html}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
+
+        # --- 4-1. 타 감명서 비교 (사주) ---
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
-            other_reading_text = (
-                st.session_state.get(dynamic_key, '') or 
-                st.session_state.get('other_reading_input', '')
-            ).strip()
-
-            daewun_html = daewun_table_html if 'daewun_table_html' in locals() and daewun_table_html else ""
-            full_fact_html = part_1_fact
-            if daewun_html and daewun_html not in full_fact_html:
-                full_fact_html = part_1_fact + "<br>" + daewun_html
+            other_reading_text = (st.session_state.get(dynamic_key, '') or st.session_state.get('other_reading_input', '')).strip()
 
             if not other_reading_text:
-                warn_html = html_views.get_warning_box(
-                    "타 감명서 원문 미입력 경고",
-                    "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
-                )
-                final_render_html = html_views.render_comparison_report(full_fact_html, warn_html, "")
+                warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
+                final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
-                class SafeDict(dict):
-                    def __missing__(self, key):
-                        return ""
-
-                ai_kwargs = dict(saju_fact) if 'saju_fact' in locals() else {}
-                ai_kwargs['other_reading_text'] = other_reading_text
-                ai_kwargs['name'] = ai_kwargs.get('disp_name', '내담자')
-                ai_kwargs['gender'] = ai_kwargs.get('u_gender', '남성')
-
-                final_prompt = prompts.프롬프트_4_1_사주대조.format_map(SafeDict(ai_kwargs))
-                
-                if 'call_claude_api' in globals():
-                    ai_response_text = call_claude_api(final_prompt, max_tokens=10000)
-                else:
-                    ai_response_text = engine.get_ai_completion(final_prompt)
-                
-                # 1) '[초연 시공명리 풀이]' 문구 정제
-                cleaned_ai_text = re.sub(r'\[초연\s*시공명리\s*풀이\]', '', ai_response_text).strip()
-                
-                # 2) 타 감명서 원문 Compact 박스 바인딩
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 
-                # 3) AI 통변 본문 황금비율 포맷팅
-                formatted_ai_text = html_views.format_ai_text_to_html(cleaned_ai_text)
+                daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+                sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
                 
-                # 4) golden_text 추출 및 주입
-                golden_box_html = ""
-                if 'golden_text' in locals() and golden_text:
-                    golden_box_html = golden_text
-                elif hasattr(html_views, 'get_golden_text_box'):
-                    golden_box_html = html_views.get_golden_text_box(saju_fact) if 'saju_fact' in locals() else ""
+                formatted_ai = ai_output_html.replace('[DAEWUN_TABLE_HERE]', daewun_table_code)
+                formatted_ai = formatted_ai.replace('[SEWUN_TABLE_HERE]', sewun_table_code)
 
-                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai_text
-                
-                final_render_html = html_views.render_comparison_report(
-                    full_fact_html, external_raw_box, full_ai_content
-                )
+                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
+                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
 
-        # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) - 불필요한 헤더 안내 문구 제거 완충판
-        # ==============================================================================
+                final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+
+        # --- 4-2. 타 감명서 비교 (궁합) ---
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
             other_reading_text = (
                 st.session_state.get(dynamic_key, '') or 
-                st.session_state.get('other_reading_input_gunghap', '') or
+                st.session_state.get('other_reading_input_gunghap', '') or 
                 st.session_state.get('other_reading_input', '')
             ).strip()
 
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
-            daewun_html_gh = daewun_table_html if 'daewun_table_html' in locals() and daewun_table_html else ""
-            
-            full_gh_fact_html = target_gunghap_fact
-            if daewun_html_gh and daewun_html_gh not in full_gh_fact_html:
-                full_gh_fact_html = target_gunghap_fact + "<br>" + daewun_html_gh
 
             if not other_reading_text:
-                warn_html = html_views.get_warning_box(
-                    "타 궁합 감명서 원문 미입력 경고",
-                    "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.<br>입력 창의 '타 감명서 원문'란에 분석할 텍스트를 붙여넣으신 후 다시 실행해 주십시오."
-                )
-                final_render_html = html_views.render_comparison_report(full_gh_fact_html, warn_html, "")
+                warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
+                final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
-                class SafeDict(dict):
-                    def __missing__(self, key):
-                        return ""
-
-                ai_kwargs = dict(gunghap_data) if 'gunghap_data' in locals() else {}
-                ai_kwargs['other_reading_text'] = other_reading_text
-
-                final_prompt = prompts.프롬프트_4_2_궁합대조.format_map(SafeDict(ai_kwargs))
-                
-                if 'call_claude_api' in globals():
-                    ai_response_text = call_claude_api(final_prompt, max_tokens=10000)
-                else:
-                    ai_response_text = engine.get_ai_completion(final_prompt)
-                
-                # 1) '[초연 시공명리 풀이]' 문구 정제
-                cleaned_ai_text = re.sub(r'\[초연\s*시공명리\s*풀이\]', '', ai_response_text).strip()
-
-                # 2) 타 궁합 원문 박스 바인딩
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
 
-                # 3) AI 통변 본문 황금비율 포맷팅
-                formatted_ai_text = html_views.format_ai_text_to_html(cleaned_ai_text)
-                
-                # 4) golden_text 추출 및 주입
-                golden_box_html = ""
-                if 'golden_text' in locals() and golden_text:
-                    golden_box_html = golden_text
-                elif hasattr(html_views, 'get_golden_text_box'):
-                    golden_box_html = html_views.get_golden_text_box(gunghap_data) if 'gunghap_data' in locals() else ""
+                m_daewun_html = un_html if gender == "남성" else p_un_html
+                f_daewun_html = p_un_html if gender == "남성" else un_html
+                c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
 
-                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai_text
-                
-                final_render_html = html_views.render_comparison_report(
-                    full_gh_fact_html, external_raw_box, full_ai_content
-                )
+                formatted_ai = ai_output_html.replace("[COUPLE_DAEWUN_TABLES_HERE]", c_daewun_html)
+                formatted_ai = formatted_ai.replace("[DAEWUN_TABLE_HERE]", un_html if 'un_html' in locals() else "")
+
+                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
+                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
+
+                final_render_html = html_views.render_comparison_report(target_gunghap_fact, external_raw_box, full_ai_content)
+
         # ==============================================================================
-        # 4. 본문 종합 보고서 최종 단독 렌더링 (중복 출력 방지 및 </div> 찌꺼기 제거)
+        # 4. 본문 종합 보고서 최종 단독 렌더링 (전체 시스템에서 단 1회만 실행)
         # ==============================================================================
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
 
         final_render_html = str(final_render_html).strip()
 
-        # 화면 최상단 </div> 찌꺼기 도려냄
+        # 화면 최상단 </div> 찌꺼기 제거
         if final_render_html.startswith("</div>"):
             final_render_html = final_render_html[6:].strip()
 
-        # 들여쓰기 줄바꿈 공백 정돈 후 단 1회만 최종 출력
+        # 줄바꿈 정돈 후 화면 최종 단독 출력
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
         st.markdown(final_render_html, unsafe_allow_html=True)
