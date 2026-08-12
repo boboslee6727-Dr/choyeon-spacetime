@@ -1114,7 +1114,7 @@ if st.session_state.get('app_running', False):
             )
             
         # ==============================================================================
-        # 4-1. 타 감명서 비교 (사주) - 원문 Compact 렌더링 & 구획 구분 강화
+        # 4-1. 타 감명서 비교 (사주) - 불필요한 헤더 안내 문구 제거 완충판
         # ==============================================================================
         elif u_product == "4-1. 타 감명서 비교 (사주)":
             dynamic_key = f"text_{u_product}"
@@ -1151,31 +1151,30 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                # 1) 타 감명서 원문: 포맷터 배제, 순수 원문 텍스트를 Compact 박스로 전송 (페이지 절약)
+                # 1) '[초연 시공명리 풀이]' 문구 정제
+                cleaned_ai_text = re.sub(r'\[초연\s*시공명리\s*풀이\]', '', ai_response_text).strip()
+                
+                # 2) 타 감명서 원문 Compact 박스 바인딩
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
                 
-                # 2) AI 대조 분석서: 박사님 지정 황금비율 포맷터 적용
-                formatted_ai_text = html_views.format_ai_text_to_html(ai_response_text)
+                # 3) AI 통변 본문 황금비율 포맷팅
+                formatted_ai_text = html_views.format_ai_text_to_html(cleaned_ai_text)
                 
-                # 3) 구획 강화를 위해 AI 통변 상단에 대제목 타이틀 및 구획선 헤더 주입
-                ai_section_header = (
-                    "<div style='margin-top: 35px; margin-bottom: 20px; border-top: 2px solid #1E3A8A; padding-top: 20px;'>"
-                    "<div style='color: #1E3A8A; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;'>"
-                    "❖ 초연시공명리 1:1 타 감명서 정밀 대조 분석서"
-                    "</div>"
-                    "<div style='color: #64748B; font-size: 14px; margin-top: 4px; font-weight: 500;'>"
-                    "본 분석은 제출된 타 역술 감명서와 초연시공명리학 원리 간의 정밀 대조 결과입니다."
-                    "</div>"
-                    "</div>"
-                )
-                full_ai_content = ai_section_header + formatted_ai_text
+                # 4) golden_text 추출 및 주입
+                golden_box_html = ""
+                if 'golden_text' in locals() and golden_text:
+                    golden_box_html = golden_text
+                elif hasattr(html_views, 'get_golden_text_box'):
+                    golden_box_html = html_views.get_golden_text_box(saju_fact) if 'saju_fact' in locals() else ""
+
+                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai_text
                 
                 final_render_html = html_views.render_comparison_report(
                     full_fact_html, external_raw_box, full_ai_content
                 )
 
         # ==============================================================================
-        # 4-2. 타 감명서 비교 (궁합) - 원문 Compact 렌더링 & 구획 구분 강화
+        # 4-2. 타 감명서 비교 (궁합) - 불필요한 헤더 안내 문구 제거 완충판
         # ==============================================================================
         elif u_product == "4-2. 타 감명서 비교 (궁합)":
             dynamic_key = f"text_{u_product}"
@@ -1213,24 +1212,23 @@ if st.session_state.get('app_running', False):
                 else:
                     ai_response_text = engine.get_ai_completion(final_prompt)
                 
-                # 1) 타 궁합 감명서 원문: 포맷터 배제, 순수 원문 텍스트 바인딩
+                # 1) '[초연 시공명리 풀이]' 문구 정제
+                cleaned_ai_text = re.sub(r'\[초연\s*시공명리\s*풀이\]', '', ai_response_text).strip()
+
+                # 2) 타 궁합 원문 박스 바인딩
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
 
-                # 2) AI 대조 분석서: 박사님 지정 황금비율 포맷터 적용
-                formatted_ai_text = html_views.format_ai_text_to_html(ai_response_text)
+                # 3) AI 통변 본문 황금비율 포맷팅
+                formatted_ai_text = html_views.format_ai_text_to_html(cleaned_ai_text)
                 
-                # 3) 구획 강화를 위해 AI 통변 상단에 대제목 타이틀 및 구획선 헤더 주입
-                ai_section_header = (
-                    "<div style='margin-top: 35px; margin-bottom: 20px; border-top: 2px solid #1E3A8A; padding-top: 20px;'>"
-                    "<div style='color: #1E3A8A; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;'>"
-                    "❖ 초연시공명리 1:1 타 궁합 감명서 정밀 대조 분석서"
-                    "</div>"
-                    "<div style='color: #64748B; font-size: 14px; margin-top: 4px; font-weight: 500;'>"
-                    "본 분석은 제출된 타 궁합 감명서와 초연시공명리학 원리 간의 정밀 대조 결과입니다."
-                    "</div>"
-                    "</div>"
-                )
-                full_ai_content = ai_section_header + formatted_ai_text
+                # 4) golden_text 추출 및 주입
+                golden_box_html = ""
+                if 'golden_text' in locals() and golden_text:
+                    golden_box_html = golden_text
+                elif hasattr(html_views, 'get_golden_text_box'):
+                    golden_box_html = html_views.get_golden_text_box(gunghap_data) if 'gunghap_data' in locals() else ""
+
+                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai_text
                 
                 final_render_html = html_views.render_comparison_report(
                     full_gh_fact_html, external_raw_box, full_ai_content
