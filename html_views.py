@@ -91,8 +91,9 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI가 생성한 순수 텍스트를 읽어들여
-    박사님 지정 전용 황금비율 CSS(ALL 검정색, 여백, 들여쓰기 15px) 및 [수석보좌관...] 볼드 강조 적용
+    AI 생성 텍스트 포맷터 (박사님 황금비율 CSS 표준)
+    - 본문 따옴표/괄호 등 문장부호 100% 원본 유지
+    - [수석보좌관의 1:1 장단점 정밀 비교] 문구만 정확히 볼드체(800) 강조
     """
     if not text:
         return ""
@@ -105,38 +106,35 @@ def format_ai_text_to_html(text):
         if not line:
             continue
             
-        # 별표(*, **)나 샵(#) 찌꺼기 제거
+        # 마크다운 찌꺼기만 제거 (따옴표, 괄호 등 문장부호는 100% 원본 유지)
         line = line.replace('*', '').replace('#', '')
-        
-        # '명리용어' ➔ 작은따옴표로 묶인 단어를 자동으로 굵고 진하게(Bold) 처리
-        line = re.sub(r"'([^']+)'", r"<b style='color:#000000;'>'\1'</b>", line)
 
-        # 🌟 [신규 추가] '수석보좌관의 1:1 장단점 정밀 비교' 전용 볼드체 강조 스타일
+        # 1. 🌟 [수석보좌관의 1:1 장단점 정밀 비교] 문구만 볼드체(800) 및 포인트 서식 적용
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
                 f"<div style='color:#000000; font-size:17px; font-weight:800; "
-                f"margin-top:16px; margin-bottom:8px; border-left:3px solid #000000; padding-left:8px;'>"
-                f"<b>{line}</b></div>"
+                f"margin-top:18px; margin-bottom:8px; border-left:4px solid #000000; padding-left:8px;'>"
+                f"{line}</div>"
             )
-        # 1. 대제목 (예: 1. 성격 분석)
+        # 2. 대제목 (예: 1. 성격 분석)
         elif re.match(r'^\d+\.\s', line):
             html_lines.append(
                 f"<div style='color:#000000; font-size:20px; font-weight:900; "
                 f"margin-top:20px; margin-bottom:10px;'>{line}</div>"
             )
-        # 2. 소제목 (예: 1) 겉으로 드러난 성격)
+        # 3. 소제목 (예: 1) 겉으로 드러난 성격)
         elif re.match(r'^\d+\)\s', line):
             html_lines.append(
                 f"<div style='color:#000000; font-size:18px; font-weight:800; "
                 f"margin-top:15px; margin-bottom:5px;'>{line}</div>"
             )
-        # 3. 소소제목 (예: (1) 구체적 행동 방식)
+        # 4. 소소제목 (예: (1) 구체적 행동 방식)
         elif re.match(r'^\(\d+\)\s', line):
             html_lines.append(
                 f"<div style='color:#000000; font-size:16px; font-weight:700; "
                 f"margin-top:10px; margin-bottom:5px;'>{line}</div>"
             )
-        # 4. 일반 통변 본문
+        # 5. 일반 통변 본문
         else:
             if line.startswith('-'):
                 html_lines.append(
