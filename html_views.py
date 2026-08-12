@@ -93,7 +93,7 @@ def format_ai_text_to_html(text):
     """
     AI 생성 텍스트 포맷터 (박사님 황금비율 CSS 표준)
     - 본문 따옴표/괄호 등 문장부호 100% 원본 유지
-    - [수석보좌관의 1:1 장단점 정밀 비교] 문구만 정확히 볼드체(800) 강조
+    - [수석보좌관의 1:1 장단점 정밀 비교] 문구: 세로선 제거 & 눈에 띄는 녹색 강조
     """
     if not text:
         return ""
@@ -109,11 +109,11 @@ def format_ai_text_to_html(text):
         # 마크다운 찌꺼기만 제거 (따옴표, 괄호 등 문장부호는 100% 원본 유지)
         line = line.replace('*', '').replace('#', '')
 
-        # 1. 🌟 [수석보좌관의 1:1 장단점 정밀 비교] 문구만 볼드체(800) 및 포인트 서식 적용
+        # 1. 🌟 [수석보좌관의 1:1 장단점 정밀 비교] 문구만 세로선 없이 녹색(#008000) 볼드체(800) 강조
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
-                f"<div style='color:#000000; font-size:17px; font-weight:800; "
-                f"margin-top:18px; margin-bottom:8px; border-left:4px solid #000000; padding-left:8px;'>"
+                f"<div style='color:#008000; font-size:17px; font-weight:800; "
+                f"margin-top:18px; margin-bottom:8px;'>"
                 f"{line}</div>"
             )
         # 2. 대제목 (예: 1. 성격 분석)
