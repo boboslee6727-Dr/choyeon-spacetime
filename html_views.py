@@ -316,6 +316,30 @@ def get_intro_html():
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
     """
 
+def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_name="알수없음격"):
+    """시공간 요약 황금문장 (ver 50.5 전통명리 + ver 72.3 시공명리 완벽 통합)"""
+    SEASON_SOLAR_TERMS = {
+        '寅': '입춘과 경칩 사이의 이른 봄(寅月)', '卯': '경칩과 청명 사이의 완연한 봄(卯月)',
+        '辰': '청명과 입하 사이의 봄과 여름의 환절기(辰月)', '巳': '입하와 망종 사이의 이른 여름(巳月)',
+        '午': '망종과 소서 사이의 완연한 여름(午月)', '未': '소서와 입추 사이의 가장 무더운 여름(未月)',
+        '申': '입추와 백로 사이의 이른 가을(申月)', '酉': '백로와 한로 사이의 완연한 가을(酉月)',
+        '戌': '한로와 입동 사이의 가을과 겨울의 환절기(戌月)', '亥': '입동과 대설 사이의 이른 겨울(亥月)',
+        '子': '대설과 소한 사이의 완연한 한겨울(子月)', '丑': '소한과 입춘 사이의 가장 추운 겨울(丑月)'
+    }
+    wol_korean_str = SEASON_SOLAR_TERMS.get(mb, f"{mb}월")
+
+    return f"""
+    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 8px;'>
+            정통 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
+        </p>
+        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
+            또한, 초연 시공명리학적 관점에서 <b>'{w_val}'</b>의 역동적인 시공간 파동을 지니고 있으며, <b>'{i_val}'</b>의 내면적 본성을 함께 품고 살아갑니다.
+        </p>
+    </div>
+    <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
+    """
+
 def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
     """시공간 요약 황금문장"""
     return f"""
@@ -528,6 +552,21 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
     </div>
     """
 
+def render_ai_with_tables(ai_text, **tables):
+    """AI 본문 내 마커([DAEWUN_TABLE_HERE] 등)를 실제 HTML 표로 변환"""
+    if not ai_text: return ""
+    patterns = {
+        'daewun': r'\[\s*\*?\*?\s*DAEWUN_TABLE_HERE\s*\*?\*?\s*\]',
+        'sewun': r'\[\s*\*?\*?\s*SEWUN_TABLE_HERE\s*\*?\*?\s*\]',
+        'wolun': r'\[\s*\*?\*?\s*WOLUN_TABLE_HERE\s*\*?\*?\s*\]',
+        'weekly': r'\[\s*\*?\*?\s*WEEKLY_CALENDAR_HERE\s*\*?\*?\s*\]',
+        'couple': r'\[\s*\*?\*?\s*COUPLE_DAEWUN_TABLES_HERE\s*\*?\*?\s*\]',
+    }
+    for key, table_html in tables.items():
+        if table_html and key in patterns:
+            ai_text = re.sub(patterns[key], table_html, ai_text, flags=re.IGNORECASE)
+    return ai_text
+
 def get_closing_html(name):
     """1인용 감명서 맺음말"""
     return f"""
@@ -556,6 +595,25 @@ def get_final_report_box(content_html):
 def get_ai_report_box(content):
     return get_final_report_box(content)
 
+def get_closing_html(name):
+    """1인용 감명서 맺음말 및 초연 전통명리 안내 박스 (ver 50.5 복원)"""
+    return f"""
+    <hr style="border: 0; border-top: 2px dashed #1A237E; margin: 40px 0 25px 0;">
+    <div style="margin: 0; padding: 0;">
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 15px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
+        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <div style="text-align: right; margin-top: 30px;">
+            <span style="font-weight: 900; font-size: 18px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
+        </div>
+    </div>
+    
+    <div style='margin-top: 35px; padding: 15px; background-color: #F8F9FA; border-left: 4px solid #1A237E; border-radius: 4px;'>
+        <p style='font-size: 16px; font-weight: 900; color: #1A237E; margin: 0; line-height: 1.6;'>💡 [초연 명리 안내]</p>
+        <p style='font-size: 15px; font-weight: 600; color: #333; margin-top: 5px; margin-bottom: 0; line-height: 1.7;'>본 풀이는 사주 원국의 본질과 현재 운의 큰 흐름을 짚어드린 기본 감명입니다. 특정 연도별·월별 정밀한 세부 흐름은 <b>'올해 및 특정연도 운세 상세분석'</b>을, 재물·직업 등 특정 분야의 집중 상담은 <b>'테마별 특성화 상담'</b>을 통해 확인하실 수 있습니다.</p>
+    </div>
+    """
 
 # ==============================================================================
 # 3. 2인용 궁합 상품 (상품 3-1)
