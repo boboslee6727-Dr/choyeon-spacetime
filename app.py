@@ -157,7 +157,7 @@ def do_auto_fill_user():
                         found = True
                         s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                         s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                        st.session_state['rev_success_msg'] = f"✅ 양력 {s_sol_fmt} / 음력 {s_lun_fmt} 자동입력 완료!"
+                        st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt} 음력{s_lun_fmt}"
                         break
                     curr_dt -= dt_mod.timedelta(days=1)
             if found: break
@@ -232,7 +232,7 @@ def do_auto_fill_partner():
                         found = True
                         s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                         s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                        st.session_state['rev_p_success_msg'] = f"✅ 상대방 양력 {s_sol_fmt} / 음력 {s_lun_fmt} 자동입력 완료!"
+                        st.session_state['rev_p_success_msg'] = f"✅ 양력{s_sol_fmt} 음력{s_lun_fmt}"
                         break
                     curr_dt -= dt_mod.timedelta(days=1)
             if found: break
