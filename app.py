@@ -1090,7 +1090,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-4"):
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
-            
+    
             formatted_ai = ai_output_html.replace('[WEEKLY_CALENDAR_HERE]', weekly_table_code)
 
             top_fact_stack = f"{part_1_fact}{un_html}{sewun_html}{wolun_html}"
