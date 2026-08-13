@@ -1,11 +1,11 @@
 # ==============================================================================
-# html_views.py (ver 72.3 + ver 50.5 Master 완결본)
+# html_views.py (ver 72.4 Master - 논리적 정돈 및 보존 완결본)
 # ==============================================================================
 import re
 import streamlit as st
 
 # ==============================================================================
-# 1. 글로벌 스타일 및 AI 통변 자동 디자인 필터
+# 섹션 1. 글로벌 스타일 및 AI 통변 포맷터 (UI/UX)
 # ==============================================================================
 def get_global_css():
     return """<style>
@@ -151,8 +151,9 @@ def format_ai_text_to_html(text):
             
     return "\n".join(html_lines)
 
+
 # ==============================================================================
-# 2. 1인용 사주팔자 및 운세 상품 (상품 1-1 ~ 2-5)
+# 섹션 2. 1인용 개인 사주 및 운세 상품 (상품 1-1 ~ 2-5 활성 모듈)
 # ==============================================================================
 def get_personal_cover(version, report_title, u_icon, name, sol, lun, time, today):
     """1인용 표지 렌더링 - 긴 타이틀도 무조건 1줄로 완벽 고정"""
@@ -317,7 +318,7 @@ def get_intro_html():
     """
 
 def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_name="알수없음격"):
-    """시공간 요약 황금문장 (ver 50.5 전통명리 + ver 72.3 시공명리 완벽 통합)"""
+    """시공간 요약 황금문장 (ver 50.5 전통명리 + ver 72.3 시공명리 완벽 통합 활성 버전)"""
     SEASON_SOLAR_TERMS = {
         '寅': '입춘과 경칩 사이의 이른 봄(寅月)', '卯': '경칩과 청명 사이의 완연한 봄(卯月)',
         '辰': '청명과 입하 사이의 봄과 여름의 환절기(辰月)', '巳': '입하와 망종 사이의 이른 여름(巳月)',
@@ -331,21 +332,10 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
     return f"""
     <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 8px;'>
-            정통 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
+            정통 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
         </p>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
             또한, 초연 시공명리학적 관점에서 <b>'{w_val}'</b>의 역동적인 시공간 파동을 지니고 있으며, <b>'{i_val}'</b>의 내면적 본성을 함께 품고 살아갑니다.
-        </p>
-    </div>
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
-    """
-
-def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc):
-    """시공간 요약 황금문장"""
-    return f"""
-    <div style="margin: 0; padding: 0;">
-        <p class="ai-body-p" style="margin: 0; color: #000000; text-align: justify; text-indent: 0;">
-            초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
         </p>
     </div>
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
@@ -568,35 +558,7 @@ def render_ai_with_tables(ai_text, **tables):
     return ai_text
 
 def get_closing_html(name):
-    """1인용 감명서 맺음말"""
-    return f"""
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 40px 0 25px 0;">
-    <div style="margin: 0; padding: 0;">
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 15px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
-        <div style="text-align: right; margin-top: 30px;">
-            <span style="font-weight: 900; font-size: 18px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
-        </div>
-    </div>
-    """
-
-def get_final_report_box(content_html):
-    """1인용 종합 보고서 최종 프레임 래핑"""
-    return f"""
-    <div class='report-page'>
-        <div style='border: 2px solid #5D4037; border-radius: 12px; padding: 25px; background-color:#FAFAFA;'>
-            {content_html}
-        </div>
-    </div>
-    """
-
-def get_ai_report_box(content):
-    return get_final_report_box(content)
-
-def get_closing_html(name):
-    """1인용 감명서 맺음말 및 초연 전통명리 안내 박스 (ver 50.5 복원)"""
+    """1인용 감명서 맺음말 및 상업용 안내 박스 (ver 50.5 복원 및 활성 버전)"""
     return f"""
     <hr style="border: 0; border-top: 2px dashed #1A237E; margin: 40px 0 25px 0;">
     <div style="margin: 0; padding: 0;">
@@ -615,8 +577,42 @@ def get_closing_html(name):
     </div>
     """
 
+def get_final_report_box(content_html):
+    """1인용 종합 보고서 최종 프레임 래핑"""
+    return f"""
+    <div class='report-page'>
+        <div style='border: 2px solid #5D4037; border-radius: 12px; padding: 25px; background-color:#FAFAFA;'>
+            {content_html}
+        </div>
+    </div>
+    """
+
+def get_ai_report_box(content):
+    return get_final_report_box(content)
+
+def render_basic_report(part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing):
+    """1-1. 사주팔자 기본 풀이 조립 함수"""
+    body = f"{part_1_fact}{part_2_intro}{part_3_golden}{ai_output_html}{un_html}{sewun_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+def render_yeareun_report(part_1_fact, sewun_html, ai_output_html, part_5_closing):
+    """1-2. 연도운 풀이 조립 함수"""
+    body = f"{part_1_fact}{sewun_html}{ai_output_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+def render_wolun_report(part_1_fact, wolun_html, ai_output_html, part_5_closing):
+    """1-3. 월운 풀이 조립 함수"""
+    body = f"{part_1_fact}{wolun_html}{ai_output_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing):
+    """1-4. 일운 풀이 조립 함수"""
+    body = f"{part_1_fact}{weekly_html}{ai_output_html}{part_5_closing}"
+    return get_final_report_box(body)
+
+
 # ==============================================================================
-# 3. 2인용 궁합 상품 (상품 3-1)
+# 섹션 3. 2인용 궁합 및 커플 상품 (상품 3-1 활성 모듈)
 # ==============================================================================
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
     """2인용 궁합 표지 렌더링 - 긴 타이틀도 무조건 1줄로 완벽 고정"""
@@ -715,15 +711,15 @@ def get_gunghap_score_visual_html(gh_engine):
     return score_chart_html
 
 def get_gunghap_closing(name1, name2):
-    """궁합 맺음말"""
+    """궁합 감명서 감성 맺음말 (ver 50.5 복원 및 활성 버전)"""
     return f"""
     <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
-        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>
-        <b>{name1}님</b>과 <b>{name2}님</b>의 소중한 인연이 하늘의 뜻과 깊은 기운 속에서 찬란하게 빛을 발하기를 진심으로 기원합니다.</p>
-        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>두 분이 서로의 다름을 이해하고 채워주는 든든한 동반자가 되어 삶이라는 길을 함께 걸어가시기를 소망합니다.</p>
-        <p style='font-size:16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <p style='font-family: "Nanum Myeongjo", serif; font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>
+        <b>{name1}님</b>과 <b>{name2}님</b>의 만남은 결코 우연이 아닌, <b>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b>'조화와 상생'</b>입니다.</p>
+        <p style='font-family: "Nanum Myeongjo", serif; font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>서로의 기운을 보완하고 다독여주는 든든한 <b>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 전통 명리의 축복이 가득하시길 소망합니다.</p>
+        <p style='font-family: "Nanum Myeongjo", serif; font-size: 16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
-            <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+            <span style='font-weight: 900; font-size: 18px !important; color: #1A237E; font-family: "Nanum Myeongjo", serif;'>- 초연 전통명리 연구소 드림 -</span>
         </div>
     </div>
     """
@@ -764,7 +760,7 @@ def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
 
 
 # ==============================================================================
-# 4. 택일 상품 (상품 3-2, 3-3)
+# 섹션 4. 택일 상품 (상품 3-2, 3-3 활성 모듈)
 # ==============================================================================
 def get_delivery_summary_box(best_days):
     """출산/결혼 길일 한눈에 보기 요약 상자"""
@@ -810,8 +806,9 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
     </div>
     """
 
+
 # ==============================================================================
-# 5. 타 감명서 대조 분석 리포트
+# 섹션 5. 타 감명서 대조 분석 리포트 (상품 4-1, 4-2 활성 모듈)
 # ==============================================================================
 def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, time_str, today_str):
     """사주 1:1 대조 분석서 표지"""
@@ -941,29 +938,6 @@ def get_other_report_original_html(other_text_input):
     </div>
     """
 
-def render_basic_report(part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing):
-    """1-1. 사주팔자 기본 풀이 조립 함수"""
-    body = f"{part_1_fact}{part_2_intro}{part_3_golden}{ai_output_html}{un_html}{sewun_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-def render_yeareun_report(part_1_fact, sewun_html, ai_output_html, part_5_closing):
-    """1-2. 연도운 풀이 조립 함수"""
-    body = f"{part_1_fact}{sewun_html}{ai_output_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-def render_wolun_report(part_1_fact, wolun_html, ai_output_html, part_5_closing):
-    """1-3. 월운 풀이 조립 함수"""
-    body = f"{part_1_fact}{wolun_html}{ai_output_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing):
-    """1-4. 일운 풀이 조립 함수"""
-    body = f"{part_1_fact}{weekly_html}{ai_output_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-# ==============================================================================
-# 타 감명서 대조 전용 뷰 함수 (closing_html 제거 및 3단 순서 조립)
-# ==============================================================================
 def get_external_raw_text_box(other_text):
     """제출된 타 감명서 원본 출력 전용 스타일 박스"""
     return f"""
@@ -990,3 +964,46 @@ def get_warning_box(title, message):
     """
 
 
+# ==============================================================================
+# 📦 섹션 6. 보존 및 백업용 구버전 모듈 (삭제 금지 - 최하단 분리 조치)
+# ==============================================================================
+
+def get_golden_text_v72_3_old(name, w_val, i_val, s_name, s_type, s_desc):
+    """[구버전/백업] 72.3 단순 시공간 요약 황금문장 (삭제 금지 및 백업)"""
+    return f"""
+    <div style="margin: 0; padding: 0;">
+        <p class="ai-body-p" style="margin: 0; color: #000000; text-align: justify; text-indent: 0;">
+            초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
+        </p>
+    </div>
+    <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
+    """
+
+def get_closing_html_v72_3_old(name):
+    """[구버전/백업] 72.3 기본 1인용 감명서 맺음말 (안내박스 미포함 버전 백업)"""
+    return f"""
+    <hr style="border: 0; border-top: 2px solid #000000; margin: 40px 0 25px 0;">
+    <div style="margin: 0; padding: 0;">
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 15px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
+        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <div style="text-align: right; margin-top: 30px;">
+            <span style="font-weight: 900; font-size: 18px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
+        </div>
+    </div>
+    """
+
+def get_gunghap_v2_closing(name1, name2):
+    """[구버전/백업] 궁합 맺음말 버전 2 백업"""
+    return f"""
+    <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
+        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>
+        <b>{name1}님</b>과 <b>{name2}님</b>의 소중한 인연이 하늘의 뜻과 깊은 기운 속에서 찬란하게 빛을 발하기를 진심으로 기원합니다.</p>
+        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>두 분이 서로의 다름을 이해하고 채워주는 든든한 동반자가 되어 삶이라는 길을 함께 걸어가시기를 소망합니다.</p>
+        <p style='font-size:16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <div style='text-align: right; margin-top: 30px;'>
+            <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+        </div>
+    </div>
+    """
