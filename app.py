@@ -1088,12 +1088,14 @@ if st.session_state.get('app_running', False):
 
         # --- 1-4. 이번 (특정) 주간 및 일 운세 상세분석 ---
         elif u_product.startswith("1-4"):
+            # 🌟 무료 배포용 슬림 스택: [사주원국표 + 마스터바] + [주간달력표] + AI본문 + [맺음말]
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
-    
+            
             formatted_ai = ai_output_html.replace('[WEEKLY_CALENDAR_HERE]', weekly_table_code)
 
-            top_fact_stack = f"{part_1_fact}{un_html}{sewun_html}{wolun_html}"
+            # 상단 표 스택에서 un_html, sewun_html, wolun_html 제거하여 가독성 및 속도 확보
+            top_fact_stack = f"{part_1_fact}"
             master_comp = f"{top_fact_stack}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
