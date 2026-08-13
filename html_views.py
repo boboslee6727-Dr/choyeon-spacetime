@@ -155,22 +155,22 @@ def format_ai_text_to_html(text):
 # 2. 1인용 사주팔자 및 운세 상품 (상품 1-1 ~ 2-5)
 # ==============================================================================
 def get_personal_cover(version, report_title, u_icon, name, sol, lun, time, today):
-    """1인용 표지 렌더링 - 타이틀 무조건 1줄 고정 적용"""
+    """1인용 표지 렌더링 - 긴 타이틀도 무조건 1줄로 완벽 고정"""
     clean_title = report_title.replace("🏮 ", "").strip()
     
     return f"""
     <div class='report-page cover-page' style='padding:40px; margin:0 auto; width:100%; max-width: 800px; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact; background: #FFFFFF;'>
-        <div style='border: 4px solid #1A237E; padding: 60px 30px; border-radius: 20px; text-align: center; background: white; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box;'>
-            <div style='border-bottom:4px double #1A237E; padding-bottom:30px; margin-bottom:50px; overflow: hidden;'>
-                <!-- 🌟 1줄 고정을 위한 핵심 CSS: white-space: nowrap, letter-spacing: -1.5px, font-size: clamp/32px -->
-                <h1 style='font-family:"Nanum Gothic", sans-serif !important; font-size: clamp(22px, 4vw, 32px) !important; font-weight: 900 !important; margin:0 !important; color:#000000; white-space: nowrap !important; letter-spacing: -1.5px !important; word-break: keep-all !important;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 15px;'>
+        <div style='border: 4px solid #1A237E; padding: 60px 25px; border-radius: 20px; text-align: center; background: white; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:25px; margin-bottom:45px; width: 100%; display: flex; flex-direction: column; align-items: center;'>
+                <!-- 🌟 한 줄 절대 고정: font-size 25px, letter-spacing -1.8px, white-space nowrap -->
+                <h1 style='font-family:"Nanum Gothic", sans-serif !important; font-size: 25px !important; font-weight: 900 !important; margin:0 !important; color:#000000; white-space: nowrap !important; letter-spacing: -1.8px !important; text-align: center; width: 100%; display: block;'>{clean_title}</h1>
+                <div style='text-align: right; width: 100%; margin-top: 15px;'>
                     <span style='font-family:"Nanum Gothic", sans-serif; font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
             </div>
             
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 40px 30px; border-radius: 15px; margin-bottom: 30px;'>
-                <h2 style='font-size: 32px; font-weight: 900; color: #1A237E; margin-bottom: 25px;'>{u_icon} 신청인 : {name} 님</h2>
+                <h2 style='font-size: 30px; font-weight: 900; color: #1A237E; margin-bottom: 25px;'>{u_icon} 신청인 : {name} 님</h2>
                 <div style='font-size: 18px; line-height: 2.2; color:#333;'>
                     <p style='margin: 0;'>양력 : {sol}</p>
                     <p style='margin: 0;'>음력 : {lun}</p>
@@ -561,16 +561,16 @@ def get_ai_report_box(content):
 # 3. 2인용 궁합 상품 (상품 3-1)
 # ==============================================================================
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합 표지 렌더링 - 타이틀 무조건 1줄 고정 적용"""
+    """2인용 궁합 표지 렌더링 - 긴 타이틀도 무조건 1줄로 완벽 고정"""
     clean_title = report_title.replace("🏮 ", "").strip()
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 50px 25px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
-            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px; overflow: hidden;'>
-                <!-- 🌟 1줄 고정을 위한 핵심 CSS -->
-                <h1 class='title-gothic' style='font-size: clamp(20px, 3.8vw, 28px) !important; margin:0 !important; font-weight: 900 !important; white-space: nowrap !important; letter-spacing: -1.5px !important; color:#000000;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 10px;'>
+        <div style='border: 4px solid #1A237E; padding: 50px 20px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:35px; width: 100%; display: flex; flex-direction: column; align-items: center;'>
+                <!-- 🌟 한 줄 절대 고정: font-size 23px, letter-spacing -1.8px, white-space nowrap -->
+                <h1 class='title-gothic' style='font-size: 23px !important; margin:0 !important; font-weight: 900 !important; white-space: nowrap !important; letter-spacing: -1.8px !important; color:#000000; text-align: center; width: 100%; display: block;'>{clean_title}</h1>
+                <div style='text-align: right; width: 100%; margin-top: 10px;'>
                     <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px; color:#555;'>{version}</span>
                 </div>
             </div>
