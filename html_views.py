@@ -985,19 +985,33 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
 def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 듀얼 황금문구 뷰
-    - 남명 황금문구 (블루 포인트) + 여명 황금문구 (로즈핑크 포인트) 나란히 결합
+    - 남명 황금문구 (블루 포인트) + 여명 황금문구 (로즈핑크 포인트) 결합
+    - 전 영역 정통 '나눔명조(Nanum Myeongjo)' 서체 통일 적용
     """
+    # 개별 get_golden_text 내부에 포함된 <hr> 태그를 정제하여 이중 분할 방지
+    clean_male = male_golden_html.replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">', '').strip()
+    clean_female = female_golden_html.replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">', '').strip()
+    
     return f"""
-    <div style="margin-bottom: 25px;">
-        <div style="border-left: 4px solid #1565C0; padding-left: 10px; margin-bottom: 12px;">
-            <div style="font-size: 15px; font-weight: 800; color: #1565C0; margin-bottom: 4px;">♂️ [신랑 {m_name}님 타고난 그릇과 시공간 본성]</div>
-            {male_golden_html}
+    <div style="margin-bottom: 25px; padding: 18px 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="border-left: 4px solid #1565C0; padding-left: 12px; margin-bottom: 18px;">
+            <div style="font-size: 16px; font-weight: 800; color: #1565C0; margin-bottom: 8px; font-family: 'Nanum Myeongjo', 'Batang', serif; letter-spacing: -0.3px;">
+                ♂️ [신랑 {m_name}님 타고난 그릇과 시공간 본성]
+            </div>
+            <div style="font-family: 'Nanum Myeongjo', 'Batang', serif; line-height: 1.85; color: #111111;">
+                {clean_male}
+            </div>
         </div>
-        <div style="border-left: 4px solid #C2185B; padding-left: 10px; margin-top: 15px;">
-            <div style="font-size: 15px; font-weight: 800; color: #C2185B; margin-bottom: 4px;">♀️ [신부 {f_name}님 타고난 그릇과 시공간 본성]</div>
-            {female_golden_html}
+        <div style="border-left: 4px solid #C2185B; padding-left: 12px;">
+            <div style="font-size: 16px; font-weight: 800; color: #C2185B; margin-bottom: 8px; font-family: 'Nanum Myeongjo', 'Batang', serif; letter-spacing: -0.3px;">
+                ♀️ [신부 {f_name}님 타고난 그릇과 시공간 본성]
+            </div>
+            <div style="font-family: 'Nanum Myeongjo', 'Batang', serif; line-height: 1.85; color: #111111;">
+                {clean_female}
+            </div>
         </div>
     </div>
+    <hr style="border: 0; border-top: 2px solid #333333; margin: 25px 0;">
     """
 
 def get_couple_fact_split_layout(male_block, female_block):
