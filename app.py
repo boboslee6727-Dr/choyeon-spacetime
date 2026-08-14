@@ -322,9 +322,9 @@ with st.sidebar:
             key="sub_category_3", 
             on_change=stop_ai
         )
-    else:
+    elif main_category == "4. 타 감명서 비교":  # <--- 명확하게 if 조건으로 분리!
         u_product = st.radio(
-            "비교 분석 대상:", 
+            "타 감명서 비교:", 
             [
                 "4-1. 타 감명서 비교 (사주)", 
                 "4-2. 타 감명서 비교 (궁합)"
@@ -332,6 +332,9 @@ with st.sidebar:
             key="sub_category_4", 
             on_change=stop_ai
         )
+    else:
+        u_product = "1-1. 사주팔자와 운세풀이"
+
     st.markdown("---")
 
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
