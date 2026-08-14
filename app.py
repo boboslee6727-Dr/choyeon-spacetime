@@ -1268,7 +1268,7 @@ if st.session_state.get('app_running', False):
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-        # 🌟 4-2. 타 감명서 비교 (궁합) 완전체 전용 렌더링
+        # 🌟 4-2. 타 감명서 비교 (궁합) -> 기존 표준 렌더링 함수 완벽 일치
         elif u_product.startswith("4-2"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1280,11 +1280,8 @@ if st.session_state.get('app_running', False):
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 
-                # 전용 궁합 비교 뷰 호출
-                if hasattr(html_views, 'render_gunghap_comparison_report'):
-                    final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
-                else:
-                    final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
+                # 🌟 별도 함수 없이 기존 4-1과 완전히 동일한 표준 뷰 함수로 직접 출력
+                final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
