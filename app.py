@@ -518,7 +518,7 @@ with st.sidebar:
     # 👤 신청인 기본 정보 입력부
     u_box = st.container()
     with u_box:
-        st.subheader("👤 신청인 기본 정보")
+        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n", on_change=stop_ai)
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai)
@@ -562,11 +562,11 @@ with st.sidebar:
             start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
             end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
         
-        # 🚨 [버그 수정]: 4-1 입력창 고정키(text_4_1) 부여 및 value 속성 완전 삭제!
+        # 🌟 4-1 타 감명서 비교 (사주) 중복 text_area 제거 및 헤더 표준화
         elif "4-1." in u_product:
             st.markdown("---")
-            st.text_area("📄 타 감명서 비교 (사주) 원문", height=150, key="text_4_1")
-            st.text_area("비교할 타 감명서 (사주) 원문을 넣어 주세요.", height=150, key="text_4_1")
+            st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 10px; margin-bottom: 6px;'>📄 타 감명서 비교 (사주) 원문</div>", unsafe_allow_html=True)
+            st.text_area("비교할 타 감명서 (사주) 원문을 넣어 주세요.", height=150, key="text_4_1", label_visibility="collapsed")
 
     # 2인 전용 상품(궁합, 택일) 상대방 사주 역산 및 기본 정보 모듈
     is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
@@ -613,6 +613,7 @@ with st.sidebar:
             st.error(st.session_state['rev_p_error_msg'])
             del st.session_state['rev_p_error_msg']
 
+        # 🌟 세션 초기값 안전 방어
         if 'f_n' not in st.session_state: st.session_state['f_n'] = ""
         if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1990
         if 'p_m_in' not in st.session_state: st.session_state['p_m_in'] = 1
@@ -620,18 +621,19 @@ with st.sidebar:
 
         p_box = st.container()
         with p_box:
-            st.subheader("💕 상대방 기본 정보")
-            f_name = st.text_input("상대방 이름", key="f_n", on_change=stop_ai)
+            st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>💕 상대방 기본 정보</div>", unsafe_allow_html=True)
+            f_name = st.text_input("상대방 이름", value=st.session_state.get("f_n", ""), placeholder="심청이", key="f_n", on_change=stop_ai)
             f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
             f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat", on_change=stop_ai)
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c", on_change=stop_ai)
             
             p_col1, p_col2, p_col3 = st.columns(3)
-            f_y = p_col1.number_input("년도(상대)", 1900, 2050, key="p_y_in", on_change=stop_ai)
-            f_m = p_col2.number_input("월(상대)", 1, 12, key="p_m_in", on_change=stop_ai)
-            f_d = p_col3.number_input("일(상대)", 1, 31, key="p_d_in", on_change=stop_ai)
+            with p_col1: f_y = st.number_input("년도(상대)", 1900, 2050, value=st.session_state.get("p_y_in", 1990), key="p_y_in", on_change=stop_ai)
+            with p_col2: f_m = st.number_input("월(상대)", 1, 12, value=st.session_state.get("p_m_in", 1), key="p_m_in", on_change=stop_ai)
+            with p_col3: f_d = st.number_input("일(상대)", 1, 31, value=st.session_state.get("p_d_in", 1), key="p_d_in", on_change=stop_ai)
             
-            p_t_idx = idx_list.index(st.session_state["p_t_key"]) if st.session_state["p_t_key"] in idx_list else 0
+            curr_p_t = st.session_state.get("p_t_key", idx_list[0])
+            p_t_idx = idx_list.index(curr_p_t) if curr_p_t in idx_list else 0
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=p_t_idx, key="p_t_select", on_change=stop_ai)
             st.session_state["p_t_key"] = f_t
 
@@ -647,24 +649,24 @@ with st.sidebar:
     elif "3-3." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc", on_change=stop_ai)
         if run_delivery_calc:
-            st.subheader("🩺 산모 생리 주기 및 기준 정보")
+            st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>🩺 산모 생리 주기 및 기준 정보</div>", unsafe_allow_html=True)
             today_dt = dt_mod.date.today()
             default_last_period = today_dt - dt_mod.timedelta(days=30)
             last_period_date = st.date_input("마지막 생리 시작일", value=default_last_period, key="last_period_date", on_change=stop_ai)
             period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=30, key="period_cycle", on_change=stop_ai)
             st.markdown("---")
-            st.subheader("📅 출산 길일 탐색 기간 설정")
+            st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>📅 출산 길일 탐색 기간 설정</div>", unsafe_allow_html=True)
             default_start = today_dt
             default_end = today_dt + dt_mod.timedelta(days=365)
             col_d1, col_d2 = st.columns(2)
             delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date", on_change=stop_ai)
             delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date", on_change=stop_ai)
 
-    # 🚨 [버그 수정]: 4-2 입력창 고정키(text_4_2) 부여 및 value 속성 완전 삭제!
+    # 🌟 4-2 타 감명서 비교 (궁합) 헤더 16px 표준화
     elif "4-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        st.markdown("📄 타 감명서 비교 (궁합) 원문")
-        st.text_area("비교할 타 감명서 (커플/궁합) 원문을 넣어 주세요.", height=150, key="text_4_2")
+        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 10px; margin-bottom: 6px;'>📄 타 감명서 비교 (궁합) 원문</div>", unsafe_allow_html=True)
+        st.text_area("비교할 타 감명서 (커플/궁합) 원문을 넣어 주세요.", height=150, key="text_4_2", label_visibility="collapsed")
         
     st.markdown("---")
 
