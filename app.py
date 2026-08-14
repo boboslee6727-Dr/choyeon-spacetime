@@ -388,17 +388,13 @@ with st.sidebar:
 
     # 🌟 [수정 후] 1인용 가지와 2인용 가지의 명확한 분기 및 4번 상품 편입
     
-    # 1. 1인용 상품군 (1-1, 1-2, 1-3, 1-4, 2-1, 2-2, 2-3, 2-4, 2-5, 4-1)
-    # 2인용이 아닌 상품들은 모두 여기로 모입니다.
     is_1person = not ( (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product) )
     
     if is_1person:
-        # [1인용 공통 입력 옵션]
         if u_product.startswith("1-"):
             is_vip_package = st.checkbox("👑 VIP 패키지 모드", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val", on_change=stop_ai)
             is_compare_traditional = st.checkbox("⚖️ 전통 : 시공 명리 운세풀이 비교", value=st.session_state.get("is_compare_trad_val", False), key="is_compare_trad_val", on_change=stop_ai)
 
-        # [상세 옵션 분기]
         if "1-2." in u_product:
             curr_yr_val = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).year
             st.number_input("📅 분석 연도", min_value=1900, max_value=2050, value=curr_yr_val, key="target_year_input", on_change=stop_ai)
@@ -418,8 +414,7 @@ with st.sidebar:
             start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
             end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
         
-        # 4-1 (사주 비교)를 1인용 가지로 확실히 편입
-        # 4-1 (사주 비교)를 1인용 가지로 확실히 편입
+        # 🚨 [버그 수정]: 4-1 입력창 고정키(text_4_1) 부여 및 value 속성 완전 삭제!
         elif "4-1." in u_product:
             st.markdown("---")
             st.text_area("📄 [1인용] 타 사주 감명서 원문", height=150, key="text_4_1")
@@ -470,7 +465,6 @@ with st.sidebar:
             f_t = st.selectbox("태어난 시간(상대)", idx_list, index=p_t_idx, key="p_t_select", on_change=stop_ai)
             st.session_state["p_t_key"] = f_t
 
-    # 택일 및 타 궁합 감명서 입력 옵션 모듈
     if "3-2." in u_product:
         date_mode = st.radio("결혼 택일 방식", ["기간 선택", "특정일 지정"], key="radio_marriage_mode", on_change=stop_ai)
         if date_mode == "기간 선택":
@@ -482,30 +476,26 @@ with st.sidebar:
             
     elif "3-3." in u_product:
         run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc", on_change=stop_ai)
-        
         if run_delivery_calc:
             st.subheader("🩺 산모 생리 주기 및 기준 정보")
             today_dt = dt_mod.date.today()
             default_last_period = today_dt - dt_mod.timedelta(days=30)
-            
             last_period_date = st.date_input("마지막 생리 시작일", value=default_last_period, key="last_period_date", on_change=stop_ai)
             period_cycle = st.number_input("평균 생리 주기 (일)", min_value=20, max_value=45, value=30, key="period_cycle", on_change=stop_ai)
-            
             st.markdown("---")
             st.subheader("📅 출산 길일 탐색 기간 설정")
-            
             default_start = today_dt
             default_end = today_dt + dt_mod.timedelta(days=365)
-            
             col_d1, col_d2 = st.columns(2)
             delivery_start_date = col_d1.date_input("탐색 시작일", value=default_start, key="delivery_start_date", on_change=stop_ai)
             delivery_end_date = col_d2.date_input("탐색 종료일", value=default_end, key="delivery_end_date", on_change=stop_ai)
 
+    # 🚨 [버그 수정]: 4-2 입력창 고정키(text_4_2) 부여 및 value 속성 완전 삭제!
     elif "4-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         st.markdown("### 📄 [2인용 커플] 타 궁합 감명서 원문")
         st.text_area("비교할 외부 커플/궁합 감명서 텍스트를 붙여넣어 주세요.", height=150, key="text_4_2")
-
+        
     st.markdown("---")
 
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
@@ -990,14 +980,6 @@ if st.session_state.get('app_running', False):
         end_d = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
         goal_target_date_range = f"{start_d} ~ {end_d}"
 
-        # 🌟 엔진 기반 이사/개업 길일 Top 3 사전 연산
-        tackil_recommend_str = "엔진에서 추천된 길일 데이터가 없습니다."
-        if u_product.startswith("2-5"):
-            if hasattr(engine, 'get_best_moving_opening_days'):
-                top_days = engine.get_best_moving_opening_days(start_d, end_d, gans, jjis, goal_tackil_purpose)
-                if top_days:
-                    tackil_recommend_str = "\n".join([f"- 추천 {i+1}순위: {d['date']} ({d['ganji']}일) / 적합도: {d['score']}점" for i, d in enumerate(top_days)])
-
         # 🌟 고정키에서 안전하게 텍스트 구출
         user_entered_text = ""
         if u_product.startswith("4-1"):
@@ -1049,7 +1031,8 @@ if st.session_state.get('app_running', False):
             "other_reading_text": user_entered_text,  # AI 프롬프트용
             "other_report": user_entered_text,        # 안전 장치용
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
-            "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name        }
+            "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
+        }
 
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
@@ -1091,12 +1074,10 @@ if st.session_state.get('app_running', False):
         # 🏮 [ver 72.5 파이프라인] 표지 및 본문 보고서 완벽 출력부
         # ==============================================================================
         
-        # 1. 표지(cover_html) 단독 출력
         if 'cover_html' in locals() and cover_html:
             safe_cover = re.sub(r'\n\s+', '\n', cover_html)
             st.markdown(safe_cover, unsafe_allow_html=True)
 
-        # 2. 택일 특화 엔진 가동
         delivery_html = ""
         if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
             try:
@@ -1113,68 +1094,51 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 pass
 
-        # 3. 파이프라인 분기 (1-1 ~ 4-2 마커 치환 정밀 교정)
         final_render_html = ""
 
         def sub_marker(text, marker_name, table_code):
             pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
             return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
 
-        # --- 1-1. 사주팔자와 운세풀이 ---
         if u_product.startswith("1-1"):
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # --- 1-2. 올 해 (특정 연도) 운세 상세분석 ---
         elif u_product.startswith("1-2"):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
-
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # --- 1-3. 이번 달 (특정 월) 운세 상세분석 ---
         elif u_product.startswith("1-3"):
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'WOLUN_TABLE_HERE', wolun_table_code)
-
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # --- 1-4. 이번 (특정) 주간 및 일 운세 상세분석 ---
         elif u_product.startswith("1-4"):
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
-            
             formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # --- 2-1 ~ 2-5. 테마별 특성화 상담 모듈 ---
         elif u_product.startswith("2-"):
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
-
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # --- 3-1. 연애/결혼운 (궁합) 풀이 ---
         elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
             m_ess, f_ess, g_ess = "", "", clean_raw
-
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
             if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
-
             f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
             if f_match: f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
-
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
             if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
 
@@ -1192,54 +1156,33 @@ if st.session_state.get('app_running', False):
 
             final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
 
-        # --- 3-2. 결혼 택일 / 3-3. 출산 택일 ---
         elif u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
             master_comp = f"{delivery_html}{ai_output_html}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # --- 4-1. 타 감명서 비교 (사주) ---
+        # 🌟 4번 상품 렌더링 블록 (간소화 완료)
         elif u_product.startswith("4-1"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-
                 daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
                 sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-
                 formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
                 formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
 
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-            else:
-                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
-
-                daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
-                sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-
-                formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
-                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-
-                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
-                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-
-                final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
-
-        # --- 4-2. 타 감명서 비교 (궁합) ---
         elif u_product.startswith("4-2"):
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
-
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-
                 m_daewun_html = un_html if gender == "남성" else p_un_html
                 f_daewun_html = p_un_html if gender == "남성" else un_html
                 c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
@@ -1249,7 +1192,6 @@ if st.session_state.get('app_running', False):
 
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, external_raw_box, full_ai_content)
 
         # 4. 본문 종합 보고서 최종 단독 렌더링
