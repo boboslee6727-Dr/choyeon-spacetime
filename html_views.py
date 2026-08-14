@@ -963,6 +963,48 @@ def get_warning_box(title, message):
     </div>
     """
 
+def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
+    """
+    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
+    - A4 캔버스 바깥선 제거 (border: none)
+    - 안쪽 표준 둥근 사각 테두리 단독 적용 (border: 1.5px solid #333; border-radius: 14px)
+    """
+    return f"""
+    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Gothic', sans-serif;">
+        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
+            {couple_fact_html}
+            <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
+            {external_raw_box}
+            <div style="margin-top: 30px;">
+                {ai_content_html}
+            </div>
+        </div>
+    </div>
+    """
+
+def get_couple_fact_split_layout(male_block, female_block):
+    """
+    4-2 타 감명서 비교 (궁합) 상단 팩트 레이아웃
+    - 남명 1장 (22px 대제목 + 원국 + 마스터바 + 대운표 + Page Break)
+    - 여명 1장 (22px 대제목 + 원국 + 마스터바 + 대운표 + Page Break)
+    """
+    return f"""
+    <!-- 1페이지: 남명 완전체 -->
+    <div style="page-break-after: always; break-after: page; margin-bottom: 30px;">
+        <div style="font-size: 22px; font-weight: 900; color: #1565C0; text-align: center; padding: 10px 0 14px 0; margin-bottom: 18px; border-bottom: 3px solid #1565C0; letter-spacing: -0.5px;">
+            ♂️ [남명(男命) 사주 원국 및 대운 분석]
+        </div>
+        {male_block}
+    </div>
+    
+    <!-- 2페이지: 여명 완전체 -->
+    <div style="page-break-after: always; break-after: page; margin-bottom: 30px;">
+        <div style="font-size: 22px; font-weight: 900; color: #C2185B; text-align: center; padding: 10px 0 14px 0; margin-bottom: 18px; border-bottom: 3px solid #C2185B; letter-spacing: -0.5px;">
+            ♀️ [여명(女命) 사주 원국 및 대운 분석]
+        </div>
+        {female_block}
+    </div>
+    """
 
 # ==============================================================================
 # 📦 섹션 6. 보존 및 백업용 구버전 모듈 (삭제 금지 - 최하단 분리 조치)
@@ -1008,21 +1050,4 @@ def get_gunghap_v2_closing(name1, name2):
     </div>
     """
 
-def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
-    """
-    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
-    - A4 캔버스 바깥선 제거 (border: none)
-    - 안쪽 표준 둥근 사각 테두리 단독 적용 (border: 1.5px solid #333; border-radius: 14px)
-    """
-    return f"""
-    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Gothic', sans-serif;">
-        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
-            {couple_fact_html}
-            <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
-            {external_raw_box}
-            <div style="margin-top: 30px;">
-                {ai_content_html}
-            </div>
-        </div>
-    </div>
-    """
+
