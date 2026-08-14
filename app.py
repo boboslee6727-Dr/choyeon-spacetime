@@ -565,7 +565,7 @@ with st.sidebar:
         # 🚨 [버그 수정]: 4-1 입력창 고정키(text_4_1) 부여 및 value 속성 완전 삭제!
         elif "4-1." in u_product:
             st.markdown("---")
-            st.text_area("📄 [1인용] 타 사주 감명서 원문", height=150, key="text_4_1")
+            st.text_area("📄 타 감명서 비교 (사주) 원문", height=150, key="text_4_1")
 
     # 2인 전용 상품(궁합, 택일) 상대방 사주 역산 및 기본 정보 모듈
     is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
@@ -662,7 +662,7 @@ with st.sidebar:
     # 🚨 [버그 수정]: 4-2 입력창 고정키(text_4_2) 부여 및 value 속성 완전 삭제!
     elif "4-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        st.markdown("### 📄 [2인용 커플] 타 궁합 감명서 원문")
+        st.markdown("📄 타 감명서 비교 (궁합) 원문")
         st.text_area("비교할 외부 커플/궁합 감명서 텍스트를 붙여넣어 주세요.", height=150, key="text_4_2")
         
     st.markdown("---")
