@@ -1000,6 +1000,13 @@ if st.session_state.get('app_running', False):
                 top_days = engine.get_best_moving_opening_days(start_d, end_d, gans, jjis, goal_tackil_purpose)
                 if top_days:
                     tackil_recommend_str = "\n".join([f"- 추천 {i+1}순위: {d['date']} ({d['ganji']}일) / 적합도: {d['score']}점" for i, d in enumerate(top_days)])
+
+        user_entered_text = (
+            st.session_state.get(f"text_{u_product}", "") or 
+            st.session_state.get("other_report", "") or 
+            st.session_state.get("other_reading_input", "")
+        ).strip()
+
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
@@ -1041,10 +1048,10 @@ if st.session_state.get('app_running', False):
             "health_goal": goal_health,
             "tackil_purpose": goal_tackil_purpose,
             "target_date_range": goal_target_date_range,
-            "other_reading_text": st.session_state.get(f"text_{u_product}", ""),
+            "other_reading_text": user_entered_text,  # AI 프롬프트용
+            "other_report": user_entered_text,        # 안전 장치용
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
-            "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
-        }
+            "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name        }
 
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
@@ -1190,8 +1197,11 @@ if st.session_state.get('app_running', False):
 
         # --- 4-1. 타 감명서 비교 (사주) ---
         elif u_product == "4-1. 타 감명서 비교 (사주)":
-            dynamic_key = f"text_{u_product}"
-            other_reading_text = (st.session_state.get(dynamic_key, '') or st.session_state.get('other_reading_input', '')).strip()
+            # 🌟 세션에 저장된 값을 철저하게 가져오도록 통일
+            other_reading_text = (
+                st.session_state.get(f"text_{u_product}", "") or 
+                st.session_state.get("other_report", "")
+            ).strip()
 
             if not other_reading_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
