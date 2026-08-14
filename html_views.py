@@ -1000,9 +1000,7 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
     - 박사님 지시 반영: 억지스러운 태그 변형 및 폰트 확대 제거, 정식 규격(22px) 복구
     """
     master_body = f"""
-    <div style="font-family: 'Nanum Myeongjo', serif; font-size: 22px !important; font-weight: 900 !important; color: #1A237E; text-align: center; padding: 6px 0 10px 0; margin-bottom: 15px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">
-        🔍 타 감명서 비교 (궁합) 1:1 정밀 분석
-    </div>
+    <div style="font-size: 22px !important; ...">🔍 타 감명서 비교 (궁합) 1:1 정밀 분석</div>
     {couple_fact_html}
     {external_raw_box}
     <div style="margin-top: 20px;">
