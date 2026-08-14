@@ -419,9 +419,10 @@ with st.sidebar:
             end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
         
         # 4-1 (사주 비교)를 1인용 가지로 확실히 편입
+        # 4-1 (사주 비교)를 1인용 가지로 확실히 편입
         elif "4-1." in u_product:
             st.markdown("---")
-            other_report = st.text_area("📄 [1인용] 타 사주 감명서 원문", height=150, key=f"text_{u_product}", value=st.session_state.get(f"text_{u_product}", ""), on_change=stop_ai)
+            st.text_area("📄 [1인용] 타 사주 감명서 원문", height=150, key="text_4_1")
 
     # 2인 전용 상품(궁합, 택일) 상대방 사주 역산 및 기본 정보 모듈
     is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
@@ -503,12 +504,8 @@ with st.sidebar:
     elif "4-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         st.markdown("### 📄 [2인용 커플] 타 궁합 감명서 원문")
-        other_report = st.text_area(
-            "비교할 외부 커플/궁합 감명서 텍스트를 붙여넣어 주세요.", 
-            height=150, 
-            key=f"text_{u_product}",
-            value=st.session_state.get(f"text_{u_product}", "")
-        )
+        st.text_area("비교할 외부 커플/궁합 감명서 텍스트를 붙여넣어 주세요.", height=150, key="text_4_2")
+
     st.markdown("---")
 
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
@@ -1001,11 +998,12 @@ if st.session_state.get('app_running', False):
                 if top_days:
                     tackil_recommend_str = "\n".join([f"- 추천 {i+1}순위: {d['date']} ({d['ganji']}일) / 적합도: {d['score']}점" for i, d in enumerate(top_days)])
 
-        user_entered_text = (
-            st.session_state.get(f"text_{u_product}", "") or 
-            st.session_state.get("other_report", "") or 
-            st.session_state.get("other_reading_input", "")
-        ).strip()
+        # 🌟 고정키에서 안전하게 텍스트 구출
+        user_entered_text = ""
+        if u_product.startswith("4-1"):
+            user_entered_text = st.session_state.get("text_4_1", "").strip()
+        elif u_product.startswith("4-2"):
+            user_entered_text = st.session_state.get("text_4_2", "").strip()
 
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
@@ -1077,13 +1075,17 @@ if st.session_state.get('app_running', False):
         target_prompt = getattr(prompts, prompt_var_name, getattr(prompts, "프롬프트_1_1_기본", ""))
         
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-        raw_response = call_gemini_api(formatted_prompt)
         
-        if raw_response and isinstance(raw_response, str):
-            clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            ai_output_html = html_views.format_ai_text_to_html(clean_raw)
+        # 🌟 [치명적 버그 수정]: 4번 상품인데 원문이 없으면 2분 동안 기다리지 않고 바로 패스!
+        if u_product.startswith("4-") and not user_entered_text:
+            ai_output_html = ""
         else:
-            ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
+            raw_response = call_gemini_api(formatted_prompt)
+            if raw_response and isinstance(raw_response, str):
+                clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+                ai_output_html = html_views.format_ai_text_to_html(clean_raw)
+            else:
+                ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
         # ==============================================================================
         # 🏮 [ver 72.5 파이프라인] 표지 및 본문 보고서 완벽 출력부
@@ -1196,16 +1198,24 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         # --- 4-1. 타 감명서 비교 (사주) ---
-        elif u_product == "4-1. 타 감명서 비교 (사주)":
-            # 🌟 세션에 저장된 값을 철저하게 가져오도록 통일
-            other_reading_text = (
-                st.session_state.get(f"text_{u_product}", "") or 
-                st.session_state.get("other_report", "")
-            ).strip()
-
-            if not other_reading_text:
+        elif u_product.startswith("4-1"):
+            if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
+            else:
+                external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
+
+                daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+                sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+
+                formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+
+                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
+                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
+
+                final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+
             else:
                 external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
 
@@ -1221,21 +1231,14 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
         # --- 4-2. 타 감명서 비교 (궁합) ---
-        elif u_product == "4-2. 타 감명서 비교 (궁합)":
-            dynamic_key = f"text_{u_product}"
-            other_reading_text = (
-                st.session_state.get(dynamic_key, '') or 
-                st.session_state.get('other_reading_input_gunghap', '') or 
-                st.session_state.get('other_reading_input', '')
-            ).strip()
-
+        elif u_product.startswith("4-2"):
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
 
-            if not other_reading_text:
+            if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
-                external_raw_box = html_views.get_external_raw_text_box(other_reading_text)
+                external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
 
                 m_daewun_html = un_html if gender == "남성" else p_un_html
                 f_daewun_html = p_un_html if gender == "남성" else un_html
