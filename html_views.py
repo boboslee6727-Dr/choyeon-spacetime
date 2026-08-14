@@ -652,7 +652,7 @@ def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing)
 # 📦 섹션 4. 2인용 궁합 및 커플 상품군 (상품 3-1 활성 모듈)
 # ==============================================================================
 
-ddef get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
+def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
     """2인용 3-1 궁합 표준 표지 (동양사상 인명 붉은색 배제 및 A4 규격화)"""
     clean_title = str(report_title or "").replace("🏮 ", "").strip()
 
