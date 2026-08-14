@@ -691,7 +691,7 @@ with st.sidebar:
         components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
-# 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부
+# 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부 (원초적 구조 완전체)
 # ==============================================================================
 if st.session_state.get('app_running', False):
     klc = KoreanLunarCalendar()
@@ -763,7 +763,6 @@ if st.session_state.get('app_running', False):
             else:
                 t_gan = ""
          
-        # 안전한 한자 변환 리스트 구성
         gans = [t_gan if t_gan else "-", d_pillar[0] if len(d_pillar)>0 else "甲", m_pillar[0] if len(m_pillar)>0 else "甲", y_pillar[0] if len(y_pillar)>0 else "甲"]
         jjis = [t_ji if t_ji else "-", d_pillar[1] if len(d_pillar)>1 else "子", m_pillar[1] if len(m_pillar)>1 else "子", y_pillar[1] if len(y_pillar)>1 else "子"]
         
@@ -784,7 +783,7 @@ if st.session_state.get('app_running', False):
             oh = engine.get_color(c)
             if oh in counts: counts[oh] += 1
         
-        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 해','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         guiin_str = guiin_map.get(ds_hanja, '없음')
         curr_y_ji = engine.JI[(curr_year - 1984) % 60 % 12]
         
@@ -797,45 +796,29 @@ if st.session_state.get('app_running', False):
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
         time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
-        # ==============================================================================
-        # 🎯 상품 고유번호(startswith) 기반 표지 타이틀 조건문
-        # ==============================================================================
-        if u_product.startswith("1-1"):
-            report_title = "🏮 사주팔자와 운세풀이"
-        elif u_product.startswith("1-2"):
-            report_title = "🏮 올 해 (특정 연도) 운세 상세분석"
-        elif u_product.startswith("1-3"):
-            report_title = "🏮 이번 달 (특정 월) 운세 상세분석"
-        elif u_product.startswith("1-4"):
-            report_title = "🏮 이번 (특정) 주간 및 일 운세 상세분석"
-        elif u_product.startswith("2-1"):
-            report_title = "🏮 재물운 특화 정밀 분석"
-        elif u_product.startswith("2-2"):
-            report_title = "🏮 직업/진학운 특화 정밀 분석"
-        elif u_product.startswith("2-3"):
-            report_title = "🏮 연애/결혼운 특화 정밀 분석"
-        elif u_product.startswith("2-4"):
-            report_title = "🏮 건강운 특화 정밀 분석"
-        elif u_product.startswith("2-5"):
-            report_title = "🏮 이사 및 개업 택일 정밀 분석"
-        elif u_product.startswith("3-1"):
-            report_title = "🏮 커플 연애/결혼운 정밀 궁합 분석"
-        elif u_product.startswith("3-2"):
-            report_title = "🏮 최고의 결혼 길일 추천 리포트"
-        elif u_product.startswith("3-3"):
-            report_title = "🏮 새 생명 마중 출산 길일 추천 리포트"
-        elif u_product.startswith("4-1"):
-            report_title = "🏮 사주 감명서 1:1 대조 리포트"
-        elif u_product.startswith("4-2"):
-            report_title = "🏮 궁합 감명서 1:1 대조 리포트"
-        else:
-            report_title = "🏮 사주팔자 정밀 분석"
+        if u_product.startswith("1-1"): report_title = "🏮 사주팔자와 운세풀이"
+        elif u_product.startswith("1-2"): report_title = "🏮 올 해 (특정 연도) 운세 상세분석"
+        elif u_product.startswith("1-3"): report_title = "🏮 이번 달 (특정 월) 운세 상세분석"
+        elif u_product.startswith("1-4"): report_title = "🏮 이번 (특정) 주간 및 일 운세 상세분석"
+        elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 정밀 분석"
+        elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 정밀 분석"
+        elif u_product.startswith("2-3"): report_title = "🏮 연애/결혼운 특화 정밀 분석"
+        elif u_product.startswith("2-4"): report_title = "🏮 건강운 특화 정밀 분석"
+        elif u_product.startswith("2-5"): report_title = "🏮 이사 및 개업 택일 정밀 분석"
+        elif u_product.startswith("3-1"): report_title = "🏮 커플 연애/결혼운 정밀 궁합 분석"
+        elif u_product.startswith("3-2"): report_title = "🏮 최고의 결혼 길일 추천 리포트"
+        elif u_product.startswith("3-3"): report_title = "🏮 새 생명 마중 출산 길일 추천 리포트"
+        elif u_product.startswith("4-1"): report_title = "🏮 사주 감명서 1:1 대조 리포트"
+        elif u_product.startswith("4-2"): report_title = "🏮 궁합 감명서 1:1 대조 리포트"
+        else: report_title = "🏮 사주팔자 정밀 분석"
 
         gh_score = 0
         gh_grade = ""
         partner_bazi = ["?", "?", "?", "?"]
 
-        # 🏮 표지 생성 분기 (1인용 vs 2인용 궁합)
+        # ----------------------------------------------------------------------
+        # 2인용 파트너 연산 및 표지 구성
+        # ----------------------------------------------------------------------
         if is_2person:
             p_y = st.session_state.get('p_y_in', 1980)
             p_m = st.session_state.get('p_m_in', 1)
@@ -905,9 +888,8 @@ if st.session_state.get('app_running', False):
                 else:
                     gh_score = 0
                     gh_grade = "엔진 업데이트 필요"
-            except Exception as e:
-                gh_score = 0
-                gh_grade = "점수 산출 불가"
+            except Exception:
+                gh_score, gh_grade = 0, "점수 산출 불가"
                 
         else:
             u_icon_str = f"{p_icon}" 
@@ -916,11 +898,13 @@ if st.session_state.get('app_running', False):
             )
         
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-        
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
         master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
         intro_html = html_views.get_intro_html()
         
+        # ----------------------------------------------------------------------
+        # 신청인 대운표 연산
+        # ----------------------------------------------------------------------
         c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
         j_idx = engine.JI.index(mb) if mb in engine.JI else 0
         cur_dw_idx = max(0, (age - calc_d) // 10)
@@ -932,34 +916,27 @@ if st.session_state.get('app_running', False):
             val = i * 10 + calc_d
             c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
             j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
-            
             c_hanja = engine.K2H_GAN.get(c_hangul, c_hangul)
             j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
-            
             is_active = (val <= age < val + 10)
-            
             u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
             y_shin_val = engine.get_12_shinsal(yb, j_hangul) if j_hangul != "-" else "-"
             d_shin_val = engine.get_12_shinsal(db, j_hangul) if j_hangul != "-" else "-"
             
             daewun_data_list.append({
-                "age_range": f"{val}~{val+9}세",
-                "ss_gan": engine.get_ss(ds_hanja, c_hangul),
-                "c_hanja": c_hanja,
-                "c_hangul": c_hangul,
-                "j_hanja": j_hanja,
-                "j_hangul": j_hangul,
-                "ss_ji": engine.get_ss(ds_hanja, j_hangul),
-                "un_sung": u_sung_val,
-                "y_shinsal": y_shin_val, 
-                "d_shinsal": d_shin_val, 
-                "is_current": is_active,
-                "is_first": (i == 0)
+                "age_range": f"{val}~{val+9}세", "ss_gan": engine.get_ss(ds_hanja, c_hangul),
+                "c_hanja": c_hanja, "c_hangul": c_hangul, "j_hanja": j_hanja, "j_hangul": j_hangul,
+                "ss_ji": engine.get_ss(ds_hanja, j_hangul), "un_sung": u_sung_val,
+                "y_shinsal": y_shin_val, "d_shinsal": d_shin_val, "is_current": is_active, "is_first": (i == 0)
             })
 
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
+        # ----------------------------------------------------------------------
+        # 상대방 대운표 연산 (2인용 전용)
+        # ----------------------------------------------------------------------
         p_un_html = ""
+        p_info_h, p_table_html, p_master_bar_html = "", "", ""
         if is_2person:
             try:
                 p_ys = partner_bazi[3][0] if len(partner_bazi[3]) > 0 else "甲"
@@ -988,36 +965,43 @@ if st.session_state.get('app_running', False):
                     p_val = i * 10 + p_calc_d
                     p_c_hangul = engine.GAN[(p_c_idx + (i + 1) * p_order_dir) % 10] if p_ms in engine.GAN else "-"
                     p_j_hangul = engine.JI[(p_j_idx + (i + 1) * p_order_dir) % 12] if p_mb in engine.JI else "-"
-                    
                     p_c_hanja = engine.K2H_GAN.get(p_c_hangul, p_c_hangul) if p_c_hangul != "-" else "-"
                     p_j_hanja = engine.K2H_JI.get(p_j_hangul, p_j_hangul) if p_j_hangul != "-" else "-"
-                    
                     p_is_active = (p_val <= p_age_val < p_val + 10)
-                    
                     p_u_sung_val = engine.get_unsung(p_ds_hanja, p_j_hanja) if p_j_hanja != "-" else "-"
                     p_y_shin_val = engine.get_12_shinsal(p_yb, p_j_hangul) if p_j_hangul != "-" else "-"
                     p_d_shin_val = engine.get_12_shinsal(p_db, p_j_hangul) if p_j_hangul != "-" else "-"
                     
                     p_daewun_data_list.append({
-                        "age_range": f"{p_val}~{p_val+9}세",
-                        "ss_gan": engine.get_ss(p_ds_hanja, p_c_hangul),
-                        "c_hanja": p_c_hanja,
-                        "c_hangul": p_c_hangul,
-                        "j_hanja": p_j_hanja,
-                        "j_hangul": p_j_hangul,
-                        "ss_ji": engine.get_ss(p_ds_hanja, p_j_hangul),
-                        "un_sung": p_u_sung_val,
-                        "y_shinsal": p_y_shin_val, 
-                        "d_shinsal": p_d_shin_val, 
-                        "is_current": p_is_active,
-                        "is_first": (i == 0)
+                        "age_range": f"{p_val}~{p_val+9}세", "ss_gan": engine.get_ss(p_ds_hanja, p_c_hangul),
+                        "c_hanja": p_c_hanja, "c_hangul": p_c_hangul, "j_hanja": p_j_hanja, "j_hangul": p_j_hangul,
+                        "ss_ji": engine.get_ss(p_ds_hanja, p_j_hangul), "un_sung": p_u_sung_val,
+                        "y_shinsal": p_y_shin_val, "d_shinsal": p_d_shin_val, "is_current": p_is_active, "is_first": (i == 0)
                     })
                 p_un_html = html_views.generate_daewun_layout(p_daewun_data_list, p_direction_str, p_calc_d, get_oh_class)
+                
+                # 상대방 원국표 및 마스터바 빌드
+                p_gans = [partner_bazi[0][0] if len(partner_bazi[0])>0 else "-", partner_bazi[1][0] if len(partner_bazi[1])>0 else "甲", partner_bazi[2][0] if len(partner_bazi[2])>0 else "甲", partner_bazi[3][0] if len(partner_bazi[3])>0 else "甲"]
+                p_jjis = [partner_bazi[0][1] if len(partner_bazi[0])>1 else "-", partner_bazi[1][1] if len(partner_bazi[1])>1 else "子", partner_bazi[2][1] if len(partner_bazi[2])>1 else "子", partner_bazi[3][1] if len(partner_bazi[3])>1 else "子"]
+                p_counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+                for c in p_gans + p_jjis:
+                    p_oh = engine.get_color(c)
+                    if p_oh in p_counts: p_counts[p_oh] += 1
+                p_guiin_str = guiin_map.get(p_ds_hanja, '없음')
+                p_n_gong = engine.calculate_gongmang(p_ys, p_yb) or "-"
+                p_i_gong = engine.calculate_gongmang(p_ds, p_db) or "-"
+                p_samjae = engine.get_samjae(p_yb, curr_y_ji)
+                p_samjae_color = "#C62828" if p_samjae != "해당 없음" else "#555"
+
+                p_info_h = html_views.get_info_header("♀️" if f_gender_val=="여성" else "♂️", p_name_val, f_gender_val, st.session_state.get("f_m_stat","선택"), p_age_val, p_sol_str_val, p_lun_str_val, p_time_val)
+                p_table_html = html_views.generate_saju_table_data(p_gans, p_jjis, p_ds, f_gender_val, engine)
+                p_master_bar_html = html_views.get_master_bar(p_calc_d, p_counts['목'], p_counts['화'], p_counts['토'], p_counts['금'], p_counts['수'], p_guiin_str, p_n_gong, p_i_gong, p_samjae_color, p_samjae)
             except Exception:
                 p_un_html = "<p style='text-align:center;'>상대방 대운 연산 중</p>"
-        else:
-            p_un_html = ""
 
+        # ----------------------------------------------------------------------
+        # 세운 및 월운 연산
+        # ----------------------------------------------------------------------
         current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
         start_year = int(sol_y) + current_daewun_age - 1
 
@@ -1027,21 +1011,14 @@ if st.session_state.get('app_running', False):
             tage = current_daewun_age + i
             base = (ty - 1984) % 60
             tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
-            tc = engine.K2H_GAN.get(tc_hangul, tc_hangul)
-            tj = engine.K2H_JI.get(tj_hangul, tj_hangul)
-            
+            tc, tj = engine.K2H_GAN.get(tc_hangul, tc_hangul), engine.K2H_JI.get(tj_hangul, tj_hangul)
             is_cur_yr = (ty == curr_year)
             bg_col = "#E1F5FE" if is_cur_yr else "transparent"
             b_left = "1px solid #ccc"
-            
             se_content += html_views.get_sewun_cell(
-                f"{ty}년", tage, 
-                engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
-                tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), 
-                engine.get_unsung(ds_hanja, tj), 
-                engine.get_12_shinsal(yb, tj), 
-                engine.get_12_shinsal(db, tj),
-                bg_col, b_left, is_cur_yr
+                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
+                tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
+                engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr
             )
             
         dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
@@ -1055,19 +1032,14 @@ if st.session_state.get('app_running', False):
                 wc_hanja, wj_hanja = m_p_res[0], m_p_res[1]
             except Exception:
                 wc_hanja, wj_hanja = "甲", "子"
-            
             is_cur_m = (tm == curr_m)
             bg_col = "#E8F5E9" if is_cur_m else "transparent"
             b_left = "1px solid #ccc"
-            
             wol_content += html_views.get_wolun_cell(
-                tm, 
-                engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
+                tm, engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
                 wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
-                engine.get_unsung(ds_hanja, wj_hanja), 
-                engine.get_12_shinsal(yb, wj_hanja), 
-                engine.get_12_shinsal(db, wj_hanja),
-                bg_col, b_left, is_cur_m
+                engine.get_unsung(ds_hanja, wj_hanja), engine.get_12_shinsal(yb, wj_hanja), 
+                engine.get_12_shinsal(db, wj_hanja), bg_col, b_left, is_cur_m
             )
 
         wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
@@ -1083,45 +1055,47 @@ if st.session_state.get('app_running', False):
         closing_html = html_views.get_closing_html(name)            
         closing_part = str(closing_html or "").strip()
 
+        # ----------------------------------------------------------------------
+        # 팩트 블록 구성 (1인용 vs 2인용 완전 분리)
+        # ----------------------------------------------------------------------
         part_1_fact = str(info_h or "") + str(table_html or "") + str(master_bar_html or "")
         part_2_intro = str(intro_html or "")
         part_3_golden = str(golden_text_html or "")
         part_5_closing = str(closing_part or "")
 
-        ss_unsung_str = (
-            f"년주:{engine.get_ss(ds, ys)}{engine.get_ss(ds, yb)}({engine.get_unsung(ds, yb)}) / "
-            f"월주:{engine.get_ss(ds, ms)}{engine.get_ss(ds, mb)}({engine.get_unsung(ds, mb)}) / "
-            f"일주:{ds}(본인){engine.get_ss(ds, db)}({engine.get_unsung(ds, db)}) / "
-            f"시주:{engine.get_ss(ds, hs)}{engine.get_ss(ds, hb)}({engine.get_unsung(ds, hb)})"
-        )
-        
+        # 🌟 4-2번 궁합 비교 전용 [남명 완전체 ➔ 여명 완전체] 상단 팩트
+        part_1_fact_gunghap = part_1_fact
+        if is_2person:
+            u_full = str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + str(un_html or "")
+            p_full = str(p_info_h or "") + str(p_table_html or "") + str(p_master_bar_html or "") + str(p_un_html or "")
+            
+            male_block = u_full if gender == "남성" else p_full
+            female_block = p_full if gender == "남성" else u_full
+
+            part_1_fact_gunghap = f"""
+            <div style='margin-bottom: 25px;'>
+                <div style='font-size: 16px; font-weight: 900; color: #1565C0; margin-bottom: 8px;'>♂️ [남명(男命) 사주 원국 및 대운]</div>
+                {male_block}
+            </div>
+            <div style='margin-top: 25px; margin-bottom: 25px;'>
+                <div style='font-size: 16px; font-weight: 900; color: #C2185B; margin-bottom: 8px;'>♀️ [여명(女命) 사주 원국 및 대운]</div>
+                {female_block}
+            </div>
+            """
+
         won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
         won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
-        if not won_guk_vaults_str:
-            won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
+        if not won_guk_vaults_str: won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
             
-        hap_chung_hyoung_pa_hae = (
-            f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, "
-            f"일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
-        )
+        hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
         
-        s12_str = engine.get_all_12_shinsal(yb, mb, db, hb)
-
         try:
-            if hasattr(engine, 'get_general_shinsal_filtered'):
-                shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender)
-            else:
-                shinsal_raw = []
+            shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
         except Exception:
             shinsal_raw = []
-
         shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', str(s)) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
 
-        w_facts = engine.get_woonse_analysis_facts(
-            ds, db, dw_g_cur, dw_j_cur, 
-            engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], 
-            "丙", "午", "甲", "子"
-        )
+        w_facts = engine.get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], "丙", "午", "甲", "子")
 
         saju_fact_summary = f"""
 - 내담자 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({hs}{hb})
@@ -1137,74 +1111,46 @@ if st.session_state.get('app_running', False):
         cur_sewun_ji_val = engine.JI[cur_sewun_base % 12]
 
         ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db)
-
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
         wolun_first_half, wolun_second_half = engine.get_wolun_half_periods(target_year_val, curr_m) if hasattr(engine, 'get_wolun_half_periods') else ("전반기(절입일~중기 전)", "후반기(중기~다음 절입일 전)")
 
-        goal_wealth = st.session_state.get('wealth_goal', '자산 증식 및 손재수 방어')
-        goal_career = st.session_state.get('career_goal', '승진, 이직 및 적성 분야')
-        goal_love = st.session_state.get('love_goal', '이성 인연 및 관계 개선')
-        goal_health = st.session_state.get('health_goal', '체질적 취약 장기 및 양생법')
-        goal_tackil_purpose = st.session_state.get('tackil_purpose', '이사')
-        start_d = st.session_state.get('moving_start', selected_target_date)
-        end_d = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
-        goal_target_date_range = f"{start_d} ~ {end_d}"
-
-        # 🌟 고정키에서 안전하게 텍스트 구출
+        # 🌟 4번 상품 외부 원문 추출 및 특수문자 정제
         user_entered_text = ""
         if u_product.startswith("4-1"):
-            user_entered_text = st.session_state.get("text_4_1", "").strip()
+            user_entered_text = (st.session_state.get("text_4_1", "") or st.session_state.get(f"text_{u_product}", "")).strip()
         elif u_product.startswith("4-2"):
-            user_entered_text = st.session_state.get("text_4_2", "").strip()
+            user_entered_text = (st.session_state.get("text_4_2", "") or st.session_state.get(f"text_{u_product}", "")).strip()
 
-        # 🚨 [박사님 지시 사항 반영]: 불필요한 장식용 특수기호 싹 청소하기
         if user_entered_text:
-            # ▷, ▶, ◈, [, ], ■, □, ●, ○, ◆, ◇ 등 역술가들이 자주 쓰는 잡다한 기호 제거
             user_entered_text = re.sub(r'[▷▶◈\[\]\■\□\●\○\◆\◇\★\☆\※\▪\▫]', '', user_entered_text)
 
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
-            "age_prompt": engine.get_age_prompt(age), 
-            "gender_prompt": engine.get_gender_prompt(gender), 
-            "marital_prompt": engine.get_marital_prompt(gender, u_marital), 
-            "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
-            "saju_fact_summary": saju_fact_summary,
-            
-            "dw_g_cur": dw_g_cur, 
-            "dw_j_cur": dw_j_cur, 
+            "age_prompt": engine.get_age_prompt(age), "gender_prompt": engine.get_gender_prompt(gender), 
+            "marital_prompt": engine.get_marital_prompt(gender, u_marital), "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
+            "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
-            
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
             "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
-            "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae,
-            "won_guk_vaults_str": won_guk_vaults_str,
-            "shinsal_str": shinsal_str,
-            "cheon_eul": guiin_str,
-            "samjae_str": cur_samjae,
-            "curr_year": target_year_val,
-            "cur_sewun_gan": cur_sewun_gan_val,
-            "cur_sewun_ji": cur_sewun_ji_val,
-            "target_year": target_year_val,
-            "curr_m": curr_m, 
-            "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
-            "gh_score": gh_score,
-            "gh_grade": gh_grade,
-
+            "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
+            "shinsal_str": shinsal_str, "cheon_eul": guiin_str, "samjae_str": cur_samjae,
+            "curr_year": target_year_val, "cur_sewun_gan": cur_sewun_gan_val, "cur_sewun_ji": cur_sewun_ji_val,
+            "target_year": target_year_val, "curr_m": curr_m, "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
+            "gh_score": gh_score, "gh_grade": gh_grade,
             "first_half_period": seun_first_half if "1-2" in u_product else wolun_first_half,
             "second_half_period": seun_second_half if "1-2" in u_product else wolun_second_half,
-            "wealth_goal": goal_wealth,
-            "career_goal": goal_career,
-            "love_goal": goal_love,
-            "health_goal": goal_health,
-            "tackil_purpose": goal_tackil_purpose,
-            "target_date_range": goal_target_date_range,
-            "other_reading_text": user_entered_text,  # AI 프롬프트용
-            "other_report": user_entered_text,        # 안전 장치용
+            "wealth_goal": st.session_state.get('wealth_goal', '자산 증식'),
+            "career_goal": st.session_state.get('career_goal', '직업 적성'),
+            "love_goal": st.session_state.get('love_goal', '인연 관계'),
+            "health_goal": st.session_state.get('health_goal', '건강 관리'),
+            "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
+            "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
+            "other_reading_text": user_entered_text, "other_report": user_entered_text,
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
         }
@@ -1233,41 +1179,20 @@ if st.session_state.get('app_running', False):
         target_prompt = getattr(prompts, prompt_var_name, getattr(prompts, "프롬프트_1_1_기본", ""))
         
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
+        raw_response = call_gemini_api(formatted_prompt)
         
-        # 🌟 [치명적 버그 수정]: 4번 상품인데 원문이 없으면 2분 동안 기다리지 않고 바로 패스!
-        if u_product.startswith("4-") and not user_entered_text:
-            ai_output_html = ""
+        if raw_response and isinstance(raw_response, str):
+            clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            ai_output_html = html_views.format_ai_text_to_html(clean_raw)
         else:
-            raw_response = call_gemini_api(formatted_prompt)
-            if raw_response and isinstance(raw_response, str):
-                clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-                ai_output_html = html_views.format_ai_text_to_html(clean_raw)
-            else:
-                ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
+            ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
         # ==============================================================================
-        # 🏮 [ver 72.5 파이프라인] 표지 및 본문 보고서 완벽 출력부
+        # 🏮 [ver 72.5 파이프라인] 최종 화면 렌더링
         # ==============================================================================
-        
         if 'cover_html' in locals() and cover_html:
             safe_cover = re.sub(r'\n\s+', '\n', cover_html)
             st.markdown(safe_cover, unsafe_allow_html=True)
-
-        delivery_html = ""
-        if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
-            try:
-                s_d_val = st.session_state.get('delivery_start_date', dt_mod.date.today())
-                e_d_val = st.session_state.get('delivery_end_date', dt_mod.date.today() + dt_mod.timedelta(days=30))
-                m_jjis_val = jjis if gender == "남성" else [b[1] if len(b)>1 else "?" for b in partner_bazi]
-                f_jjis_val = [b[1] if len(b)>1 else "?" for b in partner_bazi] if gender == "남성" else jjis
-                forbidden_list = ['병오', '임자', '계해', '신유', '경신']
-                
-                if hasattr(engine, 'get_optimized_delivery_days'):
-                    delivery_days = engine.get_optimized_delivery_days(s_d_val, e_d_val, m_jjis_val, f_jjis_val, forbidden_list)
-                    del_list_str = "".join([f"<div style='margin-bottom:8px; padding:10px; background:#F8F9FA; border:1px solid #E8EAF6; border-radius:6px; color:#1A237E;'>✅ 추천 길일: <b>{d['date']}</b> (조화 점수: {d['score']}점)</div>" for d in delivery_days])
-                    delivery_html = f"<div style='margin-top:20px; padding:20px; border:2px dashed #C62828; border-radius:10px;'><h3 style='color:#C62828; margin-top:0;'>📅 시공명리 최적 택일 추천</h3>{del_list_str}</div>"
-            except Exception as e:
-                pass
 
         final_render_html = ""
 
@@ -1320,7 +1245,6 @@ if st.session_state.get('app_running', False):
             m_daewun_html = un_html if gender == "남성" else p_un_html
             f_daewun_html = p_un_html if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-
             g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
 
             score_ui, closing_ui = "", ""
@@ -1328,14 +1252,8 @@ if st.session_state.get('app_running', False):
                 score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
             g_ess += score_ui + closing_ui
-
             final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
 
-        elif u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
-            master_comp = f"{delivery_html}{ai_output_html}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        # 🌟 4번 상품 렌더링 블록 (간소화 완료)
         elif u_product.startswith("4-1"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1346,70 +1264,32 @@ if st.session_state.get('app_running', False):
                 sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
                 formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
                 formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-        # 🌟 2인용 궁합(3-1, 4-2)을 위한 상대방 팩트 및 남/여 통합 블록 빌드
-        if is_2person:
-            p_gans = [partner_bazi[0][0] if len(partner_bazi[0])>0 else "-", partner_bazi[1][0] if len(partner_bazi[1])>0 else "甲", partner_bazi[2][0] if len(partner_bazi[2])>0 else "甲", partner_bazi[3][0] if len(partner_bazi[3])>0 else "甲"]
-            p_jjis = [partner_bazi[0][1] if len(partner_bazi[0])>1 else "-", partner_bazi[1][1] if len(partner_bazi[1])>1 else "子", partner_bazi[2][1] if len(partner_bazi[2])>1 else "子", partner_bazi[3][1] if len(partner_bazi[3])>1 else "子"]
-            
-            p_counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
-            for c in p_gans + p_jjis:
-                p_oh = engine.get_color(c)
-                if p_oh in p_counts: p_counts[p_oh] += 1
-                
-            p_guiin_str = guiin_map.get(p_ds_hanja, '없음')
-            p_n_gong = engine.calculate_gongmang(p_ys, p_yb) or "-"
-            p_i_gong = engine.calculate_gongmang(p_ds, p_db) or "-"
-            p_samjae = engine.get_samjae(p_yb, curr_y_ji)
-            p_samjae_color = "#C62828" if p_samjae != "해당 없음" else "#555"
-            
-            p_info_h = html_views.get_info_header("♀️" if f_gender_val=="여성" else "♂️", p_name_val, f_gender_val, st.session_state.get("f_m_stat","선택"), p_age_val, p_sol_str_val, p_lun_str_val, p_time_val)
-            p_table_html = html_views.generate_saju_table_data(p_gans, p_jjis, p_ds, f_gender_val, engine)
-            p_master_bar_html = html_views.get_master_bar(p_calc_d, p_counts['목'], p_counts['화'], p_counts['토'], p_counts['금'], p_counts['수'], p_guiin_str, p_n_gong, p_i_gong, p_samjae_color, p_samjae)
-
-            # 🌟 [남명 팩트 완전체] + [여명 팩트 완전체] 순차 결합
-            male_full_block = (info_h + table_html + master_bar_html + un_html) if gender == "남성" else (p_info_h + p_table_html + p_master_bar_html + p_un_html)
-            female_full_block = (p_info_h + p_table_html + p_master_bar_html + p_un_html) if gender == "남성" else (info_h + table_html + master_bar_html + un_html)
-            
-            part_1_fact_gunghap = f"""
-            <div style='margin-bottom: 25px;'>
-                <div style='font-size: 16px; font-weight: 900; color: #1565C0; margin-bottom: 8px;'>♂️ [남명(男命) 사주 원국 및 대운]</div>
-                {male_full_block}
-            </div>
-            <div style='margin-top: 25px; margin-bottom: 25px;'>
-                <div style='font-size: 16px; font-weight: 900; color: #C2185B; margin-bottom: 8px;'>♀️ [여명(女命) 사주 원국 및 대운]</div>
-                {female_full_block}
-            </div>
-            """
-
-        # --- 4-2. 타 감명서 비교 (궁합) ---
+        # 🌟 4-2. 타 감명서 비교 (궁합) 완전체 전용 렌더링
         elif u_product.startswith("4-2"):
-            target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
-                final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
+                final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-                
-                # 🚨 [수정]: AI 본문 내부의 불필요한 대운표 마커를 제거하여 순수 통변만 깔끔하게 출력
                 formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
-
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-                final_render_html = html_views.render_comparison_report(target_gunghap_fact, external_raw_box, full_ai_content)
+                
+                # 전용 궁합 비교 뷰 호출
+                if hasattr(html_views, 'render_gunghap_comparison_report'):
+                    final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
+                else:
+                    final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
-
-        # 4. 본문 종합 보고서 최종 단독 렌더링
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
 
         final_render_html = str(final_render_html).strip()
-
         if final_render_html.startswith("</div>"):
             final_render_html = final_render_html[6:].strip()
 
