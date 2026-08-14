@@ -124,13 +124,8 @@ def get_global_css():
     """
 
 def format_ai_text_to_html(text):
-    """
-    AI 생성 텍스트 포맷터
-    - 화면에서는 하나의 흐름으로 유려하게 이어지고, 인쇄 시에는 대제목별로 정돈
-    """
     if not text:
         return ""
-        
     lines = str(text).split('\n')
     html_lines = []
     
@@ -141,36 +136,31 @@ def format_ai_text_to_html(text):
             
         line = line.replace('*', '').replace('#', '')
 
-        # 1. 🌟 [수석보좌관의 1:1 장단점 정밀 비교] 문구
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#008000; font-size:17px; font-weight:800; margin-top:18px; margin-bottom:8px;'>"
                 f"{line}</div>"
             )
-        # 2. 대제목 (예: 1. 성격 분석 / 2. 종합 비교)
         elif re.match(r'^\d+\.\s', line):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#000000; font-size:19px; font-weight:800; margin-top:22px; margin-bottom:10px; border-bottom:2px solid #1A237E; padding-bottom:4px;'>{line}</div>"
             )
-        # 3. 소제목 (예: 1) 겉으로 드러난 성격)
         elif re.match(r'^\d+\)\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#1A237E; font-size:16px; font-weight:800; margin-top:14px; margin-bottom:6px;'>{line}</div>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#1A237E; font-size:17px; font-weight:800; margin-top:14px; margin-bottom:6px;'>{line}</div>"
             )
-        # 4. 소소제목 (예: (1) 구체적 행동 방식)
         elif re.match(r'^\(\d+\)\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#333333; font-size:15px; font-weight:700; margin-top:10px; margin-bottom:4px;'>{line}</div>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#333333; font-size:16px; font-weight:700; margin-top:10px; margin-bottom:4px;'>{line}</div>"
             )
-        # 5. 일반 통변 본문
         else:
             if line.startswith('-'):
                 html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size:15px; font-weight:400; line-height:1.85; color:#111111; text-align:justify; margin-top:4px; margin-bottom:8px; text-indent:5px; padding-left:10px;'>{line}</p>"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size:16px; font-weight:400; line-height:1.85; color:#111111; text-align:justify; margin-top:4px; margin-bottom:8px; text-indent:5px; padding-left:10px;'>{line}</p>"
                 )
             else:
                 html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size:15px; font-weight:400; line-height:1.85; color:#111111; text-align:justify; margin-top:4px; margin-bottom:8px; text-indent:15px;'>{line}</p>"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size:16px; font-weight:400; line-height:1.85; color:#111111; text-align:justify; margin-top:4px; margin-bottom:8px; text-indent:15px;'>{line}</p>"
                 )
             
     return "\n".join(html_lines)
@@ -562,7 +552,6 @@ def get_intro_html():
     """
 
 def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_name="알수없음격"):
-    """시공간 요약 황금문장 (나눔명조 전면 적용)"""
     SEASON_SOLAR_TERMS = {
         '寅': '입춘과 경칩 사이의 이른 봄(寅月)', '卯': '경칩과 청명 사이의 완연한 봄(卯月)',
         '辰': '청명과 입하 사이의 봄과 여름의 환절기(辰月)', '巳': '입하와 망종 사이의 이른 여름(巳月)',
@@ -574,7 +563,7 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
     wol_korean_str = SEASON_SOLAR_TERMS.get(mb, f"{mb}월")
 
     return f"""
-    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.85; color: #000000; margin-bottom: 18px;'>
+    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.85; color: #000000; margin-bottom: 18px;'>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 8px;'>
             정통 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
         </p>
@@ -586,22 +575,21 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
     """
 
 def get_closing_html(name):
-    """1인용 감명서 맺음말 및 상업용 안내 박스"""
     return f"""
     <hr style="border: 0; border-top: 2px dashed #1A237E; margin: 30px 0 20px 0;">
     <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
-        <p style="font-size: 15px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style="font-size: 15px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style="font-size: 15px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 12px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style="font-size: 15px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 12px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
+        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
         <div style="text-align: right; margin-top: 20px;">
-            <span style="font-weight: 800; font-size: 16px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
+            <span style="font-weight: 800; font-size: 17px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
         </div>
     </div>
     
     <div style='margin-top: 25px; padding: 12px 15px; background-color: #F8F9FA; border-left: 4px solid #1A237E; border-radius: 4px; font-family: "Nanum Myeongjo", serif;'>
-        <p style='font-size: 14px; font-weight: 800; color: #1A237E; margin: 0; line-height: 1.6;'>💡 [초연 명리 안내]</p>
-        <p style='font-size: 13px; font-weight: 400; color: #333; margin-top: 4px; margin-bottom: 0; line-height: 1.7;'>본 풀이는 사주 원국의 본질과 현재 운의 큰 흐름을 짚어드린 기본 감명입니다. 특정 연도별·월별 정밀한 세부 흐름은 <b>'올해 및 특정연도 운세 상세분석'</b>을, 재물·직업 등 특정 분야의 집중 상담은 <b>'테마별 특성화 상담'</b>을 통해 확인하실 수 있습니다.</p>
+        <p style='font-size: 15px; font-weight: 800; color: #1A237E; margin: 0; line-height: 1.6;'>💡 [초연 명리 안내]</p>
+        <p style='font-size: 14px; font-weight: 400; color: #333; margin-top: 4px; margin-bottom: 0; line-height: 1.7;'>본 풀이는 사주 원국의 본질과 현재 운의 큰 흐름을 짚어드린 기본 감명입니다. 특정 연도별·월별 정밀한 세부 흐름은 <b>'올해 및 특정연도 운세 상세분석'</b>을, 재물·직업 등 특정 분야의 집중 상담은 <b>'테마별 특성화 상담'</b>을 통해 확인하실 수 있습니다.</p>
     </div>
     """
 
@@ -733,15 +721,14 @@ def get_gunghap_score_visual_html(gh_engine):
     return score_chart_html
 
 def get_gunghap_closing(name1, name2):
-    """궁합 감명서 감성 맺음말"""
     return f"""
     <div style='margin-top: 30px; border-top: 2px dashed #444; padding-top: 18px; font-family: "Nanum Myeongjo", serif;'>
-        <p style='font-size: 15px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>
         <b>{name1}님</b>과 <b>{name2}님</b>의 만남은 결코 우연이 아닌, <b>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b>'조화와 상생'</b>입니다.</p>
-        <p style='font-size: 15px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>서로의 기운을 보완하고 다독여주는 든든한 <b>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 초연 시공명리의 축복이 가득하시길 소망합니다.</p>
-        <p style='font-size: 15px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>서로의 기운을 보완하고 다독여주는 든든한 <b>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 초연 시공명리의 축복이 가득하시길 소망합니다.</p>
+        <p style='font-size: 16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
         <div style='text-align: right; margin-top: 20px;'>
-            <span style='font-weight: 800; font-size: 16px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+            <span style='font-weight: 800; font-size: 17px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
         </div>
     </div>
     """
@@ -896,13 +883,12 @@ def get_auto_comparison_header():
     </div>"""
 
 def get_external_raw_text_box(other_text):
-    """제출된 타 감명서 원본 전용 박스 (인쇄 시 독립 페이지 분할)"""
     return f"""
     <div style='margin-top:20px; margin-bottom:20px; padding:20px; background-color:#F5F5F5; border:1.5px solid #757575; border-radius:10px; font-family: "Nanum Myeongjo", serif;'>
-        <div style='font-size:17px; font-weight:800; color:#212121; border-bottom:1.5px solid #9E9E9E; padding-bottom:8px; margin-bottom:12px;'>
+        <div style='font-size:18px; font-weight:800; color:#212121; border-bottom:1.5px solid #9E9E9E; padding-bottom:8px; margin-bottom:12px;'>
             📄 [제출된 외부 타 감명서 원본]
         </div>
-        <div style='font-size:14px; color:#333333; line-height:1.85; white-space:pre-wrap;'>{other_text}</div>
+        <div style='font-size:16px; color:#111111; line-height:1.85; white-space:pre-wrap;'>{other_text}</div>
     </div>
     <div class='page-break'></div>
     """
