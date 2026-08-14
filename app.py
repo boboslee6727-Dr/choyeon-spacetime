@@ -1063,7 +1063,7 @@ if st.session_state.get('app_running', False):
         part_3_golden = str(golden_text_html or "")
         part_5_closing = str(closing_part or "")
 
-        # 🌟 4-2번 궁합 비교 전용 [남명 완전체 ➔ 여명 완전체] 상단 팩트
+        # 🌟 4-2번 궁합 비교 전용 [남명 완전체 ➔ 여명 완전체] 상단 팩트 (뷰 함수로 분리)
         part_1_fact_gunghap = part_1_fact
         if is_2person:
             u_full = str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + str(un_html or "")
@@ -1072,16 +1072,10 @@ if st.session_state.get('app_running', False):
             male_block = u_full if gender == "남성" else p_full
             female_block = p_full if gender == "남성" else u_full
 
-            part_1_fact_gunghap = f"""
-            <div style='margin-bottom: 25px;'>
-                <div style='font-size: 16px; font-weight: 900; color: #1565C0; margin-bottom: 8px;'>♂️ [남명(男命) 사주 원국 및 대운]</div>
-                {male_block}
-            </div>
-            <div style='margin-top: 25px; margin-bottom: 25px;'>
-                <div style='font-size: 16px; font-weight: 900; color: #C2185B; margin-bottom: 8px;'>♀️ [여명(女命) 사주 원국 및 대운]</div>
-                {female_block}
-            </div>
-            """
+            if hasattr(html_views, 'get_couple_fact_split_layout'):
+                part_1_fact_gunghap = html_views.get_couple_fact_split_layout(male_block, female_block)
+            else:
+                part_1_fact_gunghap = f"{male_block}<br>{female_block}"
 
         won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
         won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
