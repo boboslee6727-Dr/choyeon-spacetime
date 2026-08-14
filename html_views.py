@@ -981,23 +981,24 @@ def render_master_bar(ohang_pct, epyeok_info, sinsal_list, jiji_rel_list):
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
-    - A4 캔버스 바깥선 제거 (border: none)
-    - 안쪽 표준 둥근 사각 테두리 단독 적용 (border: 1.5px solid #333; border-radius: 14px)
+    - 3-1 표준 궁합 양식과 100% 동일한 A4 상·하·좌·우 여백 및 테두리 규격 적용
+    - A4 캔버스 바깥선 제거 및 표준 둥근 사각 테두리 (border: 1.5px solid #333; border-radius: 14px)
+    - 상·하 패딩을 최적화(padding: 20px)하여 인쇄 시 A4 상하단 여백 완벽 확보
     - 전 영역 정통 '나눔명조(Nanum Myeongjo)' 서체 통일 적용
     """
     return f"""
-    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Myeongjo', 'Batang', serif;">
-        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); font-family: 'Nanum Myeongjo', 'Batang', serif;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px 0; background: transparent; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 20px 22px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); font-family: 'Nanum Myeongjo', 'Batang', serif;">
             <!-- 남명 1장 + 여명 1장 (각각 내부에서 page-break-after로 독립 분할) -->
             {couple_fact_html}
             
             <!-- 3단계: 외부 타 감명서 원본 텍스트 박스 영역 (출력 완료 후 강제 Page Break) -->
-            <div style="page-break-after: always; break-after: page; margin-top: 15px; margin-bottom: 30px;">
+            <div style="page-break-after: always; break-after: page; margin-top: 15px; margin-bottom: 25px;">
                 {external_raw_box}
             </div>
             
             <!-- 4단계: 초연 시공명리 AI 1:1 비교 통변 (새 페이지 첫 줄부터 단독 시작) -->
-            <div style="margin-top: 20px;">
+            <div style="margin-top: 15px;">
                 {ai_content_html}
             </div>
         </div>
