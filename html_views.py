@@ -523,30 +523,42 @@ def render_ai_with_tables(ai_text, **tables):
 # ==============================================================================
 
 def get_personal_cover(version, report_title, u_icon, name, sol, lun, time, today):
-    """1인용 감명서 표준 표지 (화면 연속 / 인쇄 A4 1장 분할)"""
-    clean_title = report_title.replace("🏮 ", "").strip()
+    """1인용 감명서 표준 표지 (Ver 50.5 폰트 위계·굵기 및 A4 상하 중앙정렬 완결본)"""
+    clean_title = str(report_title or "초연 전통 명리사주 풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
     
+    # 🌟 신청인 이름 앞 중복 호칭 정제
+    clean_name = str(name or "").strip()
+    for prefix in ["신청인 :", "신청인:", "남명 :", "남명:", "여명 :", "여명:"]:
+        if clean_name.startswith(prefix):
+            clean_name = clean_name[len(prefix):].strip()
+    if not clean_name:
+        clean_name = "홍길동"
+
     return f"""
-    <div class='report-page cover-page'>
-        <div class='vip-inset-frame' style='text-align: center;'>
-            <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:35px; width: 100%; display: flex; flex-direction: column; align-items: center;'>
-                <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 800 !important; margin:0 !important; color:#111111; white-space: nowrap !important; letter-spacing: -0.5px !important; text-align: center; width: 100%; display: block;'>{clean_title}</h1>
-                <div style='text-align: right; width: 100%; margin-top: 10px;'>
-                    <span style='font-family:"Nanum Myeongjo", serif; font-size: 13px; letter-spacing: 1px; color:#666;'>{version}</span>
+    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 45px 30px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 85%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            
+            <!-- [대제목 H1] Ver 50.5 규격: 36px Bold 900 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 18px; margin-bottom: 35px;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 36px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -0.5px;'>{clean_title}</h1>
+                <div style='text-align: right; margin-top: 10px;'>
+                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 25px; border-radius: 12px; margin-bottom: 30px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 24px; font-weight: 800; color: #111111; margin-bottom: 18px;'>{u_icon} 신청인 : {name} 님</h2>
-                <div style='font-family:"Nanum Myeongjo", serif; font-size: 15px; line-height: 2.0; color:#333333;'>
+            <!-- [신청인 정보 박스] Ver 50.5 규격: 성명 24px Bold 800 / 인적사항 15px Bold 700 (#111111 진하게) -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 30px 25px; border-radius: 15px; margin-bottom: 30px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: #1A237E; margin: 0 0 16px 0;'>{u_icon} 신청인 : {clean_name} 님</h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #111111; line-height: 2.0;'>
                     <p style='margin: 0;'>양력 : {sol}</p>
                     <p style='margin: 0;'>음력 : {lun}</p>
-                    <p style='margin: 0;'>태어난 시간 : {time}</p>
+                    <p style='margin: 4px 0 0 0; color: #D50000; font-weight: 800;'>태어난 시간 : {time}</p>
                 </div>
             </div>
             
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 16px; margin-top: 30px; font-weight: 700; color:#444;'>{today}</p>
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
+            <!-- [발행일자 및 연구소명] Ver 50.5 규격: 18px Bold 800 / 22px Bold 800 (#1A237E) -->
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 12px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
@@ -653,41 +665,53 @@ def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing)
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 감명서 표준 표지 (app.py 호출 인자 15개 100% 일치 및 1인용 표지 규격 통일본)"""
-    clean_title = str(report_title or "초연 시공명리 궁합풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
+    """2인용 궁합 감명서 표준 표지 (Ver 50.5 규격 100% 동일 적용 및 호칭 중복 완벽 제거)"""
+    clean_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
+    
+    # 🌟 이름 내 중복 접두어('남명 :', '여명 :', '신청인 :' 등) 원천 정제
+    def clean_person_name(raw_name):
+        n = str(raw_name or "").strip()
+        for prefix in ["남명 :", "여명 :", "남명:", "여명:", "신청인 :", "신청인:", "상대방 :", "상대방:"]:
+            if n.startswith(prefix):
+                n = n[len(prefix):].strip()
+        return n if n else "무명"
+
+    clean_u_name = clean_person_name(u_name)
+    clean_p_name = clean_person_name(p_name)
     
     return f"""
-    <div class='report-page cover-page'>
-        <div class='vip-inset-frame' style='text-align: center;'>
-            <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:28px; width: 100%; display: flex; flex-direction: column; align-items: center;'>
-                <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 800 !important; margin:0 !important; color:#111111; white-space: nowrap !important; letter-spacing: -0.5px !important; text-align: center; width: 100%; display: block;'>{clean_title}</h1>
-                <div style='text-align: right; width: 100%; margin-top: 10px;'>
-                    <span style='font-family:"Nanum Myeongjo", serif; font-size: 13px; letter-spacing: 1px; color:#666;'>{version}</span>
+    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 45px 30px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 85%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            
+            <!-- [대제목 H1] Ver 50.5 규격: 36px Bold 900 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 18px; margin-bottom: 30px;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 36px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -0.5px;'>{clean_title}</h1>
+                <div style='text-align: right; margin-top: 8px;'>
+                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
-            <!-- 남명(신청인) 정보 박스 -->
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px 25px; border-radius: 12px; margin-bottom: 18px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 12px;'>{u_icon} 남명 : {u_name} 님 <span style='font-size: 15px; color: #555;'>( {u_age}세 )</span></h2>
-                <div style='font-family:"Nanum Myeongjo", serif; font-size: 15px; line-height: 1.9; color:#333333;'>
-                    <p style='margin: 0;'>양력 : {u_sol}</p>
-                    <p style='margin: 0;'>음력 : {u_lun}</p>
-                    <p style='margin: 0;'>태어난 시간 : {u_time}</p>
+            <!-- [남명 정보 박스] Ver 50.5 규격: 성명 24px Bold 800 (#1A237E) / 인적사항 15px Bold 700 (#111111 진하게) -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 20px 20px; border-radius: 15px; margin-bottom: 16px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: #1A237E; margin: 0 0 12px 0;'>{u_icon} 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #555555; font-weight: 600;'>( {u_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #111111; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
+                    <p style='margin: 4px 0 0 0; color: #D50000; font-weight: 800; white-space: nowrap;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
-            <!-- 여명(상대방) 정보 박스 -->
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px 25px; border-radius: 12px; margin-bottom: 25px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 12px;'>{p_icon} 여명 : {p_name} 님 <span style='font-size: 15px; color: #555;'>( {p_age}세 )</span></h2>
-                <div style='font-family:"Nanum Myeongjo", serif; font-size: 15px; line-height: 1.9; color:#333333;'>
-                    <p style='margin: 0;'>양력 : {p_sol}</p>
-                    <p style='margin: 0;'>음력 : {p_lun}</p>
-                    <p style='margin: 0;'>태어난 시간 : {p_time}</p>
+            <!-- [여명 정보 박스] Ver 50.5 규격: 성명 24px Bold 800 (#D50000) / 인적사항 15px Bold 700 (#111111 진하게) -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 20px 20px; border-radius: 15px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: #D50000; margin: 0 0 12px 0;'>{p_icon} 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #555555; font-weight: 600;'>( {p_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #111111; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap;'>[양력] {p_sol} | [음력] {p_lun}</p>
+                    <p style='margin: 4px 0 0 0; color: #D50000; font-weight: 800; white-space: nowrap;'>태어난 시간 : {p_time}</p>
                 </div>
             </div>
             
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 16px; margin-top: 25px; font-weight: 700; color:#444;'>{today_str}</p>
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 12px;'>초연 시공명리 연구소</p>
+            <!-- [발행일자 및 연구소명] Ver 50.5 규격: 18px Bold 800 / 22px Bold 800 (#1A237E) -->
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 12px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
