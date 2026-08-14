@@ -987,6 +987,11 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("4-2"):
             user_entered_text = st.session_state.get("text_4_2", "").strip()
 
+        # 🚨 [박사님 지시 사항 반영]: 불필요한 장식용 특수기호 싹 청소하기
+        if user_entered_text:
+            # ▷, ▶, ◈, [, ], ■, □, ●, ○, ◆, ◇ 등 역술가들이 자주 쓰는 잡다한 기호 제거
+            user_entered_text = re.sub(r'[▷▶◈\[\]\■\□\●\○\◆\◇\★\☆\※\▪\▫]', '', user_entered_text)
+
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
