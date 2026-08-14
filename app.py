@@ -869,10 +869,21 @@ if st.session_state.get('app_running', False):
             p_lun_str_val = ""
             
             cover_html = html_views.get_couple_cover(
-                APP_VERSION, report_title, 
-                u_icon_str, name, age, sol_str_fmt, lun_str_fmt, time_str_fmt,
-                p_icon_str, p_name_val, p_age_val, p_sol_str_val, p_lun_str_val, p_time_val, 
-                today_str
+                version=APP_VERSION, 
+                report_title=report_title, 
+                u_icon=u_icon_str, 
+                u_name=name, 
+                u_age=age, 
+                u_sol=sol_str_fmt, 
+                u_lun=lun_str_fmt, 
+                u_time=time_str_fmt,
+                p_icon=p_icon_str, 
+                p_name=locals().get('p_name_val', ''), 
+                p_age=locals().get('p_age_val', ''), 
+                p_sol=locals().get('p_sol_str_val', ''), 
+                p_lun=locals().get('p_lun_str_val', ''), 
+                p_time=locals().get('p_time_val', ''), 
+                today_str=today_str
             )
             
             male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
