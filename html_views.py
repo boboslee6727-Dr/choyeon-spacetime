@@ -963,19 +963,41 @@ def get_warning_box(title, message):
     </div>
     """
 
+def render_master_bar(ohang_pct, epyeok_info, sinsal_list, jiji_rel_list):
+    """
+    오행/음양 비율 및 핵심 신살/지지역학 마스터바 렌더링
+    - 정통 '나눔명조(Nanum Myeongjo)' 서체 강제 적용
+    """
+    return f"""
+    <div style="background: #fdfdfd; border: 1px solid #dcdcdc; border-radius: 8px; padding: 12px 16px; margin: 15px 0 20px 0; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="font-size: 14px; font-weight: bold; color: #222; margin-bottom: 8px; font-family: 'Nanum Myeongjo', 'Batang', serif; letter-spacing: -0.3px;">
+            📊 [초연 시공명리 핵심 역학 지표 (Master Bar)]
+        </div>
+        <!-- 내부 지표 및 프로그레스 바 영역 -->
+        ...
+    </div>
+    """
+
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
     - A4 캔버스 바깥선 제거 (border: none)
     - 안쪽 표준 둥근 사각 테두리 단독 적용 (border: 1.5px solid #333; border-radius: 14px)
+    - 전 영역 정통 '나눔명조(Nanum Myeongjo)' 서체 통일 적용
     """
     return f"""
-    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Gothic', sans-serif;">
-        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
+    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); font-family: 'Nanum Myeongjo', 'Batang', serif;">
+            <!-- 남명 1장 + 여명 1장 (각각 내부에서 page-break-after로 독립 분할) -->
             {couple_fact_html}
-            <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
-            {external_raw_box}
-            <div style="margin-top: 30px;">
+            
+            <!-- 3단계: 외부 타 감명서 원본 텍스트 박스 영역 (출력 완료 후 강제 Page Break) -->
+            <div style="page-break-after: always; break-after: page; margin-top: 15px; margin-bottom: 30px;">
+                {external_raw_box}
+            </div>
+            
+            <!-- 4단계: 초연 시공명리 AI 1:1 비교 통변 (새 페이지 첫 줄부터 단독 시작) -->
+            <div style="margin-top: 20px;">
                 {ai_content_html}
             </div>
         </div>
