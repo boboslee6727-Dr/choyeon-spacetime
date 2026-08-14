@@ -1050,7 +1050,27 @@ if st.session_state.get('app_running', False):
         struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
         
         gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
+        # 신청인 기본 황금문구
         golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
+        
+        # 🌟 2인용 궁합(4-2 등)을 위한 상대방 황금문구 및 남녀 듀얼 황금문구 생성
+        golden_box_gunghap_html = golden_text_html
+        if is_2person:
+            try:
+                p_w_key, p_i_key = f"{p_ms}{p_mb}".strip(), f"{p_ds}{p_db}".strip()
+                p_w_val = choyeon_db.get("wolryeong", {}).get(p_w_key, f"[{p_w_key}] 시공간 데이터 없음")
+                p_i_val = choyeon_db.get("ilju", {}).get(p_i_key, f"[{p_i_key}] 성품 데이터 없음")
+                p_struct_data = choyeon_db.get("ilju_structure", {}).get(p_i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                p_gyuk, _ = engine.get_gyukgook_detailed(p_ds, p_ys, p_ms, partner_bazi[0][0] if len(partner_bazi[0])>0 else "甲", p_mb)
+                
+                p_golden_html = html_views.get_golden_text(p_name_val, p_w_val, p_i_val, p_struct_data[0], p_struct_data[1], p_struct_data[2], mb=p_mb, gyuk_name=p_gyuk)
+                
+                m_g_html = golden_text_html if gender == "남성" else p_golden_html
+                f_g_html = p_golden_html if gender == "남성" else golden_text_html
+                
+                golden_box_gunghap_html = html_views.get_couple_golden_text(m_name_val, m_g_html, f_name_val, f_g_html)
+            except Exception:
+                golden_box_gunghap_html = golden_text_html
 
         closing_html = html_views.get_closing_html(name)            
         closing_part = str(closing_html or "").strip()
@@ -1258,7 +1278,7 @@ if st.session_state.get('app_running', False):
                 sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
                 formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
                 formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
+                golden_box_html = golden_box_gunghap_html if 'golden_box_gunghap_html' in locals() else golden_text_html
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
