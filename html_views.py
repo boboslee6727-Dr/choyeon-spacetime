@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 72.4 Master - 논리적 정돈 및 보존 완결본)
+# html_views.py (ver 72.5 Master - 논리적 정돈 및 보존 완결본)
 # ==============================================================================
 import re
 import streamlit as st
@@ -1004,6 +1004,24 @@ def get_gunghap_v2_closing(name1, name2):
         <p style='font-size:16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
             <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+        </div>
+    </div>
+    """
+
+def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
+    """
+    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
+    - couple_fact_html: 남명(원국+마스터바+대운) + 여명(원국+마스터바+대운)
+    - external_raw_box: 외부 타 감명서 원문 박스
+    - ai_content_html: 초연시공명리 1:1 비교 통변
+    """
+    return f"""
+    <div class="report-box" style="background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); font-family: 'Nanum Gothic', sans-serif;">
+        {couple_fact_html}
+        <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
+        {external_raw_box}
+        <div style="margin-top: 30px;">
+            {ai_content_html}
         </div>
     </div>
     """
