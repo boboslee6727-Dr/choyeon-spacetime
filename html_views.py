@@ -948,6 +948,43 @@ def get_external_raw_text_box(other_text):
         <div style='font-size:14px; color:#424242; line-height:1.7; white-space:pre-wrap;'>{other_text}</div>
     </div>
     """
+def get_gunghap_cover_html(m_name, f_name, cur_date_str):
+    """
+    궁합 전용 표지 (Cover) 렌더링
+    - 3-1 표준 궁합 표지와 100% 동일한 A4 상·하·좌·우 여백 및 테두리 규격 적용
+    - A4 1장 출력 시 상하단 잘림 방지 (min-height 최적화 및 상하 패딩 정밀 압축)
+    """
+    return f"""
+    <div style="page-break-after: always; break-after: page; max-width: 900px; margin: 0 auto; padding: 25px 0; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 40px 35px; min-height: 860px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
+            <div style="margin-top: 15px;">
+                <div style="font-size: 18px; font-weight: 700; color: #555555; letter-spacing: 2px; margin-bottom: 15px; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+                    [ 초연 시공명리학 감명서 ]
+                </div>
+                <h1 style="font-size: 30px; font-weight: 900; color: #111111; margin: 0; line-height: 1.4; letter-spacing: -0.5px; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+                    {m_name} 님 & {f_name} 님<br>백년가약 궁합 정밀 감명서
+                </h1>
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <div style="display: inline-block; border: 1px solid #d0d0d0; border-radius: 8px; padding: 12px 28px; background: #fafafa; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+                    <div style="font-size: 15px; font-weight: 700; color: #222222; margin-bottom: 4px;">
+                        감명 일자 : {cur_date_str}
+                    </div>
+                    <div style="font-size: 14px; color: #444444;">
+                        감명 대상 : 신랑 {m_name} · 신부 {f_name}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 17px; font-weight: 900; color: #1A237E; letter-spacing: 1px; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+                    초연 시공명리 연구소
+                </div>
+            </div>
+        </div>
+    </div>
+    """
 
 def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
     """타 감명서 대조 전용 3단 순서 조립 (표지 + 타 감명서 원본 + 1:1 대조 리포트)"""
@@ -981,24 +1018,23 @@ def render_master_bar(ohang_pct, epyeok_info, sinsal_list, jiji_rel_list):
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
-    - 3-1 표준 궁합 양식과 100% 동일한 A4 상·하·좌·우 여백 및 테두리 규격 적용
-    - A4 캔버스 바깥선 제거 및 표준 둥근 사각 테두리 (border: 1.5px solid #333; border-radius: 14px)
-    - 상·하 패딩을 최적화(padding: 20px)하여 인쇄 시 A4 상하단 여백 완벽 확보
+    - A4 캔버스 바깥선 제거 (border: none)
+    - 안쪽 표준 둥근 사각 테두리 단독 적용 (border: 1.5px solid #333; border-radius: 14px)
     - 전 영역 정통 '나눔명조(Nanum Myeongjo)' 서체 통일 적용
     """
     return f"""
-    <div style="max-width: 900px; margin: 0 auto; padding: 20px 0; background: transparent; font-family: 'Nanum Myeongjo', 'Batang', serif;">
-        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 20px 22px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); font-family: 'Nanum Myeongjo', 'Batang', serif;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); font-family: 'Nanum Myeongjo', 'Batang', serif;">
             <!-- 남명 1장 + 여명 1장 (각각 내부에서 page-break-after로 독립 분할) -->
             {couple_fact_html}
             
             <!-- 3단계: 외부 타 감명서 원본 텍스트 박스 영역 (출력 완료 후 강제 Page Break) -->
-            <div style="page-break-after: always; break-after: page; margin-top: 15px; margin-bottom: 25px;">
+            <div style="page-break-after: always; break-after: page; margin-top: 15px; margin-bottom: 30px;">
                 {external_raw_box}
             </div>
             
             <!-- 4단계: 초연 시공명리 AI 1:1 비교 통변 (새 페이지 첫 줄부터 단독 시작) -->
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 20px;">
                 {ai_content_html}
             </div>
         </div>
