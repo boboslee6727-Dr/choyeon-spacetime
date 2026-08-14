@@ -1710,3 +1710,85 @@ def analyze_cosmic_gravity_and_samhyeong_patterns(bazi_dict):
     results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "시공간 특이 파동 없음."
     return results
 
+# ==============================================================================
+# 이사 및 개업 전용 길일 정밀 산출 엔진 (engine.py 하단에 추가)
+# ==============================================================================
+def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, purpose):
+    """
+    이사(가정 안정)와 개업(재물/현금흐름)의 목적을 분리하여 
+    기간 내 최적의 길일 Top 3를 산출하는 함수
+    """
+    import datetime as dt_mod
+    
+    # 내담자의 일간, 일지 추출
+    day_gan = user_gans[1]
+    day_ji = user_jjis[1]
+    
+    best_days = []
+    curr_date = start_date
+
+    while curr_date <= end_date:
+        try:
+            # 해당 날짜의 일진(간지) 역산
+            y_p, m_p, d_p = get_ganji_from_date(curr_date.year, curr_date.month, curr_date.day)
+            d_gan, d_ji = d_p[0], d_p[1]
+        except Exception:
+            curr_date += dt_mod.timedelta(days=1)
+            continue
+
+        score = 70.0  # 기본 점수
+        
+        # [공통 흉살 감점] 일지(배우자/나의 안방) 기준 합충형해파 분석
+        rel = get_ji_rel_set(day_ji, d_ji)
+        if "충" in rel: score -= 20
+        if "원진" in rel or "귀문" in rel: score -= 15
+        if "형" in rel: score -= 10
+        if "파" in rel or "해" in rel: score -= 5
+
+        # ---------------------------------------------------------
+        # 목적 1: [이사] - 일지와의 합(안정) 중시, 탕화살 배제
+        # ---------------------------------------------------------
+        if purpose == "이사":
+            if "육합" in rel: score += 15
+            if "방합" in rel or "반합" in rel: score += 10
+            
+            # 탕화살(폭발/화재/신경질) 작용일 감점
+            if day_ji == '寅' and d_ji in ['寅', '巳', '申']: score -= 10
+            if day_ji == '午' and d_ji in ['辰', '午', '丑']: score -= 10
+            if day_ji == '丑' and d_ji in ['午', '未', '戌']: score -= 10
+
+        # ---------------------------------------------------------
+        # 목적 2: [개업] - 재성/식상 확장성 및 물질 폭발 파동 중시
+        # ---------------------------------------------------------
+        else:
+            day_ss = get_ss(day_gan, d_gan)
+            day_ji_ss = get_ss(day_gan, d_ji)
+            ss_group_g = get_group_ss(day_ss)
+            ss_group_j = get_group_ss(day_ji_ss)
+
+            # 식상(고객 유입), 재성(현금 흐름) 가점
+            if ss_group_g in ["재성", "식상"]: score += 10
+            if ss_group_j in ["재성", "식상"]: score += 10
+            
+            # 군겁쟁재(비겁이 재를 극함) 감점
+            if ss_group_g == "비겁" or ss_group_j == "비겁": score -= 10
+
+            # 초연 시공명리 [거부/돈벼락 삼자조합] 완성일 가점
+            combined_gans = set(user_gans + [d_gan])
+            if {'丁', '辛', '壬'}.issubset(combined_gans): score += 20
+            if {'乙', '丙', '庚'}.issubset(combined_gans): score += 20
+            
+            # 뻥튀기 자산 파동 완성일 가점
+            combined_jjis = set(user_jjis + [d_ji])
+            if {'酉', '丑', '辰'}.issubset(combined_jjis): score += 15
+
+        best_days.append({
+            'date': curr_date.strftime("%Y-%m-%d"),
+            'ganji': d_p,
+            'score': score
+        })
+        curr_date += dt_mod.timedelta(days=1)
+
+    # 점수 높은 순 정렬 후 Top 3 반환
+    best_days.sort(key=lambda x: x['score'], reverse=True)
+    return best_days[:3]
