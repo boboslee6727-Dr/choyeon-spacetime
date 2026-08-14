@@ -997,13 +997,12 @@ def get_couple_fact_split_layout(male_block, female_block):
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 뷰
-    - 박사님 요청 반영: 최상단 메인 타이틀 28px Bold 900으로 굵고 시원하게 확대
+    - 박사님 지시 반영: 억지스러운 태그 변형 및 폰트 확대 제거, 정식 규격(22px) 복구
     """
     master_body = f"""
-    <!-- 🌟 div 태그를 h1 태그로 변경하여 Streamlit의 강제 폰트 축소 간섭 원천 차단 -->
-    <h1 style="font-family: 'Nanum Gothic', sans-serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center; padding: 10px 0 14px 0; margin-top: 0; margin-bottom: 20px; border-bottom: 3px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">
+    <div style="font-family: 'Nanum Myeongjo', serif; font-size: 22px !important; font-weight: 900 !important; color: #1A237E; text-align: center; padding: 6px 0 10px 0; margin-bottom: 15px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">
         🔍 타 감명서 비교 (궁합) 1:1 정밀 분석
-    </h1>
+    </div>
     {couple_fact_html}
     {external_raw_box}
     <div style="margin-top: 20px;">
