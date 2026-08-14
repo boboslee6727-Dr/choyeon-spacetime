@@ -1049,9 +1049,52 @@ if st.session_state.get('app_running', False):
         i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
         
+        # 1. 신청인 기본 황금문구 연산
         gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
-        # 신청인 기본 황금문구
         golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
+
+        # 🌟 2. [오류 수정] 2인용 궁합(4-2) 상대방 간지 정밀 추출 및 듀얼 황금문구 조립
+        golden_box_gunghap_html = golden_text_html
+        if is_2person:
+            try:
+                # partner_bazi = [시주(0), 일주(1), 월주(2), 년주(3)] 순서에서 정확히 추출
+                p_ys = partner_bazi[3][0] if len(partner_bazi) > 3 and len(partner_bazi[3]) > 0 else "甲"
+                p_yb = partner_bazi[3][1] if len(partner_bazi) > 3 and len(partner_bazi[3]) > 1 else "子"
+                p_ms = partner_bazi[2][0] if len(partner_bazi) > 2 and len(partner_bazi[2]) > 0 else "甲"
+                p_mb = partner_bazi[2][1] if len(partner_bazi) > 2 and len(partner_bazi[2]) > 1 else "子"
+                p_ds = partner_bazi[1][0] if len(partner_bazi) > 1 and len(partner_bazi[1]) > 0 else "甲"
+                p_db = partner_bazi[1][1] if len(partner_bazi) > 1 and len(partner_bazi[1]) > 1 else "子"
+                p_hs = partner_bazi[0][0] if len(partner_bazi) > 0 and len(partner_bazi[0]) > 0 and partner_bazi[0][0] != '?' else "甲"
+                
+                # 상대방 시공간 DB 조회
+                p_w_key = f"{p_ms}{p_mb}".strip()
+                p_i_key = f"{p_ds}{p_db}".strip()
+                p_w_val = choyeon_db.get("wolryeong", {}).get(p_w_key, f"[{p_w_key}] 시공간 데이터 없음")
+                p_i_val = choyeon_db.get("ilju", {}).get(p_i_key, f"[{p_i_key}] 성품 데이터 없음")
+                p_struct_data = choyeon_db.get("ilju_structure", {}).get(p_i_key, ["구조 미상", "유형 미상", "성향 미상"])
+                
+                # 상대방 격국 정밀 산출
+                p_gyuk, _ = engine.get_gyukgook_detailed(p_ds, p_ys, p_ms, p_hs, p_mb)
+                
+                # 상대방 황금문구 생성
+                p_golden_html = html_views.get_golden_text(
+                    p_name_val, p_w_val, p_i_val, 
+                    p_struct_data[0], p_struct_data[1], p_struct_data[2], 
+                    mb=p_mb, gyuk_name=p_gyuk
+                )
+                
+                # 성별 정렬 (남명 -> 여명 순)
+                m_g_html = golden_text_html if gender == "남성" else p_golden_html
+                f_g_html = p_golden_html if gender == "남성" else golden_text_html
+                
+                if hasattr(html_views, 'get_couple_golden_text'):
+                    golden_box_gunghap_html = html_views.get_couple_golden_text(m_name_val, m_g_html, f_name_val, f_g_html)
+                else:
+                    golden_box_gunghap_html = f"{m_g_html}<br>{f_g_html}"
+            except Exception as e:
+                # 에러 발생 시에도 남명 문구 보존
+                golden_box_gunghap_html = golden_text_html
+
         
         # 🌟 2인용 궁합(4-2 등)을 위한 상대방 황금문구 및 남녀 듀얼 황금문구 생성
         golden_box_gunghap_html = golden_text_html
@@ -1282,7 +1325,7 @@ if st.session_state.get('app_running', False):
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-        # 🌟 4-2. 타 감명서 비교 (궁합) -> 기존 표준 렌더링 함수 완벽 일치
+       # 🌟 4-2. 타 감명서 비교 (궁합) -> 기존 표준 렌더링 함수 완벽 일치
         elif u_product.startswith("4-2"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1291,11 +1334,16 @@ if st.session_state.get('app_running', False):
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
                 formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
-                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
+                
+                # 🌟 [수정] 단일 신청인 황금문구 대신 [남·녀 듀얼 황금문구] 바인딩
+                golden_box_html = golden_box_gunghap_html if 'golden_box_gunghap_html' in locals() else (golden_text_html if 'golden_text_html' in locals() else "")
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 
-                # 🌟 별도 함수 없이 기존 4-1과 완전히 동일한 표준 뷰 함수로 직접 출력
-                final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
+                # 🌟 4-2 전용 분할 뷰 함수 호출 (없을 시 표준 뷰 대체)
+                if hasattr(html_views, 'render_gunghap_comparison_report'):
+                    final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
+                else:
+                    final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
@@ -1306,3 +1354,4 @@ if st.session_state.get('app_running', False):
 
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
         st.markdown(final_render_html, unsafe_allow_html=True)
+
