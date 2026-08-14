@@ -322,7 +322,7 @@ with st.sidebar:
             key="sub_category_3", 
             on_change=stop_ai
         )
-    elif main_category == "4. 타 감명서 비교":  # <--- 명확하게 if 조건으로 분리!
+    elif main_category == "4. 타 감명서 비교":
         u_product = st.radio(
             "타 감명서 비교:", 
             [
@@ -332,10 +332,8 @@ with st.sidebar:
             key="sub_category_4", 
             on_change=stop_ai
         )
-    else:
-        u_product = "1-1. 사주팔자와 운세풀이"
-
-    st.markdown("---")
+        
+        st.markdown("---")
 
     if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
     if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
@@ -388,28 +386,24 @@ with st.sidebar:
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
         st.session_state["s_t"] = b_time
 
-    # 선택 상품별 조건부 입력 옵션 모듈
-    if u_product.startswith("1-") or u_product.startswith("2-"):
+    # 🌟 [수정 후] 1인용 가지와 2인용 가지의 명확한 분기 및 4번 상품 편입
+    
+    # 1. 1인용 상품군 (1-1, 1-2, 1-3, 1-4, 2-1, 2-2, 2-3, 2-4, 2-5, 4-1)
+    # 2인용이 아닌 상품들은 모두 여기로 모입니다.
+    is_1person = not ( (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product) )
+    
+    if is_1person:
+        # [1인용 공통 입력 옵션]
         if u_product.startswith("1-"):
-            is_vip_package = st.checkbox(
-                "👑 VIP 패키지 모드 (누적 출력)", 
-                value=st.session_state.get("is_vip_package_val", False), 
-                key="is_vip_package_val",
-                on_change=stop_ai
-            )
-            
-            is_compare_traditional = st.checkbox(
-                "⚖️ 전통 : 시공 명리 운세풀이 비교", 
-                value=st.session_state.get("is_compare_trad_val", False), 
-                key="is_compare_trad_val",
-                on_change=stop_ai
-            )
+            is_vip_package = st.checkbox("👑 VIP 패키지 모드", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val", on_change=stop_ai)
+            is_compare_traditional = st.checkbox("⚖️ 전통 : 시공 명리 운세풀이 비교", value=st.session_state.get("is_compare_trad_val", False), key="is_compare_trad_val", on_change=stop_ai)
 
+        # [상세 옵션 분기]
         if "1-2." in u_product:
             curr_yr_val = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).year
-            st.number_input("📅 분석할 특정 연도 (기본값: 올해)", min_value=1900, max_value=2050, value=curr_yr_val, key="target_year_input", on_change=stop_ai)
+            st.number_input("📅 분석 연도", min_value=1900, max_value=2050, value=curr_yr_val, key="target_year_input", on_change=stop_ai)
         elif "1-4." in u_product:
-            daily_calc_date = st.date_input("일운 분석 기준일 선택", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
+            st.date_input("일운 기준일", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
         elif "2-1." in u_product: 
             wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
         elif "2-2." in u_product: 
@@ -419,13 +413,15 @@ with st.sidebar:
         elif "2-4." in u_product: 
             health_goal = st.text_input("관리할 건강 부위는?", key="health_goal", on_change=stop_ai)
         elif "2-5." in u_product:
-            tackil_purpose = st.radio("택일 목적 선택", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
+            tackil_purpose = st.radio("택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
             col_start, col_end = st.columns(2)
-            start_date = col_start.date_input("예정 시작일", key="moving_start", on_change=stop_ai)
-            end_date = col_end.date_input("예정 종료일", key="moving_end", on_change=stop_ai)
-
-    elif "4-1." in u_product:
-        other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}", on_change=stop_ai)
+            start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
+            end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
+        
+        # 4-1 (사주 비교)를 1인용 가지로 확실히 편입
+        elif "4-1." in u_product:
+            st.markdown("---")
+            other_report = st.text_area("📄 [1인용] 타 사주 감명서 원문", height=150, key=f"text_{u_product}", value=st.session_state.get(f"text_{u_product}", ""), on_change=stop_ai)
 
     # 2인 전용 상품(궁합, 택일) 상대방 사주 역산 및 기본 정보 모듈
     is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
@@ -506,8 +502,13 @@ with st.sidebar:
 
     elif "4-2." in u_product:
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        other_report = st.text_area("📄 타 감명서 원문 (궁합) 붙여넣기", height=150, key=f"text_{u_product}", on_change=stop_ai)
-
+        st.markdown("### 📄 [2인용 커플] 타 궁합 감명서 원문")
+        other_report = st.text_area(
+            "비교할 외부 커플/궁합 감명서 텍스트를 붙여넣어 주세요.", 
+            height=150, 
+            key=f"text_{u_product}",
+            value=st.session_state.get(f"text_{u_product}", "")
+        )
     st.markdown("---")
 
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
