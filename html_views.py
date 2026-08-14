@@ -1,12 +1,10 @@
 # ==============================================================================
-# html_views.py (ver 74.0 Master - A4 황금여백 낱장 페이징 완결본)
+# html_views.py (ver 75.0 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
 # ==============================================================================
-# [핵심 개편 사항]
-# 1. A4 용지 바깥선 완전 제거 & 상·하·좌·우 황금 여백(Margin/Padding) 확보
-# 2. 낱장 페이징 박스 아키텍처: 표지 / 남명 원국 / 여명 원국 / 타감명서 원본 / AI 통변
-#    각각이 독립된 둥근 사각 박스(border: 1.5px solid #333333; border-radius: 14px) 안에서
-#    A4 규격에 맞게 열리고 닫히며(Open/Close), 강제 페이지 분할(Page Break) 실행
-# 3. 동양 전통 예법 엄수: 남명/여명 인명 붉은색(朱書) 전면 배제 (먹색 #111111 등 기품 있는 색상 적용)
+# [핵심 반영 사항]
+# 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
+# 2. 인쇄/PDF(@media print) 뷰: .page-break 엔진이 작동하여 A4 1장씩 정밀 분할 출력
+# 3. 동양 전통 예법 엄수: 남명/여명 인명 붉은색(朱書) 전면 배제 (품격 있는 먹색 #111111 적용)
 # 4. 서체 전면 통일: 전 표지, 원국표, 마스터바, 황금문구, 통변 본문 '나눔명조(Nanum Myeongjo)' 강제 적용
 # ==============================================================================
 import re
@@ -17,7 +15,7 @@ import streamlit as st
 # ==============================================================================
 
 def get_global_css():
-    """전체 시스템 UI/UX 및 인쇄(Print) 전용 글로벌 스타일시트"""
+    """전체 시스템 UI/UX 및 화면/인쇄 듀얼 분리 스타일시트"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800;900&display=swap");
 
@@ -36,7 +34,7 @@ def get_global_css():
     div[data-testid="stRadio"] label p { font-size: 14px !important; }
     div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
 
-    /* 감명서 리포트 전 영역 나눔명조체 통일 강제 */
+    /* 감명서 리포트 전 영역 나눔명조체 통일 */
     .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
         font-family: 'Nanum Myeongjo', 'Batang', serif !important; 
     }
@@ -71,6 +69,27 @@ def get_global_css():
     }
     div.stButton > button[kind="secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
 
+    /* A4 화면 래퍼: 바깥선 완전 제거 & 상하좌우 황금여백 */
+    .report-page { 
+        width: 100%; 
+        max-width: 900px; 
+        margin: 20px auto; 
+        background-color: transparent !important; 
+        padding: 0; 
+        box-sizing: border-box; 
+        color: #000; 
+    }
+
+    /* 박사님 표준 둥근 사각 테두리 프레임 */
+    .vip-inset-frame { 
+        border: 1.5px solid #333333 !important; 
+        border-radius: 14px !important; 
+        padding: 30px 25px !important; 
+        background-color: #FFFFFF !important; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        box-sizing: border-box;
+    }
+
     /* 오행 색상 규격 */
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
@@ -87,14 +106,16 @@ def get_global_css():
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 800 !important; font-size: 13px !important; }
 
-    /* A4 낱장 여백 및 인쇄 제어 */
-    .report-page { width: 210mm; max-width: 100%; margin: 0 auto; background-color: transparent !important; padding: 15px 0; box-sizing: border-box; color: #000; }
+    /* 인쇄 및 PDF 저장 시 자동 A4 낱장 분할 엔진 */
+    .page-break { display: none; }
 
     @media print { 
         @page { size: A4 portrait; margin: 12mm 10mm; }
         .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         body, .stApp { background-color: white !important; -webkit-print-color-adjust: exact !important; }
         .report-page { box-shadow: none; margin: 0 auto; width: 100%; padding: 0; }
+        .page-break { display: block !important; page-break-after: always !important; break-after: page !important; height: 1px; }
+        .vip-inset-frame { box-shadow: none !important; border: 1.5px solid #333333 !important; }
     }
     </style>
     """
@@ -102,14 +123,13 @@ def get_global_css():
 def format_ai_text_to_html(text):
     """
     AI 생성 텍스트 포맷터
-    - 대제목(1. , 2. 등)을 만날 때마다 A4 둥근 박스를 닫고 새 박스로 여는 페이징 블록 형성
+    - 화면에서는 하나의 흐름으로 유려하게 이어지고, 인쇄 시에는 대제목별로 정돈
     """
     if not text:
         return ""
         
     lines = str(text).split('\n')
     html_lines = []
-    first_section = True
     
     for line in lines:
         line = line.strip()
@@ -121,21 +141,13 @@ def format_ai_text_to_html(text):
         # 1. 🌟 [수석보좌관의 1:1 장단점 정밀 비교] 문구
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#008000; font-size:17px; font-weight:800; margin-top:16px; margin-bottom:8px;'>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#008000; font-size:17px; font-weight:800; margin-top:18px; margin-bottom:8px;'>"
                 f"{line}</div>"
             )
-        # 2. 대제목 (예: 1. 성격 분석 / 2. 종합 비교) -> 새 페이지 둥근 박스로 분할
+        # 2. 대제목 (예: 1. 성격 분석 / 2. 종합 비교)
         elif re.match(r'^\d+\.\s', line):
-            if not first_section:
-                # 이전 박스 닫기 -> 강제 페이지 넘김 -> 새 A4 둥근 박스 열기
-                html_lines.append(
-                    f"</div></div>"
-                    f"<div class='report-page' style='page-break-after: always; break-after: page; padding: 15px 0; background: transparent;'>"
-                    f"<div style='background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 25px 22px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-family: \"Nanum Myeongjo\", serif;'>"
-                )
-            first_section = False
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#000000; font-size:19px; font-weight:800; margin-top:10px; margin-bottom:12px; border-bottom:2px solid #1A237E; padding-bottom:6px;'>{line}</div>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#000000; font-size:19px; font-weight:800; margin-top:22px; margin-bottom:10px; border-bottom:2px solid #1A237E; padding-bottom:4px;'>{line}</div>"
             )
         # 3. 소제목 (예: 1) 겉으로 드러난 성격)
         elif re.match(r'^\d+\)\s', line):
@@ -493,12 +505,12 @@ def render_ai_with_tables(ai_text, **tables):
 # ==============================================================================
 
 def get_personal_cover(version, report_title, u_icon, name, sol, lun, time, today):
-    """1인용 감명서 표준 표지 (A4 황금비율 박스 독립 완결)"""
+    """1인용 감명서 표준 표지 (화면 연속 / 인쇄 A4 1장 분할)"""
     clean_title = report_title.replace("🏮 ", "").strip()
     
     return f"""
-    <div class='report-page cover-page' style='padding:25px 0; margin:0 auto; width:100%; max-width:680px; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; break-after: page; -webkit-print-color-adjust: exact; background: transparent;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 45px 30px; text-align: center; background: #ffffff; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;'>
+    <div class='report-page cover-page'>
+        <div class='vip-inset-frame' style='text-align: center;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:35px; width: 100%; display: flex; flex-direction: column; align-items: center;'>
                 <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 800 !important; margin:0 !important; color:#111111; white-space: nowrap !important; letter-spacing: -0.5px !important; text-align: center; width: 100%; display: block;'>{clean_title}</h1>
                 <div style='text-align: right; width: 100%; margin-top: 10px;'>
@@ -519,6 +531,7 @@ def get_personal_cover(version, report_title, u_icon, name, sol, lun, time, toda
             <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class='page-break'></div>
     """
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
@@ -590,10 +603,10 @@ def get_closing_html(name):
     """
 
 def get_final_report_box(content_html):
-    """1인용 종합 보고서 최종 A4 낱장 프레임 래핑"""
+    """1인용 종합 보고서 최종 프레임 래핑"""
     return f"""
-    <div class='report-page' style='padding: 15px 0; background: transparent;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 25px 22px; background-color:#FFFFFF; box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-family: "Nanum Myeongjo", serif;'>
+    <div class='report-page'>
+        <div class='vip-inset-frame'>
             {content_html}
         </div>
     </div>
@@ -603,19 +616,19 @@ def get_ai_report_box(content):
     return get_final_report_box(content)
 
 def render_basic_report(part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing):
-    body = f"{part_1_fact}{part_2_intro}{part_3_golden}{ai_output_html}{un_html}{sewun_html}{part_5_closing}"
+    body = f"{part_1_fact}{part_2_intro}{part_3_golden}<div class='page-break'></div>{ai_output_html}{un_html}{sewun_html}{part_5_closing}"
     return get_final_report_box(body)
 
 def render_yeareun_report(part_1_fact, sewun_html, ai_output_html, part_5_closing):
-    body = f"{part_1_fact}{sewun_html}{ai_output_html}{part_5_closing}"
+    body = f"{part_1_fact}{sewun_html}<div class='page-break'></div>{ai_output_html}{part_5_closing}"
     return get_final_report_box(body)
 
 def render_wolun_report(part_1_fact, wolun_html, ai_output_html, part_5_closing):
-    body = f"{part_1_fact}{wolun_html}{ai_output_html}{part_5_closing}"
+    body = f"{part_1_fact}{wolun_html}<div class='page-break'></div>{ai_output_html}{part_5_closing}"
     return get_final_report_box(body)
 
 def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing):
-    body = f"{part_1_fact}{weekly_html}{ai_output_html}{part_5_closing}"
+    body = f"{part_1_fact}{weekly_html}<div class='page-break'></div>{ai_output_html}{part_5_closing}"
     return get_final_report_box(body)
 
 
@@ -624,12 +637,12 @@ def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing)
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 3-1 궁합 표준 표지 (동양사상 인명 붉은색 배제 및 A4 낱장 완결)"""
+    """2인용 3-1 궁합 표준 표지 (동양사상 인명 붉은색 배제 및 A4 규격화)"""
     clean_title = report_title.replace("🏮 ", "").strip()
 
     return f"""
-    <div class='report-page cover-page' style='padding:25px 0; margin:0 auto; width:100%; max-width:680px; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; break-after: page; -webkit-print-color-adjust: exact; background: transparent;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 40px 25px; text-align: center; background: #ffffff; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;'>
+    <div class='report-page cover-page'>
+        <div class='vip-inset-frame' style='text-align: center;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:28px; width: 100%; display: flex; flex-direction: column; align-items: center;'>
                 <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 24px !important; margin:0 !important; font-weight: 800 !important; white-space: nowrap !important; letter-spacing: -0.5px !important; color:#111111; text-align: center; width: 100%; display: block;'>{clean_title}</h1>
                 <div style='text-align: right; width: 100%; margin-top: 10px;'>
@@ -657,34 +670,33 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
             <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 12px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class='page-break'></div>
     """
 
 def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
     """부부 대운 흐름 교차 분석 대조 상자"""
     return f"""
-    <div class='report-page' style='font-family: "Nanum Myeongjo", serif; padding: 15px 0; background: transparent; page-break-after: always; break-after: page;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 25px 20px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <h2 style='text-align:center; color:#1A237E; font-size: 21px; font-weight:800; margin-bottom: 6px; letter-spacing: 0.5px;'>
-                [ 부부 대운 흐름 교차 분석 ]
-            </h2>
-            <p style='text-align:center; color:#666; font-size: 13px; margin-bottom: 20px;'>
-                두 사람의 시공간 궤도를 한눈에 비교하는 대운 로드맵입니다.
-            </p>
-            <div style='margin-bottom: 20px; background: #fafafa; border-left: 4px solid #1565C0; padding: 12px 16px; border-radius: 8px;'>
-                <h4 style='color:#1565C0; font-weight:800; font-size: 15px; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center;'>
-                    <span style='font-size: 17px; margin-right: 6px;'>♂️</span> 남명 ({m_name}님) 대운 흐름
-                </h4>
-                <div style='overflow-x: auto;'>
-                    {m_un_html}
-                </div>
+    <div style='margin-top: 25px; margin-bottom: 25px;'>
+        <h2 style='text-align:center; color:#1A237E; font-size: 21px; font-weight:800; margin-bottom: 6px; letter-spacing: 0.5px;'>
+            [ 부부 대운 흐름 교차 분석 ]
+        </h2>
+        <p style='text-align:center; color:#666; font-size: 13px; margin-bottom: 20px;'>
+            두 사람의 시공간 궤도를 한눈에 비교하는 대운 로드맵입니다.
+        </p>
+        <div style='margin-bottom: 20px; background: #fafafa; border-left: 4px solid #1565C0; padding: 12px 16px; border-radius: 8px;'>
+            <h4 style='color:#1565C0; font-weight:800; font-size: 15px; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center;'>
+                <span style='font-size: 17px; margin-right: 6px;'>♂️</span> 남명 ({m_name}님) 대운 흐름
+            </h4>
+            <div style='overflow-x: auto;'>
+                {m_un_html}
             </div>
-            <div style='background: #fafafa; border-left: 4px solid #4A148C; padding: 12px 16px; border-radius: 8px;'>
-                <h4 style='color:#4A148C; font-weight:800; font-size: 15px; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center;'>
-                    <span style='font-size: 17px; margin-right: 6px;'>♀️</span> 여명 ({w_name}님) 대운 흐름
-                </h4>
-                <div style='overflow-x: auto;'>
-                    {w_un_html}
-                </div>
+        </div>
+        <div style='background: #fafafa; border-left: 4px solid #4A148C; padding: 12px 16px; border-radius: 8px;'>
+            <h4 style='color:#4A148C; font-weight:800; font-size: 15px; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center;'>
+                <span style='font-size: 17px; margin-right: 6px;'>♀️</span> 여명 ({w_name}님) 대운 흐름
+            </h4>
+            <div style='overflow-x: auto;'>
+                {w_un_html}
             </div>
         </div>
     </div>
@@ -732,35 +744,31 @@ def get_gunghap_closing(name1, name2):
     """
 
 def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
-    """궁합 3분할 페이지 일괄 생성 함수 (각각 독립된 A4 둥근 박스로 닫고 열기)"""
+    """궁합 3분할 페이지 일괄 생성 함수 (화면 연속 / 인쇄 A4 1장씩 분할)"""
     m_page = f"""
-    <div class='report-page' style='padding:15px 0; page-break-after: always; break-after: page; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding:25px 22px; background:#FFFFFF; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
-            {part_1_fact}
-            <div style='margin-top:15px;'>{m_ess}</div>
-        </div>
+    <div style='border: 1.5px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+        <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
+        {part_1_fact}
+        <div style='margin-top:15px;'>{m_ess}</div>
     </div>
+    <div class='page-break'></div>
     """
     
     f_page = f"""
-    <div class='report-page' style='padding:15px 0; page-break-after: always; break-after: page; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding:25px 22px; background:#FFFFFF; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
-            <div style='margin-top:15px;'>{f_ess}</div>
-        </div>
+    <div style='border: 1.5px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+        <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
+        <div style='margin-top:15px;'>{f_ess}</div>
     </div>
+    <div class='page-break'></div>
     """
     
     g_page = f"""
-    <div class='report-page' style='padding:15px 0; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding:25px 22px; background:#FFFFFF; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <h1 style='text-align:center; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
-            <div style='margin-top:15px;'>{g_ess}</div>
-        </div>
+    <div style='border: 1.5px solid #1B5E20; border-radius: 12px; padding:20px; background:#FFFFFF;'>
+        <h1 style='text-align:center; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
+        <div style='margin-top:15px;'>{g_ess}</div>
     </div>
     """
-    return m_page + f_page + g_page
+    return get_final_report_box(m_page + f_page + g_page)
 
 
 # ==============================================================================
@@ -817,10 +825,10 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
 # ==============================================================================
 
 def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, time_str, today_str):
-    """4-1 사주 1:1 대조 분석서 표지 (A4 낱장 완결)"""
+    """4-1 사주 1:1 대조 분석서 표지"""
     return f"""
-    <div class='report-page cover-page' style='padding:25px 0; margin:0 auto; width:100%; max-width:680px; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; break-after: page; -webkit-print-color-adjust: exact; background: transparent;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 45px 30px; text-align: center; background: #ffffff; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;'>
+    <div class='report-page cover-page'>
+        <div class='vip-inset-frame' style='text-align: center;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:35px;'>
                 <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 24px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important; font-weight:800;'>전통 명리 vs 시공명리 1:1 비교</h1>
                 <div style='text-align: right; margin-top: 10px;'>
@@ -838,13 +846,14 @@ def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, tim
             <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class='page-break'></div>
     """
 
 def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time, f_name, f_sol, f_lun, f_time, today_str):
-    """4-2 궁합 1:1 대조 분석서 표지 (A4 낱장 완결)"""
+    """4-2 궁합 1:1 대조 분석서 표지"""
     return f"""
-    <div class='report-page cover-page' style='padding:25px 0; margin:0 auto; width:100%; max-width:680px; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; break-after: page; -webkit-print-color-adjust: exact; background: transparent;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 40px 25px; text-align: center; background: #ffffff; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;'>
+    <div class='report-page cover-page'>
+        <div class='vip-inset-frame' style='text-align: center;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:28px;'>
                 <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 23px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important; font-weight:800;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
                 <div style='text-align: right; margin-top: 8px;'>
@@ -872,6 +881,7 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time,
             <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 12px;'>초연 시공명리 연구소</p>
         </div>
     </div>
+    <div class='page-break'></div>
     """
 
 def get_auto_comparison_header():
@@ -883,16 +893,15 @@ def get_auto_comparison_header():
     </div>"""
 
 def get_external_raw_text_box(other_text):
-    """제출된 타 감명서 원본 전용 독립 A4 낱장 뷰 (박스 닫고 페이지 분할)"""
+    """제출된 타 감명서 원본 전용 박스 (인쇄 시 독립 페이지 분할)"""
     return f"""
-    <div class='report-page' style='padding: 15px 0; page-break-after: always; break-after: page; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 25px 22px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 800px; box-sizing: border-box;'>
-            <div style='font-size:18px; font-weight:800; color:#111111; border-bottom:2px solid #333333; padding-bottom:8px; margin-bottom:15px; text-align:center;'>
-                📄 [제출된 외부 타 감명서 원본]
-            </div>
-            <div style='font-size:14px; color:#333333; line-height:1.85; white-space:pre-wrap;'>{other_text}</div>
+    <div style='margin-top:20px; margin-bottom:20px; padding:20px; background-color:#F5F5F5; border:1.5px solid #757575; border-radius:10px; font-family: "Nanum Myeongjo", serif;'>
+        <div style='font-size:17px; font-weight:800; color:#212121; border-bottom:1.5px solid #9E9E9E; padding-bottom:8px; margin-bottom:12px;'>
+            📄 [제출된 외부 타 감명서 원본]
         </div>
+        <div style='font-size:14px; color:#333333; line-height:1.85; white-space:pre-wrap;'>{other_text}</div>
     </div>
+    <div class='page-break'></div>
     """
 
 def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
@@ -925,48 +934,47 @@ def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html)
 def get_couple_fact_split_layout(male_block, female_block):
     """
     4-2 타 감명서 비교 (궁합) 상단 팩트 레이아웃
-    - 남명 1장 단독 둥근 박스 포장 후 닫기 -> Page Break
-    - 여명 1장 단독 둥근 박스 포장 후 닫기 -> Page Break
+    - 화면에서는 연속 표출, 인쇄 시 남명 1장 -> 여명 1장으로 분할
     """
     return f"""
-    <!-- 1페이지: 남명 완전체 A4 낱장 박스 -->
-    <div class='report-page' style='padding:15px 0; page-break-after: always; break-after: page; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 25px 22px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <div style="font-size: 21px; font-weight: 800; color: #1565C0; text-align: center; padding: 6px 0 10px 0; margin-bottom: 12px; border-bottom: 2.5px solid #1565C0; letter-spacing: -0.5px;">
-                ♂️ [남명 사주 원국 및 대운 분석]
-            </div>
-            {male_block}
+    <!-- 1페이지 분량: 남명 완전체 -->
+    <div style="margin-bottom: 25px; font-family: 'Nanum Myeongjo', serif;">
+        <div style="font-size: 21px; font-weight: 800; color: #1565C0; text-align: center; padding: 6px 0 10px 0; margin-bottom: 12px; border-bottom: 2.5px solid #1565C0; letter-spacing: -0.5px;">
+            ♂️ [남명 사주 원국 및 대운 분석]
         </div>
+        {male_block}
     </div>
+    <div class='page-break'></div>
     
-    <!-- 2페이지: 여명 완전체 A4 낱장 박스 -->
-    <div class='report-page' style='padding:15px 0; page-break-after: always; break-after: page; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 25px 22px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <div style="font-size: 21px; font-weight: 800; color: #4A148C; text-align: center; padding: 6px 0 10px 0; margin-bottom: 12px; border-bottom: 2.5px solid #4A148C; letter-spacing: -0.5px;">
-                ♀️ [여명 사주 원국 및 대운 분석]
-            </div>
-            {female_block}
+    <!-- 2페이지 분량: 여명 완전체 -->
+    <div style="margin-bottom: 25px; font-family: 'Nanum Myeongjo', serif;">
+        <div style="font-size: 21px; font-weight: 800; color: #4A148C; text-align: center; padding: 6px 0 10px 0; margin-bottom: 12px; border-bottom: 2.5px solid #4A148C; letter-spacing: -0.5px;">
+            ♀️ [여명 사주 원국 및 대운 분석]
         </div>
+        {female_block}
     </div>
+    <div class='page-break'></div>
     """
 
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 최종 렌더링 뷰
-    - 남명 1박스 -> 여명 1박스 -> 외부원문 1박스 -> AI 통변 낱장 박스 순차 결합
+    - 화면에서는 단일 .vip-inset-frame 안에서 연속 출력되고,
+    - 인쇄/PDF 저장 시에는 각각 A4 1장씩 깔끔하게 분할 출력
     """
-    ai_page_wrapped = f"""
-    <div class='report-page' style='padding: 15px 0; background: transparent; font-family: "Nanum Myeongjo", serif;'>
-        <div style='border: 1.5px solid #333333; border-radius: 14px; padding: 25px 22px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            {ai_content_html}
-        </div>
+    master_body = f"""
+    {couple_fact_html}
+    {external_raw_box}
+    <div style="margin-top: 20px;">
+        {ai_content_html}
     </div>
     """
-    return f"{couple_fact_html}{external_raw_box}{ai_page_wrapped}"
+    return get_final_report_box(master_body)
 
 def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
-    """4-1 타 감명서 대조 전용 3단 순서 조립 (팩트 박스 + 원본 박스 + 대조 리포트 박스)"""
-    return f"{part_1_fact}{external_raw_box}{ai_comparison_html}"
+    """4-1 타 감명서 대조 전용 3단 순서 조립 (팩트 + 원본 + 대조 리포트)"""
+    master_body = f"{part_1_fact}{external_raw_box}{ai_comparison_html}"
+    return get_final_report_box(master_body)
 
 def get_warning_box(title, message):
     """미입력 및 시스템 경고 메시지 출력 전용 뷰 함수"""
