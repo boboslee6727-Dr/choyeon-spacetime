@@ -206,7 +206,130 @@ def do_auto_fill_partner():
             '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
         }
 
-        for y in range(2026, 1899, -1):
+        # 🎯 [신청인] 사주간지 역산 전용 콜백 함수
+def do_auto_fill_user():
+    st.session_state['app_running'] = False
+    u_ry = st.session_state.get("u_ry_rev", "")
+    u_rm = st.session_state.get("u_rm_rev", "")
+    u_rd = st.session_state.get("u_rd_rev", "")
+    u_rt = st.session_state.get("u_rt_rev", "")
+
+    _ry = extract_ganji(u_ry)
+    _rm = extract_ganji(u_rm)
+    _rd = extract_ganji(u_rd)
+
+    if not _ry and not _rm and not _rd:
+        st.session_state.pop('rev_matches_user', None)
+        st.session_state.pop('rev_error_msg', None)
+        return
+
+    if len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
+        ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
+        rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
+        rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+
+        klc_find = KoreanLunarCalendar()
+        matched_results = []
+        time_map = {
+            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
+            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
+            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
+            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
+            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
+            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
+            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
+            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
+            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
+            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
+            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
+            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
+        }
+
+        # 🌟 2056년부터 1905년까지 역추적 탐색
+        for y in range(2056, 1904, -1):
+            klc_find.setSolarDate(y, 7, 1)
+            gj_y = klc_find.getChineseGapJaString().split()
+            if gj_y and gj_y[0][:2] == ry_h:
+                curr_dt = dt_mod.date(y+1, 2, 28)
+                while curr_dt >= dt_mod.date(y, 1, 1):
+                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                    gj = klc_find.getChineseGapJaString().split()
+                    if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                        if u_rt:
+                            ji_char_u = u_rt[-1]
+                            u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u)
+                            target_time_str = time_map.get(u_rt_h, "시간 모름")
+                        else:
+                            target_time_str = "시간 모름"
+
+                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                        s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
+                        
+                        matched_results.append({
+                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt})",
+                            "y": int(curr_dt.year),
+                            "m": int(curr_dt.month),
+                            "d": int(curr_dt.day),
+                            "t": target_time_str
+                        })
+                    curr_dt -= dt_mod.timedelta(days=1)
+
+        if matched_results:
+            st.session_state['rev_matches_user'] = matched_results
+            # 기본값으로 가장 최신 첫 번째 결과 자동 세팅
+            st.session_state['s_y'] = matched_results[0]["y"]
+            st.session_state['s_m'] = matched_results[0]["m"]
+            st.session_state['s_d'] = matched_results[0]["d"]
+            st.session_state['s_t'] = matched_results[0]["t"]
+            st.session_state['s_t_select'] = matched_results[0]["t"]
+            st.session_state.pop('rev_error_msg', None)
+        else:
+            st.session_state.pop('rev_matches_user', None)
+            st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
+    else:
+        st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
+# 🎯 [상대방] 사주간지 역산 전용 콜백 함수
+def do_auto_fill_partner():
+    st.session_state['app_running'] = False
+    p_ry = st.session_state.get("p_ry_rev", "")
+    p_rm = st.session_state.get("p_rm_rev", "")
+    p_rd = st.session_state.get("p_rd_rev", "")
+    p_rt = st.session_state.get("p_rt_rev", "")
+
+    _p_ry = extract_ganji(p_ry)
+    _p_rm = extract_ganji(p_rm)
+    _p_rd = extract_ganji(p_rd)
+
+    if not _p_ry and not _p_rm and not _p_rd:
+        st.session_state.pop('rev_matches_partner', None)
+        st.session_state.pop('rev_p_error_msg', None)
+        return
+
+    if len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
+        p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
+        p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
+        p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
+
+        klc_find = KoreanLunarCalendar()
+        matched_results = []
+        time_map = {
+            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
+            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
+            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
+            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
+            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
+            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
+            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
+            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
+            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
+            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
+            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
+            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
+        }
+
+        # 🌟 2056년부터 1905년까지 역추적 탐색
+        for y in range(2056, 1904, -1):
             klc_find.setSolarDate(y, 7, 1)
             gj_y = klc_find.getChineseGapJaString().split()
             if gj_y and gj_y[0][:2] == p_ry_h:
@@ -215,10 +338,6 @@ def do_auto_fill_partner():
                     klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
                     gj = klc_find.getChineseGapJaString().split()
                     if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                        st.session_state['p_y_in'] = int(curr_dt.year)
-                        st.session_state['p_m_in'] = int(curr_dt.month)
-                        st.session_state['p_d_in'] = int(curr_dt.day)
-
                         if p_rt:
                             ji_char_p = p_rt[-1]
                             p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
@@ -226,18 +345,28 @@ def do_auto_fill_partner():
                         else:
                             target_time_str = "시간 모름"
 
-                        st.session_state['p_t_key'] = target_time_str
-                        st.session_state['p_t_select'] = target_time_str
-
-                        found = True
                         s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
                         s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                        st.session_state['rev_p_success_msg'] = f"✅ 양력{s_sol_fmt} 음력{s_lun_fmt}"
-                        break
+                        
+                        matched_results.append({
+                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt})",
+                            "y": int(curr_dt.year),
+                            "m": int(curr_dt.month),
+                            "d": int(curr_dt.day),
+                            "t": target_time_str
+                        })
                     curr_dt -= dt_mod.timedelta(days=1)
-            if found: break
 
-        if not found:
+        if matched_results:
+            st.session_state['rev_matches_partner'] = matched_results
+            st.session_state['p_y_in'] = matched_results[0]["y"]
+            st.session_state['p_m_in'] = matched_results[0]["m"]
+            st.session_state['p_d_in'] = matched_results[0]["d"]
+            st.session_state['p_t_key'] = matched_results[0]["t"]
+            st.session_state['p_t_select'] = matched_results[0]["t"]
+            st.session_state.pop('rev_p_error_msg', None)
+        else:
+            st.session_state.pop('rev_matches_partner', None)
             st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
     else:
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
@@ -359,9 +488,29 @@ with st.sidebar:
 
         st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=do_auto_fill_user)
 
-        if 'rev_success_msg' in st.session_state:
-            st.success(st.session_state['rev_success_msg'])
-            del st.session_state['rev_success_msg']
+        if 'rev_matches_user' in st.session_state and st.session_state['rev_matches_user']:
+            matches = st.session_state['rev_matches_user']
+            st.success(f"✅ 총 {len(matches)}개의 일치하는 연도가 검색되었습니다.")
+            
+            def on_select_user_match():
+                sel_str = st.session_state.get('user_match_selector')
+                for m in matches:
+                    if m['display'] == sel_str:
+                        st.session_state['s_y'] = m['y']
+                        st.session_state['s_m'] = m['m']
+                        st.session_state['s_d'] = m['d']
+                        st.session_state['s_t'] = m['t']
+                        st.session_state['s_t_select'] = m['t']
+                        break
+                stop_ai()
+
+            st.selectbox(
+                "📅 적용할 생년월일 선택:",
+                options=[m['display'] for m in matches],
+                key="user_match_selector",
+                on_change=on_select_user_match
+            )
+
         if 'rev_error_msg' in st.session_state:
             st.error(st.session_state['rev_error_msg'])
             del st.session_state['rev_error_msg']
