@@ -982,6 +982,24 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
     </div>
     """
 
+def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
+    """
+    4-2 타 감명서 비교 (궁합) 전용 듀얼 황금문구 뷰
+    - 남명 황금문구 (블루 포인트) + 여명 황금문구 (로즈핑크 포인트) 나란히 결합
+    """
+    return f"""
+    <div style="margin-bottom: 25px;">
+        <div style="border-left: 4px solid #1565C0; padding-left: 10px; margin-bottom: 12px;">
+            <div style="font-size: 15px; font-weight: 800; color: #1565C0; margin-bottom: 4px;">♂️ [신랑 {m_name}님 타고난 그릇과 시공간 본성]</div>
+            {male_golden_html}
+        </div>
+        <div style="border-left: 4px solid #C2185B; padding-left: 10px; margin-top: 15px;">
+            <div style="font-size: 15px; font-weight: 800; color: #C2185B; margin-bottom: 4px;">♀️ [신부 {f_name}님 타고난 그릇과 시공간 본성]</div>
+            {female_golden_html}
+        </div>
+    </div>
+    """
+
 def get_couple_fact_split_layout(male_block, female_block):
     """
     4-2 타 감명서 비교 (궁합) 상단 팩트 레이아웃
@@ -1006,48 +1024,6 @@ def get_couple_fact_split_layout(male_block, female_block):
     </div>
     """
 
-# ==============================================================================
-# 📦 섹션 6. 보존 및 백업용 구버전 모듈 (삭제 금지 - 최하단 분리 조치)
-# ==============================================================================
 
-def get_golden_text_v72_3_old(name, w_val, i_val, s_name, s_type, s_desc):
-    """[구버전/백업] 72.3 단순 시공간 요약 황금문장 (삭제 금지 및 백업)"""
-    return f"""
-    <div style="margin: 0; padding: 0;">
-        <p class="ai-body-p" style="margin: 0; color: #000000; text-align: justify; text-indent: 0;">
-            초연 시공명리학적으로 풀이하면 <b>{name}님</b>은 <b>'{w_val}'</b>의 시공간에서, <b>'{i_val}'</b>의 성품을 가지고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로, <b>'{s_desc}'</b>하는 성향이 있습니다.
-        </p>
-    </div>
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
-    """
-
-def get_closing_html_v72_3_old(name):
-    """[구버전/백업] 72.3 기본 1인용 감명서 맺음말 (안내박스 미포함 버전 백업)"""
-    return f"""
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 40px 0 25px 0;">
-    <div style="margin: 0; padding: 0;">
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 15px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
-        <div style="text-align: right; margin-top: 30px;">
-            <span style="font-weight: 900; font-size: 18px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
-        </div>
-    </div>
-    """
-
-def get_gunghap_v2_closing(name1, name2):
-    """[구버전/백업] 궁합 맺음말 버전 2 백업"""
-    return f"""
-    <div style='margin-top: 40px; border-top: 2px dashed #444; padding-top: 25px;'>
-        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>
-        <b>{name1}님</b>과 <b>{name2}님</b>의 소중한 인연이 하늘의 뜻과 깊은 기운 속에서 찬란하게 빛을 발하기를 진심으로 기원합니다.</p>
-        <p style='font-size:16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 10px; color: #111111;'>두 분이 서로의 다름을 이해하고 채워주는 든든한 동반자가 되어 삶이라는 길을 함께 걸어가시기를 소망합니다.</p>
-        <p style='font-size:16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
-        <div style='text-align: right; margin-top: 30px;'>
-            <span style='font-weight: 900; font-size: 18px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
-        </div>
-    </div>
-    """
 
 
