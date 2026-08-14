@@ -399,7 +399,7 @@ with st.sidebar:
     st.caption(f"💡 현재 지정 기준일: **{selected_target_date.year}년 {selected_target_date.month}월 {selected_target_date.day}일**")
     st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
 
-    st.markdown("<div style='font-size: 17px; font-weight: 900; color: #000000; margin-bottom: 10px; font-family: \"Nanum Gothic\", sans-serif;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
     main_category = st.selectbox(
         "어떤 상담을 원하십니까?", 
@@ -542,7 +542,6 @@ with st.sidebar:
     if is_1person:
         if u_product.startswith("1-"):
             is_vip_package = st.checkbox("👑 VIP 패키지 모드", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val", on_change=stop_ai)
-            is_compare_traditional = st.checkbox("⚖️ 전통 : 시공 명리 운세풀이 비교", value=st.session_state.get("is_compare_trad_val", False), key="is_compare_trad_val", on_change=stop_ai)
 
         if "1-2." in u_product:
             curr_yr_val = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).year
@@ -550,15 +549,15 @@ with st.sidebar:
         elif "1-4." in u_product:
             st.date_input("일운 기준일", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
         elif "2-1." in u_product: 
-            wealth_goal = st.text_input("고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
+            wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
         elif "2-2." in u_product: 
-            career_goal = st.text_input("고민되는 직업/진학 분야는?", key="career_goal", on_change=stop_ai)
+            career_goal = st.text_input("💼 고민되는 직업/진학 분야는?", key="career_goal", on_change=stop_ai)
         elif "2-3." in u_product:
-            love_goal = st.text_input("고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
+            love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
         elif "2-4." in u_product: 
-            health_goal = st.text_input("관리할 건강 부위는?", key="health_goal", on_change=stop_ai)
+            health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
         elif "2-5." in u_product:
-            tackil_purpose = st.radio("택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
+            tackil_purpose = st.radio("🗓️ 택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
             col_start, col_end = st.columns(2)
             start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
             end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
