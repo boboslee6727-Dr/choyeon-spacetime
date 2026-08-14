@@ -652,9 +652,9 @@ def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing)
 # 📦 섹션 4. 2인용 궁합 및 커플 상품군 (상품 3-1 활성 모듈)
 # ==============================================================================
 
-def get_couple_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, p_icon, p_name, p_sol, p_lun, p_time, today):
-    """2인용 감명서 표준 표지 (1인용 표지 규격과 100% 동일 위계 적용)"""
-    clean_title = str(report_title or "초연 시공명리 궁합풀이").replace("🏮 ", "").strip()
+def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
+    """2인용 감명서 표준 표지 (app.py 호출 인자 15개 100% 일치 및 1인용 표지 규격 통일본)"""
+    clean_title = str(report_title or "초연 시공명리 궁합풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
     
     return f"""
     <div class='report-page cover-page'>
@@ -668,7 +668,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time
             
             <!-- 남명(신청인) 정보 박스 -->
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px 25px; border-radius: 12px; margin-bottom: 18px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 12px;'>{u_icon} 남명 : {u_name} 님</h2>
+                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 12px;'>{u_icon} 남명 : {u_name} 님 <span style='font-size: 15px; color: #555;'>( {u_age}세 )</span></h2>
                 <div style='font-family:"Nanum Myeongjo", serif; font-size: 15px; line-height: 1.9; color:#333333;'>
                     <p style='margin: 0;'>양력 : {u_sol}</p>
                     <p style='margin: 0;'>음력 : {u_lun}</p>
@@ -678,7 +678,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time
             
             <!-- 여명(상대방) 정보 박스 -->
             <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px 25px; border-radius: 12px; margin-bottom: 25px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 12px;'>{p_icon} 여명 : {p_name} 님</h2>
+                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 12px;'>{p_icon} 여명 : {p_name} 님 <span style='font-size: 15px; color: #555;'>( {p_age}세 )</span></h2>
                 <div style='font-family:"Nanum Myeongjo", serif; font-size: 15px; line-height: 1.9; color:#333333;'>
                     <p style='margin: 0;'>양력 : {p_sol}</p>
                     <p style='margin: 0;'>음력 : {p_lun}</p>
@@ -686,7 +686,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time
                 </div>
             </div>
             
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 16px; margin-top: 25px; font-weight: 700; color:#444;'>{today}</p>
+            <p style='font-family:"Nanum Myeongjo", serif; font-size: 16px; margin-top: 25px; font-weight: 700; color:#444;'>{today_str}</p>
             <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 12px;'>초연 시공명리 연구소</p>
         </div>
     </div>
