@@ -865,8 +865,18 @@ if st.session_state.get('app_running', False):
             
             p_name_val = st.session_state.get("f_n", "상대방")
             p_time_val = p_time_str
-            p_sol_str_val = f"{p_y}년 {p_m:02d}월 {p_d:02d}일"
-            p_lun_str_val = ""
+            
+            # 🌟 [보강] 상대방 양력/음력 변환 정확히 바인딩
+            p_klc = KoreanLunarCalendar()
+            if p_is_lunar:
+                p_klc.setLunarDate(int(p_y), int(p_m), int(p_d), p_is_leap)
+                p_sol_str_val = f"{p_klc.solarYear}년 {p_klc.solarMonth:02d}월 {p_klc.solarDay:02d}일"
+                p_lun_str_val = f"{p_y}년 {int(p_m):02d}월 {int(p_d):02d}일 ({'윤달' if p_is_leap else '평달'})"
+            else:
+                p_klc.setSolarDate(int(p_y), int(p_m), int(p_d))
+                p_sol_str_val = f"{p_y}년 {int(p_m):02d}월 {int(p_d):02d}일"
+                p_leap_txt = "윤달" if getattr(p_klc, 'isIntercalary', False) else "평달"
+                p_lun_str_val = f"{p_klc.lunarYear}년 {p_klc.lunarMonth:02d}월 {p_klc.lunarDay:02d}일 ({p_leap_txt})"
             
             cover_html = html_views.get_couple_cover(
                 version=APP_VERSION, 
