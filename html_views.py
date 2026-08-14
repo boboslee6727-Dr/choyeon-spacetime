@@ -124,8 +124,17 @@ def get_global_css():
     """
 
 def format_ai_text_to_html(text):
+    """
+    AI 생성 텍스트 포맷터 (박사님 확정 폰트 크기 및 스타일 최종 규격)
+    - 대제목(1.) 20px Bold 900
+    - 특수헤더 17px Bold 800 (중앙정렬, 밑줄 2.5px solid #1A237E)
+    - 소제목(1)) 17px Bold 800 (검정색 #000000)
+    - 소소제목((1)) 16px Bold 700 (진먹색 #333333)
+    - 일반본문 16px Medium 500 (줄간격 1.85, 들여쓰기 15px)
+    """
     if not text:
         return ""
+        
     lines = str(text).split('\n')
     html_lines = []
     
@@ -134,37 +143,53 @@ def format_ai_text_to_html(text):
         if not line:
             continue
             
+        # 마크다운 찌꺼기만 제거 (따옴표, 괄호 등 문장부호 100% 보존)
         line = line.replace('*', '').replace('#', '')
 
+        # 🌟 [특수 헤더] 수석보좌관 1:1 장단점 정밀 비교 등 (17px / 800 / 중앙 정렬 / 밑줄 2.5px solid #1A237E)
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#008000; font-size:17px; font-weight:800; margin-top:18px; margin-bottom:8px;'>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #1A237E; "
+                f"text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
+        # 🌟 [대제목 1.] (20px / 900 / 상단 22px, 하단 10px, 하단 옅은 구분선)
         elif re.match(r'^\d+\.\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#000000; font-size:19px; font-weight:800; margin-top:22px; margin-bottom:10px; border-bottom:2px solid #1A237E; padding-bottom:4px;'>{line}</div>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 20px; font-weight: 900; color: #000000; "
+                f"margin-top: 22px; margin-bottom: 10px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px; letter-spacing: -0.5px;'>"
+                f"{line}</div>"
             )
+        # 🌟 [소제목 1)] (17px / 800 / 검정색 #000000 / 상단 14px, 하단 6px)
         elif re.match(r'^\d+\)\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#1A237E; font-size:17px; font-weight:800; margin-top:14px; margin-bottom:6px;'>{line}</div>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #000000; "
+                f"margin-top: 14px; margin-bottom: 6px; letter-spacing: -0.3px;'>"
+                f"{line}</div>"
             )
+        # 🌟 [소소제목 (1)] (16px / 700 / 진먹색 #333333 / 상단 10px, 하단 4px)
         elif re.match(r'^\(\d+\)\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; color:#333333; font-size:16px; font-weight:700; margin-top:10px; margin-bottom:4px;'>{line}</div>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 700; color: #333333; "
+                f"margin-top: 10px; margin-bottom: 4px; letter-spacing: -0.2px;'>"
+                f"{line}</div>"
             )
+        # 🌟 [일반 본문] (16px / 500 / 줄간격 1.85 / 들여쓰기 15px)
         else:
             if line.startswith('-'):
                 html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size:16px; font-weight:400; line-height:1.85; color:#111111; text-align:justify; margin-top:4px; margin-bottom:8px; text-indent:5px; padding-left:10px;'>{line}</p>"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 500; line-height: 1.85; "
+                    f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 5px; padding-left: 10px;'>"
+                    f"{line}</p>"
                 )
             else:
                 html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size:16px; font-weight:400; line-height:1.85; color:#111111; text-align:justify; margin-top:4px; margin-bottom:8px; text-indent:15px;'>{line}</p>"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 500; line-height: 1.85; "
+                    f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 15px;'>"
+                    f"{line}</p>"
                 )
             
     return "\n".join(html_lines)
-
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
@@ -949,8 +974,12 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
     """
     4-2 타 감명서 비교 (궁합) 전용 뷰
     - 바깥선/그림자 없는 A4 백지 캔버스 + 안쪽 .vip-inset-frame 단독 적용
+    - 최상단 메인 타이틀: 22px / 900 / 중앙 정렬 / 밑줄 2.5px solid #1A237E
     """
     master_body = f"""
+    <div style="font-family: 'Nanum Myeongjo', serif; font-size: 22px; font-weight: 900; color: #1A237E; text-align: center; padding: 6px 0 10px 0; margin-bottom: 15px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.5px;">
+        🔍 타 감명서 비교 (궁합) 1:1 정밀 분석
+    </div>
     {couple_fact_html}
     {external_raw_box}
     <div style="margin-top: 20px;">
