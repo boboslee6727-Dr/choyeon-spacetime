@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 72.45 Master - 간지 역산 콜백 & AI 완전 통제 최종본)
+# app.py (ver 72.5 Master - 간지 역산 콜백 & AI 완전 통제 최종본)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -306,7 +306,7 @@ with st.sidebar:
                 "2-2. 직업/진학운 특화 분석", 
                 "2-3. 연애/결혼운 특화 분석", 
                 "2-4. 건강운 특화 분석", 
-                "2-5. 이사 및 방위 특화 분석"
+                "2-5. 이사 및 개업 택일"
             ], 
             key="sub_category_2", 
             on_change=stop_ai
@@ -416,8 +416,10 @@ with st.sidebar:
         elif "2-4." in u_product: 
             health_goal = st.text_input("관리할 건강 부위는?", key="health_goal", on_change=stop_ai)
         elif "2-5." in u_product:
-            moving_date = st.date_input("이사 희망일", key="moving_date", on_change=stop_ai)
-            moving_dir = st.selectbox("이사 희망 방위", ["동쪽", "서쪽", "남쪽", "북쪽", "기타"], key="moving_dir", on_change=stop_ai)
+            tackil_purpose = st.radio("택일 목적 선택", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
+            col_start, col_end = st.columns(2)
+            start_date = col_start.date_input("예정 시작일", key="moving_start", on_change=stop_ai)
+            end_date = col_end.date_input("예정 종료일", key="moving_end", on_change=stop_ai)
 
     elif "4-1." in u_product:
         other_report = st.text_area("📄 타 감명서 원문 (사주) 붙여넣기", height=150, key=f"text_{u_product}", on_change=stop_ai)
@@ -654,7 +656,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("2-4"):
             report_title = "🏮 건강운 특화 정밀 분석"
         elif u_product.startswith("2-5"):
-            report_title = "🏮 이사 및 방위 특화 정밀 분석"
+            report_title = "🏮 이사 및 개업 택일 정밀 분석"
         elif u_product.startswith("3-1"):
             report_title = "🏮 커플 연애/결혼운 정밀 궁합 분석"
         elif u_product.startswith("3-2"):
@@ -982,9 +984,18 @@ if st.session_state.get('app_running', False):
         goal_career = st.session_state.get('career_goal', '승진, 이직 및 적성 분야')
         goal_love = st.session_state.get('love_goal', '이성 인연 및 관계 개선')
         goal_health = st.session_state.get('health_goal', '체질적 취약 장기 및 양생법')
-        goal_moving_date = str(st.session_state.get('moving_date', '택일 예정일'))
-        goal_moving_dir = str(st.session_state.get('moving_dir', '희망 방위'))
+        goal_tackil_purpose = st.session_state.get('tackil_purpose', '이사')
+        start_d = st.session_state.get('moving_start', selected_target_date)
+        end_d = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
+        goal_target_date_range = f"{start_d} ~ {end_d}"
 
+        # 🌟 엔진 기반 이사/개업 길일 Top 3 사전 연산
+        tackil_recommend_str = "엔진에서 추천된 길일 데이터가 없습니다."
+        if u_product.startswith("2-5"):
+            if hasattr(engine, 'get_best_moving_opening_days'):
+                top_days = engine.get_best_moving_opening_days(start_d, end_d, gans, jjis, goal_tackil_purpose)
+                if top_days:
+                    tackil_recommend_str = "\n".join([f"- 추천 {i+1}순위: {d['date']} ({d['ganji']}일) / 적합도: {d['score']}점" for i, d in enumerate(top_days)])
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
@@ -1024,8 +1035,8 @@ if st.session_state.get('app_running', False):
             "career_goal": goal_career,
             "love_goal": goal_love,
             "health_goal": goal_health,
-            "moving_date": goal_moving_date,
-            "moving_dir": goal_moving_dir,
+            "tackil_purpose": goal_tackil_purpose,
+            "target_date_range": goal_target_date_range,
             "other_reading_text": st.session_state.get(f"text_{u_product}", ""),
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
@@ -1043,7 +1054,7 @@ if st.session_state.get('app_running', False):
             if "2-2" in u_prod: return "프롬프트_2_2_직업운"
             if "2-3" in u_prod: return "프롬프트_2_3_연애운"
             if "2-4" in u_prod: return "프롬프트_2_4_건강운"
-            if "2-5" in u_prod: return "프롬프트_2_5_이사방위"
+            if "2-5" in u_prod: return "프롬프트_2_5_이사개업 택일"
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
