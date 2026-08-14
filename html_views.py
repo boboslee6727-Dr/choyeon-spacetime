@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 72.5 Master - 논리적 정돈 및 보존 완결본)
+# html_views.py (ver 72.6 Master - 논리적 정돈 및 보존 완결본)
 # ==============================================================================
 import re
 import streamlit as st
@@ -1010,18 +1010,17 @@ def get_gunghap_v2_closing(name1, name2):
 
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
-    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
-    - couple_fact_html: 남명(원국+마스터바+대운) + 여명(원국+마스터바+대운)
-    - external_raw_box: 외부 타 감명서 원문 박스
-    - ai_content_html: 초연시공명리 1:1 비교 통변
+    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰 (A4 둥근 사각 테두리 완벽 복원)
     """
     return f"""
-    <div class="report-box" style="background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); font-family: 'Nanum Gothic', sans-serif;">
-        {couple_fact_html}
-        <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
-        {external_raw_box}
-        <div style="margin-top: 30px;">
-            {ai_content_html}
+    <div style="max-width: 900px; margin: 20px auto; padding: 20px; background: #fff; border: 2px solid #333333; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); font-family: 'Nanum Gothic', sans-serif;">
+        <div style="border: 1px solid #c0c0c0; border-radius: 12px; padding: 25px; background: #ffffff;">
+            {couple_fact_html}
+            <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
+            {external_raw_box}
+            <div style="margin-top: 30px;">
+                {ai_content_html}
+            </div>
         </div>
     </div>
     """
