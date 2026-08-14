@@ -1010,11 +1010,13 @@ def get_gunghap_v2_closing(name1, name2):
 
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
-    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰 (A4 둥근 사각 테두리 완벽 복원)
+    4-2 타 감명서 비교 (궁합) 전용 렌더링 뷰
+    - A4 캔버스 바깥선 제거 (border: none)
+    - 안쪽 표준 둥근 사각 테두리 단독 적용 (border: 1.5px solid #333; border-radius: 14px)
     """
     return f"""
-    <div style="max-width: 900px; margin: 20px auto; padding: 20px; background: #fff; border: 2px solid #333333; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); font-family: 'Nanum Gothic', sans-serif;">
-        <div style="border: 1px solid #c0c0c0; border-radius: 12px; padding: 25px; background: #ffffff;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 10px 0; background: transparent; font-family: 'Nanum Gothic', sans-serif;">
+        <div style="background: #ffffff; border: 1.5px solid #333333; border-radius: 14px; padding: 30px 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
             {couple_fact_html}
             <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 30px 0;">
             {external_raw_box}
