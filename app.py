@@ -585,15 +585,36 @@ with st.sidebar:
             
             st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=do_auto_fill_partner)
 
-            if 'rev_p_success_msg' in st.session_state:
-                st.success(st.session_state['rev_p_success_msg'])
-                del st.session_state['rev_p_success_msg']
-            if 'rev_p_error_msg' in st.session_state:
-                st.error(st.session_state['rev_p_error_msg'])
-                del st.session_state['rev_p_error_msg']
+        # 🌟 상대방 역산 결과가 1개 이상일 때 나타나는 선택창
+        if 'rev_matches_partner' in st.session_state and st.session_state['rev_matches_partner']:
+            p_matches = st.session_state['rev_matches_partner']
+            st.success(f"✅ 총 {len(p_matches)}개의 일치하는 연도가 검색되었습니다.")
+            
+            def on_select_partner_match():
+                sel_p_str = st.session_state.get('partner_match_selector')
+                for m in p_matches:
+                    if m['display'] == sel_p_str:
+                        st.session_state['p_y_in'] = m['y']
+                        st.session_state['p_m_in'] = m['m']
+                        st.session_state['p_d_in'] = m['d']
+                        st.session_state['p_t_key'] = m['t']
+                        st.session_state['p_t_select'] = m['t']
+                        break
+                stop_ai()
+
+            st.selectbox(
+                "📅 적용할 상대방 생년월일 선택:",
+                options=[m['display'] for m in p_matches],
+                key="partner_match_selector",
+                on_change=on_select_partner_match
+            )
+
+        if 'rev_p_error_msg' in st.session_state:
+            st.error(st.session_state['rev_p_error_msg'])
+            del st.session_state['rev_p_error_msg']
 
         if 'f_n' not in st.session_state: st.session_state['f_n'] = ""
-        if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1980
+        if 'p_y_in' not in st.session_state: st.session_state['p_y_in'] = 1990
         if 'p_m_in' not in st.session_state: st.session_state['p_m_in'] = 1
         if 'p_d_in' not in st.session_state: st.session_state['p_d_in'] = 1
 
