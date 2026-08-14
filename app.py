@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 72.5 Master - 간지 역산 콜백 & AI 완전 통제 최종본)
+# app.py (ver 72.6 Master - 간지 역산 콜백 & AI 완전 통제 최종본)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 72.5 Master"
+APP_VERSION = "ver 72.6 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용
@@ -1351,6 +1351,42 @@ if st.session_state.get('app_running', False):
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
+        # 🌟 2인용 궁합(3-1, 4-2)을 위한 상대방 팩트 및 남/여 통합 블록 빌드
+        if is_2person:
+            p_gans = [partner_bazi[0][0] if len(partner_bazi[0])>0 else "-", partner_bazi[1][0] if len(partner_bazi[1])>0 else "甲", partner_bazi[2][0] if len(partner_bazi[2])>0 else "甲", partner_bazi[3][0] if len(partner_bazi[3])>0 else "甲"]
+            p_jjis = [partner_bazi[0][1] if len(partner_bazi[0])>1 else "-", partner_bazi[1][1] if len(partner_bazi[1])>1 else "子", partner_bazi[2][1] if len(partner_bazi[2])>1 else "子", partner_bazi[3][1] if len(partner_bazi[3])>1 else "子"]
+            
+            p_counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+            for c in p_gans + p_jjis:
+                p_oh = engine.get_color(c)
+                if p_oh in p_counts: p_counts[p_oh] += 1
+                
+            p_guiin_str = guiin_map.get(p_ds_hanja, '없음')
+            p_n_gong = engine.calculate_gongmang(p_ys, p_yb) or "-"
+            p_i_gong = engine.calculate_gongmang(p_ds, p_db) or "-"
+            p_samjae = engine.get_samjae(p_yb, curr_y_ji)
+            p_samjae_color = "#C62828" if p_samjae != "해당 없음" else "#555"
+            
+            p_info_h = html_views.get_info_header("♀️" if f_gender_val=="여성" else "♂️", p_name_val, f_gender_val, st.session_state.get("f_m_stat","선택"), p_age_val, p_sol_str_val, p_lun_str_val, p_time_val)
+            p_table_html = html_views.generate_saju_table_data(p_gans, p_jjis, p_ds, f_gender_val, engine)
+            p_master_bar_html = html_views.get_master_bar(p_calc_d, p_counts['목'], p_counts['화'], p_counts['토'], p_counts['금'], p_counts['수'], p_guiin_str, p_n_gong, p_i_gong, p_samjae_color, p_samjae)
+
+            # 🌟 [남명 팩트 완전체] + [여명 팩트 완전체] 순차 결합
+            male_full_block = (info_h + table_html + master_bar_html + un_html) if gender == "남성" else (p_info_h + p_table_html + p_master_bar_html + p_un_html)
+            female_full_block = (p_info_h + p_table_html + p_master_bar_html + p_un_html) if gender == "남성" else (info_h + table_html + master_bar_html + un_html)
+            
+            part_1_fact_gunghap = f"""
+            <div style='margin-bottom: 25px;'>
+                <div style='font-size: 16px; font-weight: 900; color: #1565C0; margin-bottom: 8px;'>♂️ [남명(男命) 사주 원국 및 대운]</div>
+                {male_full_block}
+            </div>
+            <div style='margin-top: 25px; margin-bottom: 25px;'>
+                <div style='font-size: 16px; font-weight: 900; color: #C2185B; margin-bottom: 8px;'>♀️ [여명(女命) 사주 원국 및 대운]</div>
+                {female_full_block}
+            </div>
+            """
+
+        # --- 4-2. 타 감명서 비교 (궁합) ---
         elif u_product.startswith("4-2"):
             target_gunghap_fact = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
             if not user_entered_text:
@@ -1358,16 +1394,15 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-                m_daewun_html = un_html if gender == "남성" else p_un_html
-                f_daewun_html = p_un_html if gender == "남성" else un_html
-                c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-
-                formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
-                formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', un_html if 'un_html' in locals() else "")
+                
+                # 🚨 [수정]: AI 본문 내부의 불필요한 대운표 마커를 제거하여 순수 통변만 깔끔하게 출력
+                formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
 
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(target_gunghap_fact, external_raw_box, full_ai_content)
+
 
         # 4. 본문 종합 보고서 최종 단독 렌더링
         if 'final_render_html' not in locals() or final_render_html is None:
