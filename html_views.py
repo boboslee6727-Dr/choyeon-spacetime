@@ -69,24 +69,27 @@ def get_global_css():
     }
     div.stButton > button[kind="secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
 
-    /* A4 화면 래퍼: 바깥선 완전 제거 & 상하좌우 황금여백 */
+    /* A4 백지 캔버스 (외곽선 및 그림자 완전 제거, 순백 바탕) */
     .report-page { 
-        width: 100%; 
-        max-width: 900px; 
+        width: 210mm; 
+        min-height: 297mm; 
+        max-width: 100%; 
         margin: 20px auto; 
-        background-color: transparent !important; 
-        padding: 0; 
+        background-color: #FFFFFF !important; 
+        border: none !important; 
+        box-shadow: none !important; 
+        padding: 12mm 10mm; 
         box-sizing: border-box; 
-        color: #000; 
+        color: #000000; 
     }
 
-    /* 박사님 표준 둥근 사각 테두리 프레임 */
+    /* 안쪽 표준 둥근 사각 액자 (단일 프레임, 그림자 제거) */
     .vip-inset-frame { 
-        border: 1.5px solid #333333 !important; 
-        border-radius: 14px !important; 
-        padding: 30px 25px !important; 
+        border: 2px solid #3E2723 !important; 
+        border-radius: 12px !important; 
+        padding: 25px !important; 
         background-color: #FFFFFF !important; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        box-shadow: none !important; 
         box-sizing: border-box;
     }
 
@@ -603,7 +606,7 @@ def get_closing_html(name):
     """
 
 def get_final_report_box(content_html):
-    """1인용 종합 보고서 최종 프레임 래핑"""
+    """A4 백지 캔버스(무선/무그림자) 안쪽 둥근 VIP 프레임 단일 래핑"""
     return f"""
     <div class='report-page'>
         <div class='vip-inset-frame'>
@@ -905,13 +908,13 @@ def get_external_raw_text_box(other_text):
     """
 
 def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
-    """4-2 타 감명서 비교 전용 듀얼 황금문구 뷰"""
+    """4-2 타 감명서 비교 전용 듀얼 황금문구 뷰 (좌측 세로선 제거 깔끔형)"""
     clean_male = male_golden_html.replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">', '').replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">', '').strip()
     clean_female = female_golden_html.replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">', '').replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">', '').strip()
     
     return f"""
-    <div style="margin-bottom: 20px; padding: 15px 18px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; font-family: 'Nanum Myeongjo', 'Batang', serif;">
-        <div style="border-left: 4px solid #1565C0; padding-left: 12px; margin-bottom: 15px;">
+    <div style="margin-bottom: 20px; padding: 18px 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; font-family: 'Nanum Myeongjo', 'Batang', serif;">
+        <div style="margin-bottom: 18px;">
             <div style="font-size: 15px; font-weight: 800; color: #1565C0; margin-bottom: 6px; font-family: 'Nanum Myeongjo', serif; letter-spacing: -0.3px;">
                 ♂️ [신랑 {m_name}님 타고난 그릇과 시공간 본성]
             </div>
@@ -919,7 +922,7 @@ def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html)
                 {clean_male}
             </div>
         </div>
-        <div style="border-left: 4px solid #4A148C; padding-left: 12px;">
+        <div>
             <div style="font-size: 15px; font-weight: 800; color: #4A148C; margin-bottom: 6px; font-family: 'Nanum Myeongjo', serif; letter-spacing: -0.3px;">
                 ♀️ [신부 {f_name}님 타고난 그릇과 시공간 본성]
             </div>
@@ -958,9 +961,8 @@ def get_couple_fact_split_layout(male_block, female_block):
 
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
-    4-2 타 감명서 비교 (궁합) 전용 최종 렌더링 뷰
-    - 화면에서는 단일 .vip-inset-frame 안에서 연속 출력되고,
-    - 인쇄/PDF 저장 시에는 각각 A4 1장씩 깔끔하게 분할 출력
+    4-2 타 감명서 비교 (궁합) 전용 뷰
+    - 바깥선/그림자 없는 A4 백지 캔버스 + 안쪽 .vip-inset-frame 단독 적용
     """
     master_body = f"""
     {couple_fact_html}
