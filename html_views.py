@@ -1001,7 +1001,7 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
     """
     master_body = f"""
     <!-- 🌟 div 태그를 h1 태그로 변경하여 Streamlit의 강제 폰트 축소 간섭 원천 차단 -->
-    <h1 style="font-family: 'Nanum Gothic', sans-serif !important; font-size: 28px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center; padding: 10px 0 14px 0; margin-top: 0; margin-bottom: 20px; border-bottom: 3px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">
+    <h1 style="font-family: 'Nanum Gothic', sans-serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center; padding: 10px 0 14px 0; margin-top: 0; margin-bottom: 20px; border-bottom: 3px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">
         🔍 타 감명서 비교 (궁합) 1:1 정밀 분석
     </h1>
     {couple_fact_html}
