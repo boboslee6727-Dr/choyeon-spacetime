@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 72.6 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
+# html_views.py (ver 72.7 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
 # ==============================================================================
 # [핵심 반영 사항]
 # 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
@@ -190,6 +190,7 @@ def format_ai_text_to_html(text):
                 )
             
     return "\n".join(html_lines)
+
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
@@ -502,21 +503,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
     </div>
     """
 
-def render_ai_with_tables(ai_text, **tables):
-    """AI 본문 내 마커([DAEWUN_TABLE_HERE] 등)를 실제 HTML 표로 치환"""
-    if not ai_text: return ""
-    patterns = {
-        'daewun': r'\[\s*\*?\*?\s*DAEWUN_TABLE_HERE\s*\*?\*?\s*\]',
-        'sewun': r'\[\s*\*?\*?\s*SEWUN_TABLE_HERE\s*\*?\*?\s*\]',
-        'wolun': r'\[\s*\*?\*?\s*WOLUN_TABLE_HERE\s*\*?\*?\s*\]',
-        'weekly': r'\[\s*\*?\*?\s*WEEKLY_CALENDAR_HERE\s*\*?\*?\s*\]',
-        'couple': r'\[\s*\*?\*?\s*COUPLE_DAEWUN_TABLES_HERE\s*\*?\*?\s*\]',
-    }
-    for key, table_html in tables.items():
-        if table_html and key in patterns:
-            ai_text = re.sub(patterns[key], table_html, ai_text, flags=re.IGNORECASE)
-    return ai_text
-
 
 # ==============================================================================
 # 📦 섹션 3. 1인용 개인 사주 및 운세 상품군 (상품 1-1 ~ 2-5 활성 모듈)
@@ -640,35 +626,16 @@ def get_final_report_box(content_html):
     </div>
     """
 
-def get_ai_report_box(content):
-    return get_final_report_box(content)
-
-def render_basic_report(part_1_fact, part_2_intro, part_3_golden, ai_output_html, un_html, sewun_html, part_5_closing):
-    body = f"{part_1_fact}{part_2_intro}{part_3_golden}<div class='page-break'></div>{ai_output_html}{un_html}{sewun_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-def render_yeareun_report(part_1_fact, sewun_html, ai_output_html, part_5_closing):
-    body = f"{part_1_fact}{sewun_html}<div class='page-break'></div>{ai_output_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-def render_wolun_report(part_1_fact, wolun_html, ai_output_html, part_5_closing):
-    body = f"{part_1_fact}{wolun_html}<div class='page-break'></div>{ai_output_html}{part_5_closing}"
-    return get_final_report_box(body)
-
-def render_ilun_report(part_1_fact, weekly_html, ai_output_html, part_5_closing):
-    body = f"{part_1_fact}{weekly_html}<div class='page-break'></div>{ai_output_html}{part_5_closing}"
-    return get_final_report_box(body)
-
 
 # ==============================================================================
 # 📦 섹션 4. 2인용 궁합 및 커플 상품군 (상품 3-1 활성 모듈)
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합 감명서 표준 표지 (타이틀 1줄 고정 및 순수 뷰 전용 완결본)"""
+    """2인용 궁합 감명서 표준 표지 (디자인 통합 및 타이틀 자동 치환 완결본)"""
     clean_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
     
-    # 🌟 이름 내 중복 호칭('남명 :', '여명 :' 등) 정제
+    # 이름 내 중복 호칭 제거
     def extract_pure_name(raw_name):
         n = str(raw_name or "").strip()
         n = re.sub(r'^(?:남명\s*[:：]?|여명\s*[:：]?|신청인\s*[:：]?|상대방\s*[:：]?|\s+)+', '', n).strip()
@@ -676,34 +643,34 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 
     clean_u_name = extract_pure_name(u_name)
     clean_p_name = extract_pure_name(p_name)
-    
-    # 아이콘 기호만 추출
-    clean_u_icon = "♂️" if "♂" in str(u_icon) else ("♀️" if "♀" in str(u_icon) else "👤")
-    clean_p_icon = "♀️" if "♀" in str(p_icon) else ("♂️" if "♂" in str(p_icon) else "👥")
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 40px 25px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 88%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px;'>
                 <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -2.0px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
+            
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{clean_u_icon} 남명 : {clean_u_name} 님 <span style='font-size: 15px; color: #555555; font-weight: 600;'>( {u_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #111111; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
-                    <p style='margin: 3px 0 0 0; color: #D50000; font-weight: 800; white-space: nowrap;'>태어난 시간 : {u_time}</p>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {u_sol} | [음력] {u_lun}</p>
+                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
+            
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #D50000; margin: 0 0 10px 0;'>{clean_p_icon} 여명 : {clean_p_name} 님 <span style='font-size: 15px; color: #555555; font-weight: 600;'>( {p_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #111111; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {p_sol} | [음력] {p_lun}</p>
-                    <p style='margin: 3px 0 0 0; color: #D50000; font-weight: 800; white-space: nowrap;'>태어난 시간 : {p_time}</p>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {p_sol} | [음력] {p_lun}</p>
+                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {p_time}</p>
                 </div>
             </div>
+            
             <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 30px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
             <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 10px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
@@ -861,31 +828,6 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
 # 📦 섹션 6. 타 감명서 1:1 대조 분석 리포트 상품군 (상품 4-1, 4-2 활성 모듈)
 # ==============================================================================
 
-def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, time_str, today_str):
-    """4-1 사주 1:1 대조 분석서 표지"""
-    return f"""
-    <div class='report-page cover-page'>
-        <div class='vip-inset-frame' style='text-align: center;'>
-            <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:35px;'>
-                <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 24px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important; font-weight:800;'>전통 명리 vs 시공명리 1:1 비교</h1>
-                <div style='text-align: right; margin-top: 10px;'>
-                    <span style='font-family:"Nanum Myeongjo", serif; font-size: 13px; letter-spacing: 1px; color:#666;'>{app_version}</span>
-                </div>
-            </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 25px 20px; border-radius: 12px; margin-bottom: 25px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 15px;'>{p_icon} 신청인 : {u_name} 님</h2>
-                <div style='font-family:"Nanum Myeongjo", serif; font-size: 15px; line-height: 1.9;'>
-                    <p style='margin: 0; white-space: nowrap; font-weight: 700; color: #000000;'>[양력] {sol_str} | [음력] {lun_str}</p>
-                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 700; color: #1A237E;'>{time_str}</p>
-                </div>
-            </div>
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 16px; margin-top: 35px; font-weight: 700; color:#444;'>{today_str}</p>
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 15px;'>초연 시공명리 연구소</p>
-        </div>
-    </div>
-    <div class='page-break'></div>
-    """
-
 def get_auto_gunghap_comparison_cover(app_version, m_name, m_age, m_sol, m_lun, m_time, f_name, f_age, f_sol, f_lun, f_time, today_str):
     """4-2 궁합 감명서 1:1 대조 리포트 표지 (디자인 동기화 및 폰트/색상 완결본)"""
     return f"""
@@ -894,7 +836,7 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_age, m_sol, m_lun, 
             
             <!-- 1) 대제목 1줄 고정 (자간 -2.0px 압축) -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; color: #1A237E !important; letter-spacing: -2.0px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; color: #1A237E !important; letter-spacing: -2.0px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important;'>궁합 감명서 1:1 대조 리포트</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{app_version}</span>
                 </div>
@@ -902,10 +844,8 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_age, m_sol, m_lun, 
             
             <!-- 남명 정보 박스 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;'>
-                <!-- 4) 이름 색상(#1A237E) 및 나이 굵은체(900) 적용 -->
                 <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {m_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {m_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
-                    <!-- 3) 양/음력 날짜 볼드체(900) 및 흑색(#000000) 강화 -->
                     <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {m_sol} | [음력] {m_lun}</p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>{m_time}</p>
                 </div>
@@ -913,10 +853,8 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_age, m_sol, m_lun, 
             
             <!-- 여명 정보 박스 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px;'>
-                <!-- 4) 여명 이름 색상 남명과 통일(#1A237E), 나이 굵은체(900) 적용 -->
                 <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {f_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {f_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
-                    <!-- 3) 양/음력 날짜 볼드체(900) 및 흑색(#000000) 강화 -->
                     <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {f_sol} | [음력] {f_lun}</p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>{f_time}</p>
                 </div>
@@ -999,9 +937,10 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
     """
     4-2 타 감명서 비교 (궁합) 전용 뷰
     - 박사님 지시 반영: 억지스러운 태그 변형 및 폰트 확대 제거, 정식 규격(22px) 복구
+    - Streamlit <p> 태그 생성 차단을 위한 1줄 텍스트 결합 적용
     """
     master_body = f"""
-    <div style="font-size: 22px !important; ...">🔍 타 감명서 비교 (궁합) 1:1 정밀 분석</div>
+    <div style="font-family: 'Nanum Myeongjo', serif; font-size: 22px !important; font-weight: 900 !important; color: #1A237E; text-align: center; padding: 6px 0 10px 0; margin-bottom: 15px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">🔍 타 감명서 비교 (궁합) 1:1 정밀 분석</div>
     {couple_fact_html}
     {external_raw_box}
     <div style="margin-top: 20px;">
@@ -1023,3 +962,5 @@ def get_warning_box(title, message):
         <p style='color:#E65100; font-size:14px; margin:0; line-height:1.6;'>{message}</p>
     </div>
     """
+
+
