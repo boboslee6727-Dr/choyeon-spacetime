@@ -886,36 +886,45 @@ def get_auto_comparison_cover(app_version, p_icon, u_name, sol_str, lun_str, tim
     <div class='page-break'></div>
     """
 
-def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time, f_name, f_sol, f_lun, f_time, today_str):
-    """4-2 궁합 1:1 대조 분석서 표지"""
+def get_auto_gunghap_comparison_cover(app_version, m_name, m_age, m_sol, m_lun, m_time, f_name, f_age, f_sol, f_lun, f_time, today_str):
+    """4-2 궁합 감명서 1:1 대조 리포트 표지 (디자인 동기화 및 폰트/색상 완결본)"""
     return f"""
-    <div class='report-page cover-page'>
-        <div class='vip-inset-frame' style='text-align: center;'>
-            <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:28px;'>
-                <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 21px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important; font-weight:800;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
+    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 40px 25px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 88%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            
+            <!-- 1) 대제목 1줄 고정 (자간 -2.0px 압축) -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; color: #1A237E !important; letter-spacing: -2.0px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
                 <div style='text-align: right; margin-top: 8px;'>
-                    <span style='font-family:"Nanum Myeongjo", serif; font-size: 13px; letter-spacing: 1px; color:#666;'>{app_version}</span>
+                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{app_version}</span>
                 </div>
             </div>
             
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 12px; margin-bottom: 12px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #111111; margin-bottom: 8px;'>♂️ 남명 : {m_name} 님</h2>
-                <div style='font-family:"Nanum Myeongjo", serif; font-size: 14px; line-height: 1.7;'>
-                    <p style='margin: 0; white-space: nowrap; font-weight: 700; color: #000000;'>[양력] {m_sol} | [음력] {m_lun}</p>
-                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 700; color: #1A237E;'>{m_time}</p>
+            <!-- 남명 정보 박스 -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;'>
+                <!-- 4) 이름 색상(#1A237E) 및 나이 굵은체(900) 적용 -->
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {m_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {m_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
+                    <!-- 3) 양/음력 날짜 볼드체(900) 및 흑색(#000000) 강화 -->
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {m_sol} | [음력] {m_lun}</p>
+                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>{m_time}</p>
                 </div>
             </div>
             
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 12px;'>
-                <h2 style='font-family:"Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #111111; margin-bottom: 8px;'>♀️ 여명 : {f_name} 님</h2>
-                <div style='font-family:"Nanum Myeongjo", serif; font-size: 14px; line-height: 1.7;'>
-                    <p style='margin: 0; white-space: nowrap; font-weight: 700; color: #000000;'>[양력] {f_sol} | [음력] {f_lun}</p>
-                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 700; color: #1A237E;'>{f_time}</p>
+            <!-- 여명 정보 박스 -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px;'>
+                <!-- 4) 여명 이름 색상 남명과 통일(#1A237E), 나이 굵은체(900) 적용 -->
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {f_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {f_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
+                    <!-- 3) 양/음력 날짜 볼드체(900) 및 흑색(#000000) 강화 -->
+                    <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {f_sol} | [음력] {f_lun}</p>
+                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>{f_time}</p>
                 </div>
             </div>
             
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 16px; margin-top: 30px; font-weight: 700; color:#444;'>{today_str}</p>
-            <p style='font-family:"Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin-top: 12px;'>초연 시공명리 연구소</p>
+            <!-- 발행일자 및 연구소명 -->
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 30px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 10px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
