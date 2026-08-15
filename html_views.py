@@ -892,7 +892,7 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time,
     <div class='report-page cover-page'>
         <div class='vip-inset-frame' style='text-align: center;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:18px; margin-bottom:28px;'>
-                <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 22px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important; font-weight:800;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
+                <h1 style='font-family:"Nanum Myeongjo", serif !important; font-size: 21px !important; white-space: nowrap !important; margin:0 !important; color:#1A237E !important; font-weight:800;'>전통 궁합 vs 시공명리 궁합 1:1 비교</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family:"Nanum Myeongjo", serif; font-size: 13px; letter-spacing: 1px; color:#666;'>{app_version}</span>
                 </div>
@@ -920,14 +920,6 @@ def get_auto_gunghap_comparison_cover(app_version, m_name, m_sol, m_lun, m_time,
     </div>
     <div class='page-break'></div>
     """
-
-def get_auto_comparison_header():
-    """대조 분석서 본문 헤더"""
-    return """<div style='margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #1A237E;'>
-        <h2 style='font-family:"Nanum Myeongjo", serif !important; font-size:21px !important; font-weight:800 !important; color:#1A237E !important; margin:0 !important; text-align:center; white-space:nowrap;'>
-            ⚖️ 전통 명리 vs 시공명리 1:1 비교 리포트
-        </h2>
-    </div>"""
 
 def get_external_raw_text_box(other_text):
     return f"""
