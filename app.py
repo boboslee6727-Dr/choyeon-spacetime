@@ -747,8 +747,6 @@ if st.session_state.get('app_running', False):
             p_age_val = curr_yr_for_age - p_y + 1
             
             f_gender_val = st.session_state.get("f_g", "여성")
-            u_icon_str = "♂️ 남명 :" if gender == "남성" else "♀️ 여명 :"
-            p_icon_str = "♀️ 여명 :" if f_gender_val == "여성" else "♂️ 남명 :"
             
             p_name_val = st.session_state.get("f_n", "상대방")
             p_time_val = p_time_str
@@ -765,46 +763,30 @@ if st.session_state.get('app_running', False):
                 p_leap_txt = "윤달" if getattr(p_klc, 'isIntercalary', False) else "평달"
                 p_lun_str_val = f"{p_klc.lunarYear}년 {p_klc.lunarMonth:02d}월 {p_klc.lunarDay:02d}일 ({p_leap_txt})"
             
-            # 🌟 [수정] 4-2 상품일 경우 전용 대조 표지 호출, 그 외는 일반 궁합 표지 호출
-            if "4-2" in u_product:
-                cover_html = html_views.get_auto_gunghap_comparison_cover(
-                    app_version=APP_VERSION, 
-                    m_name=name if gender == "남성" else locals().get('p_name_val', ''),
-                    m_age=age if gender == "남성" else locals().get('p_age_val', ''),
-                    m_sol=sol_str_fmt if gender == "남성" else locals().get('p_sol_str_val', ''),
-                    m_lun=lun_str_fmt if gender == "남성" else locals().get('p_lun_str_val', ''),
-                    m_time=time_str_fmt if gender == "남성" else locals().get('p_time_val', ''),
-                    f_name=locals().get('p_name_val', '') if gender == "남성" else name,
-                    f_age=locals().get('p_age_val', '') if gender == "남성" else age,
-                    f_sol=locals().get('p_sol_str_val', '') if gender == "남성" else sol_str_fmt,
-                    f_lun=locals().get('p_lun_str_val', '') if gender == "남성" else lun_str_fmt,
-                    f_time=locals().get('p_time_val', '') if gender == "남성" else time_str_fmt,
-                    today_str=today_str
-                )
-            else:
-                cover_html = html_views.get_couple_cover(
-                    version=APP_VERSION, 
-                    report_title=report_title, 
-                    u_icon=u_icon_str, 
-                    u_name=name, 
-                    u_age=age, 
-                    u_sol=sol_str_fmt, 
-                    u_lun=lun_str_fmt, 
-                    u_time=time_str_fmt,
-                    p_icon=p_icon_str, 
-                    p_name=locals().get('p_name_val', ''), 
-                    p_age=locals().get('p_age_val', ''), 
-                    p_sol=locals().get('p_sol_str_val', ''), 
-                    p_lun=locals().get('p_lun_str_val', ''), 
-                    p_time=locals().get('p_time_val', ''), 
-                    today_str=today_str
-                )
+            # 🌟 [수정] 남명/여명 데이터 분리 바인딩 (누가 신청하든 남명이 무조건 위로 가도록 정렬)
+            m_name_val = name if gender == "남성" else p_name_val
+            m_age_val = age if gender == "남성" else p_age_val
+            m_sol_val = sol_str_fmt if gender == "남성" else p_sol_str_val
+            m_lun_val = lun_str_fmt if gender == "남성" else p_lun_str_val
+            m_time_val = time_str_fmt if gender == "남성" else p_time_val
+
+            f_name_val = p_name_val if gender == "남성" else name
+            f_age_val = p_age_val if gender == "남성" else age
+            f_sol_val = p_sol_str_val if gender == "남성" else sol_str_fmt
+            f_lun_val = p_lun_str_val if gender == "남성" else lun_str_fmt
+            f_time_val = p_time_val if gender == "남성" else time_str_fmt
+
+            # 🌟 [수정] DRY 원칙: 모든 2인용 표지를 get_couple_cover 하나로 완벽 통합 (타이틀은 report_title 자동 치환)
+            cover_html = html_views.get_couple_cover(
+                version=APP_VERSION, 
+                report_title=report_title, 
+                u_icon="♂️", u_name=m_name_val, u_age=m_age_val, u_sol=m_sol_val, u_lun=m_lun_val, u_time=m_time_val,
+                p_icon="♀️", p_name=f_name_val, p_age=f_age_val, p_sol=f_sol_val, p_lun=f_lun_val, p_time=f_time_val, 
+                today_str=today_str
+            )
             
             male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
             female_data_pack = partner_bazi if gender == "남성" else [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
-            
-            m_name_val = name if gender == "남성" else p_name_val
-            f_name_val = p_name_val if gender == "남성" else name
             
             try:
                 if hasattr(engine, 'UniversalPrintableGunghap'):
