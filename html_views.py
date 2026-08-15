@@ -632,22 +632,17 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합 감명서 표준 표지 (디자인 통합 및 타이틀 자동 치환 완결본)"""
+    """2인용 궁합 감명서 표준 표지 (구버전 잔재 제거 및 타이틀 자동 치환 완결본)"""
+    # 1. 타이틀 강제 1줄 압축 및 불필요한 기호 정제
     clean_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
     
-    # 이름 내 중복 호칭 제거
-    def extract_pure_name(raw_name):
-        n = str(raw_name or "").strip()
-        n = re.sub(r'^(?:남명\s*[:：]?|여명\s*[:：]?|신청인\s*[:：]?|상대방\s*[:：]?|\s+)+', '', n).strip()
-        return n if n else "무명"
-
-    clean_u_name = extract_pure_name(u_name)
-    clean_p_name = extract_pure_name(p_name)
-
+    # 2. 구버전의 쓸데없는 extract_pure_name 함수 완전 삭제 완료
+    
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 40px 25px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 88%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
+            <!-- 대제목 영역 -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px;'>
                 <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -2.0px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
@@ -655,16 +650,18 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
                 </div>
             </div>
             
+            <!-- 남명 정보 박스 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {u_sol} | [음력] {u_lun}</p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
+            <!-- 여명 정보 박스 (빨간색 폐기 -> 남색 #1A237E 통일) -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap; font-weight: 900 !important; color: #000000;'>[양력] {p_sol} | [음력] {p_lun}</p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {p_time}</p>
