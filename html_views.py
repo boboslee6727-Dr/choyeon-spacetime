@@ -644,7 +644,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
             
             <!-- 대제목 영역 (폰트 21px 축소, 자간 -2.0px, 어간 -1.0px 압축으로 절대 1줄 방어) -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 21px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -2.0px !important; word-spacing: -1.0px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: clip !important; line-height: 1.2 !important;'>{clean_title}</h1>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 19px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -2.0px !important; word-spacing: -1.0px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: clip !important; line-height: 1.2 !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
@@ -894,11 +894,10 @@ def get_couple_fact_split_layout(male_block, female_block):
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 뷰
-    - 박사님 지시 반영: 억지스러운 태그 변형 및 폰트 확대 제거, 정식 규격(22px) 복구
-    - Streamlit <p> 태그 생성 차단을 위한 1줄 텍스트 결합 적용
+    - 박사님 지시 반영: Streamlit 강제 폰트 축소 무효화. <h2> 태그를 통한 대제목 24px 확정
     """
     master_body = f"""
-    <div style="font-family: 'Nanum Myeongjo', serif; font-size: 22px !important; font-weight: 900 !important; color: #1A237E; text-align: center; padding: 6px 0 10px 0; margin-bottom: 15px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.5px; white-space: nowrap;">🔍 타 감명서 비교 (궁합) 1:1 정밀 분석</div>
+    <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center !important; padding-bottom: 15px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; letter-spacing: -0.5px !important; display: block !important; margin-top: 0 !important;">🔍 타 감명서 비교 (궁합) 1:1 정밀 분석</h2>
     {couple_fact_html}
     {external_raw_box}
     <div style="margin-top: 20px;">
