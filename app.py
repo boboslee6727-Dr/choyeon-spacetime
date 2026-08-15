@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 72.6 Master - 간지 역산 콜백 & AI 완전 통제 최종본)
+# app.py (ver 72.7 Master - 간지 역산 콜백 & AI 완전 통제 최종본)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ importlib.reload(html_views)
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 72.6 Master"
+APP_VERSION = "ver 72.7 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용
@@ -92,121 +92,7 @@ def get_oh_class(ganji):
     oh = engine.get_color(ganji)
     return f"color-{oh}" if oh != '무' else ""
 
-# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (AI 구동 완전 차단 + 위젯 수치 즉시 반영)
-def do_auto_fill_user():
-    st.session_state['app_running'] = False  # 🚨 AI 구동 방지
-    u_ry = st.session_state.get("u_ry_rev", "")
-    u_rm = st.session_state.get("u_rm_rev", "")
-    u_rd = st.session_state.get("u_rd_rev", "")
-    u_rt = st.session_state.get("u_rt_rev", "")
-
-    _ry = extract_ganji(u_ry)
-    _rm = extract_ganji(u_rm)
-    _rd = extract_ganji(u_rd)
-
-    if not _ry and not _rm and not _rd:
-        st.session_state.pop('rev_success_msg', None)
-        st.session_state.pop('rev_error_msg', None)
-        return
-
-    if len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
-        ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
-        rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
-        rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
-
-        klc_find = KoreanLunarCalendar()
-        found = False
-        time_map = {
-            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
-            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
-            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
-            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
-            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
-            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
-            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
-            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
-            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
-            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
-            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
-            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
-        }
-
-        for y in range(2026, 1899, -1):
-            klc_find.setSolarDate(y, 7, 1)
-            gj_y = klc_find.getChineseGapJaString().split()
-            if gj_y and gj_y[0][:2] == ry_h:
-                curr_dt = dt_mod.date(y+1, 2, 28)
-                while curr_dt >= dt_mod.date(y, 1, 1):
-                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                    gj = klc_find.getChineseGapJaString().split()
-                    if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                        st.session_state['s_y'] = int(curr_dt.year)
-                        st.session_state['s_m'] = int(curr_dt.month)
-                        st.session_state['s_d'] = int(curr_dt.day)
-
-                        if u_rt:
-                            ji_char_u = u_rt[-1]
-                            u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u)
-                            target_time_str = time_map.get(u_rt_h, "시간 모름")
-                        else:
-                            target_time_str = "시간 모름"
-
-                        st.session_state['s_t'] = target_time_str
-                        st.session_state['s_t_select'] = target_time_str
-
-                        found = True
-                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                        s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                        st.session_state['rev_success_msg'] = f"✅양력{s_sol_fmt} 음력{s_lun_fmt}"
-                        break
-                    curr_dt -= dt_mod.timedelta(days=1)
-            if found: break
-
-        if not found:
-            st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
-    else:
-        st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
-
-# 🎯 [상대방] 사주간지 역산 전용 콜백 함수
-def do_auto_fill_partner():
-    st.session_state['app_running'] = False  # 🚨 AI 구동 방지
-    p_ry = st.session_state.get("p_ry_rev", "")
-    p_rm = st.session_state.get("p_rm_rev", "")
-    p_rd = st.session_state.get("p_rd_rev", "")
-    p_rt = st.session_state.get("p_rt_rev", "")
-
-    _p_ry = extract_ganji(p_ry)
-    _p_rm = extract_ganji(p_rm)
-    _p_rd = extract_ganji(p_rd)
-
-    if not _p_ry and not _p_rm and not _p_rd:
-        st.session_state.pop('rev_p_success_msg', None)
-        st.session_state.pop('rev_p_error_msg', None)
-        return
-
-    if len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
-        p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
-        p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
-        p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
-
-        klc_find = KoreanLunarCalendar()
-        found = False
-        time_map = {
-            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
-            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
-            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
-            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
-            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
-            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
-            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
-            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
-            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
-            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
-            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
-            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
-        }
-
-        # 🎯 [신청인] 사주간지 역산 전용 콜백 함수
+# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (다중 검색 최신 버전 적용)
 def do_auto_fill_user():
     st.session_state['app_running'] = False
     u_ry = st.session_state.get("u_ry_rev", "")
@@ -289,7 +175,7 @@ def do_auto_fill_user():
     else:
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-# 🎯 [상대방] 사주간지 역산 전용 콜백 함수
+# 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (다중 검색 최신 버전 적용)
 def do_auto_fill_partner():
     st.session_state['app_running'] = False
     p_ry = st.session_state.get("p_ry_rev", "")
@@ -370,6 +256,7 @@ def do_auto_fill_partner():
             st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
     else:
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
 
 # ==============================================================================
 # 2. 사이드바 통제 센터
@@ -535,7 +422,7 @@ with st.sidebar:
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
         st.session_state["s_t"] = b_time
 
-    # 🌟 [수정 후] 1인용 가지와 2인용 가지의 명확한 분기 및 4번 상품 편입
+    # 🌟 1인용 가지와 2인용 가지의 명확한 분기 및 4번 상품 편입
     
     is_1person = not ( (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product) )
     
@@ -562,7 +449,7 @@ with st.sidebar:
             start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
             end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
         
-        # 🌟 4-1 타 감명서 비교 (사주) 중복 text_area 제거 및 헤더 표준화
+        # 🌟 4-1 타 감명서 비교 (사주)
         elif "4-1." in u_product:
             st.markdown("---")
             st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 10px; margin-bottom: 6px;'>📄 타 감명서 비교 (사주) 원문</div>", unsafe_allow_html=True)
@@ -878,23 +765,40 @@ if st.session_state.get('app_running', False):
                 p_leap_txt = "윤달" if getattr(p_klc, 'isIntercalary', False) else "평달"
                 p_lun_str_val = f"{p_klc.lunarYear}년 {p_klc.lunarMonth:02d}월 {p_klc.lunarDay:02d}일 ({p_leap_txt})"
             
-            cover_html = html_views.get_couple_cover(
-                version=APP_VERSION, 
-                report_title=report_title, 
-                u_icon=u_icon_str, 
-                u_name=name, 
-                u_age=age, 
-                u_sol=sol_str_fmt, 
-                u_lun=lun_str_fmt, 
-                u_time=time_str_fmt,
-                p_icon=p_icon_str, 
-                p_name=locals().get('p_name_val', ''), 
-                p_age=locals().get('p_age_val', ''), 
-                p_sol=locals().get('p_sol_str_val', ''), 
-                p_lun=locals().get('p_lun_str_val', ''), 
-                p_time=locals().get('p_time_val', ''), 
-                today_str=today_str
-            )
+            # 🌟 [수정] 4-2 상품일 경우 전용 대조 표지 호출, 그 외는 일반 궁합 표지 호출
+            if "4-2" in u_product:
+                cover_html = html_views.get_auto_gunghap_comparison_cover(
+                    app_version=APP_VERSION, 
+                    m_name=name if gender == "남성" else locals().get('p_name_val', ''),
+                    m_age=age if gender == "남성" else locals().get('p_age_val', ''),
+                    m_sol=sol_str_fmt if gender == "남성" else locals().get('p_sol_str_val', ''),
+                    m_lun=lun_str_fmt if gender == "남성" else locals().get('p_lun_str_val', ''),
+                    m_time=time_str_fmt if gender == "남성" else locals().get('p_time_val', ''),
+                    f_name=locals().get('p_name_val', '') if gender == "남성" else name,
+                    f_age=locals().get('p_age_val', '') if gender == "남성" else age,
+                    f_sol=locals().get('p_sol_str_val', '') if gender == "남성" else sol_str_fmt,
+                    f_lun=locals().get('p_lun_str_val', '') if gender == "남성" else lun_str_fmt,
+                    f_time=locals().get('p_time_val', '') if gender == "남성" else time_str_fmt,
+                    today_str=today_str
+                )
+            else:
+                cover_html = html_views.get_couple_cover(
+                    version=APP_VERSION, 
+                    report_title=report_title, 
+                    u_icon=u_icon_str, 
+                    u_name=name, 
+                    u_age=age, 
+                    u_sol=sol_str_fmt, 
+                    u_lun=lun_str_fmt, 
+                    u_time=time_str_fmt,
+                    p_icon=p_icon_str, 
+                    p_name=locals().get('p_name_val', ''), 
+                    p_age=locals().get('p_age_val', ''), 
+                    p_sol=locals().get('p_sol_str_val', ''), 
+                    p_lun=locals().get('p_lun_str_val', ''), 
+                    p_time=locals().get('p_time_val', ''), 
+                    today_str=today_str
+                )
             
             male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
             female_data_pack = partner_bazi if gender == "남성" else [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
@@ -1377,4 +1281,3 @@ if st.session_state.get('app_running', False):
 
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
         st.markdown(final_render_html, unsafe_allow_html=True)
-
