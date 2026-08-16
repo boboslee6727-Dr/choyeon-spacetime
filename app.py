@@ -1010,6 +1010,14 @@ if st.session_state.get('app_running', False):
         if not won_guk_vaults_str: won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
             
         hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
+
+        # 🌟 [초연 시공명리 3대 진실 정밀 감지 엔진 호출]
+        adv_saju_data = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
+        if hasattr(html_views, 'analyze_saju_facts_advanced'):
+            adv_flags = html_views.analyze_saju_facts_advanced(adv_saju_data, dw_j_cur, cur_sewun_ji_val)
+            adv_warning_str = adv_flags.get("warning_message", "정상 시공간 흐름")
+        else:
+            adv_warning_str = "정상 시공간 흐름"
         
         try:
             shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
@@ -1093,6 +1101,7 @@ if st.session_state.get('app_running', False):
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
+            "adv_warning_str": adv_warning_str,  # 🌟 [신규] 복음·묘고·합화 감지 경고 텍스트 전달
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
