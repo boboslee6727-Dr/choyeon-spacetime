@@ -1191,21 +1191,26 @@ if st.session_state.get('app_running', False):
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-       # 🌟 4-2. 타 감명서 비교 (궁합) -> 기존 표준 렌더링 함수 완벽 일치
+        # 🌟 4-2. 타 감명서 비교 (궁합) -> 불필요 마커 완전 소각 및 렌더링
         elif u_product.startswith("4-2"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
+                
+                # 🌟 불필요한 모든 시스템 마커 태그를 빈 문자열로 완전 소각 (안전망)
                 formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
                 
-                # 🌟 [수정] 단일 신청인 황금문구 대신 [남·녀 듀얼 황금문구] 바인딩
+                # 남·녀 듀얼 황금문구 바인딩
                 golden_box_html = golden_box_gunghap_html if 'golden_box_gunghap_html' in locals() else (golden_text_html if 'golden_text_html' in locals() else "")
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 
-                # 🌟 4-2 전용 분할 뷰 함수 호출 (없을 시 표준 뷰 대체)
+                # 4-2 전용 분할 뷰 함수 호출
                 if hasattr(html_views, 'render_gunghap_comparison_report'):
                     final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
                 else:
