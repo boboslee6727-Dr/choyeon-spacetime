@@ -1011,22 +1011,33 @@ if st.session_state.get('app_running', False):
             
         hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
 
-        # 🌟 [초연 시공명리 3대 진실 정밀 감지 엔진 호출]
-        adv_saju_data = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
+        # 🌟 [초연 시공명리 통합 정밀 감지 엔진 호출]
+        adv_saju_data = {
+            'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs,
+            'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb
+        }
         if hasattr(html_views, 'analyze_saju_facts_advanced'):
             sewun_ji_param = curr_y_ji if 'curr_y_ji' in locals() else "-"
             adv_flags = html_views.analyze_saju_facts_advanced(adv_saju_data, dw_j_cur, sewun_ji_param)
             adv_warning_str = adv_flags.get("warning_message", "정상 시공간 흐름")
             health_erosion_str = adv_flags.get("health_erosion_facts", "특이 침식 파동 없음")
-            action_solutions_str = adv_flags.get("action_solutions", "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지")
-            spouse_issue_str = adv_flags.get("spouse_issue_facts", "배우자궁 비교적 안정적 흐름 유지")
+            action_solutions_str = adv_flags.get("action_solutions", "자연스러운 기운의 순환 유지")
+            spouse_issue_str = adv_flags.get("spouse_issue_facts", "배우자궁 안정")
+            samhyung_potential_str = adv_flags.get("samhyung_potential_facts", "특이 삼형 파동 없음")
+            shinsal_risk_str = adv_flags.get("shinsal_risk_facts", "신살 복합 파동 안정")
+            harmony_index_str = adv_flags.get("harmony_index_facts", "균형 상태")
+            alternative_space_str = adv_flags.get("alternative_space_facts", "현재 환경 유지")
         else:
             adv_warning_str = "정상 시공간 흐름"
             health_erosion_str = "특이 침식 파동 없음"
-            action_solutions_str = "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
-            spouse_issue_str = "배우자궁 비교적 안정적 흐름 유지"
+            action_solutions_str = "자연스러운 기운의 순환 유지"
+            spouse_issue_str = "배우자궁 안정"
+            samhyung_potential_str = "특이 삼형 파동 없음"
+            shinsal_risk_str = "신살 복합 파동 안정"
+            harmony_index_str = "균형 상태"
+            alternative_space_str = "현재 환경 유지"
 
-        # 🌟 [신규] 천간 3자조합 궁위별(년월 vs 일시) 물상 분기 엔진 호출
+        # 🌟 천간 3자조합 궁위별 물상 분기 엔진 호출
         adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
         if hasattr(html_views, 'analyze_samja_combination'):
             samja_comb_facts = html_views.analyze_samja_combination(adv_gan_data, dw_g_cur)
@@ -1116,11 +1127,15 @@ if st.session_state.get('app_running', False):
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
-            "adv_warning_str": adv_warning_str,  # 🌟 복음·묘고·합화 감지 경고 텍스트
-            "health_erosion_facts": health_erosion_str,  # 🌟 조토극수 건강 침식 팩트
-            "samja_comb_facts": samja_comb_facts,  # 🌟 천간 3자조합 궁위별 물상 팩트
-            "action_solutions": action_solutions_str,  # 🌟 복음·묘고 극복 4대 처세 솔루션 전달
-            "spouse_issue_facts": spouse_issue_str,  # 🌟 [신규] 배우자 인연 복합 파동 팩트 전달
+            "adv_warning_str": adv_warning_str,
+            "health_erosion_facts": health_erosion_str,
+            "samja_comb_facts": samja_comb_facts,
+            "action_solutions": action_solutions_str,
+            "spouse_issue_facts": spouse_issue_str,
+            "samhyung_potential_facts": samhyung_potential_str,  # 🌟 삼형 개고 변곡점
+            "shinsal_risk_facts": shinsal_risk_str,              # 🌟 신살/이성구설 복합 파동
+            "harmony_index_facts": harmony_index_str,            # 🌟 부 vs 내면평화 지수
+            "alternative_space_facts": alternative_space_str,    # 🌟 운명개척 시뮬레이션
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
