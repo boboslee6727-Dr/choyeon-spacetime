@@ -633,18 +633,24 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합 감명서 표준 표지 (타이틀 1줄 완벽 압축 & 생년월일 볼드체 적용본)"""
+    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 완벽 고정)"""
     
-    # 타이틀 줄바꿈 요인 원천 차단 (엔터 및 html 태그 완전 제거)
-    clean_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮 ", "").replace("🎯 ", "").replace("\n", " ").replace("<br>", " ").strip()
-    
+    # 1) 타이틀 정제 (기호 및 줄바꿈 공백 치환 후 단일 공백으로 압축)
+    raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
+    for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
+        raw_title = raw_title.replace(tag, " ")
+    clean_title = " ".join(raw_title.split())
+
+    clean_u_name = str(u_name or "무명").strip()
+    clean_p_name = str(p_name or "무명").strip()
+
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 40px 25px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 88%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 대제목 영역 (폰트 21px 축소, 자간 -2.0px, 어간 -1.0px 압축으로 절대 1줄 방어) -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 19px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -2.0px !important; word-spacing: -1.0px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: clip !important; line-height: 1.2 !important;'>{clean_title}</h1>
+            <!-- 🌟 대제목 영역: 22px 규격 & nowrap으로 완벽한 1줄 유지 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px; width: 100%;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 22px !important; font-weight: 900 !important; margin: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.3 !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
@@ -652,7 +658,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
             
             <!-- 남명 정보 박스 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
@@ -661,7 +667,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
             
             <!-- 여명 정보 박스 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {p_time}</p>
