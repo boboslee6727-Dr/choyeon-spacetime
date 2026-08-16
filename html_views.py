@@ -18,7 +18,7 @@ import streamlit as st
 def get_global_css():
     """전체 시스템 UI/UX 및 화면/인쇄 듀얼 분리 스타일시트"""
     return """<style>
-    @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800;900&family=Noto+Serif+KR:wght@400;500;600;700;900&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800;900&display=swap");
 
     .stApp { background-color: #FFF8E1 !important; }
     
@@ -35,9 +35,9 @@ def get_global_css():
     div[data-testid="stRadio"] label p { font-size: 14px !important; }
     div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
 
-    /* 감명서 리포트 전 영역 명조체 통일 */
+    /* 감명서 리포트 전 영역 나눔명조체 통일 */
     .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
-        font-family: 'Nanum Myeongjo', 'Noto Serif KR', 'Batang', serif !important; 
+        font-family: 'Nanum Myeongjo', 'Batang', serif !important; 
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
@@ -56,7 +56,7 @@ def get_global_css():
         box-shadow: 0 4px 6px rgba(0,0,0,0.12) !important; 
     }
 
-    /* 1. [초연 시공명리 풀이 가동] (Primary) -> 빨간색 사수 */
+    /* 1. [초연 시공명리 풀이 가동] (Primary) */
     div.stButton > button[kind="primary"],
     div.stButton > button[data-testid="baseButton-primary"],
     div.stButton > button[data-testid="stBaseButton-primary"] { 
@@ -70,7 +70,7 @@ def get_global_css():
         color: #FFFFFF !important; 
     }
 
-    /* 2. [풀이결과 인쇄/PDF 저장] (Secondary) -> 초록색 사수 */
+    /* 2. [풀이결과 인쇄/PDF 저장] (Secondary) */
     div.stButton > button[kind="secondary"],
     div.stButton > button[data-testid="baseButton-secondary"],
     div.stButton > button[data-testid="stBaseButton-secondary"] { 
@@ -95,7 +95,7 @@ def get_global_css():
         box-shadow: none !important; 
         padding: 12mm 10mm; 
         box-sizing: border-box; 
-        color: #111111; 
+        color: #222222; 
     }
 
     /* 안쪽 표준 둥근 사각 액자 */
@@ -140,12 +140,12 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (자연스럽고 품격 있는 명조체 규격)
-    - 대제목(1.) 20px Bold 900
+    AI 생성 텍스트 포맷터 (단정하고 눈이 편안한 표준 명조체 규격)
+    - 대제목(1.) 20px Bold 800
     - 특수헤더 17px Bold 800 (중앙정렬, 밑줄 2.5px solid #1A237E)
-    - 소제목(1)) 17px Bold 800 (검정색 #111111)
-    - 소소제목((1)) 16px Bold 700 (진먹색 #2B2B2B)
-    - 일반본문 16px Semi-Bold 600 (적당히 힘차고 눈이 편안한 두께, 색상 #1F1F1F)
+    - 소제목(1)) 17px Bold 700 (검정색 #000000)
+    - 소소제목((1)) 16px Bold 700 (진먹색 #333333)
+    - 일반본문 15.5px Regular 400 (기본 정규 굵기, 줄간격 1.85, 편안한 먹색 #222222)
     """
     if not text:
         return ""
@@ -158,54 +158,53 @@ def format_ai_text_to_html(text):
         if not line:
             continue
             
-        # 마크다운 찌꺼기만 제거 (따옴표, 괄호 등 문장부호 100% 보존)
+        # 마크다운 찌꺼기 제거
         line = line.replace('*', '').replace('#', '')
 
         # 🌟 [특수 헤더] 수석보좌관 1:1 장단점 정밀 비교 등
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", \"Noto Serif KR\", serif; font-size: 17px; font-weight: 800; color: #1A237E; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #1A237E; "
                 f"text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [대제목 1.] (20px / 900)
+        # 🌟 [대제목 1.] (20px / 800)
         elif re.match(r'^\d+\.\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", \"Noto Serif KR\", serif; font-size: 20px; font-weight: 900; color: #000000; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 20px; font-weight: 800; color: #000000; "
                 f"margin-top: 22px; margin-bottom: 10px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px; letter-spacing: -0.5px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [소제목 1)] (17px / 800)
+        # 🌟 [소제목 1)] (17px / 700)
         elif re.match(r'^\d+\)\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", \"Noto Serif KR\", serif; font-size: 17px; font-weight: 800; color: #111111; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 700; color: #000000; "
                 f"margin-top: 14px; margin-bottom: 6px; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
         # 🌟 [소소제목 (1)] (16px / 700)
         elif re.match(r'^\(\d+\)\s', line):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", \"Noto Serif KR\", serif; font-size: 16px; font-weight: 700; color: #2B2B2B; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 700; color: #333333; "
                 f"margin-top: 10px; margin-bottom: 4px; letter-spacing: -0.2px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [일반 본문] (16px / 600 Semi-Bold / 편안한 딥차콜 #1F1F1F)
+        # 🌟 [일반 본문] (15.5px / 400 Regular 표준 두께 / 편안한 먹색 #222222)
         else:
             if line.startswith('-'):
                 html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", \"Noto Serif KR\", serif; font-size: 16px; font-weight: 600; line-height: 1.85; "
-                    f"color: #1F1F1F; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 5px; padding-left: 10px; letter-spacing: -0.2px;'>"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15.5px; font-weight: 400; line-height: 1.85; "
+                    f"color: #222222; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 5px; padding-left: 10px;'>"
                     f"{line}</p>"
                 )
             else:
                 html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", \"Noto Serif KR\", serif; font-size: 16px; font-weight: 600; line-height: 1.85; "
-                    f"color: #1F1F1F; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 15px; letter-spacing: -0.2px;'>"
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15.5px; font-weight: 400; line-height: 1.85; "
+                    f"color: #222222; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 15px;'>"
                     f"{line}</p>"
                 )
             
     return "\n".join(html_lines)
-
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
 # ==============================================================================
