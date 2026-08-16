@@ -79,9 +79,8 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
 def call_gemini_api(prompt_text, max_tokens=6000):
-    sys_role = getattr(prompts, '공통_시스템_헤더', None)
-    if sys_role is None:
-        sys_role = getattr(prompts, 'COMMON_SYSTEM_HEADER', "당신은 초연 시공명리 전문가입니다. 팩트 데이터를 바탕으로 정확하게 분석하세요.")
+    # 🌟 {name} 미치환 템플릿의 시스템 이중 주입을 차단하고 정제된 표준 역할 전달
+    sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
 def extract_ganji(text):
@@ -1020,14 +1019,27 @@ if st.session_state.get('app_running', False):
 
         w_facts = engine.get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], "丙", "午", "甲", "子")
 
-        saju_fact_summary = f"""
+        # [수정 후 확정 코드]
+        if is_2person:
+            saju_fact_summary = f"""
+[남명({m_name_val}) 사주 팩트]
+- 명조: {m_sol_val}생 (음력 {m_lun_val}) / {m_time_val}
+- 사주팔자: 년주({ys if gender=='남성' else p_ys}{yb if gender=='남성' else p_yb}), 월주({ms if gender=='남성' else p_ms}{mb if gender=='남성' else p_mb}), 일주({ds if gender=='남성' else p_ds}{db if gender=='남성' else p_db}), 시주({hs if gender=='남성' else p_hs}{hb if gender=='남성' else p_hb})
+- 격국: {gyukgook_detail if gender=='남성' else p_gyuk}
+
+[여명({f_name_val}) 사주 팩트]
+- 명조: {f_sol_val}생 (음력 {f_lun_val}) / {f_time_val}
+- 사주팔자: 년주({p_ys if gender=='남성' else ys}{p_yb if gender=='남성' else yb}), 월주({p_ms if gender=='남성' else ms}{p_mb if gender=='남성' else mb}), 일주({p_ds if gender=='남성' else ds}{p_db if gender=='남성' else db}), 시주({p_hs if gender=='남성' else hs}{p_hb if gender=='남성' else hb})
+- 격국: {p_gyuk if gender=='남성' else gyukgook_detail}
+"""
+        else:
+            saju_fact_summary = f"""
 - 내담자 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({hs}{hb})
 - 격국 및 용신 팩트: {gyukgook_detail}
 - 원국 오행 분포: 목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}
 - 공망 궁위 팩트: [년지공망] {n_gong} / [일지공망] {i_gong}
 - 삼재 여부: {cur_samjae}
 """
-
         target_year_val = st.session_state.get('target_year_input', curr_year)
         cur_sewun_base = (target_year_val - 1984) % 60
         cur_sewun_gan_val = engine.GAN[cur_sewun_base % 10]
@@ -1183,11 +1195,15 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-                daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
-                sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-                formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
-                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-                golden_box_html = golden_box_gunghap_html if 'golden_box_gunghap_html' in locals() else golden_text_html
+                
+                # 🌟 4-1 전용 마커 완전 소각 (안전망)
+                formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
+                
+                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
                 final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
