@@ -984,3 +984,54 @@ def get_warning_box(title, message):
         <p style='color:#E65100; font-size:14px; margin:0; line-height:1.6;'>{message}</p>
     </div>
     """
+
+def analyze_samja_combination(saju_gan_data, dw_gan="-"):
+    """
+    [초연 시공명리 천간 3자조합 궁위별 시공간 물상 분기 엔진]
+    - 丁辛壬 (활인·전문기술·돈벼락)
+    - 甲戊庚 (귀격·우두머리·권력/대업)
+    - 乙丙己 (교육·문화·화려한 개화)
+    - 丙辛癸 (정밀 연구·의약·특수기술)
+    """
+    ys = saju_gan_data.get('year_gan', '-')
+    ms = saju_gan_data.get('month_gan', '-')
+    ds = saju_gan_data.get('day_gan', '-')
+    hs = saju_gan_data.get('hour_gan', '-')
+
+    gans = [ys, ms, ds, hs]
+    valid_gans = [g for g in gans if g and g != '-' and g != '?']
+    gan_set = set(valid_gans)
+
+    comb_results = []
+
+    # 1. 丁辛壬 (정신임) 삼자조합 판별
+    target_set = {'丁', '辛', '壬'}
+    matched = target_set.intersection(gan_set)
+    
+    # 원국에 2글자 이상 있거나 대운 결합 시
+    if len(matched) >= 3 or (len(matched) == 2 and dw_gan in target_set):
+        loc_desc = []
+        # 년월궁(선천/부모/조상) vs 일시궁(본인/중말년/전문성) 판별
+        yw_has = any(g in ['丁', '辛', '壬'] for g in [ys, ms])
+        dh_has = any(g in ['丁', '辛', '壬'] for g in [ds, hs])
+
+        if yw_has and dh_has:
+            loc_desc.append("년월과 일시에 걸쳐 조상·부모의 선천적 혜택(돈벼락/두뇌)과 본인의 전문 장인정신이 완벽히 이어지는 형태")
+        elif yw_has:
+            loc_desc.append("년월에 위치하여 조상·부모 대의 유산 및 선천적 총명함으로 조기 사회적 발탁을 이루는 형태")
+        elif dh_has:
+            loc_desc.append("일시에 집중되어 중년 이후 본인의 독보적 전문 기술과 집념으로 자수성가 부를 일구는 형태")
+
+        if dw_gan in target_set and len(matched) == 2:
+            loc_desc.append(f"현재 {dw_gan}대운이 가세하여 잠자던 丁辛壬 삼자조합이 폭발적으로 개화하는 황금기")
+
+        comb_results.append(f"✨ [丁辛壬 삼자조합]: {', '.join(loc_desc)}")
+
+    # 2. 甲戊庚 (갑무경) 삼자조합 판별
+    target_set_kmg = {'甲', '戊', '庚'}
+    matched_kmg = target_set_kmg.intersection(gan_set)
+    if len(matched_kmg) >= 3 or (len(matched_kmg) == 2 and dw_gan in target_set_kmg):
+        comb_results.append("✨ [甲戊庚 삼자조합]: 거대한 조직과 권력을 장악하는 우두머리 리더십 발현")
+
+    res_str = " / ".join(comb_results) if comb_results else "원국 특이 삼자조합 없음"
+    return res_str
