@@ -1020,21 +1020,46 @@ if st.session_state.get('app_running', False):
         w_facts = engine.get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], "丙", "午", "甲", "子")
 
         # [수정 후 확정 코드]
+        # ======================================================================
+        # 🌟 1인용 / 2인용 사주 팩트 요약 (3주 6자 & NameError 완벽 방어)
+        # ======================================================================
         if is_2person:
+            # male_data_pack / female_data_pack = [시주(0), 일주(1), 월주(2), 년주(3)]
+            m_h_raw = male_data_pack[0] if len(male_data_pack) > 0 else ""
+            m_d_p = male_data_pack[1] if len(male_data_pack) > 1 else "甲子"
+            m_m_p = male_data_pack[2] if len(male_data_pack) > 2 else "甲子"
+            m_y_p = male_data_pack[3] if len(male_data_pack) > 3 else "甲子"
+
+            f_h_raw = female_data_pack[0] if len(female_data_pack) > 0 else ""
+            f_d_p = female_data_pack[1] if len(female_data_pack) > 1 else "甲子"
+            f_m_p = female_data_pack[2] if len(female_data_pack) > 2 else "甲子"
+            f_y_p = female_data_pack[3] if len(female_data_pack) > 3 else "甲子"
+
+            # 3주 6자(시간 모름) 시주 안전 변환
+            m_h_p = "미상(시간 모름)" if (not m_h_raw or "?" in m_h_raw or "-" in m_h_raw) else m_h_raw
+            f_h_p = "미상(시간 모름)" if (not f_h_raw or "?" in f_h_raw or "-" in f_h_raw) else f_h_raw
+
+            m_gyuk_val = gyukgook_detail if gender == '남성' else (p_gyuk if 'p_gyuk' in locals() else "격국 분석")
+            f_gyuk_val = (p_gyuk if 'p_gyuk' in locals() else "격국 분석") if gender == '남성' else gyukgook_detail
+
             saju_fact_summary = f"""
 [남명({m_name_val}) 사주 팩트]
 - 명조: {m_sol_val}생 (음력 {m_lun_val}) / {m_time_val}
-- 사주팔자: 년주({ys if gender=='남성' else p_ys}{yb if gender=='남성' else p_yb}), 월주({ms if gender=='남성' else p_ms}{mb if gender=='남성' else p_mb}), 일주({ds if gender=='남성' else p_ds}{db if gender=='남성' else p_db}), 시주({hs if gender=='남성' else p_hs}{hb if gender=='남성' else p_hb})
-- 격국: {gyukgook_detail if gender=='남성' else p_gyuk}
+- 사주팔자: 년주({m_y_p}), 월주({m_m_p}), 일주({m_d_p}), 시주({m_h_p})
+- 격국: {m_gyuk_val}
 
 [여명({f_name_val}) 사주 팩트]
 - 명조: {f_sol_val}생 (음력 {f_lun_val}) / {f_time_val}
-- 사주팔자: 년주({p_ys if gender=='남성' else ys}{p_yb if gender=='남성' else yb}), 월주({p_ms if gender=='남성' else ms}{p_mb if gender=='남성' else mb}), 일주({p_ds if gender=='남성' else ds}{p_db if gender=='남성' else db}), 시주({p_hs if gender=='남성' else hs}{p_hb if gender=='남성' else hb})
-- 격국: {p_gyuk if gender=='남성' else gyukgook_detail}
+- 사주팔자: 년주({f_y_p}), 월주({f_m_p}), 일주({f_d_p}), 시주({f_h_p})
+- 격국: {f_gyuk_val}
 """
         else:
+            # 1인용 3주 6자(시간 모름) 시주 안전 변환
+            u_h_raw = f"{hs}{hb}"
+            u_h_p = "미상(시간 모름)" if (not u_h_raw or "?" in u_h_raw or "-" in u_h_raw) else u_h_raw
+
             saju_fact_summary = f"""
-- 내담자 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({hs}{hb})
+- 내담자 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({u_h_p})
 - 격국 및 용신 팩트: {gyukgook_detail}
 - 원국 오행 분포: 목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}
 - 공망 궁위 팩트: [년지공망] {n_gong} / [일지공망] {i_gong}
