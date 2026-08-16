@@ -54,19 +54,30 @@ def get_global_css():
         box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
     }
 
-    /* 1. 풀이가동 버튼 (진청색 사수) */
+    /* 버튼 공통 규격 */
+    div.stButton > button { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
+        font-weight: 900 !important; 
+        font-size: 16px !important; 
+        border-radius: 8px !important; 
+        height: 50px !important; 
+        border: none !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.12) !important; 
+    }
+
+    /* 1. [초연 시공명리 풀이 가동] 버튼: 빨간색 (Primary) */
     div.stButton > button[kind="primary"],
     [data-testid="stSidebar"] div.stButton:first-of-type > button { 
-        background-color: #1A237E !important; 
+        background-color: #D32F2F !important; 
         color: #FFFFFF !important; 
     }
     div.stButton > button[kind="primary"]:hover,
     [data-testid="stSidebar"] div.stButton:first-of-type > button:hover { 
-        background-color: #0D47A1 !important; 
+        background-color: #B71C1C !important; 
         color: #FFFFFF !important; 
     }
 
-    /* 2. [인쇄 / PDF 저장] 버튼 (녹색 #00A843 강제 사수) */
+    /* 2. [풀이결과 인쇄/PDF 저장] 버튼: 초록색 (Secondary) */
     div.stButton > button[kind="secondary"],
     [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button,
     [data-testid="stSidebar"] div.stButton:last-of-type > button { 
