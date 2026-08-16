@@ -1217,11 +1217,11 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("4-1"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
-                final_render_html = html_views.render_comparison_report(part_1_fact, warn_html, "")
+                final_render_html = html_views.render_saju_comparison_report(part_1_fact, warn_html, "")
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
                 
-                # 🌟 4-1 전용 마커 완전 소각 (안전망)
+                # 🌟 불필요 마커 제거 로직 유지
                 formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
@@ -1230,7 +1230,12 @@ if st.session_state.get('app_running', False):
                 
                 golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
                 full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-                final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+                
+                # 🌟 4-1 전용 뷰 함수 호출로 변경 (render_comparison_report -> render_saju_comparison_report)
+                if hasattr(html_views, 'render_saju_comparison_report'):
+                    final_render_html = html_views.render_saju_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+                else:
+                    final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
         # 🌟 4-2. 타 감명서 비교 (궁합) -> 불필요 마커 완전 소각 및 렌더링
         elif u_product.startswith("4-2"):
