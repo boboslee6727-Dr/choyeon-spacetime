@@ -1795,16 +1795,16 @@ def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, pur
 
 def search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji=None, base_year=None):
     """
-    절기(get_true_year_month_pillar) 기반 사주 간지 역산 표준 마스터 함수
-    - 24절기(대설, 경칩 등) 태양 황경 정밀 연산 적용
-    - 탐색 범위: 1900년 ~ 2050년
-    - 탐색 순서: base_year(지정 기준일)부터 1900년까지 역추적 스캔 후 미래(2050년) 순차 스캔
-    - 반환 형식: app.py UI와 100% 호환되는 Dict 리스트 [{'display', 'y', 'm', 'd', 't'}, ...]
+    초연 시공명리 24절기(ephem) 및 율리우스적일 기반 정통 사주 역산 함수
+    - klc의 부정확한 음력 간지 필터를 전면 배제하고 순수 절기 기반 만세력으로 탐색
     """
     if base_year is None:
         base_year = dt_mod.datetime.now().year
 
-    klc = KoreanLunarCalendar()
+    ry_h = _to_hanja(ry_h[:1]) + _to_hanja_ji(ry_h[1:]) if len(ry_h)>=2 else ry_h
+    rm_h = _to_hanja(rm_h[:1]) + _to_hanja_ji(rm_h[1:]) if len(rm_h)>=2 else rm_h
+    rd_h = _to_hanja(rd_h[:1]) + _to_hanja_ji(rd_h[1:]) if len(rd_h)>=2 else rd_h
+
     time_map = {
         '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
         '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
@@ -1822,51 +1822,54 @@ def search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji=None, base_year=None):
     
     target_time_str = time_map.get(rt_ji, "시간 모름") if rt_ji else "시간 모름"
     matched_results = []
+    klc = KoreanLunarCalendar()
+
+    # 기준 연도 목록 (현대인 기준 우선 탐색 후 전 범위 스캔)
+    # 1900년 ~ 2050년 전체 날짜 중 일주가 일치하는 날짜를 수학적으로 직접 계산
+    ref_dt = dt_mod.date(1900, 1, 1) # 1900-01-01 은 甲戌일 (10)
+    # 60갑자 표
+    gan_list = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+    ji_list = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
     
-    # 1. 기준 시점(base_year)부터 1900년까지 과거 방향 역추적 스캔
-    for y in range(base_year, 1899, -1):
-        curr_dt = dt_mod.date(y, 12, 31)
-        start_dt = dt_mod.date(y, 1, 1)
-        while curr_dt >= start_dt:
-            if klc.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day):
-                gj = klc.getChineseGapJaString().split()
-                # 1차: 일주 일치 확인 (고속 필터링)
-                if len(gj) >= 3 and gj[2][:2] == rd_h:
-                    # 2차: 24절기 태양 황경 기반 년주·월주 정밀 검증
-                    y_p, m_p, _ = get_true_year_month_pillar(curr_dt.year, curr_dt.month, curr_dt.day, 12, 0)
-                    if y_p == ry_h and m_p == rm_h:
-                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                        s_lun_fmt = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
-                        age_calc = base_year - curr_dt.year + 1
-                        matched_results.append({
-                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt}, {age_calc}세)",
-                            "y": int(curr_dt.year),
-                            "m": int(curr_dt.month),
-                            "d": int(curr_dt.day),
-                            "t": target_time_str
-                        })
-            curr_dt -= dt_mod.timedelta(days=1)
+    target_d_idx = -1
+    for idx in range(60):
+        if (gan_list[idx % 10] + ji_list[idx % 12]) == rd_h:
+            target_d_idx = idx
+            break
             
-    # 2. 기준 시점 이후(base_year + 1 ~ 2050년) 미래 방향 순차 스캔
-    for y in range(base_year + 1, 2051):
-        curr_dt = dt_mod.date(y, 1, 1)
-        end_dt = dt_mod.date(y, 12, 31)
-        while curr_dt <= end_dt:
-            if klc.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day):
-                gj = klc.getChineseGapJaString().split()
-                if len(gj) >= 3 and gj[2][:2] == rd_h:
-                    y_p, m_p, _ = get_true_year_month_pillar(curr_dt.year, curr_dt.month, curr_dt.day, 12, 0)
-                    if y_p == ry_h and m_p == rm_h:
-                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                        s_lun_fmt = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
-                        age_calc = base_year - curr_dt.year + 1
-                        matched_results.append({
-                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt}, {age_calc}세)",
-                            "y": int(curr_dt.year),
-                            "m": int(curr_dt.month),
-                            "d": int(curr_dt.day),
-                            "t": target_time_str
-                        })
-            curr_dt += dt_mod.timedelta(days=1)
+    if target_d_idx == -1:
+        return []
+
+    # 1900-01-01의 간지 인덱스는 甲(0)戌(10) -> 10번 인덱스
+    # 날짜별 간지 인덱스 = (days_from_1900_01_01 + 10) % 60
+    
+    # 1900-01-01부터 2050-12-31까지 순회하며 일주가 일치하는 날만 60일 단위로 초고속 스캔
+    start_date = dt_mod.date(1900, 1, 1)
+    end_date = dt_mod.date(2050, 12, 31)
+    
+    # 첫 일치 날짜 계산
+    offset = (target_d_idx - 10) % 60
+    first_match = start_date + dt_mod.timedelta(days=offset)
+    
+    curr = first_match
+    while curr <= end_date:
+        # 절기 기반 년주·월주 정밀 검증
+        y_p, m_p, _ = get_true_year_month_pillar(curr.year, curr.month, curr.day, 12, 0)
+        if y_p == ry_h and m_p == rm_h:
+            klc.setSolarDate(curr.year, curr.month, curr.day)
+            s_sol_fmt = f"{curr.year}년 {curr.month:02d}월 {curr.day:02d}일"
+            s_lun_fmt = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
+            age_calc = base_year - curr.year + 1
+            matched_results.append({
+                "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt}, {age_calc}세)",
+                "y": int(curr.year),
+                "m": int(curr.month),
+                "d": int(curr.day),
+                "t": target_time_str
+            })
+        curr += dt_mod.timedelta(days=60)
+
+    # 기준연도(base_year)와 가장 가까운 순서(현대인 나이대)로 정렬
+    matched_results.sort(key=lambda item: abs(item["y"] - (base_year - 40)))
 
     return matched_results
