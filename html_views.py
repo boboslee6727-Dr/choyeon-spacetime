@@ -509,43 +509,37 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
 # 📦 섹션 3. 1인용 개인 사주 및 운세 상품군 (상품 1-1 ~ 2-5 활성 모듈)
 # ==============================================================================
 
-def get_personal_cover(version, report_title, u_icon, name, sol, lun, time, today):
-    """1인용 감명서 표준 표지 (Ver 50.5 폰트 위계·굵기 및 A4 상하 중앙정렬 완결본)"""
-    clean_title = str(report_title or "초연 전통 명리사주 풀이").replace("🏮 ", "").replace("🎯 ", "").strip()
-    
-    # 🌟 신청인 이름 앞 중복 호칭 정제
-    clean_name = str(name or "").strip()
-    for prefix in ["신청인 :", "신청인:", "남명 :", "남명:", "여명 :", "여명:"]:
-        if clean_name.startswith(prefix):
-            clean_name = clean_name[len(prefix):].strip()
-    if not clean_name:
-        clean_name = "홍길동"
+def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
+    """1인용 감명서 표준 표지 (타이틀 1줄 완전 고정형)"""
+    raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
+    for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
+        raw_title = raw_title.replace(tag, " ")
+    clean_title = " ".join(raw_title.split())
+    clean_u_name = str(u_name or "무명").strip()
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 45px 30px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 85%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+        <div style='border: 4px solid #1A237E; padding: 40px 20px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 90%; max-width: 620px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- [대제목 H1] Ver 50.5 규격: 36px Bold 900 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 18px; margin-bottom: 35px;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 36px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: -0.5px;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 10px;'>
-                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
+            <!-- 🌟 대제목 1줄 완전 고정 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 14px; margin-bottom: 30px; width: 100%; box-sizing: border-box; overflow: hidden;'>
+                <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 19px !important; font-weight: 900 !important; margin: 0 auto !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.0px !important; white-space: nowrap !important; line-height: 1.2 !important; display: block; width: 100%; text-align: center;'>{clean_title}</div>
+                <div style='text-align: right; margin-top: 6px;'>
+                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
-            <!-- [신청인 정보 박스] Ver 50.5 규격: 성명 24px Bold 800 / 인적사항 15px Bold 700 (#111111 진하게) -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 30px 25px; border-radius: 15px; margin-bottom: 30px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: #1A237E; margin: 0 0 16px 0;'>{u_icon} 신청인 : {clean_name} 님</h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #111111; line-height: 2.0;'>
-                    <p style='margin: 0;'>양력 : {sol}</p>
-                    <p style='margin: 0;'>음력 : {lun}</p>
-                    <p style='margin: 4px 0 0 0; color: #D50000; font-weight: 800;'>태어난 시간 : {time}</p>
+            <!-- 신청인 정보 박스 -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 20px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
+                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
-            <!-- [발행일자 및 연구소명] Ver 50.5 규격: 18px Bold 800 / 22px Bold 800 (#1A237E) -->
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 12px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
