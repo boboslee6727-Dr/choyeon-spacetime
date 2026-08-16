@@ -1012,15 +1012,15 @@ if st.session_state.get('app_running', False):
         hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
 
         # 🌟 [초연 시공명리 3대 진실 정밀 감지 엔진 호출]
-        # 🌟 [초연 시공명리 3대 진실 정밀 감지 엔진 호출]
         adv_saju_data = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
         if hasattr(html_views, 'analyze_saju_facts_advanced'):
-            # 상단에 이미 정의된 curr_y_ji를 안전하게 전달
             sewun_ji_param = curr_y_ji if 'curr_y_ji' in locals() else "-"
             adv_flags = html_views.analyze_saju_facts_advanced(adv_saju_data, dw_j_cur, sewun_ji_param)
             adv_warning_str = adv_flags.get("warning_message", "정상 시공간 흐름")
+            health_erosion_str = adv_flags.get("health_erosion_facts", "특이 침식 파동 없음")
         else:
             adv_warning_str = "정상 시공간 흐름"
+            health_erosion_str = "특이 침식 파동 없음"
         
         try:
             shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
