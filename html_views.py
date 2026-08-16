@@ -43,18 +43,7 @@ def get_global_css():
     .b-text { font-weight: 800 !important; color: #000000 !important; display: inline-block; }
     .b-text-point { font-weight: 800 !important; color: #1A237E !important; display: inline-block; }
 
-    /* 버튼 공통 스타일 */
-    div.stButton > button { 
-        font-family: 'Nanum Gothic', sans-serif !important; 
-        font-weight: 900 !important; 
-        font-size: 16px !important; 
-        border-radius: 8px !important; 
-        height: 50px !important; 
-        border: none !important; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
-    }
-
-    /* 버튼 공통 규격 */
+    /* 버튼 기본 공통 규격 */
     div.stButton > button { 
         font-family: 'Nanum Gothic', sans-serif !important; 
         font-weight: 900 !important; 
@@ -65,28 +54,30 @@ def get_global_css():
         box-shadow: 0 4px 6px rgba(0,0,0,0.12) !important; 
     }
 
-    /* 1. [초연 시공명리 풀이 가동] 버튼: 빨간색 (Primary) */
+    /* 1. [초연 시공명리 풀이 가동] (Primary) -> 강렬한 빨간색 사수 */
     div.stButton > button[kind="primary"],
-    [data-testid="stSidebar"] div.stButton:first-of-type > button { 
+    div.stButton > button[data-testid="baseButton-primary"],
+    div.stButton > button[data-testid="stBaseButton-primary"] { 
         background-color: #D32F2F !important; 
         color: #FFFFFF !important; 
     }
     div.stButton > button[kind="primary"]:hover,
-    [data-testid="stSidebar"] div.stButton:first-of-type > button:hover { 
+    div.stButton > button[data-testid="baseButton-primary"]:hover,
+    div.stButton > button[data-testid="stBaseButton-primary"]:hover { 
         background-color: #B71C1C !important; 
         color: #FFFFFF !important; 
     }
 
-    /* 2. [풀이결과 인쇄/PDF 저장] 버튼: 초록색 (Secondary) */
+    /* 2. [풀이결과 인쇄/PDF 저장] (Secondary) -> 선명한 초록색 사수 */
     div.stButton > button[kind="secondary"],
-    [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button,
-    [data-testid="stSidebar"] div.stButton:last-of-type > button { 
+    div.stButton > button[data-testid="baseButton-secondary"],
+    div.stButton > button[data-testid="stBaseButton-secondary"] { 
         background-color: #00A843 !important; 
         color: #FFFFFF !important; 
     }
     div.stButton > button[kind="secondary"]:hover,
-    [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button:hover,
-    [data-testid="stSidebar"] div.stButton:last-of-type > button:hover { 
+    div.stButton > button[data-testid="baseButton-secondary"]:hover,
+    div.stButton > button[data-testid="stBaseButton-secondary"]:hover { 
         background-color: #008937 !important; 
         color: #FFFFFF !important; 
     }
