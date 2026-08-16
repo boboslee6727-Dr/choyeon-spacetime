@@ -633,9 +633,9 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 완전 고정)"""
+    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 완전 고정형)"""
     
-    # 1) 타이틀 정제 및 태그 제거
+    # 1) 타이틀 정제
     raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -646,11 +646,11 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 36px 20px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 660px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+        <div style='border: 4px solid #1A237E; padding: 36px 20px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 90%; max-width: 620px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 1줄 고정 (18.5px, -1.2px 자간, nowrap) -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 14px; margin-bottom: 24px; width: 100%; box-sizing: border-box; text-align: center;'>
-                <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 18.5px !important; font-weight: 900 !important; margin: 0 auto !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.2px !important; white-space: nowrap !important; line-height: 1.2 !important; display: inline-block;'>{clean_title}</div>
+            <!-- 🌟 대제목 영역: 19px 규격 & nowrap 완벽한 1줄 보장 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 14px; margin-bottom: 24px; width: 100%; box-sizing: border-box; overflow: hidden;'>
+                <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 19px !important; font-weight: 900 !important; margin: 0 auto !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.0px !important; white-space: nowrap !important; line-height: 1.2 !important; display: block; width: 100%; text-align: center;'>{clean_title}</div>
                 <div style='text-align: right; margin-top: 6px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
