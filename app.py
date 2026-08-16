@@ -1020,7 +1020,7 @@ if st.session_state.get('app_running', False):
             adv_flags = html_views.analyze_saju_facts_advanced(adv_saju_data, dw_j_cur, sewun_ji_param)
             adv_warning_str = adv_flags.get("warning_message", "정상 시공간 흐름")
         else:
-            adv_warning_str = "정상 시공간 흐름
+            adv_warning_str = "정상 시공간 흐름"
         
         try:
             shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
