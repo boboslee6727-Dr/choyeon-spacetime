@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 72.5 Master - 초연 시공명리학 통합 최종본)
+# engine.py (ver 72.7 Master - 초연 시공명리학 통합 최종본)
 # ==============================================================================
 from google import genai
 import os
@@ -1792,3 +1792,81 @@ def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, pur
     # 점수 높은 순 정렬 후 Top 3 반환
     best_days.sort(key=lambda x: x['score'], reverse=True)
     return best_days[:3]
+
+def search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji=None, base_year=None):
+    """
+    절기(get_true_year_month_pillar) 기반 사주 간지 역산 표준 마스터 함수
+    - 24절기(대설, 경칩 등) 태양 황경 정밀 연산 적용
+    - 탐색 범위: 1900년 ~ 2050년
+    - 탐색 순서: base_year(지정 기준일)부터 1900년까지 역추적 스캔 후 미래(2050년) 순차 스캔
+    - 반환 형식: app.py UI와 100% 호환되는 Dict 리스트 [{'display', 'y', 'm', 'd', 't'}, ...]
+    """
+    if base_year is None:
+        base_year = dt_mod.datetime.now().year
+
+    klc = KoreanLunarCalendar()
+    time_map = {
+        '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
+        '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
+        '인': '03:30 ~ 05:29 (寅)시', '寅': '03:30 ~ 05:29 (寅)시',
+        '묘': '05:30 ~ 07:29 (卯)시', '卯': '05:30 ~ 07:29 (卯)시',
+        '진': '07:30 ~ 09:29 (辰)시', '辰': '07:30 ~ 09:29 (辰)시',
+        '사': '09:30 ~ 11:29 (巳)시', '巳': '09:30 ~ 11:29 (巳)시',
+        '오': '11:30 ~ 13:29 (午)시', '午': '11:30 ~ 13:29 (午)시',
+        '미': '13:30 ~ 15:29 (未)시', '未': '13:30 ~ 15:29 (未)시',
+        '신': '15:30 ~ 17:29 (申)시', '申': '15:30 ~ 17:29 (申)시',
+        '유': '17:30 ~ 19:29 (酉)시', '酉': '17:30 ~ 19:29 (酉)시',
+        '술': '19:30 ~ 21:29 (戌)시', '戌': '19:30 ~ 21:29 (戌)시',
+        '해': '21:30 ~ 23:29 (亥)시', '亥': '21:30 ~ 23:29 (亥)시'
+    }
+    
+    target_time_str = time_map.get(rt_ji, "시간 모름") if rt_ji else "시간 모름"
+    matched_results = []
+    
+    # 1. 기준 시점(base_year)부터 1900년까지 과거 방향 역추적 스캔
+    for y in range(base_year, 1899, -1):
+        curr_dt = dt_mod.date(y, 12, 31)
+        start_dt = dt_mod.date(y, 1, 1)
+        while curr_dt >= start_dt:
+            if klc.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day):
+                gj = klc.getChineseGapJaString().split()
+                # 1차: 일주 일치 확인 (고속 필터링)
+                if len(gj) >= 3 and gj[2][:2] == rd_h:
+                    # 2차: 24절기 태양 황경 기반 년주·월주 정밀 검증
+                    y_p, m_p, _ = get_true_year_month_pillar(curr_dt.year, curr_dt.month, curr_dt.day, 12, 0)
+                    if y_p == ry_h and m_p == rm_h:
+                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                        s_lun_fmt = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
+                        age_calc = base_year - curr_dt.year + 1
+                        matched_results.append({
+                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt}, {age_calc}세)",
+                            "y": int(curr_dt.year),
+                            "m": int(curr_dt.month),
+                            "d": int(curr_dt.day),
+                            "t": target_time_str
+                        })
+            curr_dt -= dt_mod.timedelta(days=1)
+            
+    # 2. 기준 시점 이후(base_year + 1 ~ 2050년) 미래 방향 순차 스캔
+    for y in range(base_year + 1, 2051):
+        curr_dt = dt_mod.date(y, 1, 1)
+        end_dt = dt_mod.date(y, 12, 31)
+        while curr_dt <= end_dt:
+            if klc.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day):
+                gj = klc.getChineseGapJaString().split()
+                if len(gj) >= 3 and gj[2][:2] == rd_h:
+                    y_p, m_p, _ = get_true_year_month_pillar(curr_dt.year, curr_dt.month, curr_dt.day, 12, 0)
+                    if y_p == ry_h and m_p == rm_h:
+                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
+                        s_lun_fmt = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
+                        age_calc = base_year - curr_dt.year + 1
+                        matched_results.append({
+                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt}, {age_calc}세)",
+                            "y": int(curr_dt.year),
+                            "m": int(curr_dt.month),
+                            "d": int(curr_dt.day),
+                            "t": target_time_str
+                        })
+            curr_dt += dt_mod.timedelta(days=1)
+
+    return matched_results
