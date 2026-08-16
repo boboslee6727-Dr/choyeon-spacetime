@@ -633,9 +633,9 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 무조건 고정 규격)"""
+    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 완전 고정)"""
     
-    # 1) 타이틀 정제 (기호 및 숨은 줄바꿈 요소를 완전 공백 치환 후 단일 공백으로 압축)
+    # 1) 타이틀 정제 및 태그 제거
     raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -646,68 +646,39 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 40px 25px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 88%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+        <div style='border: 4px solid #1A237E; padding: 36px 20px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 660px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 20px 최적 규격, nowrap 및 -1.0px 자간으로 완벽한 1줄 강제 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px; width: 100%; box-sizing: border-box; overflow: hidden;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 20px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.0px !important; white-space: nowrap !important; line-height: 1.2 !important; display: block; width: 100%;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 8px;'>
+            <!-- 🌟 대제목 영역: 1줄 고정 (18.5px, -1.2px 자간, nowrap) -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 14px; margin-bottom: 24px; width: 100%; box-sizing: border-box; text-align: center;'>
+                <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 18.5px !important; font-weight: 900 !important; margin: 0 auto !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.2px !important; white-space: nowrap !important; line-height: 1.2 !important; display: inline-block;'>{clean_title}</div>
+                <div style='text-align: right; margin-top: 6px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
             <!-- 남명 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px; margin-bottom: 12px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.7;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
             <!-- 여명 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.8;'>
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.7;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {p_time}</p>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 30px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 10px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 26px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
-    """
-
-def get_daewun_compare_box(m_name, m_un_html, w_name, w_un_html):
-    """부부 대운 흐름 교차 분석 대조 상자"""
-    return f"""
-    <div style='margin-top: 25px; margin-bottom: 25px;'>
-        <h2 style='text-align:center; color:#1A237E; font-size: 21px; font-weight:800; margin-bottom: 6px; letter-spacing: 0.5px;'>
-            [ 부부 대운 흐름 교차 분석 ]
-        </h2>
-        <p style='text-align:center; color:#666; font-size: 13px; margin-bottom: 20px;'>
-            두 사람의 시공간 궤도를 한눈에 비교하는 대운 로드맵입니다.
-        </p>
-        <div style='margin-bottom: 20px; background: #fafafa; border-left: 4px solid #1565C0; padding: 12px 16px; border-radius: 8px;'>
-            <h4 style='color:#1565C0; font-weight:800; font-size: 15px; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center;'>
-                <span style='font-size: 17px; margin-right: 6px;'>♂️</span> 남명 ({m_name}님) 대운 흐름
-            </h4>
-            <div style='overflow-x: auto;'>
-                {m_un_html}
-            </div>
-        </div>
-        <div style='background: #fafafa; border-left: 4px solid #4A148C; padding: 12px 16px; border-radius: 8px;'>
-            <h4 style='color:#4A148C; font-weight:800; font-size: 15px; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center;'>
-                <span style='font-size: 17px; margin-right: 6px;'>♀️</span> 여명 ({w_name}님) 대운 흐름
-            </h4>
-            <div style='overflow-x: auto;'>
-                {w_un_html}
-            </div>
-        </div>
-    </div>
     """
 
 def get_gunghap_score_visual_html(gh_engine):
