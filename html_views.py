@@ -860,6 +860,21 @@ def get_couple_fact_split_layout(male_block, female_block):
     <div class='page-break'></div>
     """
 
+def render_saju_comparison_report(saju_fact_html, external_raw_box, ai_content_html):
+    """
+    4-1 타 감명서 비교 (사주) 전용 뷰
+    - 4-2 궁합 함수 구조를 완벽히 재활용하여 일관된 24px 대제목 및 스타일 유지
+    """
+    master_body = f"""
+    <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center !important; padding-bottom: 15px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; letter-spacing: -0.5px !important; display: block !important; margin-top: 0 !important;">🔍 타 감명서 비교 (사주) 1:1 정밀 분석</h2>
+    {saju_fact_html}
+    {external_raw_box}
+    <div style="margin-top: 20px;">
+        {ai_content_html}
+    </div>
+    """
+    return get_final_report_box(master_body)
+
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 뷰
