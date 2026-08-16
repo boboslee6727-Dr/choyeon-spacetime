@@ -889,20 +889,30 @@ def render_saju_comparison_report(saju_fact_html, external_raw_box, ai_content_h
 
 def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="-"):
     """
-    [초연 시공명리 3대 진실 정밀 감지 엔진]
-    1. 복음(伏吟) 파동: 글자 중복으로 인한 기운 정체 및 자가당착 고갈
-    2. 묘고(墓庫) 파동: 辰·戌·丑·未 조토/습토의 관성·재성 침식 및 흡수
-    3. 합화(合化)·삼형 파동: 지지 국(局) 형성으로 인한 뿌리(禄地) 변질 및 생명선 임계점
+    [초연 시공명리 정밀 감지 엔진 통합본]
+    1. 복음 및 묘고 중첩 에너지 정체 지수 & 4대 실전 처세 솔루션
+    2. 조토극수(未·戌 ➔ 亥·子) 시공간 침식 파동 건강 진단
+    3. 배우자 인연 복합 파동 (관성입묘·암합·궁위파동)
+    4. 丑戌未 가형(假刑) 상태 및 행운 개고(開庫) 변곡점
+    5. 신살 + 시공간 복합체 (홍염/음욕 + 복음) 이성 구설 파동
+    6. 부(富) vs 내면 평화 상호작용 지수 & 대안 시공간 설계
     """
+    ys = saju_data.get('year_gan', '-')
+    ms = saju_data.get('month_gan', '-')
+    ds = saju_data.get('day_gan', '-')
+    hs = saju_data.get('hour_gan', '-')
+    
     y_ji = saju_data.get('year_ji', '-')
     m_ji = saju_data.get('month_ji', '-')
     d_ji = saju_data.get('day_ji', '-')
     h_ji = saju_data.get('hour_ji', '-')
     
     jis = [y_ji, m_ji, d_ji, h_ji]
+    gans = [ys, ms, ds, hs]
     valid_jis = [j for j in jis if j and j != '-' and j != '?']
+    valid_gans = [g for g in gans if g and g != '-' and g != '?']
 
-    # 1. 복음(伏吟) 파동 감지 (년-월, 일-시, 월-일 등 동일 지지 중복)
+    # 1. 복음(伏吟) 파동 감지
     is_bokgeum = False
     bokgeum_details = []
     if len(valid_jis) > len(set(valid_jis)):
@@ -911,80 +921,94 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
             if valid_jis.count(j) >= 2:
                 bokgeum_details.append(f"{j}{j} 복음")
 
-    # 2. 묘고(墓庫: 辰戌丑未) 및 조토(未·戌) / 생명수(亥·子) 상호작용 감지
+    # 2. 묘고(墓庫) 및 조토극수 침식 감지
     vaults = ['辰', '戌', '丑', '未']
     detected_vaults = [j for j in valid_jis if j in vaults]
     has_vault = len(detected_vaults) > 0
-    
     dry_earths = [j for j in valid_jis if j in ['未', '戌']]
     life_waters = [j for j in valid_jis if j in ['亥', '子']]
     has_erosion = (len(dry_earths) > 0) and (len(life_waters) > 0)
 
-    # 3. 흉화 변곡점 및 시공간 침식 파동 진단
+    # 3. 흉화 변곡점 및 건강 침식
     warnings = []
     health_erosion_facts = []
 
     if is_bokgeum:
-        warnings.append(f"지지에 {', '.join(bokgeum_details)} 파동이 형성되어 기운이 순환하지 못하고 내적으로 정체·소모되는 구조")
+        warnings.append(f"지지에 {', '.join(bokgeum_details)} 파동 형성(기운 정체 및 내적 소모)")
         
     if has_erosion:
-        erosion_desc = f"조열한 흙({','.join(set(dry_earths))})이 맑은 생명수({','.join(set(life_waters))})를 탁하게 말려버리는 [시공간 침식 파동]"
+        erosion_desc = f"조열한 흙({','.join(set(dry_earths))})이 생명수({','.join(set(life_waters))})를 말리는 [시공간 침식 파동]"
         warnings.append(erosion_desc)
-        # 현대의학 질환 정밀 매핑
         health_erosion_facts.append(
-            f"⚠️ [조토극수 침식 주의보] {erosion_desc} ➔ 혈관 탄력 저하(고혈압/심혈관), 대사 정체(당뇨/고혈당), 신장·비뇨기 및 호르몬 불균형 집중 관리 필요"
+            f"⚠️ [조토극수 침식 경보] {erosion_desc} ➔ 혈관 탄력 저하(고혈압), 대사 정체(고혈당/당뇨), 신장·비뇨기·호르몬 불균형 집중 관리"
         )
 
-    # 🌟 [3순위 고도화] 복음·묘고 정체 지수 및 개운 솔루션 산출
+    # 4. 정체 지수 & 4대 실전 처세 솔루션
     stagnation_level = "정상"
     action_solutions = []
-
     vault_cnt = len(detected_vaults)
     bokgeum_cnt = len(bokgeum_details)
 
     if has_vault and is_bokgeum:
-        if vault_cnt >= 2 or bokgeum_cnt >= 2:
-            stagnation_level = "심각 (에너지 고갈 위험)"
-        else:
-            stagnation_level = "경고 (기운 정체 및 내적 소모)"
-        warnings.append(f"복음과 묘고가 중첩({stagnation_level})되어 환경적 변동 시 극심한 정체나 육친·건강상 급격한 에너지 소모 주의")
-        
-        # 실전 처세 솔루션 자동 매핑
-        action_solutions.append("1) [시공간 이격]: 주기적인 환경 변화(출장, 여행, 주말부부/각방 등 물리적 거리두기)로 정체된 기운 환기")
-        action_solutions.append("2) [활인 개운]: 타인을 돕는 교육, 상담, 의료, 봉사 등 '활인업(活人業)' 성향의 활동을 통해 살기(殺氣)를 덕(德)으로 승화")
-        action_solutions.append("3) [수기 충전]: 맑은 물가 산책, 반신욕, 정기적인 명상과 호흡을 통해 메마르고 갇힌 생명수 순환 촉진")
-        action_solutions.append("4) [비우기 처세]: 불필요한 물건 정리(미니멀리즘)와 과도한 집착을 내려놓는 마음공부로 묘고의 침식 방어")
+        stagnation_level = "심각 (에너지 고갈 위험)" if (vault_cnt >= 2 or bokgeum_cnt >= 2) else "경고 (기운 정체)"
+        warnings.append(f"복음·묘고 중첩({stagnation_level})으로 환경 급변 시 에너지 소모 주의")
+        action_solutions.append("1) [시공간 이격]: 출장, 여행, 주말부부/각방 등 물리적 거리두기로 정체된 기운 환기")
+        action_solutions.append("2) [활인 개운]: 교육, 상담, 봉사, 의료 등 활인업(活人業) 활동으로 살기(殺氣)를 덕(德)으로 승화")
+        action_solutions.append("3) [수기 충전]: 물가 산책, 반신욕, 명상·호흡으로 메마른 생명수 순환 촉진")
+        action_solutions.append("4) [비우기 처세]: 공간 미니멀리즘 정리 및 집착을 내려놓는 마음공부")
     elif is_bokgeum or has_vault:
         stagnation_level = "주의 (부분적 정체)"
 
-    # 경고 메시지 최종 조립
-    if warnings:
-        warning_message = "⚠️ [시공간 파동 경보]: " + " / ".join(warnings)
-    else:
-        warning_message = "원국 내 심각한 복음·묘고 왜곡 없이 비교적 원활한 순환 구조 유지"
-
-    action_solution_str = "\n".join(action_solutions) if action_solutions else "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
-
-    # 🌟 [4순위 고도화] 배우자 인연 복합 변곡점(관성입묘·암합·궁위파동) 정밀 진단
+    # 5. 배우자 인연 복합 파동
     spouse_risk_factors = []
-    
-    # 1) 일지 묘고/관대 (여명 丁未, 戊戌 등 가주화/관성 입묘 기운)
     if d_ji in ['未', '戌', '辰', '丑']:
-        spouse_risk_factors.append(f"일지 묘고·관대({d_ji})로 인한 본인의 강한 독립성 및 가주(家主) 기질")
-
-    # 2) 일지 충·형·복음 (丑未충, 子午충, 일지 복음 등)
+        spouse_risk_factors.append(f"일지 묘고·관대({d_ji})로 인한 강한 독립성 및 가주(家主) 기질")
     if (d_ji == '未' and '丑' in valid_jis) or (d_ji == '丑' and '未' in valid_jis):
         spouse_risk_factors.append("배우자궁 丑未충으로 인한 궁위 흔들림 및 환경적 급변동")
     elif d_ji in [y_ji, m_ji, h_ji]:
-        spouse_risk_factors.append(f"배우자궁({d_ji}) 복음 중첩으로 인한 부부 관계의 정체와 마찰")
-
-    # 3) 암합 및 복음 파동 (丁壬 암합/亥亥 복음 등)
+        spouse_risk_factors.append(f"배우자궁({d_ji}) 복음 중첩으로 인한 부부 관계 정체")
     if '亥' in valid_jis and valid_jis.count('亥') >= 2:
-        spouse_risk_factors.append("관성 亥亥 복음 및 암합 파동으로 인한 배우자 인연의 불안정성")
-
+        spouse_risk_factors.append("관성 亥亥 복음 및 암합 파동으로 인한 배우자 인연 불안정")
     spouse_issue_str = " / ".join(spouse_risk_factors) if spouse_risk_factors else "배우자궁 비교적 안정적 흐름 유지"
 
-    advanced_flags = {
+    # 6. 丑戌未 가형(假刑) 및 개고(開庫) 변곡점
+    samhyung_potential_factors = []
+    vault_samhyung_set = {'丑', '戌', '未'}
+    matched_v_samhyung = vault_samhyung_set.intersection(set(valid_jis))
+    if len(matched_v_samhyung) == 2:
+        missing_ji = list(vault_samhyung_set - matched_v_samhyung)[0]
+        if current_dw_ji == missing_ji or current_sewun_ji == missing_ji:
+            samhyung_potential_factors.append(
+                f"⚡ [丑戌未 삼형 완성 및 개고 경보]: 운에서 {missing_ji}토가 가세하여 묘고 개고(開庫) 및 재물·건강·문서 지각변동 발생"
+            )
+        else:
+            samhyung_potential_factors.append(
+                f"원국에 {','.join(matched_v_samhyung)} 가형(잠재 상태) 형성 ➔ 향후 {missing_ji}운(대운/세운) 진입 시 개고 및 삼형 변곡점 주의"
+            )
+    elif len(matched_v_samhyung) == 3:
+        samhyung_potential_factors.append("원국 자체에 丑戌未 삼형 완성으로 수술·조정 파동 상시 내재")
+    samhyung_potential_str = " / ".join(samhyung_potential_factors) if samhyung_potential_factors else "특이 삼형 잠재 파동 없음"
+
+    # 7. 신살 + 시공간 복합 파동 (이성 구설/육친 파동)
+    shinsal_risk_factors = []
+    if is_bokgeum and ('丁' in valid_gans and valid_gans.count('丁') >= 2):
+        shinsal_risk_factors.append("丁丁 천간 중첩 및 지지 복음 결합으로 인한 이성 구설 및 감정적 에너지 소모 숙제")
+    shinsal_risk_str = " / ".join(shinsal_risk_factors) if shinsal_risk_factors else "신살 복합 파동 안정"
+
+    # 8. 부(富) vs 내면 평화 상호작용 지수 및 대안 시공간 설계
+    has_wealth_comb = ('丁' in valid_gans and '辛' in valid_gans and '壬' in valid_gans)
+    if has_wealth_comb and (has_erosion or is_bokgeum):
+        harmony_index_str = "외적 번영도(재물 성취) 90점 / 내적 피로도(심리·건강 침식) 85점 ➔ 외화내빈(外華內貧)형 불균형 주의"
+        alternative_space_str = "물리적 시공간 이격(주말부부/독립 가주화) 및 활인업(봉사/교육/멘토링) 실천 시 흉화 파동 70% 이상 상쇄 가능"
+    else:
+        harmony_index_str = "외적 성취와 내면의 에너지가 비교적 균형을 이루는 상태"
+        alternative_space_str = "현재의 환경을 유지하며 점진적 자기계발 추천"
+
+    # 최종 경고 메시지 조립
+    warning_message = "⚠️ [시공간 파동 경보]: " + " / ".join(warnings) if warnings else "원국 내 왜곡 없이 비교적 원활한 순환 유지"
+    action_solution_str = "\n".join(action_solutions) if action_solutions else "자연스러운 기운의 순환 유지 및 긍정적 마음가짐"
+
+    return {
         "is_bokgeum": is_bokgeum,
         "bokgeum_details": bokgeum_details,
         "has_vault": has_vault,
@@ -992,12 +1016,14 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
         "has_erosion": has_erosion,
         "stagnation_level": stagnation_level,
         "action_solutions": action_solution_str,
-        "spouse_issue_facts": spouse_issue_str,  # 🌟 [신규] 배우자 인연 복합 파동 팩트
+        "spouse_issue_facts": spouse_issue_str,
+        "samhyung_potential_facts": samhyung_potential_str,
+        "shinsal_risk_facts": shinsal_risk_str,
+        "harmony_index_facts": harmony_index_str,
+        "alternative_space_facts": alternative_space_str,
         "health_erosion_facts": " / ".join(health_erosion_facts) if health_erosion_facts else "특이 침식 파동 없음",
         "warning_message": warning_message
     }
-    
-    return advanced_flags
 
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
