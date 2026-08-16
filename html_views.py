@@ -911,20 +911,29 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
             if valid_jis.count(j) >= 2:
                 bokgeum_details.append(f"{j}{j} 복음")
 
-    # 2. 묘고(墓庫: 辰戌丑未) 보유 및 조토(未·戌) 기운 감지
+    # 2. 묘고(墓庫: 辰戌丑未) 및 조토(未·戌) / 생명수(亥·子) 상호작용 감지
     vaults = ['辰', '戌', '丑', '未']
     detected_vaults = [j for j in valid_jis if j in vaults]
     has_vault = len(detected_vaults) > 0
-    has_dry_earth = ('未' in valid_jis) or ('戌' in valid_jis)  # 조토(열기 품은 흙)
-
-    # 3. 흉화 변곡점(대운/세운 결합 묘고·합화 리스크) 진단
-    warnings = []
     
+    dry_earths = [j for j in valid_jis if j in ['未', '戌']]
+    life_waters = [j for j in valid_jis if j in ['亥', '子']]
+    has_erosion = (len(dry_earths) > 0) and (len(life_waters) > 0)
+
+    # 3. 흉화 변곡점 및 시공간 침식 파동 진단
+    warnings = []
+    health_erosion_facts = []
+
     if is_bokgeum:
         warnings.append(f"지지에 {', '.join(bokgeum_details)} 파동이 형성되어 기운이 순환하지 못하고 내적으로 정체·소모되는 구조")
         
-    if has_dry_earth and ('亥' in valid_jis or '子' in valid_jis):
-        warnings.append("조열한 흙(未·戌)이 맑은 생명수(亥·子)의 흐름을 가로막아 수기가 탁해지거나 말라붙는 시공간 침식 파동")
+    if has_erosion:
+        erosion_desc = f"조열한 흙({','.join(set(dry_earths))})이 맑은 생명수({','.join(set(life_waters))})를 탁하게 말려버리는 [시공간 침식 파동]"
+        warnings.append(erosion_desc)
+        # 현대의학 질환 정밀 매핑
+        health_erosion_facts.append(
+            f"⚠️ [조토극수 침식 주의보] {erosion_desc} ➔ 혈관 탄력 저하(고혈압/심혈관), 대사 정체(당뇨/고혈당), 신장·비뇨기 및 호르몬 불균형 집중 관리 필요"
+        )
 
     if has_vault and is_bokgeum:
         warnings.append("복음과 묘고가 중첩되어 환경적 변동 시 극심한 정체나 육친·건강상 급격한 에너지 소모 주의")
@@ -940,9 +949,11 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
         "bokgeum_details": bokgeum_details,
         "has_vault": has_vault,
         "detected_vaults": detected_vaults,
+        "has_erosion": has_erosion,
+        "health_erosion_facts": " / ".join(health_erosion_facts) if health_erosion_facts else "특이 침식 파동 없음",
         "warning_message": warning_message
     }
-
+    
     return advanced_flags
 
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
