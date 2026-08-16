@@ -1072,6 +1072,7 @@ if st.session_state.get('app_running', False):
 - 원국 오행 분포: 목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}
 - 공망 궁위 팩트: [년지공망] {n_gong} / [일지공망] {i_gong}
 - 삼재 여부: {cur_samjae}
+- 시공간 파동 정밀 감지: {adv_warning_str}
 """
         target_year_val = st.session_state.get('target_year_input', curr_year)
         cur_sewun_base = (target_year_val - 1984) % 60
