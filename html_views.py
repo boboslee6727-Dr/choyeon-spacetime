@@ -633,9 +633,9 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 완벽 고정)"""
+    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 무조건 고정 규격)"""
     
-    # 1) 타이틀 정제 (기호 및 줄바꿈 공백 치환 후 단일 공백으로 압축)
+    # 1) 타이틀 정제 (기호 및 숨은 줄바꿈 요소를 완전 공백 치환 후 단일 공백으로 압축)
     raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -648,9 +648,9 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 40px 25px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 88%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 22px 규격 & nowrap으로 완벽한 1줄 유지 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px; width: 100%;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 22px !important; font-weight: 900 !important; margin: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.3 !important;'>{clean_title}</h1>
+            <!-- 🌟 대제목 영역: 20px 최적 규격, nowrap 및 -1.0px 자간으로 완벽한 1줄 강제 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 26px; width: 100%; box-sizing: border-box; overflow: hidden;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 20px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.0px !important; white-space: nowrap !important; line-height: 1.2 !important; display: block; width: 100%;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
