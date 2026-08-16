@@ -965,6 +965,25 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
 
     action_solution_str = "\n".join(action_solutions) if action_solutions else "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
 
+    # 🌟 [4순위 고도화] 배우자 인연 복합 변곡점(관성입묘·암합·궁위파동) 정밀 진단
+    spouse_risk_factors = []
+    
+    # 1) 일지 묘고/관대 (여명 丁未, 戊戌 등 가주화/관성 입묘 기운)
+    if d_ji in ['未', '戌', '辰', '丑']:
+        spouse_risk_factors.append(f"일지 묘고·관대({d_ji})로 인한 본인의 강한 독립성 및 가주(家主) 기질")
+
+    # 2) 일지 충·형·복음 (丑未충, 子午충, 일지 복음 등)
+    if (d_ji == '未' and '丑' in valid_jis) or (d_ji == '丑' and '未' in valid_jis):
+        spouse_risk_factors.append("배우자궁 丑未충으로 인한 궁위 흔들림 및 환경적 급변동")
+    elif d_ji in [y_ji, m_ji, h_ji]:
+        spouse_risk_factors.append(f"배우자궁({d_ji}) 복음 중첩으로 인한 부부 관계의 정체와 마찰")
+
+    # 3) 암합 및 복음 파동 (丁壬 암합/亥亥 복음 등)
+    if '亥' in valid_jis and valid_jis.count('亥') >= 2:
+        spouse_risk_factors.append("관성 亥亥 복음 및 암합 파동으로 인한 배우자 인연의 불안정성")
+
+    spouse_issue_str = " / ".join(spouse_risk_factors) if spouse_risk_factors else "배우자궁 비교적 안정적 흐름 유지"
+
     advanced_flags = {
         "is_bokgeum": is_bokgeum,
         "bokgeum_details": bokgeum_details,
@@ -973,6 +992,7 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
         "has_erosion": has_erosion,
         "stagnation_level": stagnation_level,
         "action_solutions": action_solution_str,
+        "spouse_issue_facts": spouse_issue_str,  # 🌟 [신규] 배우자 인연 복합 파동 팩트
         "health_erosion_facts": " / ".join(health_erosion_facts) if health_erosion_facts else "특이 침식 파동 없음",
         "warning_message": warning_message
     }
