@@ -92,7 +92,7 @@ def get_oh_class(ganji):
     oh = engine.get_color(ganji)
     return f"color-{oh}" if oh != '무' else ""
 
-# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (다중 검색 최신 버전 적용)
+# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
 def do_auto_fill_user():
     st.session_state['app_running'] = False
     u_ry = st.session_state.get("u_ry_rev", "")
@@ -113,56 +113,21 @@ def do_auto_fill_user():
         ry_h = engine.K2H_GAN.get(_ry[0], _ry[0]) + engine.K2H_JI.get(_ry[1], _ry[1])
         rm_h = engine.K2H_GAN.get(_rm[0], _rm[0]) + engine.K2H_JI.get(_rm[1], _rm[1])
         rd_h = engine.K2H_GAN.get(_rd[0], _rd[0]) + engine.K2H_JI.get(_rd[1], _rd[1])
+        
+        rt_ji = None
+        if u_rt:
+            ji_char = u_rt[-1]
+            rt_ji = engine.K2H_JI.get(ji_char, ji_char)
 
-        klc_find = KoreanLunarCalendar()
-        matched_results = []
-        time_map = {
-            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
-            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
-            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
-            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
-            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
-            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
-            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
-            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
-            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
-            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
-            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
-            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
-        }
+        # 🌟 사이드바의 [분석 기준 시점 선택]에서 지정한 날짜의 연도를 100% 동적 추출
+        target_date_val = st.session_state.get('main_target_date_picker', st.session_state.get('target_date', dt_mod.date.today()))
+        base_year = target_date_val.year if hasattr(target_date_val, 'year') else dt_mod.date.today().year
 
-        # 🌟 2056년부터 1905년까지 역추적 탐색
-        for y in range(2056, 1904, -1):
-            klc_find.setSolarDate(y, 7, 1)
-            gj_y = klc_find.getChineseGapJaString().split()
-            if gj_y and gj_y[0][:2] == ry_h:
-                curr_dt = dt_mod.date(y+1, 2, 28)
-                while curr_dt >= dt_mod.date(y, 1, 1):
-                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                    gj = klc_find.getChineseGapJaString().split()
-                    if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                        if u_rt:
-                            ji_char_u = u_rt[-1]
-                            u_rt_h = engine.K2H_JI.get(ji_char_u, ji_char_u)
-                            target_time_str = time_map.get(u_rt_h, "시간 모름")
-                        else:
-                            target_time_str = "시간 모름"
-
-                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                        s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                        
-                        matched_results.append({
-                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt})",
-                            "y": int(curr_dt.year),
-                            "m": int(curr_dt.month),
-                            "d": int(curr_dt.day),
-                            "t": target_time_str
-                        })
-                    curr_dt -= dt_mod.timedelta(days=1)
+        matched_results = engine.search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji, base_year)
 
         if matched_results:
             st.session_state['rev_matches_user'] = matched_results
-            # 기본값으로 가장 최신 첫 번째 결과 자동 세팅
+            # 1순위(현대 기준) 자동 바인딩
             st.session_state['s_y'] = matched_results[0]["y"]
             st.session_state['s_m'] = matched_results[0]["m"]
             st.session_state['s_d'] = matched_results[0]["d"]
@@ -175,7 +140,8 @@ def do_auto_fill_user():
     else:
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-# 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (다중 검색 최신 버전 적용)
+
+# 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
 def do_auto_fill_partner():
     st.session_state['app_running'] = False
     p_ry = st.session_state.get("p_ry_rev", "")
@@ -196,55 +162,21 @@ def do_auto_fill_partner():
         p_ry_h = engine.K2H_GAN.get(_p_ry[0], _p_ry[0]) + engine.K2H_JI.get(_p_ry[1], _p_ry[1])
         p_rm_h = engine.K2H_GAN.get(_p_rm[0], _p_rm[0]) + engine.K2H_JI.get(_p_rm[1], _p_rm[1])
         p_rd_h = engine.K2H_GAN.get(_p_rd[0], _p_rd[0]) + engine.K2H_JI.get(_p_rd[1], _p_rd[1])
+        
+        p_rt_ji = None
+        if p_rt:
+            ji_char_p = p_rt[-1]
+            p_rt_ji = engine.K2H_JI.get(ji_char_p, ji_char_p)
 
-        klc_find = KoreanLunarCalendar()
-        matched_results = []
-        time_map = {
-            '자':'00:30 ~ 01:29 (朝子)시', '子':'00:30 ~ 01:29 (朝子)시',
-            '축':'01:30 ~ 03:29 (丑)시', '丑':'01:30 ~ 03:29 (丑)시',
-            '인':'03:30 ~ 05:29 (寅)시', '寅':'03:30 ~ 05:29 (寅)시',
-            '묘':'05:30 ~ 07:29 (卯)시', '卯':'05:30 ~ 07:29 (卯)시',
-            '진':'07:30 ~ 09:29 (辰)시', '辰':'07:30 ~ 09:29 (辰)시',
-            '사':'09:30 ~ 11:29 (巳)시', '巳':'09:30 ~ 11:29 (巳)시',
-            '오':'11:30 ~ 13:29 (午)시', '午':'11:30 ~ 13:29 (午)시',
-            '미':'13:30 ~ 15:29 (未)시', '未':'13:30 ~ 15:29 (未)시',
-            '신':'15:30 ~ 17:29 (申)시', '申':'15:30 ~ 17:29 (申)시',
-            '유':'17:30 ~ 19:29 (酉)시', '酉':'17:30 ~ 19:29 (酉)시',
-            '술':'19:30 ~ 21:29 (戌)시', '戌':'19:30 ~ 21:29 (戌)시',
-            '해':'21:30 ~ 23:29 (亥)시', '亥':'21:30 ~ 23:29 (亥)시'
-        }
+        # 🌟 사이드바의 [분석 기준 시점 선택]에서 지정한 날짜의 연도를 100% 동적 추출
+        target_date_val = st.session_state.get('main_target_date_picker', st.session_state.get('target_date', dt_mod.date.today()))
+        base_year = target_date_val.year if hasattr(target_date_val, 'year') else dt_mod.date.today().year
 
-        # 🌟 2056년부터 1905년까지 역추적 탐색
-        for y in range(2056, 1904, -1):
-            klc_find.setSolarDate(y, 7, 1)
-            gj_y = klc_find.getChineseGapJaString().split()
-            if gj_y and gj_y[0][:2] == p_ry_h:
-                curr_dt = dt_mod.date(y+1, 2, 28)
-                while curr_dt >= dt_mod.date(y, 1, 1):
-                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                    gj = klc_find.getChineseGapJaString().split()
-                    if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
-                        if p_rt:
-                            ji_char_p = p_rt[-1]
-                            p_rt_h = engine.K2H_JI.get(ji_char_p, ji_char_p)
-                            target_time_str = time_map.get(p_rt_h, "시간 모름")
-                        else:
-                            target_time_str = "시간 모름"
-
-                        s_sol_fmt = f"{curr_dt.year}년 {curr_dt.month:02d}월 {curr_dt.day:02d}일"
-                        s_lun_fmt = f"{klc_find.lunarYear}년 {klc_find.lunarMonth:02d}월 {klc_find.lunarDay:02d}일"
-                        
-                        matched_results.append({
-                            "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt})",
-                            "y": int(curr_dt.year),
-                            "m": int(curr_dt.month),
-                            "d": int(curr_dt.day),
-                            "t": target_time_str
-                        })
-                    curr_dt -= dt_mod.timedelta(days=1)
+        matched_results = engine.search_dates_by_ganji(p_ry_h, p_rm_h, p_rd_h, p_rt_ji, base_year)
 
         if matched_results:
             st.session_state['rev_matches_partner'] = matched_results
+            # 1순위(현대 기준) 자동 바인딩
             st.session_state['p_y_in'] = matched_results[0]["y"]
             st.session_state['p_m_in'] = matched_results[0]["m"]
             st.session_state['p_d_in'] = matched_results[0]["d"]
@@ -364,7 +296,9 @@ with st.sidebar:
         st.session_state["u_g"] = "여성" if f_val == "남성" else "남성"
         stop_ai()
 
-    # 🔍 신청인 사주간지 역산 모듈 (on_click 콜백 연결)
+    # =========================================================================
+    # 🔍 [신청인] 사주간지 역산 UI (다중 결과 선택 지원)
+    # =========================================================================
     with st.expander("🔍 신청인 사주간지 역산", expanded=False):
         col_g1, col_g2 = st.columns(2)
         with col_g1: u_ry = st.text_input("년주", key="u_ry_rev", on_change=stop_ai)
@@ -375,28 +309,42 @@ with st.sidebar:
 
         st.button("🔍 신청인 생년월일 자동입력", use_container_width=True, key="btn_user_rev", on_click=do_auto_fill_user)
 
+        # 🌟 다중 결과가 존재할 때 선택창 활성화
         if 'rev_matches_user' in st.session_state and st.session_state['rev_matches_user']:
             matches = st.session_state['rev_matches_user']
-            st.success(f"✅ 총 {len(matches)}개의 일치하는 연도가 검색되었습니다.")
-            
-            def on_select_user_match():
-                sel_str = st.session_state.get('user_match_selector')
-                for m in matches:
-                    if m['display'] == sel_str:
-                        st.session_state['s_y'] = m['y']
-                        st.session_state['s_m'] = m['m']
-                        st.session_state['s_d'] = m['d']
-                        st.session_state['s_t'] = m['t']
-                        st.session_state['s_t_select'] = m['t']
+            if len(matches) > 1:
+                st.info(f"💡 일치하는 생년월일이 **{len(matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
+                
+                # 현재 선택된 연도와 일치하는 옵션의 인덱스 탐색 (상태 보존)
+                cur_y_val = st.session_state.get('s_y')
+                match_opts = [m['display'] for m in matches]
+                default_idx = 0
+                for idx, m in enumerate(matches):
+                    if m['y'] == cur_y_val:
+                        default_idx = idx
                         break
-                stop_ai()
 
-            st.selectbox(
-                "📅 적용할 생년월일 선택:",
-                options=[m['display'] for m in matches],
-                key="user_match_selector",
-                on_change=on_select_user_match
-            )
+                def on_select_user_match():
+                    sel_str = st.session_state.get('user_match_selector')
+                    for m in matches:
+                        if m['display'] == sel_str:
+                            st.session_state['s_y'] = m['y']
+                            st.session_state['s_m'] = m['m']
+                            st.session_state['s_d'] = m['d']
+                            st.session_state['s_t'] = m['t']
+                            st.session_state['s_t_select'] = m['t']
+                            break
+                    stop_ai()
+
+                st.selectbox(
+                    "📅 적용할 생년월일 선택:",
+                    options=match_opts,
+                    index=default_idx,
+                    key="user_match_selector",
+                    on_change=on_select_user_match
+                )
+            else:
+                st.success("✅ 1개의 일치하는 생년월일이 자동 입력되었습니다.")
 
         if 'rev_error_msg' in st.session_state:
             st.error(st.session_state['rev_error_msg'])
@@ -423,7 +371,6 @@ with st.sidebar:
         st.session_state["s_t"] = b_time
 
     # 🌟 1인용 가지와 2인용 가지의 명확한 분기 및 4번 상품 편입
-    
     is_1person = not ( (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product) )
     
     if is_1person:
@@ -455,13 +402,11 @@ with st.sidebar:
             st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 10px; margin-bottom: 6px;'>📄 타 감명서 비교 (사주) 원문</div>", unsafe_allow_html=True)
             st.text_area("비교할 타 감명서 (사주) 원문을 넣어 주세요.", height=150, key="text_4_1", label_visibility="collapsed")
 
-    # 2인 전용 상품(궁합, 택일) 상대방 사주 역산 및 기본 정보 모듈
+    # =========================================================================
+    # 🔍 [상대방] 사주간지 역산 UI (다중 결과 선택 지원)
+    # =========================================================================
     is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
     if is_2person:
-        st.markdown("<hr style='border:1px dashed #C62828; margin:15px 0;'>", unsafe_allow_html=True)
-        
-        if 'p_t_key' not in st.session_state: st.session_state['p_t_key'] = idx_list[0]
-        
         with st.expander("🔍 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
             with p_col_g1: p_ry = st.text_input("상대방 년주", key="p_ry_rev", on_change=stop_ai)
@@ -472,33 +417,45 @@ with st.sidebar:
             
             st.button("🔍 상대방 생년월일 자동입력", use_container_width=True, key="btn_partner_rev", on_click=do_auto_fill_partner)
 
-        # 🌟 상대방 역산 결과가 1개 이상일 때 나타나는 선택창
-        if 'rev_matches_partner' in st.session_state and st.session_state['rev_matches_partner']:
-            p_matches = st.session_state['rev_matches_partner']
-            st.success(f"✅ 총 {len(p_matches)}개의 일치하는 연도가 검색되었습니다.")
-            
-            def on_select_partner_match():
-                sel_p_str = st.session_state.get('partner_match_selector')
-                for m in p_matches:
-                    if m['display'] == sel_p_str:
-                        st.session_state['p_y_in'] = m['y']
-                        st.session_state['p_m_in'] = m['m']
-                        st.session_state['p_d_in'] = m['d']
-                        st.session_state['p_t_key'] = m['t']
-                        st.session_state['p_t_select'] = m['t']
-                        break
-                stop_ai()
+            # 🌟 상대방 다중 결과가 존재할 때 선택창 활성화
+            if 'rev_matches_partner' in st.session_state and st.session_state['rev_matches_partner']:
+                p_matches = st.session_state['rev_matches_partner']
+                if len(p_matches) > 1:
+                    st.info(f"💡 상대방 일치 날짜가 **{len(p_matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
+                    
+                    cur_p_y_val = st.session_state.get('p_y_in')
+                    p_match_opts = [m['display'] for m in p_matches]
+                    p_default_idx = 0
+                    for idx, m in enumerate(p_matches):
+                        if m['y'] == cur_p_y_val:
+                            p_default_idx = idx
+                            break
 
-            st.selectbox(
-                "📅 적용할 상대방 생년월일 선택:",
-                options=[m['display'] for m in p_matches],
-                key="partner_match_selector",
-                on_change=on_select_partner_match
-            )
+                    def on_select_partner_match():
+                        sel_p_str = st.session_state.get('partner_match_selector')
+                        for m in p_matches:
+                            if m['display'] == sel_p_str:
+                                st.session_state['p_y_in'] = m['y']
+                                st.session_state['p_m_in'] = m['m']
+                                st.session_state['p_d_in'] = m['d']
+                                st.session_state['p_t_key'] = m['t']
+                                st.session_state['p_t_select'] = m['t']
+                                break
+                        stop_ai()
 
-        if 'rev_p_error_msg' in st.session_state:
-            st.error(st.session_state['rev_p_error_msg'])
-            del st.session_state['rev_p_error_msg']
+                    st.selectbox(
+                        "📅 적용할 상대방 생년월일 선택:",
+                        options=p_match_opts,
+                        index=p_default_idx,
+                        key="partner_match_selector",
+                        on_change=on_select_partner_match
+                    )
+                else:
+                    st.success("✅ 상대방 생년월일이 자동 입력되었습니다.")
+
+            if 'rev_p_error_msg' in st.session_state:
+                st.error(st.session_state['rev_p_error_msg'])
+                del st.session_state['rev_p_error_msg']
 
         # 🌟 세션 초기값 안전 방어
         if 'f_n' not in st.session_state: st.session_state['f_n'] = ""
