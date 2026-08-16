@@ -1021,6 +1021,13 @@ if st.session_state.get('app_running', False):
         else:
             adv_warning_str = "정상 시공간 흐름"
             health_erosion_str = "특이 침식 파동 없음"
+
+        # 🌟 [신규] 천간 3자조합 궁위별(년월 vs 일시) 물상 분기 엔진 호출
+        adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
+        if hasattr(html_views, 'analyze_samja_combination'):
+            samja_comb_facts = html_views.analyze_samja_combination(adv_gan_data, dw_g_cur)
+        else:
+            samja_comb_facts = "원국 특이 삼자조합 없음"
         
         try:
             shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
@@ -1105,7 +1112,9 @@ if st.session_state.get('app_running', False):
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
-            "adv_warning_str": adv_warning_str,  # 🌟 [신규] 복음·묘고·합화 감지 경고 텍스트 전달
+            "adv_warning_str": adv_warning_str,  # 🌟 복음·묘고·합화 감지 경고 텍스트
+            "health_erosion_facts": health_erosion_str,  # 🌟 조토극수 건강 침식 팩트
+            "samja_comb_facts": samja_comb_facts,  # 🌟 [신규] 천간 3자조합 궁위별 물상 팩트 전달
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
