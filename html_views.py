@@ -43,37 +43,39 @@ def get_global_css():
     .b-text { font-weight: 800 !important; color: #000000 !important; display: inline-block; }
     .b-text-point { font-weight: 800 !important; color: #1A237E !important; display: inline-block; }
 
-    /* 버튼 스타일 (사이드바 풀이가동 / 인쇄 버튼 강제 색상 사수) */
+    /* 버튼 공통 스타일 */
     div.stButton > button { 
         font-family: 'Nanum Gothic', sans-serif !important; 
         font-weight: 900 !important; 
         font-size: 16px !important; 
         border-radius: 8px !important; 
-        height: 50px !important;
-        border: none !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        height: 50px !important; 
+        border: none !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
     }
 
-    /* 1. 풀이가동 버튼 (진청색 #1A237E 강제 고정) */
+    /* 1. 풀이가동 버튼 (진청색 사수) */
     div.stButton > button[kind="primary"],
-    [data-testid="stSidebar"] div.stButton:nth-of-type(1) > button { 
+    [data-testid="stSidebar"] div.stButton:first-of-type > button { 
         background-color: #1A237E !important; 
         color: #FFFFFF !important; 
     }
     div.stButton > button[kind="primary"]:hover,
-    [data-testid="stSidebar"] div.stButton:nth-of-type(1) > button:hover { 
+    [data-testid="stSidebar"] div.stButton:first-of-type > button:hover { 
         background-color: #0D47A1 !important; 
         color: #FFFFFF !important; 
     }
 
-    /* 2. 인쇄 / PDF 저장 버튼 (초록색 #00A843 강제 고정) */
+    /* 2. [인쇄 / PDF 저장] 버튼 (녹색 #00A843 강제 사수) */
     div.stButton > button[kind="secondary"],
-    [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button { 
+    [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button,
+    [data-testid="stSidebar"] div.stButton:last-of-type > button { 
         background-color: #00A843 !important; 
         color: #FFFFFF !important; 
     }
     div.stButton > button[kind="secondary"]:hover,
-    [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button:hover { 
+    [data-testid="stSidebar"] div.stButton:nth-of-type(2) > button:hover,
+    [data-testid="stSidebar"] div.stButton:last-of-type > button:hover { 
         background-color: #008937 !important; 
         color: #FFFFFF !important; 
     }
