@@ -510,7 +510,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
 # ==============================================================================
 
 def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    """1인용 감명서 표준 표지 (타이틀 1줄 완전 고정형)"""
+    """1인용 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
     raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -519,18 +519,18 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 40px 20px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 90%; max-width: 620px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+        <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 1줄 완전 고정 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 14px; margin-bottom: 30px; width: 100%; box-sizing: border-box; overflow: hidden;'>
-                <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 19px !important; font-weight: 900 !important; margin: 0 auto !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.0px !important; white-space: nowrap !important; line-height: 1.2 !important; display: block; width: 100%; text-align: center;'>{clean_title}</div>
-                <div style='text-align: right; margin-top: 6px;'>
+            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
+                <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
             <!-- 신청인 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 20px;'>
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
                 <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
@@ -627,9 +627,8 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합/대조 감명서 표준 표지 (타이틀 1줄 완전 고정형)"""
+    """2인용 궁합/대조 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
     
-    # 1) 타이틀 정제
     raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -640,12 +639,12 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 
     return f"""
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 36px 20px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 90%; max-width: 620px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+        <div style='border: 4px solid #1A237E; padding: 38px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 19px 규격 & nowrap 완벽한 1줄 보장 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 14px; margin-bottom: 24px; width: 100%; box-sizing: border-box; overflow: hidden;'>
-                <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 19px !important; font-weight: 900 !important; margin: 0 auto !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.0px !important; white-space: nowrap !important; line-height: 1.2 !important; display: block; width: 100%; text-align: center;'>{clean_title}</div>
-                <div style='text-align: right; margin-top: 6px;'>
+            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 24px; width: 100%; box-sizing: border-box;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
+                <div style='text-align: right; margin-top: 8px;'>
                     <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
@@ -674,7 +673,6 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     </div>
     <div class='page-break'></div>
     """
-
 def get_gunghap_score_visual_html(gh_engine):
     """궁합 점수 및 비주얼 차트 HTML"""
     sky_blue = "#38B6FF"
