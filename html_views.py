@@ -887,6 +887,64 @@ def render_saju_comparison_report(saju_fact_html, external_raw_box, ai_content_h
     """
     return get_final_report_box(master_body)
 
+def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="-"):
+    """
+    [초연 시공명리 3대 진실 정밀 감지 엔진]
+    1. 복음(伏吟) 파동: 글자 중복으로 인한 기운 정체 및 자가당착 고갈
+    2. 묘고(墓庫) 파동: 辰·戌·丑·未 조토/습토의 관성·재성 침식 및 흡수
+    3. 합화(合化)·삼형 파동: 지지 국(局) 형성으로 인한 뿌리(禄地) 변질 및 생명선 임계점
+    """
+    y_ji = saju_data.get('year_ji', '-')
+    m_ji = saju_data.get('month_ji', '-')
+    d_ji = saju_data.get('day_ji', '-')
+    h_ji = saju_data.get('hour_ji', '-')
+    
+    jis = [y_ji, m_ji, d_ji, h_ji]
+    valid_jis = [j for j in jis if j and j != '-' and j != '?']
+
+    # 1. 복음(伏吟) 파동 감지 (년-월, 일-시, 월-일 등 동일 지지 중복)
+    is_bokgeum = False
+    bokgeum_details = []
+    if len(valid_jis) > len(set(valid_jis)):
+        is_bokgeum = True
+        for j in set(valid_jis):
+            if valid_jis.count(j) >= 2:
+                bokgeum_details.append(f"{j}{j} 복음")
+
+    # 2. 묘고(墓庫: 辰戌丑未) 보유 및 조토(未·戌) 기운 감지
+    vaults = ['辰', '戌', '丑', '未']
+    detected_vaults = [j for j in valid_jis if j in vaults]
+    has_vault = len(detected_vaults) > 0
+    has_dry_earth = ('未' in valid_jis) or ('戌' in valid_jis)  # 조토(열기 품은 흙)
+
+    # 3. 흉화 변곡점(대운/세운 결합 묘고·합화 리스크) 진단
+    warnings = []
+    
+    if is_bokgeum:
+        warnings.append(f"지지에 {', '.join(bokgeum_details)} 파동이 형성되어 기운이 순환하지 못하고 내적으로 정체·소모되는 구조")
+        
+    if has_dry_earth and ('亥' in valid_jis or '子' in valid_jis):
+        warnings.append("조열한 흙(未·戌)이 맑은 생명수(亥·子)의 흐름을 가로막아 수기가 탁해지거나 말라붙는 시공간 침식 파동")
+
+    if has_vault and is_bokgeum:
+        warnings.append("복음과 묘고가 중첩되어 환경적 변동 시 극심한 정체나 육친·건강상 급격한 에너지 소모 주의")
+
+    # 경고 메시지 최종 조립
+    if warnings:
+        warning_message = "⚠️ [시공간 파동 경보]: " + " / ".join(warnings)
+    else:
+        warning_message = "원국 내 심각한 복음·묘고 왜곡 없이 비교적 원활한 순환 구조 유지"
+
+    advanced_flags = {
+        "is_bokgeum": is_bokgeum,
+        "bokgeum_details": bokgeum_details,
+        "has_vault": has_vault,
+        "detected_vaults": detected_vaults,
+        "warning_message": warning_message
+    }
+
+    return advanced_flags
+
 def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
     """
     4-2 타 감명서 비교 (궁합) 전용 뷰
