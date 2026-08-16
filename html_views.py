@@ -935,8 +935,27 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
             f"⚠️ [조토극수 침식 주의보] {erosion_desc} ➔ 혈관 탄력 저하(고혈압/심혈관), 대사 정체(당뇨/고혈당), 신장·비뇨기 및 호르몬 불균형 집중 관리 필요"
         )
 
+    # 🌟 [3순위 고도화] 복음·묘고 정체 지수 및 개운 솔루션 산출
+    stagnation_level = "정상"
+    action_solutions = []
+
+    vault_cnt = len(detected_vaults)
+    bokgeum_cnt = len(bokgeum_details)
+
     if has_vault and is_bokgeum:
-        warnings.append("복음과 묘고가 중첩되어 환경적 변동 시 극심한 정체나 육친·건강상 급격한 에너지 소모 주의")
+        if vault_cnt >= 2 or bokgeum_cnt >= 2:
+            stagnation_level = "심각 (에너지 고갈 위험)"
+        else:
+            stagnation_level = "경고 (기운 정체 및 내적 소모)"
+        warnings.append(f"복음과 묘고가 중첩({stagnation_level})되어 환경적 변동 시 극심한 정체나 육친·건강상 급격한 에너지 소모 주의")
+        
+        # 실전 처세 솔루션 자동 매핑
+        action_solutions.append("1) [시공간 이격]: 주기적인 환경 변화(출장, 여행, 주말부부/각방 등 물리적 거리두기)로 정체된 기운 환기")
+        action_solutions.append("2) [활인 개운]: 타인을 돕는 교육, 상담, 의료, 봉사 등 '활인업(活人業)' 성향의 활동을 통해 살기(殺氣)를 덕(德)으로 승화")
+        action_solutions.append("3) [수기 충전]: 맑은 물가 산책, 반신욕, 정기적인 명상과 호흡을 통해 메마르고 갇힌 생명수 순환 촉진")
+        action_solutions.append("4) [비우기 처세]: 불필요한 물건 정리(미니멀리즘)와 과도한 집착을 내려놓는 마음공부로 묘고의 침식 방어")
+    elif is_bokgeum or has_vault:
+        stagnation_level = "주의 (부분적 정체)"
 
     # 경고 메시지 최종 조립
     if warnings:
@@ -944,12 +963,16 @@ def analyze_saju_facts_advanced(saju_data, current_dw_ji="-", current_sewun_ji="
     else:
         warning_message = "원국 내 심각한 복음·묘고 왜곡 없이 비교적 원활한 순환 구조 유지"
 
+    action_solution_str = "\n".join(action_solutions) if action_solutions else "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
+
     advanced_flags = {
         "is_bokgeum": is_bokgeum,
         "bokgeum_details": bokgeum_details,
         "has_vault": has_vault,
         "detected_vaults": detected_vaults,
         "has_erosion": has_erosion,
+        "stagnation_level": stagnation_level,
+        "action_solutions": action_solution_str,
         "health_erosion_facts": " / ".join(health_erosion_facts) if health_erosion_facts else "특이 침식 파동 없음",
         "warning_message": warning_message
     }
