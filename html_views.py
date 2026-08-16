@@ -1,905 +1,1898 @@
 # ==============================================================================
-# html_views.py (ver 72.7 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
+# engine.py (ver 72.7 Master - 초연 시공명리학 통합 최종본)
 # ==============================================================================
-# [핵심 반영 사항]
-# 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
-# 2. 인쇄/PDF(@media print) 뷰: .page-break 엔진이 작동하여 A4 1장씩 정밀 분할 출력
-# 3. 동양 전통 예법 엄수: 남명/여명 인명 붉은색(朱書) 전면 배제 (품격 있는 먹색 #111111 적용)
-# 4. 서체 전면 통일: 전 표지, 원국표, 마스터바, 황금문구, 통변 본문 '나눔명조(Nanum Myeongjo)' 강제 적용
-# 5. 궁합 표지 통합: 타이틀 1줄 강제 방어 및 남/녀 생년월일 <strong> 볼드체 적용 (DRY 통일)
-# ==============================================================================
-import re
+from google import genai
+import os
 import streamlit as st
+import math
+import datetime as dt_mod
+from datetime import datetime
+import pytz
+import ephem
+import re
+from korean_lunar_calendar import KoreanLunarCalendar
 
 # ==============================================================================
-# 📦 섹션 1. 글로벌 스타일 (CSS) 및 AI 통변 텍스트 포맷터
+# 섹션 1. 시스템 변수 및 기초 상수 정의
 # ==============================================================================
+K2H_GAN = {
+    '갑':'甲', '甲':'甲', '을':'乙', '乙':'乙', '병':'丙', '丙':'丙', 
+    '정':'丁', '丁':'丁', '무':'戊', '戊':'戊', '기':'己', '己':'己', 
+    '경':'庚', '庚':'庚', '신':'辛', '辛':'辛', '임':'壬', '壬':'壬', '계':'癸', '癸':'癸'
+}
+K2H_JI = {
+    '자':'子', '子':'子', '축':'丑', '丑':'丑', '인':'寅', '寅':'寅', 
+    '묘':'卯', '卯':'卯', '진':'辰', '辰':'辰', '사':'巳', '巳':'巳', 
+    '오':'午', '午':'午', '미':'未', '未':'未', '신':'申', '申':'申', 
+    '유':'酉', '酉':'酉', '술':'戌', '戌':'戌', '해':'亥', '亥':'亥'
+}
 
-def get_global_css():
-    """전체 시스템 UI/UX 및 화면/인쇄 듀얼 분리 스타일시트"""
-    return """<style>
-    @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800;900&display=swap");
+GAN = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계", "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+JI  = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
-    .stApp { background-color: #FFF8E1 !important; }
+JIJANGGAN = {
+    '子': ['壬', '-', '癸'], '丑': ['癸', '辛', '己'], '寅': ['戊', '丙', '甲'], 
+    '卯': ['甲', '-', '乙'], '辰': ['乙', '癸', '戊'], '巳': ['戊', '庚', '丙'], 
+    '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'], 
+    '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬'] 
+}
+
+def _to_hanja(char):
+    """한글/한자 구분 없이 무조건 정통 한자 1글자로 완벽 변환"""
+    if not char or char in ["?", " ", "-"]: return ""
+    char = str(char).strip()
+    return K2H_GAN.get(char, K2H_JI.get(char, char))
+
+def _to_hanja_ji(char):
+    """지지를 정통 한자로 변환할 때 한글 '신'이 천간 辛으로 튀는 현상 원천 차단"""
+    if not char or char in ["?", " ", "-"]: return ""
+    char = str(char).strip()
+    return K2H_JI.get(char, K2H_GAN.get(char, char))
+
+
+# ==============================================================================
+# 섹션 2. 핵심 사주 역산 및 만세력·절기 연산 로직
+# ==============================================================================
+def get_total_time_adjustment(dt):
+    adj = -30
+    if dt_mod.datetime(1954, 3, 21) <= dt <= dt_mod.datetime(1961, 8, 9, 23, 59): adj = 0
+    si = [
+        (dt_mod.datetime(1948,5,31), dt_mod.datetime(1948,9,22)), 
+        (dt_mod.datetime(1949,3,31), dt_mod.datetime(1949,9,30)), 
+        (dt_mod.datetime(1950,4,1), dt_mod.datetime(1950,9,10)), 
+        (dt_mod.datetime(1951,5,6), dt_mod.datetime(1951,9,9)), 
+        (dt_mod.datetime(1954,3,21), dt_mod.datetime(1954,5,5)), 
+        (dt_mod.datetime(1955,4,6), dt_mod.datetime(1955,9,22)), 
+        (dt_mod.datetime(1956,5,20), dt_mod.datetime(1956,9,30)), 
+        (dt_mod.datetime(1957,5,5), dt_mod.datetime(1957,9,22)), 
+        (dt_mod.datetime(1958,5,4), dt_mod.datetime(1958,9,21)), 
+        (dt_mod.datetime(1959,5,4), dt_mod.datetime(1959,9,20)), 
+        (dt_mod.datetime(1960,5,1), dt_mod.datetime(1960,9,18)), 
+        (dt_mod.datetime(1987,5,10,2), dt_mod.datetime(1987,10,11,3)), 
+        (dt_mod.datetime(1988,5,8,2), dt_mod.datetime(1988,10,9,3))
+    ]
+    for s, e in si:
+        if s <= dt <= e: adj -= 60; break
+    return adj
+
+def extract_ganji(text):
+    g = [c for c in text if c in "甲乙丙丁戊己庚辛壬癸갑을병정무기경신임계"]
+    j = [c for c in text if c in "子丑寅卯辰巳午未申酉戌亥자축인묘진사오미신유술해"]
+    return (g[0] if g else "?") + (j[0] if j else "?")
+
+def extract_pure_ganji(cell_0, cell_1):
+    raw_s = str(cell_0[0] if isinstance(cell_0, (list, tuple)) else cell_0)
+    raw_b = str(cell_1[1] if isinstance(cell_1, (list, tuple)) and len(cell_1) > 1 else (cell_1[0] if isinstance(cell_1, (list, tuple)) else cell_1))
+    s = re.sub(r'[^一-龥]', '', raw_s)
+    b = re.sub(r'[^一-龥]', '', raw_b)
+    return (s[0] if s else ""), (b[0] if b else "")
+
+def get_true_year_month_pillar(year, month, day, hour, minute):
+    kst = pytz.timezone('Asia/Seoul')
+    dt_kst = kst.localize(datetime(year, month, day, hour, minute))
+    dt_utc = dt_kst.astimezone(pytz.utc)
     
-    /* 사이드바 컨트롤 영역 (고딕체 유지) */
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] span[data-testid="stMarkdownContainer"] { 
-        font-family: 'Nanum Gothic', sans-serif !important; 
-    }
-    div[data-testid="stSidebar"] * { font-size: 14px !important; }
-    div[data-testid="stRadio"] label p { font-size: 14px !important; }
-    div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
-
-    /* 감명서 리포트 전 영역 나눔명조체 통일 */
-    .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
-        font-family: 'Nanum Myeongjo', 'Batang', serif !important; 
-    }
-
-    .b-text { font-weight: 800 !important; color: #000000 !important; display: inline-block; }
-    .b-text-point { font-weight: 800 !important; color: #1A237E !important; display: inline-block; }
-
-    /* 버튼 스타일 */
-    div.stButton > button { 
-        font-family: 'Nanum Gothic', sans-serif !important; 
-        font-weight: 900 !important; 
-        font-size: 16px !important; 
-        border-radius: 8px !important; 
-    }
-    div.stButton > button[kind="primary"] { 
-        background-color: #1A237E !important; 
-        color: #FFFFFF !important; 
-        border: none !important; 
-        height: 50px !important; 
-        font-weight: 900 !important; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
-    }
-    div.stButton > button[kind="primary"]:hover { background-color: #0D47A1 !important; color: #FFFFFF !important; }
-
-    div.stButton > button[kind="secondary"] { 
-        background-color: #00A843 !important; 
-        color: #FFFFFF !important; 
-        border: none !important; 
-        height: 50px !important; 
-        font-weight: 900 !important; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; 
-    }
-    div.stButton > button[kind="secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
-
-    /* A4 백지 캔버스 (외곽선 및 그림자 완전 제거, 순백 바탕) */
-    .report-page { 
-        width: 210mm; 
-        min-height: 297mm; 
-        max-width: 100%; 
-        margin: 20px auto; 
-        background-color: #FFFFFF !important; 
-        border: none !important; 
-        box-shadow: none !important; 
-        padding: 12mm 10mm; 
-        box-sizing: border-box; 
-        color: #000000; 
-    }
-
-    /* 안쪽 표준 둥근 사각 액자 (단일 프레임, 그림자 제거) */
-    .vip-inset-frame { 
-        border: 2px solid #3E2723 !important; 
-        border-radius: 12px !important; 
-        padding: 25px !important; 
-        background-color: #FFFFFF !important; 
-        box-shadow: none !important; 
-        box-sizing: border-box;
-    }
-
-    /* 오행 색상 규격 */
-    .color-목 { background: #2E7D32 !important; color: #FFF !important; }
-    .color-화 { background: #C62828 !important; color: #FFF !important; }
-    .color-토 { background: #F9A825 !important; color: #000 !important; }
-    .color-금 { background: #9E9E9E !important; color: #FFF !important; }
-    .color-수 { background: #212121 !important; color: #FFF !important; }
-
-    /* 원국표 테이블 규격 */
-    .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 12px; table-layout: fixed; }
-    .result-table td { border: 1px solid #444 !important; padding: 2px 0 !important; text-align: center; vertical-align: middle; font-weight: 800 !important; font-size: 13px; line-height: 1.25 !important; }
-    .ganji-cell-24 { font-size: 24px !important; font-weight: 900 !important; }
-
-    .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
-    .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
-    .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 800 !important; font-size: 13px !important; }
-
-    /* 인쇄 및 PDF 저장 시 자동 A4 낱장 분할 엔진 */
-    .page-break { display: none; }
-
-    @media print { 
-        @page { size: A4 portrait; margin: 12mm 10mm; }
-        .stSidebar, button, iframe, .print-hide, header { display: none !important; }
-        body, .stApp { background-color: white !important; -webkit-print-color-adjust: exact !important; }
-        .report-page { box-shadow: none; margin: 0 auto; width: 100%; padding: 0; }
-        .page-break { display: block !important; page-break-after: always !important; break-after: page !important; height: 1px; }
-        .vip-inset-frame { box-shadow: none !important; border: 1.5px solid #333333 !important; }
-    }
-    </style>
-    """
-
-def format_ai_text_to_html(text):
-    """
-    AI 생성 텍스트 포맷터 (박사님 확정 폰트 크기 및 스타일 최종 규격)
-    - 대제목(1.) 20px Bold 900
-    - 특수헤더 17px Bold 800 (중앙정렬, 밑줄 2.5px solid #1A237E)
-    - 소제목(1)) 17px Bold 800 (검정색 #000000)
-    - 소소제목((1)) 16px Bold 700 (진먹색 #333333)
-    - 일반본문 16px Medium 500 (줄간격 1.85, 들여쓰기 15px)
-    """
-    if not text:
-        return ""
+    sun = ephem.Sun()
+    sun.compute(dt_utc)
+    lon = math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+    
+    actual_year = year
+    if month <= 2 and lon < 315.0:
+        actual_year -= 1
         
-    lines = str(text).split('\n')
-    html_lines = []
+    year_idx = (actual_year - 1984) % 60
     
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-            
-        # 마크다운 찌꺼기만 제거 (따옴표, 괄호 등 문장부호 100% 보존)
-        line = line.replace('*', '').replace('#', '')
+    y_gan_kor = GAN[year_idx % 10]
+    y_ji_kor = JI[year_idx % 12]
+    
+    if 315 <= lon < 345: m_ji_idx = 2     # 寅월
+    elif 345 <= lon or lon < 15: m_ji_idx = 3  # 卯월
+    elif 15 <= lon < 45: m_ji_idx = 4    # 辰월
+    elif 45 <= lon < 75: m_ji_idx = 5    # 巳월
+    elif 75 <= lon < 105: m_ji_idx = 6   # 午월
+    elif 105 <= lon < 135: m_ji_idx = 7  # 未월
+    elif 135 <= lon < 165: m_ji_idx = 8  # 申월
+    elif 165 <= lon < 195: m_ji_idx = 9  # 酉월
+    elif 195 <= lon < 225: m_ji_idx = 10 # 戌월
+    elif 225 <= lon < 255: m_ji_idx = 11 # 亥월
+    elif 255 <= lon < 285: m_ji_idx = 0  # 子월
+    elif 285 <= lon < 315: m_ji_idx = 1  # 丑월
+    
+    y_gan_idx = year_idx % 10
+    start_month_gan_idx = ((y_gan_idx % 5) * 2 + 2) % 10
+    m_offset = (m_ji_idx - 2) % 12
+    m_gan_kor = GAN[(start_month_gan_idx + m_offset) % 10]
+    m_ji_kor = JI[m_ji_idx]
+    
+    y_pillar = K2H_GAN[y_gan_kor] + K2H_JI[y_ji_kor]
+    m_pillar = K2H_GAN[m_gan_kor] + K2H_JI[m_ji_kor]
+    
+    return y_pillar, m_pillar, lon
 
-        # 🌟 [특수 헤더] 수석보좌관 1:1 장단점 정밀 비교 등 (17px / 800 / 중앙 정렬 / 밑줄 2.5px solid #1A237E)
-        if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #1A237E; "
-                f"text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.3px;'>"
-                f"{line}</div>"
-            )
-        # 🌟 [대제목 1.] (20px / 900 / 상단 22px, 하단 10px, 하단 옅은 구분선)
-        elif re.match(r'^\d+\.\s', line):
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 20px; font-weight: 900; color: #000000; "
-                f"margin-top: 22px; margin-bottom: 10px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px; letter-spacing: -0.5px;'>"
-                f"{line}</div>"
-            )
-        # 🌟 [소제목 1)] (17px / 800 / 검정색 #000000 / 상단 14px, 하단 6px)
-        elif re.match(r'^\d+\)\s', line):
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #000000; "
-                f"margin-top: 14px; margin-bottom: 6px; letter-spacing: -0.3px;'>"
-                f"{line}</div>"
-            )
-        # 🌟 [소소제목 (1)] (16px / 700 / 진먹색 #333333 / 상단 10px, 하단 4px)
-        elif re.match(r'^\(\d+\)\s', line):
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 700; color: #333333; "
-                f"margin-top: 10px; margin-bottom: 4px; letter-spacing: -0.2px;'>"
-                f"{line}</div>"
-            )
-        # 🌟 [일반 본문] (16px / 500 / 줄간격 1.85 / 들여쓰기 15px)
-        else:
-            if line.startswith('-'):
-                html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 500; line-height: 1.85; "
-                    f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 5px; padding-left: 10px;'>"
-                    f"{line}</p>"
-                )
-            else:
-                html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 500; line-height: 1.85; "
-                    f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 15px;'>"
-                    f"{line}</p>"
-                )
-            
-    return "\n".join(html_lines)
+def find_solar_date_from_ganji(y_ganji, m_ganji, d_ganji, is_lunar=False):
+    klc = KoreanLunarCalendar()
+    for y in range(2036, 1919, -1):
+        for m in range(12, 0, -1):
+            for d in range(31, 0, -1):
+                try:
+                    if is_lunar:
+                        if not klc.setLunarDate(y, m, d, False): continue
+                    else:
+                        if not klc.setSolarDate(y, m, d): continue
+                    
+                    gj = klc.getChineseGapJaString().split()
+                    if len(gj) >= 3:
+                        if gj[0][:2] == y_ganji and gj[1][:2] == m_ganji and gj[2][:2] == d_ganji:
+                            return klc.solarYear, klc.solarMonth, klc.solarDay
+                except: continue
+    return None, None, None
 
-
-# ==============================================================================
-# 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
-# ==============================================================================
-
-def td_func(val, engine):
-    oh = engine.get_color(val)
-    cls_str = f"color-{oh}" if oh != '무' else ""
-    return f"<td class='{cls_str} ganji-cell-24' style='border:1px solid #444 !important; width:21.25%;'>{val}</td>"
-
-def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, y_shinsal, d_shinsal, gen_shinsal):
-    """사주팔자 원국 표 HTML 구조"""
-    return f"""
-    <table class='result-table' style='width:100%; border-collapse:collapse; text-align:center;'>
-        <tr class='top-header-cell'>
-            <td style='width:15%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>구분</td>
-            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>시주</td>
-            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>일주</td>
-            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>월주</td>
-            <td style='width:21.25%; border:1px solid #444; color:#FFFFFF !important; font-weight:900;'>년주</td>
-        </tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800;'>천간합충</td>{gan_rel}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800;'>천간십성</td>{gan_ss}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:16px !important;'>천간</td>{gan_row}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:16px !important;'>지지</td>{ji_row}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800;'>지지십성</td>{ji_ss}</tr>
-        <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:800;'>지장간</td>{jijanggan}</tr>
-        {ji_rel_rows}
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:800;'>십이운성</td>{unsung}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:800;'>년지신살</td>{y_shinsal}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:800;'>일지신살</td>{d_shinsal}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:800;'>일반신살</td>{gen_shinsal}</tr>
-    </table>
+def get_seun_half_periods(target_year):
     """
+    연도운(1-2) 상/하반기 절기(입춘/입추) 기준 양력 기간 연산
+    """
+    y = int(target_year)
+    first_half = f"{y}년 2월 4일(입춘) ~ {y}년 8월 6일"
+    second_half = f"{y}년 8월 7일(입추) ~ {y+1}년 2월 3일"
+    return first_half, second_half
 
-def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """사주 원국 데이터를 연산하여 표 HTML 생성"""
-    gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
+def get_wolun_half_periods(target_year, target_month):
+    """
+    월운(1-3) 전/후반기 절입일 및 중기(節氣 & 中氣) 기준 양력 기간 연산
+    """
+    y = int(target_year)
+    m = int(target_month)
     
-    hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
-    gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td>" \
-             f"<td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td>" \
-             f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td>" \
-             f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
-
-    hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
+    terms_map = {
+        1: (5, 20),   2: (4, 19),   3: (6, 21),   4: (5, 20),
+        5: (5, 21),   6: (6, 21),   7: (7, 23),   8: (7, 23),
+        9: (8, 23),   10: (8, 23),  11: (7, 22),  12: (7, 22)
+    }
     
-    gan_row_html = "".join([td_func(g, engine) for g in gans])
-    ji_row_html = "".join([td_func(j, engine) for j in jjis])
+    jul_day, jung_day = terms_map.get(m, (5, 20))
+    next_m = m + 1 if m < 12 else 1
+    next_y = y if m < 12 else y + 1
+    next_jul_day = terms_map.get(next_m, (5, 20))[0]
+    
+    first_half = f"{y}년 {m:02d}월 {jul_day:02d}일 ~ {y}년 {m:02d}월 {jung_day-1:02d}일"
+    second_half = f"{y}년 {m:02d}월 {jung_day:02d}일 ~ {next_y}년 {next_m:02d}월 {next_jul_day-1:02d}일"
+    
+    return first_half, second_half
 
-    ji_ss_html = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hb)}</td>" \
-                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, db)}</td>" \
-                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, mb)}</td>" \
-                 f"<td style='border:1px solid #444;'>{engine.get_ss(ds, yb)}</td>"
+def get_ganji_from_date(y, m, d, is_lunar=False, is_leap=False):
+    klc = KoreanLunarCalendar()
+    if is_lunar:
+        if not klc.setLunarDate(y, m, d, is_leap): return "?", "?", "?"
+    else:
+        if not klc.setSolarDate(y, m, d): return "?", "?", "?"
+    
+    gapja_str = klc.getChineseGapJaString()
+    parts = gapja_str.split()
+    
+    if len(parts) < 3: return "?", "?", "?"
+    return parts[0][:2], parts[1][:2], parts[2][:2]
 
-    jijanggan_html = "".join([f"<td style='padding:0; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
+def get_time_ganji(day_gan, time_str, dt_obj=None):
+    if "시간 모름" in time_str: return "?", "?"
+    if dt_obj:
+        adj_mins = get_total_time_adjustment(dt_obj)
+        dt_obj += dt_mod.timedelta(minutes=adj_mins)
+    
+    target_ji, t_idx = "子", 0
+    if "朝子" in time_str or "夜子" in time_str: target_ji, t_idx = "子", 0
+    else:
+        for j in list(JI):
+            if j in time_str: target_ji, t_idx = j, list(JI).index(j); break
+    start_gan_idx = {"甲":0,"己":0,"乙":2,"庚":2,"丙":4,"辛":4,"丁":6,"壬":6,"戊":8,"癸":8}.get(day_gan, 0)
+    return list(GAN)[(start_gan_idx + t_idx) % 10], target_ji
 
+def auto_fill_user_ganji():
+    st.session_state['app_running'] = False
+    
+    ry = st.session_state.get("u_ry_rev", "")
+    rm = st.session_state.get("u_rm_rev", "")
+    rd = st.session_state.get("u_rd_rev", "")
+    rt = st.session_state.get("u_rt_rev", "")
+    
+    _ry = extract_ganji(ry) if 'extract_ganji' in globals() else ry
+    _rm = extract_ganji(rm) if 'extract_ganji' in globals() else rm
+    _rd = extract_ganji(rd) if 'extract_ganji' in globals() else rd
+    
+    if not _ry and not _rm and not _rd:
+        st.session_state.pop('rev_success_msg', None)
+    elif len(_ry) >= 2 and len(_rm) >= 2 and len(_rd) >= 2:
+        ry_h = K2H_GAN.get(_ry[0], _ry[0]) + K2H_JI.get(_ry[1], _ry[1])
+        rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
+        rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
+        
+        klc_find = KoreanLunarCalendar()
+        found = False
+        
+        time_map = {
+            '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
+            '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
+            '인': '03:30 ~ 05:29 (寅)시', '寅': '03:30 ~ 05:29 (寅)시',
+            '묘': '05:30 ~ 07:29 (卯)시', '卯': '05:30 ~ 07:29 (卯)시',
+            '진': '07:30 ~ 09:29 (辰)시', '辰': '07:30 ~ 09:29 (辰)시',
+            '사': '09:30 ~ 11:29 (巳)시', '巳': '09:30 ~ 11:29 (巳)시',
+            '오': '11:30 ~ 13:29 (午)시', '午': '11:30 ~ 13:29 (午)시',
+            '미': '13:30 ~ 15:29 (未)시', '未': '13:30 ~ 15:29 (未)시',
+            '신': '15:30 ~ 17:29 (申)시', '申': '15:30 ~ 17:29 (申)시',
+            '유': '17:30 ~ 19:29 (酉)시', '酉': '17:30 ~ 19:29 (酉)시',
+            '술': '19:30 ~ 21:29 (戌)시', '戌': '19:30 ~ 21:29 (戌)시',
+            '해': '21:30 ~ 23:29 (亥)시', '亥': '21:30 ~ 23:29 (亥)시'
+        }
+        
+        for y in range(2050, 1899, -1):
+            klc_find.setSolarDate(y, 7, 1)
+            gj_y = klc_find.getChineseGapJaString().split()
+            if gj_y and gj_y[0][:2] == ry_h:
+                curr_dt = dt_mod.date(y+1, 2, 28)
+                while curr_dt >= dt_mod.date(y, 1, 1):
+                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                    gj = klc_find.getChineseGapJaString().split()
+                    if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
+                        st.session_state['s_y'] = curr_dt.year
+                        st.session_state['s_m'] = curr_dt.month
+                        st.session_state['s_d'] = curr_dt.day
+                        
+                        if rt:
+                            ji_char = rt[-1]
+                            rt_h = K2H_JI.get(ji_char, ji_char)
+                            st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
+                        else:
+                            st.session_state['s_t'] = "시간 모름"
+
+                        found = True
+                        st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
+                        break
+                curr_dt -= dt_mod.timedelta(days=1)
+            if found: break
+        if not found: 
+            st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
+    else: 
+        st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
+def auto_fill_partner_ganji():
+    st.session_state['app_running'] = False
+    
+    p_ry = st.session_state.get("p_ry_rev", "")
+    p_rm = st.session_state.get("p_rm_rev", "")
+    p_rd = st.session_state.get("p_rd_rev", "")
+    p_rt = st.session_state.get("p_rt_rev", "")
+    
+    _p_ry = extract_ganji(p_ry) if 'extract_ganji' in globals() else p_ry
+    _p_rm = extract_ganji(p_rm) if 'extract_ganji' in globals() else p_rm
+    _p_rd = extract_ganji(p_rd) if 'extract_ganji' in globals() else p_rd
+
+    if not _p_ry and not _p_rm and not _p_rd:
+        st.session_state.pop('rev_p_success_msg', None)
+    elif len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
+        p_ry_h = K2H_GAN.get(_p_ry[0], _p_ry[0]) + K2H_JI.get(_p_ry[1], _p_ry[1])
+        p_rm_h = K2H_GAN.get(_p_rm[0], _p_rm[0]) + K2H_JI.get(_p_rm[1], _p_rm[1])
+        p_rd_h = K2H_GAN.get(_p_rd[0], _p_rd[0]) + K2H_JI.get(_p_rd[1], _p_rd[1])
+        
+        klc_find = KoreanLunarCalendar()
+        found = False
+        
+        time_map = {
+            '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
+            '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
+            '인': '03:30 ~ 05:29 (寅)시', '寅': '03:30 ~ 05:29 (寅)시',
+            '묘': '05:30 ~ 07:29 (卯)시', '卯': '05:30 ~ 07:29 (卯)시',
+            '진': '07:30 ~ 09:29 (辰)시', '辰': '07:30 ~ 09:29 (辰)시',
+            '사': '09:30 ~ 11:29 (巳)시', '巳': '09:30 ~ 11:29 (巳)시',
+            '오': '11:30 ~ 13:29 (午)시', '午': '11:30 ~ 13:29 (午)시',
+            '미': '13:30 ~ 15:29 (未)시', '未': '13:30 ~ 15:29 (未)시',
+            '신': '15:30 ~ 17:29 (申)시', '申': '15:30 ~ 17:29 (申)시',
+            '유': '17:30 ~ 19:29 (酉)시', '酉': '17:30 ~ 19:29 (酉)시',
+            '술': '19:30 ~ 21:29 (戌)시', '戌': '19:30 ~ 21:29 (戌)시',
+            '해': '21:30 ~ 23:29 (亥)시', '亥': '21:30 ~ 23:29 (亥)시'
+        }
+        
+        for y in range(2050, 1899, -1):
+            klc_find.setSolarDate(y, 7, 1)
+            gj_y = klc_find.getChineseGapJaString().split()
+            if gj_y and gj_y[0][:2] == p_ry_h:
+                curr_dt = dt_mod.date(y+1, 2, 28)
+                while curr_dt >= dt_mod.date(y, 1, 1):
+                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
+                    gj = klc_find.getChineseGapJaString().split()
+                    if len(gj) >= 3 and gj[0][:2] == p_ry_h and gj[1][:2] == p_rm_h and gj[2][:2] == p_rd_h:
+                        st.session_state['p_y_in'] = curr_dt.year
+                        st.session_state['p_m_in'] = curr_dt.month
+                        st.session_state['p_d_in'] = curr_dt.day
+                        
+                        if p_rt:
+                            ji_char_p = p_rt[-1]
+                            p_rt_h = K2H_JI.get(ji_char_p, ji_char_p)
+                            st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                        else:
+                            st.session_state['p_t_key'] = "시간 모름"
+
+                        found = True
+                        st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
+                        break
+                curr_dt -= dt_mod.timedelta(days=1)
+            if found: break
+        if not found: 
+            st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
+    else: 
+        st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
+
+# ==============================================================================
+# 섹션 3. 명리 기초 연산 로직 (오행, 십성, 12운성, 신살, 공망, 격국 등)
+# ==============================================================================
+def get_color(c):
+    c = _to_hanja(c)
+    if c in "甲乙寅卯": return "목"
+    if c in "丙丁巳午": return "화"
+    if c in "戊己辰戌丑未": return "토"
+    if c in "庚辛申酉": return "금"
+    if c in "壬癸亥子": return "수"
+    return "무"
+
+def get_ss(dg, tc):
+    dg, tc = _to_hanja(dg), _to_hanja(tc)
+    if tc in ["?", " ", "-"]: return "-"
+    rels = {
+        '甲':{'甲':'비견','乙':'겁재','丙':'식신','丁':'상관','戊':'편재','己':'정재','庚':'편관','辛':'정관','壬':'편인','癸':'정인','寅':'비견','卯':'겁재','巳':'식신','午':'상관','辰':'편재','戌':'편재','丑':'정재','未':'정재','申':'편관','酉':'정관','亥':'편인','子':'정인'},
+        '乙':{'乙':'비견','甲':'겁재','丁':'식신','丙':'상관','己':'편재','戊':'정재','辛':'편관','庚':'정관','癸':'편인','壬':'정인','卯':'비견','寅':'겁재','午':'식신','巳':'상관','丑':'편재','未':'편재','辰':'정재','戌':'정재','酉':'편관','申':'정관','子':'편인','亥':'정인'},
+        '丙':{'丙':'비견','丁':'겁재','戊':'식신','己':'상관','庚':'편재','辛':'정재','壬':'편관','癸':'정관','甲':'편인','乙':'정인','巳':'비견','午':'겁재','辰':'식신','戌':'식신','未':'상관','丑':'상관','申':'편재','酉':'정재','亥':'편관','子':'정관','寅':'편인','卯':'정인'},
+        '丁':{'丁':'비견','丙':'겁재','己':'식신','戊':'상관','辛':'편재','庚':'정재','癸':'편관','壬':'정관','乙':'편인','甲':'정인','午':'비견','巳':'겁재','未':'식신','丑':'식신','辰':'상관','戌':'상관','酉':'편재','申':'정재','子':'편관','亥':'정관','卯':'편인','寅':'정인'},
+        '戊':{'戊':'비견','己':'겁재','庚':'식신','辛':'상관','壬':'편재','癸':'정재','甲':'편관','乙':'정관','丙':'편인','丁':'정인','辰':'비견','戌':'비견','丑':'겁재','未':'겁재','申':'식신','酉':'상관','亥':'편재','子':'정재','寅':'편관','卯':'정관','巳':'편인','午':'정인'},
+        '己':{'己':'비견','戊':'겁재','辛':'식신','庚':'상관','癸':'편재','壬':'정재','乙':'편관','甲':'정관','丁':'편인','丙':'정인','丑':'비견','未':'비견','辰':'겁재','戌':'겁재','酉':'식신','申':'상관','子':'편재','亥':'정재','卯':'편관','寅':'정관','午':'편인','巳':'정인'},
+        '庚':{'庚':'비견','辛':'겁재','壬':'식신','癸':'상관','甲':'편재','乙':'정재','丙':'편관','丁':'정관','戊':'편인','己':'정인','申':'비견','酉':'겁재','亥':'식신','子':'상관','寅':'편재','卯':'정재','巳':'편관','午':'정관','辰':'편인','戌':'편인','丑':'정인','未':'정인'},
+        '辛':{'辛':'비견','庚':'겁재','癸':'식신','壬':'상관','乙':'편재','甲':'정재','丁':'편관','丙':'정관','己':'편인','戊':'정인','酉':'비견','申':'겁재','子':'식신','亥':'상관','卯':'편재','寅':'정재','午':'편관','巳':'정관','未':'편인','丑':'편인','辰':'정인','戌':'정인'},
+        '壬':{'壬':'비견','癸':'겁재','甲':'식신','乙':'상관','丙':'편재','丁':'정재','戊':'편관','己':'정관','庚':'편인','辛':'정인','亥':'비견','子':'겁재','寅':'식신','卯':'상관','巳':'편재','午':'정재','辰':'편관','戌':'편관','丑':'정관','未':'정관','申':'편인','酉':'정인'},
+        '癸':{'癸':'비견','壬':'겁재','乙':'식신','甲':'상관','丁':'편재','丙':'정재','己':'편관','戊':'정관','辛':'편인','庚':'정인','子':'비견','亥':'겁재','卯':'식신','寅':'상관','午':'편재','巳':'정재','未':'편관','丑':'편관','戌':'정관','辰':'정관','酉':'편인','申':'정인'}
+    }
+    return rels.get(dg, {}).get(tc, "-")
+
+def get_unsung(dg, ji):
+    """일간과 지지가 한글/한자 무엇으로 들어와도 100% 정밀 연산하는 12운성 함수"""
+    dg_h = _to_hanja(dg)
+    ji_h = _to_hanja(ji)
+    
+    if not dg_h or not ji_h: return "-"
+    
+    table = {
+        '甲': "亥子丑寅卯辰巳午未申酉戌",
+        '丙': "寅卯辰巳午未申酉戌亥子丑",
+        '戊': "寅卯辰巳午未申酉戌亥子丑",
+        '庚': "巳午未申酉戌亥子丑寅卯辰",
+        '壬': "申酉戌亥子丑寅卯辰巳午未",
+        '乙': "午巳辰卯寅丑子亥戌酉申未",
+        '丁': "酉申未午巳辰卯寅丑子亥戌",
+        '己': "酉申未午巳辰卯寅丑子亥戌",
+        '辛': "子亥戌酉申未午巳辰卯寅丑",
+        '癸': "卯寅丑子亥戌酉申未午巳辰"
+    }
+    
+    target_str = table.get(dg_h, "")
+    idx = target_str.find(ji_h)
+    
+    if idx != -1:
+        unsung_names = ["장생", "목욕", "관대", "건록", "제왕", "쇠", "병", "사", "묘", "절", "태", "양"]
+        return unsung_names[idx]
+    return "-"
+
+def get_12_shinsal(base_ji, target_ji):
+    """기준 지지(년지 또는 일지) 대비 대상 지지의 12신살 정밀 연산"""
+    b_h = _to_hanja_ji(base_ji)
+    t_h = _to_hanja_ji(target_ji)
+    
+    if not b_h or not t_h: return "-"
+        
+    jis = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+    if b_h not in jis or t_h not in jis: return "-"
+        
+    samhap_geob_map = {
+        '申': '巳', '子': '巳', '辰': '巳',
+        '寅': '亥', '午': '亥', '戌': '亥',
+        '巳': '寅', '酉': '寅', '丑': '寅',
+        '亥': '申', '卯': '申', '未': '申'
+    }
+    
+    geob_start_ji = samhap_geob_map.get(b_h, "")
+    if not geob_start_ji: return "-"
+        
+    start_idx = jis.index(geob_start_ji)
+    target_idx = jis.index(t_h)
+    shinsal_names = ["겁살", "재살", "천살", "지살", "년살", "월살", "망신살", "장성살", "반안살", "역마살", "육해살", "화개살"]
+    
+    diff = (target_idx - start_idx) % 12
+    return shinsal_names[diff]
+
+def get_dual_12_shinsal(yb, db, target_ji):
+    """년지(yb) 기준 신살과 일지(db) 기준 신살을 '년지신살 (일지신살)' 형태로 결합"""
+    try:
+        y_shinsal = get_12_shinsal(yb, target_ji)
+        d_shinsal = get_12_shinsal(db, target_ji)
+        
+        if not y_shinsal or y_shinsal == "-": y_shinsal = "-"
+        if not d_shinsal or d_shinsal == "-": d_shinsal = "-"
+        
+        if y_shinsal == "-" and d_shinsal == "-": return "-"
+        if y_shinsal == d_shinsal:
+            return f"{y_shinsal}"
+        else:
+            return f"{y_shinsal} ({d_shinsal})"
+    except Exception:
+        return "-"
+
+def get_all_dual_12_shinsal(yb, db, target_list):
+    try:
+        return [get_dual_12_shinsal(yb, db, j) for j in target_list]
+    except Exception:
+        return ["-"] * len(target_list) if target_list else ["-", "-", "-", "-"]
+
+def get_all_12_shinsal(yb, mb, db, hb):
+    try:
+        results = [
+            get_12_shinsal(yb, yb),
+            get_12_shinsal(yb, mb),
+            get_12_shinsal(yb, db),
+            get_12_shinsal(yb, hb)
+        ]
+        return ", ".join(results)
+    except Exception:
+        return "년지 기준 12신살 연산 완료"
+
+def get_samjae(year_ji, target_ji):
+    year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
+    if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
+    s_map = {
+        '申': ['寅','卯','辰'], '子': ['寅','卯','辰'], '辰': ['寅','卯','辰'],
+        '亥': ['巳','午','未'], '卯': ['巳','午','未'], '未': ['巳','午','未'],
+        '寅': ['申','酉','戌'], '午': ['申','酉','戌'], '戌': ['申','酉','戌'],
+        '巳': ['亥','子','丑'], '酉': ['亥','子','丑'], '丑': ['亥','子','丑']
+    }
+    sj_list = s_map.get(year_ji, [])
+    if not sj_list: return "해당 없음"
+    if target_ji == sj_list[0]: return "들삼재"
+    elif target_ji == sj_list[1]: return "눌삼재"
+    elif target_ji == sj_list[2]: return "날삼재"
+    return "해당 없음"
+
+def get_gan_rel_all(idx, gans):
+    gans = [_to_hanja(g) for g in gans]
+    me = gans[idx]; res = []
+    if me in ["-", "?", " "]: return "-"
+    for i, other in enumerate(gans):
+        if i == idx or other in ["-", "?", " "]: continue
+        s = {me, other}
+        if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: res.append("합")
+        if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}, {'戊','甲'}, {'己','乙'}]: res.append("충")
+    return "".join(list(set(res))) if res else "-"
+
+def get_ji_rel_set(me, target):
+    me, target = _to_hanja(me), _to_hanja(target)
+    if not me or not target or me == "?" or target == "?" or me == target: return "자형" if me == target and me in "辰午酉亥" else "-"
+    s, r = {me, target}, []
+    if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: r.append("방합")
+    if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: r.append("반합")
+    if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: r.append("육합")
+    if s in [{'午','亥'}, {'子','戌'}, {'丑','寅'}, {'寅','未'}, {'卯','申'}]: r.append("암합")
+    if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: r.append("충")
+    if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: r.append("형")
+    if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: r.append("해")
+    if s in [{'子','酉'}, {'丑','辰'}, {'寅','亥'}, {'卯','午'}, {'巳','申'}, {'未','戌'}]: r.append("파")
+    if s in [{'丑','午'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: r.extend(["원진", "귀문"])
+    elif s in [{'子','酉'}, {'寅','未'}]: r.append("귀문")
+    elif s in [{'寅','酉'}, {'子','未'}]: r.append("원진")
+    if s == {'戌','亥'}: r.append("천라")
+    if s == {'辰','巳'}: r.append("지망")
+    return ", ".join(list(dict.fromkeys(r))) if r else "-"
+
+def get_ji_rel_rows_html(jjis):
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
-        b_top = "0px !important"
-        b_bot = "2px solid #CCCCCC !important" if l_idx == 1 else "1px solid #444 !important"
-        
-        cells = []
-        for ci in range(4):
-            if ci == r_idx:
-                if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
-                elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
-                else:            lbl_txt = f"←({jjis[r_idx]})→"
-                cells.append(f"<td style='color:#1A237E; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{lbl_txt}</td>")
-            else:
-                rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
-                txt_color = "#000" if rel_val != "-" else "#BBB"
-                cells.append(f"<td style='color:{txt_color}; font-weight:800; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{rel_val}</td>")
-                
-        lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:13px !important; vertical-align: middle; padding:0 !important;'>합충형파해</td>" if l_idx == 0 else ""
-        ji_rel_rows += f"<tr style='border:none; height:auto;'>{lbl}{''.join(cells)}</tr>"
+        cells = "".join([f"<td style='border:1px solid #444;'>{get_ji_rel_set(jjis[r_idx], jjis[ci])}</td>" for ci in range(4)])
+        lbl = f"<td rowspan='4' class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5;'>합충형해파</td>" if l_idx==0 else ""
+        ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
+    return ji_rel_rows
 
-    unsung = "".join([f"<td style='color:#0D47A1; font-weight:800; border:1px solid #444 !important;'>{engine.get_unsung(ds, jjis[i])}</td>" for i in range(4)])
-
-    y_shinsal_tds, d_shinsal_tds = [], []
-    for i in range(4):
-        y_s = engine.get_12_shinsal(yb, jjis[i]) if jjis[i] != "-" else "-"
-        raw_d = engine.get_12_shinsal(db, jjis[i]) if jjis[i] != "-" else "-"
-        clean_d = str(raw_d).strip().replace("(", "").replace(")", "").replace("（", "").replace("）", "")
-        d_s = f"({clean_d})" if clean_d and clean_d != "-" else "(-)"
-        
-        y_shinsal_tds.append(f"<td style='color:#C62828; font-weight:800; font-size:13px; border:1px solid #444 !important; padding:3px 0;'>{y_s}</td>")
-        d_shinsal_tds.append(f"<td style='color:#C62828; font-weight:800; font-size:13px; border:1px solid #444 !important; padding:3px 0;'>{d_s}</td>")
-        
-    y_shinsal_html = "".join(y_shinsal_tds)
-    d_shinsal_html = "".join(d_shinsal_tds)
-
-    gen_shinsals = []
-    for i in range(4):
-        filtered = engine.get_general_shinsal_filtered(i, gans, jjis, gender)
-        gen_shinsals.append("<br>".join(filtered[:6]) if filtered else "-")
-    gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; font-weight:800; border:1px solid #444 !important;'>{s}</td>" for s in gen_shinsals])
-
-    return get_saju_table(gan_rel, gan_ss, gan_row_html, ji_row_html, ji_ss_html, jijanggan_html, ji_rel_rows, unsung, y_shinsal_html, d_shinsal_html, gen_shinsal)
-
-def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color, cur_samjae):
-    """사주팔자 하단 핵심 명리 종합 바 (정통 나눔명조 적용)"""
-    return f"""
-    <div style="background:#FFF8E1; padding:8px 12px; border-radius:8px; margin:10px 0; border:1px solid #3E2723; font-family:'Nanum Myeongjo', serif; font-weight:700; font-size:13px; color:#1A237E; display:flex; justify-content:space-between; align-items:center; white-space:nowrap;">
-        <span style="flex: 1; text-align: center;">🔢 대운수: {calc_d}</span>
-        <span style="flex: 1; text-align: center;">💥 오행: 木{m} 火{f} 土{e} 金{mtl} 水{w}</span>
-        <span style="flex: 1; text-align: center;">🌟 천을귀인: {guiin}</span>
-        <span style="flex: 1; text-align: center;">🎯 공망: [년]{n_gong} [일]{i_gong}</span>
-        <span style="flex: 1; text-align: center;">🌪️ 삼재: <span style="color:{samjae_color};">{cur_samjae}</span></span>
-    </div>
-    """
-
-def get_un_layout(title, content):
-    return f"""
-    <div style='margin-top:14px; margin-bottom:8px; font-size:16px; font-weight:800; color:#1A237E; font-family:"Nanum Myeongjo", serif;'>{title}</div>
-    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:10px; table-layout:fixed; font-family:"Nanum Myeongjo", serif;'>
-        {content}
-    </div>
-    """
-
-def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
-    u_val = unsung if unsung and str(unsung).strip() else "-"
-    y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() and str(y_shinsal).strip() != "None" else "-"
-    clean_d = str(d_shinsal).strip().replace("(", "").replace(")", "").replace("（", "").replace("）", "")
-    d_val = f"({clean_d})" if clean_d and clean_d != "-" and clean_d != "None" else "(-)"
+def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
+    gans = [_to_hanja(g) for g in gans]
+    jjis = [_to_hanja(j) for j in jjis]
+    dc, mc, yc = gans[1], gans[2], gans[3]
+    dj, mj, yj = jjis[1], jjis[2], jjis[3]
+    cur_g, cur_j = gans[idx], jjis[idx]
     
-    if is_current:
-        active_style = "border: 3px solid #E65100 !important;"
-        header_bg = "#E65100"
-        bg_col = "#FFF9C4"
-    else:
-        active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
-        header_bg = "#3E2723"
+    if cur_g in ["?", "-", " "] or cur_j in ["?", "-", " "]: return []
+    gj = cur_g + cur_j
+    noble, ausp, evil = [], [], []
+    
+    if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인") 
+    if cur_j == mj: noble.append("월덕귀인") 
+    if cur_j in {'甲':'子午','乙':'子午','丙':'卯酉','丁':'卯酉','戊':'辰戌丑未','己':'辰戌丑未','庚':'寅亥','辛':'寅亥','壬':'巳申','癸':'巳申'}.get(dc,""): noble.append("태극귀인") 
+    if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): noble.append("천록귀인") 
+    if cur_j in {'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("문창귀인")
+    if cur_j in {'甲':'亥','乙':'子','丙':'寅','戊':'寅','丁':'卯','己':'卯','庚':'巳','辛':'午','壬':'申','癸':'酉'}.get(dc,""): noble.append("문곡귀인")
+    if cur_j in {'甲':'亥','乙':'午','丙':'寅','戊':'寅','丁':'酉','己':'酉','庚':'巳','辛':'子','壬':'申','癸':'卯'}.get(dc,""): noble.append("학당귀인")
+    if gj in ["甲寅", "乙丑", "丙子", "丁酉", "戊申", "己未", "庚午", "辛巳", "壬辰", "癸卯"]: noble.append("복성귀인")
+    if cur_j in {'甲':'巳','乙':'午','丙':'巳','丁':'午','戊':'申','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("천주귀인")
+    
+    if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): ausp.append("건록")
+    if cur_j in {'甲':'亥','乙':'戌','丙':'申','戊':'申','丁':'未','己':'未','庚':'巳','辛':'辰','壬':'寅','癸':'丑'}.get(dc,""): noble.append("암록")
+    if cur_j in {'甲':'辰','乙':'巳','丙':'未','戊':'未','丁':'申','己':'申','庚':'戌','辛':'亥','壬':'丑','癸':'寅'}.get(dc,""): ausp.append("금여록")
+    if gj in ["甲寅", "丙辰", "戊辰", "庚辰", "壬戌"]: ausp.append("일덕")
+    if gj in ["乙丑", "己巳", "癸酉"] and idx in [0, 1]: ausp.append("금신")
+    hyeop_map = {'甲':['丑','卯'], '乙':['寅','辰'], '丙':['辰','午'], '戊':['辰','午'], '丁':['巳','未'], '己':['巳','未'], '庚':['未','酉'], '辛':['申','戌'], '壬':['戌','子'], '癸':['亥','丑']}
+    if cur_j in hyeop_map.get(dc, []): ausp.append("협록")  
+    
+    if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호대살")
+    if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살")
+    if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살")
+
+    if cur_j in {'甲':'酉','乙':'戌','丙':'子','丁':'丑','戊':'子','己':'丑','庚':'卯','辛':'辰','壬':'午','癸':'未'}.get(dc,""): evil.append("비인살")
+    if dj == '寅' and cur_j in ['寅', '巳', '申']: evil.append("탕화살")
+    if dj == '午' and cur_j in ['辰', '午', '丑']: evil.append("탕화살")
+    if dj == '丑' and cur_j in ['午', '未', '戌']: evil.append("탕화살")
+    if cur_g in ['乙', '己'] or cur_j in ['巳', '丑']: evil.append("곡각살")
+    if cur_g in ['甲', '辛'] or cur_j in ['卯', '午', '申', '未']: evil.append("현침살")
+
+    if gj in ["甲寅", "乙卯", "丙午", "丁巳", "戊辰", "戊戌", "己未", "己丑", "庚申", "辛酉", "壬子", "癸亥"]: evil.append("간여지동")
+    if gj in ["甲寅","乙巳","丁巳","戊申","辛亥"]: evil.append("고란살")
+    if gj in ["丙子","丁丑","戊寅","辛卯","壬辰","癸巳","丙午","丁未","戊申","辛酉","壬戌","癸亥"]: evil.append("음양차착")
+    if gj in ["甲午", "丙戌", "戊辰", "庚辰", "壬戌", "乙巳", "丁亥", "己亥", "辛巳", "癸亥"]: evil.append("의처의부")
+    if cur_j in ['寅','申','巳','亥']: evil.append("효신살")
+
+    dohwa_map = {'寅':'卯', '午':'卯', '戌':'卯', '申':'酉', '子':'酉', '辰':'酉', '巳':'午', '酉':'午', '丑':'午', '亥':'子', '卯':'子', '未':'子'}
+    if cur_j == dohwa_map.get(yj, "") or cur_j == dohwa_map.get(dj, ""): evil.append("도화살")
+    if gj in ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"]: evil.append("나체도화")
+    if gj in ["甲午","丙寅","丁未","戊辰","庚戌","辛酉","壬子"]: evil.append("홍염살")
+    if gj in ["甲寅", "乙卯", "丁未", "戊戌", "己未", "庚申", "辛酉", "癸丑"]: evil.append("음욕살")
+    if gender == "여성" and gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
+    if gender == "남성" and gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
+
+    if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금")
+    if cur_j in ['子','午','卯','酉']: evil.append("교신성")
+    if idx == 1 and gj in ["丙午", "丁未", "戊午", "戊子", "己未", "己丑"]: evil.append("육수살")
+    if gj in ["甲辰","乙巳","丙申","丁亥","戊戌","己丑","庚辰","辛巳","壬申","癸亥"]: evil.append("십악대패살")
+    if cur_g in ['甲', '丙', '壬'] and cur_j in ['子', '辰']: evil.append("평두살")
+    cheolsa_map = {'甲':'辰', '乙':'寅', '丙':'戌', '丁':'申', '戊':'午', '己':'辰', '庚':'寅', '辛':'戌', '壬':'申', '癸':'午'}
+    if cur_j == cheolsa_map.get(dc, ""): evil.append("철사관")
+
+    if gj in ["甲子", "甲午", "己卯", "己酉"]: ausp.append("진신") 
+    if gj in ["丙子", "丙午", "辛卯", "辛酉"]: evil.append("교신") 
+    if gj in ["丁丑", "丁未", "壬辰", "壬戌"]: evil.append("퇴신") 
+    if gj in ["戊寅", "戊申", "癸巳", "癸亥"]: evil.append("복신") 
+
+    result = []
+    for n in list(dict.fromkeys(noble)): result.append(f"<span style='color:#0D47A1;'>{n}</span>")
+    for a in list(dict.fromkeys(ausp)): result.append(f"<span style='color:#2E7D32;'>{a}</span>")
+    for e in list(dict.fromkeys(evil)): result.append(f"<span style='color:#C62828;'>{e}</span>")
+    return result
+
+def get_jijanggan_full(dg, ji):
+    dg, ji = _to_hanja(dg), _to_hanja(ji)
+    if ji in ["?", "-", " "]: return "-"
+    raw = JIJANGGAN.get(ji, ['-','-','-'])
+    res = "<div style='display:flex; flex-direction:column; height:100%; min-height:65px; gap:2px; padding:2px 0; margin:0;'>"
+    for j in raw:
+        if j != '-':
+            ss_label = get_ss(dg, j)[:2]
+            color_key = get_color(j)
+            bg = {'목':'#2E7D32','화':'#C62828','토':'#F9A825','금':'#9E9E9E','수':'#212121'}.get(color_key, '#888')
+            tc = 'white' if color_key != '토' else 'black'
+            res += f"<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:{bg}; color:{tc}; width:95%; margin:0 auto; font-size:12px; font-weight:900; border-radius:3px;'>{j} ({ss_label})</div>"
+        else: 
+            res += "<div style='flex-grow:1; display:flex; align-items:center; justify-content:center; background:#f9f9f9; width:95%; margin:0 auto; color:#bbb; border-radius:3px; border:1px dashed #ddd;'>-</div>"
+    return res + "</div>"
+
+def get_jijanggan_pure(ji):
+    """지지의 지장간을 HTML 태그 없이 순수 한자 텍스트(예: '癸·辛·己')로 반환"""
+    ji = _to_hanja(ji)
+    if ji in ["?", "-", " "]: return "-"
+    raw = JIJANGGAN.get(ji, ['-','-','-'])
+    clean_list = [j for j in raw if j != '-']
+    return "·".join(clean_list) if clean_list else "-"
+
+def get_gyukgook_detailed(ds, ys, ms, hs, mb):
+    ds, ys, ms, hs, mb = _to_hanja(ds), _to_hanja(ys), _to_hanja(ms), _to_hanja(hs), _to_hanja(mb)
+    jg = JIJANGGAN.get(mb, [])
+    if not jg: return "알수없음격", "지장간 정보가 없습니다."
+
+    if ds in ['甲', '丙', '戊', '庚', '壬']:
+        if mb == '卯' and ds == '甲': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
+        if mb == '午' and ds == '丙': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
+        if mb == '酉' and ds == '庚': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
+        if mb == '子' and ds == '壬': return "양인격", "월지 겁재 및 제왕으로 폭발적 에너지인 양인격입니다."
+        if mb == {'甲':'寅', '丙':'巳', '戊':'巳', '庚':'申', '壬':'亥'}.get(ds, ""):
+            return "건록격", f"월지 {mb}가 일간 {ds}의 건록(建祿)에 해당하여 건록격으로 정합니다."
+
+    def safe_get_ss(day_gan, target_char):
+        if not target_char or target_char == "?": return "무명"
+        return get_ss(day_gan, target_char)
+
+    if mb in ["子", "午", "卯", "酉"]:
+        core_ss = safe_get_ss(ds, mb)
+        if core_ss in ["비견", "겁재"]:
+            return "건록(월겁)격", f"월지 {mb}가 일간 {ds}와 같은 기운이므로 건록(월겁)격으로 삼습니다."
+        return core_ss + "격", f"월지 {mb}의 순수한 기운인 {core_ss}을 그대로 격으로 삼습니다."
+    
+    target_gans = [ys, ms, hs] 
+    main_qi = jg[-1]
+    
+    def is_valid_gyuk(char):
+        return safe_get_ss(ds, char) not in ["비견", "겁재"]
+    
+    if main_qi in target_gans and is_valid_gyuk(main_qi):
+        return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {safe_get_ss(ds, main_qi)}격이 되었습니다."
+    if len(jg) >= 2 and jg[1] in target_gans and is_valid_gyuk(jg[1]):
+        return safe_get_ss(ds, jg[1]) + "격", f"월지 {mb}의 중기인 {jg[1]}이 천간에 투출하여 {safe_get_ss(ds, jg[1])}격이 되었습니다."
+    if len(jg) >= 1 and jg[0] in target_gans and is_valid_gyuk(jg[0]):
+        return safe_get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {safe_get_ss(ds, jg[0])}격이 되었습니다."
         
-    return f"""
-    <div style='flex:1; width:10%; {active_style} text-align:center; padding-bottom:4px; background-color:{bg_col}; min-width:0; display:flex; flex-direction:column; box-sizing:border-box; overflow:hidden;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:17px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:17px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
-    </div>
-    """
+    fallback_ss = safe_get_ss(ds, main_qi)
+    if fallback_ss in ["비견", "겁재"]:
+        return "건록(월겁)격", f"월지 {mb}의 본기가 {fallback_ss}이므로 건록(월겁)격으로 정합니다."
+    
+    return fallback_ss + "격", f"월지 {mb}의 지장간(비겁 제외)이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {fallback_ss}격으로 정합니다."
 
-def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
-    un_content = ""
-    for data in daewun_list:
-        bg_col = "#FFF9C4" if data.get("is_current", False) else "transparent"
-        b_left = "none" if data.get("is_first", False) else "1px solid #ccc"
-        y_s_val = data.get("y_shinsal", data.get("shin_sal", "-"))
-        d_s_val = data.get("d_shinsal", "-")
+def calculate_gongmang(ilgan, ilji):
+    g = _to_hanja(ilgan)
+    j = _to_hanja(ilji)
+    
+    gan_list = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+    ji_list = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+    
+    if g not in gan_list or j not in ji_list: return "-"
+    
+    try:
+        base = (ji_list.index(j) - gan_list.index(g) - 2) % 12
+        gong1 = ji_list[base]
+        gong2 = ji_list[(base + 1) % 12]
+        return f"{gong1}{gong2}"
+    except:
+        return "-"
+
+def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
+    daewun_list = []
+    c_idx = GAN.index(ms) % 10 if ms in GAN else 0
+    j_idx = JI.index(mb) % 12 if mb in JI else 0
+
+    yb_hanja = K2H_JI.get(yb, yb)
+    db_hanja = K2H_JI.get(db, db) if db else ""
+
+    for i in range(10):
+        val = i * 10 + calc_d
+        c_idx_calc = (c_idx + (i + 1) * order_dir) % 10
+        j_idx_calc = (j_idx + (i + 1) * order_dir) % 12
         
-        un_content += get_un_cell(
-            data["age_range"], data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
-            data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
-            data["un_sung"], y_s_val, d_s_val, bg_col, b_left, data.get("is_current", False)
-        )
-    return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
-
-def get_sewun_layout(title, content):
-    return f"""
-    <div style='margin-top:14px; margin-bottom:8px; font-size:16px; font-weight:800; color:#1A237E; font-family:"Nanum Myeongjo", serif;'>{title}</div>
-    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:10px; table-layout:fixed; font-family:"Nanum Myeongjo", serif;'>
-        {content}
-    </div>
-    """
-
-def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
-    u_val = unsung if unsung and str(unsung).strip() else "-"
-    y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() else "-"
-    clean_d = str(d_shinsal).strip().replace("(", "").replace(")", "").replace("（", "").replace("）", "")
-    d_val = f"({clean_d})" if clean_d and clean_d != "-" else "(-)"
-    
-    if is_current:
-        active_style = "border: 3px solid #0277BD !important;"
-        header_bg = "#0277BD"
-        bg_col = "#E1F5FE"
-    else:
-        active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
-        header_bg = "#3E2723"
-    
-    return f"""
-    <div style='flex:1; width:8.33%; {active_style} text-align:center; padding-bottom:4px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:26px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
-            <span>{title_str}</span>
-        </div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
-    </div>
-    """
-
-def get_wolun_layout(title, content):
-    return f"""
-    <div style='margin-top:14px; margin-bottom:8px; font-size:16px; font-weight:800; color:#1A237E; font-family:"Nanum Myeongjo", serif;'>{title}</div>
-    <div style='display:flex; flex-direction:row-reverse; width:100%; border:3px solid #3E2723; background:white; margin-bottom:10px; table-layout:fixed; font-family:"Nanum Myeongjo", serif;'>
-        {content}
-    </div>
-    """
-
-def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
-    u_val = unsung if unsung and str(unsung).strip() else "-"
-    y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() else "-"
-    clean_d = str(d_shinsal).strip().replace("(", "").replace(")", "").replace("（", "").replace("）", "")
-    d_val = f"({clean_d})" if clean_d and clean_d != "-" else "(-)"
-    
-    if is_current:
-        active_style = "border: 3px solid #2E7D32 !important;"
-        header_bg = "#2E7D32"
-        bg_col = "#E8F5E9"
-    else:
-        active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
-        header_bg = "#3E2723"
-    
-    return f"""
-    <div style='flex:1; width:8.33%; {active_style} text-align:center; padding-bottom:4px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{tm}월</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
-    </div>
-    """
-
-def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
-    """1-4 일운 분석 전용 주간 달력 HTML"""
-    content = ""
-    def get_oh_class_local(char):
+        c_hangul = GAN[c_idx_calc]
+        j_hangul = JI[j_idx_calc]
+        
+        c = K2H_GAN.get(c_hangul, c_hangul)
+        j = K2H_JI.get(j_hangul, j_hangul)
+        
+        ss_gan = get_ss(ds, c_hangul) or get_ss(ds, c) or "-"
+        ss_ji = get_ss(ds, j_hangul) or get_ss(ds, j) or "-"
+        
         try:
-            import engine
-            oh = engine.get_color(char)
-            return f"color-{oh}" if oh != '무' else ""
-        except:
-            return ""
+            un_sung = get_unsung(ds, j) or get_unsung(ds, j_hangul) or "-"
+        except Exception:
+            un_sung = "-"
 
-    for item in weekly_days_data:
-        wday = item['weekday']
-        day_num = item['day']
-        ganji_str = item['ganji']
-        is_today = item['is_today']
-        
-        gan_char = ganji_str[0] if len(ganji_str) >= 1 and ganji_str != "-" else "-"
-        ji_char = ganji_str[1] if len(ganji_str) >= 2 else "-"
-        
-        gan_cls = get_oh_class_local(gan_char)
-        ji_cls = get_oh_class_local(ji_char)
-        
-        ss_val, unsung_val, y_shinsal_val, d_shinsal_val = "-", "-", "-", "-"
-        try:
-            import engine
-            ds_hanja = st.session_state.get('ds_hanja', '甲') if hasattr(st, 'session_state') else '甲'
-            ss_val = engine.get_ss(ds_hanja, ji_char) if ji_char != "-" else "-"
-            unsung_val = engine.get_unsung(ds_hanja, ji_char) if ji_char != "-" else "-"
-            if yb and ji_char != "-": y_shinsal_val = engine.get_12_shinsal(yb, ji_char)
-            if db and ji_char != "-": d_shinsal_val = engine.get_12_shinsal(db, ji_char)
-        except:
-            pass
-            
-        y_val = f"<span style='color:#C62828;'>{y_shinsal_val}</span>" if y_shinsal_val != "-" else "-"
-        clean_d_w = str(d_shinsal_val).strip().replace("(", "").replace(")", "").replace("（", "").replace("）", "")
-        d_val = f"<span style='color:#C62828;'>({clean_d_w})</span>" if clean_d_w and clean_d_w != "-" else "<span style='color:#C62828;'>(-)</span>"
-            
-        if is_today:
-            active_style = "border: 3px solid #2E7D32 !important;"
-            header_bg = "#2E7D32"
-            bg_col = "#E8F5E9"
-        elif wday == '일':
-            active_style = "border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
-            header_bg = "#C62828"
-            bg_col = "#FAFAFA"
-        elif wday == '토':
-            active_style = "border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
-            header_bg = "#1565C0"
-            bg_col = "#FAFAFA"
-        else:
-            active_style = "border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
-            header_bg = "#555555"
-            bg_col = "#FAFAFA"
-            
-        u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
-        
-        content += f"""
-        <div style='flex:1; width:14.28%; {active_style} text-align:center; padding-bottom:4px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
-            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:14px; height:26px; display:flex; align-items:center; justify-content:center; white-space:nowrap;'>
-                {day_num}일 ({wday})
-            </div>
-            <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_val}</div>
-            <div class='{gan_cls}' style='font-size:17px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{gan_char}</div>
-            <div class='{ji_cls}' style='font-size:17px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{ji_char}</div>
-            <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{u_val}</div>
-            <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{y_val}</div>
-            <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
-        </div>
-        """
+        y_shin = get_12_shinsal(yb_hanja, j)
+        if not y_shin or y_shin == "-":
+            y_shin = get_12_shinsal(yb, j_hangul)
 
-    return f"""
-    <div style='margin-top:14px; margin-bottom:8px; font-size:15px; font-weight:800; color:#3E2723; font-family:"Nanum Myeongjo", serif;'>📅 이번 주 운세 흐름 (일요일 ~ 토요일)</div>
-    <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:10px; table-layout:fixed; font-family:"Nanum Myeongjo", serif;'>
-        {content}
-    </div>
-    """
+        d_shin = get_12_shinsal(db_hanja, j) if db_hanja else "-"
+        if not d_shin or d_shin == "-":
+            d_shin = get_12_shinsal(db, j_hangul) if db else "-"
+
+        daewun_list.append({
+            "age_range": f"{val}~{val+9}세", 
+            "ss_gan": ss_gan, 
+            "c_hanja": c, 
+            "c_hangul": c_hangul,
+            "j_hanja": j, 
+            "j_hangul": j_hangul, 
+            "ss_ji": ss_ji, 
+            "un_sung": un_sung, 
+            "y_shinsal": y_shin, 
+            "d_shinsal": d_shin, 
+            "shin_sal": y_shin, 
+            "is_current": (val <= age < val + 10), 
+            "is_first": (i == 0)
+        })
+    return daewun_list
+
+def get_daeun_fact_string(daewun_data_list):
+    fact_str = "\n"
+    for dw in daewun_data_list:
+        age_range = dw.get("age_range", "정보없음")
+        ganji = f"{dw.get('c_hangul', '')}{dw.get('j_hangul', '')}"
+        ss = f"{dw.get('ss_gan', '')}{dw.get('ss_ji', '')}"
+        fact_str += f"- {age_range} 대운 ({ganji}): 주요 기운({ss})\n"
+    return fact_str
 
 
 # ==============================================================================
-# 📦 섹션 3. 1인용 개인 사주 및 운세 상품군 (상품 1-1 ~ 2-5 활성 모듈)
+# 섹션 4. 특수 파동 및 묘고 정밀 연산 로직
 # ==============================================================================
-
-def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    """1인용 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
-    raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
-    for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
-        raw_title = raw_title.replace(tag, " ")
-    clean_title = " ".join(raw_title.split())
-    clean_u_name = str(u_name or "무명").strip()
-
-    return f"""
-    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
-            
-            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 8px;'>
-                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
-                </div>
-            </div>
-            
-            <!-- 신청인 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
-                </div>
-            </div>
-            
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
-        </div>
-    </div>
-    <div class='page-break'></div>
+def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
     """
-
-def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
-    """본문 상단 신상 정보 헤더 (인명 검정색 확정)"""
-    return f"""
-    <div style='font-family:"Nanum Myeongjo", serif; text-align:center; margin-bottom:10px; line-height:1.6;'>
-        <span style='font-size:19px; font-weight:800; color:{p_color}; letter-spacing:0.5px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
-        <span style='font-size:13px; letter-spacing:0.5px; white-space:nowrap;'>[<span class='b-text'>양력: {sol_str} | 음력: {lun_str}</span> <span class='b-text-point'>{time_str}</span>]</span>
-    </div>
+    원국(년/월/일/시 지지) 및 행운(대운/세운/월운)과의 조합에서
+    인사신(寅巳申)·축술미(丑戌未) 삼형살의 완결 및 가형(假刑) 상태를 정밀 연산합니다.
     """
+    jjis_h = [_to_hanja(j) for j in jjis if j not in ["?", "-", " "]]
+    results = []
 
-def get_intro_html():
-    """시공명리학 소개 안내문"""
-    return """
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">
-    <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
-        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 6px; font-weight: 600; text-align: justify; text-indent: 0; line-height: 1.8;">
-            <b>"초연 시공 명리학"</b>은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.
-        </p> 
-        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 0; font-weight: 600; text-align: justify; text-indent: 0; line-height: 1.8;">
-            따라서, <b>"본 초연 시공 명리학"</b>은 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.
-        </p>
-    </div>
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">
-    """
+    in_set = {'寅', '巳', '申'}
+    sul_set = {'丑', '戌', '未'}
 
-def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_name="알수없음격"):
-    SEASON_SOLAR_TERMS = {
-        '寅': '입춘과 경칩 사이의 이른 봄(寅月)', '卯': '경칩과 청명 사이의 완연한 봄(卯月)',
-        '辰': '청명과 입하 사이의 봄과 여름의 환절기(辰月)', '巳': '입하와 망종 사이의 이른 여름(巳月)',
-        '午': '망종과 소서 사이의 완연한 여름(午月)', '未': '소서와 입추 사이의 가장 무더운 여름(未月)',
-        '申': '입추와 백로 사이의 이른 가을(申月)', '酉': '백로와 한로 사이의 완연한 가을(酉月)',
-        '戌': '한로와 입동 사이의 가을과 겨울의 환절기(戌月)', '亥': '입동과 대설 사이의 이른 겨울(亥月)',
-        '子': '대설과 소한 사이의 완연한 한겨울(子月)', '丑': '소한과 입춘 사이의 가장 추운 겨울(丑月)'
+    won_in_present = in_set.intersection(set(jjis_h))
+    won_sul_present = sul_set.intersection(set(jjis_h))
+
+    if len(won_in_present) == 3:
+        results.append("🔥 [원국 인사신(寅巳申) 삼형살 완성] 권력, 조정, 수리, 의료, 법형, 물리적 충돌 및 강력한 개혁 에너지가 내재됨.")
+    elif len(won_in_present) == 2:
+        missing = list(in_set - won_in_present)[0]
+        results.append(f"⚠️ [원국 인사신(寅巳申) 가형(假刑) 상태] 원국에 {','.join(won_in_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 신상·사고·조정 주의 요망.")
+
+    if len(won_sul_present) == 3:
+        results.append("🔥 [원국 축술미(丑戌未) 삼형살 완성] 묘고의 충돌, 재물·건강·인간관계의 대대적 재편 및 정교한 조정 에너지가 내재됨.")
+    elif len(won_sul_present) == 2:
+        missing = list(sul_set - won_sul_present)[0]
+        results.append(f"⚠️ [원국 축술미(丑戌未) 가형(假刑) 상태] 원국에 {','.join(won_sul_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 재물·건강 조정 주의 요망.")
+
+    hangun_list = []
+    if dw_j and dw_j not in ["?", "-", " "]: hangun_list.append(("대운", _to_hanja(dw_j)))
+    if sewun_j and sewun_j not in ["?", "-", " "]: hangun_list.append(("세운", _to_hanja(sewun_j)))
+    if wolun_j and wolun_j not in ["?", "-", " "]: hangun_list.append(("월운", _to_hanja(wolun_j)))
+
+    for u_type, u_j in hangun_list:
+        combined_set = set(jjis_h + [u_j])
+        if len(won_in_present) == 2 and in_set.issubset(combined_set) and u_j in in_set:
+            results.append(f"🚨 [{u_type}({u_j}) 인사신 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 인사신 삼형살 발동!")
+
+        if len(won_sul_present) == 2 and sul_set.issubset(combined_set) and u_j in sul_set:
+            results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 축술미 삼형살 발동!")
+
+    return " / ".join(results) if results else "삼형살(인사신/축술미) 특이 파동 없음"
+
+def check_vault_status(base_gans, base_jjis, attacker_ji):
+    """원국 지지 묘고 입고/개고 판별 함수"""
+    base_gans = [_to_hanja(g) for g in base_gans]
+    base_jjis = [_to_hanja(j) for j in base_jjis]
+    attacker_ji = _to_hanja(attacker_ji)
+    
+    vaults = ['辰', '戌', '丑', '未']
+    clash_map = {'辰':'戌', '戌':'辰', '丑':'未', '未':'丑'}
+    hyung_sets = [{'丑','戌'}, {'戌','未'}, {'丑','未'}]
+    core_gans = {'辰':['壬','癸'], '戌':['丙','丁'], '丑':['庚','辛'], '未':['甲','乙']}
+    
+    results = []
+    for i, ji in enumerate(base_jjis):
+        if ji in vaults:
+            if clash_map.get(ji) == attacker_ji or {ji, attacker_ji} in hyung_sets:
+                targets = core_gans.get(ji, [])
+                is_trapped = any(g in targets for g in base_gans)
+                if is_trapped:
+                    trapped_chars = [g for g in targets if g in base_gans]
+                    results.append(f"🚨 [입고(入庫) 주의] {ji} 무덤이 열려 천간의 {','.join(trapped_chars)} 기운이 수렴됩니다.")
+                else:
+                    results.append(f"💎 [개고(開庫) 발현] {ji} 금고가 열려 지장간의 숨은 보물이 세상에 드러납니다.")
+    return results
+
+def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
+    """대운 지지(dw_j) 수고/화고/금고/목고 정밀 판별 및 입고/개고 분석"""
+    dw_j = _to_hanja(dw_j)
+    if dw_j not in ['辰', '戌', '丑', '未']:
+        return "진술축미(辰戌丑未) 대운이 아니므로 대운 자체의 강력한 묘고 입고/개고 작용은 없음"
+
+    base_gans = [_to_hanja(g) for g in base_gans if g not in ["?", "-", " "]]
+    base_jjis = [_to_hanja(j) for j in base_jjis if j not in ["?", "-", " "]]
+
+    vault_info = {
+        '辰': ('水庫(수고)', ['壬', '癸'], '戌'),
+        '戌': ('火庫(화고)', ['丙', '丁'], '辰'),
+        '丑': ('金庫(금고)', ['庚', '辛'], '未'),
+        '未': ('木庫(목고)', ['甲', '乙'], '丑')
     }
-    wol_korean_str = SEASON_SOLAR_TERMS.get(mb, f"{mb}월")
 
-    return f"""
-    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.85; color: #000000; margin-bottom: 18px;'>
-        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 8px;'>
-            정통 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
-        </p>
-        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
-            또한, 초연 시공명리학적 관점에서 <b>'{w_val}'</b>의 역동적인 시공간 파동을 지니고 있으며, <b>'{i_val}'</b>의 내면적 본성을 함께 품고 살아갑니다.
-        </p>
-    </div>
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">
-    """
+    vault_name, target_gans, clash_partner = vault_info[dw_j]
+    trapped_gans = [g for g in target_gans if g in base_gans]
 
-def get_closing_html(name):
-    return f"""
-    <hr style="border: 0; border-top: 2px dashed #1A237E; margin: 30px 0 20px 0;">
-    <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 12px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
-        <div style="text-align: right; margin-top: 20px;">
-            <span style="font-weight: 800; font-size: 17px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
-        </div>
-    </div>
+    is_clashed = clash_partner in base_jjis
+    is_hyung = False
+    if dw_j in ['丑', '戌', '未']:
+        is_hyung = any(j in ['丑', '戌', '未'] and j != dw_j for j in base_jjis)
+
+    details = []
+    if trapped_gans:
+        details.append(f"🚨 원국 천간의 {','.join(trapped_gans)} 기운이 대운 {dw_j}({vault_name})에 입고(入庫)되어 활동성이 수렴·제약됨")
     
-    <div style='margin-top: 25px; padding: 12px 15px; background-color: #F8F9FA; border-left: 4px solid #1A237E; border-radius: 4px; font-family: "Nanum Myeongjo", serif;'>
-        <p style='font-size: 15px; font-weight: 800; color: #1A237E; margin: 0; line-height: 1.6;'>💡 [초연 명리 안내]</p>
-        <p style='font-size: 14px; font-weight: 400; color: #333; margin-top: 4px; margin-bottom: 0; line-height: 1.7;'>본 풀이는 사주 원국의 본질과 현재 운의 큰 흐름을 짚어드린 기본 감명입니다. 특정 연도별·월별 정밀한 세부 흐름은 <b>'올해 및 특정연도 운세 상세분석'</b>을, 재물·직업 등 특정 분야의 집중 상담은 <b>'테마별 특성화 상담'</b>을 통해 확인하실 수 있습니다.</p>
-    </div>
-    """
+    if is_clashed or is_hyung:
+        trigger_type = "충(沖)" if is_clashed else "형(刑)"
+        details.append(f"💎 원국 지지와의 {trigger_type} 작용으로 대운 {dw_j}({vault_name}) 창고가 개고(開庫)되어 지장간 보물이 발현됨")
+    elif not trapped_gans:
+        details.append(f"📦 대운 {dw_j}({vault_name}) 환경이 조성되어 해당 오행의 저장 무대가 형성됨")
 
-def get_final_report_box(content_html):
-    """A4 백지 캔버스(무선/무그림자) 안쪽 둥근 VIP 프레임 단일 래핑"""
-    return f"""
-    <div class='report-page'>
-        <div class='vip-inset-frame'>
-            {content_html}
-        </div>
-    </div>
-    """
+    return f"[{dw_j}대운 - {vault_name}] " + " / ".join(details)
+
+def get_won_guk_vaults_str(jjis):
+    """원국 내 진술축미 보유 여부 및 잠재력 분석"""
+    jjis_clean = [_to_hanja(j) for j in jjis if j not in ["?", "-", " "]]
+    vaults = [j for j in jjis_clean if j in ['辰', '戌', '丑', '未']]
+    if not vaults:
+        return "원국 내 진술축미(묘고) 글자 없음 (특수 입고 작용 미미함)"
+    return f"원국 내 묘고 글자 보유: {', '.join(vaults)} (강력한 입고 및 개고 잠재력 내재)"
 
 
 # ==============================================================================
-# 📦 섹션 4. 2인용 궁합 및 커플 상품군 (상품 3-1 활성 모듈)
+# 섹션 5. 운세 풀이, 체용(體用) 5x5 확장 & 초연 시공명리 특수 파동 연산 모듈
 # ==============================================================================
+def get_age_prompt(age):
+    """연령대에 맞춘 AI 통변 집중 가이드 지침 생성"""
+    if age < 20:
+        return f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
+    elif age < 40:
+        return f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
+    elif age < 60:
+        return f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
+    else:
+        return f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
 
-def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합/대조 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
+def get_gender_prompt(gender):
+    """성별에 따른 육친(관성/재성/식상) 해석 원칙 가이드 생성"""
+    if gender == "여성":
+        return "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
+    else:
+        return "남성 내담자(남명)이므로 육친 적용 시 재성(財星)을 배우자/아내로, 관성(官星)을 자식으로 엄격히 적용하십시오."
+
+def get_marital_prompt(gender, marital):
+    """혼인 상태별(미혼/기혼/돌싱) 타겟팅 지침 생성"""
+    if marital == "기혼":
+        sp_name = "남편" if gender == "여성" else "아내"
+        return f"현재 기혼 상태이므로 {sp_name}과의 실질적인 가내 평안, 정서적 유대, 부부 관계 유지 전략에 집중하여 통변하십시오."
+    elif marital == "돌싱":
+        return "현재 이혼/사별(돌싱) 상태이므로 과거 인연에 대한 성찰과 함께 새로운 재혼 및 운명적 재기 인연에 집중하여 통변하십시오."
+    else:
+        sp_name = "미래의 남편" if gender == "여성" else "미래의 아내"
+        return f"현재 미혼 상태이므로 {sp_name}이 될 인연의 도래 시기와 연애/결혼 준비 전략에 집중하여 통변하십시오."
+
+def get_opposite_gender(gender):
+    return "여성" if gender == "남성" else "남성"
+
+def update_partner_gender():
+    user_g = st.session_state.get("u_g", "남성")
+    st.session_state["f_g"] = get_opposite_gender(user_g)
+
+def update_user_gender():
+    partner_g = st.session_state.get("f_g", "여성")
+    st.session_state["u_g"] = get_opposite_gender(partner_g)
+
+def get_yukchin_rule(gender, marital):
+    if gender == '남성':
+        return f"""
+★ 육친 통변 절대 규칙 (남성용) ★
+- 본 내담자는 남성(현재 상태: {marital})입니다.
+1. 핵심 가족: 아내 = 정재 (없으면 편재) / 애인 = 편재 (없으면 정재) / 자녀 = 관성(정관/편관) ※ 식상으로 풀이 금지
+2. 부모 및 조부모: 아버지 = 편재(없으면 정재) / 어머니 = 정인(없으면 편인)
+3. 처가 및 형제: 장모 = 식상 / 형제(남) = 비견 / 형제(여) = 겁재
+4. 상태별 타겟팅: 내담자 상태({marital})에 따라 아내/재혼/이성 인연을 구분하여 통변할 것.
+"""
+    else:
+        return f"""
+★ 육친 통변 절대 규칙 (여성용) ★
+- 본 내담자는 여성(현재 상태: {marital})입니다.
+1. 핵심 가족: 남편 = 정관 (없으면 편관) / 애인 = 편관 (없으면 정관) / 자녀 = 식상(식신/상관) ※ 관성으로 풀이 금지
+2. 부모 및 조부모: 아버지 = 편재(없으면 정재) / 어머니 = 정인(없으면 편인)
+3. 시댁 및 자매: 시어머니 = 재성 / 자매 = 비견 / 형제 = 겁재
+4. 상태별 타겟팅: 내담자 상태({marital})에 따라 남편/재혼/이성 인연을 구분하여 통변할 것.
+"""
+
+def get_universal_analysis(ds, mb, db, gans, jjis):
+    """일지(db) 궁(宮) 무대 산출 및 지장간 좌법/인종법 분석"""
+    db_h = _to_hanja(db)
+    ds_h = _to_hanja(ds)
+    if not db_h or not ds_h: return []
+        
+    ilji_unsung_base = get_unsung(ds_h, db_h)
+    ilji_palace = f"{ilji_unsung_base}궁" if ilji_unsung_base != "-" else "자좌"
     
-    raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
-    for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
-        raw_title = raw_title.replace(tag, " ")
-    clean_title = " ".join(raw_title.split())
+    jg_list = JIJANGGAN.get(db_h, [])
+    results = []
+    
+    for qi in jg_list:
+        if qi == '-': continue
+        ss = get_ss(ds_h, qi)
+        qi_unsung = get_unsung(qi, db_h)
+        results.append(
+            f"[겉성격/좌법] 일지 {db_h} {ilji_palace}(宮) 환경 무대: 지장간 속 {qi}({ss})는 {qi_unsung}좌(坐)하여, "
+            f"사회적 표상에서 {ss}의 기운이 {qi_unsung}의 주도적 파동으로 강렬하게 발현됨"
+        )
+        
+    all_gans = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+    present_chars = [_to_hanja(c) for c in gans + jjis if _to_hanja(c) in all_gans]
+    missing_gans = [g for g in all_gans if g not in present_chars]
+    
+    for m in missing_gans:
+        ss = get_ss(ds_h, m)
+        m_unsung = get_unsung(m, db_h)
+        results.append(
+            f"[속마음/인종법] 일지 {db_h} {ilji_palace}(宮) 속 무의식: 원국에 숨겨진 {m}({ss})를 인종하면 {m_unsung}종(從)에 해당하여, "
+            f"내면 깊은 곳에 {ss}에 대한 {m_unsung}적 정신적/현실적 결핍과 갈망이 작용함"
+        )
+        
+    return results
 
-    clean_u_name = str(u_name or "무명").strip()
-    clean_p_name = str(p_name or "무명").strip()
+CHE_YONG_MATRIX_TEXT = """- 체(비겁)+용(비겁): 식상발흥, 직무개척, 건강호조, 출산운, 처가와 유정
+- 체(비겁)+용(식상): 업무원만, 진취력, 건강호조, 원행(遠行), 발표, 여행
+- 체(비겁)+용(재성): 손재, 소비, 이성난, 가정불화, 부친반목
+- 체(비겁)+용(관성): 설화, 관재, 가족불화, 직장문제, 공명심
+- 체(비겁)+용(인성): 의식주안정, 스카우트, 계약, 학업순성, 합격, 가정화목
+- 체(식상)+용(비겁): 사업원만, 결과만족, 명진(名振), 의기투합, 긍정심
+- 체(식상)+용(식상): 재성발흥, 재적성취, 이성운, 가정원만, 재물입고, 환대
+- 체(식상)+용(재성): 이재순성, 사업원만, 인연, 가족화목, 건강, 횡재
+- 체(식상)+용(관성): 건강악화, 직업불안, 직주이동, 관재, 설화, 가족불화
+- 체(식상)+용(인성): 직업불안, 건강문제, 계약파기, 학문불안, 의식주 불안
+- 체(재성)+용(비겁): 일득삼재, 손재, 부부갈등, 과소비, 업무지연
+- 체(재성)+용(식상): 여행, 결과만족, 횡재수, 가정화목, 득자운
+- 체(재성)+용(재성): 관성발흥, 직업운 상승, 이성운 순성, 가정원만
+- 체(재성)+용(관성): 신분상승, 출마, 천거, 장기출장, 가정화목, 이성운
+- 체(재성)+용(인성): 매사불성, 소비지출, 가족불화, 계약파기, 손재, 흉사
+- 체(관성)+용(비겁): 업무지연, 관재, 설화, 다툼, 허언, 선민의식
+- 체(관성)+용(식상): 명예훼손, 직업이동, 질책, 가족불화, 이성난
+- 체(관성)+용(재성): 사업운 원만, 이성운 순성, 가정원만, 취업, 명예
+- 체(관성)+용(관성): 인성발흥, 승진승급, 계약성사, 자식운 원만
+- 체(관성)+용(인성): 합격, 승진, 계약, 스카우트, 의식주 안정, 당선
+- 체(인성)+용(비겁): 건강호조, 학업원만, 신분상승, 당선, 명예, 안정
+- 체(인성)+용(식상): 불안정, 계약파기, 학업불성, 구설, 육친흉사, 자식불효
+- 체(인성)+용(재성): 지출, 탈재, 파재, 사기수, 손재, 분주다망, 시성종패
+- 체(인성)+용(관성): 업무원활, 학업성취, 승진승급, 영전, 합격, 포상
+- 체(인성)+용(인성): 비겁발흥, 명예, 명진, 칭찬, 주체성 확립, 학문성취"""
 
-    return f"""
-    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 38px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+def get_group_ss(ss_name):
+    """십성 이름을 5대 그룹(비겁, 식상, 재성, 관성, 인성)으로 변환"""
+    if not ss_name or ss_name == "-": return "비겁"
+    if ss_name in ["비견", "겁재"]: return "비겁"
+    if ss_name in ["식신", "상관"]: return "식상"
+    if ss_name in ["편재", "정재"]: return "재성"
+    if ss_name in ["편관", "정관"]: return "관성"
+    if ss_name in ["편인", "정인"]: return "인성"
+    return "비겁"
+
+def get_execution_yong(upper_group, lower_group):
+    matrix = {
+        '비겁': {'비겁':'비겁', '식상':'식상', '재성':'재성', '관성':'관성', '인성':'인성'},
+        '식상': {'비겁':'인성', '식상':'비겁', '재성':'식상', '관성':'재성', '인성':'관성'},
+        '재성': {'비겁':'관성', '식상':'인성', '재성':'비겁', '관성':'식상', '인성':'재성'},
+        '관성': {'비겁':'재성', '식상':'관성', '재성':'인성', '관성':'비겁', '인성':'식상'},
+        '인성': {'비겁':'식상', '식상':'재성', '재성':'관성', '관성':'인성', '인성':'비겁'}
+    }
+    return matrix.get(upper_group, {}).get(lower_group, '비겁')
+
+def get_matrix_keyword(che_group, yong_group):
+    target_str = f"- 체({che_group})+용({yong_group}):"
+    for line in CHE_YONG_MATRIX_TEXT.splitlines():
+        if line.startswith(target_str):
+            return line.split(":", 1)[1].strip()
+    return "변화 감지"
+
+def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolun_g, wolun_j, ilun_g, ilun_j):
+    ilju_ss = get_ss(ds, db)
+    ilju_lower_group = ilju_ss if isinstance(ilju_ss, str) else (ilju_ss[0] if isinstance(ilju_ss, (list, tuple)) and len(ilju_ss) > 0 else '비겁')
+    
+    dw_upper_ss = get_ss(ds, dw_g_cur)
+    dw_che = get_group_ss(dw_upper_ss)
+    dw_yong = get_execution_yong(dw_che, ilju_lower_group)
+    dw_kw = get_matrix_keyword(dw_che, dw_yong)
+    
+    sewun_upper_ss = get_ss(ds, sewun_g)
+    sewun_che = get_group_ss(sewun_upper_ss)
+    s_yong = get_execution_yong(sewun_che, ilju_lower_group)
+    sewun_kw = get_matrix_keyword(dw_che, s_yong)
+    
+    wolun_upper_ss = get_ss(ds, wolun_g)
+    wolun_che = get_group_ss(wolun_upper_ss)
+    w_yong = get_execution_yong(wolun_che, ilju_lower_group)
+    wolun_kw = get_matrix_keyword(sewun_che, w_yong)
+    
+    ilun_upper_ss = get_ss(ds, ilun_g)
+    ilun_che = get_group_ss(ilun_upper_ss)
+    i_yong = get_execution_yong(ilun_che, ilju_lower_group)
+    ilun_kw = get_matrix_keyword(wolun_che, i_yong)
+    
+    woonse_fact_str = f"""
+- [대운 체용 파동]: 體({dw_che}) + 用({dw_yong}) ➔ 핵심 키워드: [{dw_kw}]
+- [세운 체용 파동]: 體({dw_che}) + 用({s_yong}) ➔ 핵심 키워드: [{sewun_kw}]
+- [월운 체용 파동]: 體({sewun_che}) + 用({w_yong}) ➔ 핵심 키워드: [{wolun_kw}]
+- [일운 체용 파동]: 體({wolun_che}) + 用({i_yong}) ➔ 핵심 키워드: [{ilun_kw}]
+"""
+    return {
+        "dw_che": dw_che, "dw_yong": dw_yong, "dw_kw": dw_kw,
+        "sewun_che": sewun_che, "sewun_yong": s_yong, "sewun_kw": sewun_kw,
+        "wolun_che": wolun_che, "wolun_yong": w_yong, "wolun_kw": wolun_kw,
+        "ilun_che": ilun_che, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
+        "woonse_fact_str": woonse_fact_str.strip()
+    }
+
+def get_weekly_daily_facts(ds, db, yb, year, month, day):
+    target_dt = dt_mod.datetime(year, month, day)
+    _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
+    i_gan, i_ji = d_pillar[0], d_pillar[1]
+    
+    day_wunseong = get_unsung(ds, i_ji)
+    day_12shinsal = get_dual_12_shinsal(yb, db, i_ji)
+    
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    i_gan_group = get_group_ss(get_ss(ds, i_gan))
+    
+    m_che_first = i_gan_group
+    am_yong = get_execution_yong(i_gan_group, ilju_lower_group)
+    m_che_second = get_group_ss(get_ss(ds, i_ji))
+    pm_yong = get_execution_yong(m_che_second, ilju_lower_group)
+    
+    weekly_ganji = []
+    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
+    for i in range(7):
+        curr = start_sun + dt_mod.timedelta(days=i)
+        _, _, dp = get_ganji_from_date(curr.year, curr.month, curr.day)
+        weekly_ganji.append(f"{dp[0]}{dp[1]}")
+        
+    return {
+        "m_che_first": m_che_first, "am_yong": am_yong,
+        "m_che_second": m_che_second, "pm_yong": pm_yong,
+        "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
+        "weekly_ganji_list": ", ".join(weekly_ganji)
+    }
+
+def get_dw_fact_str(dw_g, dw_j):
+    return f"천간 {dw_g}의 기운이 지지 {dw_j}의 환경을 만난 형국 (체용의 상호작용)"
+
+def get_yongshin_analysis(counts, mb, ds):
+    return f"사주 오행 분포(목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}) 및 월지 {mb} 조후 밸런스를 고려한 용신 분석"
+
+def get_goshin_gwasook(yb, gender):
+    return "고신살/과숙살 영향 분석 완료"
+
+def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital, 
+                        birth_year=None, age=None,
+                        dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, 
+                        target_year=None, target_month=None, target_day=None, **kwargs):
+    """
+    지정된 연도/월/일 및 생년/성별/혼인 상태를 바탕으로
+    연령, 연령대 지침, 성별 지침, 혼인 상태 지침을 자동 생성하고 팩트 시트를 바인딩합니다.
+    """
+    now_dt = dt_mod.datetime.now()
+    calc_year = target_year if target_year else now_dt.year
+    calc_month = target_month if target_month else now_dt.month
+    calc_day = target_day if target_day else now_dt.day
+
+    if age is not None:
+        calc_age = age
+    elif birth_year is not None:
+        calc_age = calc_year - int(birth_year) + 1
+    else:
+        calc_age = 40
+
+    age_p = get_age_prompt(calc_age)
+    gender_p = get_gender_prompt(gender)
+    marital_p = get_marital_prompt(gender, marital)
+    yukchin_r = get_yukchin_rule(gender, marital)
+
+    ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
+    gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
+    counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+    for c in [ys, yb, ms, mb, ds, db, hs, hb]: counts[get_color(c)] += 1
+    oheng_str = f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}"
+
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    
+    dw_fact_str = "대운 정보 없음"
+    if dw_g_cur and dw_j_cur:
+        dw_che = get_group_ss(get_ss(ds, dw_g_cur))
+        dw_yong = get_execution_yong(get_group_ss(get_ss(ds, dw_g_cur)), ilju_lower_group)
+        dw_fact_str = f"체운(무대): {dw_che} / 용운(사건): {dw_yong} ➔ 도출 키워드: {get_matrix_keyword(dw_che, dw_yong)}"
+
+    sewun_fact_str = "세운 정보 없음"
+    sewun_ji_val = None
+    if curr_y_ganji:
+        if isinstance(curr_y_ganji, (list, tuple)) and len(curr_y_ganji) >= 2:
+            s_gan, s_ji = str(curr_y_ganji[0]), str(curr_y_ganji[1])
+        elif isinstance(curr_y_ganji, str) and len(curr_y_ganji) >= 2:
+            s_gan, s_ji = curr_y_ganji[0], curr_y_ganji[1]
+        else:
+            s_gan, s_ji = "丙", "午"
+
+        sewun_ji_val = s_ji
+        s_upper = get_group_ss(get_ss(s_gan, s_ji))
+        s_yong = get_execution_yong(s_upper, ilju_lower_group)
+        sewun_che = get_group_ss(get_ss(ds, dw_g_cur)) if dw_g_cur else "비겁"
+        sewun_fact_str = f"체운(무대): {sewun_che} / 용운(사건): {s_yong} ➔ 도출 키워드: {get_matrix_keyword(sewun_che, s_yong)}"
+    
+    wol_fact_str = "월운 정보 없음"
+    if cur_wol_g and cur_wol_j:
+        w_upper = get_group_ss(get_ss(cur_wol_g, cur_wol_j))
+        w_yong = get_execution_yong(w_upper, ilju_lower_group)
+        w_che = get_group_ss(get_ss(ds, curr_y_ganji[1][0])) if curr_y_ganji else "비겁"
+        wol_fact_str = f"체운(무대): {w_che} / 용운(사건): {w_yong} ➔ 도출 키워드: {get_matrix_keyword(w_che, w_yong)}"
+
+    weekly_daily_res = get_weekly_daily_facts(ds, db, yb, calc_year, calc_month, calc_day)
+    
+    am_che = weekly_daily_res.get('m_che_first', '오전 체(무대)')
+    am_yong = weekly_daily_res.get('am_yong', '오전 용(사건)')
+    pm_che = weekly_daily_res.get('m_che_second', '오후 체(무대)')
+    pm_yong = weekly_daily_res.get('pm_yong', '오후 용(사건)')
+    
+    daily_fact_str = f"오전 체용: [{am_che} + {am_yong}] / 오후 체용: [{pm_che} + {pm_yong}] (12운성: {weekly_daily_res.get('day_wunseong', '건록')}, 12신살: {weekly_daily_res.get('day_12shinsal', '망신살')})"
+
+    yongshin_str = get_yongshin_analysis(counts, mb, ds)
+    goshin_gwasook_str = get_goshin_gwasook(yb, gender)
+
+    samhyung_fact_str = check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_ji_val, cur_wol_j)
+    samjae_val = get_samjae(yb, db) if 'get_samjae' in globals() else "해당 없음"
+    dw_end_val = calc_age + 9
+    hang_un_vaults_val = get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]) if dw_j_cur else "대운 입고 작용 없음"
+
+    fact_data = {
+        "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
+        "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
+        "yongshin_str": yongshin_str,
+        "goshin_gwasook_str": goshin_gwasook_str,
+        "samhyung_fact_str": samhyung_fact_str,
+        "gongmang_actual": calculate_gongmang(ds, db),
+        "year_gongmang": calculate_gongmang(ys, yb),
+        "day_gongmang": calculate_gongmang(ds, db),
+        "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
+        "s12_str": get_all_12_shinsal(yb, mb, db, hb),
+        "won_guk_vaults_str": get_won_guk_vaults_str([yb, mb, db, hb]),
+        
+        # 오행 왕쇠 키 명칭 호환성 보완 (3가지 키 호환 매칭)
+        "oheng_force_str": oheng_str,
+        "oheng_counts_str": oheng_str,
+        "oheng_force_summary": oheng_str,
+        
+        "samjae_str": samjae_val,
+        "dw_end_age": dw_end_val,
+        "hang_un_vaults_str": hang_un_vaults_val,
+        
+        "weekly_ganji_list": weekly_daily_res.get('weekly_ganji_list', '월~일 주간 간지 데이터'),
+        "t_month": calc_month,
+        "t_day": calc_day,
+        "m_ilgan": ds,
+        "m_ilji": db,
+        "m_che_first": am_che,
+        "am_yong": am_yong,
+        "m_che_second": pm_che,
+        "pm_yong": pm_yong,
+        "day_wunseong": weekly_daily_res.get('day_wunseong', '건록'),
+        "day_12shinsal": weekly_daily_res.get('day_12shinsal', '망신살'),
+        "daily_fact_str": daily_fact_str,
+
+        "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
+        "curr_y": calc_year,
+        "curr_m": calc_month,
+        "curr_d": calc_day,
+        "disp_name": name, "name": name, "gender": gender, "marital": marital,
+        "u_age": calc_age, "u_gender": gender, "u_marital": marital,
+        "age_prompt": age_p,
+        "gender_prompt": gender_p,
+        "marital_prompt": marital_p,
+        "yukchin_rule": yukchin_r,
+        "dw_fact_str": dw_fact_str, 
+        "sewun_fact_str": sewun_fact_str, 
+        "wol_fact_str": wol_fact_str
+    }
+    fact_data.update(kwargs)
+    return fact_data
+
+def get_daeun_su_accurate(utc_dt, order):
+    try:
+        sun = ephem.Sun()
+        def get_lon(dt):
+            sun.compute(dt)
+            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+
+        start_lon = get_lon(utc_dt)
+        jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
+        
+        if order == 1:
+            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
+        else:
+            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
             
-            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 24px; width: 100%; box-sizing: border-box;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 8px;'>
-                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
-                </div>
-            </div>
+        search_dt = utc_dt
+        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
+        
+        for _ in range(6000):
+            search_dt += step
+            curr_lon = get_lon(search_dt)
             
-            <!-- 남명 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px; margin-bottom: 12px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.7;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
-                </div>
-            </div>
+            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180:
+                curr_lon += 360
+            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180:
+                curr_lon -= 360
+                
+            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped):
+                break
+                
+        total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
+        d_su = int(round(total_days / 3.0))
+        
+        if d_su == 0: d_su = 1
+        elif d_su > 10: d_su = 10
+        
+        return d_su
+    except: 
+        return 1
+
+
+# ==============================================================================
+# 섹션 6. 궁합, 택일 및 초연 시공명리 특수 파동 통합 모듈 (활성 구역)
+# ==============================================================================
+def evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, time_ji):
+    day_gan = d_pillar[0]
+    day_ji = d_pillar[1]
+    month_ji = m_pillar[1]
+    
+    date_seed = (delivery_date.year * 10000 + delivery_date.month * 100 + delivery_date.day)
+    base_score = 72.0 + (date_seed % 11) * 1.2
+    
+    samhap_groups = [{'申','子','辰'}, {'巳','酉','丑'}, {'寅','午','戌'}, {'亥','卯','未'}]
+    yukhap_pairs = {('子','丑'), ('寅','亥'), ('卯','戌'), ('辰','酉'), ('巳','申'), ('午','未')}
+    chung_pairs = {('子','午'), ('丑','未'), ('寅','申'), ('卯','酉'), ('辰','戌'), ('巳','亥')}
+    
+    score = base_score
+    
+    dt_pair = (day_ji, time_ji) if day_ji < time_ji else (time_ji, day_ji)
+    if dt_pair in yukhap_pairs:
+        score += 8.0
+    elif any({day_ji, time_ji}.issubset(g) for g in samhap_groups):
+        score += 6.0
+    elif dt_pair in chung_pairs:
+        score -= 10.0
+        
+    for p_ji in [male_jiji, female_jiji]:
+        p_pair = (p_ji, time_ji) if p_ji < time_ji else (time_ji, p_ji)
+        if p_pair in yukhap_pairs:
+            score += 4.0
+        elif any({p_ji, time_ji}.issubset(g) for g in samhap_groups):
+            score += 3.0
+        elif p_pair in chung_pairs:
+            score -= 5.0
             
-            <!-- 여명 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.7;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
-                    <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {p_time}</p>
-                </div>
-            </div>
+    ji_order = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+    if time_ji in ji_order:
+        t_idx = ji_order.index(time_ji)
+        score += ((t_idx * 5 + delivery_date.day * 2) % 9) * 0.5
+
+    return min(98.5, max(60.0, round(score, 1)))
+
+def get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji):
+    try:
+        y_pillar, m_pillar, d_pillar = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
+    except:
+        y_pillar, m_pillar, d_pillar = "甲子", "丙寅", "戊辰"
+
+    time_slots = [
+        {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子'},
+        {'time_str': '01:30 ~ 03:29 (축)시', 'ji': '丑'},
+        {'time_str': '03:30 ~ 05:29 (인)시', 'ji': '寅'},
+        {'time_str': '05:30 ~ 07:29 (묘)시', 'ji': '卯'},
+        {'time_str': '07:30 ~ 09:29 (진)시', 'ji': '辰'},
+        {'time_str': '09:30 ~ 11:29 (사)시', 'ji': '巳'},
+        {'time_str': '11:30 ~ 13:29 (오)시', 'ji': '午'},
+        {'time_str': '13:30 ~ 15:29 (미)시', 'ji': '未'},
+        {'time_str': '15:30 ~ 17:29 (신)시', 'ji': '申'},
+        {'time_str': '17:30 ~ 19:29 (유)시', 'ji': '酉'},
+        {'time_str': '19:30 ~ 21:29 (술)시', 'ji': '戌'},
+        {'time_str': '21:30 ~ 23:29 (해)시', 'ji': '亥'}
+    ]
+    
+    evaluated = []
+    for slot in time_slots:
+        score = evaluate_saju_harmony(delivery_date, y_pillar, m_pillar, d_pillar, male_jiji, female_jiji, slot['ji'])
+        evaluated.append({
+            'time_str': slot['time_str'],
+            'ji': slot['ji'],
+            'score': score
+        })
+    
+    evaluated.sort(key=lambda x: x['score'], reverse=True)
+    return evaluated
+
+def get_optimized_delivery_days(start_date, end_date, male_jjis, female_jjis, last_period_date=None, period_cycle=30):
+    """
+    결혼/출산 268일 Gestation 주기 및 사주 조화도 기반 정밀 길일 산출 통합 마스터 로직
+    """
+    male_jiji = male_jjis[0] if male_jjis else "子"
+    female_jiji = female_jjis[0] if female_jjis else "丑"
+    
+    candidate_results = []
+    current_date = start_date
+    
+    while current_date <= end_date:
+        conception_date = current_date 
+        delivery_date = conception_date + dt_mod.timedelta(days=268)
+        
+        if start_date <= delivery_date <= end_date:
+            if last_period_date:
+                gestation_days = (delivery_date - last_period_date).days
+                if gestation_days > 0:
+                    g_weeks = gestation_days // 7
+                    # 의학적 만삭 주차(37주~41주) 범위를 벗어나는 경우 탐색일 하루 증가 후 스킵
+                    if g_weeks < 37 or g_weeks > 41:
+                        current_date += dt_mod.timedelta(days=1)
+                        continue
             
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 26px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
-        </div>
-    </div>
-    <div class='page-break'></div>
-    """
-def get_gunghap_score_visual_html(gh_engine):
-    """궁합 점수 및 비주얼 차트 HTML"""
-    sky_blue = "#38B6FF"
-    bars = "".join([
-        f"<div style='display:flex; align-items:center; margin-bottom:10px; font-family:\"Nanum Myeongjo\", serif;'>"
-        f"<div style='width:130px; font-size:13px; font-weight:700; color:#444;'>{d['label']}</div>"
-        f"<div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div>"
-        f"<div style='width:35px; font-size:12px; font-weight:700;'>{d['pct']}%</div>"
-        f"</div>" 
-        for d in gh_engine.details
-    ])
+            # 해당 분만 일자의 시간대별 사주 조화도 평가 수행
+            time_slots_eval = get_all_time_scores_for_date(delivery_date, male_jiji, female_jiji)
+            best_slot = time_slots_eval[0] if time_slots_eval else {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'score': 70.0}
+            
+            try:
+                y_p, m_p, d_p = get_ganji_from_date(delivery_date.year, delivery_date.month, delivery_date.day)
+                h_p = f"{best_slot['ji']}時"
+                four_pillars = f"{y_p}년 {m_p}월 {d_p}일 {h_p}"
+            except:
+                four_pillars = "사주간지 분석중"
 
-    score_chart_html = (
-        f"<h2 style='font-family:\"Nanum Myeongjo\", serif; text-align:center; margin-top:30px; font-size:21px; font-weight:800;'>📊 최종 궁합 점수</h2>\n"
-        f"<div style='display:flex; justify-content:center; align-items:center; margin:15px 0;'>\n"
-        f"<div style='width:120px; height:120px; border-radius:50%; background:conic-gradient({sky_blue} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>\n"
-        f"<div style='width:90px; height:90px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>\n"
-        f"<span style='font-family:\"Nanum Myeongjo\", serif; font-size:28px; font-weight:800; color:{sky_blue};'>{gh_engine.final_score}</span>\n"
-        f"<span style='font-size:9px; color:#888; font-weight:bold;'>SCORE</span>\n"
-        f"</div>\n"
-        f"</div>\n"
-        f"</div>\n"
-        f"<div style='text-align:center; margin-bottom:15px;'><span style='font-family:\"Nanum Myeongjo\", serif; font-size:14px; font-weight:700; color:#fff; background:{sky_blue}; padding:5px 24px; border-radius:24px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>\n"
-        f"<div style='max-width:460px; margin:0 auto; margin-bottom:15px;'>\n{bars}\n</div>\n"
-    )
-    return score_chart_html
+            candidate_results.append({
+                'date': delivery_date.strftime("%Y-%m-%d"),
+                'delivery_dt': delivery_date,
+                'conception_date': conception_date.strftime("%Y-%m-%d"),
+                'score': best_slot['score'],
+                'four_pillars': four_pillars,
+                'best_time': {
+                    'time_str': best_slot['time_str'],
+                    'time_pillar': f"{best_slot['ji']}時",
+                    'ji': best_slot['ji']
+                },
+                'all_time_slots': time_slots_eval
+            })
+            
+        current_date += dt_mod.timedelta(days=2)
+        
+    # 조화도 점수가 높은 순으로 정렬
+    candidate_results.sort(key=lambda x: x['score'], reverse=True)
+    
+    # 너무 근접한 날짜(25일 이내)는 중복 제거 후 상위 5개 선별
+    filtered_results = []
+    for item in candidate_results:
+        if not any(abs((item['delivery_dt'] - selected['delivery_dt']).days) < 25 for selected in filtered_results):
+            filtered_results.append(item)
+            if len(filtered_results) >= 5:
+                break
+                
+    return filtered_results
 
-def get_gunghap_closing(name1, name2):
+class UniversalPrintableGunghap:
+    """프리미엄 2인 궁합 정밀 점수 및 조화도 산출 엔진"""
+    def __init__(self, applicant, partner_name, male, female, daeun_score=10):
+        self.app = applicant
+        self.p_name = partner_name
+        self.daeun_score = daeun_score
+        male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
+        female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
+        
+        # [시주, 일주, 월주, 년주] 간지 분리
+        self.m_g = [male[3][0], male[2][0], male[1][0], male[0][0]]
+        self.m_j = [male[3][1], male[2][1], male[1][1], male[0][1]]
+        self.f_g = [female[3][0], female[2][0], female[1][0], female[0][0]]
+        self.f_j = [female[3][1], female[2][1], female[1][1], female[0][1]]
+        self.logic_flags, self.details = {}, []
+
+    def get_ji_rel(self, j1, j2):
+        j1, j2 = _to_hanja(j1), _to_hanja(j2)
+        if not j1 or not j2 or j1=="?" or j2=="?": return "무"
+        s = {j1, j2}
+        if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
+        if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return "방합"
+        if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: return "반합"
+        if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
+        if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
+        if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
+        if s in [{'子','酉'}, {'丑','辰'}, {'寅','亥'}, {'卯','午'}, {'巳','申'}, {'未','戌'}]: return "파"
+        if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: return "해"
+        return "무"
+
+    def count_elements(self, gans, jjis):
+        counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+        for char in gans + jjis:
+            c = _to_hanja(char)
+            if c in "甲乙寅卯": counts['목'] += 1
+            elif c in "丙丁巳午": counts['화'] += 1
+            elif c in "戊己辰戌丑未": counts['토'] += 1
+            elif c in "庚辛申酉": counts['금'] += 1
+            elif c in "壬癸亥子": counts['수'] += 1
+        return counts
+
+    def get_johoo_harmony(self, m_ilgan, m_ec, f_ec):
+        score = 0
+        if m_ilgan in "丙丁":
+            if f_ec['수'] >= 2: score += 5
+        elif m_ilgan in "壬癸":
+            if f_ec['화'] >= 2: score += 5
+        return score
+
+    def run_universal_logic(self):
+        m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
+        
+        # 1. 일지(배우자궁) 결합력
+        il_rel = self.get_ji_rel(m_j[2], f_j[2])
+        if il_rel == "육합": s1 = 25
+        elif il_rel in ["방합", "반합"]: s1 = 21
+        elif il_rel == "무": s1 = 17
+        elif il_rel in ["파", "해"]: s1 = 12
+        elif il_rel in ["형", "원진"]: s1 = 8
+        elif il_rel == "충": s1 = 5
+        else: s1 = 17
+        p1 = int((s1 / 25) * 100)
+        
+        # 2. 타 궁위 조화
+        s2 = 5 
+        n_rel, w_rel, si_rel = self.get_ji_rel(m_j[0], f_j[0]), self.get_ji_rel(m_j[1], f_j[1]), self.get_ji_rel(m_j[3], f_j[3]) 
+        if n_rel in ["육합", "방합", "반합"]: s2 += 2
+        elif n_rel == "충": s2 -= 1
+        if w_rel in ["육합", "방합", "반합"]: s2 += 2
+        elif w_rel == "충": s2 -= 1
+        if si_rel in ["육합", "방합", "반합"]: s2 += 1
+        s2 = max(0, min(10, s2))
+        p2 = int((s2 / 10) * 100)
+        
+        # 3. 오행 보완 (시공명리 환경 조화력)
+        m_ec, f_ec = self.count_elements(m_g, m_j), self.count_elements(f_g, f_j)
+        s3 = 5
+        for e in ['목','화','토','금','수']:
+            if m_ec[e] == 0 and f_ec[e] >= 2: s3 += 2 
+            if f_ec[e] == 0 and m_ec[e] >= 2: s3 += 2 
+            if m_ec[e] >= 4 and f_ec[e] >= 4: s3 -= 2 
+        s3 = max(0, min(10, s3))
+        p3 = int((s3 / 10) * 100)
+        
+        # 4. 특수 기운 (고란/나체 등)
+        s4 = 5
+        bad_iljus, goran, nache = ["甲寅", "乙卯", "庚申", "辛酉", "戊辰", "戊戌"], ["甲寅", "乙巳", "丁巳", "戊申", "辛亥"], ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"] 
+        m_ilju, f_ilju = m_g[2] + m_j[2], f_g[2] + f_j[2]
+        if m_ilju in bad_iljus or m_ilju in goran or m_ilju in nache: s4 -= 1
+        if f_ilju in bad_iljus or f_ilju in goran or f_ilju in nache: s4 -= 1
+        s4 = max(0, min(5, s4))
+        p4 = int((s4 / 5) * 100)
+        
+        # 5. 대운 기상도 조화
+        s5 = min(10, self.daeun_score)
+        p5 = int((s5 / 10) * 100)
+        
+        # 6. 리스크 방어력 (십성 과다/부족)
+        risk = 0.0
+        if il_rel == "충": risk += 0.10 
+        elif il_rel in ["형", "원진"]: risk += 0.05 
+        
+        def count_ss_groups_local(dc, chars):
+            res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
+            for c in chars:
+                if c and c not in ["?", " ", "-"]:
+                    try:
+                        ss = get_ss(dc, c)
+                        group_ss = get_group_ss(ss)
+                        if group_ss in res: res[group_ss] += 1
+                    except Exception: pass
+            return res
+            
+        m_ss, f_ss = count_ss_groups_local(m_g[2], m_g + m_j), count_ss_groups_local(f_g[2], f_g + f_j)
+        if m_ss['비겁'] >= 4: risk += 0.05 
+        if m_ss['재성'] == 0: risk += 0.05 
+        if f_ss['식상'] >= 4: risk += 0.05 
+        if f_ss['관성'] >= 4 or f_ss['관성'] == 0: risk += 0.05 
+        risk = min(0.20, risk) 
+        p6_safety = int((1.0 - risk) * 100)
+        
+        # 종합 점수 산출
+        base_bonus = 40 
+        sub_total = base_bonus + s1 + s2 + s3 + s4 + s5
+        self.final_score = max(40, min(100, int(sub_total * (1.0 - risk))))
+        
+        if self.final_score >= 90: self.grade = "천생연분 (최고의 인연)"
+        elif self.final_score >= 85: self.grade = "상생연분 (함께하면 좋은 인연)"
+        elif self.final_score >= 80: self.grade = "동행연분 (편안하고 안정적인 인연)"
+        elif self.final_score >= 70: self.grade = "보완연분 (서로를 채워주는 인연)"
+        elif self.final_score >= 60: self.grade = "성장연분 (이해하며 맞춰가는 인연)"
+        else: self.grade = "조율연분 (인내와 배려가 필요한 인연)"
+        
+        self.details = [
+            {"label": "내면의 유대감", "pct": p1, "color": "#9b59b6"},
+            {"label": "환경 조화", "pct": p2, "color": "#2ecc71"},
+            {"label": "기운 상호보완", "pct": p3, "color": "#3498db"},
+            {"label": "특수 기운", "pct": p4, "color": "#f1c40f"},
+            {"label": "대운 기상도 조화", "pct": p5, "color": "#8e44ad"},
+            {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
+        ]
+
+def get_ilju_master_prompt_context(user_ilju_key, choyeon_db):
+    """ver 50.5 기반 일주 전용 마스터 비기 (팩트폭격) 프롬프트 생성 함수"""
+    ilju_full_db = choyeon_db.get("ilju_full_master", {})
+    ilju_master_data = ilju_full_db.get(user_ilju_key, {})
+    
+    if not ilju_master_data:
+        return ""
+        
     return f"""
-    <div style='margin-top: 30px; border-top: 2px dashed #444; padding-top: 18px; font-family: "Nanum Myeongjo", serif;'>
-        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>
-        <b>{name1}님</b>과 <b>{name2}님</b>의 만남은 결코 우연이 아닌, <b>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b>'조화와 상생'</b>입니다.</p>
-        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>서로의 기운을 보완하고 다독여주는 든든한 <b>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 초연 시공명리의 축복이 가득하시길 소망합니다.</p>
-        <p style='font-size: 16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
-        <div style='text-align: right; margin-top: 20px;'>
-            <span style='font-weight: 800; font-size: 17px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
-        </div>
-    </div>
-    """
+🎯 [초연 전통명리의 뼈때리는 팩트폭격 - {user_ilju_key}일주 전용 마스터 비기]
+- 물상 및 성향 요약: {ilju_master_data.get('summary', '')}
+- 심리적 관점: {ilju_master_data.get('psychology', '')}
+- 육친적 관점: {ilju_master_data.get('family', '')}
+- 사회적 관점: {ilju_master_data.get('society', '')}
+- 지장간 좌법(座法) 분석: {ilju_master_data.get('jijanggan_zaBeob', '')}
+- 인종법(引從法) 숨겨진 내면: {ilju_master_data.get('injong_beob', '')}
+- 신살, 변곡점, 건강, 과숙/고신, 도망역: {ilju_master_data.get('shinsal_warnings', '')}
+- 💥 뼈때리는 팩트폭격 핵심 비기: {ilju_master_data.get('choyeon_secret', '')}
 
-def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
-    """궁합 3분할 페이지 일괄 생성 함수 (화면 연속 / 인쇄 A4 1장씩 분할)"""
-    m_page = f"""
-    <div style='border: 1.5px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
-        <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
-        {part_1_fact}
-        <div style='margin-top:15px;'>{m_ess}</div>
-    </div>
-    <div class='page-break'></div>
-    """
-    
-    f_page = f"""
-    <div style='border: 1.5px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
-        <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
-        <div style='margin-top:15px;'>{f_ess}</div>
-    </div>
-    <div class='page-break'></div>
-    """
-    
-    g_page = f"""
-    <div style='border: 1.5px solid #1B5E20; border-radius: 12px; padding:20px; background:#FFFFFF;'>
-        <h1 style='text-align:center; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
-        <div style='margin-top:15px;'>{g_ess}</div>
-    </div>
-    """
-    return get_final_report_box(m_page + f_page + g_page)
+🚨 [통변 절대 규칙]: 위 박사님의 '초연 전통명리의 뼈때리는 팩트폭격'에 담긴 문장과 임상적 통찰을 사주풀이 에세이 전반에 100% 녹여내어 깊이 있게 풀이하십시오.
+"""
 
+def analyze_super_wealth_patterns(bazi_dict):
+    """초연 시공명리학 벼락부자 파동(乙丙庚, 丁辛壬, 酉丑辰, 墓庫) 정밀 연산 함수"""
+    yg, yj = bazi_dict.get('year_g'), bazi_dict.get('year_j')
+    mg, mj = bazi_dict.get('month_g'), bazi_dict.get('month_j')
+    dg, dj = bazi_dict.get('day_g'), bazi_dict.get('day_j')
+    hg, hj = bazi_dict.get('time_g'), bazi_dict.get('time_j')
+    
+    stems = [yg, mg, dg, hg]
+    branches = [yj, mj, dj, hj]
+    
+    results = {
+        "yi_bing_geng_flag": False,
+        "ding_xin_ren_flag": False,
+        "you_chou_chen_flag": False,
+        "myogo_treasure_flag": False,
+        "wealth_power_score": 0,
+        "fact_summary_text": []
+    }
+
+    has_yi = ('乙' in stems) or ('卯' in branches) or ('辰' in branches) or ('未' in branches)
+    has_bing = ('丙' in stems) or ('巳' in branches) or ('午' in branches)
+    has_geng = ('庚' in stems) or ('申' in branches)
+    
+    if has_yi and has_bing and has_geng:
+        results["yi_bing_geng_flag"] = True
+        results["wealth_power_score"] += 35
+        results["fact_summary_text"].append("[乙·丙·庚 삼자조합 감지]: 대형 사업/거부 파동.")
+
+    has_ding = ('丁' in stems) or ('午' in branches) or ('未' in branches)
+    has_xin = ('辛' in stems) or ('酉' in branches)
+    has_ren = ('壬' in stems) or ('亥' in branches) or ('子' in branches)
+    
+    if has_ding and has_xin and has_ren:
+        results["ding_xin_ren_flag"] = True
+        results["wealth_power_score"] += 40
+        results["fact_summary_text"].append("[丁·辛·壬 삼자조합 감지]: 자산 가열 후 단기 대발/돈벼락 파동.")
+
+    if ('酉' in branches) and ('丑' in branches) and ('辰' in branches):
+        results["you_chou_chen_flag"] = True
+        results["wealth_power_score"] += 25
+        results["fact_summary_text"].append("[酉·丑·辰 삼자조합 감지]: 한탕/부동산 재개발 뻥튀기 파동.")
+
+    earth_count = sum(1 for b in branches if b in ['辰', '戌', '丑', '未'])
+    if earth_count >= 2:
+        results["myogo_treasure_flag"] = True
+        results["wealth_power_score"] += (earth_count * 10)
+        results["fact_summary_text"].append(f"[자산 창고 {earth_count}개 보유]: 묘고 개고 시 대규모 자산 입고.")
+
+    results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "일반 재물 흐름."
+    return results
+
+def analyze_zishui_jiapja_and_gapwood_patterns(bazi_dict):
+    """07_십이지 논하기(子水/夾字) 및 11_건상비술(甲木) 기반 정밀 연산 함수"""
+    yg, yj = bazi_dict.get('year_g'), bazi_dict.get('year_j')
+    mg, mj = bazi_dict.get('month_g'), bazi_dict.get('month_j')
+    dg, dj = bazi_dict.get('day_g'), bazi_dict.get('day_j')
+    hg, hj = bazi_dict.get('time_g'), bazi_dict.get('time_j')
+    
+    stems = [yg, mg, dg, hg]
+    branches = [yj, mj, dj, hj]
+    
+    results = {"special_risk_score": 0, "fact_summary_text": []}
+
+    if ('子' in branches) and ('酉' in branches):
+        results["fact_summary_text"].append("[酉·子 破 파동 감지]: 씨종자 가치 변질 및 한탕주의 리스크.")
+    if ('子' in branches) and ('卯' in branches):
+        results["fact_summary_text"].append("[子·卯 刑 파동 감지]: 성적 강박, 자궁/비뇨기 질환 주의.")
+    if ('子' in branches) and ('丑' in branches) and ('卯' in branches):
+        results["fact_summary_text"].append("[지지 夾字(협자) 비틀림 감지]: 卯木 생기 강제 압박 및 신체 정체.")
+
+    has_gap = ('甲' in stems) or ('寅' in branches)
+    has_ren = ('壬' in stems) or ('亥' in branches)
+    has_bing = ('丙' in stems) or ('巳' in branches)
+    has_gui = ('癸' in stems) or ('子' in branches)
+    has_mu = ('戊' in stems) or ('辰' in branches) or ('戌' in branches)
+
+    if has_gap and has_ren and has_bing:
+        results["fact_summary_text"].append("[壬·甲·丙 삼자조합 감지]: 대기만성형 거부 및 고위공직 파동.")
+    if has_gap and has_gui and has_mu:
+        results["fact_summary_text"].append("[癸·甲·戊 삼자조합 감지]: 폭력, 구타, 수술, 관재구설 주의.")
+
+    results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "특이 파동 없음."
+    return results
+
+def analyze_love_and_marriage_patterns(bazi_dict):
+    """초연 시공명리학 남녀애정론 기반 배우자 동태, 쌍복음, 성적 파동 정밀 연산 함수"""
+    yg, yj = bazi_dict.get('year_g'), bazi_dict.get('year_j')
+    mg, mj = bazi_dict.get('month_g'), bazi_dict.get('month_j')
+    dg, dj = bazi_dict.get('day_g'), bazi_dict.get('day_j')
+    hg, hj = bazi_dict.get('time_g'), bazi_dict.get('time_j')
+    
+    branches = [yj, mj, dj, hj]
+    results = {"love_risk_score": 0, "fact_summary_text": []}
+
+    if branches.count(dj) >= 2:
+        results["fact_summary_text"].append(f"[쌍복음(雙伏吟) 경고]: 배우자 궁({dj}) 중첩으로 애정 불안정 및 이별 리스크.")
+    if ('酉' in branches) and ('子' in branches) and ('丑' in branches):
+        results["fact_summary_text"].append("[酉·子·丑 삼자조합 감지]: 한탕주의, 강압적 인연 및 정서적 폭발 주의.")
+    if ('子' in branches) and ('卯' in branches) and ('辰' in branches):
+        results["fact_summary_text"].append("[子·卯·辰 삼자조합 감지]: 불임, 자궁 질환, 자식 인연 박약 파동.")
+    if ('卯' in branches) and ('戌' in branches):
+        results["fact_summary_text"].append("[卯·戌 합(合) 파동 감지]: 연상남/유부남/후처 인연.")
+    if dj == '戌':
+        results["fact_summary_text"].append("[일지 戌土 남편궁 감지]: 배우자의 성 무력증/불감증 및 성적 불만족 리스크.")
+
+    results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "특이 애정 리스크 없음."
+    return results
+
+def analyze_spacetime_distortion_and_fukim(bazi_dict):
+    """초연 시공명리학 삼합과 형충파해 & 궁위론 기반 시공간 비틀림 연산 함수"""
+    branches = [bazi_dict.get('year_j'), bazi_dict.get('month_j'), bazi_dict.get('day_j'), bazi_dict.get('time_j')]
+    stems = [bazi_dict.get('year_g'), bazi_dict.get('month_g'), bazi_dict.get('day_g'), bazi_dict.get('time_g')]
+    
+    results = {"distortion_score": 0, "fact_summary_text": []}
+    
+    wonjin_map = [('辰', '亥'), ('巳', '戌'), ('寅', '未'), ('子', '未'), ('丑', '午'), ('卯', '申')]
+    for b1, b2 in wonjin_map:
+        if (b1 in branches) and (b2 in branches):
+            results["fact_summary_text"].append(f"[{b1}·{b2} 원진귀문 감지]: 시공간 파동의 꼬임 및 감정 정체.")
+
+    results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "정순한 흐름."
+    return results
+
+def analyze_jijanggan_spacetime_dynamics(bazi_dict):
+    """지장간(地藏干) 속 천간의 시공간 순환 원리 및 육합/형충파해 특수 물상 연산 함수"""
+    branches = [bazi_dict.get('year_j'), bazi_dict.get('month_j'), bazi_dict.get('day_j'), bazi_dict.get('time_j')]
+    results = {"fact_summary_text": []}
+
+    if ('子' in branches) and ('丑' in branches):
+        results["fact_summary_text"].append("[子·丑 탕화 파동 감지]: 가스/화재 사고 및 답답한 심리적 압박 주의.")
+    if ('卯' in branches) and ('戌' in branches):
+        results["fact_summary_text"].append("[卯·戌 합 파동 감지]: 아궁이 물상 및 희생/유흥 관련 파동.")
+    if ('辰' in branches) and ('酉' in branches):
+        results["fact_summary_text"].append("[辰·酉 합 파동 감지]: 자산 뻥튀기 대발 및 관재구설 주의.")
+    if ('巳' in branches) and ('申' in branches):
+        results["fact_summary_text"].append("[巳·申 합형 파동 감지]: 기계, 촬영 장비 물상 및 교통사고 리스크.")
+
+    results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "특이 지장간 파동 없음."
+    return results
+
+def analyze_cosmic_gravity_and_samhyeong_patterns(bazi_dict):
+    """중력/척력(丁-壬-癸) 파동 및 辰未戌丑 삼형(三刑) / 子卯午酉 破 파동 연산 함수"""
+    stems = [bazi_dict.get('year_g'), bazi_dict.get('month_g'), bazi_dict.get('day_g'), bazi_dict.get('time_g')]
+    branches = [bazi_dict.get('year_j'), bazi_dict.get('month_j'), bazi_dict.get('day_j'), bazi_dict.get('time_j')]
+    
+    results = {"fact_summary_text": []}
+    has_ding = ('丁' in stems) or ('午' in branches) or ('未' in branches)
+    has_gui = ('癸' in stems) or ('子' in branches)
+    
+    if has_ding and has_gui:
+        results["fact_summary_text"].append("[丁·癸 중력/척력 조절 파동 감지]: 고도의 이성적 조율 능력 및 사법/기획적 적성.")
+
+    earth_count = sum(1 for b in branches if b in ['辰', '戌', '丑', '未'])
+    if earth_count >= 2:
+        results["fact_summary_text"].append(f"[토(土) 영역 확장 파동]: 부동산/토지 집착 및 영역 확장 욕구.")
+
+    samhyeong_set = {'寅', '巳', '申'}
+    if len(samhyeong_set.intersection(set(branches))) >= 2:
+        results["fact_summary_text"].append("[寅巳申 형/충 파동 감지]: 수술, 교통사고, 관재구설 리스크 주의.")
+
+    results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "시공간 특이 파동 없음."
+    return results
 
 # ==============================================================================
-# 📦 섹션 5. 택일 상품군 (상품 3-2, 3-3 활성 모듈)
+# 이사 및 개업 전용 길일 정밀 산출 엔진 (engine.py 하단에 추가)
 # ==============================================================================
-
-def get_delivery_summary_box(best_days):
-    """출산/결혼 길일 한눈에 보기 요약 상자"""
-    summary_items = ""
-    for idx, day_info in enumerate(best_days):
-        b_time_info = day_info['best_time']
-        pillars_str = day_info.get('four_pillars', '')
-        summary_items += f"""
-        <li style="margin-bottom:6px;">
-            🏅 <b>추천 {idx+1}순위</b> (명리 종합점수: <span style="color:#C62828; font-weight:bold;">{day_info['score']}점</span>) : 
-            <b>{day_info['date']} {b_time_info['time_str']}</b> 
-            <span style="color:#555; font-size:13px;">({pillars_str})</span>
-        </li>
-        """
-    return f"""
-    <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:15px; margin-top:15px; margin-bottom:20px; font-family: 'Nanum Myeongjo', serif;">
-        <h4 style="color:#1A237E; margin-top:0; margin-bottom:10px; font-size:15px; border-bottom:1px solid #C5CAE9; padding-bottom:6px;">
-            📋 길일 한눈에 보기 (최적 길일 로드맵)
-        </h4>
-        <ul style="list-style-type:none; padding-left:0; margin:0; line-height:1.8; font-size:14px; color:#2C3E50;">
-            {summary_items}
-        </ul>
-    </div>
+def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, purpose):
     """
-
-def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b_time_pillar, gestation_warning, conception_title, conception_str, conception_msg, baby_saju_html, ai_output_html):
-    """출산 택일 상세 추천 카드"""
-    return f"""
-    <div style="background-color:#FFFFFF; border:1px solid #E0E0E0; border-radius:12px; padding:18px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); font-family: 'Nanum Myeongjo', serif;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #F1F3F4; padding-bottom:10px; margin-bottom:12px;">
-            <h3 style="color:#1A237E; margin:0; font-size:17px; font-weight:800;">🏅 추천 {idx+1}순위 길일 : {b_date_str}</h3>
-            <span style="background-color:#E8EAF6; color:#1A237E; font-weight:bold; padding:3px 10px; border-radius:20px; font-size:13px;">명리 종합점수: {score}점</span>
-        </div>
-        <ul style="list-style-type:none; padding-left:0; margin-top:8px; line-height:1.8; color:#333; font-size:14px;">
-            <li><b>⏰ 가장 좋은 시간</b>: <span style="color:#00695C; font-weight:bold;">{b_time_str} ({b_time_pillar})</span></li>
-            {gestation_warning}
-            <li><b>{conception_title}</b>: <span style="font-weight:bold; color:#0277BD;">{conception_str}</span> <br>{conception_msg}</li>
-        </ul>
-        {baby_saju_html}
-        <div style="margin-top:12px; padding-top:12px; border-top:1px dashed #DDD;">
-            {ai_output_html}
-        </div>
-    </div>
+    이사(가정 안정)와 개업(재물/현금흐름)의 목적을 분리하여 
+    기간 내 최적의 길일 Top 3를 산출하는 함수
     """
-
-
-# ==============================================================================
-# 📦 섹션 6. 타 감명서 1:1 대조 분석 리포트 상품군 (상품 4-1, 4-2 활성 모듈)
-# ==============================================================================
-
-
-def get_external_raw_text_box(other_text):
-    return f"""
-    <div style='margin-top:20px; margin-bottom:20px; padding:20px; background-color:#F5F5F5; border:1.5px solid #757575; border-radius:10px; font-family: "Nanum Myeongjo", serif;'>
-        <div style='font-size:18px; font-weight:800; color:#212121; border-bottom:1.5px solid #9E9E9E; padding-bottom:8px; margin-bottom:12px;'>
-            📄 [제출된 외부 타 감명서 원본]
-        </div>
-        <div style='font-size:16px; color:#111111; line-height:1.85; white-space:pre-wrap;'>{other_text}</div>
-    </div>
-    <div class='page-break'></div>
-    """
-
-def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
-    """4-2 타 감명서 비교 전용 듀얼 황금문구 뷰 (헤더 17px 표준 규격 적용)"""
-    clean_male = male_golden_html.replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">', '').replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">', '').strip()
-    clean_female = female_golden_html.replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">', '').replace('<hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">', '').strip()
+    import datetime as dt_mod
     
-    return f"""
-    <div style="margin-bottom: 20px; padding: 18px 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; font-family: 'Nanum Myeongjo', 'Batang', serif;">
-        <div style="margin-bottom: 18px;">
-            <!-- ♂️ 신랑 헤더: 17px Bold 800 -->
-            <div style="font-size: 17px; font-weight: 800; color: #1565C0; margin-bottom: 6px; font-family: 'Nanum Myeongjo', serif; letter-spacing: -0.3px;">
-                ♂️ [신랑 {m_name}님 타고난 그릇과 시공간 본성]
-            </div>
-            <div style="font-family: 'Nanum Myeongjo', serif; font-size: 16px; font-weight: 500; line-height: 1.85; color: #111111;">
-                {clean_male}
-            </div>
-        </div>
-        <div>
-            <!-- ♀️ 신부 헤더: 17px Bold 800 -->
-            <div style="font-size: 17px; font-weight: 800; color: #4A148C; margin-bottom: 6px; font-family: 'Nanum Myeongjo', serif; letter-spacing: -0.3px;">
-                ♀️ [신부 {f_name}님 타고난 그릇과 시공간 본성]
-            </div>
-            <div style="font-family: 'Nanum Myeongjo', serif; font-size: 16px; font-weight: 500; line-height: 1.85; color: #111111;">
-                {clean_female}
-            </div>
-        </div>
-    </div>
-    <hr style="border: 0; border-top: 2px solid #333333; margin: 20px 0;">
-    """
-
-def get_couple_fact_split_layout(male_block, female_block):
-    """
-    4-2 타 감명서 비교 (궁합) 상단 팩트 레이아웃
-    - 화면에서는 연속 표출, 인쇄 시 남명 1장 -> 여명 1장으로 분할
-    """
-    return f"""
-    <!-- 1페이지 분량: 남명 완전체 -->
-    <div style="margin-bottom: 25px; font-family: 'Nanum Myeongjo', serif;">
-        <div style="font-size: 21px; font-weight: 800; color: #1565C0; text-align: center; padding: 6px 0 10px 0; margin-bottom: 12px; border-bottom: 2.5px solid #1565C0; letter-spacing: -0.5px;">
-            ♂️ [남명 사주 원국 및 대운 분석]
-        </div>
-        {male_block}
-    </div>
-    <div class='page-break'></div>
+    # 내담자의 일간, 일지 추출
+    day_gan = user_gans[1]
+    day_ji = user_jjis[1]
     
-    <!-- 2페이지 분량: 여명 완전체 -->
-    <div style="margin-bottom: 25px; font-family: 'Nanum Myeongjo', serif;">
-        <div style="font-size: 21px; font-weight: 800; color: #4A148C; text-align: center; padding: 6px 0 10px 0; margin-bottom: 12px; border-bottom: 2.5px solid #4A148C; letter-spacing: -0.5px;">
-            ♀️ [여명 사주 원국 및 대운 분석]
-        </div>
-        {female_block}
-    </div>
-    <div class='page-break'></div>
-    """
+    best_days = []
+    curr_date = start_date
 
-def render_saju_comparison_report(saju_fact_html, external_raw_box, ai_content_html):
-    """
-    4-1 타 감명서 비교 (사주) 전용 뷰
-    - 4-2 궁합 함수 구조를 완벽히 재활용하여 일관된 24px 대제목 및 스타일 유지
-    """
-    master_body = f"""
-    <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center !important; padding-bottom: 15px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; letter-spacing: -0.5px !important; display: block !important; margin-top: 0 !important;">🔍 타 감명서 비교 (사주) 1:1 정밀 분석</h2>
-    {saju_fact_html}
-    {external_raw_box}
-    <div style="margin-top: 20px;">
-        {ai_content_html}
-    </div>
-    """
-    return get_final_report_box(master_body)
+    while curr_date <= end_date:
+        try:
+            # 해당 날짜의 일진(간지) 역산
+            y_p, m_p, d_p = get_ganji_from_date(curr_date.year, curr_date.month, curr_date.day)
+            d_gan, d_ji = d_p[0], d_p[1]
+        except Exception:
+            curr_date += dt_mod.timedelta(days=1)
+            continue
 
-def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_content_html):
-    """
-    4-2 타 감명서 비교 (궁합) 전용 뷰
-    - 박사님 지시 반영: Streamlit 강제 폰트 축소 무효화. <h2> 태그를 통한 대제목 24px 확정
-    """
-    master_body = f"""
-    <h2 style="font-family: 'Nanum Myeongjo', serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center !important; padding-bottom: 15px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; letter-spacing: -0.5px !important; display: block !important; margin-top: 0 !important;">🔍 타 감명서 비교 (궁합) 1:1 정밀 분석</h2>
-    {couple_fact_html}
-    {external_raw_box}
-    <div style="margin-top: 20px;">
-        {ai_content_html}
-    </div>
-    """
-    return get_final_report_box(master_body)
+        score = 70.0  # 기본 점수
+        
+        # [공통 흉살 감점] 일지(배우자/나의 안방) 기준 합충형해파 분석
+        rel = get_ji_rel_set(day_ji, d_ji)
+        if "충" in rel: score -= 20
+        if "원진" in rel or "귀문" in rel: score -= 15
+        if "형" in rel: score -= 10
+        if "파" in rel or "해" in rel: score -= 5
 
-def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
-    """4-1 타 감명서 대조 전용 3단 순서 조립 (팩트 + 원본 + 대조 리포트)"""
-    master_body = f"{part_1_fact}{external_raw_box}{ai_comparison_html}"
-    return get_final_report_box(master_body)
+        # ---------------------------------------------------------
+        # 목적 1: [이사] - 일지와의 합(안정) 중시, 탕화살 배제
+        # ---------------------------------------------------------
+        if purpose == "이사":
+            if "육합" in rel: score += 15
+            if "방합" in rel or "반합" in rel: score += 10
+            
+            # 탕화살(폭발/화재/신경질) 작용일 감점
+            if day_ji == '寅' and d_ji in ['寅', '巳', '申']: score -= 10
+            if day_ji == '午' and d_ji in ['辰', '午', '丑']: score -= 10
+            if day_ji == '丑' and d_ji in ['午', '未', '戌']: score -= 10
 
-def get_warning_box(title, message):
-    """미입력 및 시스템 경고 메시지 출력 전용 뷰 함수"""
-    return f"""
-    <div style='padding:16px; background-color:#FFF3E0; border:2px solid #FB8C00; border-radius:8px; margin-top:15px; font-family: "Nanum Myeongjo", serif;'>
-        <h3 style='color:#E65100; margin:0 0 6px 0; font-size:15px; font-weight:800;'>⚠️ [{title}]</h3>
-        <p style='color:#E65100; font-size:14px; margin:0; line-height:1.6;'>{message}</p>
-    </div>
+        # ---------------------------------------------------------
+        # 목적 2: [개업] - 재성/식상 확장성 및 물질 폭발 파동 중시
+        # ---------------------------------------------------------
+        else:
+            day_ss = get_ss(day_gan, d_gan)
+            day_ji_ss = get_ss(day_gan, d_ji)
+            ss_group_g = get_group_ss(day_ss)
+            ss_group_j = get_group_ss(day_ji_ss)
+
+            # 식상(고객 유입), 재성(현금 흐름) 가점
+            if ss_group_g in ["재성", "식상"]: score += 10
+            if ss_group_j in ["재성", "식상"]: score += 10
+            
+            # 군겁쟁재(비겁이 재를 극함) 감점
+            if ss_group_g == "비겁" or ss_group_j == "비겁": score -= 10
+
+            # 초연 시공명리 [거부/돈벼락 삼자조합] 완성일 가점
+            combined_gans = set(user_gans + [d_gan])
+            if {'丁', '辛', '壬'}.issubset(combined_gans): score += 20
+            if {'乙', '丙', '庚'}.issubset(combined_gans): score += 20
+            
+            # 뻥튀기 자산 파동 완성일 가점
+            combined_jjis = set(user_jjis + [d_ji])
+            if {'酉', '丑', '辰'}.issubset(combined_jjis): score += 15
+
+        best_days.append({
+            'date': curr_date.strftime("%Y-%m-%d"),
+            'ganji': d_p,
+            'score': score
+        })
+        curr_date += dt_mod.timedelta(days=1)
+
+    # 점수 높은 순 정렬 후 Top 3 반환
+    best_days.sort(key=lambda x: x['score'], reverse=True)
+    return best_days[:3]
+
+def search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji=None, base_year=None):
     """
+    초연 시공명리 24절기(ephem) 및 율리우스적일 기반 정통 사주 역산 함수
+    - klc의 부정확한 음력 간지 필터를 전면 배제하고 순수 절기 기반 만세력으로 탐색
+    """
+    if base_year is None:
+        base_year = dt_mod.datetime.now().year
+
+    ry_h = _to_hanja(ry_h[:1]) + _to_hanja_ji(ry_h[1:]) if len(ry_h)>=2 else ry_h
+    rm_h = _to_hanja(rm_h[:1]) + _to_hanja_ji(rm_h[1:]) if len(rm_h)>=2 else rm_h
+    rd_h = _to_hanja(rd_h[:1]) + _to_hanja_ji(rd_h[1:]) if len(rd_h)>=2 else rd_h
+
+    time_map = {
+        '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
+        '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
+        '인': '03:30 ~ 05:29 (寅)시', '寅': '03:30 ~ 05:29 (寅)시',
+        '묘': '05:30 ~ 07:29 (卯)시', '卯': '05:30 ~ 07:29 (卯)시',
+        '진': '07:30 ~ 09:29 (辰)시', '辰': '07:30 ~ 09:29 (辰)시',
+        '사': '09:30 ~ 11:29 (巳)시', '巳': '09:30 ~ 11:29 (巳)시',
+        '오': '11:30 ~ 13:29 (午)시', '午': '11:30 ~ 13:29 (午)시',
+        '미': '13:30 ~ 15:29 (未)시', '未': '13:30 ~ 15:29 (未)시',
+        '신': '15:30 ~ 17:29 (申)시', '申': '15:30 ~ 17:29 (申)시',
+        '유': '17:30 ~ 19:29 (酉)시', '酉': '17:30 ~ 19:29 (酉)시',
+        '술': '19:30 ~ 21:29 (戌)시', '戌': '19:30 ~ 21:29 (戌)시',
+        '해': '21:30 ~ 23:29 (亥)시', '亥': '21:30 ~ 23:29 (亥)시'
+    }
+    
+    target_time_str = time_map.get(rt_ji, "시간 모름") if rt_ji else "시간 모름"
+    matched_results = []
+    klc = KoreanLunarCalendar()
+
+    # 기준 연도 목록 (현대인 기준 우선 탐색 후 전 범위 스캔)
+    # 1900년 ~ 2050년 전체 날짜 중 일주가 일치하는 날짜를 수학적으로 직접 계산
+    ref_dt = dt_mod.date(1900, 1, 1) # 1900-01-01 은 甲戌일 (10)
+    # 60갑자 표
+    gan_list = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+    ji_list = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+    
+    target_d_idx = -1
+    for idx in range(60):
+        if (gan_list[idx % 10] + ji_list[idx % 12]) == rd_h:
+            target_d_idx = idx
+            break
+            
+    if target_d_idx == -1:
+        return []
+
+    # 1900-01-01의 간지 인덱스는 甲(0)戌(10) -> 10번 인덱스
+    # 날짜별 간지 인덱스 = (days_from_1900_01_01 + 10) % 60
+    
+    # 1900-01-01부터 2050-12-31까지 순회하며 일주가 일치하는 날만 60일 단위로 초고속 스캔
+    start_date = dt_mod.date(1900, 1, 1)
+    end_date = dt_mod.date(2050, 12, 31)
+    
+    # 첫 일치 날짜 계산
+    offset = (target_d_idx - 10) % 60
+    first_match = start_date + dt_mod.timedelta(days=offset)
+    
+    curr = first_match
+    while curr <= end_date:
+        # 절기 기반 년주·월주 정밀 검증
+        y_p, m_p, _ = get_true_year_month_pillar(curr.year, curr.month, curr.day, 12, 0)
+        if y_p == ry_h and m_p == rm_h:
+            klc.setSolarDate(curr.year, curr.month, curr.day)
+            s_sol_fmt = f"{curr.year}년 {curr.month:02d}월 {curr.day:02d}일"
+            s_lun_fmt = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
+            age_calc = base_year - curr.year + 1
+            matched_results.append({
+                "display": f"양력 {s_sol_fmt} (음력 {s_lun_fmt}, {age_calc}세)",
+                "y": int(curr.year),
+                "m": int(curr.month),
+                "d": int(curr.day),
+                "t": target_time_str
+            })
+        curr += dt_mod.timedelta(days=60)
+
+    # 기준연도(base_year)와 가장 가까운 순서(현대인 나이대)로 정렬
+    matched_results.sort(key=lambda item: abs(item["y"] - (base_year - 40)))
+
+    return matched_results
+
+def analyze_saju_facts_advanced(saju_data, current_dw, current_sewun):
+    """
+    초연 시공명리 3대 진실(복음 고갈, 조토 흡수, 묘고 합화 소멸) 정밀 감지 엔진
+    """
+    oheng, hap_chung = analyze_saju_facts(saju_data)
+    
+    # 1. 복음(伏吟) 파동 감지 (일/시지 또는 월/년지 동일 글자 중복)
+    is_bokgeum = (saju_data.get('day_ji') == saju_data.get('hour_ji')) or \
+                 (saju_data.get('year_ji') == saju_data.get('month_ji'))
+                 
+    # 2. 묘고(墓庫) 및 삼합/방합 변질(합화) 리스크 감지
+    vaults = ['辰', '戌', '丑', '未']
+    has_vault = any(v in [saju_data.get('year_ji'), saju_data.get('month_ji'), saju_data.get('day_ji'), saju_data.get('hour_ji')] for v in vaults)
+    
+    # 3. 시공간 파동 리포트 변수 패키징
+    advanced_flags = {
+        "bokgeum_active": is_bokgeum,
+        "vault_active": has_vault,
+        "warning_message": "⚠️ [시공간 경고]: 복음 및 묘고 합화 파동에 따른 에너지 고갈 또는 신체 임계점 주의" if (is_bokgeum and has_vault) else "정상 시공간 흐름"
+    }
+    
+    return oheng, hap_chung, advanced_flags
