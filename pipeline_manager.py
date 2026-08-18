@@ -268,6 +268,7 @@ def render_customer_order_form():
             color: #2D3748;
         }
         
+        /* multiselect 태그 닫기(X) 버튼 활성화 */
         span[data-baseweb="tag"] {
             cursor: default !important;
         }
@@ -281,7 +282,98 @@ def render_customer_order_form():
     
     st.markdown("<div class='m-title'>🔮박사사주 신청서🔮</div>", unsafe_allow_html=True)
     
-    # 1. 상품 선택 (폼 외부 배치로 3-* 선택 시 즉시 감지)
+    # --------------------------------------------------------------------------
+    # [1단계] 이미 신청을 완료한 경우 -> 접수완료/공유 화면만 고정 렌더링
+    # --------------------------------------------------------------------------
+    if "submitted_order" in st.session_state:
+        ord_info = st.session_state["submitted_order"]
+
+        if ord_info["discount_amt"] > 0:
+            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
+        else:
+            price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
+
+        # 메인 접수 완료 박스
+        st.markdown(f"""
+<div class='guide-box'>
+<div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
+<b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
+신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
+이제 아래 계좌로 복비를 쏴주시면,<br>
+초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
+</div>
+""", unsafe_allow_html=True)
+
+        # 계좌 박스
+        st.markdown(f"""
+<div class='bank-info-box'>
+💳 <b>국민은행 231402-04-133221</b><br>
+👤 <b>예금주: 이 * 호</b><br>
+💰 <b>복비:</b> {price_display}
+</div>
+""", unsafe_allow_html=True)
+
+        # 주의사항 & 이벤트 박스
+        st.markdown("""
+<div class='guide-box' style='margin-top:10px;'>
+<span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+<hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
+🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
+좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
+소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
+<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+        # 원터치 공유 박스 (href 이동 없이 JS 단독 호출)
+        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
+        share_title = "🔮 박사사주 - 내 인생 스포일러"
+        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
+
+        st.markdown(f"""
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+💬 친구에게 박사사주 공유하고 함께 혜택 받기
+</div>
+<div class='share-card'>
+🔮 [ 박사사주 ] 🔮<br>
+소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
+친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
+
+<div style='text-align:center; margin: 15px 0;'>
+    <button type="button" 
+       onclick="
+           if (navigator.share) {{
+               navigator.share({{
+                   title: '{share_title}',
+                   text: `{share_msg}`,
+                   url: '{ref_order_link}'
+               }}).catch(function(e){{}});
+           }} else {{
+               window.open('sms:?&body=' + encodeURIComponent(`{share_msg}`));
+           }}
+       " 
+       style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:16px; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif; cursor:pointer;'>
+        🟡 터치해서 친구에게 카톡/문자 바로 보내기
+    </button>
+</div>
+
+<span style='color:#757575; font-size:13px;'>※ 터치 시 현재 화면은 그대로 유지되며 카카오톡/문자 전송 창이 열립니다.</span><br><br>
+<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
+</div>
+""", unsafe_allow_html=True)
+        
+        # 추가 신청이 필요한 경우를 위한 초기화 버튼
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+        if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
+            del st.session_state["submitted_order"]
+            st.rerun()
+        return
+
+    # --------------------------------------------------------------------------
+    # [2단계] 미신청 상태 -> 신청 폼 화면 렌더링
+    # --------------------------------------------------------------------------
     label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
     selected_products = st.multiselect(
         label=label_text,
@@ -292,9 +384,7 @@ def render_customer_order_form():
     
     has_partner_product = any(p.startswith("3-") for p in selected_products)
 
-    # 2. 단일 고유 키 적용 (중복 에러 원천 방지)
     with st.form("choyeon_customer_order_form_v2"):
-        # --- 1. 신청자 본인 정보 ---
         st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
@@ -317,7 +407,7 @@ def render_customer_order_form():
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
-        # --- 2. 3-* 계열 상품 선택 시에만 노출되는 상대방 사주 정보 ---
+        # 3-* 선택 시에만 노출되는 상대방 정보
         partner_name = ""
         p_b_year, p_b_month, p_b_day = "", "", ""
         partner_gender, partner_cal, partner_marital, partner_time = "남성", "양력", "미혼", "시간 모름"
@@ -344,7 +434,6 @@ def render_customer_order_form():
         
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
-        # --- 3. 제출 검증 및 DB 저장 ---
         if submitted:
             actual_selected = st.session_state.get("user_selected_products", selected_products)
 
