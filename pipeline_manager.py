@@ -12,10 +12,11 @@ import hmac
 import hashlib
 import json
 import requests
+import urllib.parse
 
 DB_FILE = "choyeon_orders.db"
 LEDGER_FILE = "박사사주_비밀장부.csv"
-ADMIN_PASSWORD = "boss!631201" # 박사님 전용 관리자 암호
+ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 
 # 12개 정식 상품 체계
@@ -107,9 +108,9 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 '박사사주' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
 👉 채널 추가: [카톡 채널 URL 삽입]
 
-2️⃣ 리얼 후기 쓰고 50% 반값 쿠폰 득템!
+2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
 풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
-연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [50% 할인 쿠폰] 팍팍 쏩니다! 💸
+연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [30% 할인 쿠폰] 팍팍 쏩니다! 💸
 
 ---
 
@@ -260,15 +261,16 @@ def render_customer_order_form():
         }
         .share-card {
             background: #FFFDF5;
-            border: 1px solid #FFE082;
-            border-radius: 10px;
-            padding: 16px;
+            border: 1.5px solid #FFE082;
+            border-radius: 12px;
+            padding: 20px;
             font-family: 'Gowun Dodum', sans-serif;
-            font-size: 14.5px;
+            font-size: 16px;
             line-height: 1.8;
-            color: #374151;
+            color: #2D3748;
         }
-        /* multiselect 태그 닫기(X) 버튼 터치/클릭 활성화 보장 */
+        
+        /* multiselect 태그 닫기(X) 버튼 터치/클릭 활성화 */
         span[data-baseweb="tag"] {
             cursor: default !important;
         }
@@ -283,6 +285,8 @@ def render_customer_order_form():
     st.markdown("<div class='m-title'>🔮박사사주 신청서🔮</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
+        # --- 1. 신청자 본인 정보 ---
+        st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
         # 010 고정 및 번호 입력창 구성
@@ -294,7 +298,7 @@ def render_customer_order_form():
         email = st.text_input("이메일 (선택)", placeholder="ch1234@example.com")
         
         c_y, c_m, c_d = st.columns(3)
-        with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="2010")
+        with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="1990")
         with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="06")
         with c_d: b_day = st.text_input("일 (DD) *", max_chars=2, placeholder="15")
         
@@ -305,40 +309,68 @@ def render_customer_order_form():
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
-        # 라벨 완벽 2줄 줄바꿈 ("선택  \n" 뒤에 공백 2칸 필수)
+        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+        
+        # --- 2. 상품 선택 (라벨 2줄 처리 및 한글 placeholder) ---
         label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
-
         selected_products = st.multiselect(
             label=label_text,
             options=PRODUCT_LIST,
             placeholder="상담 상품 선택",
-            key="user_selected_products",
+            key="user_selected_products"
         )
         
+        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+        # --- 3. 3-1 궁합 상품 전용 상대방 정보 ---
+        st.markdown("<b>👩‍❤️‍👨 상대방 사주 정보 (※ 3-1 궁합 신청 시에만 작성)</b>", unsafe_allow_html=True)
+        partner_name = st.text_input("상대방 성명 (궁합 신청 시 필수)", placeholder="궁합 대상자 성함")
+        
+        c_py, c_pm, c_pd = st.columns(3)
+        with c_py: p_b_year = st.text_input("상대방 생년 (YYYY)", max_chars=4, placeholder="1992")
+        with c_pm: p_b_month = st.text_input("상대방 월 (MM)", max_chars=2, placeholder="08")
+        with c_pd: p_b_day = st.text_input("상대방 일 (DD)", max_chars=2, placeholder="20")
+        
+        c_pg, c_pc, c_pt = st.columns([1, 1, 1.5])
+        with c_pg: partner_gender = st.selectbox("상대방 성별", ["남성", "여성"])
+        with c_pc: partner_cal = st.selectbox("상대방 양/음력", ["양력", "음력", "음력(윤달)"])
+        with c_pt: partner_time = st.selectbox("상대방 태어난 시간", TIME_OPTIONS)
+
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
         
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
+        # --- 4. 제출 버튼 클릭 시에만 유효성 검사 실행 (상시 에러 노출 방지) ---
         if submitted:
-            # Session State에서 직접 선택 목록 추출 (다중 선택 누락 방지)
             actual_selected = st.session_state.get("user_selected_products", selected_products)
 
             if not name.strip():
-                st.error("🚨 이름을 입력해 주십시오.")
+                st.error("🚨 본인 이름을 입력해 주십시오.")
                 return
             if len(p_mid.strip()) != 4 or len(p_end.strip()) != 4 or not (p_mid.isdigit() and p_end.isdigit()):
                 st.error("🚨 핸드폰 번호 4자리를 숫자로 정확히 입력해 주십시오.")
                 return
             if not (b_year.isdigit() and b_month.isdigit() and b_day.isdigit()):
-                st.error("🚨 생년월일 숫자를 정확히 입력해 주십시오.")
+                st.error("🚨 본인 생년월일 숫자를 정확히 입력해 주십시오.")
                 return
             if not actual_selected or len(actual_selected) == 0:
                 st.error("🚨 최소 1개 이상의 상담 상품을 선택해 주십시오.")
                 return
+                
+            is_gunghap = any("3-1" in prod for prod in actual_selected)
+            if is_gunghap:
+                if not partner_name.strip():
+                    st.error("🚨 [3-1 궁합] 상품을 선택하셨습니다. 상대방 성함을 입력해 주십시오.")
+                    return
+                if not (p_b_year.isdigit() and p_b_month.isdigit() and p_b_day.isdigit()):
+                    st.error("🚨 [3-1 궁합] 상대방 생년월일 숫자를 정확히 입력해 주십시오.")
+                    return
+
             if not agree:
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
-
+            
+            # 할인 연산 실행
             total_raw, discount_amt, rate_pct, final_price = calculate_package_price(actual_selected)
             product_names_summary = " + ".join([p.split('.')[0] for p in actual_selected])
             full_product_desc = f"{product_names_summary} ({final_price:,}원)"
@@ -346,13 +378,21 @@ def render_customer_order_form():
             order_id = str(uuid.uuid4())[:8]
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             birth_full = f"{b_year.strip()}-{b_month.strip().zfill(2)}-{b_day.strip().zfill(2)}"
+            
+            if is_gunghap:
+                p_birth_full = f"{p_b_year.strip()}-{p_b_month.strip().zfill(2)}-{p_b_day.strip().zfill(2)}"
+                partner_info_str = f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal}]"
+                memo_info = f"{email.strip()} | {partner_info_str}" if email.strip() else partner_info_str
+            else:
+                memo_info = email.strip()
+
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             
             conn = sqlite3.connect(DB_FILE)
             c = conn.cursor()
             c.execute('''
                 INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (order_id, now_str, name.strip(), phone_full, email.strip(), birth_full, b_time, gender, cal_type, marital, full_product_desc, "입금대기", ""))
+            ''', (order_id, now_str, name.strip(), phone_full, memo_info, birth_full, b_time, gender, cal_type, marital, full_product_desc, "입금대기", ""))
             conn.commit()
             conn.close()
             
@@ -360,7 +400,7 @@ def render_customer_order_form():
                 "order_id": order_id, 
                 "name": name.strip(), 
                 "product_desc": full_product_desc,
-                "selected_products": selected_products,
+                "selected_products": actual_selected,
                 "total_raw": total_raw,
                 "discount_amt": discount_amt,
                 "rate_pct": rate_pct,
@@ -369,10 +409,7 @@ def render_customer_order_form():
             st.rerun()
 
     # --------------------------------------------------------------------------
-    # 신청 완료 화면
-    # --------------------------------------------------------------------------
-    # --------------------------------------------------------------------------
-    # 신청 완료 화면 (문단별 st.markdown 분리)
+    # 신청 완료 화면 (문단별 st.markdown 분리 & 소스코드 노출 방지)
     # --------------------------------------------------------------------------
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
@@ -391,7 +428,7 @@ def render_customer_order_form():
 <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
 신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
 이제 아래 계좌로 복비를 쏴주시면,<br>
-초연박사님이 바로 🔍돋보기 들고<br> 내 인생 스포일러 👀분석에 들어갑니다!
+초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
 </div>
 """, unsafe_allow_html=True)
 
@@ -404,13 +441,13 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        # 4. 입금 주의사항 및 친구 소개 이벤트 (독립 문단)
+        # 4. 입금 주의사항 및 친구 소개 이벤트 (독립 문단 & 30% 할인 적용)
         st.markdown("""
 <div class='guide-box' style='margin-top:10px;'>
 <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
-좋은 건 나눠야지요! <br>친구에게 '박사사주'를 소개해 주세요.<br>
+좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
 소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
@@ -418,17 +455,14 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 5. 친구 공유 박스 (내 화면 이동 없이 카톡/문자 앱만 호출)
+        # 5. 친구 공유 박스 (독립 문단 & order_id 링크 연동 & 원터치 전송)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        
         share_title = "🔮 박사사주 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 아래 링크에서 신청해봐!\n{ref_order_link}"
-        
-        import urllib.parse
         encoded_msg = urllib.parse.quote(share_msg)
 
         st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:15px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
 💬 친구에게 박사사주 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
@@ -457,6 +491,7 @@ def render_customer_order_form():
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
+
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
 # ------------------------------------------------------------------------------
@@ -487,6 +522,8 @@ def render_admin_panel(generator_func):
             for _, row in pending_orders.iterrows():
                 with st.expander(f"📌 [{row['name']} 님] {row['product']} (신청일: {row['created_at']})", expanded=True):
                     st.write(f"- 핸드폰 번호: **{row['phone']}** | 생년월일: **{row['birth_date']} ({row['calendar_type']})** | 시간: **{row['birth_time']}**")
+                    if row['email']:
+                        st.caption(f"📝 메모/궁합상대: {row['email']}")
                     
                     c1, c2 = st.columns(2)
                     with c1:
@@ -564,9 +601,9 @@ def render_admin_panel(generator_func):
 '박사사주' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
 👉 채널 추가: [카톡 채널 URL 삽입]
 
-2️⃣ 리얼 후기 쓰고 50% 반값 쿠폰 득템!
+2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
 풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
-연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [50% 할인 쿠폰] 팍팍 쏩니다! 💸
+연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [30% 할인 쿠폰] 팍팍 쏩니다! 💸
 
 ---
 
