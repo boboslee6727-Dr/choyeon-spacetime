@@ -2,6 +2,7 @@
 # 🏮 박사사주: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
 # ==============================================================================
 import streamlit as st
+import streamlit.components.v1 as components
 import sqlite3
 import os
 import uuid
@@ -543,34 +544,85 @@ def render_customer_order_form():
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_title = "🔮 박사사주 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 아래 링크에서 신청해봐!\n{ref_order_link}"
-        encoded_msg = urllib.parse.quote(share_msg)
 
+        # 공유 카드 상단 안내문
         st.markdown(f"""
 <div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
 💬 친구에게 박사사주 공유하고 함께 혜택 받기
 </div>
-<div class='share-card'>
+<div class='share-card' style='padding-bottom: 10px;'>
 🔮 [ 박사사주 ] 🔮<br>
 소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
-친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
-
-<div style='text-align:center; margin: 15px 0;'>
-    <a href="sms:?&body={encoded_msg}" 
-       onclick="
-           if (navigator.share) {{
-               event.preventDefault();
-               navigator.share({{
-                   title: '{share_title}',
-                   text: `{share_msg}`,
-                   url: '{ref_order_link}'
-               }}).catch(function(e){{}});
-           }}
-       " 
-       style='display:block; text-decoration:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:16px; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif;'>
-        🟡 터치해서 친구에게 카톡/문자 바로 보내기
-    </a>
+친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br>
 </div>
+""", unsafe_allow_html=True)
 
+        # 자바스크립트가 100% 실행되는 실시간 버튼 컴포넌트
+        share_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+          body {{ margin: 0; padding: 5px 0; background: transparent; font-family: 'Gowun Dodum', sans-serif; }}
+          .share-btn {{
+              width: 100%;
+              background-color: #FEE500;
+              color: #191919;
+              border: none;
+              border-radius: 10px;
+              padding: 14px 10px;
+              font-size: 16px;
+              font-weight: bold;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+              cursor: pointer;
+              transition: background-color 0.2s;
+              font-family: 'Gowun Dodum', sans-serif;
+          }}
+          .share-btn:active {{
+              background-color: #E5CD00;
+          }}
+        </style>
+        </head>
+        <body>
+          <button type="button" class="share-btn" onclick="executeShare()">
+            🟡 터치해서 친구에게 카톡/문자 바로 보내기
+          </button>
+
+          <script>
+            const sTitle = {json.dumps(share_title)};
+            const sText = {json.dumps(share_msg)};
+            const sUrl = {json.dumps(ref_order_link)};
+
+            function executeShare() {{
+              if (navigator.share) {{
+                navigator.share({{
+                  title: sTitle,
+                  text: sText,
+                  url: sUrl
+                }}).catch(function(e) {{}});
+              }} else {{
+                // PC 또는 미지원 환경: 클립보드 복사 + 문자 링크 호출
+                const fullText = sText + "\\n" + sUrl;
+                if (navigator.clipboard) {{
+                  navigator.clipboard.writeText(fullText).then(function() {{
+                    alert("✨ 추천 링크와 안내 문구가 복사되었습니다! 카카오톡이나 문자에 붙여넣어 친구에게 보내주세요.");
+                  }});
+                }} else {{
+                  window.open("sms:?&body=" + encodeURIComponent(fullText));
+                }}
+              }}
+            }}
+          </script>
+        </body>
+        </html>
+        """
+        components.html(share_html, height=75)
+
+        # 공유 카드 하단 문구
+        st.markdown("""
+<div class='share-card' style='margin-top: -15px; border-top: none; border-top-left-radius: 0; border-top-right-radius: 0; padding-top: 5px;'>
 <span style='color:#757575; font-size:13px;'>※ 터치 시 현재 화면은 그대로 유지되며 카카오톡/문자 전송 창이 열립니다.</span><br><br>
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
