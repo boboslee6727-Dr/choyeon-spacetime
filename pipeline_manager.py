@@ -14,24 +14,24 @@ import json
 import requests
 
 DB_FILE = "choyeon_orders.db"
-LEDGER_FILE = "초연시공_비밀장부.csv"
-ADMIN_PASSWORD = "choyeon_master_pass" # 박사님 전용 관리자 암호
+LEDGER_FILE = "박사사주_비밀장부.csv"
+ADMIN_PASSWORD = "boss!631201" # 박사님 전용 관리자 암호
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 
 # 12개 정식 상품 체계
 PRODUCT_LIST = [
-    "1-1. 사주팔자 및 평생 총운 풀이 (33,000원)",
-    "1-2. 올 해 (특정 연도) 운세 상세분석 (22,000원)",
-    "1-3. 이번 달 (특정 월) 운세 상세분석 (11,000원)",
-    "1-4. 이번 주간 및 일진 운세 (무료/5,000원)",
-    "2-1. 재물운 & 자산 축적 타이밍 특화 (22,000원)",
-    "2-2. 직업/진로/이직/승진운 특화 (22,000원)",
-    "2-3. 연애/결혼운 & 사전 흉화예방 특화 (22,000원)",
-    "2-4. 건강운 & 조토극수 체질분석 특화 (22,000원)",
-    "2-5. 이사 및 개업 택일 특화 (22,000원)",
-    "3-1. 부부/연인 정밀 궁합 풀이 (33,000원)",
-    "3-2. 백년가약 결혼 택일 (33,000원)",
-    "3-3. 명품 출산 택일 (Top 5 길일) (55,000원)"
+    "1-1. 사주팔자 및 평생 총운 풀이 (11,000원)",
+    "1-2. 올 해 (특정 연도) 운세 상세분석 (5,500원)",
+    "1-3. 이번 달 (특정 월) 운세 상세분석 (5,500원)",
+    "1-4. 이번 주간 및 일진 운세 (무료/2,200원)",
+    "2-1. 재물운 & 자산 축적 타이밍 특화 (11,000원)",
+    "2-2. 직업/진로/이직/승진운 특화 (11,000원)",
+    "2-3. 연애/결혼운 & 사전 흉화예방 특화 (11,000원)",
+    "2-4. 건강운 & 조토극수 체질분석 특화 (5,500원)",
+    "2-5. 이사 및 개업 택일 특화 (5,500원)",
+    "3-1. 부부/연인 정밀 궁합 풀이 (22,000원)",
+    "3-2. 백년가약 결혼 택일 (11,000원)",
+    "3-3. 명품 출산 택일 (Top 5 길일) (33,000원)"
 ]
 
 TIME_OPTIONS = [
@@ -122,7 +122,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 
 고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
 
-- 초연박사 올림 -"""
+- 박사사주 올림 -"""
 
         url = "https://api.solapi.com/messages/v4/send"
         headers = {
@@ -172,49 +172,33 @@ def render_customer_order_form():
     st.markdown("""
     <style>
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; font-family: 'Nanum Myeongjo', serif; }
-        .logo-container { text-align: center; margin-bottom: 20px; }
-        .logo-container img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(26,35,126,0.15); }
+        .m-title { font-size: 22px; font-weight: 900; color: #1A237E; text-align: center; border-bottom: 2px double #1A237E; padding-bottom: 8px; margin-bottom: 15px; }
         .req { color: #D50000; font-weight: bold; }
         .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Nanum Myeongjo', serif; }
         .pay-title { font-size: 20px; font-weight: 900; color: #1A237E; text-align: center; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
     
-    # 박사사주 공식 이미지 로고 삽입 (GitHub 등에 업로드하신 이미지 주소를 대입하시면 됩니다)
-    logo_img_url = "https://raw.githubusercontent.com/사용자계정/저장소이름/main/baksa_saju_logo.png"
-    
-    st.markdown(f"""
-        <div class='logo-container'>
-            <img src='{logo_img_url}' alt='박사사주 로고'>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div class='m-title-box'>
-            <h1 class='m-main-logo'>🔮 박사사주</h1>
-            <p class='m-sub-desc'>초연박사의 소름 돋는 인생 스포일러</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='m-title'>🔮 박사사주 신청서</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
-        name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
+        name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요")
         
-        c_p1, c_p2, c_p3 = st.columns([1.2, 1.5, 1.5])
-        with c_p1: st.text_input("통신사/국번", value="010", disabled=True)
-        with c_p2: p_mid = st.text_input("중간 4자리 *(필수)", max_chars=4, placeholder="1234")
-        with c_p3: p_end = st.text_input("끝 4자리 *(필수)", max_chars=4, placeholder="5678")
+        # 불필요한 '통신사/국번' 항목을 삭제하고 전화번호 입력창으로 통합
+        c_p1, c_p2 = st.columns(2)
+        with c_p1: p_mid = st.text_input("휴대폰 중간 4자리 *(필수)", max_chars=4, placeholder="1234")
+        with c_p2: p_end = st.text_input("휴대폰 끝 4자리 *(필수)", max_chars=4, placeholder="5678")
         
-        email = st.text_input("이메일 (선택)", placeholder="choyeon@example.com")
+        email = st.text_input("이메일 (선택)", placeholder="ch1234@example.com")
         
         c_y, c_m, c_d = st.columns(3)
-        # 초기값을 2010년 6월 15일로 세팅
         with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="2010")
         with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="06")
         with c_d: b_day = st.text_input("일 (DD) *", max_chars=2, placeholder="15")
         
         c_g, c_c, c_m_stat = st.columns(3)
         with c_g: gender = st.selectbox("성별 *", ["여성", "남성"])
-        with c_c: cal_type = st.selectbox("양/음력 *", ["양력", "음력", "음력(윤달)"])
+        with c_c: cal_type = st.selectbox("양력 또는 음력 *", ["양력", "음력", "음력(윤달)"])
         with c_m_stat: marital = st.selectbox("혼인 상태 *", ["미혼", "기혼"])
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
@@ -226,7 +210,7 @@ def render_customer_order_form():
         
         if submitted:
             if not name.strip():
-                st.error("🚨 성명을 입력해 주십시오.")
+                st.error("🚨 이름을 입력해 주십시오.")
                 return
             if len(p_mid.strip()) != 4 or len(p_end.strip()) != 4 or not (p_mid.isdigit() and p_end.isdigit()):
                 st.error("🚨 휴대전화 번호 4자리를 숫자로 정확히 입력해 주십시오.")
@@ -259,7 +243,6 @@ def render_customer_order_form():
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
-        logo_img_url = "https://raw.githubusercontent.com/.../baksa_saju_logo.png"
 
         st.markdown(
             f"""
@@ -268,17 +251,16 @@ def render_customer_order_form():
             <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
             신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
             이제 아래 계좌로 복비를 쏴주시면, 초연박사님이 바로 돋보기 들고 내 인생 스포일러 분석에 들어갑니다! 👀🔍<br><br>
-            💳 <b>국민은행 231402-04-13322*</b><br>
+            💳 <b>국민은행 231402-04-133221</b><br>
             👤 <b>예금주: 이 * 호</b><br>
             💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
             <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
-            <b>- 초연박사 올림 -</b>
+            <b>- 박사사주 올림 -</b>
         </div>
         """,
             unsafe_allow_html=True,
         )
 
-        # 🌟 [친구 초대 및 지인 추천 카드 메시지 안내 영역]
         st.markdown("---")
         st.markdown(
             "<div style='text-align:center; font-weight:bold; font-size:15px;"
@@ -286,20 +268,21 @@ def render_customer_order_form():
             unsafe_allow_html=True,
         )
 
-        share_text = f"""[박사사주]
-🏮 박사 사주풀이 신청서
-아래 링크를 눌러 신청서를 작성해 주세요.
+        # 박사사주 로고(텍스트 배너) 아래에 링크가 바로 위치하도록 구성한 친구 공유 텍스트
+        share_text = f"""🔮 [ 박사사주 ] 🔮
+📖 소름 돋는 인생 스포일러 & 사주 풀이 신청서
 
+👇 아래 링크를 눌러 간편하게 신청하세요!
 {order_link}
 
-- 초연박사 올림 -"""
+- 박사사주 올림 -"""
         st.code(share_text, language="text")
 
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
 # ------------------------------------------------------------------------------
 def render_admin_panel(generator_func):
-    st.subheader("👑 초연 시공명리 관리자 장부 및 감명 발송 패널")
+    st.subheader("👑 박사사주 관리자 장부 및 감명 발송 패널")
     
     pwd = st.sidebar.text_input("관리자 비밀번호", type="password")
     if pwd != ADMIN_PASSWORD:
@@ -324,12 +307,12 @@ def render_admin_panel(generator_func):
         else:
             for _, row in pending_orders.iterrows():
                 with st.expander(f"📌 [{row['name']} 님] {row['product']} (신청일: {row['created_at']})", expanded=True):
-                    st.write(f"- 연락처: **{row['phone']}** | 생년월일: **{row['birth_date']} ({row['calendar_type']})** | 시간: **{row['birth_time']}**")
+                    st.write(f"- 핸드폰 번호: **{row['phone']}** | 생년월일: **{row['birth_date']} ({row['calendar_type']})** | 시간: **{row['birth_time']}**")
                     
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button(f"💰 입금 확인 (감명생성 + 자동발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
-                            with st.spinner(f"{row['name']}님의 ver 74.0 정밀 감명서를 생성 중입니다..."):
+                            with st.spinner(f"{row['name']}님의 정밀 감명서를 생성 중입니다..."):
                                 html_result = generator_func(row)
                                 
                                 conn = sqlite3.connect(DB_FILE)
@@ -339,7 +322,7 @@ def render_admin_panel(generator_func):
                                 conn.close()
                                 
                                 ledger_row = {
-                                    '접수일시': [row['created_at']], '성명': [row['name']], '연락처': [row['phone']],
+                                    '접수일시': [row['created_at']], '이름': [row['name']], '핸드폰 번호': [row['phone']],
                                     '생년월일': [row['birth_date']], '태어난시간': [row['birth_time']],
                                     '신청상품': [row['product']], '진행상태': ['분석완료']
                                 }
@@ -349,7 +332,6 @@ def render_admin_panel(generator_func):
                                 else:
                                     df_led.to_csv(LEDGER_FILE, mode='w', header=True, index=False, encoding='utf-8-sig')
                                 
-                                # 🌟 [1순위: 솔라피 자동 발송 가동]
                                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
                                 send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
                                 
@@ -366,7 +348,7 @@ def render_admin_panel(generator_func):
 혹시 잊으신 건 아니죠? 🥺
 {row['name']}님, 신청하신 "{row['product'].split(' (')[0]}" 복비 입금이 아직 안 돼서 초연박사님이 대기 타고 계셔요! 
 
-■ 국민은행 231402-04-13322* (이*호)
+■ 국민은행 231402-04-133221 (예금주: 이*호)
 ■ 복비: {row['product'].split('(')[-1].replace(')', '')}
 
 입금 호다닥 해주시면 바로 소름 돋는 사주 분석 시작합니다 🚀
@@ -374,7 +356,7 @@ def render_admin_panel(generator_func):
 🏮 내 신청서 다시 보기:
 {BASE_URL}/?mode=order
 
-- 초연박사 올림 -"""
+- 박사사주 올림 -"""
                         st.caption("⚠️ 미입금 안내 문자:")
                         st.code(unpaid_msg, language="text")
 
@@ -411,12 +393,12 @@ def render_admin_panel(generator_func):
 
 🔮 고민 있을 땐? 박사사주 메뉴판!
 • 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
-• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운
+• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운- 진짜루 개인고민도 싹다 풀어줘요!
 • 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
 
 고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
 
-- 초연박사 올림 -"""
+- 박사사주 올림 -"""
 
                 with st.expander(f"✅ [{row['name']} 님] {row['product']} (열람코드: {row['order_id']})", expanded=True):
                     st.write(f"- 연락처: **{row['phone']}** | 열람 링크: [감명서 바로보기]({view_url})")
@@ -428,7 +410,6 @@ def render_admin_panel(generator_func):
                             if s_ok: st.success(s_msg)
                             else: st.error(s_msg)
                     
-                    # 🌟 [2순위: 2중 안전망 수동 복사창 백업 유지]
                     with c_copy:
                         st.caption("💌 비상용 백업: 카카오톡/문자 수동 복사창")
                         st.code(complete_msg, language="text")
