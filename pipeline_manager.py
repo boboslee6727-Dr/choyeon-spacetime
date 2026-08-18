@@ -172,14 +172,29 @@ def render_customer_order_form():
     st.markdown("""
     <style>
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; font-family: 'Nanum Myeongjo', serif; }
-        .m-title { font-size: 22px; font-weight: 900; color: #1A237E; text-align: center; border-bottom: 2px double #1A237E; padding-bottom: 8px; margin-bottom: 15px; }
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .logo-container img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(26,35,126,0.15); }
         .req { color: #D50000; font-weight: bold; }
         .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Nanum Myeongjo', serif; }
         .pay-title { font-size: 20px; font-weight: 900; color: #1A237E; text-align: center; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>🏮 박사 사주풀이 신청서</div>", unsafe_allow_html=True)
+    # 박사사주 공식 이미지 로고 삽입 (GitHub 등에 업로드하신 이미지 주소를 대입하시면 됩니다)
+    logo_img_url = "https://raw.githubusercontent.com/사용자계정/저장소이름/main/baksa_saju_logo.png"
+    
+    st.markdown(f"""
+        <div class='logo-container'>
+            <img src='{logo_img_url}' alt='박사사주 로고'>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div class='m-title-box'>
+            <h1 class='m-main-logo'>🔮 박사사주</h1>
+            <p class='m-sub-desc'>초연박사의 소름 돋는 인생 스포일러</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
