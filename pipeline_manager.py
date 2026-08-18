@@ -173,8 +173,8 @@ def render_customer_order_form():
         email = st.text_input("이메일 (선택)", placeholder="choyeon@example.com")
         
         c_y, c_m, c_d = st.columns(3)
-        with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="1980")
-        with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="05")
+        with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="2010")
+        with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="06")
         with c_d: b_day = st.text_input("일 (DD) *", max_chars=2, placeholder="15")
         
         c_g, c_c, c_m_stat = st.columns(3)
