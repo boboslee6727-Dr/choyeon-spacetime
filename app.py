@@ -250,36 +250,12 @@ def generate_report_for_order(order_row):
     final_html = f"{cover}<br>{info_h}<br>{formatted_body}"
     report_box = html_views.get_final_report_box(final_html)
 
-    # 5. [수정] 솔라피(Solapi) 알림톡 자동 발송 실행 (정상 들여쓰기 적용)
+    # 5. [수정] 솔라피(Solapi) 자동 발송 실행 (pipeline.py 연동)
     if phone_number and view_code:
         try:
-            from sdk.api.message import Message
-            from sdk.exceptions import NurigoMessageNotEnoughBalanceException
-
-            solapi_key = st.secrets["SOLAPI_API_KEY"]
-            solapi_secret = st.secrets["SOLAPI_API_SECRET"]
-            sender_id = st.secrets["SOLAPI_SENDER_ID"]  # 솔라피 발신프로필 ID
-
-            message_service = Message(solapi_key, solapi_secret)
-
-            # 실제 서비스 도메인 일치
-            view_url = f"http://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
-            order_url = "http://choyeon-spacetime.streamlit.app/?mode=order"
-
-            params = {
-                "to": phone_number.replace("-", ""),
-                "from": sender_id,
-                "kakaoOptions": {
-                    "pfId": sender_id,
-                    "templateId": "KA01TP...",  # 등록하신 알림톡 템플릿 ID
-                    "variables": {
-                        "#{이름}": name,
-                        "#{링크}": view_url,
-                        "#{신청링크}": order_url,
-                    },
-                },
-            }
-            message_service.send(params)
+            view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
+            from pipeline import send_solapi_auto_message
+            send_solapi_auto_message(phone_number, name, product, view_url)
         except Exception as e:
             st.error(f"🚨 알림톡 자동 발송 실패: {e}")
 
