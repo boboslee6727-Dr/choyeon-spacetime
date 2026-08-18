@@ -500,16 +500,18 @@ def render_customer_order_form():
             }
             st.rerun()
 
-    # 3. 신청 완료 화면 (문단별 분리)
+    # --------------------------------------------------------------------------
+    # [1단계] 이미 신청을 완료한 경우 -> 접수완료/공유 화면 고정 렌더링
+    # --------------------------------------------------------------------------
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
-        order_link = f"{BASE_URL}/?mode=order"
 
         if ord_info["discount_amt"] > 0:
             price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
         else:
             price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
+        # 1. 메인 접수 완료 박스
         st.markdown(f"""
 <div class='guide-box'>
 <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
@@ -520,6 +522,7 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
+        # 2. 계좌 및 복비 안내 박스
         st.markdown(f"""
 <div class='bank-info-box'>
 💳 <b>국민은행 231402-04-133221</b><br>
@@ -528,59 +531,37 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
+        # 3. 입금 주의사항 & 윈-윈 친구 소개 이벤트 안내
         st.markdown("""
 <div class='guide-box' style='margin-top:10px;'>
 <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
 좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
-소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
-<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-
-        # ----------------------------------------------------------------------
-        # 5. 친구 공유 박스 (모바일 OS 규격 완벽 대응 & target 충돌 제거)
-        # ----------------------------------------------------------------------
-        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 아래 링크에서 신청해봐!\n{ref_order_link}"
-        
-        # 모바일 표준 인코딩
-        encoded_sms_msg = urllib.parse.quote(share_msg)
-
-        st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
-💬 친구에게 박사사주 공유하고 함께 혜택 받기
-</div>
-<div class='share-card'>
-🔮 <b>[ 박사사주 친구 추천 혜택 ]</b> 🔮<br>
-소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
-친구 소개로 같이 신청하면 우리 둘 다 <b>30% 할인 쿠폰</b> 득템 혜택! 🎁<br><br>
-
-<div style='text-align:center; margin: 15px 0;'>
-    <a href="sms:?body={encoded_sms_msg}" 
-       style='display:block; text-decoration:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:15px 10px; font-size:16px; font-weight:bold; box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-family: "Gowun Dodum", sans-serif; cursor:pointer;'>
-        📱 [모바일] 터치해서 친구에게 바로 문자 보내기
-    </a>
-</div>
-
-<span style='color:#757575; font-size:13px;'>※ 버튼 터치 시 스마트폰 문자 전송 창이 열리며, 본 화면은 그대로 유지됩니다.</span>
+소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
 </div>
 """, unsafe_allow_html=True)
 
         st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-        
-        # 카카오톡/PC 복사용 텍스트 박스
-        st.caption("💬 **카카오톡 / PC 전송 시**: 아래 박스 오른쪽 위의 복사(Copy) 아이콘을 눌러 붙여넣기 하세요!")
+
+        # 4. 이벤트 바로 아래 다이렉트 복사창 & 숏폼 안내문
+        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
+        share_msg = f"내 인생 스포일러 보러가기 👀 (친구 추천 시 둘 다 30% 할인!)\n👉 {ref_order_link}"
+
         st.code(share_msg, language="text")
 
         st.markdown("""
-<div style='text-align: right; font-weight: bold; font-family: "Gowun Dodum", sans-serif; color: #2D3748; margin-top: 5px;'>
-- 박사사주 올림 -
+<div style='text-align: center; font-family: "Gowun Dodum", sans-serif; font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 20px;'>
+    위 박스 우측 <b>[복사 아이콘]</b> 또는 화면 우측 하단 <b>👑(공유)</b>를 눌러<br>
+    친구에게 카톡으로 보내면 <b>두 사람 모두 30% 할인</b> 혜택 적용! 💸
 </div>
 """, unsafe_allow_html=True)
+        
+        # 추가 신청 버튼
+        if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
+            del st.session_state["submitted_order"]
+            st.rerun()
+        return
 
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
