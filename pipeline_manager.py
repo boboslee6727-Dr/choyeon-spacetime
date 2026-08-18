@@ -405,7 +405,7 @@ def render_customer_order_form():
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['name']}"
 
         st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:16px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
 💬 친구에게 앱 주소 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
