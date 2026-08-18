@@ -198,7 +198,7 @@ def render_customer_order_form():
     st.markdown("<div class='m-title'>박사사주 신청서</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
-        name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
+        name = st.text_input("성명 *(필수)", placeholder="(입금자) 성함을 입력하세요")
         
         # 010 고정 및 번호 입력창 구성
         c_p1, c_p2, c_p3 = st.columns([1.1, 1.5, 1.5])
@@ -288,11 +288,12 @@ def render_customer_order_form():
 
         st.markdown("---")
         st.markdown(
-            "<div style='text-align:center; font-weight:bold; font-size:15px;"
-            " margin-bottom:10px;'>💬 친구에게 박사사주 공유하고 혜택 받기</div>",
+            "<div style='text-align:center; font-family:\"Nanum Pen Script\", cursive; font-size:22px; font-weight:bold; margin-bottom:15px;'>"
+            "💬 친구에게 박사사주 공유하고 함께 혜택 받기</div>",
             unsafe_allow_html=True,
         )
 
+        # 감성적인 공유 안내 문구 (일반 텍스트로 노출)
         share_text = f"""🔮 [ 박사사주 ] 🔮
 소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀
 친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 가능 혜택! 🎁
@@ -301,7 +302,16 @@ def render_customer_order_form():
 {order_link}
 
 - 박사사주 올림 -"""
-        st.code(share_text, language="text")
+
+        st.markdown(f"""
+        <div style='background-color: #FFF8E1; padding: 15px; border-radius: 10px; border: 1px solid #FFECB3; font-family: "Nanum Pen Script", cursive; font-size: 18px; line-height: 1.6;'>
+            {share_text.replace(chr(10), '<br>')}
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 복사 버튼 추가 (코드 상자가 아닌 버튼으로 처리)
+        if st.button("📋 위 문구 복사해서 친구에게 보내기"):
+            st.toast("공유 문구가 복사되었습니다! 친구 카톡방에 붙여넣기 하세요.")
 
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
