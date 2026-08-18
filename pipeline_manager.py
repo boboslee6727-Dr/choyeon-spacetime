@@ -296,6 +296,7 @@ def render_customer_order_form():
 
     # 2. 단일 고유 키 적용 (중복 에러 원천 방지)
     with st.form("choyeon_customer_order_form_v2"):
+        # --- 1. 신청자 본인 정보 ---
         st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
@@ -314,14 +315,14 @@ def render_customer_order_form():
         c_g, c_c, c_m_stat = st.columns(3)
         with c_g: gender = st.selectbox("성별 *", ["여성", "남성"])
         with c_c: cal_type = st.selectbox("양력 또는 음력 *", ["양력", "음력", "음력(윤달)"])
-        with c_m_stat: marital = st.selectbox("혼인 상태 *", ["미혼", "기혼"])
+        with c_m_stat: marital = st.selectbox("혼인 상태 *", ["미혼", "기혼", "돌싱"])
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
-        # 3-* 선택 시에만 상대방 입력창 노출
+        # --- 2. 3-* 계열 상품 선택 시에만 노출되는 상대방 사주 정보 ---
         partner_name = ""
         p_b_year, p_b_month, p_b_day = "", "", ""
-        partner_gender, partner_cal, partner_time = "남성", "양력", "시간 모름"
+        partner_gender, partner_cal, partner_marital, partner_time = "남성", "양력", "미혼", "시간 모름"
         
         if has_partner_product:
             st.markdown("<hr style='border: 0; border-top: 1px dashed #3F51B5; margin: 15px 0;'>", unsafe_allow_html=True)
@@ -333,16 +334,19 @@ def render_customer_order_form():
             with c_pm: p_b_month = st.text_input("상대방 월 (MM) *", max_chars=2, placeholder="08")
             with c_pd: p_b_day = st.text_input("상대방 일 (DD) *", max_chars=2, placeholder="20")
             
-            c_pg, c_pc, c_pt = st.columns([1, 1, 1.5])
+            c_pg, c_pc, c_pm_stat = st.columns(3)
             with c_pg: partner_gender = st.selectbox("상대방 성별 *", ["남성", "여성"])
             with c_pc: partner_cal = st.selectbox("상대방 양/음력 *", ["양력", "음력", "음력(윤달)"])
-            with c_pt: partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
+            with c_pm_stat: partner_marital = st.selectbox("상대방 혼인 상태 *", ["미혼", "기혼", "돌싱"])
+            
+            partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
         
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
+        # --- 3. 제출 검증 및 DB 저장 ---
         if submitted:
             actual_selected = st.session_state.get("user_selected_products", selected_products)
 
@@ -381,7 +385,7 @@ def render_customer_order_form():
             
             if has_partner_product:
                 p_birth_full = f"{p_b_year.strip()}-{p_b_month.strip().zfill(2)}-{p_b_day.strip().zfill(2)}"
-                partner_info_str = f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal}]"
+                partner_info_str = f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal} / {partner_marital}]"
                 memo_info = f"{email.strip()} | {partner_info_str}" if email.strip() else partner_info_str
             else:
                 memo_info = email.strip()
