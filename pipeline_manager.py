@@ -1,62 +1,5 @@
-import streamlit.components.v1 as components
-
-# 파트너센터 프로필용 이미지 다운로드 생성기
-components.html("""
-<canvas id="logoCanvas" width="800" height="800" style="display:none;"></canvas>
-<div style="text-align:center; margin-top:20px;">
-    <button onclick="downloadLogo()" style="padding:15px 30px; background-color:#1A237E; color:white; border:none; border-radius:10px; font-size:18px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        📥 '박사사주' 파트너센터 프로필 이미지 다운로드
-    </button>
-</div>
-<script>
-function downloadLogo() {
-    var c = document.getElementById("logoCanvas");
-    var ctx = c.getContext("2d");
-    
-    // 1. 아이보리 바탕색 채우기
-    ctx.fillStyle = "#F8F5ED";
-    ctx.fillRect(0, 0, 800, 800);
-    
-    // 2. 책 모양 심볼 그리기 (진한 먹색)
-    ctx.strokeStyle = "#374151";
-    ctx.lineWidth = 14;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    
-    // 윗면 곡선
-    ctx.moveTo(150, 300); 
-    ctx.quadraticCurveTo(275, 330, 400, 250); 
-    ctx.quadraticCurveTo(525, 330, 650, 300);
-    
-    // 아랫면 곡선
-    ctx.moveTo(150, 600); 
-    ctx.quadraticCurveTo(275, 630, 400, 550); 
-    ctx.quadraticCurveTo(525, 630, 650, 600);
-    
-    // 기둥 및 양옆 테두리
-    ctx.moveTo(400, 250); ctx.lineTo(400, 550); // 중앙
-    ctx.moveTo(150, 300); ctx.lineTo(150, 600); // 좌측
-    ctx.moveTo(650, 300); ctx.lineTo(650, 600); // 우측
-    ctx.stroke();
-    
-    // 3. '박사사주' 타이틀 넣기
-    ctx.fillStyle = "#1A2332";
-    ctx.font = "bold 130px 'Gowun Dodum', sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("박 사 사 주", 400, 470);
-    
-    // 4. PNG 파일로 즉시 다운로드 실행
-    var link = document.createElement('a');
-    link.download = '박사사주_프로필.png';
-    link.href = c.toDataURL("image/png");
-    link.click();
-}
-</script>
-""", height=120)
-
 # ==============================================================================
-# 🏮 박사사주: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -73,7 +16,7 @@ import requests
 import urllib.parse
 
 DB_FILE = "choyeon_orders.db"
-LEDGER_FILE = "박사사주_비밀장부.csv"
+LEDGER_FILE = "사주박사_비밀장부.csv"
 ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 
@@ -150,7 +93,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         clean_to_phone = to_phone.replace("-", "").strip()
         clean_from_phone = from_phone.replace("-", "").strip()
 
-        msg_body = f"""[박사사주]
+        msg_body = f"""[사주박사]
 짠! {name}님, 기다리던 사주 풀이가 도착했어요! 😎
 
 아래 링크를 누르면 내 인생 스포일러(사주 감명서)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
@@ -160,10 +103,10 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 
 ---
 
-🎁 [박사사주 폼 미친 이벤트] 🎁
+🎁 [사주박사 폼 미친 이벤트] 🎁
 
 1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
-'박사사주' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
+'사주박사' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
 👉 채널 추가: [카톡 채널 URL 삽입]
 
 2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
@@ -172,14 +115,14 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 
 ---
 
-🔮 고민 있을 땐? 박사사주 메뉴판!
+🔮 고민 있을 땐? 사주박사 메뉴판!
 • 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
 • 테마운: 썸/연애/결혼운, 재물운, 취업/이직운 - 진짜루 개인고민도 싹다 풀어줘요!
 • 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
 
 고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
 
-- 박사사주 올림 -"""
+- 사주박사 올림 -"""
 
         url = "https://api.solapi.com/messages/v4/send"
         headers = {
@@ -192,7 +135,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
                 "to": clean_to_phone,
                 "from": clean_from_phone,
                 "text": msg_body,
-                "subject": f"[박사사주] {name}님 감명 완료 안내"
+                "subject": f"[사주박사] {name}님 감명 완료 안내"
             }
         }
 
@@ -338,7 +281,7 @@ def render_customer_order_form():
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>🔮박사사주 신청서🔮</div>", unsafe_allow_html=True)
+    st.markdown("<div class='m-title'>🔮사주박사 신청서🔮</div>", unsafe_allow_html=True)
     
     # --------------------------------------------------------------------------
     # [1단계] 이미 신청을 완료한 경우 -> 접수완료/공유 화면만 고정 렌더링
@@ -377,9 +320,9 @@ def render_customer_order_form():
 <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
-좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
+좋은 건 나눠야지요! 친구에게 '사주박사'를 소개해 주세요.<br>
 소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
-<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
+<div style='text-align: right; font-weight: bold;'>- 사주박사 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -387,15 +330,15 @@ def render_customer_order_form():
 
         # 원터치 공유 박스 (href 이동 없이 JS 단독 호출)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        share_title = "🔮 박사사주 - 내 인생 스포일러"
+        share_title = "🔮 사주박사 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
 
         st.markdown(f"""
 <div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
-💬 친구에게 박사사주 공유하고 함께 혜택 받기
+💬 친구에게 사주박사 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
-🔮 [ 박사사주 ] 🔮<br>
+🔮 [ 사주박사 ] 🔮<br>
 소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
 친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
 
@@ -413,12 +356,12 @@ def render_customer_order_form():
            }}
        " 
        style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:16px; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif; cursor:pointer;'>
-        🟡 터치해서 친구에게 카톡/문자 바로 보내기
+         🟡 터치해서 친구에게 카톡/문자 바로 보내기
     </button>
 </div>
 
 <span style='color:#757575; font-size:13px;'>※ 터치 시 현재 화면은 그대로 유지되며 카카오톡/문자 전송 창이 열립니다.</span><br><br>
-<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
+<div style='text-align: right; font-weight: bold;'>- 사주박사 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
         
@@ -557,74 +500,11 @@ def render_customer_order_form():
             }
             st.rerun()
 
-    # --------------------------------------------------------------------------
-    # [1단계] 이미 신청을 완료한 경우 -> 접수완료/공유 화면 고정 렌더링
-    # --------------------------------------------------------------------------
-    if "submitted_order" in st.session_state:
-        ord_info = st.session_state["submitted_order"]
-
-        if ord_info["discount_amt"] > 0:
-            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
-        else:
-            price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
-
-        # 1. 메인 접수 완료 박스
-        st.markdown(f"""
-<div class='guide-box'>
-<div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
-<b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
-신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-이제 아래 계좌로 복비를 쏴주시면,<br>
-초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
-</div>
-""", unsafe_allow_html=True)
-
-        # 2. 계좌 및 복비 안내 박스
-        st.markdown(f"""
-<div class='bank-info-box'>
-💳 <b>국민은행 231402-04-133221</b><br>
-👤 <b>예금주: 이 * 호</b><br>
-💰 <b>복비:</b> {price_display}
-</div>
-""", unsafe_allow_html=True)
-
-        # 3. 입금 주의사항 & 윈-윈 친구 소개 이벤트 안내
-        st.markdown("""
-<div class='guide-box' style='margin-top:10px;'>
-<span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
-<hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
-🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
-좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
-소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-
-        # 4. 이벤트 바로 아래 다이렉트 복사창 & 숏폼 안내문
-        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        share_msg = f"내 인생 스포일러 보러가기 👀 (친구 추천 시 둘 다 30% 할인!)\n👉 {ref_order_link}"
-
-        st.code(share_msg, language="text")
-
-        st.markdown("""
-<div style='text-align: center; font-family: "Gowun Dodum", sans-serif; font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 20px;'>
-    위 박스 우측 <b>[복사 아이콘]</b> 또는 화면 우측 하단 <b>👑(공유)</b>를 눌러<br>
-    친구에게 카톡으로 보내면 <b>두 사람 모두 30% 할인</b> 혜택 적용! 💸
-</div>
-""", unsafe_allow_html=True)
-        
-        # 추가 신청 버튼
-        if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
-            del st.session_state["submitted_order"]
-            st.rerun()
-        return
-
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
 # ------------------------------------------------------------------------------
 def render_admin_panel(generator_func):
-    st.subheader("👑 박사사주 관리자 장부 및 감명 발송 패널")
+    st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
     
     pwd = st.sidebar.text_input("관리자 비밀번호", type="password")
     if pwd != ADMIN_PASSWORD:
@@ -688,7 +568,7 @@ def render_admin_panel(generator_func):
                                 st.rerun()
                                 
                     with c2:
-                        unpaid_msg = f"""[박사사주]
+                        unpaid_msg = f"""[사주박사]
 혹시 잊으신 건 아니죠? 🥺
 {row['name']}님, 신청하신 "{row['product'].split(' (')[0]}" 복비 입금이 아직 안 돼서 초연박사님이 대기 타고 계셔요! 
 
@@ -700,7 +580,7 @@ def render_admin_panel(generator_func):
 🏮 내 신청서 다시 보기:
 {BASE_URL}/?mode=order
 
-- 박사사주 올림 -"""
+- 사주박사 올림 -"""
                         st.caption("⚠️ 미입금 안내 문자:")
                         st.code(unpaid_msg, language="text")
 
@@ -713,7 +593,7 @@ def render_admin_panel(generator_func):
             for _, row in completed_orders.iterrows():
                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
                 
-                complete_msg = f"""[박사사주]
+                complete_msg = f"""[사주박사]
 짠! {row['name']}님, 기다리던 사주 풀이가 도착했어요! 😎
 
 아래 링크를 누르면 내 인생 스포일러(사주 감명서)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
@@ -723,10 +603,10 @@ def render_admin_panel(generator_func):
 
 ---
 
-🎁 [박사사주 폼 미친 이벤트] 🎁
+🎁 [사주박사 폼 미친 이벤트] 🎁
 
 1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
-'박사사주' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
+'사주박사' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
 👉 채널 추가: [카톡 채널 URL 삽입]
 
 2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
@@ -735,14 +615,14 @@ def render_admin_panel(generator_func):
 
 ---
 
-🔮 고민 있을 땐? 박사사주 메뉴판!
+🔮 고민 있을 땐? 사주박사 메뉴판!
 • 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
 • 테마운: 썸/연애/결혼운, 재물운, 취업/이직운 - 진짜루 개인고민도 싹다 풀어줘요!
 • 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
 
 고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
 
-- 박사사주 올림 -"""
+- 사주박사 올림 -"""
 
                 with st.expander(f"✅ [{row['name']} 님] {row['product']} (열람코드: {row['order_id']})", expanded=True):
                     st.write(f"- 연락처: **{row['phone']}** | 열람 링크: [감명서 바로보기]({view_url})")
