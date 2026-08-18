@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 초연 시공명리: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
+# 🏮 박사사주: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -92,7 +92,8 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         clean_to_phone = to_phone.replace("-", "").strip()
         clean_from_phone = from_phone.replace("-", "").strip()
 
-        msg_body = f"""[초연 시공명리 연구소]
+        # 채널명 [박사사주]로 통일
+        msg_body = f"""[박사사주]
 {name}님 안녕하세요.😊
 신청해 주신 "{product.split(' (')[0]}" 정밀 분석이 완료되었습니다.
 
@@ -102,7 +103,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 {view_url}
 
 소중한 인연에 감사드리며, 평안과 번영을 기원합니다.
-- 초연 시공명리 연구소 배상 -"""
+- 박사사주 배상 -"""
 
         url = "https://api.solapi.com/messages/v4/send"
         headers = {
@@ -115,7 +116,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
                 "to": clean_to_phone,
                 "from": clean_from_phone,
                 "text": msg_body,
-                "subject": f"[초연시공명리] {name}님 감명 완료 안내"
+                "subject": f"[박사사주] {name}님 감명 완료 안내"
             }
         }
 
@@ -223,7 +224,8 @@ def render_customer_order_form():
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
-        logo_img_url = "https://raw.githubusercontent.com/.../saju_baksa_logo.png"  # 박사사주 로고 웹 이미지 경로
+        # 로고 이미지 URL 변수명 박사사주로 정비
+        logo_img_url = "https://raw.githubusercontent.com/.../baksa_saju_logo.png"
 
         st.markdown(
             f"""
@@ -238,7 +240,7 @@ def render_customer_order_form():
             <b>예금주: 이 * 호</b><br>
             <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
             <span style='color:#D50000; font-weight:bold;'>※ 신청자와 입금자 성명이 다를 경우 카카오톡 채널로 알려주세요.</span><br><br>
-            <b>초연 시공명리 연구소</b>
+            <b>박사사주</b>
         </div>
         """,
             unsafe_allow_html=True,
@@ -258,7 +260,7 @@ def render_customer_order_form():
 
 {order_link}
 
-초연 시공명리 연구소"""
+- 박사사주 -"""
         st.code(share_text, language="text")
 
 # ------------------------------------------------------------------------------
@@ -295,7 +297,7 @@ def render_admin_panel(generator_func):
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button(f"💰 입금 확인 (감명생성 + 자동발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
-                            with st.spinner(f"{row['name']}님의 ver 73.0 정밀 감명서를 생성 중입니다..."):
+                            with st.spinner(f"{row['name']}님의 ver 74.0 정밀 감명서를 생성 중입니다..."):
                                 html_result = generator_func(row)
                                 
                                 conn = sqlite3.connect(DB_FILE)
@@ -328,7 +330,7 @@ def render_admin_panel(generator_func):
                                 st.rerun()
                                 
                     with c2:
-                        unpaid_msg = f"[박사사주]\n{row['name']}님 안녕하세요.😊\n신청해 주신 \"{row['product'].split(' (')[0]}\" 복비 입금이 확인되지 않아 안내드립니다.\n\n■ 국민은행 231402-04-13322* (예금주: 이*호)\n■ 복비: {row['product'].split('(')[-1].replace(')', '')}\n\n입금 확인 즉시 정밀 분석이 시작됩니다.\n\n🏮 박사 사주풀이 신청서:\n{BASE_URL}/?mode=order\n- 초연 시공명리 연구소 -"
+                        unpaid_msg = f"[박사사주]\n{row['name']}님 안녕하세요.😊\n신청해 주신 \"{row['product'].split(' (')[0]}\" 복비 입금이 확인되지 않아 안내드립니다.\n\n■ 국민은행 231402-04-13322* (예금주: 이*호)\n■ 복비: {row['product'].split('(')[-1].replace(')', '')}\n\n입금 확인 즉시 정밀 분석이 시작됩니다.\n\n🏮 박사 사주풀이 신청서:\n{BASE_URL}/?mode=order\n- 박사사주 -"
                         st.caption("⚠️ 미입금 안내 문자:")
                         st.code(unpaid_msg, language="text")
 
@@ -341,7 +343,7 @@ def render_admin_panel(generator_func):
             for _, row in completed_orders.iterrows():
                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
                 
-                complete_msg = f"""[초연 시공명리 연구소]
+                complete_msg = f"""[박사사주]
 {row['name']}님 안녕하세요.😊
 신청해 주신 "{row['product'].split(' (')[0]}" 정밀 분석이 완료되었습니다.
 
@@ -352,7 +354,7 @@ def render_admin_panel(generator_func):
 
 소중한 인연에 깊이 감사드리며, 앞날에 평안과 번영이 가득하시길 기원합니다.
 
-- 초연 시공명리 연구소 배상 -"""
+- 박사사주 배상 -"""
 
                 with st.expander(f"✅ [{row['name']} 님] {row['product']} (열람코드: {row['order_id']})", expanded=True):
                     st.write(f"- 연락처: **{row['phone']}** | 열람 링크: [감명서 바로보기]({view_url})")
