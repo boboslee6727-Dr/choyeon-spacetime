@@ -171,15 +171,31 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 def render_customer_order_form():
     st.markdown("""
     <style>
-        .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; font-family: 'Nanum Myeongjo', serif; }
-        .m-title { font-size: 22px; font-weight: 900; color: #1A237E; text-align: center; border-bottom: 2px double #1A237E; padding-bottom: 8px; margin-bottom: 15px; }
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&display=swap');
+        
+        .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
+        
+        /* 예쁘고 부드러운 감성의 타이틀 스타일 */
+        .m-title { 
+            font-family: 'Nanum Myeongjo', serif;
+            font-size: 24px; 
+            font-weight: 700; 
+            color: #2C3E50; 
+            text-align: center; 
+            letter-spacing: 1px;
+            padding-bottom: 12px; 
+            margin-bottom: 20px;
+            border-bottom: 1.5px solid #E0E0E0;
+        }
+        
         .req { color: #D50000; font-weight: bold; }
-        .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Nanum Myeongjo', serif; }
+        .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Gowun Dodum', sans-serif; }
         .pay-title { font-size: 20px; font-weight: 900; color: #1A237E; text-align: center; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>🔮 박사사주 신청서</div>", unsafe_allow_html=True)
+    # 이모지 제거 및 우아한 명조 계열 폰트 적용
+    st.markdown("<div class='m-title'>박사사주 신청서</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
         name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요")
