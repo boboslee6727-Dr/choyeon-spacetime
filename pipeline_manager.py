@@ -354,71 +354,67 @@ def render_customer_order_form():
     # --------------------------------------------------------------------------
     # 신청 완료 화면
     # --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    # 신청 완료 화면 (문단별 st.markdown 분리)
+    # --------------------------------------------------------------------------
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
 
+        # 1. 복비 텍스트 구성
         if ord_info["discount_amt"] > 0:
-            price_display = (
-                f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ "
-                f"<b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> "
-                f"<span style='color:#2E7D32; font-size:14px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인 적용)</span>"
-            )
+            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
         else:
             price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
-        st.markdown(
-            f"""
-        <div class='guide-box'>
-            <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
-            <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
-            신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-            이제 아래 계좌로 복비를 쏴주시면,<br>
-            초연박사님이 바로 🔍돋보기 들고 <br>
-            내 인생 스포일러 👀분석에 들어갑니다!<br>
-            
-            <div class='bank-info-box'>
-                💳 <b>국민은행 231402-04-133221</b><br>
-                👤 <b>예금주: 이 * 호</b><br>
-                💰 <b>복비:</b> {price_display}
-            </div>
-            
-            <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
-            
-            <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
-            
-            🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
-            좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
-            소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[50% 반값 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
-            
-            <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        # 2. 메인 안내문 (상단)
+        st.markdown(f"""
+<div class='guide-box'>
+<div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
+<b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
+신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
+이제 아래 계좌로 복비를 쏴주시면,<br>
+초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
+</div>
+""", unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+        # 3. 계좌 및 복비 안내 박스 (독립 문단)
+        st.markdown(f"""
+<div class='bank-info-box'>
+💳 <b>국민은행 231402-04-133221</b><br>
+👤 <b>예금주: 이 * 호</b><br>
+💰 <b>복비:</b> {price_display}
+</div>
+""", unsafe_allow_html=True)
 
-        share_content = (
-            f"🔮 [ 박사사주 ] 🔮<br>"
-            f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>"
-            f"친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 혜택! 🎁<br><br>"
-            f"👇 아래 링크에서 간편하게 신청하세요!<br>"
-            f"<b>{order_link}</b><br><br>"
-            f"- 박사사주 올림 -"
-        )
+        # 4. 입금 주의사항 및 친구 소개 이벤트 (독립 문단)
+        st.markdown("""
+<div class='guide-box' style='margin-top:10px;'>
+<span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+<hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
+🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
+좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
+소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[50% 반값 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
+<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
+</div>
+""", unsafe_allow_html=True)
 
-        st.markdown(
-            f"""
-        <div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:16px; font-weight:bold; margin-bottom:8px; color:#1A237E;'>
-            💬 친구에게 박사사주 공유하고 함께 혜택 받기
-        </div>
-        <div class='share-card'>
-            {share_content}
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+        # 5. 친구 공유 박스 (독립 문단)
+        st.markdown(f"""
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:16px; font-weight:bold; margin-bottom:8px; color:#1A237E;'>
+💬 친구에게 박사사주 공유하고 함께 혜택 받기
+</div>
+<div class='share-card'>
+🔮 [ 박사사주 ] 🔮<br>
+소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
+친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 혜택! 🎁<br><br>
+👇 아래 링크에서 간편하게 신청하세요!<br>
+<b>{order_link}</b><br><br>
+- 박사사주 올림 -
+</div>
+""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
