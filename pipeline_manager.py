@@ -297,9 +297,8 @@ def render_customer_order_form():
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
         selected_products = st.multiselect(
-            "상담 상품 선택 (2개 이상 복수 선택 시 20~30% 특별할인!) *(필수)", 
-            PRODUCT_LIST,
-            placeholder="상담받을 상품을 선택하세요 (복수 선택 가능)"
+            "상담 상품 선택\n(2개 이상 복수 선택 시 20~30% 특별할인!) *(필수)", 
+            PRODUCT_LIST
         )
         
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
