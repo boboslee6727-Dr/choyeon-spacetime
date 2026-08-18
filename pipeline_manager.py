@@ -92,18 +92,37 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         clean_to_phone = to_phone.replace("-", "").strip()
         clean_from_phone = from_phone.replace("-", "").strip()
 
-        # 채널명 [박사사주]로 통일
+        # 채널명 [박사사주] 통일 및 MZ세대 타겟팅 알림톡 내용
         msg_body = f"""[박사사주]
-{name}님 안녕하세요.😊
-신청해 주신 "{product.split(' (')[0]}" 정밀 분석이 완료되었습니다.
+짠! {name}님, 기다리던 사주 풀이가 도착했어요! 😎
 
-아래 전용 링크를 클릭하시면 {name}님의 평생 사주 감명서와 10년 대운 리포트를 열람 및 PDF 다운로드하실 수 있습니다.
+아래 링크를 누르면 내 인생 스포일러(사주 감명서)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
 
-📜 내 감명서 확인하기:
+📜 내 사주 결과 확인하기:
 {view_url}
 
-소중한 인연에 감사드리며, 평안과 번영을 기원합니다.
-- 박사사주 배상 -"""
+---
+
+🎁 [박사사주 폼 미친 이벤트] 🎁
+
+1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
+'박사사주' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
+👉 채널 추가: [카톡 채널 URL 삽입]
+
+2️⃣ 리얼 후기 쓰고 50% 반값 쿠폰 득템!
+풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
+연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [50% 할인 쿠폰] 팍팍 쏩니다! 💸
+
+---
+
+🔮 고민 있을 땐? 박사사주 메뉴판!
+• 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
+• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운
+• 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
+
+고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
+
+- 초연박사 올림 -"""
 
         url = "https://api.solapi.com/messages/v4/send"
         headers = {
@@ -173,6 +192,7 @@ def render_customer_order_form():
         email = st.text_input("이메일 (선택)", placeholder="choyeon@example.com")
         
         c_y, c_m, c_d = st.columns(3)
+        # 초기값을 2010년 6월 15일로 세팅
         with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="2010")
         with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="06")
         with c_d: b_day = st.text_input("일 (DD) *", max_chars=2, placeholder="15")
@@ -224,23 +244,20 @@ def render_customer_order_form():
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
-        # 로고 이미지 URL 변수명 박사사주로 정비
         logo_img_url = "https://raw.githubusercontent.com/.../baksa_saju_logo.png"
 
         st.markdown(
             f"""
         <div class='guide-box'>
-            <div class='pay-title'>[ 🏮 신청 접수 완료 ]</div>
-            <b>{ord_info['name']}</b>님 안녕하세요. 😊<br>
-            신청번호: <b>{ord_info['order_id']}</b><br>
-            <b>"{ord_info['product']}"</b> 분석 신청이 정상 접수되었습니다.<br><br>
-            아래 계좌로 복비를 입금해 주시면, 박사님 확인 즉시 정밀 감명이 시작됩니다.<br><br>
-            <b>국민은행</b><br>
-            <b>231402-04-13322*</b><br>
-            <b>예금주: 이 * 호</b><br>
-            <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
-            <span style='color:#D50000; font-weight:bold;'>※ 신청자와 입금자 성명이 다를 경우 카카오톡 채널로 알려주세요.</span><br><br>
-            <b>박사사주</b>
+            <div class='pay-title'>[ 🏮 신청 접수 완료! ]</div>
+            <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
+            신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
+            이제 아래 계좌로 복비를 쏴주시면, 초연박사님이 바로 돋보기 들고 내 인생 스포일러 분석에 들어갑니다! 👀🔍<br><br>
+            💳 <b>국민은행 231402-04-13322*</b><br>
+            👤 <b>예금주: 이 * 호</b><br>
+            💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
+            <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+            <b>- 초연박사 올림 -</b>
         </div>
         """,
             unsafe_allow_html=True,
@@ -260,7 +277,7 @@ def render_customer_order_form():
 
 {order_link}
 
-- 박사사주 -"""
+- 초연박사 올림 -"""
         st.code(share_text, language="text")
 
 # ------------------------------------------------------------------------------
@@ -330,7 +347,19 @@ def render_admin_panel(generator_func):
                                 st.rerun()
                                 
                     with c2:
-                        unpaid_msg = f"[박사사주]\n{row['name']}님 안녕하세요.😊\n신청해 주신 \"{row['product'].split(' (')[0]}\" 복비 입금이 확인되지 않아 안내드립니다.\n\n■ 국민은행 231402-04-13322* (예금주: 이*호)\n■ 복비: {row['product'].split('(')[-1].replace(')', '')}\n\n입금 확인 즉시 정밀 분석이 시작됩니다.\n\n🏮 박사 사주풀이 신청서:\n{BASE_URL}/?mode=order\n- 박사사주 -"
+                        unpaid_msg = f"""[박사사주]
+혹시 잊으신 건 아니죠? 🥺
+{row['name']}님, 신청하신 "{row['product'].split(' (')[0]}" 복비 입금이 아직 안 돼서 초연박사님이 대기 타고 계셔요! 
+
+■ 국민은행 231402-04-13322* (이*호)
+■ 복비: {row['product'].split('(')[-1].replace(')', '')}
+
+입금 호다닥 해주시면 바로 소름 돋는 사주 분석 시작합니다 🚀
+
+🏮 내 신청서 다시 보기:
+{BASE_URL}/?mode=order
+
+- 초연박사 올림 -"""
                         st.caption("⚠️ 미입금 안내 문자:")
                         st.code(unpaid_msg, language="text")
 
@@ -344,17 +373,35 @@ def render_admin_panel(generator_func):
                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
                 
                 complete_msg = f"""[박사사주]
-{row['name']}님 안녕하세요.😊
-신청해 주신 "{row['product'].split(' (')[0]}" 정밀 분석이 완료되었습니다.
+짠! {row['name']}님, 기다리던 사주 풀이가 도착했어요! 😎
 
-아래 전용 링크를 클릭하시면 {row['name']}님의 평생 사주 감명서와 10년 대운 분석 리포트를 열람 및 PDF로 다운로드하실 수 있습니다.
+아래 링크를 누르면 내 인생 스포일러(사주 감명서)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
 
-📜 내 감명서 확인하기:
+📜 내 사주 결과 확인하기:
 {view_url}
 
-소중한 인연에 깊이 감사드리며, 앞날에 평안과 번영이 가득하시길 기원합니다.
+---
 
-- 박사사주 배상 -"""
+🎁 [박사사주 폼 미친 이벤트] 🎁
+
+1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
+'박사사주' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
+👉 채널 추가: [카톡 채널 URL 삽입]
+
+2️⃣ 리얼 후기 쓰고 50% 반값 쿠폰 득템!
+풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
+연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [50% 할인 쿠폰] 팍팍 쏩니다! 💸
+
+---
+
+🔮 고민 있을 땐? 박사사주 메뉴판!
+• 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
+• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운
+• 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
+
+고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
+
+- 초연박사 올림 -"""
 
                 with st.expander(f"✅ [{row['name']} 님] {row['product']} (열람코드: {row['order_id']})", expanded=True):
                     st.write(f"- 연락처: **{row['phone']}** | 열람 링크: [감명서 바로보기]({view_url})")
@@ -387,7 +434,7 @@ def render_view_page(order_id):
         
     name, product, status, result_html = res
     if status != "분석완료" or not result_html:
-        st.warning(f"현재 {name}님의 감명서를 정밀 분석 중입니다. 입금 확인 후 1일 이내에 완료됩니다.")
+        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 초연박사님이 영혼을 갈아 넣어 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
         
     st.markdown(result_html, unsafe_allow_html=True)
