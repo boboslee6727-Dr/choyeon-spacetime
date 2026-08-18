@@ -1,3 +1,60 @@
+import streamlit.components.v1 as components
+
+# 파트너센터 프로필용 이미지 다운로드 생성기
+components.html("""
+<canvas id="logoCanvas" width="800" height="800" style="display:none;"></canvas>
+<div style="text-align:center; margin-top:20px;">
+    <button onclick="downloadLogo()" style="padding:15px 30px; background-color:#1A237E; color:white; border:none; border-radius:10px; font-size:18px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        📥 '박사사주' 파트너센터 프로필 이미지 다운로드
+    </button>
+</div>
+<script>
+function downloadLogo() {
+    var c = document.getElementById("logoCanvas");
+    var ctx = c.getContext("2d");
+    
+    // 1. 아이보리 바탕색 채우기
+    ctx.fillStyle = "#F8F5ED";
+    ctx.fillRect(0, 0, 800, 800);
+    
+    // 2. 책 모양 심볼 그리기 (진한 먹색)
+    ctx.strokeStyle = "#374151";
+    ctx.lineWidth = 14;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    
+    // 윗면 곡선
+    ctx.moveTo(150, 300); 
+    ctx.quadraticCurveTo(275, 330, 400, 250); 
+    ctx.quadraticCurveTo(525, 330, 650, 300);
+    
+    // 아랫면 곡선
+    ctx.moveTo(150, 600); 
+    ctx.quadraticCurveTo(275, 630, 400, 550); 
+    ctx.quadraticCurveTo(525, 630, 650, 600);
+    
+    // 기둥 및 양옆 테두리
+    ctx.moveTo(400, 250); ctx.lineTo(400, 550); // 중앙
+    ctx.moveTo(150, 300); ctx.lineTo(150, 600); // 좌측
+    ctx.moveTo(650, 300); ctx.lineTo(650, 600); // 우측
+    ctx.stroke();
+    
+    // 3. '박사사주' 타이틀 넣기
+    ctx.fillStyle = "#1A2332";
+    ctx.font = "bold 130px 'Gowun Dodum', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("박 사 사 주", 400, 470);
+    
+    // 4. PNG 파일로 즉시 다운로드 실행
+    var link = document.createElement('a');
+    link.download = '박사사주_프로필.png';
+    link.href = c.toDataURL("image/png");
+    link.click();
+}
+</script>
+""", height=120)
+
 # ==============================================================================
 # 🏮 박사사주: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
 # ==============================================================================
