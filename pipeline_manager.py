@@ -360,8 +360,7 @@ def render_customer_order_form():
     </button>
 </div>
 
-<span style='color:#757575; font-size:13px;'>※ 터치 시 현재 화면은 그대로 유지되며 카카오톡/문자 전송 창이 열립니다.</span><br><br>
-<div style='text-align: right; font-weight: bold;'>- 사주박사 올림 -</div>
+<span style='color:#757575; font-size:14px;'>※ 신청 후 우측 아래의 "크라운 왕관"을 터치하여 "링크 복사"하여 카톡/문자를 베프에게 보내세요.</span>
 </div>
 """, unsafe_allow_html=True)
         
