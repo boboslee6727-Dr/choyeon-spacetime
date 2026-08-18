@@ -206,7 +206,7 @@ def render_customer_order_form():
         
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
         
-        submitted = st.form_submit_button("🏮 감명 신청서 제출하기 (복비 안내)", use_container_width=True)
+        submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
         if submitted:
             if not name.strip():
@@ -250,21 +250,15 @@ def render_customer_order_form():
             <div class='pay-title'>[ 🏮 신청 접수 완료! ]</div>
             <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
             신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-            이제 아래 계좌로 복비를 쏴주시면, 초연박사님이 바로 돋보기 들고 내 인생 스포일러 분석에 들어갑니다! 👀🔍<br><br>
-            💳 <b>국민은행 231402-04-133221</b><br>
+            이제 아래 계좌로 복비를 쏴주시면,<br>
+            초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다! <br><br>
+            💳 <b>국민은행 231402-04-13322*</b><br>
             👤 <b>예금주: 이 * 호</b><br>
             💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
-            <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+            <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 혹! 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
             <b>- 박사사주 올림 -</b>
         </div>
         """,
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("---")
-        st.markdown(
-            "<div style='text-align:center; font-weight:bold; font-size:15px;"
-            " margin-bottom:10px;'>💬 지인/가족에게 사주풀이 신청서 공유하기</div>",
             unsafe_allow_html=True,
         )
 
