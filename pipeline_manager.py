@@ -264,15 +264,19 @@ def render_customer_order_form():
         st.markdown(
             f"""
         <div class='guide-box'>
-            <div class='pay-title'>[ 🏮 신청 접수 완료! ]</div>
+            <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
             <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
             신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
             이제 아래 계좌로 복비를 쏴주시면,<br>
-            초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다! <br><br>
-            💳 <b>국민은행 231402-04-133221</b><br>
-            👤 <b>예금주: 이 * 호</b><br>
-            💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
-            <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+            초연박사님이 바로 🔍돋보기 들고 <br> 내 인생 스포일러 👀분석에 들어갑니다! <br><br>
+            
+            <div style='font-family: "Nanum Myeongjo", serif; background: #FFF; padding: 10px; border-radius: 8px; border: 1px solid #ddd;'>
+                💳 <b>국민은행 231402-04-133221</b><br>
+                👤 <b>예금주: 이 * 호</b><br>
+                💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b>
+            </div>
+            <br>
+            <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
             
             <hr style='border: 1px dashed #ccc; margin: 15px 0;'>
             
@@ -285,7 +289,6 @@ def render_customer_order_form():
         """,
             unsafe_allow_html=True,
         )
-
         st.markdown("---")
         st.markdown(
             "<div style='text-align:center; font-family:\"Nanum Pen Script\", cursive; font-size:22px; font-weight:bold; margin-bottom:15px;'>"
