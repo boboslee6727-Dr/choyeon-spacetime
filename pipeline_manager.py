@@ -401,23 +401,46 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 5. 친구 공유 박스 (실명 대신 고유 주문번호 order_id 연동)
+        # 5. 친구 공유 박스 (원터치 카톡/문자 즉시 전송 버튼 연동)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
+        
+        share_title = "🔮 박사사주 - 내 인생 스포일러"
+        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 지금 바로 신청하기:\n{ref_order_link}"
+        
+        # URL 인코딩 (문자/메신저 전송용)
+        import urllib.parse
+        encoded_msg = urllib.parse.quote(share_msg)
 
         st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:15px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
 💬 친구에게 박사사주 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
 🔮 [ 박사사주 ] 🔮<br>
 소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
 친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
-👇 <b>아래 링크를 친구에게 보내봐!</b><br>
-<span style='color:#1A237E; font-weight:bold; word-break:break-all;'>{ref_order_link}</span><br><br>
+
+<div style='text-align:center; margin: 15px 0;'>
+    <!-- 1순위: 모바일 원터치 공유창 (카톡/인스타/문자 선택) -->
+    <button onclick="
+        if (navigator.share) {{
+            navigator.share({{
+                title: '{share_title}',
+                text: `{share_msg}`,
+                url: '{ref_order_link}'
+            }});
+        }} else {{
+            location.href = 'sms:?body={encoded_msg}';
+        }}
+    " style='background-color:#FEE500; color:#191919; border:none; border-radius:10px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; width:100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif;'>
+        🟡 터치 한 번으로 친구에게 카톡/문자 보내기
+    </button>
+</div>
+
+<span style='color:#757575; font-size:13px;'>※ 버튼 클릭 시 카카오톡 또는 문자 전송 창이 즉시 실행됩니다.</span><br><br>
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
 # ------------------------------------------------------------------------------
