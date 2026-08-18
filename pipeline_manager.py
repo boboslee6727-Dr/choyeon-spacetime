@@ -374,7 +374,7 @@ def render_customer_order_form():
 <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
 신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
 이제 아래 계좌로 복비를 쏴주시면,<br>
-초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
+초연박사님이 바로 🔍돋보기 들고<br> 내 인생 스포일러 👀분석에 들어갑니다!
 </div>
 """, unsafe_allow_html=True)
 
@@ -394,25 +394,27 @@ def render_customer_order_form():
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
 좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
-소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[50% 반값 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
+소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 5. 친구 공유 박스 (독립 문단)
+        # 5. 친구 공유 박스 (독립 문단 & 30% 혜택 & 추천인 링크 연동)
+        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['name']}"
+
         st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:16px; font-weight:bold; margin-bottom:8px; color:#1A237E;'>
-💬 친구에게 박사사주 공유하고 함께 혜택 받기
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+💬 친구에게 앱 주소 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
 🔮 [ 박사사주 ] 🔮<br>
 소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
-친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 혜택! 🎁<br><br>
-👇 아래 링크에서 간편하게 신청하세요!<br>
-<b>{order_link}</b><br><br>
-- 박사사주 올림 -
+친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
+👇 <b>아래 링크를 친구에게 보내봐!</b><br>
+<span style='color:#1A237E; font-weight:bold; word-break:break-all;'>{ref_order_link}</span><br><br>
+<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
 
