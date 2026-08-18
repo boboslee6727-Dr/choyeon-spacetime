@@ -542,12 +542,12 @@ def render_customer_order_form():
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
         # ----------------------------------------------------------------------
-        # 5. 친구 공유 박스 (샌드박스 차단 없는 100% 다이렉트 전송)
+        # 5. 친구 공유 박스 (모바일 OS 규격 완벽 대응 & target 충돌 제거)
         # ----------------------------------------------------------------------
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 아래 링크에서 신청해봐!\n{ref_order_link}"
         
-        # URL 인코딩 (문자 앱 다이렉트 호출용)
+        # 모바일 표준 인코딩
         encoded_sms_msg = urllib.parse.quote(share_msg)
 
         st.markdown(f"""
@@ -560,15 +560,25 @@ def render_customer_order_form():
 친구 소개로 같이 신청하면 우리 둘 다 <b>30% 할인 쿠폰</b> 득템 혜택! 🎁<br><br>
 
 <div style='text-align:center; margin: 15px 0;'>
-    <a href="sms:?&body={encoded_sms_msg}" 
-       target="_blank"
-       style='display:block; text-decoration:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:15px 10px; font-size:16px; font-weight:bold; box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-family: "Gowun Dodum", sans-serif;'>
-        🟡 터치해서 친구에게 카톡/문자 바로 보내기
+    <a href="sms:?body={encoded_sms_msg}" 
+       style='display:block; text-decoration:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:15px 10px; font-size:16px; font-weight:bold; box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-family: "Gowun Dodum", sans-serif; cursor:pointer;'>
+        📱 [모바일] 터치해서 친구에게 바로 문자 보내기
     </a>
 </div>
 
-<span style='color:#757575; font-size:13px;'>※ 터치 시 현재 화면은 유지되며 메시지 전송 창이 열립니다.</span><br><br>
-<div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
+<span style='color:#757575; font-size:13px;'>※ 버튼 터치 시 스마트폰 문자 전송 창이 열리며, 본 화면은 그대로 유지됩니다.</span>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        
+        # 카카오톡/PC 복사용 텍스트 박스
+        st.caption("💬 **카카오톡 / PC 전송 시**: 아래 박스 오른쪽 위의 복사(Copy) 아이콘을 눌러 붙여넣기 하세요!")
+        st.code(share_msg, language="text")
+
+        st.markdown("""
+<div style='text-align: right; font-weight: bold; font-family: "Gowun Dodum", sans-serif; color: #2D3748; margin-top: 5px;'>
+- 박사사주 올림 -
 </div>
 """, unsafe_allow_html=True)
 
