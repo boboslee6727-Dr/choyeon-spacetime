@@ -177,8 +177,9 @@ def do_auto_fill_partner():
     else:
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-# 🏮 파이프라인 관리 모듈 로드
-from pipeline import (init_order_db, render_customer_order_form, render_admin_panel, render_view_page)
+# 🏮 파이프라인 관리 모듈 로드 (여기가 치명적 오류의 원인이었습니다. 정확히 맞추었습니다!)
+from pipeline_manager import init_order_db, render_customer_order_form, render_admin_panel, render_view_page
+
 init_order_db()
 params = st.query_params
 
@@ -245,16 +246,16 @@ def generate_report_for_order(order_row):
     formatted_body = html_views.format_ai_text_to_html(ai_raw)
     
     # 4. 프리미엄 나눔명조체 리포트 조립
-    cover = html_views.get_personal_cover("ver 73.0 Master", product.split(" (")[0], "🏮", name, f"{y}년 {m}월 {d}일", "", b_time, dt_mod.date.today().strftime("%Y년 %m월 %d일"))
+    cover = html_views.get_personal_cover("ver 74.0 Master", product.split(" (")[0], "🏮", name, f"{y}년 {m}월 {d}일", "", b_time, dt_mod.date.today().strftime("%Y년 %m월 %d일"))
     info_h = html_views.get_info_header("🏮", name, gender, marital, dt_mod.date.today().year - y + 1, f"{y}년 {m}월 {d}일", "", b_time)
     final_html = f"{cover}<br>{info_h}<br>{formatted_body}"
     report_box = html_views.get_final_report_box(final_html)
 
-    # 5. [수정] 솔라피(Solapi) 자동 발송 실행 (pipeline.py 연동)
+    # 5. [수정] 솔라피(Solapi) 자동 발송 실행 (pipeline_manager.py 연동)
     if phone_number and view_code:
         try:
             view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
-            from pipeline import send_solapi_auto_message
+            from pipeline_manager import send_solapi_auto_message
             send_solapi_auto_message(phone_number, name, product, view_url)
         except Exception as e:
             st.error(f"🚨 알림톡 자동 발송 실패: {e}")
