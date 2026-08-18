@@ -298,7 +298,8 @@ def render_customer_order_form():
         
         selected_products = st.multiselect(
             "상담 상품 선택\n(2개 이상 복수 선택 시 20~30% 특별할인!) *(필수)", 
-            PRODUCT_LIST
+            PRODUCT_LIST,
+            placeholder="상담 상품 선택"
         )
         
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
@@ -401,18 +402,17 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 5. 친구 공유 박스 (원터치 카톡/문자 즉시 전송 버튼 연동)
+        # 5. 친구 공유 박스 (내 화면 이동 없이 카톡/문자 앱만 호출)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         
         share_title = "🔮 박사사주 - 내 인생 스포일러"
-        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 지금 바로 신청하기:\n{ref_order_link}"
+        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 아래 링크에서 신청해봐!\n{ref_order_link}"
         
-        # URL 인코딩 (문자/메신저 전송용)
         import urllib.parse
         encoded_msg = urllib.parse.quote(share_msg)
 
         st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:15px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
 💬 친구에게 박사사주 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
@@ -421,23 +421,23 @@ def render_customer_order_form():
 친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
 
 <div style='text-align:center; margin: 15px 0;'>
-    <!-- 1순위: 모바일 원터치 공유창 (카톡/인스타/문자 선택) -->
-    <button onclick="
-        if (navigator.share) {{
-            navigator.share({{
-                title: '{share_title}',
-                text: `{share_msg}`,
-                url: '{ref_order_link}'
-            }});
-        }} else {{
-            location.href = 'sms:?body={encoded_msg}';
-        }}
-    " style='background-color:#FEE500; color:#191919; border:none; border-radius:10px; padding:12px 20px; font-size:16px; font-weight:bold; cursor:pointer; width:100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif;'>
-        🟡 터치 한 번으로 친구에게 카톡/문자 보내기
-    </button>
+    <a href="sms:?&body={encoded_msg}" 
+       onclick="
+           if (navigator.share) {{
+               event.preventDefault();
+               navigator.share({{
+                   title: '{share_title}',
+                   text: `{share_msg}`,
+                   url: '{ref_order_link}'
+               }}).catch(function(e){{}});
+           }}
+       " 
+       style='display:block; text-decoration:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:16px; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif;'>
+        🟡 터치해서 친구에게 카톡/문자 바로 보내기
+    </a>
 </div>
 
-<span style='color:#757575; font-size:13px;'>※ 버튼 클릭 시 카카오톡 또는 문자 전송 창이 즉시 실행됩니다.</span><br><br>
+<span style='color:#757575; font-size:13px;'>※ 터치 시 현재 화면은 그대로 유지되며 카카오톡/문자 전송 창이 열립니다.</span><br><br>
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
 """, unsafe_allow_html=True)
