@@ -307,11 +307,12 @@ def render_customer_order_form():
         
         # 라벨 완벽 2줄 줄바꿈 ("선택  \n" 뒤에 공백 2칸 필수)
         label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
-        
+
         selected_products = st.multiselect(
             label=label_text,
             options=PRODUCT_LIST,
-            placeholder="상담 상품 선택"
+            placeholder="상담 상품 선택",
+            key="user_selected_products",
         )
         
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
@@ -319,6 +320,9 @@ def render_customer_order_form():
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
         if submitted:
+            # Session State에서 직접 선택 목록 추출 (다중 선택 누락 방지)
+            actual_selected = st.session_state.get("user_selected_products", selected_products)
+
             if not name.strip():
                 st.error("🚨 이름을 입력해 주십시오.")
                 return
@@ -328,15 +332,15 @@ def render_customer_order_form():
             if not (b_year.isdigit() and b_month.isdigit() and b_day.isdigit()):
                 st.error("🚨 생년월일 숫자를 정확히 입력해 주십시오.")
                 return
-            if not selected_products:
+            if not actual_selected or len(actual_selected) == 0:
                 st.error("🚨 최소 1개 이상의 상담 상품을 선택해 주십시오.")
                 return
             if not agree:
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
-            
-            total_raw, discount_amt, rate_pct, final_price = calculate_package_price(selected_products)
-            product_names_summary = " + ".join([p.split('.')[0] for p in selected_products])
+
+            total_raw, discount_amt, rate_pct, final_price = calculate_package_price(actual_selected)
+            product_names_summary = " + ".join([p.split('.')[0] for p in actual_selected])
             full_product_desc = f"{product_names_summary} ({final_price:,}원)"
             
             order_id = str(uuid.uuid4())[:8]
