@@ -268,6 +268,15 @@ def render_customer_order_form():
             line-height: 1.8;
             color: #374151;
         }
+        /* multiselect 태그 닫기(X) 버튼 터치/클릭 활성화 보장 */
+        span[data-baseweb="tag"] {
+            cursor: default !important;
+        }
+        span[data-baseweb="tag"] > span[role="presentation"],
+        span[data-baseweb="tag"] svg {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
     </style>
     """, unsafe_allow_html=True)
     
@@ -296,9 +305,12 @@ def render_customer_order_form():
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
+        # 라벨 완벽 2줄 줄바꿈 ("선택  \n" 뒤에 공백 2칸 필수)
+        label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
+        
         selected_products = st.multiselect(
-            "상담 상품 선택 \n<br><(2개 이상 복수 선택 시 20~30% 특별할인!) *(필수)", 
-            PRODUCT_LIST,
+            label=label_text,
+            options=PRODUCT_LIST,
             placeholder="상담 상품 선택"
         )
         
