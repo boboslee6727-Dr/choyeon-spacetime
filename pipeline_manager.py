@@ -157,7 +157,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         res_data = res.json()
 
         if res.status_code == 200 and "groupId" in res_data:
-            return True, f"고객님 휴대전화({to_phone})로 자동 발송이 완료되었습니다."
+            return True, f"고객님 핸드폰(카톡)({to_phone})으로 발송이 완료되었습니다."
         else:
             err_msg = res_data.get("errorMessage", str(res_data))
             return False, f"솔라피 응답 오류: {err_msg}"
@@ -213,7 +213,7 @@ def render_customer_order_form():
                 st.error("🚨 이름을 입력해 주십시오.")
                 return
             if len(p_mid.strip()) != 4 or len(p_end.strip()) != 4 or not (p_mid.isdigit() and p_end.isdigit()):
-                st.error("🚨 휴대전화 번호 4자리를 숫자로 정확히 입력해 주십시오.")
+                st.error("🚨 핸드폰 번호 4자리를 숫자로 정확히 입력해 주십시오.")
                 return
             if not (b_year.isdigit() and b_month.isdigit() and b_day.isdigit()):
                 st.error("🚨 생년월일 숫자를 정확히 입력해 주십시오.")
