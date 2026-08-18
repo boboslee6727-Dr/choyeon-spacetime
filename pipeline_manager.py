@@ -393,7 +393,7 @@ def render_customer_order_form():
 <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
-좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
+좋은 건 나눠야지요! <br>친구에게 '박사사주'를 소개해 주세요.<br>
 소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
 <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
 </div>
@@ -401,12 +401,12 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 5. 친구 공유 박스 (독립 문단 & 30% 혜택 & 추천인 링크 연동)
-        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['name']}"
+        # 5. 친구 공유 박스 (실명 대신 고유 주문번호 order_id 연동)
+        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
 
         st.markdown(f"""
-<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:16px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
-💬 친구에게 앱 주소 공유하고 함께 혜택 받기
+<div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:15px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
+💬 친구에게 박사사주 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
 🔮 [ 박사사주 ] 🔮<br>
