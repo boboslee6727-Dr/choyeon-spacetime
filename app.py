@@ -184,10 +184,10 @@ init_order_db()
 params = st.query_params
 
 # ------------------------------------------------------------------------------
-# 👑 [관리자 입금 승인 시 백그라운드 AI 감명서 자동 생성 래퍼 함수]
+# 👑 [관리자 입금 승인 시 백그라운드 AI 감명서 자동 생성 및 알림톡 발송 래퍼 함수]
 # ------------------------------------------------------------------------------
 def generate_report_for_order(order_row):
-    """관리자가 입금 확인 버튼을 눌렀을 때 실행되는 감명서 완성 생성기"""
+    """관리자가 입금 확인 버튼을 눌렀을 때 실행되는 감명서 완성 생성기 및 알림톡 자동 발송"""
     name = order_row["name"]
     gender = order_row["gender"]
     b_date = order_row["birth_date"] # 'YYYY-MM-DD'
@@ -195,6 +195,8 @@ def generate_report_for_order(order_row):
     cal_type = order_row["calendar_type"]
     product = order_row["product"]
     marital = order_row["marital"]
+    phone_number = order_row.get("phone", "") # 고객 핸드폰 번호
+    view_code = order_row.get("code", "")     # 결과 열람 고유 코드
     
     y, m, d = [int(v) for v in b_date.split("-")]
     is_lunar = "음력" in cal_type
@@ -247,7 +249,42 @@ def generate_report_for_order(order_row):
     cover = html_views.get_personal_cover("ver 73.0 Master", product.split(" (")[0], "🏮", name, f"{y}년 {m}월 {d}일", "", b_time, dt_mod.date.today().strftime("%Y년 %m월 %d일"))
     info_h = html_views.get_info_header("🏮", name, gender, marital, dt_mod.date.today().year - y + 1, f"{y}년 {m}월 {d}일", "", b_time)
     final_html = f"{cover}<br>{info_h}<br>{formatted_body}"
-    return html_views.get_final_report_box(final_html)
+    report_box = html_views.get_final_report_box(final_html)
+
+    # 5. [추가] 솔라피(Solapi) 알림톡 자동 발송 실행
+    if phone_number and view_code:
+        try:
+            from sdk.api.message import Message
+            from sdk.exceptions import NurigoMessageNotEnoughBalanceException
+            
+            # Streamlit Secrets에서 솔라피 키 호출
+            solapi_key = st.secrets["SOLAPI_API_KEY"]
+            solapi_secret = st.secrets["SOLAPI_API_SECRET"]
+            sender_id = st.secrets["SOLAPI_SENDER_ID"] # '@1사주박사' 또는 발신프로필 ID
+            
+            message_service = Message(solapi_key, solapi_secret)
+            
+            # 열람 링크 생성 (예시 도메인 기준 또는 상대 경로)
+            view_url = f"https://choyeon-saju.streamlit.app/?mode=view&code={view_code}"
+            
+            # 알림톡 발송 페이로드 구성
+            params = {
+                "to": phone_number.replace("-", ""),
+                "from": sender_id,
+                "kakaoOptions": {
+                    "pfId": sender_id,
+                    "templateId": "KA01TP...", # 등록하신 알림톡 템플릿 ID
+                    "variables": {
+                        "#{이름}": name,
+                        "#{링크}": view_url
+                    }
+                }
+            }
+            message_service.send(params)
+        except Exception as e:
+            st.error(f"🚨 알림톡 자동 발송 실패: {e}")
+
+    return report_box
 
 # ------------------------------------------------------------------------------
 # 🧭 [3대 화면 라우팅 분기]
