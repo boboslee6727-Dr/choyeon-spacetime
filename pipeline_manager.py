@@ -311,36 +311,71 @@ def render_customer_order_form():
         
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         
-        # --- 2. 상품 선택 (라벨 2줄 처리 및 한글 placeholder) ---
-        label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
-        selected_products = st.multiselect(
-            label=label_text,
-            options=PRODUCT_LIST,
-            placeholder="상담 상품 선택",
-            key="user_selected_products"
-        )
+        # --------------------------------------------------------------------------
+    # 상품 선택 (폼 외부/상단 배치로 3-* 선택 시 상대방 입력창 즉시 노출)
+    # --------------------------------------------------------------------------
+    label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
+    selected_products = st.multiselect(
+        label=label_text,
+        options=PRODUCT_LIST,
+        placeholder="상담 상품 선택",
+        key="user_selected_products"
+    )
+    
+    # 3번 계열 상품(3-1, 3-2, 3-3 등) 선택 여부 감지
+    has_partner_product = any(p.startswith("3-") for p in selected_products)
+
+    with st.form("choyeon_order_form"):
+        # --- 1. 신청자 본인 정보 ---
+        st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
+        name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
+        # 010 고정 및 번호 입력창 구성
+        c_p1, c_p2, c_p3 = st.columns([1.1, 1.5, 1.5])
+        with c_p1: st.text_input("국번", value="010", disabled=True)
+        with c_p2: p_mid = st.text_input("중간 4자리 *(필수)", max_chars=4, placeholder="1234")
+        with c_p3: p_end = st.text_input("끝 4자리 *(필수)", max_chars=4, placeholder="5678")
+        
+        email = st.text_input("이메일 (선택)", placeholder="ch1234@example.com")
+        
+        c_y, c_m, c_d = st.columns(3)
+        with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="1990")
+        with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="06")
+        with c_d: b_day = st.text_input("일 (DD) *", max_chars=2, placeholder="15")
+        
+        c_g, c_c, c_m_stat = st.columns(3)
+        with c_g: gender = st.selectbox("성별 *", ["여성", "남성"])
+        with c_c: cal_type = st.selectbox("양력 또는 음력 *", ["양력", "음력", "음력(윤달)"])
+        with c_m_stat: marital = st.selectbox("혼인 상태 *", ["미혼", "기혼"])
+        
+        b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
+        
+        # --- 2. 3-* 계열 상품 선택 시에만 노출되는 상대방 사주 정보 ---
+        partner_name = ""
+        p_b_year, p_b_month, p_b_day = "", "", ""
+        partner_gender, partner_cal, partner_time = "남성", "양력", "시간 모름"
+        
+        if has_partner_product:
+            st.markdown("<hr style='border: 0; border-top: 1px dashed #3F51B5; margin: 15px 0;'>", unsafe_allow_html=True)
+            st.markdown("<b>👩‍❤️‍👨 상대방 사주 정보 (궁합/택일 필수)</b>", unsafe_allow_html=True)
+            partner_name = st.text_input("상대방 성명 *(필수)", placeholder="상대방 성함을 입력하세요")
+            
+            c_py, c_pm, c_pd = st.columns(3)
+            with c_py: p_b_year = st.text_input("상대방 생년 (YYYY) *", max_chars=4, placeholder="1992")
+            with c_pm: p_b_month = st.text_input("상대방 월 (MM) *", max_chars=2, placeholder="08")
+            with c_pd: p_b_day = st.text_input("상대방 일 (DD) *", max_chars=2, placeholder="20")
+            
+            c_pg, c_pc, c_pt = st.columns([1, 1, 1.5])
+            with c_pg: partner_gender = st.selectbox("상대방 성별 *", ["남성", "여성"])
+            with c_pc: partner_cal = st.selectbox("상대방 양/음력 *", ["양력", "음력", "음력(윤달)"])
+            with c_pt: partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
+
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-
-        # --- 3. 3-1 궁합 상품 전용 상대방 정보 ---
-        st.markdown("<b>👩‍❤️‍👨 상대방 사주 정보 (※ 3-1 궁합 신청 시에만 작성)</b>", unsafe_allow_html=True)
-        partner_name = st.text_input("상대방 성명 (궁합 신청 시 필수)", placeholder="궁합 대상자 성함")
-        
-        c_py, c_pm, c_pd = st.columns(3)
-        with c_py: p_b_year = st.text_input("상대방 생년 (YYYY)", max_chars=4, placeholder="1992")
-        with c_pm: p_b_month = st.text_input("상대방 월 (MM)", max_chars=2, placeholder="08")
-        with c_pd: p_b_day = st.text_input("상대방 일 (DD)", max_chars=2, placeholder="20")
-        
-        c_pg, c_pc, c_pt = st.columns([1, 1, 1.5])
-        with c_pg: partner_gender = st.selectbox("상대방 성별", ["남성", "여성"])
-        with c_pc: partner_cal = st.selectbox("상대방 양/음력", ["양력", "음력", "음력(윤달)"])
-        with c_pt: partner_time = st.selectbox("상대방 태어난 시간", TIME_OPTIONS)
-
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
         
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
-        # --- 4. 제출 버튼 클릭 시에만 유효성 검사 실행 (상시 에러 노출 방지) ---
+        # --- 3. 제출 검증 로직 ---
         if submitted:
             actual_selected = st.session_state.get("user_selected_products", selected_products)
 
@@ -357,20 +392,20 @@ def render_customer_order_form():
                 st.error("🚨 최소 1개 이상의 상담 상품을 선택해 주십시오.")
                 return
                 
-            is_gunghap = any("3-1" in prod for prod in actual_selected)
-            if is_gunghap:
+            # 3-* 상품 선택 시 상대방 필수값 검증
+            if has_partner_product:
                 if not partner_name.strip():
-                    st.error("🚨 [3-1 궁합] 상품을 선택하셨습니다. 상대방 성함을 입력해 주십시오.")
+                    st.error("🚨 궁합/택일 상품을 선택하셨습니다. 상대방 성함을 입력해 주십시오.")
                     return
                 if not (p_b_year.isdigit() and p_b_month.isdigit() and p_b_day.isdigit()):
-                    st.error("🚨 [3-1 궁합] 상대방 생년월일 숫자를 정확히 입력해 주십시오.")
+                    st.error("🚨 상대방 생년월일 숫자를 정확히 입력해 주십시오.")
                     return
 
             if not agree:
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
             
-            # 할인 연산 실행
+            # 할인 연산 및 주문 등록
             total_raw, discount_amt, rate_pct, final_price = calculate_package_price(actual_selected)
             product_names_summary = " + ".join([p.split('.')[0] for p in actual_selected])
             full_product_desc = f"{product_names_summary} ({final_price:,}원)"
@@ -379,7 +414,7 @@ def render_customer_order_form():
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             birth_full = f"{b_year.strip()}-{b_month.strip().zfill(2)}-{b_day.strip().zfill(2)}"
             
-            if is_gunghap:
+            if has_partner_product:
                 p_birth_full = f"{p_b_year.strip()}-{p_b_month.strip().zfill(2)}-{p_b_day.strip().zfill(2)}"
                 partner_info_str = f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal}]"
                 memo_info = f"{email.strip()} | {partner_info_str}" if email.strip() else partner_info_str
