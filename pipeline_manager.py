@@ -261,6 +261,57 @@ def render_customer_order_form():
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
 
+        # 폰트 불러오기: 나눔명조(계좌용) + 고운돋움(본문/안내문용)
+        st.markdown(
+            """
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&display=swap');
+            
+            .guide-box {
+                background: #FCFCFD;
+                border: 2px solid #3F51B5;
+                border-radius: 12px;
+                padding: 22px;
+                margin-top: 15px;
+                line-height: 1.8;
+                color: #2D3748;
+                font-family: 'Gowun Dodum', sans-serif;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+            .pay-title {
+                font-size: 20px;
+                font-weight: bold;
+                color: #1A237E;
+                text-align: center;
+                margin-bottom: 12px;
+            }
+            .bank-info-box {
+                font-family: 'Nanum Myeongjo', serif;
+                background: #F4F6F9;
+                padding: 14px;
+                border-radius: 8px;
+                border-left: 4px solid #1A237E;
+                font-size: 16px;
+                line-height: 1.9;
+                color: #111;
+                margin: 12px 0;
+            }
+            .share-card {
+                background: #FFFDF5;
+                border: 1px solid #FFE082;
+                border-radius: 10px;
+                padding: 16px;
+                font-family: 'Gowun Dodum', sans-serif;
+                font-size: 14.5px;
+                line-height: 1.8;
+                color: #374151;
+            }
+        </style>
+        """,
+            unsafe_allow_html=True,
+        )
+
+        # 신청 완료 및 계좌 안내 카드
         st.markdown(
             f"""
         <div class='guide-box'>
@@ -268,31 +319,50 @@ def render_customer_order_form():
             <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
             신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
             이제 아래 계좌로 복비를 쏴주시면,<br>
-            초연박사님이 바로 🔍돋보기 들고 <br> 내 인생 스포일러 👀분석에 들어갑니다! <br><br>
+            초연박사님이 바로 🔍돋보기 들고 <br>
+            내 인생 스포일러 👀분석에 들어갑니다!<br>
             
-            <div style='font-family: "Nanum Myeongjo", serif; background: #FFF; padding: 10px; border-radius: 8px; border: 1px solid #ddd;'>
+            <div class='bank-info-box'>
                 💳 <b>국민은행 231402-04-133221</b><br>
                 👤 <b>예금주: 이 * 호</b><br>
                 💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b>
             </div>
-            <br>
+            
             <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
             
-            <hr style='border: 1px dashed #ccc; margin: 15px 0;'>
+            <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
             
             🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
             좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
-            소개받은 친구와 나 **두 사람 모두에게** 다음 테마 분석 시 쓸 수 있는 **[50% 반값 할인 쿠폰]**을 팍팍 쏩니다! 💸<br><br>
+            소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[50% 반값 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
             
-            <b>- 박사사주 올림 -</b>
+            <div style='text-align: right; font-weight: bold;'>- 박사사주 올림 -</div>
         </div>
         """,
             unsafe_allow_html=True,
         )
-        st.markdown("---")
+
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
+        # 감성 친구 공유 영역 (소스코드 박스 완전 제거)
+        share_content = (
+            f"🔮 [ 박사사주 ] 🔮<br>"
+            f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>"
+            f"친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 혜택! 🎁<br><br>"
+            f"👇 아래 링크에서 간편하게 신청하세요!<br>"
+            f"<b>{order_link}</b><br><br>"
+            f"- 박사사주 올림 -"
+        )
+
         st.markdown(
-            "<div style='text-align:center; font-family:\"Nanum Pen Script\", cursive; font-size:22px; font-weight:bold; margin-bottom:15px;'>"
-            "💬 친구에게 박사사주 공유하고 함께 혜택 받기</div>",
+            f"""
+        <div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:16px; font-weight:bold; margin-bottom:8px; color:#1A237E;'>
+            💬 친구에게 박사사주 공유하고 함께 혜택 받기
+        </div>
+        <div class='share-card'>
+            {share_content}
+        </div>
+        """,
             unsafe_allow_html=True,
         )
 
