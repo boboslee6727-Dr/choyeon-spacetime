@@ -88,11 +88,9 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         if not api_key or not api_secret or not from_phone:
             return False, "솔라피 API Key 또는 발신번호가 Streamlit Secrets에 설정되지 않았습니다. (수동 복사창 이용)"
 
-        # 숫자만 정제
         clean_to_phone = to_phone.replace("-", "").strip()
         clean_from_phone = from_phone.replace("-", "").strip()
 
-        # 채널명 [박사사주] 통일 및 MZ세대 타겟팅 알림톡 내용
         msg_body = f"""[박사사주]
 짠! {name}님, 기다리던 사주 풀이가 도착했어요! 😎
 
@@ -139,7 +137,6 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
             }
         }
 
-        # 카카오 알림톡 템플릿 ID가 Secrets에 등록되어 있으면 알림톡으로 발송 (없으면 LMS 자동발송)
         kakao_pf_id = st.secrets.get("SOLAPI_KAKAO_PF_ID")
         kakao_tpl_id = st.secrets.get("SOLAPI_KAKAO_TEMPLATE_ID")
         if kakao_pf_id and kakao_tpl_id:
@@ -166,17 +163,60 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         return False, f"발송 연동 장애: {e}"
 
 # ------------------------------------------------------------------------------
+# 0. 🧮 [패키지 복수 선택 할인 정책 및 연산 엔진]
+# ------------------------------------------------------------------------------
+DISCOUNT_POLICY = {
+    "default_rate": 0.20,       # 기본 2개 이상 패키지 할인 20%
+    "three_plus_rate": 0.25,    # 3개 이상 신청 시 25% 할인
+    "premium_rate": 0.30,       # 프리미엄 조합(3-1 + 3-3)은 30% 할인
+    "premium_combination": ["3-1", "3-3"]
+}
+
+def calculate_package_price(selected_products):
+    """상품 목록에 따른 원가, 할인액, 할인율, 최종금액 산출"""
+    if not selected_products:
+        return 0, 0, 0, 0
+        
+    total_raw_price = 0
+    codes = []
+    
+    for item in selected_products:
+        code = item.split('.')[0].strip()
+        codes.append(code)
+        price_str = item.split('(')[-1].replace('원)', '').replace(',', '').strip()
+        total_raw_price += int(price_str)
+        
+    count = len(selected_products)
+    if count <= 1:
+        return total_raw_price, 0, 0, total_raw_price
+        
+    # 1. 프리미엄 조합 체크 (3-1과 3-3 동시 포함)
+    if all(p in codes for p in DISCOUNT_POLICY["premium_combination"]):
+        rate = DISCOUNT_POLICY["premium_rate"]
+    # 2. 3개 이상 신청
+    elif count >= 3:
+        rate = DISCOUNT_POLICY["three_plus_rate"]
+    # 3. 기본 2개 신청
+    else:
+        rate = DISCOUNT_POLICY["default_rate"]
+        
+    final_price = int(total_raw_price * (1 - rate))
+    # 10원 단위 절사
+    final_price = (final_price // 10) * 10
+    discount_amount = total_raw_price - final_price
+    
+    return total_raw_price, discount_amount, int(rate * 100), final_price
+
+# ------------------------------------------------------------------------------
 # 1. 📱 [고객 모바일 접수 화면]
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     st.markdown("""
     <style>
-        /* 구글 웹폰트: 나눔손글씨 펜체(손글씨 흘림 느낌) 임베드 */
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
         
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
         
-        /* 예쁜 손글씨/흘림체 스타일 적용 */
         .m-title { 
             font-family: 'Nanum Pen Script', cursive;
             font-size: 34px; 
@@ -189,16 +229,52 @@ def render_customer_order_form():
             border-bottom: 1.5px dashed #1A237E;
         }
         
-        .req { color: #D50000; font-weight: bold; }
-        .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Nanum Pen Script', cursive; font-size: 20px; }
-        .pay-title { font-size: 24px; font-weight: bold; color: #1A237E; text-align: center; margin-bottom: 10px; font-family: 'Nanum Pen Script', cursive; }
+        .guide-box {
+            background: #FCFCFD;
+            border: 2px solid #3F51B5;
+            border-radius: 12px;
+            padding: 22px;
+            margin-top: 15px;
+            line-height: 1.8;
+            color: #2D3748;
+            font-family: 'Gowun Dodum', sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .pay-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1A237E;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .bank-info-box {
+            font-family: 'Nanum Myeongjo', serif;
+            background: #F4F6F9;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid #1A237E;
+            font-size: 16px;
+            line-height: 1.9;
+            color: #111;
+            margin: 12px 0;
+        }
+        .share-card {
+            background: #FFFDF5;
+            border: 1px solid #FFE082;
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'Gowun Dodum', sans-serif;
+            font-size: 14.5px;
+            line-height: 1.8;
+            color: #374151;
+        }
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>🔮박사사주 신청서🔮</div>", unsafe_allow_html=True)
+    st.markdown("<div class='m-title'>박사사주 신청서</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
-        name = st.text_input("성명 *(필수)", placeholder="(입금자) 성함을 입력하세요")
+        name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
         # 010 고정 및 번호 입력창 구성
         c_p1, c_p2, c_p3 = st.columns([1.1, 1.5, 1.5])
@@ -219,7 +295,12 @@ def render_customer_order_form():
         with c_m_stat: marital = st.selectbox("혼인 상태 *", ["미혼", "기혼"])
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
-        product = st.selectbox("상담 상품 선택 *(필수)", PRODUCT_LIST)
+        
+        selected_products = st.multiselect(
+            "상담 상품 선택 (2개 이상 복수 선택 시 20~30% 특별할인!) *(필수)", 
+            PRODUCT_LIST,
+            placeholder="상담받을 상품을 선택하세요 (복수 선택 가능)"
+        )
         
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
         
@@ -235,9 +316,16 @@ def render_customer_order_form():
             if not (b_year.isdigit() and b_month.isdigit() and b_day.isdigit()):
                 st.error("🚨 생년월일 숫자를 정확히 입력해 주십시오.")
                 return
+            if not selected_products:
+                st.error("🚨 최소 1개 이상의 상담 상품을 선택해 주십시오.")
+                return
             if not agree:
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
+            
+            total_raw, discount_amt, rate_pct, final_price = calculate_package_price(selected_products)
+            product_names_summary = " + ".join([p.split('.')[0] for p in selected_products])
+            full_product_desc = f"{product_names_summary} ({final_price:,}원)"
             
             order_id = str(uuid.uuid4())[:8]
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
@@ -248,76 +336,44 @@ def render_customer_order_form():
             c = conn.cursor()
             c.execute('''
                 INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (order_id, now_str, name.strip(), phone_full, email.strip(), birth_full, b_time, gender, cal_type, marital, product, "입금대기", ""))
+            ''', (order_id, now_str, name.strip(), phone_full, email.strip(), birth_full, b_time, gender, cal_type, marital, full_product_desc, "입금대기", ""))
             conn.commit()
             conn.close()
             
             st.session_state["submitted_order"] = {
-                "order_id": order_id, "name": name.strip(), "product": product
+                "order_id": order_id, 
+                "name": name.strip(), 
+                "product_desc": full_product_desc,
+                "selected_products": selected_products,
+                "total_raw": total_raw,
+                "discount_amt": discount_amt,
+                "rate_pct": rate_pct,
+                "final_price": final_price
             }
             st.rerun()
 
+    # --------------------------------------------------------------------------
+    # 신청 완료 화면
+    # --------------------------------------------------------------------------
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
 
-        # 폰트 불러오기: 나눔명조(계좌용) + 고운돋움(본문/안내문용)
-        st.markdown(
-            """
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&display=swap');
-            
-            .guide-box {
-                background: #FCFCFD;
-                border: 2px solid #3F51B5;
-                border-radius: 12px;
-                padding: 22px;
-                margin-top: 15px;
-                line-height: 1.8;
-                color: #2D3748;
-                font-family: 'Gowun Dodum', sans-serif;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            }
-            .pay-title {
-                font-size: 20px;
-                font-weight: bold;
-                color: #1A237E;
-                text-align: center;
-                margin-bottom: 12px;
-            }
-            .bank-info-box {
-                font-family: 'Nanum Myeongjo', serif;
-                background: #F4F6F9;
-                padding: 14px;
-                border-radius: 8px;
-                border-left: 4px solid #1A237E;
-                font-size: 16px;
-                line-height: 1.9;
-                color: #111;
-                margin: 12px 0;
-            }
-            .share-card {
-                background: #FFFDF5;
-                border: 1px solid #FFE082;
-                border-radius: 10px;
-                padding: 16px;
-                font-family: 'Gowun Dodum', sans-serif;
-                font-size: 14.5px;
-                line-height: 1.8;
-                color: #374151;
-            }
-        </style>
-        """,
-            unsafe_allow_html=True,
-        )
+        if ord_info["discount_amt"] > 0:
+            price_display = (
+                f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ "
+                f"<b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> "
+                f"<span style='color:#2E7D32; font-size:14px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인 적용)</span>"
+            )
+        else:
+            price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
-        # 신청 완료 및 계좌 안내 카드
         st.markdown(
             f"""
         <div class='guide-box'>
             <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
             <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
-            신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
+            신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
             이제 아래 계좌로 복비를 쏴주시면,<br>
             초연박사님이 바로 🔍돋보기 들고 <br>
             내 인생 스포일러 👀분석에 들어갑니다!<br>
@@ -325,7 +381,7 @@ def render_customer_order_form():
             <div class='bank-info-box'>
                 💳 <b>국민은행 231402-04-133221</b><br>
                 👤 <b>예금주: 이 * 호</b><br>
-                💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b>
+                💰 <b>복비:</b> {price_display}
             </div>
             
             <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
@@ -344,7 +400,6 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
-        # 감성 친구 공유 영역 (소스코드 박스 완전 제거)
         share_content = (
             f"🔮 [ 박사사주 ] 🔮<br>"
             f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>"
@@ -365,26 +420,6 @@ def render_customer_order_form():
         """,
             unsafe_allow_html=True,
         )
-
-        # 감성적인 공유 안내 문구 (일반 텍스트로 노출)
-        share_text = f"""🔮 [ 박사사주 ] 🔮
-소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀
-친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 가능 혜택! 🎁
-
-👇 아래 링크에서 간편하게 신청하세요!
-{order_link}
-
-- 박사사주 올림 -"""
-
-        st.markdown(f"""
-        <div style='background-color: #FFF8E1; padding: 15px; border-radius: 10px; border: 1px solid #FFECB3; font-family: "Nanum Pen Script", cursive; font-size: 18px; line-height: 1.6;'>
-            {share_text.replace(chr(10), '<br>')}
-        </div>
-        """, unsafe_allow_html=True)
-
-        # 복사 버튼 추가 (코드 상자가 아닌 버튼으로 처리)
-        if st.button("📋 위 문구 복사해서 친구에게 보내기"):
-            st.toast("공유 문구가 복사되었습니다! 친구 카톡방에 붙여넣기 하세요.")
 
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
