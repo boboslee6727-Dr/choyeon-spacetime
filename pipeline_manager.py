@@ -164,17 +164,17 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         return False, f"발송 연동 장애: {e}"
 
 # ------------------------------------------------------------------------------
-# 0. 🧮 [패키지 복수 선택 할인 정책 및 연산 엔진]
+# 0. 🧮 [패키지 복수 선택 할인 정책 및 연산 엔진 (2개 20%, 3개 이상 30%)]
 # ------------------------------------------------------------------------------
 DISCOUNT_POLICY = {
-    "default_rate": 0.20,       # 기본 2개 이상 패키지 할인 20%
-    "three_plus_rate": 0.25,    # 3개 이상 신청 시 25% 할인
-    "premium_rate": 0.30,       # 프리미엄 조합(3-1 + 3-3)은 30% 할인
+    "two_item_rate": 0.20,      # 2개 선택 시: 20% 할인
+    "three_plus_rate": 0.30,    # 3개 이상 선택 시: 30% 할인
+    "premium_rate": 0.30,       # 프리미엄 조합(3-1 + 3-3): 30% 할인
     "premium_combination": ["3-1", "3-3"]
 }
 
 def calculate_package_price(selected_products):
-    """상품 목록에 따른 원가, 할인액, 할인율, 최종금액 산출"""
+    """상품 목록에 따른 원가, 할인액, 할인율, 최종금액 산출 (천원 단위 사사오입 적용)"""
     if not selected_products:
         return 0, 0, 0, 0
         
@@ -191,19 +191,17 @@ def calculate_package_price(selected_products):
     if count <= 1:
         return total_raw_price, 0, 0, total_raw_price
         
-    # 1. 프리미엄 조합 체크 (3-1과 3-3 동시 포함)
-    if all(p in codes for p in DISCOUNT_POLICY["premium_combination"]):
-        rate = DISCOUNT_POLICY["premium_rate"]
-    # 2. 3개 이상 신청
-    elif count >= 3:
+    # 1. 3개 이상 신청 또는 프리미엄 조합(3-1 + 3-3)은 30% 할인
+    if count >= 3 or all(p in codes for p in DISCOUNT_POLICY["premium_combination"]):
         rate = DISCOUNT_POLICY["three_plus_rate"]
-    # 3. 기본 2개 신청
+    # 2. 2개 신청 시 20% 할인
     else:
-        rate = DISCOUNT_POLICY["default_rate"]
+        rate = DISCOUNT_POLICY["two_item_rate"]
         
-    final_price = int(total_raw_price * (1 - rate))
-    # 10원 단위 절사
-    final_price = (final_price // 10) * 10
+    # 천원 단위 사사오입(반올림: 500원 이상 올림, 499원 이하 버림)
+    calculated_price = total_raw_price * (1 - rate)
+    final_price = int(round(calculated_price, -3))
+    
     discount_amount = total_raw_price - final_price
     
     return total_raw_price, discount_amount, int(rate * 100), final_price
