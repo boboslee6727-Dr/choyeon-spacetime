@@ -271,7 +271,7 @@ def render_customer_order_form():
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>박사사주 신청서</div>", unsafe_allow_html=True)
+    st.markdown("<div class='m-title'>🔮박사사주 신청서🔮</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
