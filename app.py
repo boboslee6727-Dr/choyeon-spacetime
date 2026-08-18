@@ -178,8 +178,7 @@ def do_auto_fill_partner():
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
 # 🏮 파이프라인 관리 모듈 로드
-from pipeline_manager import init_order_db, render_customer_order_form, render_admin_panel, render_view_page
-
+from pipeline import (init_order_db, render_customer_order_form, render_admin_panel, render_view_page)
 init_order_db()
 params = st.query_params
 
