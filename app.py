@@ -177,12 +177,6 @@ def do_auto_fill_partner():
     else:
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-# 🏮 파이프라인 관리 모듈 로드 (여기가 치명적 오류의 원인이었습니다. 정확히 맞추었습니다!)
-from pipeline_manager import init_order_db, render_customer_order_form, render_admin_panel, render_view_page
-
-init_order_db()
-params = st.query_params
-
 # ------------------------------------------------------------------------------
 # 👑 [관리자 입금 승인 시 백그라운드 AI 감명서 자동 생성 및 알림톡 발송 래퍼 함수]
 # ------------------------------------------------------------------------------
@@ -255,27 +249,31 @@ def generate_report_for_order(order_row):
     if phone_number and view_code:
         try:
             view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
-            from pipeline_manager import send_solapi_auto_message
-            send_solapi_auto_message(phone_number, name, product, view_url)
+            import pipeline_manager as pl
+            pl.send_solapi_auto_message(phone_number, name, product, view_url)
         except Exception as e:
             st.error(f"🚨 알림톡 자동 발송 실패: {e}")
 
     return report_box
 
 # ------------------------------------------------------------------------------
-# 🧭 [3대 화면 라우팅 분기]
+# 🧭 [3대 화면 라우팅 분기] - 순환 참조 방지 처리 완료 구역
 # ------------------------------------------------------------------------------
+import pipeline_manager as pl
+pl.init_order_db()
+params = st.query_params
+
 if params.get("mode") == "admin":
     # 👑 박사님 관리자 패널
-    render_admin_panel(generate_report_for_order)
+    pl.render_admin_panel(generate_report_for_order)
     st.stop()
 elif params.get("mode") == "view" and "code" in params:
     # 📜 고객 결과 열람 화면
-    render_view_page(params["code"])
+    pl.render_view_page(params["code"])
     st.stop()
 elif params.get("mode") == "order":
     # 📱 고객 모바일 신청 접수창
-    render_customer_order_form()
+    pl.render_customer_order_form()
     st.stop()
 
 # ==============================================================================
