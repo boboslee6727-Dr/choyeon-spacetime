@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 73.0 Master - 신청접수/수동입금승인/열람 파이프라인 통합 완결판)
+# app.py (ver 74.0 Master - 신청접수/수동입금승인/열람 파이프라인 통합 완결판)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -23,7 +23,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 73.0 Master"
+APP_VERSION = "ver 74.0 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용
@@ -251,34 +251,34 @@ def generate_report_for_order(order_row):
     final_html = f"{cover}<br>{info_h}<br>{formatted_body}"
     report_box = html_views.get_final_report_box(final_html)
 
-    # 5. [추가] 솔라피(Solapi) 알림톡 자동 발송 실행
+    # 5. [수정] 솔라피(Solapi) 알림톡 자동 발송 실행 (정상 들여쓰기 적용)
     if phone_number and view_code:
         try:
             from sdk.api.message import Message
             from sdk.exceptions import NurigoMessageNotEnoughBalanceException
-            
-            # Streamlit Secrets에서 솔라피 키 호출
+
             solapi_key = st.secrets["SOLAPI_API_KEY"]
             solapi_secret = st.secrets["SOLAPI_API_SECRET"]
-            sender_id = st.secrets["SOLAPI_SENDER_ID"] # '@1사주박사' 또는 발신프로필 ID
-            
+            sender_id = st.secrets["SOLAPI_SENDER_ID"]  # 솔라피 발신프로필 ID
+
             message_service = Message(solapi_key, solapi_secret)
-            
-            # 열람 링크 생성 (예시 도메인 기준 또는 상대 경로)
-            view_url = f"https://choyeon-saju.streamlit.app/?mode=view&code={view_code}"
-            
-            # 알림톡 발송 페이로드 구성
+
+            # 실제 서비스 도메인 일치
+            view_url = f"http://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
+            order_url = "http://choyeon-spacetime.streamlit.app/?mode=order"
+
             params = {
                 "to": phone_number.replace("-", ""),
                 "from": sender_id,
                 "kakaoOptions": {
                     "pfId": sender_id,
-                    "templateId": "KA01TP...", # 등록하신 알림톡 템플릿 ID
+                    "templateId": "KA01TP...",  # 등록하신 알림톡 템플릿 ID
                     "variables": {
                         "#{이름}": name,
-                        "#{링크}": view_url
-                    }
-                }
+                        "#{링크}": view_url,
+                        "#{신청링크}": order_url,
+                    },
+                },
             }
             message_service.send(params)
         except Exception as e:
