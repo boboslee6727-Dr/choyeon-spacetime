@@ -270,7 +270,6 @@ def render_customer_order_form():
             color: #2D3748;
         }
         
-        /* multiselect 태그 닫기(X) 버튼 터치/클릭 활성화 */
         span[data-baseweb="tag"] {
             cursor: default !important;
         }
@@ -284,36 +283,7 @@ def render_customer_order_form():
     
     st.markdown("<div class='m-title'>🔮박사사주 신청서🔮</div>", unsafe_allow_html=True)
     
-    with st.form("choyeon_order_form"):
-        # --- 1. 신청자 본인 정보 ---
-        st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
-        name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
-        
-        # 010 고정 및 번호 입력창 구성
-        c_p1, c_p2, c_p3 = st.columns([1.1, 1.5, 1.5])
-        with c_p1: st.text_input("국번", value="010", disabled=True)
-        with c_p2: p_mid = st.text_input("중간 4자리 *(필수)", max_chars=4, placeholder="1234")
-        with c_p3: p_end = st.text_input("끝 4자리 *(필수)", max_chars=4, placeholder="5678")
-        
-        email = st.text_input("이메일 (선택)", placeholder="ch1234@example.com")
-        
-        c_y, c_m, c_d = st.columns(3)
-        with c_y: b_year = st.text_input("생년 (YYYY) *", max_chars=4, placeholder="1990")
-        with c_m: b_month = st.text_input("월 (MM) *", max_chars=2, placeholder="06")
-        with c_d: b_day = st.text_input("일 (DD) *", max_chars=2, placeholder="15")
-        
-        c_g, c_c, c_m_stat = st.columns(3)
-        with c_g: gender = st.selectbox("성별 *", ["여성", "남성"])
-        with c_c: cal_type = st.selectbox("양력 또는 음력 *", ["양력", "음력", "음력(윤달)"])
-        with c_m_stat: marital = st.selectbox("혼인 상태 *", ["미혼", "기혼"])
-        
-        b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
-        
-        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-        
-        # --------------------------------------------------------------------------
-    # 상품 선택 (폼 외부/상단 배치로 3-* 선택 시 상대방 입력창 즉시 노출)
-    # --------------------------------------------------------------------------
+    # 1. 상품 선택 (폼 외부 배치로 3-* 선택 시 즉시 감지)
     label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
     selected_products = st.multiselect(
         label=label_text,
@@ -322,15 +292,13 @@ def render_customer_order_form():
         key="user_selected_products"
     )
     
-    # 3번 계열 상품(3-1, 3-2, 3-3 등) 선택 여부 감지
     has_partner_product = any(p.startswith("3-") for p in selected_products)
 
-    with st.form("choyeon_order_form"):
-        # --- 1. 신청자 본인 정보 ---
+    # 2. 단일 고유 키 적용 (중복 에러 원천 방지)
+    with st.form("choyeon_customer_order_form_v2"):
         st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
-        # 010 고정 및 번호 입력창 구성
         c_p1, c_p2, c_p3 = st.columns([1.1, 1.5, 1.5])
         with c_p1: st.text_input("국번", value="010", disabled=True)
         with c_p2: p_mid = st.text_input("중간 4자리 *(필수)", max_chars=4, placeholder="1234")
@@ -350,7 +318,7 @@ def render_customer_order_form():
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
-        # --- 2. 3-* 계열 상품 선택 시에만 노출되는 상대방 사주 정보 ---
+        # 3-* 선택 시에만 상대방 입력창 노출
         partner_name = ""
         p_b_year, p_b_month, p_b_day = "", "", ""
         partner_gender, partner_cal, partner_time = "남성", "양력", "시간 모름"
@@ -375,7 +343,6 @@ def render_customer_order_form():
         
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
-        # --- 3. 제출 검증 로직 ---
         if submitted:
             actual_selected = st.session_state.get("user_selected_products", selected_products)
 
@@ -392,7 +359,6 @@ def render_customer_order_form():
                 st.error("🚨 최소 1개 이상의 상담 상품을 선택해 주십시오.")
                 return
                 
-            # 3-* 상품 선택 시 상대방 필수값 검증
             if has_partner_product:
                 if not partner_name.strip():
                     st.error("🚨 궁합/택일 상품을 선택하셨습니다. 상대방 성함을 입력해 주십시오.")
@@ -405,7 +371,6 @@ def render_customer_order_form():
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
             
-            # 할인 연산 및 주문 등록
             total_raw, discount_amt, rate_pct, final_price = calculate_package_price(actual_selected)
             product_names_summary = " + ".join([p.split('.')[0] for p in actual_selected])
             full_product_desc = f"{product_names_summary} ({final_price:,}원)"
@@ -443,20 +408,16 @@ def render_customer_order_form():
             }
             st.rerun()
 
-    # --------------------------------------------------------------------------
-    # 신청 완료 화면 (문단별 st.markdown 분리 & 소스코드 노출 방지)
-    # --------------------------------------------------------------------------
+    # 3. 신청 완료 화면 (문단별 분리)
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         order_link = f"{BASE_URL}/?mode=order"
 
-        # 1. 복비 텍스트 구성
         if ord_info["discount_amt"] > 0:
             price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
         else:
             price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
-        # 2. 메인 안내문 (상단)
         st.markdown(f"""
 <div class='guide-box'>
 <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
@@ -467,7 +428,6 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        # 3. 계좌 및 복비 안내 박스 (독립 문단)
         st.markdown(f"""
 <div class='bank-info-box'>
 💳 <b>국민은행 231402-04-133221</b><br>
@@ -476,7 +436,6 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        # 4. 입금 주의사항 및 친구 소개 이벤트 (독립 문단 & 30% 할인 적용)
         st.markdown("""
 <div class='guide-box' style='margin-top:10px;'>
 <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
@@ -490,7 +449,6 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 5. 친구 공유 박스 (독립 문단 & order_id 링크 연동 & 원터치 전송)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_title = "🔮 박사사주 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\n\n👇 아래 링크에서 신청해봐!\n{ref_order_link}"
