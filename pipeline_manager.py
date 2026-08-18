@@ -117,7 +117,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 
 🔮 고민 있을 땐? 박사사주 메뉴판!
 • 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
-• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운
+• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운 - 진짜루 개인고민도 싹다 풀어줘요!
 • 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
 
 고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
@@ -171,39 +171,40 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 def render_customer_order_form():
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&display=swap');
+        /* 구글 웹폰트: 나눔손글씨 펜체(손글씨 흘림 느낌) 임베드 */
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
         
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
         
-        /* 예쁘고 부드러운 감성의 타이틀 스타일 */
+        /* 예쁜 손글씨/흘림체 스타일 적용 */
         .m-title { 
-            font-family: 'Nanum Myeongjo', serif;
-            font-size: 24px; 
-            font-weight: 700; 
-            color: #2C3E50; 
+            font-family: 'Nanum Pen Script', cursive;
+            font-size: 34px; 
+            font-weight: normal; 
+            color: #1A237E; 
             text-align: center; 
             letter-spacing: 1px;
-            padding-bottom: 12px; 
+            padding-bottom: 5px; 
             margin-bottom: 20px;
-            border-bottom: 1.5px solid #E0E0E0;
+            border-bottom: 1.5px dashed #1A237E;
         }
         
         .req { color: #D50000; font-weight: bold; }
-        .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Gowun Dodum', sans-serif; }
-        .pay-title { font-size: 20px; font-weight: 900; color: #1A237E; text-align: center; margin-bottom: 10px; }
+        .guide-box { background: #FAFAFA; border: 2px solid #6D4C41; border-radius: 10px; padding: 20px; margin-top: 15px; line-height: 1.8; color: #111; font-family: 'Nanum Pen Script', cursive; font-size: 20px; }
+        .pay-title { font-size: 24px; font-weight: bold; color: #1A237E; text-align: center; margin-bottom: 10px; font-family: 'Nanum Pen Script', cursive; }
     </style>
     """, unsafe_allow_html=True)
     
-    # 이모지 제거 및 우아한 명조 계열 폰트 적용
     st.markdown("<div class='m-title'>박사사주 신청서</div>", unsafe_allow_html=True)
     
     with st.form("choyeon_order_form"):
-        name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요")
+        name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
-        # 불필요한 '통신사/국번' 항목을 삭제하고 전화번호 입력창으로 통합
-        c_p1, c_p2 = st.columns(2)
-        with c_p1: p_mid = st.text_input("휴대폰 중간 4자리 *(필수)", max_chars=4, placeholder="1234")
-        with c_p2: p_end = st.text_input("휴대폰 끝 4자리 *(필수)", max_chars=4, placeholder="5678")
+        # 010 고정 및 번호 입력창 구성
+        c_p1, c_p2, c_p3 = st.columns([1.1, 1.5, 1.5])
+        with c_p1: st.text_input("국번", value="010", disabled=True)
+        with c_p2: p_mid = st.text_input("중간 4자리 *(필수)", max_chars=4, placeholder="1234")
+        with c_p3: p_end = st.text_input("끝 4자리 *(필수)", max_chars=4, placeholder="5678")
         
         email = st.text_input("이메일 (선택)", placeholder="ch1234@example.com")
         
@@ -268,21 +269,35 @@ def render_customer_order_form():
             신청하신 <b>"{ord_info['product']}"</b> 접수가 완벽하게 끝났어요.<br><br>
             이제 아래 계좌로 복비를 쏴주시면,<br>
             초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다! <br><br>
-            💳 <b>국민은행 231402-04-13322*</b><br>
+            💳 <b>국민은행 231402-04-133221</b><br>
             👤 <b>예금주: 이 * 호</b><br>
             💰 <b>복비: {ord_info['product'].split('(')[-1].replace(')', '')}</b><br><br>
-            <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 혹! 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+            <span style='color:#D50000; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+            
+            <hr style='border: 1px dashed #ccc; margin: 15px 0;'>
+            
+            🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
+            좋은 건 나눠야지요! 친구에게 '박사사주'를 소개해 주세요.<br>
+            소개받은 친구와 나 **두 사람 모두에게** 다음 테마 분석 시 쓸 수 있는 **[50% 반값 할인 쿠폰]**을 팍팍 쏩니다! 💸<br><br>
+            
             <b>- 박사사주 올림 -</b>
         </div>
         """,
             unsafe_allow_html=True,
         )
 
-        # 박사사주 로고(텍스트 배너) 아래에 링크가 바로 위치하도록 구성한 친구 공유 텍스트
-        share_text = f"""🔮 [ 박사사주 ] 🔮
-📖 소름 돋는 인생 스포일러 & 사주 풀이 신청서
+        st.markdown("---")
+        st.markdown(
+            "<div style='text-align:center; font-weight:bold; font-size:15px;"
+            " margin-bottom:10px;'>💬 친구에게 박사사주 공유하고 혜택 받기</div>",
+            unsafe_allow_html=True,
+        )
 
-👇 아래 링크를 눌러 간편하게 신청하세요!
+        share_text = f"""🔮 [ 박사사주 ] 🔮
+소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀
+친구 소개로 같이 신청하면 우리 둘 다 50% 할인 쿠폰 득템 가능 혜택! 🎁
+
+👇 아래 링크에서 간편하게 신청하세요!
 {order_link}
 
 - 박사사주 올림 -"""
@@ -403,7 +418,7 @@ def render_admin_panel(generator_func):
 
 🔮 고민 있을 땐? 박사사주 메뉴판!
 • 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
-• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운- 진짜루 개인고민도 싹다 풀어줘요!
+• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운 - 진짜루 개인고민도 싹다 풀어줘요!
 • 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
 
 고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
