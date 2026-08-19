@@ -124,7 +124,7 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
         
         # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
-        admin_phone = "010-3857-6727" 
+        admin_phone = "01038576727" 
         
         if not api_key or not api_secret or not from_phone:
             return False, "솔라피 시크릿 설정 누락"
