@@ -118,44 +118,70 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 # 💡 [여기서부터 새로 추가!] 사장님(관리자) 전용 알림 문자 발송 함수
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
     try:
-        api_key = st.secrets.get("SOLAPI_API_KEY = "NCSHCHQUBFVYIWFX"
-        api_secret = st.secrets.get("SOLAPI_API_SECRET = "NCSHCHQUBFVYIWFX"
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE = "01038576727"
+        # 🛑 파이썬 코드에는 이렇게만 둬야 심부름꾼이 창고에서 꺼내옵니다!
+        api_key = st.secrets.get("NCSHCHQUBFVYIWFX")
+        api_secret = st.secrets.get("MSWES2ILXRVW7AS5P5XKMJDB0CURW4UY")
+        from_phone = st.secrets.get("01038576727") 
         
-        # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
-        admin_phone = "010-3857-6727" 
-        
+        # 💡 [핵심] Secrets 창고에서 카카오 채널/템플릿 ID를 가져옵니다. (없으면 자동으로 빈칸)
+        kakao_pf_id = st.secrets.get("KAKAO_PF_ID", "")
+        kakao_template_id = st.secrets.get("KAKAO_TEMPLATE_ID", "")
+
         if not api_key or not api_secret or not from_phone:
-            return False, "솔라피 시크릿 설정 누락"
+            return False, "솔라피 설정이 Streamlit Secrets에 누락되었습니다."
 
-        # 💡 날짜 형식 초압축 (2026-08-19 13:40:55 -> 2026/08/19 13:40)
-        short_time = now_str.replace("-", "/").rsplit(":", 1)[0]
-        
-        # 💡 박사님표 초압축 영수증 폼 (약 74바이트로 SMS 8원 규격 완벽 통과!)
-        admin_msg = f"{short_time}/ {name.strip()}님 / {product_summary} / {base_price:,}원 -> {discount_amt:,}원 -> {final_price:,}원"
+        clean_to_phone = to_phone.replace("-", "").strip()
+        clean_from_phone = from_phone.replace("-", "").strip()
 
-        import requests
-        auth_header = get_solapi_auth_header(api_key, api_secret)
-        headers = {"Authorization": auth_header, "Content-Type": "application/json"}
-        data = {
-            "message": {
-                "to": admin_phone.replace("-", ""),
-                "from": from_phone.replace("-", ""),
-                "text": admin_msg,
-                "type": "SMS"  # 💡 8원짜리 단문으로 완벽 세팅
-            }
+        # 🛑 [매우 중요] 카카오 알림톡은 카카오 본사 심사를 통과한 문구와 "토씨 하나 틀리지 않고 100% 똑같아야" 발송됩니다!
+        # 아래 내용은 카카오에 심사받으실 때 제출할 "기본 템플릿" 양식으로 맞춘 것입니다.
+        msg_body = f"""{name}님, 신청하신 사주 분석이 완료되었습니다.
+
+🔮 신청 상품: {product}
+
+아래 링크를 눌러 소름 돋는 인생 스포일러(사주 리포트)를 바로 확인해 보세요!
+
+결과 확인하기:
+{view_url}"""
+
+        url = "https://api.solapi.com/messages/v4/send"
+        headers = {
+            "Authorization": get_solapi_auth_header(api_key, api_secret),
+            "Content-Type": "application/json; charset=utf-8"
         }
-        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=3)
-        res_data = res.json()
         
+        # 💡 1단계: 솔라피 데이터 기본 조립 (카톡 실패 시 문자로 우회할 수 있게 넉넉한 LMS 타입으로 세팅)
+        message_data = {
+            "to": clean_to_phone,
+            "from": clean_from_phone,
+            "text": msg_body,
+            "subject": f"[사주박사] {name}님 사주 리포트 도착",
+            "type": "LMS" 
+        }
+
+        # 💡 2단계: 박사님께서 Secrets 창고에 카카오 ID를 꽂아두셨다면 -> 카카오 알림톡 옵션 가동!
+        # 솔라피는 알림톡 발송이 실패하면 알아서 위의 'text'와 'LMS' 타입으로 우회해서 문자를 날려줍니다!
+        if kakao_pf_id and kakao_template_id:
+            message_data["kakaoOptions"] = {
+                "pfId": kakao_pf_id,
+                "templateId": kakao_template_id
+            }
+
+        payload = {
+            "message": message_data
+        }
+
+        res = requests.post(url, headers=headers, json=payload, timeout=10)
+        res_data = res.json()
+
         if res.status_code == 200 and "groupId" in res_data:
-            return True, "성공"
+            return True, f"고객님({to_phone}) 카톡(또는 대체 문자) 발송 완료!"
         else:
             err_msg = res_data.get("errorMessage", str(res_data))
-            return False, f"솔라피 서버 거절: {err_msg}"
-            
+            return False, f"솔라피 응답 오류: {err_msg}"
+
     except Exception as e:
-        return False, str(e)
+        return False, f"발송 연동 장애: {e}"
 
 # ------------------------------------------------------------------------------
 # 🗄️ [데이터베이스 초기화]
