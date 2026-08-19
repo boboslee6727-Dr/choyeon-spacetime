@@ -121,7 +121,7 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         # 🛑 파이썬 코드에는 열쇠를 직접 쓰지 않습니다! (아래 3줄 절대 건드리지 마세요!)
         api_key = st.secrets.get("SOLAPI_API_KEY")
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
         
         # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
         admin_phone = "010-3857-6727" 
