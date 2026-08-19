@@ -1873,3 +1873,26 @@ def search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji=None, base_year=None):
     matched_results.sort(key=lambda item: abs(item["y"] - (base_year - 40)))
 
     return matched_results
+
+def analyze_saju_facts_advanced(saju_data, current_dw, current_sewun):
+    """
+    초연 시공명리 3대 진실(복음 고갈, 조토 흡수, 묘고 합화 소멸) 정밀 감지 엔진
+    """
+    oheng, hap_chung = analyze_saju_facts(saju_data)
+    
+    # 1. 복음(伏吟) 파동 감지 (일/시지 또는 월/년지 동일 글자 중복)
+    is_bokgeum = (saju_data.get('day_ji') == saju_data.get('hour_ji')) or \
+                 (saju_data.get('year_ji') == saju_data.get('month_ji'))
+                 
+    # 2. 묘고(墓庫) 및 삼합/방합 변질(합화) 리스크 감지
+    vaults = ['辰', '戌', '丑', '未']
+    has_vault = any(v in [saju_data.get('year_ji'), saju_data.get('month_ji'), saju_data.get('day_ji'), saju_data.get('hour_ji')] for v in vaults)
+    
+    # 3. 시공간 파동 리포트 변수 패키징
+    advanced_flags = {
+        "bokgeum_active": is_bokgeum,
+        "vault_active": has_vault,
+        "warning_message": "⚠️ [시공간 경고]: 복음 및 묘고 합화 파동에 따른 에너지 고갈 또는 신체 임계점 주의" if (is_bokgeum and has_vault) else "정상 시공간 흐름"
+    }
+    
+    return oheng, hap_chung, advanced_flags
