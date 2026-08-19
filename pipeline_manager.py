@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 74.0)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -425,15 +425,16 @@ def render_customer_order_form():
             
             partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
 
-        # 💡 [1:1 비밀상담소 (고민 Q&A)] 영역 추가
+        # 💡 [1:1 비밀상담소 (고민 Q&A)] 영역 추가 (립스틱 메이크업 및 들여쓰기 완벽 적용)
         st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
         st.markdown("""
-        <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #3F51B5; margin-bottom: 15px;'>
-            <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
-            <p style='font-size: 14px; color: #424242; line-height: 1.7; text-indent: 12px; margin-top: 8px; margin-bottom: 0; letter-spacing: -0.3px; word-break: keep-all;'>
+        <div style='background: #FFFDF5; border-radius: 12px; padding: 22px; border: 2px solid #FFE082; border-left: 6px solid #FFCA28; margin-bottom: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);'>
+            <b style='color:#E65100; font-size: 17px; letter-spacing: -0.5px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
+            <div style='height: 8px;'></div>
+            <p style='font-size: 14.5px; color: #424242; line-height: 1.75; text-indent: 14px; margin: 0; letter-spacing: -0.4px; word-break: keep-all;'>
             "사주팔자는 정해져 있어도, 다가올 운명을 경영하는 것은 결국 당신입니다."<br>
             혼자 끙끙 앓지 말고, 지금 안고 계신 답답한 고민들을 편하게 털어놓아 보세요.<br>
-            제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
+            제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b style='color:#D84315;'>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -478,7 +479,14 @@ def render_customer_order_form():
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
             
-            total_raw, discount_amt, rate_pct, final_price = calculate_package_price(actual_selected)
+            # 파이프라인에서 반환값을 4개로 받을지 5개로 받을지 엔진 상태에 맞춰 안전하게 unpacking
+            calc_result = calculate_package_price(actual_selected)
+            if len(calc_result) == 5:
+                total_original, total_raw, rate_pct, total_rate_pct, final_price = calc_result
+                discount_amt = total_original - final_price
+            else:
+                total_raw, discount_amt, rate_pct, final_price = calc_result
+                
             product_names_summary = " + ".join([p.split('.')[0] for p in actual_selected])
             full_product_desc = f"{product_names_summary} ({final_price:,}원)"
             
