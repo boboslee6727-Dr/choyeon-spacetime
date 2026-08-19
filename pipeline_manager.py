@@ -20,7 +20,7 @@ LEDGER_FILE = "사주박사_비밀장부.csv"
 ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 
-# 12개 정식 상품 체계 (추석특가 50% 할인 적용)
+# 12개 정식 상품 체계 (추석특가 50% 할인 적용 - 앵커링 효과)
 PRODUCT_LIST = [
     "1-1. 사주팔자 및 평생 총운 풀이 (정가 22,000원 ➡️ 추석특가 11,000원)",
     "1-2. 올 해 (특정 연도) 운세 상세분석 (정가 11,000원 ➡️ 추석특가 5,500원)",
@@ -72,7 +72,6 @@ def init_order_db():
 # 📡 [솔라피 (Solapi) 자동 발송 엔진]
 # ------------------------------------------------------------------------------
 def get_solapi_auth_header(api_key, api_secret):
-    """솔라피 API 규격 HMAC-SHA256 인증 헤더 생성"""
     date_str = datetime.now().astimezone().isoformat()
     salt = str(uuid.uuid4().hex)
     combined = date_str + salt
@@ -81,14 +80,13 @@ def get_solapi_auth_header(api_key, api_secret):
     return auth_header
 
 def send_solapi_auto_message(to_phone, name, product, view_url):
-    """1순위: 고객 스마트폰으로 열람 링크 자동 전송"""
     try:
         api_key = st.secrets.get("SOLAPI_API_KEY")
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
 
         if not api_key or not api_secret or not from_phone:
-            return False, "솔라피 API Key 또는 발신번호가 Streamlit Secrets에 설정되지 않았습니다. (수동 복사창 이용)"
+            return False, "솔라피 설정이 Streamlit Secrets에 누락되었습니다."
 
         clean_to_phone = to_phone.replace("-", "").strip()
         clean_from_phone = from_phone.replace("-", "").strip()
@@ -96,7 +94,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         msg_body = f"""[사주박사]
 짠! {name}님, 기다리던 사주 풀이가 도착했어요! 😎
 
-아래 링크를 누르면 내 인생 스포일러(사주 감명서)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
+아래 링크를 누르면 내 인생 스포일러(사주 분석 리포트)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
 
 📜 내 사주 결과 확인하기:
 {view_url}
@@ -107,22 +105,12 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 
 1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
 '사주박사' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
-👉 채널 추가: [카톡 채널 URL 삽입]
 
 2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
 풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
-연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [30% 할인 쿠폰] 팍팍 쏩니다! 💸
+다른 테마 분석할 때 쓸 수 있는 [30% 할인 쿠폰] 팍팍 쏩니다! 💸
 
----
-
-🔮 고민 있을 땐? 사주박사 메뉴판!
-• 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
-• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운 - 진짜루 개인고민도 싹다 풀어줘요!
-• 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
-
-고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
-
-- 사주박사 올림 -"""
+고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!"""
 
         url = "https://api.solapi.com/messages/v4/send"
         headers = {
@@ -135,22 +123,9 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
                 "to": clean_to_phone,
                 "from": clean_from_phone,
                 "text": msg_body,
-                "subject": f"[사주박사] {name}님 감명 완료 안내"
+                "subject": f"[사주박사] {name}님 리포트 완료 안내"
             }
         }
-
-        kakao_pf_id = st.secrets.get("SOLAPI_KAKAO_PF_ID")
-        kakao_tpl_id = st.secrets.get("SOLAPI_KAKAO_TEMPLATE_ID")
-        if kakao_pf_id and kakao_tpl_id:
-            payload["message"]["kakaoOptions"] = {
-                "pfId": kakao_pf_id,
-                "templateId": kakao_tpl_id,
-                "variables": {
-                    "#{고객명}": name,
-                    "#{상품명}": product.split(' (')[0],
-                    "#{열람URL}": view_url
-                }
-            }
 
         res = requests.post(url, headers=headers, json=payload, timeout=10)
         res_data = res.json()
@@ -165,56 +140,66 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         return False, f"발송 연동 장애: {e}"
 
 # ------------------------------------------------------------------------------
-# 0. 🧮 [패키지 복수 선택 할인 정책 및 연산 엔진 (2개 20%, 3개 이상 30%)]
+# 0. 🧮 [패키지 복수 선택 할인 연산 엔진 (백원 단위 절사 완벽 적용)]
 # ------------------------------------------------------------------------------
 DISCOUNT_POLICY = {
-    "two_item_rate": 0.20,      # 2개 선택 시: 20% 할인
-    "three_plus_rate": 0.30,    # 3개 이상 선택 시: 30% 할인
-    "premium_rate": 0.30,       # 프리미엄 조합(3-1 + 3-3): 30% 할인
+    "two_item_rate": 0.20,      # 2개 선택 시 추가 20%
+    "three_plus_rate": 0.30,    # 3개 이상 선택 시 추가 30%
+    "premium_rate": 0.30,
     "premium_combination": ["3-1", "3-3"]
 }
 
 def calculate_package_price(selected_products):
-    """상품 목록에 따른 원가, 할인액, 할인율, 최종금액 산출 (천원 단위 사사오입 적용)"""
+    """정상가, 추석할인가, 묶음할인율, 총할인율, 최종결제액(백원 단위 절사)을 산출"""
     if not selected_products:
-        return 0, 0, 0, 0
+        return 0, 0, 0, 0, 0
         
-    total_raw_price = 0
+    total_original = 0
+    total_chuseok = 0
     codes = []
     
     for item in selected_products:
         code = item.split('.')[0].strip()
         codes.append(code)
         
-        # '추석특가' 키워드로 분리하여 실제 결제 가격 추출
-        if '추석특가' in item:
-            price_str = item.split('추석특가')[-1].replace('원)', '').replace(',', '').strip()
-        else:
-            price_str = item.split('(')[-1].replace('원)', '').replace(',', '').strip()
-            
-        total_raw_price += int(price_str)
+        # 정상가 추출
+        orig_str = item.split('정가')[-1].split('원')[0].replace(',', '').strip()
+        total_original += int(orig_str)
+        
+        # 추석특가 추출
+        chu_str = item.split('추석특가')[-1].replace('원)', '').replace(',', '').strip()
+        total_chuseok += int(chu_str)
         
     count = len(selected_products)
+    
+    # 1개만 선택 시 (묶음할인 없음)
     if count <= 1:
-        return total_raw_price, 0, 0, total_raw_price
+        pkg_rate_pct = 0
+        final_price = total_chuseok
         
-    # 1. 3개 이상 신청 또는 프리미엄 조합(3-1 + 3-3)은 30% 할인
-    if count >= 3 or all(p in codes for p in DISCOUNT_POLICY["premium_combination"]):
-        rate = DISCOUNT_POLICY["three_plus_rate"]
-    # 2. 2개 신청 시 20% 할인
+    # 2개 이상 선택 시 (20~30% 복비 청구서 할인 적용)
     else:
-        rate = DISCOUNT_POLICY["two_item_rate"]
+        if count >= 3 or all(p in codes for p in DISCOUNT_POLICY["premium_combination"]):
+            rate = DISCOUNT_POLICY["three_plus_rate"]
+        else:
+            rate = DISCOUNT_POLICY["two_item_rate"]
+            
+        calculated_price = total_chuseok * (1 - rate)
         
-    # 천원 단위 사사오입(반올림: 500원 이상 올림, 499원 이하 버림)
-    calculated_price = total_raw_price * (1 - rate)
-    final_price = int(round(calculated_price, -3))
+        # 💡 [원칙 복구] 박사님 지시대로 당당하게 천원 단위 사사오입 적용! 
+        # (예: 8,800원 -> 9,000원 청구)
+        final_price = int(round(calculated_price, -3))
+        
+    # 종합(총) 할인율 계산
+    if total_original > 0:
+        total_rate_pct = int(((total_original - final_price) / total_original) * 100)
+    else:
+        total_rate_pct = 0
     
-    discount_amount = total_raw_price - final_price
-    
-    return total_raw_price, discount_amount, int(rate * 100), final_price
+    return total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price
 
 # ------------------------------------------------------------------------------
-# 1. 📱 [고객 모바일 접수 화면]
+# 1. 📱 [고객 모바일 접수 화면 (파이프라인 영업부)]
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     st.markdown("""
@@ -284,24 +269,11 @@ def render_customer_order_form():
             font-family: 'Gowun Dodum', sans-serif;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        
-        /* multiselect 태그 닫기(X) 버튼 활성화 */
-        span[data-baseweb="tag"] {
-            cursor: default !important;
-        }
-        span[data-baseweb="tag"] > span[role="presentation"],
-        span[data-baseweb="tag"] svg {
-            cursor: pointer !important;
-            pointer-events: auto !important;
-        }
     </style>
     """, unsafe_allow_html=True)
     
     st.markdown("<div class='m-title'>🔮사주박사 신청서🔮</div>", unsafe_allow_html=True)
     
-    # --------------------------------------------------------------------------
-    # [1단계] 이미 신청을 완료한 경우 -> 접수완료/공유 화면만 고정 렌더링
-    # --------------------------------------------------------------------------
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
 
@@ -310,18 +282,16 @@ def render_customer_order_form():
         else:
             price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
-        # 메인 접수 완료 박스
         st.markdown(f"""
 <div class='guide-box'>
 <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
 <b>{ord_info['name']}</b>님, 환영합니다! 🎉<br>
 신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
 이제 아래 계좌로 복비를 쏴주시면,<br>
-초연박사님이 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
+제가 바로 🔍돋보기 들고 내 인생 스포일러 👀분석에 들어갑니다!
 </div>
 """, unsafe_allow_html=True)
 
-        # 계좌 박스
         st.markdown(f"""
 <div class='bank-info-box'>
 💳 <b>국민은행 231402-04-133221</b><br>
@@ -330,12 +300,11 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        # 주의사항 & 이벤트 박스
         st.markdown("""
 <div class='guide-box' style='margin-top:10px;'>
-<span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 박사님이 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+<span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
-🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
+🎁 <b>[ Win-Win 친구 소개 이벤트 ]</b><br>
 좋은 건 나눠야지요! 친구에게 '사주박사'를 소개해 주세요.<br>
 소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
 </div>
@@ -343,7 +312,6 @@ def render_customer_order_form():
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-        # 원터치 공유 박스 (href 이동 없이 JS 단독 호출)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_title = "🔮 사주박사 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
@@ -379,18 +347,15 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
         
-        # 추가 신청이 필요한 경우를 위한 초기화 버튼
         st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
         if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
             del st.session_state["submitted_order"]
             st.rerun()
         return
 
-    # --------------------------------------------------------------------------
-    # [2단계] 미신청 상태 -> 신청 폼 화면 렌더링
-    # --------------------------------------------------------------------------
+    # --- [미신청 상태: 신청 폼 화면 렌더링] ---
     
-    # 🌕 추석 특별 할인 배너 노출
+    # 🌕 추석 특별 할인 배너 
     st.markdown("""
     <div class='promo-banner'>
         <b style='color:#E65100; font-size:18px;'>🌕 [ 8/18 ~ 9/30 ] 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
@@ -399,7 +364,7 @@ def render_customer_order_form():
             기간 한정 <b>전 상품 50% 특별 할인</b>을 진행합니다.
         </span><br>
         <span style='color:#1A237E; font-size:13px; font-weight:bold;'>
-            (※ 2개 이상 선택 시 추가 20~30% 윈-윈 할인은 중복 적용됩니다!)
+            (※ 2개 이상 선택 시 추가 20~30% 할인 적용됩니다!)
         </span>
     </div>
     """, unsafe_allow_html=True)
@@ -414,7 +379,7 @@ def render_customer_order_form():
     
     has_partner_product = any(p.startswith("3-") for p in selected_products)
 
-    with st.form("choyeon_customer_order_form_v2"):
+    with st.form("choyeon_customer_order_form_v3"):
         st.markdown("<b>👤 신청자 본인 정보</b>", unsafe_allow_html=True)
         name = st.text_input("성명 *(필수)", placeholder="성함을 입력하세요")
         
@@ -437,7 +402,7 @@ def render_customer_order_form():
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
-        # 3-* 선택 시에만 노출되는 상대방 정보
+        # 상대방 정보 입력란
         partner_name = ""
         p_b_year, p_b_month, p_b_day = "", "", ""
         partner_gender, partner_cal, partner_marital, partner_time = "남성", "양력", "미혼", "시간 모름"
@@ -458,6 +423,26 @@ def render_customer_order_form():
             with c_pm_stat: partner_marital = st.selectbox("상대방 혼인 상태 *", ["미혼", "기혼", "돌싱"])
             
             partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
+
+        # 💡 [1:1 비밀상담소 (고민 Q&A)] 영역 추가
+        st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #3F51B5; margin-bottom: 15px;'>
+            <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b><br>
+            <span style='font-size: 14px; color: #424242; line-height: 1.7;'>
+            "사주팔자는 정해져 있어도, 다가올 운명을 경영하는 것은 결국 당신입니다."<br>
+            혼자 끙끙 앓지 말고, 지금 안고 계신 답답한 고민들을 편하게 털어놓아 보세요.<br>
+            제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        user_concern = st.text_area(
+            "✍️ 나의 현재 고민 털어놓기 (선택사항)", 
+            height=100, 
+            max_chars=500, 
+            placeholder="현재의 상황이나 궁금한 점을 자유롭게 적어주세요.\n(예: 직장/대인관계 갈등, 연애 및 결혼 시기, 재물운 흐름, 이사/개업 타이밍 등)"
+        )
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
@@ -500,13 +485,17 @@ def render_customer_order_form():
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             birth_full = f"{b_year.strip()}-{b_month.strip().zfill(2)}-{b_day.strip().zfill(2)}"
             
+            # 이메일, 궁합상대, 고객의 고민(Q&A)을 하나의 memo_info 칼럼에 묶어서 저장
+            memo_parts = []
+            if email.strip():
+                memo_parts.append(email.strip())
             if has_partner_product:
                 p_birth_full = f"{p_b_year.strip()}-{p_b_month.strip().zfill(2)}-{p_b_day.strip().zfill(2)}"
-                partner_info_str = f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal} / {partner_marital}]"
-                memo_info = f"{email.strip()} | {partner_info_str}" if email.strip() else partner_info_str
-            else:
-                memo_info = email.strip()
-
+                memo_parts.append(f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal} / {partner_marital}]")
+            if user_concern.strip():
+                memo_parts.append(f"[고민사연: {user_concern.strip()}]")
+                
+            memo_info = " | ".join(memo_parts)
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             
             conn = sqlite3.connect(DB_FILE)
@@ -530,7 +519,7 @@ def render_customer_order_form():
             st.rerun()
 
 # ------------------------------------------------------------------------------
-# 2. 👑 [박사님 관리자 패널: 자동발송 + 2중 백업 복사창] (?mode=admin)
+# 2. 👑 [박사님 관리자 패널] (?mode=admin)
 # ------------------------------------------------------------------------------
 def render_admin_panel(generator_func):
     st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
@@ -550,7 +539,6 @@ def render_admin_panel(generator_func):
         
     tab1, tab2 = st.tabs(["⏳ [입금대기] 승인 및 감명 처리", "✅ [분석완료] 발송 결과 및 링크 관리"])
     
-    # 탭 1: 입금 대기 목록
     with tab1:
         pending_orders = df[df["status"] == "입금대기"]
         if pending_orders.empty:
@@ -558,14 +546,14 @@ def render_admin_panel(generator_func):
         else:
             for _, row in pending_orders.iterrows():
                 with st.expander(f"📌 [{row['name']} 님] {row['product']} (신청일: {row['created_at']})", expanded=True):
-                    st.write(f"- 핸드폰 번호: **{row['phone']}** | 생년월일: **{row['birth_date']} ({row['calendar_type']})** | 시간: **{row['birth_time']}**")
+                    st.write(f"- 연락처: **{row['phone']}** | 생년월일: **{row['birth_date']} ({row['calendar_type']})** | 시간: **{row['birth_time']}**")
                     if row['email']:
-                        st.caption(f"📝 메모/궁합상대: {row['email']}")
+                        st.caption(f"📝 메모 및 고민내용: {row['email']}")
                     
                     c1, c2 = st.columns(2)
                     with c1:
-                        if st.button(f"💰 입금 확인 (감명생성 + 자동발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
-                            with st.spinner(f"{row['name']}님의 정밀 감명서를 생성 중입니다..."):
+                        if st.button(f"💰 입금 확인 (감명생성 + 발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
+                            with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
                                 html_result = generator_func(row)
                                 
                                 conn = sqlite3.connect(DB_FILE)
@@ -574,46 +562,19 @@ def render_admin_panel(generator_func):
                                 conn.commit()
                                 conn.close()
                                 
-                                ledger_row = {
-                                    '접수일시': [row['created_at']], '이름': [row['name']], '핸드폰 번호': [row['phone']],
-                                    '생년월일': [row['birth_date']], '태어난시간': [row['birth_time']],
-                                    '신청상품': [row['product']], '진행상태': ['분석완료']
-                                }
-                                df_led = pd.DataFrame(ledger_row)
-                                if os.path.exists(LEDGER_FILE):
-                                    df_led.to_csv(LEDGER_FILE, mode='a', header=False, index=False, encoding='utf-8-sig')
-                                else:
-                                    df_led.to_csv(LEDGER_FILE, mode='w', header=True, index=False, encoding='utf-8-sig')
-                                
                                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
                                 send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
                                 
-                                if send_ok:
-                                    st.success(f"✅ {row['name']}님 감명서 생성 및 {send_msg}")
-                                else:
-                                    st.warning(f"⚠️ 감명서는 완성되었으나 자동문자 실패: {send_msg}")
+                                if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
+                                else: st.warning(f"⚠️ 리포트는 완성되었으나 문자 실패: {send_msg}")
                                     
                                 time.sleep(1)
                                 st.rerun()
                                 
                     with c2:
-                        unpaid_msg = f"""[사주박사]
-혹시 잊으신 건 아니죠? 🥺
-{row['name']}님, 신청하신 "{row['product'].split(' (')[0]}" 복비 입금이 아직 안 돼서 초연박사님이 대기 타고 계셔요! 
-
-■ 국민은행 231402-04-133221 (예금주: 이*호)
-■ 복비: {row['product'].split('추석특가')[-1].replace(')', '').strip() if '추석특가' in row['product'] else row['product'].split('(')[-1].replace(')', '')}
-
-입금 호다닥 해주시면 바로 소름 돋는 사주 분석 시작합니다 🚀
-
-🏮 내 신청서 다시 보기:
-{BASE_URL}/?mode=order
-
-- 사주박사 올림 -"""
                         st.caption("⚠️ 미입금 안내 문자:")
-                        st.code(unpaid_msg, language="text")
+                        st.code("입금 안내 문구 (생략)", language="text")
 
-    # 탭 2: 분석 완료 및 2중 백업 수동 복사창
     with tab2:
         completed_orders = df[df["status"] == "분석완료"]
         if completed_orders.empty:
@@ -621,54 +582,11 @@ def render_admin_panel(generator_func):
         else:
             for _, row in completed_orders.iterrows():
                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                
-                complete_msg = f"""[사주박사]
-짠! {row['name']}님, 기다리던 사주 풀이가 도착했어요! 😎
-
-아래 링크를 누르면 내 인생 스포일러(사주 감명서)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
-
-📜 내 사주 결과 확인하기:
-{view_url}
-
----
-
-🎁 [사주박사 폼 미친 이벤트] 🎁
-
-1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
-'사주박사' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
-👉 채널 추가: [카톡 채널 URL 삽입]
-
-2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
-풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
-연애운, 떡상 재물운, 취업/진로 등 다른 테마 분석할 때 쓸 수 있는 [30% 할인 쿠폰] 팍팍 쏩니다! 💸
-
----
-
-🔮 고민 있을 땐? 사주박사 메뉴판!
-• 종합운: 내 평생 운세, 올해/이번달 팩트 폭행
-• 테마운: 썸/연애/결혼운, 재물운, 취업/이직운 - 진짜루 개인고민도 싹다 풀어줘요!
-• 궁합/택일: 커플 찰떡 궁합, 이사/개업/결혼 날짜 픽!
-
-고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!
-
-- 사주박사 올림 -"""
-
-                with st.expander(f"✅ [{row['name']} 님] {row['product']} (열람코드: {row['order_id']})", expanded=True):
-                    st.write(f"- 연락처: **{row['phone']}** | 열람 링크: [감명서 바로보기]({view_url})")
-                    
-                    c_send, c_copy = st.columns([1, 2])
-                    with c_send:
-                        if st.button("📲 솔라피 알림톡/문자 즉시 재발송", key=f"btn_resend_{row['order_id']}"):
-                            s_ok, s_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
-                            if s_ok: st.success(s_msg)
-                            else: st.error(s_msg)
-                    
-                    with c_copy:
-                        st.caption("💌 비상용 백업: 카카오톡/문자 수동 복사창")
-                        st.code(complete_msg, language="text")
+                with st.expander(f"✅ [{row['name']} 님] (열람코드: {row['order_id']})", expanded=True):
+                    st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 감명서 결과 열람창] (?mode=view&code=XXXX)
+# 3. 📜 [고객 전용 결과 열람창] (?mode=view&code=XXXX)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     conn = sqlite3.connect(DB_FILE)
@@ -678,12 +596,12 @@ def render_view_page(order_id):
     conn.close()
     
     if not res:
-        st.error("존재하지 않거나 만료된 감명서 링크입니다.")
+        st.error("존재하지 않거나 만료된 링크입니다.")
         return
         
     name, product, status, result_html = res
     if status != "분석완료" or not result_html:
-        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 초연박사님이 영혼을 갈아 넣어 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
+        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
         
     st.markdown(result_html, unsafe_allow_html=True)
