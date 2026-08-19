@@ -305,7 +305,7 @@ def render_customer_order_form():
 <span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ Win-Win 친구 소개 이벤트 ]</b><br>
-좋은 건 나눠야지요! 친구에게 '사주박사'를 소개해 주세요.<br>
+좋은 건 나눠야지요! <br>친구에게 '사주박사'를 소개해 주세요.<br>
 소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
 </div>
 """, unsafe_allow_html=True)
@@ -425,16 +425,15 @@ def render_customer_order_form():
             
             partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
 
-        # 💡 [1:1 비밀상담소 (고민 Q&A)] 영역 추가 (립스틱 메이크업 및 들여쓰기 완벽 적용)
+        # 💡 [1:1 비밀상담소 (고민 Q&A)] 영역 추가
         st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
         st.markdown("""
-        <div style='background: #FFFDF5; border-radius: 12px; padding: 22px; border: 2px solid #FFE082; border-left: 6px solid #FFCA28; margin-bottom: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);'>
-            <b style='color:#E65100; font-size: 17px; letter-spacing: -0.5px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
-            <div style='height: 8px;'></div>
-            <p style='font-size: 14.5px; color: #424242; line-height: 1.75; text-indent: 14px; margin: 0; letter-spacing: -0.4px; word-break: keep-all;'>
+        <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #3F51B5; margin-bottom: 15px;'>
+            <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
+            <p style='font-size: 14px; color: #424242; line-height: 1.7; text-indent: 12px; margin-top: 8px; margin-bottom: 0; letter-spacing: -0.3px; word-break: keep-all;'>
             "사주팔자는 정해져 있어도, 다가올 운명을 경영하는 것은 결국 당신입니다."<br>
             혼자 끙끙 앓지 말고, 지금 안고 계신 답답한 고민들을 편하게 털어놓아 보세요.<br>
-            제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b style='color:#D84315;'>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
+            제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
             </p>
         </div>
         """, unsafe_allow_html=True)
