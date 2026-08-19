@@ -44,32 +44,8 @@ TIME_OPTIONS = [
     "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"
 ]
 
-def init_order_db():
-    """주문 데이터베이스 초기화"""
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS orders (
-            order_id TEXT PRIMARY KEY,
-            created_at TEXT,
-            name TEXT,
-            phone TEXT,
-            email TEXT,
-            birth_date TEXT,
-            birth_time TEXT,
-            gender TEXT,
-            calendar_type TEXT,
-            marital TEXT,
-            product TEXT,
-            status TEXT,
-            result_html TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
 # ------------------------------------------------------------------------------
-# 📡 [솔라피 (Solapi) 자동 발송 엔진]
+# 📡 [솔라피 (Solapi) 자동 발송 및 알림 엔진]
 # ------------------------------------------------------------------------------
 def get_solapi_auth_header(api_key, api_secret):
     date_str = datetime.now().astimezone().isoformat()
@@ -100,7 +76,6 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 {view_url}
 
 ---
-
 🎁 [사주박사 폼 미친 이벤트] 🎁
 
 1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
@@ -123,7 +98,8 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
                 "to": clean_to_phone,
                 "from": clean_from_phone,
                 "text": msg_body,
-                "subject": f"[사주박사] {name}님 리포트 완료 안내"
+                "subject": f"[사주박사] {name}님 리포트 완료 안내",
+                "type": "LMS"
             }
         }
 
@@ -138,6 +114,63 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 
     except Exception as e:
         return False, f"발송 연동 장애: {e}"
+
+def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
+    try:
+        api_key = st.secrets.get("SOLAPI_API_KEY")
+        api_secret = st.secrets.get("SOLAPI_API_SECRET")
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        
+        # 🛑 [주의] 박사님 핸드폰 번호로 꼭 변경해주세요 (예: "010-1234-5678")
+        admin_phone = "010-XXXX-XXXX" 
+        
+        if not api_key or not api_secret or not from_phone:
+            return False, "솔라피 시크릿 설정 누락"
+
+        admin_msg = f"띠링! [새로운 사주 신청 도착]\n{now_str} / {name.strip()}님 / {product_summary} / 정가 {base_price:,}원 -> 할인가 {discount_amt:,}원 -> 최종입금예정액 {final_price:,}원\n\n👉 관리자 승인하러 가기:\nhttps://choyeon-spacetime.streamlit.app/?mode=admin"
+
+        auth_header = get_solapi_auth_header(api_key, api_secret)
+        headers = {"Authorization": auth_header, "Content-Type": "application/json"}
+        
+        data = {
+            "message": {
+                "to": admin_phone.replace("-", ""),
+                "from": from_phone.replace("-", ""),
+                "text": admin_msg,
+                "type": "SMS"
+            }
+        }
+        requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=3)
+        return True, "성공"
+    except Exception as e:
+        return False, str(e)
+
+# ------------------------------------------------------------------------------
+# 🗄️ [데이터베이스 초기화]
+# ------------------------------------------------------------------------------
+def init_order_db():
+    """주문 데이터베이스 초기화"""
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
+            order_id TEXT PRIMARY KEY,
+            created_at TEXT,
+            name TEXT,
+            phone TEXT,
+            email TEXT,
+            birth_date TEXT,
+            birth_time TEXT,
+            gender TEXT,
+            calendar_type TEXT,
+            marital TEXT,
+            product TEXT,
+            status TEXT,
+            result_html TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
 # ------------------------------------------------------------------------------
 # 0. 🧮 [패키지 복수 선택 할인 연산 엔진 (백원 단위 절사 완벽 적용)]
@@ -186,8 +219,7 @@ def calculate_package_price(selected_products):
             
         calculated_price = total_chuseok * (1 - rate)
         
-        # 💡 [원칙 복구] 박사님 지시대로 당당하게 천원 단위 사사오입 적용! 
-        # (예: 8,800원 -> 9,000원 청구)
+        # 천원 단위 사사오입 적용
         final_price = int(round(calculated_price, -3))
         
     # 종합(총) 할인율 계산
@@ -355,7 +387,7 @@ def render_customer_order_form():
 
     # --- [미신청 상태: 신청 폼 화면 렌더링] ---
     
-    # 🌕 추석 특별 할인 배너 (자간 및 줄바꿈 최적화 버전)
+    # 🌕 추석 특별 할인 배너
     st.markdown("""
     <div class='promo-banner'>
         <b style='color:#E65100; font-size:17px; letter-spacing:-0.5px;'>[ 8/18 ~ 9/30 ] <br> 🌕 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
@@ -478,7 +510,6 @@ def render_customer_order_form():
                 st.error("🚨 개인정보 제공에 동의해 주십시오.")
                 return
             
-            # 파이프라인에서 반환값을 4개로 받을지 5개로 받을지 엔진 상태에 맞춰 안전하게 unpacking
             calc_result = calculate_package_price(actual_selected)
             if len(calc_result) == 5:
                 total_original, total_raw, rate_pct, total_rate_pct, final_price = calc_result
@@ -493,7 +524,6 @@ def render_customer_order_form():
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             birth_full = f"{b_year.strip()}-{b_month.strip().zfill(2)}-{b_day.strip().zfill(2)}"
             
-            # 이메일, 궁합상대, 고객의 고민(Q&A)을 하나의 memo_info 칼럼에 묶어서 저장
             memo_parts = []
             if email.strip():
                 memo_parts.append(email.strip())
@@ -514,14 +544,21 @@ def render_customer_order_form():
             conn.commit()
             conn.close()
             
+            # 💡 [핵심] 여기서 사장님 핸드폰으로 비상벨을 울립니다!
+            try:
+                base_price = total_original if 'total_original' in locals() else total_raw
+                send_solapi_admin_alert(now_str, name.strip(), product_names_summary, base_price, discount_amt, final_price)
+            except Exception:
+                pass
+            
             st.session_state["submitted_order"] = {
                 "order_id": order_id, 
                 "name": name.strip(), 
                 "product_desc": full_product_desc,
                 "selected_products": actual_selected,
-                "total_raw": total_raw,
+                "total_raw": total_raw if 'total_raw' in locals() else total_original,
                 "discount_amt": discount_amt,
-                "rate_pct": rate_pct,
+                "rate_pct": rate_pct if 'rate_pct' in locals() else total_rate_pct,
                 "final_price": final_price
             }
             st.rerun()
