@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 72.7 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
+# html_views.py (ver 74.0 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
 # ==============================================================================
 # [핵심 반영 사항]
 # 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
@@ -140,56 +140,55 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (단정하고 눈이 편안한 표준 명조체 규격)
-    - 대제목(1.) 20px Bold 800
-    - 특수헤더 17px Bold 800 (중앙정렬, 밑줄 2.5px solid #1A237E)
-    - 소제목(1)) 17px Bold 700 (검정색 #000000)
-    - 소소제목((1)) 16px Bold 700 (진먹색 #333333)
-    - 일반본문 15.5px Regular 400 (기본 정규 굵기, 줄간격 1.85, 편안한 먹색 #222222)
+    AI 생성 텍스트 포맷터 (단정하고 눈이 편안한 표준 명조체 규격 + 💡 Q&A 박스 자동 분리)
     """
     if not text:
         return ""
         
-    lines = str(text).split('\n')
+    # 1. 💡 아이콘을 기준으로 '일반 통변'과 '1:1 고민 Q&A' 영역을 반으로 쪼갭니다.
+    if "💡" in text:
+        parts = text.split("💡", 1)
+        main_text = parts[0].strip()
+        qna_text = "💡" + parts[1].strip()
+    else:
+        main_text = text.strip()
+        qna_text = ""
+        
+    lines = str(main_text).split('\n')
     html_lines = []
     
+    # 2. 일반 통변 파트 포맷팅 (기존 로직 그대로 유지)
     for line in lines:
         line = line.strip()
         if not line:
             continue
             
-        # 마크다운 찌꺼기 제거
         line = line.replace('*', '').replace('#', '')
 
-        # 🌟 [특수 헤더] 수석보좌관 1:1 장단점 정밀 비교 등
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #1A237E; "
                 f"text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [대제목 1.] (20px / 800)
         elif re.match(r'^\d+\.\s', line):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 20px; font-weight: 800; color: #000000; "
                 f"margin-top: 22px; margin-bottom: 10px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px; letter-spacing: -0.5px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [소제목 1)] (17px / 700)
         elif re.match(r'^\d+\)\s', line):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 700; color: #000000; "
                 f"margin-top: 14px; margin-bottom: 6px; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [소소제목 (1)] (16px / 700)
         elif re.match(r'^\(\d+\)\s', line):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 700; color: #333333; "
                 f"margin-top: 10px; margin-bottom: 4px; letter-spacing: -0.2px;'>"
                 f"{line}</div>"
             )
-        # 🌟 [일반 본문] (15.5px / 500 Medium 탄탄한 두께 / 선명한 먹색 #111111)
         else:
             if line.startswith('-'):
                 html_lines.append(
@@ -203,8 +202,25 @@ def format_ai_text_to_html(text):
                     f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 15px;'>"
                     f"{line}</p>"
                 )
-            
-    return "\n".join(html_lines)
+    
+    main_html = "\n".join(html_lines)
+    
+    # 3. Q&A 파트 포맷팅 (비밀 편지 스타일 하이라이트 박스)
+    qna_html = ""
+    if qna_text:
+        # Q&A 내부 줄바꿈을 html <br>로 처리
+        qna_body = qna_text.replace('\n', '<br>')
+        # 강렬한 강조보다는 명조체에 어울리는 차분하고 예쁜 박스
+        qna_html = f"""
+        <div style='background-color: #FFFDF5; border: 2px solid #FFE082; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+            <div style='font-family: "Nanum Myeongjo", serif; font-size: 15.5px; line-height: 1.85; color: #111111; font-weight: 600;'>
+                {qna_body}
+            </div>
+        </div>
+        """
+        
+    return main_html + "\n" + qna_html
+
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
 # ==============================================================================
@@ -605,21 +621,25 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
     """
 
 def get_closing_html(name):
+    """보고서 마지막 맺음말 및 카톡 채널 A/S 유도 배너"""
     return f"""
     <hr style="border: 0; border-top: 2px dashed #1A237E; margin: 30px 0 20px 0;">
     <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
         <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
         <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 12px; color: #111111;">앞으로 미래에 대한 더 깊은 시공명리의 지혜와 궁금증이 있으시면 언제든 <b>'초연 시공명리 연구소'</b>의 문을 두드려 주십시오.</p>
-        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 감사드립니다.</p>
-        <div style="text-align: right; margin-top: 20px;">
+        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
+        <div style="text-align: right; margin-top: 20px; margin-bottom: 30px;">
             <span style="font-weight: 800; font-size: 17px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
         </div>
     </div>
     
-    <div style='margin-top: 25px; padding: 12px 15px; background-color: #F8F9FA; border-left: 4px solid #1A237E; border-radius: 4px; font-family: "Nanum Myeongjo", serif;'>
-        <p style='font-size: 15px; font-weight: 800; color: #1A237E; margin: 0; line-height: 1.6;'>💡 [초연 명리 안내]</p>
-        <p style='font-size: 14px; font-weight: 400; color: #333; margin-top: 4px; margin-bottom: 0; line-height: 1.7;'>본 풀이는 사주 원국의 본질과 현재 운의 큰 흐름을 짚어드린 기본 감명입니다. 특정 연도별·월별 정밀한 세부 흐름은 <b>'올해 및 특정연도 운세 상세분석'</b>을, 재물·직업 등 특정 분야의 집중 상담은 <b>'테마별 특성화 상담'</b>을 통해 확인하실 수 있습니다.</p>
+    <!-- 💌 고객 CRM 관리 및 카톡 채널 유도 배너 -->
+    <div style='padding: 20px; background: #F4F6F9; border-left: 5px solid #3F51B5; border-radius: 8px; font-family: "Nanum Myeongjo", serif;'>
+        <b style='color:#1A237E; font-size: 16.5px; letter-spacing: -0.5px;'>💌 [사주박사의 1:1 애프터 서비스]</b><br>
+        <p style='font-size: 14.5px; font-weight: 500; color: #333333; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
+        {name}님, 이번 리포트에서는 사주 원국과 함께 남겨주신 고민의 핵심 원인과 타개 시기를 우선적으로 짚어드렸습니다. <br><br>
+        혹시 제 풀이를 읽고 더 깊은 이야기나 추가로 궁금한 점이 생기셨나요? 언제든 <b>'사주박사 카카오톡 채널'</b>로 편하게 말을 걸어주세요. 기존 신청자분들께는 저렴하고 친절하게 1:1 추가 상담을 도와드리고 있습니다. 늘 응원합니다! 🙏
+        </p>
     </div>
     """
 
