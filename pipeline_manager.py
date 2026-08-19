@@ -217,6 +217,9 @@ def calculate_package_price(selected_products):
         else:
             rate = DISCOUNT_POLICY["two_item_rate"]
             
+        # 💡 [핵심 추가] 파이썬이 에러를 뱉지 않게 할인율 변수를 명확히 계산해서 넣어줍니다!
+        pkg_rate_pct = int(rate * 100)
+            
         calculated_price = total_chuseok * (1 - rate)
         
         # 천원 단위 사사오입 적용
