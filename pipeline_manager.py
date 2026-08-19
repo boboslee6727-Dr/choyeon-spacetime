@@ -57,9 +57,9 @@ def get_solapi_auth_header(api_key, api_secret):
 
 def send_solapi_auto_message(to_phone, name, product, view_url):
     try:
-        api_key = st.secrets.get("SOLAPI_API_KEY")
-        api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        api_key = st.secrets.get("NCSHCHQUBFVYIWFX")
+        api_secret = st.secrets.get("MSWES2ILXRVW7AS5P5XKMJDB0CURW4UY")
+        from_phone = st.secrets.get("01038576727")
 
         if not api_key or not api_secret or not from_phone:
             return False, "솔라피 설정이 Streamlit Secrets에 누락되었습니다."
