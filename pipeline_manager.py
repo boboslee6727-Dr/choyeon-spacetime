@@ -272,7 +272,7 @@ def render_customer_order_form():
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>🔮사주박사 신청서🔮</div>", unsafe_allow_html=True)
+    st.markdown("<div class='m-title'>🔮 사주박사 신청서 🔮</div>", unsafe_allow_html=True)
     
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
@@ -358,13 +358,13 @@ def render_customer_order_form():
     # 🌕 추석 특별 할인 배너 
     st.markdown("""
     <div class='promo-banner'>
-        <b style='color:#E65100; font-size:18px;'>🌕 [ 8/18 ~ 9/30 ] 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
+        <b style='color:#E65100; font-size:18px;'> [ 8/18 ~ 9/30 ] <br> 🌕 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
         <span style='color:#424242; font-size:15px; line-height: 1.6;'>
             학생과 청년들의 힘찬 새 출발을 응원하며,<br>
             기간 한정 <b>전 상품 50% 특별 할인</b>을 진행합니다.
         </span><br>
         <span style='color:#1A237E; font-size:13px; font-weight:bold;'>
-            (※ 2개 이상 선택 시 추가 20~30% 할인 적용됩니다!)
+            (※ 2개 이상 선택 시 추가 20~30% 할인 적용!)
         </span>
     </div>
     """, unsafe_allow_html=True)
