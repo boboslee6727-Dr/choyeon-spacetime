@@ -429,12 +429,12 @@ def render_customer_order_form():
         st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
         st.markdown("""
         <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #3F51B5; margin-bottom: 15px;'>
-            <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b><br>
-            <span style='font-size: 14px; color: #424242; line-height: 1.7;'>
+            <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
+            <p style='font-size: 14px; color: #424242; line-height: 1.7; text-indent: 12px; margin-top: 8px; margin-bottom: 0; letter-spacing: -0.3px; word-break: keep-all;'>
             "사주팔자는 정해져 있어도, 다가올 운명을 경영하는 것은 결국 당신입니다."<br>
             혼자 끙끙 앓지 말고, 지금 안고 계신 답답한 고민들을 편하게 털어놓아 보세요.<br>
             제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
-            </span>
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
