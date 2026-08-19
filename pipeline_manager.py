@@ -118,9 +118,9 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 # 💡 [여기서부터 새로 추가!] 사장님(관리자) 전용 알림 문자 발송 함수
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
     try:
-        api_key = st.secrets.get("SOLAPI_API_KEY")
-        api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
+        api_key = st.secrets.get("SOLAPI_API_KEY = "NCSHCHQUBFVYIWFX"
+        api_secret = st.secrets.get("SOLAPI_API_SECRET = "NCSHCHQUBFVYIWFX"
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE = "01038576727"
         
         # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
         admin_phone = "010-3857-6727" 
