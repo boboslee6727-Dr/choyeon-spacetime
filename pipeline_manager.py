@@ -20,20 +20,20 @@ LEDGER_FILE = "사주박사_비밀장부.csv"
 ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 
-# 12개 정식 상품 체계
+# 12개 정식 상품 체계 (추석특가 50% 할인 적용)
 PRODUCT_LIST = [
-    "1-1. 사주팔자 및 평생 총운 풀이 (11,000원)",
-    "1-2. 올 해 (특정 연도) 운세 상세분석 (5,500원)",
-    "1-3. 이번 달 (특정 월) 운세 상세분석 (5,500원)",
-    "1-4. 이번 주간 및 일진 운세 (무료/2,200원)",
-    "2-1. 재물운 & 자산 축적 타이밍 특화 (11,000원)",
-    "2-2. 직업/진로/이직/승진운 특화 (11,000원)",
-    "2-3. 연애/결혼운 & 사전 흉화예방 특화 (11,000원)",
-    "2-4. 건강운 & 조토극수 체질분석 특화 (5,500원)",
-    "2-5. 이사 및 개업 택일 특화 (5,500원)",
-    "3-1. 부부/연인 정밀 궁합 풀이 (22,000원)",
-    "3-2. 백년가약 결혼 택일 (11,000원)",
-    "3-3. 명품 출산 택일 (Top 5 길일) (33,000원)"
+    "1-1. 사주팔자 및 평생 총운 풀이 (정가 22,000원 ➡️ 추석특가 11,000원)",
+    "1-2. 올 해 (특정 연도) 운세 상세분석 (정가 11,000원 ➡️ 추석특가 5,500원)",
+    "1-3. 이번 달 (특정 월) 운세 상세분석 (정가 11,000원 ➡️ 추석특가 5,500원)",
+    "1-4. 이번 주간 및 일진 운세 (정가 4,400원 ➡️ 추석특가 2,200원)",
+    "2-1. 재물운 & 자산 축적 타이밍 특화 (정가 22,000원 ➡️ 추석특가 11,000원)",
+    "2-2. 직업/진로/이직/승진운 특화 (정가 22,000원 ➡️ 추석특가 11,000원)",
+    "2-3. 연애/결혼운 & 사전 흉화예방 특화 (정가 22,000원 ➡️ 추석특가 11,000원)",
+    "2-4. 건강운 & 조토극수 체질분석 특화 (정가 11,000원 ➡️ 추석특가 5,500원)",
+    "2-5. 이사 및 개업 택일 특화 (정가 11,000원 ➡️ 추석특가 5,500원)",
+    "3-1. 부부/연인 정밀 궁합 풀이 (정가 44,000원 ➡️ 추석특가 22,000원)",
+    "3-2. 백년가약 결혼 택일 (정가 22,000원 ➡️ 추석특가 11,000원)",
+    "3-3. 명품 출산 택일 (Top 5 길일) (정가 66,000원 ➡️ 추석특가 33,000원)"
 ]
 
 TIME_OPTIONS = [
@@ -185,7 +185,13 @@ def calculate_package_price(selected_products):
     for item in selected_products:
         code = item.split('.')[0].strip()
         codes.append(code)
-        price_str = item.split('(')[-1].replace('원)', '').replace(',', '').strip()
+        
+        # '추석특가' 키워드로 분리하여 실제 결제 가격 추출
+        if '추석특가' in item:
+            price_str = item.split('추석특가')[-1].replace('원)', '').replace(',', '').strip()
+        else:
+            price_str = item.split('(')[-1].replace('원)', '').replace(',', '').strip()
+            
         total_raw_price += int(price_str)
         
     count = len(selected_products)
@@ -268,6 +274,16 @@ def render_customer_order_form():
             line-height: 1.8;
             color: #2D3748;
         }
+        .promo-banner {
+            background: #FFF3E0;
+            border: 2px solid #FF9800;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-family: 'Gowun Dodum', sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
         
         /* multiselect 태그 닫기(X) 버튼 활성화 */
         span[data-baseweb="tag"] {
@@ -321,8 +337,7 @@ def render_customer_order_form():
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ 윈-윈 친구 소개 이벤트 ]</b><br>
 좋은 건 나눠야지요! 친구에게 '사주박사'를 소개해 주세요.<br>
-소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸<br><br>
-<div style='text-align: right; font-weight: bold;'>- 사주박사 올림 -</div>
+소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
 </div>
 """, unsafe_allow_html=True)
 
@@ -360,7 +375,7 @@ def render_customer_order_form():
     </button>
 </div>
 
-<span style='color:#757575; font-size:14px;'>※ 신청 후 우측 아래의 "크라운 왕관"을 터치하여 "링크 복사"하여 카톡/문자를 베프에게 보내세요.</span>
+<span style='color:#757575; font-size:13px;'>※ 신청 후 우측 아래의 "크라운 왕관"을 터치하여 "링크 복사"하여 카톡/문자를 베프에게 보내세요.</span>
 </div>
 """, unsafe_allow_html=True)
         
@@ -374,6 +389,21 @@ def render_customer_order_form():
     # --------------------------------------------------------------------------
     # [2단계] 미신청 상태 -> 신청 폼 화면 렌더링
     # --------------------------------------------------------------------------
+    
+    # 🌕 추석 특별 할인 배너 노출
+    st.markdown("""
+    <div class='promo-banner'>
+        <b style='color:#E65100; font-size:18px;'>🌕 [ 8/18 ~ 9/30 ] 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
+        <span style='color:#424242; font-size:15px; line-height: 1.6;'>
+            학생과 청년들의 힘찬 새 출발을 응원하며,<br>
+            기간 한정 <b>전 상품 50% 특별 할인</b>을 진행합니다.
+        </span><br>
+        <span style='color:#1A237E; font-size:13px; font-weight:bold;'>
+            (※ 2개 이상 선택 시 추가 20~30% 윈-윈 할인은 중복 적용됩니다!)
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+
     label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
     selected_products = st.multiselect(
         label=label_text,
@@ -572,7 +602,7 @@ def render_admin_panel(generator_func):
 {row['name']}님, 신청하신 "{row['product'].split(' (')[0]}" 복비 입금이 아직 안 돼서 초연박사님이 대기 타고 계셔요! 
 
 ■ 국민은행 231402-04-133221 (예금주: 이*호)
-■ 복비: {row['product'].split('(')[-1].replace(')', '')}
+■ 복비: {row['product'].split('추석특가')[-1].replace(')', '').strip() if '추석특가' in row['product'] else row['product'].split('(')[-1].replace(')', '')}
 
 입금 호다닥 해주시면 바로 소름 돋는 사주 분석 시작합니다 🚀
 
