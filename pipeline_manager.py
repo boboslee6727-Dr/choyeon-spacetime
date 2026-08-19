@@ -1,8 +1,7 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 74.0)
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.0)
 # ==============================================================================
 import streamlit as st
-import streamlit.components.v1 as components
 import sqlite3
 import os
 import uuid
@@ -45,7 +44,7 @@ TIME_OPTIONS = [
 ]
 
 # ------------------------------------------------------------------------------
-# 📡 [솔라피 (Solapi) 자동 발송 및 알림 엔진]
+# 📡 [솔라피 (Solapi) 공통 암호화 함수]
 # ------------------------------------------------------------------------------
 def get_solapi_auth_header(api_key, api_secret):
     date_str = datetime.now().astimezone().isoformat()
@@ -55,68 +54,8 @@ def get_solapi_auth_header(api_key, api_secret):
     auth_header = f"HMAC-SHA256 apiKey={api_key}, date={date_str}, salt={salt}, signature={signature}"
     return auth_header
 
-def send_solapi_auto_message(to_phone, name, product, view_url):
-    try:
-        api_key = st.secrets.get("NCSHCHQUBFVYIWFX")
-        api_secret = st.secrets.get("MSWES2ILXRVW7AS5P5XKMJDB0CURW4UY")
-        from_phone = st.secrets.get("01038576727")
-
-        if not api_key or not api_secret or not from_phone:
-            return False, "솔라피 설정이 Streamlit Secrets에 누락되었습니다."
-
-        clean_to_phone = to_phone.replace("-", "").strip()
-        clean_from_phone = from_phone.replace("-", "").strip()
-
-        msg_body = f"""[사주박사]
-짠! {name}님, 기다리던 사주 풀이가 도착했어요! 😎
-
-아래 링크를 누르면 내 인생 스포일러(사주 분석 리포트)를 바로 볼 수 있어요. (PDF 저장도 완전 가능!)
-
-📜 내 사주 결과 확인하기:
-{view_url}
-
----
-🎁 [사주박사 폼 미친 이벤트] 🎁
-
-1️⃣ 플친 맺고 '오늘의 운세' 공짜로 받기!
-'사주박사' 카톡 채널 추가하면 일주일 동안 매일 아침 내 맞춤형 일진(운세)을 카톡으로 보내드려요. 하루 시작 전에 운세 체크는 필수! ✔️
-
-2️⃣ 리얼 후기 쓰고 30% 할인 쿠폰 득템!
-풀이 보고 소름 돋았다면? 카톡 채널에 찐 후기를 남겨주세요!
-다른 테마 분석할 때 쓸 수 있는 [30% 할인 쿠폰] 팍팍 쏩니다! 💸
-
-고민 생기면 혼자 끙끙 앓지 말고 언제든 찾아주세요!"""
-
-        url = "https://api.solapi.com/messages/v4/send"
-        headers = {
-            "Authorization": get_solapi_auth_header(api_key, api_secret),
-            "Content-Type": "application/json; charset=utf-8"
-        }
-        
-        payload = {
-            "message": {
-                "to": clean_to_phone,
-                "from": clean_from_phone,
-                "text": msg_body,
-                "subject": f"[사주박사] {name}님 리포트 완료 안내",
-                "type": "LMS"
-            }
-        }
-
-        res = requests.post(url, headers=headers, json=payload, timeout=10)
-        res_data = res.json()
-
-        if res.status_code == 200 and "groupId" in res_data:
-            return True, f"고객님 핸드폰(카톡)({to_phone})으로 발송이 완료되었습니다."
-        else:
-            err_msg = res_data.get("errorMessage", str(res_data))
-            return False, f"솔라피 응답 오류: {err_msg}"
-
-    except Exception as e:
-        return False, f"발송 연동 장애: {e}"
-
 # ------------------------------------------------------------------------------
-# 📡 [손님용] 카카오 알림톡 우선 발송 + 실패 시 문자(LMS) 자동 우회 엔진
+# 📡 1. [손님용] 카카오 알림톡 우선 발송 + 실패 시 문자(LMS) 우회 엔진
 # ------------------------------------------------------------------------------
 def send_solapi_auto_message(to_phone, name, product, view_url):
     try:
@@ -124,7 +63,6 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
 
-        # 💡 Secrets 창고에서 카카오 채널/템플릿 ID를 가져옵니다. (없으면 자동으로 빈칸)
         kakao_pf_id = st.secrets.get("KAKAO_PF_ID", "")
         kakao_template_id = st.secrets.get("KAKAO_TEMPLATE_ID", "")
 
@@ -149,7 +87,6 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
             "Content-Type": "application/json; charset=utf-8"
         }
         
-        # 💡 1단계: 카톡 실패 시 문자로 우회할 수 있게 넉넉한 LMS 타입으로 세팅
         message_data = {
             "to": clean_to_phone,
             "from": clean_from_phone,
@@ -158,7 +95,6 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
             "type": "LMS" 
         }
 
-        # 💡 2단계: 카카오 ID가 있다면 카카오 알림톡 옵션 가동!
         if kakao_pf_id and kakao_template_id:
             message_data["kakaoOptions"] = {
                 "pfId": kakao_pf_id,
@@ -181,16 +117,15 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
     except Exception as e:
         return False, f"발송 연동 장애: {e}"
 
-
-# 💡 [여기서부터 새로 추가!] 사장님(관리자) 전용 알림 문자 발송 함수
+# ------------------------------------------------------------------------------
+# 📡 2. [사장님(관리자)용] 비상벨 알림 문자(SMS) 발송 함수
+# ------------------------------------------------------------------------------
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
     try:
-        # 🛑 파이썬 코드에는 열쇠를 직접 쓰지 않습니다!
         api_key = st.secrets.get("SOLAPI_API_KEY")
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
         
-        # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
         admin_phone = "01038576727" 
         
         if not api_key or not api_secret or not from_phone:
@@ -226,7 +161,6 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
 # 🗄️ [데이터베이스 초기화]
 # ------------------------------------------------------------------------------
 def init_order_db():
-    """주문 데이터베이스 초기화"""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
@@ -250,17 +184,16 @@ def init_order_db():
     conn.close()
 
 # ------------------------------------------------------------------------------
-# 0. 🧮 [패키지 복수 선택 할인 연산 엔진 (백원 단위 절사 완벽 적용)]
+# 0. 🧮 [패키지 복수 선택 할인 연산 엔진]
 # ------------------------------------------------------------------------------
 DISCOUNT_POLICY = {
-    "two_item_rate": 0.20,      # 2개 선택 시 추가 20%
-    "three_plus_rate": 0.30,    # 3개 이상 선택 시 추가 30%
+    "two_item_rate": 0.20,      
+    "three_plus_rate": 0.30,    
     "premium_rate": 0.30,
     "premium_combination": ["3-1", "3-3"]
 }
 
 def calculate_package_price(selected_products):
-    """정상가, 추석할인가, 묶음할인율, 총할인율, 최종결제액(백원 단위 절사)을 산출"""
     if not selected_products:
         return 0, 0, 0, 0, 0
         
@@ -272,37 +205,28 @@ def calculate_package_price(selected_products):
         code = item.split('.')[0].strip()
         codes.append(code)
         
-        # 정상가 추출
         orig_str = item.split('정가')[-1].split('원')[0].replace(',', '').strip()
         total_original += int(orig_str)
         
-        # 추석특가 추출
         chu_str = item.split('추석특가')[-1].replace('원)', '').replace(',', '').strip()
         total_chuseok += int(chu_str)
         
     count = len(selected_products)
     
-    # 1개만 선택 시 (묶음할인 없음)
     if count <= 1:
         pkg_rate_pct = 0
         final_price = total_chuseok
         
-    # 2개 이상 선택 시 (20~30% 복비 청구서 할인 적용)
     else:
         if count >= 3 or all(p in codes for p in DISCOUNT_POLICY["premium_combination"]):
             rate = DISCOUNT_POLICY["three_plus_rate"]
         else:
             rate = DISCOUNT_POLICY["two_item_rate"]
             
-        # 💡 [핵심 추가] 파이썬이 에러를 뱉지 않게 할인율 변수를 명확히 계산해서 넣어줍니다!
         pkg_rate_pct = int(rate * 100)
-            
         calculated_price = total_chuseok * (1 - rate)
-        
-        # 천원 단위 사사오입 적용
         final_price = int(round(calculated_price, -3))
         
-    # 종합(총) 할인율 계산
     if total_original > 0:
         total_rate_pct = int(((total_original - final_price) / total_original) * 100)
     else:
@@ -311,76 +235,19 @@ def calculate_package_price(selected_products):
     return total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price
 
 # ------------------------------------------------------------------------------
-# 1. 📱 [고객 모바일 접수 화면 (파이프라인 영업부)]
+# 1. 📱 [고객 모바일 접수 화면]
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
-        
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
-        
-        .m-title { 
-            font-family: 'Nanum Pen Script', cursive;
-            font-size: 34px; 
-            font-weight: normal; 
-            color: #1A237E; 
-            text-align: center; 
-            letter-spacing: 1px;
-            padding-bottom: 5px; 
-            margin-bottom: 20px;
-            border-bottom: 1.5px dashed #1A237E;
-        }
-        
-        .guide-box {
-            background: #FCFCFD;
-            border: 2px solid #3F51B5;
-            border-radius: 12px;
-            padding: 22px;
-            margin-top: 15px;
-            line-height: 1.8;
-            color: #2D3748;
-            font-family: 'Gowun Dodum', sans-serif;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .pay-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1A237E;
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .bank-info-box {
-            font-family: 'Nanum Myeongjo', serif;
-            background: #F4F6F9;
-            padding: 14px;
-            border-radius: 8px;
-            border-left: 4px solid #1A237E;
-            font-size: 16px;
-            line-height: 1.9;
-            color: #111;
-            margin: 12px 0;
-        }
-        .share-card {
-            background: #FFFDF5;
-            border: 1.5px solid #FFE082;
-            border-radius: 12px;
-            padding: 20px;
-            font-family: 'Gowun Dodum', sans-serif;
-            font-size: 16px;
-            line-height: 1.8;
-            color: #2D3748;
-        }
-        .promo-banner {
-            background: #FFF3E0;
-            border: 2px solid #FF9800;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-family: 'Gowun Dodum', sans-serif;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+        .m-title { font-family: 'Nanum Pen Script', cursive; font-size: 34px; color: #1A237E; text-align: center; margin-bottom: 20px; border-bottom: 1.5px dashed #1A237E; }
+        .guide-box { background: #FCFCFD; border: 2px solid #3F51B5; border-radius: 12px; padding: 22px; margin-top: 15px; line-height: 1.8; color: #2D3748; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .pay-title { font-size: 20px; font-weight: bold; color: #1A237E; text-align: center; margin-bottom: 12px; }
+        .bank-info-box { font-family: 'Nanum Myeongjo', serif; background: #F4F6F9; padding: 14px; border-radius: 8px; border-left: 4px solid #1A237E; font-size: 16px; line-height: 1.9; margin: 12px 0; }
+        .share-card { background: #FFFDF5; border: 1.5px solid #FFE082; border-radius: 12px; padding: 20px; font-family: 'Gowun Dodum', sans-serif; font-size: 16px; line-height: 1.8; color: #2D3748; }
+        .promo-banner { background: #FFF3E0; border: 2px solid #FF9800; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     </style>
     """, unsafe_allow_html=True)
     
@@ -388,7 +255,6 @@ def render_customer_order_form():
     
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
-
         if ord_info["discount_amt"] > 0:
             price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
         else:
@@ -414,29 +280,23 @@ def render_customer_order_form():
 
         st.markdown("""
 <div class='guide-box' style='margin-top:10px;'>
-<span style='color:#1A237E; font-weight:bold;'>※ 앗! 신청자 이름이랑 입금자 이름이 다르면 헷갈려요 ㅠㅠ 다를 경우 꼭 카톡 채널로 알려주세요!</span><br><br>
+<span style='color:#1A237E; font-weight:bold;'>※ 신청자 이름이랑 입금자 이름이 다르면 카톡 채널로 알려주세요!</span><br>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ Win-Win 친구 소개 이벤트 ]</b><br>
-좋은 건 나눠야지요! <br>친구에게 '사주박사'를 소개해 주세요.<br>
-소개받은 친구와 나 <b>두 사람 모두에게</b> 다음 테마 분석 시 쓸 수 있는 <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
+친구에게 '사주박사'를 소개해 주세요. 소개받은 친구와 나 <b>두 사람 모두에게</b> <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
 </div>
 """, unsafe_allow_html=True)
-
-        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_title = "🔮 사주박사 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
 
         st.markdown(f"""
+<div style='height: 10px;'></div>
 <div style='text-align:center; font-family: "Gowun Dodum", sans-serif; font-size:18px; font-weight:bold; margin-bottom:10px; color:#1A237E;'>
 💬 친구에게 사주박사 공유하고 함께 혜택 받기
 </div>
 <div class='share-card'>
-🔮 [ 사주박사 ] 🔮<br>
-소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀<br>
-친구 소개로 같이 신청하면 우리 둘 다 30% 할인 쿠폰 득템 혜택! 🎁<br><br>
-
 <div style='text-align:center; margin: 15px 0;'>
     <button type="button" 
        onclick="
@@ -451,10 +311,9 @@ def render_customer_order_form():
            }}
        " 
        style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:16px; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-family: \"Gowun Dodum\", sans-serif; cursor:pointer;'>
-         🟡 터치해서 친구에게 카톡/문자 바로 보내기
+        🟡 터치해서 친구에게 카톡/문자 바로 보내기
     </button>
 </div>
-
 <span style='color:#757575; font-size:13px;'>※ 신청 후 우측 아래의 "크라운 왕관"을 터치하여 "링크 복사"하여 카톡/문자를 베프에게 보내세요.</span>
 </div>
 """, unsafe_allow_html=True)
@@ -465,14 +324,11 @@ def render_customer_order_form():
             st.rerun()
         return
 
-    # --- [미신청 상태: 신청 폼 화면 렌더링] ---
-    
-    # 🌕 추석 특별 할인 배너
     st.markdown("""
     <div class='promo-banner'>
         <b style='color:#E65100; font-size:17px; letter-spacing:-0.5px;'>[ 8/18 ~ 9/30 ] <br> 🌕 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
         <div style='height: 6px;'></div>
-        <span style='color:#424242; font-size:14px; line-height: 1.5; letter-spacing:-0.4px; word-break: keep-all;'>
+        <span style='color:#424242; font-size:14px; line-height: 1.5; letter-spacing:-0.4px;'>
             학생과 청년들의 힘찬 새 출발을 응원하며,<br>
             기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다.
         </span><br>
@@ -483,12 +339,7 @@ def render_customer_order_form():
     """, unsafe_allow_html=True)
 
     label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
-    selected_products = st.multiselect(
-        label=label_text,
-        options=PRODUCT_LIST,
-        placeholder="상담 상품 선택",
-        key="user_selected_products"
-    )
+    selected_products = st.multiselect(label=label_text, options=PRODUCT_LIST, placeholder="상담 상품 선택", key="user_selected_products")
     
     has_partner_product = any(p.startswith("3-") for p in selected_products)
 
@@ -515,7 +366,6 @@ def render_customer_order_form():
         
         b_time = st.selectbox("태어난 시간 *(필수)", TIME_OPTIONS)
         
-        # 상대방 정보 입력란
         partner_name = ""
         p_b_year, p_b_month, p_b_day = "", "", ""
         partner_gender, partner_cal, partner_marital, partner_time = "남성", "양력", "미혼", "시간 모름"
@@ -534,32 +384,23 @@ def render_customer_order_form():
             with c_pg: partner_gender = st.selectbox("상대방 성별 *", ["남성", "여성"])
             with c_pc: partner_cal = st.selectbox("상대방 양/음력 *", ["양력", "음력", "음력(윤달)"])
             with c_pm_stat: partner_marital = st.selectbox("상대방 혼인 상태 *", ["미혼", "기혼", "돌싱"])
-            
             partner_time = st.selectbox("상대방 태어난 시간 *", TIME_OPTIONS)
 
-        # 💡 [1:1 비밀상담소 (고민 Q&A)] 영역 추가
         st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
         st.markdown("""
         <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #3F51B5; margin-bottom: 15px;'>
             <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
-            <p style='font-size: 14px; color: #424242; line-height: 1.7; text-indent: 12px; margin-top: 8px; margin-bottom: 0; letter-spacing: -0.3px; word-break: keep-all;'>
-            "사주팔자는 정해져 있어도, 다가올 운명을 경영하는 것은 결국 당신입니다."<br>
-            혼자 끙끙 앓지 말고, 지금 안고 계신 답답한 고민들을 편하게 털어놓아 보세요.<br>
-            제가 직접 사연을 읽고, 명리학적 원인 분석과 함께 <b>'정확한 타이밍과 현실적인 솔루션'</b>을 리포트에 꽉 채워 담아드립니다.
+            <p style='font-size: 14px; color: #424242; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
+            혼자 끙끙 앓지 말고, 답답한 고민들을 편하게 털어놓아 보세요.<br>
+            명리학적 원인 분석과 함께 <b>'현실적인 솔루션'</b>을 담아드립니다.
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        user_concern = st.text_area(
-            "✍️ 나의 현재 고민 털어놓기 (선택사항)", 
-            height=100, 
-            max_chars=500, 
-            placeholder="현재의 상황이나 궁금한 점을 자유롭게 적어주세요.\n(예: 직장/대인관계 갈등, 연애 및 결혼 시기, 재물운 흐름, 이사/개업 타이밍 등)"
-        )
+        user_concern = st.text_area("✍️ 나의 현재 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="현재의 상황이나 궁금한 점을 자유롭게 적어주세요.")
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
-        
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", use_container_width=True)
         
         if submitted:
@@ -605,8 +446,7 @@ def render_customer_order_form():
             birth_full = f"{b_year.strip()}-{b_month.strip().zfill(2)}-{b_day.strip().zfill(2)}"
             
             memo_parts = []
-            if email.strip():
-                memo_parts.append(email.strip())
+            if email.strip(): memo_parts.append(email.strip())
             if has_partner_product:
                 p_birth_full = f"{p_b_year.strip()}-{p_b_month.strip().zfill(2)}-{p_b_day.strip().zfill(2)}"
                 memo_parts.append(f"[상대방: {partner_name.strip()} / {p_birth_full} / {partner_time} / {partner_gender} / {partner_cal} / {partner_marital}]")
@@ -624,7 +464,7 @@ def render_customer_order_form():
             conn.commit()
             conn.close()
             
-            # 💡 [핵심] 여기서 사장님 핸드폰으로 비상벨을 울립니다!
+            # 💡 [사장님 비상벨 타격 온!]
             try:
                 base_price = total_original if 'total_original' in locals() else total_raw
                 send_solapi_admin_alert(now_str, name.strip(), product_names_summary, base_price, discount_amt, final_price)
@@ -644,11 +484,10 @@ def render_customer_order_form():
             st.rerun()
 
 # ------------------------------------------------------------------------------
-# 2. 👑 [박사님 관리자 패널] (?mode=admin)
+# 2. 👑 [박사님 관리자 패널]
 # ------------------------------------------------------------------------------
 def render_admin_panel(generator_func):
     st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
-    
     pwd = st.sidebar.text_input("관리자 비밀번호", type="password")
     if pwd != ADMIN_PASSWORD:
         st.warning("🔒 관리자 암호를 입력하여 주십시오.")
@@ -711,7 +550,7 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (?mode=view&code=XXXX)
+# 3. 📜 [고객 전용 결과 열람창]
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     conn = sqlite3.connect(DB_FILE)
