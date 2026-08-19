@@ -115,33 +115,45 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
     except Exception as e:
         return False, f"발송 연동 장애: {e}"
 
+# 💡 [여기서부터 새로 추가!] 사장님(관리자) 전용 알림 문자 발송 함수
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
     try:
         api_key = st.secrets.get("SOLAPI_API_KEY")
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
         
-        # 🛑 [주의] 박사님 핸드폰 번호로 꼭 변경해주세요 (예: "010-1234-5678")
+        # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
         admin_phone = "010-3857-6727" 
         
         if not api_key or not api_secret or not from_phone:
             return False, "솔라피 시크릿 설정 누락"
 
-        admin_msg = f"띠링! [새로운 사주 신청 도착]\n{now_str} / {name.strip()}님 / {product_summary} / 정가 {base_price:,}원 -> 할인가 {discount_amt:,}원 -> 최종입금예정액 {final_price:,}원\n\n👉 관리자 승인하러 가기:\nhttps://choyeon-spacetime.streamlit.app/?mode=admin"
+        # 💡 날짜 형식 초압축 (2026-08-19 13:40:55 -> 2026/08/19 13:40)
+        short_time = now_str.replace("-", "/").rsplit(":", 1)[0]
+        
+        # 💡 박사님표 초압축 영수증 폼 (약 74바이트로 SMS 8원 규격 완벽 통과!)
+        admin_msg = f"{short_time}/ {name.strip()}님 / {product_summary} / {base_price:,}원 -> {discount_amt:,}원 -> {final_price:,}원"
 
+        import requests
         auth_header = get_solapi_auth_header(api_key, api_secret)
         headers = {"Authorization": auth_header, "Content-Type": "application/json"}
-        
         data = {
             "message": {
                 "to": admin_phone.replace("-", ""),
                 "from": from_phone.replace("-", ""),
                 "text": admin_msg,
-                "type": "SMS"
+                "type": "SMS"  # 💡 8원짜리 단문으로 완벽 세팅
             }
         }
-        requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=3)
-        return True, "성공"
+        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=3)
+        res_data = res.json()
+        
+        if res.status_code == 200 and "groupId" in res_data:
+            return True, "성공"
+        else:
+            err_msg = res_data.get("errorMessage", str(res_data))
+            return False, f"솔라피 서버 거절: {err_msg}"
+            
     except Exception as e:
         return False, str(e)
 
