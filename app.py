@@ -200,8 +200,13 @@ def generate_report_for_order(order_row):
     g_res = engine.get_ganji_from_date(y, m, d, is_lunar, is_leap)
     y_p, m_p, d_p = g_res[0], g_res[1], g_res[2]
     
-    # 2. 사주 팩트 및 시공간 파동 산출
+    # 2. 사주 팩트 및 시공간 파동 산출 (기존 코드)
     gyuk, gyuk_detail = engine.get_gyukgook_detailed(d_p[0], y_p[0], m_p[0], "-", m_p[1])
+    
+    # 💡 [추가할 부분] DB에서 손님의 1:1 고민 사연 추출하기
+    memo_info = order_row.get("email", "") 
+    concern_match = re.search(r'\[고민사연:\s*(.*?)\]', memo_info)
+    user_concern_text = concern_match.group(1).strip() if concern_match else "특별히 남긴 고민 사연이 없습니다. 다가올 운의 흐름에서 가장 주의해야 할 점과 긍정적인 덕담을 남겨주세요."
     
     adv_saju = {'year_ji': y_p[1], 'month_ji': m_p[1], 'day_ji': d_p[1], 'hour_ji': '-'}
     adv_flags = html_views.analyze_saju_facts_advanced(adv_saju, "-", "-") if hasattr(html_views, 'analyze_saju_facts_advanced') else {}
@@ -229,7 +234,8 @@ def generate_report_for_order(order_row):
         "year_gongmang": "-", "day_gongmang": "-", "curr_year": dt_mod.date.today().year,
         "cur_sewun_gan": "甲", "cur_sewun_ji": "辰", "wealth_goal": "자산 증식",
         "career_goal": "직무 적성", "love_goal": "인연 관계", "health_goal": "건강 관리",
-        "tackil_purpose": "이사", "target_date_range": "향후 1개월", "other_reading_text": ""
+        "tackil_purpose": "이사", "target_date_range": "향후 1개월", "other_reading_text": "",
+        "user_concern": user_concern_text  # <--- 이거 한 줄 추가!
     }
     
     class SafeDict(dict):
