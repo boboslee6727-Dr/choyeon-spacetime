@@ -356,13 +356,18 @@ def render_customer_order_form():
     # --- [미신청 상태: 신청 폼 화면 렌더링] ---
     
     # 🌕 추석 특별 할인 배너 
+# 🌕 추석 특별 할인 배너 (자간 및 줄바꿈 최적화 버전)
     st.markdown("""
     <div class='promo-banner'>
-        <b style='color:#E65100; font-size:17px;'> [ 8/18 ~ 9/30 ] <br> 🌕 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
-        <span style='color:#424242; font-size:14px; line-height: 1.6;'>
+        <b style='color:#E65100; font-size:17px; letter-spacing:-0.5px;'>[ 8/18 ~ 9/30 ] <br> 🌕 추석 및 새학기 맞이 반값 특가! 🌕</b><br>
+        <div style='height: 6px;'></div>
+        <span style='color:#424242; font-size:14px; line-height: 1.5; letter-spacing:-0.4px; word-break: keep-all;'>
             학생과 청년들의 힘찬 새 출발을 응원하며,<br>
-            기간한정 <b>전 상품 50% 특별할인</b>을 진행합니다.
+            기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다.
         </span><br>
+    </div>
+    """, unsafe_allow_html=True)
+
         <span style='color:#1A237E; font-size:13px; font-weight:bold;'>
             (※ 2개 이상 선택 시 추가 20~30% 할인 적용!)
         </span>
