@@ -118,24 +118,42 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 # 💡 [여기서부터 새로 추가!] 사장님(관리자) 전용 알림 문자 발송 함수
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
     try:
-        # 🛑 파이썬 코드에는 이렇게만 둬야 심부름꾼이 창고에서 꺼내옵니다!
-        api_key = st.secrets.get("NCSHCHQUBFVYIWFX")
-        api_secret = st.secrets.get("MSWES2ILXRVW7AS5P5XKMJDB0CURW4UY")
-        from_phone = st.secrets.get("01038576727") 
+        # 🛑 파이썬 코드에는 열쇠를 직접 쓰지 않습니다! (아래 3줄 절대 건드리지 마세요!)
+        api_key = st.secrets.get("SOLAPI_API_KEY")
+        api_secret = st.secrets.get("SOLAPI_API_SECRET")
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
         
-        # 💡 [핵심] Secrets 창고에서 카카오 채널/템플릿 ID를 가져옵니다. (없으면 자동으로 빈칸)
-        kakao_pf_id = st.secrets.get("KAKAO_PF_ID", "")
-        kakao_template_id = st.secrets.get("KAKAO_TEMPLATE_ID", "")
-
+        # 🛑 박사님 핸드폰 번호 완벽 장착 완료!
+        admin_phone = "010-3857-6727" 
+        
         if not api_key or not api_secret or not from_phone:
-            return False, "솔라피 설정이 Streamlit Secrets에 누락되었습니다."
+            return False, "솔라피 시크릿 설정 누락"
 
-        clean_to_phone = to_phone.replace("-", "").strip()
-        clean_from_phone = from_phone.replace("-", "").strip()
+        short_time = now_str.replace("-", "/").rsplit(":", 1)[0]
+        admin_msg = f"{short_time}/ {name.strip()}님 / {product_summary} / {base_price:,}원 -> {discount_amt:,}원 -> {final_price:,}원"
 
-        # 🛑 [매우 중요] 카카오 알림톡은 카카오 본사 심사를 통과한 문구와 "토씨 하나 틀리지 않고 100% 똑같아야" 발송됩니다!
-        # 아래 내용은 카카오에 심사받으실 때 제출할 "기본 템플릿" 양식으로 맞춘 것입니다.
-        msg_body = f"""{name}님, 신청하신 사주 분석이 완료되었습니다.
+        import requests
+        auth_header = get_solapi_auth_header(api_key, api_secret)
+        headers = {"Authorization": auth_header, "Content-Type": "application/json"}
+        data = {
+            "message": {
+                "to": admin_phone.replace("-", ""),
+                "from": from_phone.replace("-", ""),
+                "text": admin_msg,
+                "type": "SMS"
+            }
+        }
+        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=3)
+        res_data = res.json()
+        
+        if res.status_code == 200 and "groupId" in res_data:
+            return True, "성공"
+        else:
+            err_msg = res_data.get("errorMessage", str(res_data))
+            return False, f"솔라피 서버 거절: {err_msg}"
+            
+    except Exception as e:
+        return False, str(e)
 
 🔮 신청 상품: {product}
 
