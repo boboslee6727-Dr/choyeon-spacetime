@@ -576,12 +576,10 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (방탄 iframe 격리망 구축 - 무한 로딩 원천 차단)
+# 3. 📜 [고객 전용 결과 열람창] (박사님 논리 적용: 억지 변환 제거 및 순정 복원)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     import re
-    import streamlit.components.v1 as components
-    
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT name, product, status, result_html FROM orders WHERE order_id=?", (order_id,))
@@ -597,48 +595,20 @@ def render_view_page(order_id):
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
 
-    # 1. AI 마크다운 껍질(```) 제거 및 시작 </div> 붕괴 방어
-    safe_html = str(result_html)
-    safe_html = re.sub(r'```(?:html|xml|markdown)?', '', safe_html, flags=re.IGNORECASE)
-    safe_html = safe_html.replace('```', '').strip()
+    # app.py에서 DB에 저장한 완제품(result_html)을 그대로 가져옵니다.
+    final_render_html = str(result_html).strip()
+
+    # 박사님의 app.py 원본 하단 렌더링 로직 "그대로" 적용 (추가 조작 일체 없음)
+    if final_render_html.startswith("</div>"):
+        final_render_html = final_render_html[6:].strip()
+
+    final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
+
+    # 상단 PDF 버튼
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
     
-    if safe_html.startswith("</div>"):
-        safe_html = safe_html[6:].strip()
-
-    # 2. 방탄유리(iframe) 상단 CSS 뼈대 (f-string 금지)
-    html_top = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="[https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap)" rel="stylesheet">
-        <style>
-            body { font-family: 'Noto Sans KR', sans-serif; background-color: #f7f9f9; margin: 0; padding: 10px; }
-            .report-container { width: 100%; max-width: 800px; margin: 0 auto; }
-            .saju-card { background: #ffffff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eaeaea; line-height: 1.8; color: #333; font-size: 16px; overflow-x: auto; }
-            .btn-pdf { display: block; width: 100%; background-color: #c9a764; color: white; text-align: center; padding: 15px; border-radius: 10px; border: none; cursor: pointer; font-size: 16px; font-weight: bold; margin: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-            @media print { .btn-pdf { display: none !important; } body { background-color: #ffffff; padding: 0; } .saju-card { box-shadow: none; border: none; padding: 0; overflow: visible; } }
-        </style>
-    </head>
-    <body>
-        <div class="report-container">
-            <button type="button" class="btn-pdf" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>
-            <div class="saju-card">
-    """
-
-    # 3. 방탄유리 하단 뼈대
-    html_bottom = """
-            </div>
-            <button type="button" class="btn-pdf" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>
-        </div>
-    </body>
-    </html>
-    """
-
-    # 4. 가장 안전한 결합 방식 (단순 더하기 기호 사용 -> 파이썬 에러 원천 차단)
-    final_iframe_html = html_top + safe_html + html_bottom
-
-    # 5. 메인 앱과 철저히 격리된 컴포넌트로 렌더링 (st.markdown 폐기)
-    components.html(final_iframe_html, height=2000, scrolling=True)
-
+    # 억지 iframe 없이, 순정 markdown 출력
+    st.markdown(final_render_html, unsafe_allow_html=True)
+    
+    # 하단 PDF 버튼
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
