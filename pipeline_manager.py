@@ -538,26 +538,28 @@ def render_admin_panel(generator_func):
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button(f"💰 입금 확인 (감명생성 + 발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
-                            with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
-                                html_result = generator_func(row)
-                                
-                                conn = sqlite3.connect(DB_FILE)
-                                c = conn.cursor()
-                                c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (html_result, row['order_id']))
-                                conn.commit()
-                                conn.close()
-                                
-                                view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                                
-                                # [수정 1 적용부] 문자 발송 임시 비활성화 (주석 처리) 및 통과 처리
-                                # send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
-                                send_ok, send_msg = True, "문자 발송 임시 비활성화(테스트 모드)"
-                                
-                                if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
-                                else: st.warning(f"⚠️ 리포트는 완성되었으나 문자 실패: {send_msg}")
+                            # 유령 스피너 방지용 에러 추적기 추가
+                            try:
+                                with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
+                                    html_result = generator_func(row)
                                     
-                                time.sleep(1)
-                                st.rerun()
+                                    conn = sqlite3.connect(DB_FILE)
+                                    c = conn.cursor()
+                                    c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (html_result, row['order_id']))
+                                    conn.commit()
+                                    conn.close()
+                                    
+                                    view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
+                                    send_ok, send_msg = True, "문자 발송 임시 비활성화(테스트 모드)"
+                                    
+                                    if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
+                                    else: st.warning(f"⚠️ 리포트는 완성되었으나 문자 실패: {send_msg}")
+                                        
+                                    time.sleep(1)
+                                    st.rerun()
+                                    
+                            except Exception as e:
+                                st.error(f"🚨 [감명 엔진 치명적 에러] 앱이 뻗었습니다! 원인: {e}")
                                 
                     with c2:
                         st.caption("⚠️ 미입금 안내 문자:")
