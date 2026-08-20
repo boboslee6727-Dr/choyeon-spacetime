@@ -1034,6 +1034,34 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "woonse_fact_str": woonse_fact_str.strip()
     }
 
+def get_weekly_calendar_data(target_date, ds_hanja):
+    """특정 날짜가 속한 주간(일~토)의 일진 데이터를 생성하는 함수"""
+    import datetime as dt_mod
+    
+    start_sun = target_date - dt_mod.timedelta(days=(target_date.weekday() + 1) % 7)
+    weekly_data = []
+    
+    for i in range(7):
+        curr = start_sun + dt_mod.timedelta(days=i)
+        try:
+            y_p, m_p, d_p = get_ganji_from_date(curr.year, curr.month, curr.day)
+            gan, ji = d_p[0], d_p[1]
+        except:
+            gan, ji = "甲", "子"
+        
+        ss = get_ss(ds_hanja, ji)
+        oh = get_color(ji)
+        
+        weekly_data.append({
+            "date": curr,
+            "day_str": ["일", "월", "화", "수", "목", "금", "토"][i],
+            "gan": gan,
+            "ji": ji,
+            "ss": ss,
+            "oh": oh
+        })
+    return weekly_data
+
 def get_weekly_daily_facts(ds, db, yb, year, month, day):
     target_dt = dt_mod.datetime(year, month, day)
     _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
