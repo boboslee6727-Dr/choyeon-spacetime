@@ -327,10 +327,17 @@ def generate_report_for_order(order_row):
         pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
         return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
         
+    # 💡 1-4 주간운표 생성 로직 연결
+    weekly_table_code = ""
+    if "1-4" in product:
+        if hasattr(engine, 'get_weekly_calendar_data') and hasattr(html_views, 'generate_weekly_calendar_html'):
+            weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
+
     formatted_body = sub_marker(formatted_body, 'DAEWUN_TABLE_HERE', un_html)
     formatted_body = sub_marker(formatted_body, 'SEWUN_TABLE_HERE', sewun_html)
     formatted_body = sub_marker(formatted_body, 'WOLUN_TABLE_HERE', "") 
-    formatted_body = sub_marker(formatted_body, 'WEEKLY_CALENDAR_HERE', "")
+    formatted_body = sub_marker(formatted_body, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
 
     # 전체 페이지 조립 (사주표 + 인트로 + 황금문구 + 통변/표 + 맺음말)
     part_1_fact = str(table_html) + str(master_bar_html)
@@ -341,6 +348,12 @@ def generate_report_for_order(order_row):
     
     final_html = f"{cover}<br>{info_h}<br>{master_comp}"
     report_box = html_views.get_final_report_box(final_html)
+
+    # 💡 [핵심 해결] DB에 넣기 직전에 모든 들여쓰기를 제거! (파이프라인 소스코드 노출 버그 원천 차단)
+    safe_lines = []
+    for line in report_box.split('\n'):
+        safe_lines.append(line.strip())
+    report_box_clean = '\n'.join(safe_lines)
 
     # 5. [수정] 솔라피(Solapi) 자동 발송 (2개 이상 선택시 "외 1건" 오류 방어 적용 완료)
     if phone_number and view_code:
@@ -356,7 +369,7 @@ def generate_report_for_order(order_row):
         except Exception as e:
             st.error(f"🚨 알림톡 자동 발송 실패: {e}")
 
-    return report_box
+    return report_box_clean
 
 # ------------------------------------------------------------------------------
 # 🧭 [3대 화면 라우팅 분기] - 순환 참조 방지 처리 완료 구역
