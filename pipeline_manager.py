@@ -612,13 +612,13 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 다시보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (앱 내부와 100% 동일한 완벽 렌더링 보장)
+# 3. 📜 [고객 전용 결과 열람창] - PDF 다운로드(인쇄) 기능 100% 활성화
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     import streamlit as st
     import sqlite3
+    import streamlit.components.v1 as components  # 💡 JS 프린트 작동을 위한 필수 모듈
     
-    # 가짜 경로가 아닌 진짜 DB 파일명
     DB_FILE = "choyeon_orders.db"
     
     conn = sqlite3.connect(DB_FILE)
@@ -633,17 +633,25 @@ def render_view_page(order_id):
         
     name, product, status, result_html = res
     if status != "분석완료" or not result_html:
-        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
+        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨")
         return
 
-    # 이미 관리자 패널에서 띄어쓰기를 다듬어서 DB에 넣었으므로, 꺼내서 바로 출력!
+    # 박사님의 완벽한 엔진이 빚어낸 순수 결과물
     final_html = str(result_html).strip()
     
-    # 최상단 PDF 다운로드 버튼
-    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
+    # 💡 [핵심] window.parent.print()를 통해 
+    # 스트림릿 iframe을 뚫고 브라우저의 진짜 인쇄(PDF 저장) 창을 즉시 띄웁니다!
+    pdf_btn_html = """
+    <button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer; font-size:16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.parent.print();">
+    📄 평생 소장용 PDF 다운로드 (인쇄)
+    </button>
+    """
+    
+    # 최상단 PDF 다운로드 진짜 버튼 (높이를 넉넉히 주어 잘리지 않게 방어)
+    components.html(pdf_btn_html, height=65)
     
     # 리포트 본문 출력
     st.markdown(final_html, unsafe_allow_html=True)
     
-    # 최하단 PDF 다운로드 버튼
-    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
+    # 최하단 PDF 다운로드 진짜 버튼
+    components.html(pdf_btn_html, height=65)
