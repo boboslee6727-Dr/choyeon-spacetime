@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.2)
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.2) - 현 무한루프 
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -576,10 +576,9 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (박사님 논리 적용: 억지 변환 제거 및 순정 복원)
+# 3. 📜 [고객 전용 결과 열람창] (순정 복원 완료 - 무한루프 원천 차단)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
-    import re
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT name, product, status, result_html FROM orders WHERE order_id=?", (order_id,))
@@ -594,21 +593,13 @@ def render_view_page(order_id):
     if status != "분석완료" or not result_html:
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
-
-    # app.py에서 DB에 저장한 완제품(result_html)을 그대로 가져옵니다.
-    final_render_html = str(result_html).strip()
-
-    # 박사님의 app.py 원본 하단 렌더링 로직 "그대로" 적용 (추가 조작 일체 없음)
-    if final_render_html.startswith("</div>"):
-        final_render_html = final_render_html[6:].strip()
-
-    final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
-
-    # 상단 PDF 버튼
+        
+    # 상단 PDF 다운로드 버튼
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
     
-    # 억지 iframe 없이, 순정 markdown 출력
-    st.markdown(final_render_html, unsafe_allow_html=True)
+    # 🚨 파이썬 뻗음 방지! 어떤 강제 변환도 없이 DB의 원본(75.1 방식) 그대로 출력
+    st.markdown(result_html, unsafe_allow_html=True)
     
-    # 하단 PDF 버튼
+    # 하단 PDF 다운로드 버튼
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
+
