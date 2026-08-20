@@ -641,8 +641,12 @@ def render_view_page(order_id):
         result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
         result_html = result_html.replace("[WOLUN_TABLE_HERE]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
 
-    # [수정 2.5] AI가 씌운 마크다운 껍질(```html, ```) 강제로 벗겨내기
-    result_html = result_html.replace("```html\n", "").replace("```html", "").replace("```", "")
+    # [수정 2.5] 어떤 형태의 AI 껍질이든 100% 분쇄하는 강력한 제거 로직
+    result_html = result_html.replace("```html", "")
+    result_html = result_html.replace("```markdown", "")
+    result_html = result_html.replace("```xml", "")
+    result_html = result_html.replace("```", "")
+    result_html = result_html.strip() # 앞뒤 쓸데없는 공백/줄바꿈 완전 제거
 
     # [수정 3] 상단 PDF 소장 버튼
     st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 평생 소장용 PDF 다운로드</a>', unsafe_allow_html=True)
