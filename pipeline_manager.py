@@ -127,7 +127,7 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
         
-        admin_phone = "01038576727" 
+        admin_phone = "010-3857-6727" 
         
         if not api_key or not api_secret or not from_phone:
             return False, "솔라피 시크릿 설정 누락 (API_KEY, API_SECRET, SENDER_PHONE)"
@@ -570,7 +570,7 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창]
+# 3. 📜 [고객 전용 결과 열람창] (뷰어 엔진 정상화 및 모바일 감성 카드 적용)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     conn = sqlite3.connect(DB_FILE)
@@ -587,5 +587,71 @@ def render_view_page(order_id):
     if status != "분석완료" or not result_html:
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
+
+    # [수정 1] 모바일 감성 카드 UI 및 인쇄(PDF)용 CSS 주입
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
         
-    st.markdown(result_html, unsafe_allow_html=True)
+        /* 모바일 최적화 배경 */
+        .report-container {
+            max-width: 480px; 
+            margin: 0 auto; 
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f7f9f9;
+            padding: 15px;
+        }
+        /* 미리캔버스 스타일 카드 박스 */
+        .saju-card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+            line-height: 1.8;
+            color: #333;
+            font-size: 16px;
+        }
+        /* PDF 다운로드 버튼 */
+        .btn-pdf {
+            display: block;
+            width: 100%;
+            background-color: #c9a764; /* 고급스러운 골드 */
+            color: white !important;
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        /* 실제 인쇄(PDF 저장) 시 버튼 숨기기 및 여백 제거 */
+        @media print {
+            .btn-pdf { display: none !important; }
+            .report-container { background-color: #ffffff; padding: 0; }
+            .saju-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # [수정 2] 월운표 마커 미치환 버그 임시 방어 (감명기에서 누락되었을 경우를 대비)
+    if "[WOLUN_TABLE_HEAR]" in result_html or "[WOLUN_TABLE_HERE]" in result_html:
+        result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
+        result_html = result_html.replace("[WOLUN_TABLE_HERE]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
+
+    # [수정 3] 상단 PDF 소장 버튼
+    st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 평생 소장용 PDF 다운로드</a>', unsafe_allow_html=True)
+    
+    # [수정 4] 사주원국 HTML 렌더링 정상화 및 카드 레이아웃 래핑
+    st.markdown(f"""
+    <div class="report-container">
+        <div class="saju-card">
+            {result_html}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 하단 PDF 소장 버튼
+    st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 리포트 하단 PDF 다운로드</a>', unsafe_allow_html=True)
