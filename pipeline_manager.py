@@ -581,7 +581,9 @@ def render_admin_panel(generator_func):
 def render_view_page(order_id):
     import streamlit as st
     import sqlite3
-    from DB_FILE_PATH import DB_FILE # (박사님 환경에 맞게 DB 경로 설정 필요 시 수정)
+    
+    # 💡 [핵심 수정] 가짜 안내 경로를 삭제하고 진짜 DB 파일명으로 강제 고정!
+    DB_FILE = "choyeon_orders.db"
     
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -602,8 +604,7 @@ def render_view_page(order_id):
     final_html = str(result_html)
     final_html = final_html.replace("```html", "").replace("```markdown", "").replace("```", "")
 
-    # 2. 💡 [핵심] 무한루프 폭탄(re.sub) 대신 안전하게 들여쓰기 띄어쓰기만 제거!
-    # 이 과정을 거쳐야 Streamlit이 소스코드로 오해하지 않고 예쁜 표로 렌더링합니다.
+    # 2. 안전하게 들여쓰기 띄어쓰기만 제거! (Streamlit 마크다운 오인 방지)
     safe_lines = []
     for line in final_html.split("\n"):
         safe_lines.append(line.strip())
@@ -615,5 +616,6 @@ def render_view_page(order_id):
     st.markdown(final_html, unsafe_allow_html=True)
     
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
+
 
 
