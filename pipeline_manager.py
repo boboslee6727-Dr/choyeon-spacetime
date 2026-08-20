@@ -579,6 +579,10 @@ def render_admin_panel(generator_func):
 # 3. 📜 [고객 전용 결과 열람창] (소스코드 노출 방지 및 0.001초 안전 렌더링)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
+    import streamlit as st
+    import sqlite3
+    from DB_FILE_PATH import DB_FILE # (박사님 환경에 맞게 DB 경로 설정 필요 시 수정)
+    
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT name, product, status, result_html FROM orders WHERE order_id=?", (order_id,))
