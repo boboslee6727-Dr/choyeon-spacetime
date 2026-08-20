@@ -505,7 +505,7 @@ def render_customer_order_form():
             st.rerun()
 
 # ------------------------------------------------------------------------------
-# 2. 👑 [박사님 관리자 패널] (DB 다림질 및 솔라피 활성화 완결)
+# 2. 👑 [박사님 관리자 패널] (수동 감수 및 발송 완벽 분리 적용!)
 # ------------------------------------------------------------------------------
 def render_admin_panel(generator_func):
     st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
@@ -522,8 +522,10 @@ def render_admin_panel(generator_func):
         st.info("현재 접수된 신청 내역이 없습니다.")
         return
         
-    tab1, tab2 = st.tabs(["⏳ [입금대기] 승인 및 감명 처리", "✅ [분석완료] 발송 결과 및 링크 관리"])
+    # 💡 탭을 3단계(대기 -> 감수 -> 발송완료)로 명확히 나눕니다!
+    tab1, tab2, tab3 = st.tabs(["⏳ [1단계: 입금대기] 감명 생성", "🔍 [2단계: 분석완료] 감수 및 발송", "✅ [3단계: 발송완료] 보관함"])
     
+    # --- [탭 1] 입금 확인 및 감명서 "생성만" ---
     with tab1:
         pending_orders = df[df["status"] == "입금대기"]
         if pending_orders.empty:
@@ -537,57 +539,77 @@ def render_admin_panel(generator_func):
                     
                     c1, c2 = st.columns(2)
                     with c1:
-                        if st.button(f"💰 입금 확인 (감명생성 + 발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
+                        # 💡 버튼 이름 변경 & 내부 로직에서 발송 부분 완전 제거!
+                        if st.button(f"💸 입금 확인 및 감명서 생성 (발송 X)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
                             try:
                                 with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
-                                    # 1. 감명 리포트 자동 생성
                                     html_result = generator_func(row)
                                     
-                                    # 💡 [핵심] DB에 넣기 직전에 띄어쓰기를 싹 다림질하여 뷰어 에러 원천 차단!
                                     clean_html = str(html_result).replace("```html", "").replace("```markdown", "").replace("```", "")
-                                    safe_lines = []
-                                    for line in clean_html.split("\n"):
-                                        safe_lines.append(line.strip())
+                                    safe_lines = [line.strip() for line in clean_html.split("\n")]
                                     final_clean_html = "\n".join(safe_lines)
                                     
-                                    # 2. DB에 '분석완료' 상태 및 최종 결과 저장
                                     conn = sqlite3.connect(DB_FILE)
                                     c = conn.cursor()
                                     c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (final_clean_html, row['order_id']))
                                     conn.commit()
                                     conn.close()
                                     
-                                    view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                                    
-                                    # 3. 💡 솔라피 고객 알림톡 자동 발송 100% 활성화!
-                                    safe_product_name = row['product']
-                                    if "+" in safe_product_name:
-                                        safe_product_name = safe_product_name.split("+")[0].strip() + " 외 1건"
-                                        
-                                    send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], safe_product_name, view_url)
-                                    
-                                    if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
-                                    else: st.warning(f"⚠️ 리포트는 완성되었으나 알림톡 발송 실패: {send_msg}")
-                                        
-                                    time.sleep(1)
+                                    st.success(f"✅ {row['name']}님 리포트 생성 완료! [2단계: 분석완료] 탭에서 확인 후 발송해주세요.")
+                                    time.sleep(1.5)
                                     st.rerun()
                                     
                             except Exception as e:
-                                st.error(f"🚨 [감명 엔진 치명적 에러] 앱이 뻗었습니다! 원인: {e}")
+                                st.error(f"🚨 [감명 엔진 치명적 에러] 원인: {e}")
                                 
                     with c2:
                         st.caption("⚠️ 미입금 안내 문자:")
                         st.code("입금 안내 문구 (생략)", language="text")
 
+    # --- [탭 2] 감수 및 "수동 발송" ---
     with tab2:
         completed_orders = df[df["status"] == "분석완료"]
         if completed_orders.empty:
-            st.info("아직 분석 완료된 내역이 없습니다.")
+            st.info("현재 감수 대기 중인 내역이 없습니다.")
         else:
             for _, row in completed_orders.iterrows():
                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                with st.expander(f"✅ [{row['name']} 님] (열람코드: {row['order_id']})", expanded=True):
-                    st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
+                with st.expander(f"🔍 [{row['name']} 님] 감수 대기 중 (열람코드: {row['order_id']})", expanded=True):
+                    st.write(f"- 연락처: **{row['phone']}** | 신청상품: **{row['product']}**")
+                    
+                    st.markdown(f"**👉 [1. 먼저 여기를 눌러 작성된 리포트 내용을 확인(감수)하세요]({view_url})**")
+                    
+                    # 💡 박사님이 직접 누르시는 수동 발송 버튼!
+                    if st.button(f"📨 2. 내용 확인 완료! 고객에게 알림톡 발송하기", key=f"btn_send_{row['order_id']}", type="primary"):
+                        with st.spinner("알림톡 발송 중..."):
+                            safe_product_name = row['product']
+                            if "+" in safe_product_name:
+                                safe_product_name = safe_product_name.split("+")[0].strip() + " 외 1건"
+                                
+                            send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], safe_product_name, view_url)
+                            
+                            if send_ok:
+                                conn = sqlite3.connect(DB_FILE)
+                                c = conn.cursor()
+                                c.execute("UPDATE orders SET status='발송완료' WHERE order_id=?", (row['order_id'],))
+                                conn.commit()
+                                conn.close()
+                                st.success(f"✅ 알림톡 발송 완료! ({send_msg})")
+                                time.sleep(1.5)
+                                st.rerun()
+                            else:
+                                st.error(f"🚨 발송 실패: {send_msg}")
+
+    # --- [탭 3] 발송 완료 보관함 ---
+    with tab3:
+        sent_orders = df[df["status"] == "발송완료"]
+        if sent_orders.empty:
+            st.info("알림톡까지 발송 완료된 내역이 없습니다.")
+        else:
+            for _, row in sent_orders.iterrows():
+                view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
+                with st.expander(f"✅ [{row['name']} 님] 발송 완료 (신청일: {row['created_at']})"):
+                    st.write(f"- 연락처: **{row['phone']}** | [리포트 다시보기]({view_url})")
 
 # ------------------------------------------------------------------------------
 # 3. 📜 [고객 전용 결과 열람창] (앱 내부와 100% 동일한 완벽 렌더링 보장)
