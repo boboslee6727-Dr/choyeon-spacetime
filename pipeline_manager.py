@@ -574,12 +574,10 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (독립된 뷰어 컴포넌트 - 무한 로딩 원천 차단)
+# 3. 📜 [고객 전용 결과 열람창] (app.py 원본 렌더링 방식 100% 이식)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
-    import streamlit.components.v1 as components
     import re
-    
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT name, product, status, result_html FROM orders WHERE order_id=?", (order_id,))
@@ -595,83 +593,18 @@ def render_view_page(order_id):
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
 
-    # [수정 1] 월운표 마커 미치환 버그 방어
-    if "[WOLUN_TABLE_HEAR]" in result_html or "[WOLUN_TABLE_HERE]" in result_html:
-        result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
-        result_html = result_html.replace("[WOLUN_TABLE_HERE]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
-
-    # [수정 2] AI 껍질 100% 분쇄기
-    result_html = re.sub(r'```(?:html|xml|markdown)?', '', result_html)
+    # 1. AI가 생성한 마크다운 코드 껍질(```) 강제 제거
+    result_html = re.sub(r'```(?:html|xml|markdown)?', '', result_html, flags=re.IGNORECASE)
     result_html = result_html.replace('```', '')
 
-    # [수정 3] 박사님 기억이 맞았습니다! 무한 로딩을 막는 '독립된 컴포넌트(iframe)' 조립
-    # 이 안에 CSS, PDF 버튼, 사주 리포트를 모두 안전하게 때려 넣습니다.
-    full_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-        <style>
-            body {{
-                font-family: 'Noto Sans KR', sans-serif;
-                background-color: #f7f9f9;
-                margin: 0;
-                padding: 10px;
-            }}
-            .report-container {{
-                width: 100%; 
-                max-width: 800px; 
-                margin: 0 auto; 
-            }}
-            .saju-card {{
-                background: #ffffff;
-                border-radius: 12px;
-                padding: 15px; 
-                box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-                border: 1px solid #eaeaea;
-                line-height: 1.8;
-                color: #333;
-                font-size: 16px;
-                overflow-x: auto; 
-            }}
-            .btn-pdf {{
-                display: block;
-                width: 100%;
-                background-color: #c9a764; 
-                color: white;
-                text-align: center;
-                padding: 15px;
-                border-radius: 10px;
-                border: none;
-                cursor: pointer;
-                font-size: 16px;
-                font-weight: bold;
-                margin: 15px 0;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }}
-            /* 인쇄 시 버튼 숨기기 및 배경 하얗게 */
-            @media print {{
-                .btn-pdf {{ display: none !important; }}
-                body {{ background-color: #ffffff; padding: 0; }}
-                .saju-card {{ box-shadow: none; border: none; padding: 0; overflow: visible; }}
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="report-container">
-            <button type="button" class="btn-pdf" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>
-            
-            <div class="saju-card">
-                {result_html}
-            </div>
-            
-            <button type="button" class="btn-pdf" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>
-        </div>
-    </body>
-    </html>
-    """
+    # 2. 박사님의 app.py 핵심 로직 적용 (과도한 들여쓰기 및 줄바꿈 압축)
+    safe_render_html = re.sub(r'\n\s+', '\n', result_html).strip()
 
-    # Streamlit의 무한 로딩 에러를 원천 차단하는 무적의 컴포넌트 렌더러 (높이 자동 넉넉히)
-    components.html(full_html, height=4000, scrolling=True)
+    # 상단 PDF 인쇄 버튼 (무한 로딩 방지용 button 태그)
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
+    
+    # 사주원국 및 통변 본문 출력 (app.py와 완벽 동일 방식)
+    st.markdown(safe_render_html, unsafe_allow_html=True)
+    
+    # 하단 PDF 인쇄 버튼
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
