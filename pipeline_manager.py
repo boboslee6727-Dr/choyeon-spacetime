@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.1)
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.2) - 현 무한루프 
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -13,12 +13,13 @@ import hashlib
 import json
 import requests
 import urllib.parse
+import re  # [수정 추가] AI 껍질 제거를 위한 정규식 모듈
 
 DB_FILE = "choyeon_orders.db"
 LEDGER_FILE = "사주박사_비밀장부.csv"
 ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
-BASE_URL = "https://choyeon-spacetime.streamlit.app"
-KAKAO_CHAT_URL = "http://pf.kakao.com/_xexizSX/chat"
+BASE_URL = "[https://choyeon-spacetime.streamlit.app](https://choyeon-spacetime.streamlit.app)"
+KAKAO_CHAT_URL = "[http://pf.kakao.com/_xexizSX/chat](http://pf.kakao.com/_xexizSX/chat)"
 
 # 12개 정식 상품 체계 (추석특가 50% 할인 적용 - 앵커링 효과)
 PRODUCT_LIST = [
@@ -82,7 +83,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 결과 확인하기:
 {view_url}"""
 
-        url = "https://api.solapi.com/messages/v4/send"
+        url = "[https://api.solapi.com/messages/v4/send](https://api.solapi.com/messages/v4/send)"
         headers = {
             "Authorization": get_solapi_auth_header(api_key, api_secret),
             "Content-Type": "application/json; charset=utf-8"
@@ -127,7 +128,7 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         api_secret = st.secrets.get("SOLAPI_API_SECRET")
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE") 
         
-        admin_phone = "01038576727" 
+        admin_phone = "010-3857-6727" 
         
         if not api_key or not api_secret or not from_phone:
             return False, "솔라피 시크릿 설정 누락 (API_KEY, API_SECRET, SENDER_PHONE)"
@@ -145,7 +146,7 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
                 "type": "SMS"
             }
         }
-        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=5)
+        res = requests.post("[https://api.solapi.com/messages/v4/send](https://api.solapi.com/messages/v4/send)", headers=headers, json=data, timeout=5)
         res_data = res.json()
         
         if res.status_code == 200 and "groupId" in res_data:
@@ -240,7 +241,7 @@ def calculate_package_price(selected_products):
 def render_customer_order_form():
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap](https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap)');
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
         .m-title { font-family: 'Nanum Pen Script', cursive; font-size: 34px; color: #1A237E; text-align: center; margin-bottom: 20px; border-bottom: 1.5px dashed #1A237E; }
         .guide-box { background: #FCFCFD; border: 2px solid #3F51B5; border-radius: 12px; padding: 22px; margin-top: 15px; line-height: 1.8; color: #2D3748; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -537,23 +538,28 @@ def render_admin_panel(generator_func):
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button(f"💰 입금 확인 (감명생성 + 발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
-                            with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
-                                html_result = generator_func(row)
-                                
-                                conn = sqlite3.connect(DB_FILE)
-                                c = conn.cursor()
-                                c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (html_result, row['order_id']))
-                                conn.commit()
-                                conn.close()
-                                
-                                view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                                send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
-                                
-                                if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
-                                else: st.warning(f"⚠️ 리포트는 완성되었으나 문자 실패: {send_msg}")
+                            # 유령 스피너 방지용 에러 추적기 추가
+                            try:
+                                with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
+                                    html_result = generator_func(row)
                                     
-                                time.sleep(1)
-                                st.rerun()
+                                    conn = sqlite3.connect(DB_FILE)
+                                    c = conn.cursor()
+                                    c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (html_result, row['order_id']))
+                                    conn.commit()
+                                    conn.close()
+                                    
+                                    view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
+                                    send_ok, send_msg = True, "문자 발송 임시 비활성화(테스트 모드)"
+                                    
+                                    if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
+                                    else: st.warning(f"⚠️ 리포트는 완성되었으나 문자 실패: {send_msg}")
+                                        
+                                    time.sleep(1)
+                                    st.rerun()
+                                    
+                            except Exception as e:
+                                st.error(f"🚨 [감명 엔진 치명적 에러] 앱이 뻗었습니다! 원인: {e}")
                                 
                     with c2:
                         st.caption("⚠️ 미입금 안내 문자:")
@@ -570,7 +576,7 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (파이프라인 본연의 '단순 배달부' 역할로 완벽 복원)
+# 3. 📜 [고객 전용 결과 열람창] (소스코드 노출 방지 및 0.001초 안전 렌더링)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     conn = sqlite3.connect(DB_FILE)
@@ -588,13 +594,22 @@ def render_view_page(order_id):
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
 
-    # 💡 [박사님 지시 완벽 반영] 
-    # 1. 뻗음을 유발했던 억지 PDF 버튼 추가 로직 완전 폐기!
-    # 2. app.py가 만든 완제품을 그대로 가져옴
+    # 1. 원본 HTML 가져오기 및 AI 껍질 제거
     final_html = str(result_html)
-    
-    # 3. 표가 소스코드로 나오는 현상만 방지하기 위해 껍질(마크다운 기호)만 살짝 닦아냄 (절대 뻗지 않는 단순 교체)
     final_html = final_html.replace("```html", "").replace("```markdown", "").replace("```", "")
+
+    # 2. 💡 [핵심] 무한루프 폭탄(re.sub) 대신 안전하게 들여쓰기 띄어쓰기만 제거!
+    # 이 과정을 거쳐야 Streamlit이 소스코드로 오해하지 않고 예쁜 표로 렌더링합니다.
+    safe_lines = []
+    for line in final_html.split("\n"):
+        safe_lines.append(line.strip())
+    final_html = "\n".join(safe_lines)
+
+    # 3. 출력 (순정 마크다운 - 인쇄 버튼 정상 작동 보장)
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
     
-    # 4. 배달부 역할에 충실하게, 있는 그대로 화면에 송출!
     st.markdown(final_html, unsafe_allow_html=True)
+    
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
+
+
