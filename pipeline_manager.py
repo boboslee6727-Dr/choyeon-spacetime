@@ -593,7 +593,6 @@ def render_view_page(order_id):
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
         
-        /* 모바일 최적화 배경 */
         .report-container {
             max-width: 480px; 
             margin: 0 auto; 
@@ -601,7 +600,6 @@ def render_view_page(order_id):
             background-color: #f7f9f9;
             padding: 15px;
         }
-        /* 미리캔버스 스타일 카드 박스 */
         .saju-card {
             background: #ffffff;
             border-radius: 15px;
@@ -613,11 +611,10 @@ def render_view_page(order_id):
             color: #333;
             font-size: 16px;
         }
-        /* PDF 다운로드 버튼 */
         .btn-pdf {
             display: block;
             width: 100%;
-            background-color: #c9a764; /* 고급스러운 골드 */
+            background-color: #c9a764; 
             color: white !important;
             text-align: center;
             padding: 15px;
@@ -627,7 +624,6 @@ def render_view_page(order_id):
             margin-bottom: 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        /* 실제 인쇄(PDF 저장) 시 버튼 숨기기 및 여백 제거 */
         @media print {
             .btn-pdf { display: none !important; }
             .report-container { background-color: #ffffff; padding: 0; }
@@ -635,8 +631,8 @@ def render_view_page(order_id):
         }
     </style>
     """, unsafe_allow_html=True)
-    오후 6:39 2026-08-20오후 6:39 2026-08-20
-    # [수정 2] 월운표 마커 미치환 버그 임시 방어 (감명기에서 누락되었을 경우를 대비)
+    
+    # [수정 2] 월운표 마커 미치환 버그 방어
     if "[WOLUN_TABLE_HEAR]" in result_html or "[WOLUN_TABLE_HERE]" in result_html:
         result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
         result_html = result_html.replace("[WOLUN_TABLE_HERE]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
@@ -646,7 +642,7 @@ def render_view_page(order_id):
     result_html = result_html.replace("```markdown", "")
     result_html = result_html.replace("```xml", "")
     result_html = result_html.replace("```", "")
-    result_html = result_html.strip() # 앞뒤 쓸데없는 공백/줄바꿈 완전 제거
+    result_html = result_html.strip()
 
     # [수정 3] 상단 PDF 소장 버튼
     st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 평생 소장용 PDF 다운로드</a>', unsafe_allow_html=True)
@@ -662,3 +658,4 @@ def render_view_page(order_id):
     
     # 하단 PDF 소장 버튼
     st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 리포트 하단 PDF 다운로드</a>', unsafe_allow_html=True)
+
