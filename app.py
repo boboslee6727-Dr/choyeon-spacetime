@@ -577,22 +577,9 @@ def generate_report_for_order(order_row):
         safe_lines.append(line.strip())
     report_box_clean = '\n'.join(safe_lines)
 
-    # 5. [수정] 솔라피(Solapi) 자동 발송 (2개 이상 선택시 "외 1건" 오류 방어 적용 완료)
-    if phone_number and view_code:
-        try:
-            view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
-            import pipeline_manager as pl
-            
-            safe_product_name = product
-            if "+" in product:
-                safe_product_name = product.split("+")[0].strip() + " 외 1건"
-                
-            pl.send_solapi_auto_message(phone_number, name, safe_product_name, view_url)
-        except Exception as e:
-            st.error(f"🚨 알림톡 자동 발송 실패: {e}")
-
+    # 알림톡 발송 코드 싹 다 삭제!!
+    # 파이프라인(외주업체)에게 완성된 감명서만 딱 던져주고 연구소는 퇴근합니다.
     return report_box_clean
-
 # ------------------------------------------------------------------------------
 # 🧭 [3대 화면 라우팅 분기] - 순환 참조 방지 처리 완료 구역
 # ------------------------------------------------------------------------------
