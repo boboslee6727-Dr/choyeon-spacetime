@@ -592,10 +592,10 @@ def render_view_page(order_id):
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
 
-    # [수정 2-A] 와이드 반응형 레이아웃 CSS 주입
+    # [수정 2-A] 와이드 반응형 레이아웃 및 버튼 CSS 주입
     st.markdown("""
     <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap)');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
         
         .report-container {
             width: 100%; 
@@ -617,6 +617,7 @@ def render_view_page(order_id):
             font-size: 16px;
             overflow-x: auto; 
         }
+        /* 링크가 아닌 진짜 버튼 스타일로 수정 */
         .btn-pdf {
             display: block;
             width: 100%;
@@ -625,7 +626,10 @@ def render_view_page(order_id):
             text-align: center;
             padding: 15px;
             border-radius: 10px;
-            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: 'Noto Sans KR', sans-serif;
             font-weight: bold;
             margin: 15px 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -638,6 +642,7 @@ def render_view_page(order_id):
     </style>
     """, unsafe_allow_html=True)
     
+    import re
     # [수정 2-B] 월운표 마커 미치환 버그 방어
     if "[WOLUN_TABLE_HEAR]" in result_html or "[WOLUN_TABLE_HERE]" in result_html:
         result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
@@ -652,8 +657,8 @@ def render_view_page(order_id):
         clean_lines.append(line.lstrip())
     result_html = "\n".join(clean_lines)
 
-    # 상단 PDF 소장 버튼
-    st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 평생 소장용 PDF 다운로드</a>', unsafe_allow_html=True)
+    # [수정 3] 에러를 유발하던 <a> 태그를 진짜 <button> 태그로 전면 교체!
+    st.markdown('<button type="button" class="btn-pdf" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
     
     # 사주원국 렌더링 
     st.markdown(f"""
@@ -664,5 +669,5 @@ def render_view_page(order_id):
     </div>
     """, unsafe_allow_html=True)
     
-    # 하단 PDF 소장 버튼
-    st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 리포트 하단 PDF 다운로드</a>', unsafe_allow_html=True)
+    # 하단 PDF 버튼 역시 교체
+    st.markdown('<button type="button" class="btn-pdf" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
