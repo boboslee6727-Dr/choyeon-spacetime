@@ -635,11 +635,14 @@ def render_view_page(order_id):
         }
     </style>
     """, unsafe_allow_html=True)
-    
+    오후 6:39 2026-08-20오후 6:39 2026-08-20
     # [수정 2] 월운표 마커 미치환 버그 임시 방어 (감명기에서 누락되었을 경우를 대비)
     if "[WOLUN_TABLE_HEAR]" in result_html or "[WOLUN_TABLE_HERE]" in result_html:
         result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
         result_html = result_html.replace("[WOLUN_TABLE_HERE]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
+
+    # [수정 2.5] AI가 씌운 마크다운 껍질(```html, ```) 강제로 벗겨내기
+    result_html = result_html.replace("```html\n", "").replace("```html", "").replace("```", "")
 
     # [수정 3] 상단 PDF 소장 버튼
     st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 평생 소장용 PDF 다운로드</a>', unsafe_allow_html=True)
