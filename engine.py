@@ -1061,17 +1061,21 @@ def get_weekly_calendar_data(target_date, ds_hanja):
         # 지지 오행의 색상 연산
         oh = get_color(ji)
         
+        # 💡 기준일(target_date)과 현재 루프의 날짜(curr)가 일치하는지 확인
+        is_today_flag = (curr.year == target_date.year and curr.month == target_date.month and curr.day == target_date.day)
+        
         # 💡 html_views.py가 찾는 모든 이름표(key) 완벽 제공
         weekly_data.append({
             "date": curr,
-            "day": curr.day,           # 날짜 숫자 (예: 25)
-            "weekday": days_str[i],    # 요일 한글 (예: "월")
-            "day_str": days_str[i],    # 호환성 유지용
+            "day": curr.day,           # 날짜 숫자 
+            "weekday": days_str[i],    # 요일 한글 
+            "day_str": days_str[i],    
             "gan": gan,
             "ji": ji,
-            "ganji": f"{gan}{ji}",     # 🚨 에러 원인 해결: 'ganji' 키 완벽 결합!
+            "ganji": f"{gan}{ji}",     # 간지 결합본
             "ss": ss,
-            "oh": oh
+            "oh": oh,
+            "is_today": is_today_flag  # 🚨 에러 원인 해결: 오늘 날짜 하이라이트용 스위치 추가!
         })
         
     return weekly_data
