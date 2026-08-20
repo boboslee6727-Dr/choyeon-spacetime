@@ -1331,9 +1331,24 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-4"):
-            weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
-            formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+            # 1. 주간 데이터 강제 생성
+            if hasattr(engine, 'get_weekly_calendar_data'):
+                weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
+            else:
+                weekly_days_data = []
+            
+            # 2. 표 HTML 강제 조립
+            if hasattr(html_views, 'generate_weekly_calendar_html') and weekly_days_data:
+                weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
+            else:
+                weekly_table_code = "<div style='padding:15px; text-align:center; color:#C62828; font-weight:bold; background:#FFEBEE; border-radius:10px;'>🚨 주간운표 달력 생성 엔진 누락됨 (engine.py 점검 필요)</div>"
+
+            # 3. 마커 교체 및 강제 주입
+            if "WEEKLY_CALENDAR_HERE" in ai_output_html:
+                formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+            else:
+                formatted_ai = f"{weekly_table_code}<br><br>{ai_output_html}"
+
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
@@ -1406,12 +1421,18 @@ if st.session_state.get('app_running', False):
                 else:
                     final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
-        if 'final_render_html' not in locals() or final_render_html is None:
-            final_render_html = ""
+    if 'final_render_html' not in locals() or final_render_html is None:
+        final_render_html = ""
 
-        final_render_html = str(final_render_html).strip()
-        if final_render_html.startswith("</div>"):
-            final_render_html = final_render_html[6:].strip()
+    final_render_html = str(final_render_html).strip()
+    if final_render_html.startswith("</div>"):
+        final_render_html = final_render_html[6:].strip()
 
-        final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
-        st.markdown(final_render_html, unsafe_allow_html=True)
+    # 💡 [핵심 수정 완료] 무한루프 및 소스코드 노출을 유발하는 re.sub 폭탄을 제거하고,
+    # 가장 안전한 방식(split & strip)으로 띄어쓰기만 제거하여 예쁜 표를 보장합니다!
+    safe_lines_app = []
+    for line in final_render_html.split("\n"):
+        safe_lines_app.append(line.strip())
+    final_render_html = "\n".join(safe_lines_app)
+
+    st.markdown(final_render_html, unsafe_allow_html=True)
