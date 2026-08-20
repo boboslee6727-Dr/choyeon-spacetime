@@ -1035,31 +1035,44 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
     }
 
 def get_weekly_calendar_data(target_date, ds_hanja):
-    """특정 날짜가 속한 주간(일~토)의 일진 데이터를 생성하는 함수"""
+    """
+    고객 열람 화면에 7일간의 주간운표 표를 그리기 위해, 
+    해당 주(일요일~토요일)의 날짜, 간지, 십성, 오행 색상 데이터를 배열로 추출합니다.
+    """
     import datetime as dt_mod
     
+    # target_date가 속한 주의 일요일(시작일) 찾기
     start_sun = target_date - dt_mod.timedelta(days=(target_date.weekday() + 1) % 7)
+    
     weekly_data = []
+    days_str = ["일", "월", "화", "수", "목", "금", "토"]
     
     for i in range(7):
         curr = start_sun + dt_mod.timedelta(days=i)
         try:
+            # 해당 날짜의 일진(간지) 역산
             y_p, m_p, d_p = get_ganji_from_date(curr.year, curr.month, curr.day)
             gan, ji = d_p[0], d_p[1]
-        except:
-            gan, ji = "甲", "子"
-        
+        except Exception:
+            gan, ji = "甲", "子" # 에러 발생 시 기본값
+            
+        # 내담자의 일간(ds_hanja) 대비 해당 일진의 십성(육친) 연산
         ss = get_ss(ds_hanja, ji)
+        # 지지 오행의 색상 연산
         oh = get_color(ji)
         
+        # 💡 html_views.py가 찾는 모든 이름표(key) 완벽 제공
         weekly_data.append({
             "date": curr,
-            "day_str": ["일", "월", "화", "수", "목", "금", "토"][i],
+            "day": curr.day,           # 날짜 숫자 (예: 25)
+            "weekday": days_str[i],    # 요일 한글 (예: "월")
+            "day_str": days_str[i],    # 호환성 유지용
             "gan": gan,
             "ji": ji,
             "ss": ss,
             "oh": oh
         })
+        
     return weekly_data
 
 def get_weekly_daily_facts(ds, db, yb, year, month, day):
