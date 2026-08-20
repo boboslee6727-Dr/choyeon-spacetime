@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.0)
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.1)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -18,6 +18,7 @@ DB_FILE = "choyeon_orders.db"
 LEDGER_FILE = "사주박사_비밀장부.csv"
 ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
+KAKAO_CHAT_URL = "http://pf.kakao.com/_xexizSX/chat"
 
 # 12개 정식 상품 체계 (추석특가 50% 할인 적용 - 앵커링 효과)
 PRODUCT_LIST = [
@@ -129,33 +130,32 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         admin_phone = "01038576727" 
         
         if not api_key or not api_secret or not from_phone:
-            return False, "솔라피 시크릿 설정 누락"
+            return False, "솔라피 시크릿 설정 누락 (API_KEY, API_SECRET, SENDER_PHONE)"
 
         short_time = now_str.replace("-", "/").rsplit(":", 1)[0]
         admin_msg = f"{short_time}/ {name.strip()}님 / {product_summary} / {base_price:,}원 -> {discount_amt:,}원 -> {final_price:,}원"
 
-        import requests
         auth_header = get_solapi_auth_header(api_key, api_secret)
         headers = {"Authorization": auth_header, "Content-Type": "application/json"}
         data = {
             "message": {
-                "to": admin_phone.replace("-", ""),
-                "from": from_phone.replace("-", ""),
+                "to": admin_phone.replace("-", "").strip(),
+                "from": from_phone.replace("-", "").strip(),
                 "text": admin_msg,
                 "type": "SMS"
             }
         }
-        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=3)
+        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=5)
         res_data = res.json()
         
         if res.status_code == 200 and "groupId" in res_data:
-            return True, "성공"
+            return True, "비상벨 SMS 발송 성공"
         else:
             err_msg = res_data.get("errorMessage", str(res_data))
-            return False, f"솔라피 서버 거절: {err_msg}"
+            return False, f"솔라피 응답 에러: {err_msg}"
             
     except Exception as e:
-        return False, str(e)
+        return False, f"비상벨 통신 장애: {e}"
 
 # ------------------------------------------------------------------------------
 # 🗄️ [데이터베이스 초기화]
@@ -278,9 +278,16 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        st.markdown("""
+        st.markdown(f"""
 <div class='guide-box' style='margin-top:10px;'>
 <span style='color:#1A237E; font-weight:bold;'>※ 신청자 이름이랑 입금자 이름이 다르면 카톡 채널로 알려주세요!</span><br>
+<div style='margin-top: 10px; margin-bottom: 8px;'>
+    <a href='{KAKAO_CHAT_URL}' target='_blank' style='text-decoration:none;'>
+        <div style='background-color:#FEE500; color:#191919; text-align:center; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:14px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);'>
+            💬 사주박사 카톡 1:1 채팅 문의하기
+        </div>
+    </a>
+</div>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
 🎁 <b>[ Win-Win 친구 소개 이벤트 ]</b><br>
 친구에게 '사주박사'를 소개해 주세요. 소개받은 친구와 나 <b>두 사람 모두에게</b> <b>[30% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
@@ -433,10 +440,15 @@ def render_customer_order_form():
             
             calc_result = calculate_package_price(actual_selected)
             if len(calc_result) == 5:
-                total_original, total_raw, rate_pct, total_rate_pct, final_price = calc_result
+                total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
                 discount_amt = total_original - final_price
+                effective_rate = total_rate_pct
+                base_price_to_show = total_original
             else:
-                total_raw, discount_amt, rate_pct, final_price = calc_result
+                total_original, total_chuseok, pkg_rate_pct, final_price = calc_result
+                discount_amt = total_original - final_price
+                effective_rate = pkg_rate_pct
+                base_price_to_show = total_original
                 
             product_names_summary = " + ".join([p.split('.')[0] for p in actual_selected])
             full_product_desc = f"{product_names_summary} ({final_price:,}원)"
@@ -464,21 +476,29 @@ def render_customer_order_form():
             conn.commit()
             conn.close()
             
-            # 💡 [사장님 비상벨 타격 온!]
+            # 💡 [사장님 비상벨 타격 온!] - 즉각 발송 및 모니터링
             try:
-                base_price = total_original if 'total_original' in locals() else total_raw
-                send_solapi_admin_alert(now_str, name.strip(), product_names_summary, base_price, discount_amt, final_price)
-            except Exception:
-                pass
+                alert_ok, alert_msg = send_solapi_admin_alert(
+                    now_str=now_str, 
+                    name=name.strip(), 
+                    product_summary=product_names_summary, 
+                    base_price=base_price_to_show, 
+                    discount_amt=discount_amt, 
+                    final_price=final_price
+                )
+                if not alert_ok:
+                    print(f"[관리자 비상벨 전송 경고] {alert_msg}")
+            except Exception as e:
+                print(f"[관리자 비상벨 치명적 예외] {e}")
             
             st.session_state["submitted_order"] = {
                 "order_id": order_id, 
                 "name": name.strip(), 
                 "product_desc": full_product_desc,
                 "selected_products": actual_selected,
-                "total_raw": total_raw if 'total_raw' in locals() else total_original,
+                "total_raw": base_price_to_show,
                 "discount_amt": discount_amt,
-                "rate_pct": rate_pct if 'rate_pct' in locals() else total_rate_pct,
+                "rate_pct": effective_rate,
                 "final_price": final_price
             }
             st.rerun()
