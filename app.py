@@ -182,6 +182,11 @@ def do_auto_fill_partner():
 # ------------------------------------------------------------------------------
 def generate_report_for_order(order_row):
     """관리자가 입금 확인 버튼을 눌렀을 때 실행되는 감명서 완성 생성기 및 알림톡 자동 발송"""
+
+    # 🚨 [여기 2줄을 추가하십시오!] 관리자 모드에서 사이드바 변수가 없어 뻗는 현상 원천 차단
+    import datetime as dt_mod
+    selected_target_date = dt_mod.date.today()
+
     name = order_row["name"]
     gender = order_row["gender"]
     b_date = order_row["birth_date"] # 'YYYY-MM-DD'
@@ -196,23 +201,36 @@ def generate_report_for_order(order_row):
     is_lunar = "음력" in cal_type
     is_leap = "윤달" in cal_type
     
-    # 1. 간지 추출
+    # 1. 간지 추출 및 대운수 연산
     g_res = engine.get_ganji_from_date(y, m, d, is_lunar, is_leap)
     y_p, m_p, d_p = g_res[0], g_res[1], g_res[2]
     
-    # 2. 사주 팩트 및 시공간 파동 산출 (기존 코드)
-    gyuk, gyuk_detail = engine.get_gyukgook_detailed(d_p[0], y_p[0], m_p[0], "-", m_p[1])
+    h_gan, h_ji = engine.get_time_ganji(d_p[0], b_time)
+    gans = [h_gan if h_gan != "?" else "-", d_p[0], m_p[0], y_p[0]]
+    jjis = [h_ji if h_ji != "?" else "-", d_p[1], m_p[1], y_p[1]]
+    hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
+    hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
+    ds_hanja = engine.K2H_GAN.get(ds, ds)
     
-    # 💡 [추가할 부분] DB에서 손님의 1:1 고민 사연 추출하기
+    base_dt = dt_mod.datetime(y, m, d, 12, 0)
+    adj_mins = engine.get_total_time_adjustment(base_dt)
+    utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+    ys_idx = engine.GAN.index(ys) if ys in engine.GAN else 0
+    order_dir = 1 if (ys_idx % 2 == 0) == (gender == '남성') else -1
+    calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
+    
+    # 2. 사주 팩트 및 시공간 파동 산출
+    gyuk, gyuk_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
+    
     memo_info = order_row.get("email", "") 
     concern_match = re.search(r'\[고민사연:\s*(.*?)\]', memo_info)
     user_concern_text = concern_match.group(1).strip() if concern_match else "특별히 남긴 고민 사연이 없습니다. 다가올 운의 흐름에서 가장 주의해야 할 점과 긍정적인 덕담을 남겨주세요."
     
-    adv_saju = {'year_ji': y_p[1], 'month_ji': m_p[1], 'day_ji': d_p[1], 'hour_ji': '-'}
+    adv_saju = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
     adv_flags = html_views.analyze_saju_facts_advanced(adv_saju, "-", "-") if hasattr(html_views, 'analyze_saju_facts_advanced') else {}
     adv_warning = adv_flags.get("warning_message", "정상 시공간 흐름")
     
-    saju_summary = f"- {name}님 명조: 년주({y_p}), 월주({m_p}), 일주({d_p}), 시주({b_time})\n- 격국: {gyuk_detail}\n- 파동 경보: {adv_warning}"
+    saju_summary = f"- {name}님 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({b_time})\n- 격국: {gyuk_detail}\n- 파동 경보: {adv_warning}"
     
     # 3. 프롬프트 매핑 및 AI 호출
     prompt_var = "프롬프트_1_1_기본"
@@ -235,7 +253,7 @@ def generate_report_for_order(order_row):
         "cur_sewun_gan": "甲", "cur_sewun_ji": "辰", "wealth_goal": "자산 증식",
         "career_goal": "직무 적성", "love_goal": "인연 관계", "health_goal": "건강 관리",
         "tackil_purpose": "이사", "target_date_range": "향후 1개월", "other_reading_text": "",
-        "user_concern": user_concern_text  # <--- 이거 한 줄 추가!
+        "user_concern": user_concern_text
     }
     
     class SafeDict(dict):
@@ -243,20 +261,98 @@ def generate_report_for_order(order_row):
         
     final_prompt = target_prompt.format_map(SafeDict(prompt_input))
     ai_raw = call_gemini_api(final_prompt)
-    formatted_body = html_views.format_ai_text_to_html(ai_raw)
     
-    # 4. 프리미엄 나눔명조체 리포트 조립
-    cover = html_views.get_personal_cover("ver 74.0 Master", product.split(" (")[0], "🏮", name, f"{y}년 {m}월 {d}일", "", b_time, dt_mod.date.today().strftime("%Y년 %m월 %d일"))
-    info_h = html_views.get_info_header("🏮", name, gender, marital, dt_mod.date.today().year - y + 1, f"{y}년 {m}월 {d}일", "", b_time)
-    final_html = f"{cover}<br>{info_h}<br>{formatted_body}"
+    # 💡 [핵심 수정] AI 마크다운 찌꺼기 완벽 클렌징
+    clean_raw = ai_raw.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+    formatted_body = html_views.format_ai_text_to_html(clean_raw)
+    
+    # 4. 프리미엄 나눔명조체 리포트 UI 완벽 조립 (표, 차트 모두 포함)
+    def get_oh_class(ganji):
+        oh = engine.get_color(ganji)
+        return f"color-{oh}" if oh != '무' else ""
+
+    counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
+    for c in gans + jjis:
+        oh = engine.get_color(c)
+        if oh in counts: counts[oh] += 1
+    
+    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+    guiin_str = guiin_map.get(ds_hanja, '없음')
+    curr_year = dt_mod.date.today().year
+    curr_y_ji = engine.JI[(curr_year - 1984) % 60 % 12]
+    cur_samjae = engine.get_samjae(yb, curr_y_ji)
+    samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
+    n_gong = engine.calculate_gongmang(ys, yb) or "-"
+    i_gong = engine.calculate_gongmang(ds, db) or "-"
+    
+    table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
+    master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
+    
+    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
+    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터")
+    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터")
+    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조", "유형", "성향"])
+    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyuk_detail.split(' ')[0] if gyuk_detail else "격")
+    intro_html = html_views.get_intro_html()
+    closing_html = html_views.get_closing_html(name)
+    
+    # 대운 및 세운 표 생성
+    daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, dt_mod.date.today().year - y + 1, db)
+    un_html = html_views.generate_daewun_layout(daewun_data_list, "순행" if order_dir==1 else "역행", calc_d, get_oh_class)
+    
+    cur_dw_idx = max(0, ((dt_mod.date.today().year - y + 1) - calc_d) // 10)
+    c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
+    j_idx = engine.JI.index(mb) if mb in engine.JI else 0
+    dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
+    dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
+    current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
+    start_year = y + current_daewun_age - 1
+    se_content = ""
+    for i in range(10):
+        ty = start_year + i
+        tage = current_daewun_age + i
+        base = (ty - 1984) % 60
+        tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
+        tc, tj = engine.K2H_GAN.get(tc_hangul, tc_hangul), engine.K2H_JI.get(tj_hangul, tj_hangul)
+        bg_col = "#E1F5FE" if (ty == curr_year) else "transparent"
+        se_content += html_views.get_sewun_cell(
+            f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
+            tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
+            engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, "1px solid #ccc", (ty == curr_year)
+        )
+    sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운) ]", se_content)
+    
+    # 💡 [핵심 수정] 마커(SEWUN_TABLE_HERE 등)를 실제 표 HTML로 교체
+    def sub_marker(text, marker_name, table_code):
+        pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
+        return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
+        
+    formatted_body = sub_marker(formatted_body, 'DAEWUN_TABLE_HERE', un_html)
+    formatted_body = sub_marker(formatted_body, 'SEWUN_TABLE_HERE', sewun_html)
+    formatted_body = sub_marker(formatted_body, 'WOLUN_TABLE_HERE', "") 
+    formatted_body = sub_marker(formatted_body, 'WEEKLY_CALENDAR_HERE', "")
+
+    # 전체 페이지 조립 (사주표 + 인트로 + 황금문구 + 통변/표 + 맺음말)
+    part_1_fact = str(table_html) + str(master_bar_html)
+    master_comp = f"{part_1_fact}{intro_html}{golden_text_html}{formatted_body}{closing_html}"
+
+    cover = html_views.get_personal_cover("ver 74.0 Master", product.split(" (")[0], "🏮", name, b_date, "", b_time, dt_mod.date.today().strftime("%Y년 %m월 %d일"))
+    info_h = html_views.get_info_header("🏮", name, gender, marital, dt_mod.date.today().year - y + 1, b_date, "", b_time)
+    
+    final_html = f"{cover}<br>{info_h}<br>{master_comp}"
     report_box = html_views.get_final_report_box(final_html)
 
-    # 5. [수정] 솔라피(Solapi) 자동 발송 실행 (pipeline_manager.py 연동)
+    # 5. [수정] 솔라피(Solapi) 자동 발송 (2개 이상 선택시 "외 1건" 오류 방어 적용 완료)
     if phone_number and view_code:
         try:
             view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
             import pipeline_manager as pl
-            pl.send_solapi_auto_message(phone_number, name, product, view_url)
+            
+            safe_product_name = product
+            if "+" in product:
+                safe_product_name = product.split("+")[0].strip() + " 외 1건"
+                
+            pl.send_solapi_auto_message(phone_number, name, safe_product_name, view_url)
         except Exception as e:
             st.error(f"🚨 알림톡 자동 발송 실패: {e}")
 
