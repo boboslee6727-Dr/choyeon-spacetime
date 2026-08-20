@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.1)
+# 🏮 사주박사: 신청접수 ~ 수동 입금승인 ~ 솔라피 자동발송 완결 파이프라인 (ver 75.2)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -13,12 +13,13 @@ import hashlib
 import json
 import requests
 import urllib.parse
+import re  # [수정 추가] AI 껍질 제거를 위한 정규식 모듈
 
 DB_FILE = "choyeon_orders.db"
 LEDGER_FILE = "사주박사_비밀장부.csv"
 ADMIN_PASSWORD = "boss!631201"  # 박사님 전용 관리자 암호
-BASE_URL = "https://choyeon-spacetime.streamlit.app"
-KAKAO_CHAT_URL = "http://pf.kakao.com/_xexizSX/chat"
+BASE_URL = "[https://choyeon-spacetime.streamlit.app](https://choyeon-spacetime.streamlit.app)"
+KAKAO_CHAT_URL = "[http://pf.kakao.com/_xexizSX/chat](http://pf.kakao.com/_xexizSX/chat)"
 
 # 12개 정식 상품 체계 (추석특가 50% 할인 적용 - 앵커링 효과)
 PRODUCT_LIST = [
@@ -82,7 +83,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
 결과 확인하기:
 {view_url}"""
 
-        url = "https://api.solapi.com/messages/v4/send"
+        url = "[https://api.solapi.com/messages/v4/send](https://api.solapi.com/messages/v4/send)"
         headers = {
             "Authorization": get_solapi_auth_header(api_key, api_secret),
             "Content-Type": "application/json; charset=utf-8"
@@ -145,7 +146,7 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
                 "type": "SMS"
             }
         }
-        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=data, timeout=5)
+        res = requests.post("[https://api.solapi.com/messages/v4/send](https://api.solapi.com/messages/v4/send)", headers=headers, json=data, timeout=5)
         res_data = res.json()
         
         if res.status_code == 200 and "groupId" in res_data:
@@ -240,7 +241,7 @@ def calculate_package_price(selected_products):
 def render_customer_order_form():
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap](https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap)');
         .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
         .m-title { font-family: 'Nanum Pen Script', cursive; font-size: 34px; color: #1A237E; text-align: center; margin-bottom: 20px; border-bottom: 1.5px dashed #1A237E; }
         .guide-box { background: #FCFCFD; border: 2px solid #3F51B5; border-radius: 12px; padding: 22px; margin-top: 15px; line-height: 1.8; color: #2D3748; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -547,7 +548,10 @@ def render_admin_panel(generator_func):
                                 conn.close()
                                 
                                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                                send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
+                                
+                                # [수정 1 적용부] 문자 발송 임시 비활성화 (주석 처리) 및 통과 처리
+                                # send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], row['product'], view_url)
+                                send_ok, send_msg = True, "문자 발송 임시 비활성화(테스트 모드)"
                                 
                                 if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
                                 else: st.warning(f"⚠️ 리포트는 완성되었으나 문자 실패: {send_msg}")
@@ -570,7 +574,7 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (뷰어 엔진 정상화 및 모바일 감성 카드 적용)
+# 3. 📜 [고객 전용 결과 열람창] (와이드 레이아웃 & HTML 완벽 렌더링)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     conn = sqlite3.connect(DB_FILE)
@@ -588,28 +592,30 @@ def render_view_page(order_id):
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
 
-    # [수정 1] 모바일 감성 카드 UI 및 인쇄(PDF)용 CSS 주입
+    # [수정 2-A] 와이드 반응형 레이아웃 CSS 주입
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap)');
         
         .report-container {
-            max-width: 480px; 
+            width: 100%; 
+            max-width: 800px; 
             margin: 0 auto; 
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #f7f9f9;
-            padding: 15px;
+            padding: 5px; 
         }
         .saju-card {
             background: #ffffff;
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 10px; 
             margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             border: 1px solid #eaeaea;
             line-height: 1.8;
             color: #333;
             font-size: 16px;
+            overflow-x: auto; 
         }
         .btn-pdf {
             display: block;
@@ -621,33 +627,35 @@ def render_view_page(order_id):
             border-radius: 10px;
             text-decoration: none;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin: 15px 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         @media print {
             .btn-pdf { display: none !important; }
-            .report-container { background-color: #ffffff; padding: 0; }
-            .saju-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .report-container { background-color: #ffffff; padding: 0; max-width: 100%; }
+            .saju-card { box-shadow: none; border: 1px solid #ccc; padding: 0; overflow: visible; }
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # [수정 2] 월운표 마커 미치환 버그 방어
+    # [수정 2-B] 월운표 마커 미치환 버그 방어
     if "[WOLUN_TABLE_HEAR]" in result_html or "[WOLUN_TABLE_HERE]" in result_html:
         result_html = result_html.replace("[WOLUN_TABLE_HEAR]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
         result_html = result_html.replace("[WOLUN_TABLE_HERE]", "<div style='color:#c9a764; font-weight:bold;'>[월운표 세부 분석 데이터 렌더링 영역]</div>")
 
-    # [수정 2.5] 어떤 형태의 AI 껍질이든 100% 분쇄하는 강력한 제거 로직
-    result_html = result_html.replace("```html", "")
-    result_html = result_html.replace("```markdown", "")
-    result_html = result_html.replace("```xml", "")
-    result_html = result_html.replace("```", "")
-    result_html = result_html.strip()
+    # [수정 2-C] AI 껍질 및 들여쓰기 100% 분쇄기
+    result_html = re.sub(r'```(?:html|xml|markdown)?', '', result_html)
+    result_html = result_html.replace('```', '')
+    
+    clean_lines = []
+    for line in result_html.split('\n'):
+        clean_lines.append(line.lstrip())
+    result_html = "\n".join(clean_lines)
 
-    # [수정 3] 상단 PDF 소장 버튼
+    # 상단 PDF 소장 버튼
     st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 평생 소장용 PDF 다운로드</a>', unsafe_allow_html=True)
     
-    # [수정 4] 사주원국 HTML 렌더링 정상화 및 카드 레이아웃 래핑
+    # 사주원국 렌더링 
     st.markdown(f"""
     <div class="report-container">
         <div class="saju-card">
@@ -658,4 +666,3 @@ def render_view_page(order_id):
     
     # 하단 PDF 소장 버튼
     st.markdown('<a href="javascript:window.print()" class="btn-pdf">📄 리포트 하단 PDF 다운로드</a>', unsafe_allow_html=True)
-
