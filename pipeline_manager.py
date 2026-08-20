@@ -574,7 +574,7 @@ def render_admin_panel(generator_func):
                     st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
 
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] (app.py 원본 렌더링 방식 100% 이식)
+# 3. 📜 [고객 전용 결과 열람창] (app.py 원본 렌더링 방식 100% 이식 및 에러 방어)
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     import re
@@ -593,18 +593,24 @@ def render_view_page(order_id):
         st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {name}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
         return
 
-    # 1. AI가 생성한 마크다운 코드 껍질(```) 강제 제거
+    # 1. AI 마크다운 코드 껍질(```) 강제 제거
     result_html = re.sub(r'```(?:html|xml|markdown)?', '', result_html, flags=re.IGNORECASE)
     result_html = result_html.replace('```', '')
 
-    # 2. 박사님의 app.py 핵심 로직 적용 (과도한 들여쓰기 및 줄바꿈 압축)
-    safe_render_html = re.sub(r'\n\s+', '\n', result_html).strip()
+    # 2. 박사님의 app.py 핵심 로직: 붕괴 유발하는 시작 </div> 태그 절단
+    safe_render_html = str(result_html).strip()
+    if safe_render_html.startswith("</div>"):
+        safe_render_html = safe_render_html[6:].strip()
 
-    # 상단 PDF 인쇄 버튼 (무한 로딩 방지용 button 태그)
+    # 3. 과도한 들여쓰기 및 줄바꿈 압축
+    safe_render_html = re.sub(r'\n\s+', '\n', safe_render_html).strip()
+
+    # 상단 PDF 인쇄 버튼
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
     
-    # 사주원국 및 통변 본문 출력 (app.py와 완벽 동일 방식)
+    # 사주원국 및 통변 본문 출력
     st.markdown(safe_render_html, unsafe_allow_html=True)
     
     # 하단 PDF 인쇄 버튼
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
+
