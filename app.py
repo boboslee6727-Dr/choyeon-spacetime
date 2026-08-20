@@ -600,11 +600,10 @@ import pipeline_manager as pl
 pl.init_order_db()
 params = st.query_params
 
-# if params.get("mode") == "admin":
+if params.get("mode") == "admin":
     # 👑 박사님 관리자 패널
-    #pl.render_admin_panel(generate_report_for_order)
-    #st.stop()
-
+    pl.render_admin_panel(generate_report_for_order)
+    st.stop()
 elif params.get("mode") == "view" and params.get("code"):
     # 📜 고객 결과 열람 화면 (안전한 get 방식으로 에러 원천 차단)
     pl.render_view_page(params.get("code"))
@@ -613,7 +612,6 @@ elif params.get("mode") == "order":
     # 📱 고객 모바일 신청 접수창
     pl.render_customer_order_form()
     st.stop()
-
 
 # ==============================================================================
 # 2. 사이드바 통제 센터
@@ -1669,34 +1667,3 @@ if st.session_state.get('app_running', False):
 
     st.markdown(final_render_html, unsafe_allow_html=True)
 
-# ==============================================================================
-# 🏭 [파이프라인 전용 연결 어댑터 신규 삽입] (박사님의 수작업을 0초로 만들어주는 비서)
-# ==============================================================================
-def generate_report_for_order(row):
-    # 1. 본인(신청자) 데이터 언박싱
-    name = row['name']
-    birth_date_str = row['birth_date']
-    birth_time_str = row['birth_time']
-    gender = row['gender']
-    cal_type = row['calendar_type']
-    u_marital = row['marital']
-    u_product = row['product']
-
-    # 2. 💡 궁합(3-x) 상품일 경우, 상대방(Partner) 데이터 추가 언박싱!
-    # (DB orders 테이블에 있는 상대방 컬럼들을 가져옵니다)
-    p_name, p_birth_date, p_birth_time, p_gender, p_cal_type = None, None, None, None, None
-    
-    if u_product.startswith("3-") or "궁합" in u_product:
-        p_name = row.get('partner_name', '')
-        p_birth_date = row.get('partner_birth_date', '')
-        p_birth_time = row.get('partner_birth_time', '')
-        p_gender = row.get('partner_gender', '')
-        p_cal_type = row.get('partner_calendar_type', '')
-
-    # 3. app.py의 만능 공장 함수에 본인 + 상대방 재료를 통째로 꽂아줍니다!
-    final_html = app.build_saju_report(
-        name, birth_date_str, birth_time_str, gender, cal_type, u_marital, u_product,
-        p_name, p_birth_date, p_birth_time, p_gender, p_cal_type  # 💡 상대방 데이터 추가!
-    )
-
-    return final_html
