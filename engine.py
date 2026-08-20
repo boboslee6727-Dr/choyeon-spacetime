@@ -1069,6 +1069,7 @@ def get_weekly_calendar_data(target_date, ds_hanja):
             "day_str": days_str[i],    # 호환성 유지용
             "gan": gan,
             "ji": ji,
+            "ganji": f"{gan}{ji}",     # 🚨 에러 원인 해결: 'ganji' 키 완벽 결합!
             "ss": ss,
             "oh": oh
         })
