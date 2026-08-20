@@ -382,9 +382,9 @@ if params.get("mode") == "admin":
     # 👑 박사님 관리자 패널
     pl.render_admin_panel(generate_report_for_order)
     st.stop()
-elif params.get("mode") == "view" and "code" in params:
-    # 📜 고객 결과 열람 화면
-    pl.render_view_page(params["code"])
+elif params.get("mode") == "view" and params.get("code"):
+    # 📜 고객 결과 열람 화면 (안전한 get 방식으로 에러 원천 차단)
+    pl.render_view_page(params.get("code"))
     st.stop()
 elif params.get("mode") == "order":
     # 📱 고객 모바일 신청 접수창
