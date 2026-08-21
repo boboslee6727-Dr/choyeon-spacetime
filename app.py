@@ -140,48 +140,37 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (뭉텅이 강제 절단기 V2 + 문단 띄어쓰기 + 소따옴표 볼드 완벽 반영)
+    AI 생성 텍스트 포맷터 (.ganji-cell-24 및 오행 색상 완벽 소각 버전)
     """
     if not text:
         return ""
 
-    # 🌟 [초강력 마법 갑옷 CSS] 진녹색 오염 완벽 방어
+    # 🌟 [물리적 제거] app.py가 몰래 입혀놓은 span 태그(ganji-cell 등)를 흔적도 없이 뜯어냅니다!
+    text = re.sub(r'<span[^>]*>**', '', text)
+    text = text.replace('</span>', '')
+
+    # 🌟 [화학적 방어] 그래도 app.py가 화면 출력 직전에 또 색을 칠할까 봐, 
+    # 박사님이 찾아내신 '.ganji-cell-24'를 정조준하여 16px 검정색으로 강제 무력화시킵니다!
     anti_color_css = """
     <style>
-    .ai-content span, 
-    .ai-content font,
-    .ai-content [class*="color"],
-    .ai-content [class*="ganji"] {
-        color: #111111 !important;
+    .ai-content .ganji-cell-24,
+    .ai-content span[class*="color-"],
+    .ai-content span[class*="ganji-"] {
         font-size: 16px !important;
         background-color: transparent !important;
-        font-weight: inherit !important;
-        letter-spacing: normal !important;
+        color: #111111 !important;
+        font-weight: 800 !important;
         padding: 0 !important;
-        margin: 0 !important;
         border: none !important;
     }
     </style>
     """
 
-    # 🌟 [잔여물 청소] [MALE_START] 등 쓸데없는 태그 찌꺼기가 파싱을 방해하지 못하게 완벽 삭제!
-    text = re.sub(r'\[[a-zA-Z_]+_START\]|\[[a-zA-Z_]+_END\]', '', text).strip()
-
-    # 🌟 [디테일 교정] **강조**를 무조건 '강조' (소따옴표 + 굵은 글씨)로 통일 변환!
-    text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
+    # 🌟 [방어막 1] 소따옴표 안쪽만 볼드
+    text = re.sub(r'\*\*[\'\"](.*?)[\'\"]\*\*', r"'<b class=\"b-text\">\1</b>'", text)
+    text = re.sub(r'[\'\"]\*\*(.*?)\*\*[\'\"]', r"'<b class=\"b-text\">\1</b>'", text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b class="b-text">\1</b>', text)
     text = text.replace('*', '').replace('#', '')
-
-    # 🌟 [뭉텅이 텍스트 강제 절단기 V2 - 전기톱 버전] 🌟
-    # 1. 모든 번호(1. / 1) / (1)) 앞에 무조건 줄바꿈 2번(엔터)을 삽입하여 뭉텅이를 토막 냅니다.
-    text = re.sub(r'(?<!\n)\s+(\d+\.\s)', r'\n\n\1', text)
-    text = re.sub(r'(?<!\n)\s+(\d+\)\s)', r'\n\n\1', text)
-    text = re.sub(r'(?<!\n)\s+(\(\d+\)\s)', r'\n\n\1', text)
-
-    # 2. 제목과 본문이 한 줄에 찰싹 붙어있을 때, 제목 글자 뒤에서 강제로 엔터를 쳐서 본문을 밑으로 떨굽니다!
-    title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
-    text = re.sub(fr'^(\d+\.\s+.*?(?:{title_kws}))\s+([가-힣A-Z\'"<])', r'\1\n\2', text, flags=re.MULTILINE)
-    text = re.sub(fr'^(\d+\)\s+.*?(?:{title_kws}))\s+([가-힣A-Z\'"<])', r'\1\n\2', text, flags=re.MULTILINE)
-    text = re.sub(fr'^(\(\d+\)\s+.*?(?:{title_kws}))\s+([가-힣A-Z\'"<])', r'\1\n\2', text, flags=re.MULTILINE)
 
     # 💡 Q&A 박스 분리
     match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
@@ -201,32 +190,55 @@ def format_ai_text_to_html(text):
         if not line:
             continue
 
-        clean_line = line
+        clean_line = re.sub(r'^#+\s*', '', line)
 
-        # 수석보좌관 헤더
+        # 수석보좌관 헤더 (continue는 매우 정상 작동 중입니다!)
         if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #1A237E; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #1A237E;'>{clean_line}</div>")
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #1A237E; text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E;'>{clean_line}</div>")
             continue
 
-        # 👑 (1) 순수 대제목 (1. 제목)
-        if re.match(r'^\d+\.\s', clean_line) and len(clean_line) <= 80:
-            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{clean_line}</div>")
+        # (1) "1) [소제목]: 본문"
+        colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', clean_line)
+        if colon_match:
+            num = colon_match.group(1)
+            title_text = colon_match.group(3).strip()
+            body_part = colon_match.group(4).strip()
+            title_part = f"{num}) {title_text}:"
+            
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 18px; margin-bottom: 8px;'>{title_part}</div>")
+            if body_part:
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px;'>{body_part}</p>")
             continue
 
-        # 👑 (2) 순수 중/소제목 (1) 제목)
-        if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 80:
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 24px; margin-bottom: 8px;'>{clean_line}</div>")
+        # (2) "[소제목]: 본문"
+        colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', clean_line)
+        if colon_match_no_num:
+            title_part = colon_match_no_num.group(1).strip() + ":"
+            body_part = colon_match_no_num.group(2).strip()
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #1A237E; margin-top: 16px; margin-bottom: 4px;'>{title_part}</div>")
+            if body_part:
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px;'>{body_part}</p>")
             continue
 
-        # 👑 (3) 순수 소소제목 ((1) 제목)
-        if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 80:
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #333333; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
+        # 👑 (3) 순수 대제목 (1. 제목)
+        if re.match(r'^\d+\.\s', clean_line) and len(clean_line) <= 60:
+            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{clean_line}</div>")
             continue
 
-        # 👑 (4) 일반 서술 문장 (박사님 지시사항: 아래쪽 문단 여백 18px로 넉넉하게 띄어쓰기 확보!)
+        # 👑 (4) 순수 중/소제목 (1) 제목)
+        if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 60:
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
+            continue
+
+        # 👑 (5) 순수 소소제목 ((1) 제목)
+        if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 60:
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #333333; margin-top: 14px; margin-bottom: 6px;'>{clean_line}</div>")
+            continue
+
+        # 👑 (6) 일반 서술 문장
         indent = "5px" if clean_line.startswith('-') else "15px"
         padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
-        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}'>{clean_line}</p>")
+        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 4px 0 8px 0; text-indent: {indent}; {padding}'>{clean_line}</p>")
 
     main_html = "\n".join(html_lines)
 
@@ -242,6 +254,7 @@ def format_ai_text_to_html(text):
         </div>
         """
 
+    # 🌟 본문을 '.ai-content' 무균실로 감싸서 내보냅니다.
     return anti_color_css + f"<div class='ai-content' style='color: #111111;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
