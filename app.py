@@ -1511,19 +1511,30 @@ if st.session_state.get('app_running', False):
                         final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
             # =====================================================================
-            # 🌟 [최종 화면 출력] 
+            # 🌟 [최종 화면 출력] (박사님의 오리지널 정규식 방어막 복구!)
             # =====================================================================
             st.markdown("---")
+
+            if 'final_render_html' not in locals() or final_render_html is None:
+                final_render_html = ""
+
+            # 1. 텍스트화 및 양끝 공백 제거
+            final_render_html = str(final_render_html).strip()
             
-            # 🚨 악명 높았던 HTML 압축/자르기 루프 (safe_lines_app) 완전 삭제!! 🚨
-            # 있는 그대로 화면에 쏩니다!
+            # 2. 레이아웃 붕괴를 막는 찌꺼기 태그 방어막!
+            if final_render_html.startswith("</div>"):
+                final_render_html = final_render_html[6:].strip()
+
+            # 3. 🔥 HTML 속살 노출 방지용 절대 명검 (들여쓰기 완벽 제거) 🔥
+            final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
+            
+            # 4. 화면 출력!
             if final_render_html:
                 st.markdown(final_render_html, unsafe_allow_html=True)
             else:
-                st.warning("⚠️ 렌더링된 결과물이 비어 있습니다. (로직은 통과했으나 HTML이 생성되지 않음)")
+                st.warning("⚠️ 렌더링된 결과물이 비어 있습니다.")
 
         except Exception as render_error:
-            # 숨어서 앱을 터뜨리던 에러를 화면에 강제로 띄웁니다!
             st.error(f"🚨 [화면 렌더링 중 치명적 오류 발생] 시스템이 멈췄습니다!")
             st.error(f"오류 내용: {render_error}")
             import traceback
