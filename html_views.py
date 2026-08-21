@@ -279,10 +279,10 @@ def format_ai_text_to_html(text):
         </div>
         """
 
-    # 🌟 [스마트 방어막 백신] 대운표/세운표 오행 색상은 절대 건드리지 않고, 본문의 b-text만 정밀 타격!
+    # 🌟 [스마트 유도탄 백신 V2] 표(div)는 살리고, 문장(p) 속 진녹색 스파이만 완벽 타격!
     kill_switch_css = """
     <style>
-    /* AI 서술 문장(p) 속에 몰래 숨어든 b-text(진녹색 17px)만 16px 검정색으로 압사! */
+    /* 1. 문장(p) 안에 숨어든 b-text (강조 텍스트) 흑백화 */
     .ai-content p .b-text {
         color: #000000 !important;
         font-size: 16px !important;
@@ -290,7 +290,19 @@ def format_ai_text_to_html(text):
         background-color: transparent !important;
     }
     
-    /* 제목(div) 속에 들어온 b-text는 제목 크기에 맞게 검정색 동기화 */
+    /* 2. 🚨 [진녹색 간지 완벽 압사] 문장(p) 안의 span과 오행 컬러 클래스는 무조건 흑백화! */
+    /* (p 태그 안쪽만 타격하므로, div로 짜여진 대운표/세운표 색상은 절대 다치지 않습니다!) */
+    .ai-content p span, 
+    .ai-content p font, 
+    .ai-content p [class*="color-"], 
+    .ai-content p [class*="ganji-"] {
+        color: #000000 !important;
+        font-size: 16px !important;
+        font-weight: 800 !important; 
+        background-color: transparent !important;
+    }
+    
+    /* 3. 제목(div) 속에 들어온 스파이도 흑백화 하되, 크기는 제목을 따라감 */
     .ai-content div .b-text {
         color: #000000 !important;
         font-size: inherit !important;
