@@ -227,7 +227,7 @@ def format_ai_text_to_html(text):
             )
             continue
             
-        (5) 순수 중/소제목 (1) 제목) -> 20px / 900
+        #(5) 순수 중/소제목 (1) 제목) -> 20px / 900
         if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 60:
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 20px; font-weight: 900; color: #1A237E; "
@@ -818,31 +818,51 @@ def get_gunghap_score_visual_html(gh_engine):
     )
     return score_chart_html
 
-def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
-    """궁합 3분할 페이지 일괄 생성 함수 (화면 연속 / 인쇄 A4 1장씩 분할)"""
+def get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess):
+    """
+    [제2원칙 최종 승인판] 궁합 3분할 페이지 일괄 생성 함수
+    - app.py 고정 환경 완벽 대응: 섞여 들어온 페이지 넘김 태그를 안전하게 분리
+    """
+    
+    # 1. 🚨 [불순물 제거 필터] app.py가 억지로 집어넣은 페이지 넘김 태그
+    pb_tag = "<div style='page-break-before: always; break-before: page;'></div>"
+    
+    # f_ess와 g_ess에서 테두리를 찢어발기는 원흉(pb_tag)만 완벽히 삭제하고 알맹이만 남깁니다.
+    clean_f_ess = str(f_ess).replace(pb_tag, "").strip() if f_ess else ""
+    clean_g_ess = str(g_ess).replace(pb_tag, "").strip() if g_ess else ""
+
+    # 2. [1페이지] ♂️ 남명 사주 요약 조립
     m_page = f"""
-    <div style='border: 1.5px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+    <div style='border: 2px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
         <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
-        {part_1_fact}
+        {m_saju_html}
         <div style='margin-top:15px;'>{m_ess}</div>
     </div>
-    <div class='page-break'></div>
     """
     
-    f_page = f"""
-    <div style='border: 1.5px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
-        <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
-        <div style='margin-top:15px;'>{f_ess}</div>
-    </div>
-    <div class='page-break'></div>
-    """
-    
-    g_page = f"""
-    <div style='border: 1.5px solid #1B5E20; border-radius: 12px; padding:20px; background:#FFFFFF;'>
-        <h1 style='text-align:center; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
-        <div style='margin-top:15px;'>{g_ess}</div>
-    </div>
-    """
+    # 3. [2페이지] ♀️ 여명 사주 요약 조립 (불순물이 제거된 알맹이 사용)
+    f_page = ""
+    if clean_f_ess:
+        f_page = f"""
+        <div class='page-break'></div>
+        <div style='border: 2px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+            <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
+            <div style='margin-top:15px;'>{clean_f_ess}</div>
+        </div>
+        """
+        
+    # 4. [3페이지] 🍀 커플 궁합 풀이 조립 (불순물이 제거된 알맹이 사용)
+    g_page = ""
+    if clean_g_ess:
+        g_page = f"""
+        <div class='page-break'></div>
+        <div style='border: 2px solid #1B5E20; border-radius: 12px; padding:20px; background:#FFFFFF;'>
+            <h1 style='text-align:center; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
+            <div style='margin-top:15px;'>{clean_g_ess}</div>
+        </div>
+        """
+        
+    # 5. 최종 액자(A4 VIP 프레임)에 넣어서 렌더링 반환!
     return get_final_report_box(m_page + f_page + g_page)
 
 
