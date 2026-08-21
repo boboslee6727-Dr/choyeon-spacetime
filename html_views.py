@@ -741,7 +741,9 @@ def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
         
     </div>
     """
+    
     return html
+
 def get_gunghap_score_visual_html(gh_engine):
     """궁합 점수 및 비주얼 차트 HTML"""
     sky_blue = "#38B6FF"
@@ -780,19 +782,6 @@ def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
     <div class='page-break'></div>
     """
     
-def get_gunghap_closing(name1, name2):
-    return f"""
-    <div style='margin-top: 30px; border-top: 2px dashed #444; padding-top: 18px; font-family: "Nanum Myeongjo", serif;'>
-        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>
-        <b>{name1}님</b>과 <b>{name2}님</b>의 만남은 결코 우연이 아닌, <b>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b>'조화와 상생'</b>입니다.</p>
-        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>서로의 기운을 보완하고 다독여주는 든든한 <b>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 초연 시공명리의 축복이 가득하시길 소망합니다.</p>
-        <p style='font-size: 16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
-        <div style='text-align: right; margin-top: 20px;'>
-            <span style='font-weight: 800; font-size: 17px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
-        </div>
-    </div>
-    """
-
     f_page = f"""
     <div style='border: 1.5px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
         <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
@@ -809,6 +798,20 @@ def get_gunghap_closing(name1, name2):
     """
     return get_final_report_box(m_page + f_page + g_page)
 
+
+def get_gunghap_closing(name1, name2):
+    """궁합 감명서 마지막 맺음말"""
+    return f"""
+    <div style='margin-top: 30px; border-top: 2px dashed #444; padding-top: 18px; font-family: "Nanum Myeongjo", serif;'>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>
+        <b>{name1}님</b>과 <b>{name2}님</b>의 만남은 결코 우연이 아닌, <b>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b>'조화와 상생'</b>입니다.</p>
+        <p style='font-size: 16px !important; font-weight: 400 !important; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;'>서로의 기운을 보완하고 다독여주는 든든한 <b>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 초연 시공명리의 축복이 가득하시길 소망합니다.</p>
+        <p style='font-size: 16px !important; font-weight: 800 !important; text-indent: 15px; line-height: 1.85; margin-bottom: 0px; color: #111111;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
+        <div style='text-align: right; margin-top: 20px;'>
+            <span style='font-weight: 800; font-size: 17px !important; color: #1A237E;'>- 초연 시공명리 연구소 드림 -</span>
+        </div>
+    </div>
+    """
 
 # ==============================================================================
 # 📦 섹션 5. 택일 상품군 (상품 3-2, 3-3 활성 모듈)
