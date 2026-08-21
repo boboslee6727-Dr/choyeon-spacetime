@@ -42,6 +42,7 @@ def get_global_css():
         -moz-osx-font-smoothing: grayscale;
     }
 
+    /* 🌟 박사님의 오리지널 명문 규정 (완벽하게 보존) */
     .b-text { font-weight: 800 !important; color: #000000 !important; display: inline-block; }
     .b-text-point { font-weight: 800 !important; color: #1A237E !important; display: inline-block; }
 
@@ -108,7 +109,7 @@ def get_global_css():
         box-sizing: border-box;
     }
 
-    /* 오행 색상 규격 */
+    /* 오행 색상 규격 (표 안에서만 얌전하게 작동) */
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
     .color-토 { background: #F9A825 !important; color: #000 !important; }
@@ -122,6 +123,21 @@ def get_global_css():
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 800 !important; font-size: 13px !important; }
+
+    /* ========================================================================= */
+    /* 🚨 [진녹색 간지 원천 차단] 본문(p) 안으로 침투한 오행 색상 완벽 무효화 */
+    /* ========================================================================= */
+    .ai-content p span, 
+    .ai-content p font, 
+    .ai-content p [style*="color"], 
+    .ai-content p [class*="color-"], 
+    .ai-content p [class*="ganji-"] {
+        color: #000000 !important;
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        background-color: transparent !important;
+    }
+    /* ========================================================================= */
 
     /* 인쇄 및 PDF 저장 시 자동 A4 낱장 분할 엔진 */
     .page-break { display: none; }
@@ -278,39 +294,6 @@ def format_ai_text_to_html(text):
             </div>
         </div>
         """
-
-    # 🌟 [스마트 유도탄 백신 V2] 표(div)는 살리고, 문장(p) 속 진녹색 스파이만 완벽 타격!
-    kill_switch_css = """
-    <style>
-    /* 1. 문장(p) 안에 숨어든 b-text (강조 텍스트) 흑백화 */
-    .ai-content p .b-text {
-        color: #000000 !important;
-        font-size: 16px !important;
-        font-weight: 800 !important;
-        background-color: transparent !important;
-    }
-    
-    /* 2. 🚨 [진녹색 간지 완벽 압사] 문장(p) 안의 span과 오행 컬러 클래스는 무조건 흑백화! */
-    /* (p 태그 안쪽만 타격하므로, div로 짜여진 대운표/세운표 색상은 절대 다치지 않습니다!) */
-    .ai-content p span, 
-    .ai-content p font, 
-    .ai-content p [class*="color-"], 
-    .ai-content p [class*="ganji-"] {
-        color: #000000 !important;
-        font-size: 16px !important;
-        font-weight: 800 !important; 
-        background-color: transparent !important;
-    }
-    
-    /* 3. 제목(div) 속에 들어온 스파이도 흑백화 하되, 크기는 제목을 따라감 */
-    .ai-content div .b-text {
-        color: #000000 !important;
-        font-size: inherit !important;
-        background-color: transparent !important;
-    }
-    </style>
-    """
-
     return kill_switch_css + f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
