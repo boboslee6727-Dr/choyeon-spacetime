@@ -468,38 +468,38 @@ with st.sidebar:
     main_category = st.selectbox(
         "어떤 상담을 원하십니까?", 
         [
-            "1. 개인 사주팔자 풀이 (종합)", 
+            "1. 사주팔자 및 운세 풀이 (종합)", 
             "2. 테마별 특성화 상담", 
-            "3. 커플 연애/결혼운 (궁합) 풀이", 
+            "3. 연애/결혼운 (궁합) 풀이", 
             "4. 타 감명서 비교"
         ], 
         key="main_category", 
         on_change=stop_ai
     )
 
-    u_product = "1-1. 사주팔자와 운세풀이"
+    u_product = "1-1. 사주팔자 및 운세 분석"
 
-    if main_category == "1. 개인 사주팔자 풀이 (종합)":
+    if main_category == "1. 사주팔자 및 운세 풀이 (종합)":
         u_product = st.radio(
             "상세 분석 항목:", 
             [
-                "1-1. 사주팔자와 운세풀이", 
-                "1-2. 올 해 (특정 연도) 운세 상세분석", 
+                "1-1. 사주팔자 및 운세 분석", 
+                "1-2. 올 해 (특정 년도) 운세 상세분석", 
                 "1-3. 이번 달 (특정 월) 운세 상세분석", 
-                "1-4. 이번(특정) 주 및 일 운세 상세분석"
+                "1-4. 이번(특정) 주간 및 일 운세 상세분석"
             ], 
             key="sub_category_1", 
             on_change=stop_ai
         )
     elif main_category == "2. 테마별 특성화 상담":
         u_product = st.radio(
-            "특성화 상품 선택:", 
+            "특성화 분석 항목:", 
             [
                 "2-1. 재물운 특화 분석", 
                 "2-2. 직업/진학운 특화 분석", 
-                "2-3. 연애/결혼운 특화 분석", 
+                "2-3. 커플 연애/결혼운 특화 분석", 
                 "2-4. 건강운 특화 분석", 
-                "2-5. 이사 및 개업 택일"
+                "2-5. 이사/개업 택일 특화 분석"
             ], 
             key="sub_category_2", 
             on_change=stop_ai
@@ -508,16 +508,16 @@ with st.sidebar:
         u_product = st.radio(
             "상세 분석 항목:", 
             [
-                "3-1. 연애/결혼운 (궁합) 풀이", 
-                "3-2. 결혼 택일", 
-                "3-3. 출산 택일"
+                "3-1. 커플 연애/결혼운 (궁합) 분석", 
+                "3-2. 결혼 택일 특화 분석", 
+                "3-3. 출산 택일 특화 분석"
             ], 
             key="sub_category_3", 
             on_change=stop_ai
         )
     elif main_category == "4. 타 감명서 비교":
         u_product = st.radio(
-            "타 감명서 비교:", 
+            "타 감명서 비교 항목:", 
             [
                 "4-1. 타 감명서 비교 (사주)", 
                 "4-2. 타 감명서 비교 (궁합)"
@@ -879,20 +879,20 @@ if st.session_state.get('app_running', False):
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
         time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
-        if u_product.startswith("1-1"): report_title = "🏮 사주팔자와 운세풀이"
-        elif u_product.startswith("1-2"): report_title = "🏮 올 해 (특정 연도) 운세 상세분석"
+        if u_product.startswith("1-1"): report_title = "🏮 사주팔자 및 운세 분석"
+        elif u_product.startswith("1-2"): report_title = "🏮 올 해 (특정 년도) 운세 상세분석"
         elif u_product.startswith("1-3"): report_title = "🏮 이번 달 (특정 월) 운세 상세분석"
         elif u_product.startswith("1-4"): report_title = "🏮 이번 (특정) 주간 및 일 운세 상세분석"
-        elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 정밀 분석"
-        elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 정밀 분석"
-        elif u_product.startswith("2-3"): report_title = "🏮 연애/결혼운 특화 정밀 분석"
-        elif u_product.startswith("2-4"): report_title = "🏮 건강운 특화 정밀 분석"
-        elif u_product.startswith("2-5"): report_title = "🏮 이사 및 개업 택일 정밀 분석"
-        elif u_product.startswith("3-1"): report_title = "🏮 커플 연애/결혼운 정밀 궁합 분석"
-        elif u_product.startswith("3-2"): report_title = "🏮 최고의 결혼 길일 추천 리포트"
-        elif u_product.startswith("3-3"): report_title = "🏮 새 생명 마중 출산 길일 추천 리포트"
-        elif u_product.startswith("4-1"): report_title = "🏮 사주 감명서 1:1 대조 리포트"
-        elif u_product.startswith("4-2"): report_title = "🏮 궁합 감명서 1:1 대조 리포트"
+        elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 분석"
+        elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 분석"
+        elif u_product.startswith("2-3"): report_title = "🏮 커플 연애/결혼운 특화 분석"
+        elif u_product.startswith("2-4"): report_title = "🏮 건강운 특화 분석"
+        elif u_product.startswith("2-5"): report_title = "🏮 이사/개업 택일 특화 분석"
+        elif u_product.startswith("3-1"): report_title = "🏮 커플 연애/결혼운 (궁합) 분석"
+        elif u_product.startswith("3-2"): report_title = "🏮 결혼 택일 특화 분석"
+        elif u_product.startswith("3-3"): report_title = "🏮 출산 택일 특화 분석"
+        elif u_product.startswith("4-1"): report_title = "🏮 타 감명서 비교 (사주)"
+        elif u_product.startswith("4-2"): report_title = "🏮 타 감명서 비교 (궁합)"
         else: report_title = "🏮 사주팔자 정밀 분석"
 
         gh_score = 0
