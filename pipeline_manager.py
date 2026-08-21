@@ -438,15 +438,23 @@ def render_admin_panel(generator_func):
                         if st.button(f"💰 입금 확인 (리포트만 조용히 생성)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
                             try:
                                 with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
-                                    # 1. 감명 리포트 자동 생성
-                                    html_result = generator_func(row)
+                                    
+                                    # 💡 [어댑터 마법] 구버전 AI 엔진이 찾는 변수명을 즉석에서 조립해 줍니다!
+                                    row_dict = row.to_dict()
+                                    row_dict['birth_date'] = f"{row['b_year']}-{str(row['b_month']).zfill(2)}-{str(row['b_day']).zfill(2)}"
+                                    row_dict['calendar_type'] = row['u_cal']
+                                    row_dict['birth_time'] = row['b_time']
+                                    row_dict['product'] = row['u_product']
+                                    
+                                    # 1. 감명 리포트 자동 생성 (row 대신 변환된 row_dict를 엔진에 전달!)
+                                    html_result = generator_func(row_dict)
                                     
                                     # DB 에러 방지 다림질
                                     clean_html = str(html_result).replace("```html", "").replace("```markdown", "").replace("```", "")
                                     safe_lines = [line.strip() for line in clean_html.split("\n")]
                                     final_clean_html = "\n".join(safe_lines)
                                     
-                                    # 2. DB에 '분석완료' 상태로 저장만 함 (문자 발송 코드는 뺐습니다!)
+                                    # 2. DB에 '분석완료' 상태로 저장만 함
                                     conn = sqlite3.connect(DB_FILE)
                                     c = conn.cursor()
                                     c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (final_clean_html, row['order_id']))
