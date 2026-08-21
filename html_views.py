@@ -140,16 +140,25 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (단정하고 눈이 편안한 표준 명조체 규격 + 💡 Q&A 박스 자동 분리)
+    AI 생성 텍스트 포맷터
+    - 전 영역 정통 '나눔명조(Nanum Myeongjo)' 서체 강제 적용
+    - 마크다운(**) 찌꺼기 -> 나눔명조 볼드(<b>) 자동 치환
+    - 콜론(:) 소제목 자동 분리 및 줄바꿈
+    - 💡 1:1 고민 Q&A 비밀 편지 박스 완벽 분리
     """
     if not text:
         return ""
         
-    # 1. 💡 아이콘을 기준으로 '일반 통변'과 '1:1 고민 Q&A' 영역을 반으로 쪼갭니다.
-    if "💡" in text:
-        parts = text.split("💡", 1)
-        main_text = parts[0].strip()
-        qna_text = "💡" + parts[1].strip()
+    # 1. 마크다운 볼드(**)를 품격 있는 나눔명조 네이비 볼드 태그로 치환 및 특수기호 소각
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b style="font-family: \'Nanum Myeongjo\', serif; font-weight: 800; color: #1A237E;">\1</b>', text)
+    text = text.replace('*', '').replace('#', '')
+    
+    # 2. 💡 Q&A 박스 분리 (앞단의 '5. ' 등 찌꺼기 번호 동시 흡수)
+    match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
+    if match:
+        split_idx = match.start()
+        main_text = text[:split_idx].strip()
+        qna_text = "💡" + match.group(2).strip()
     else:
         main_text = text.strip()
         qna_text = ""
@@ -157,53 +166,79 @@ def format_ai_text_to_html(text):
     lines = str(main_text).split('\n')
     html_lines = []
     
-    # 2. 일반 통변 파트 포맷팅 (기존 로직 그대로 유지)
+    # 3. 일반 통변 파트 나눔명조 포맷팅
     for line in lines:
         line = line.strip()
         if not line:
             continue
-            
-        line = line.replace('*', '').replace('#', '')
 
+        # (1) 수석보좌관 / 장단점 정밀 비교 헤더
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 800; color: #1A237E; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 17px; font-weight: 800; color: #1A237E; "
                 f"text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
-        elif re.match(r'^\d+\.\s', line):
+        
+        # (2) 콜론(:)이 포함된 소제목 + 본문 혼합형 줄바꿈 분리
+        elif (re.match(r'^\d+[\.\)]\s', line) or re.match(r'^\[.*?\]\s*:', line)) and ':' in line:
+            parts = line.split(':', 1)
+            title_part = parts[0].strip() + ":"
+            body_part = parts[1].strip()
+            
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 20px; font-weight: 800; color: #000000; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 16.5px; font-weight: 800; color: #1A237E; "
+                f"margin-top: 16px; margin-bottom: 4px; letter-spacing: -0.3px;'>"
+                f"{title_part}</div>"
+            )
+            if body_part:
+                html_lines.append(
+                    f"<p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 15.5px; font-weight: 500; line-height: 1.85; "
+                    f"color: #111111; text-align: justify; margin-top: 0px; margin-bottom: 12px; text-indent: 10px;'>"
+                    f"{body_part}</p>"
+                )
+        
+        # (3) 순수 대제목 (길이 40자 이하)
+        elif re.match(r'^\d+\.\s', line) and len(line) <= 40:
+            html_lines.append(
+                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 20px; font-weight: 800; color: #000000; "
                 f"margin-top: 22px; margin-bottom: 10px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px; letter-spacing: -0.5px;'>"
                 f"{line}</div>"
             )
-        elif re.match(r'^\d+\)\s', line):
+            
+        # (4) 순수 중/소제목 (길이 40자 이하)
+        elif (re.match(r'^\d+\)\s', line) or re.match(r'^\(\d+\)\s', line)) and len(line) <= 40:
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 17px; font-weight: 700; color: #000000; "
+                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 17px; font-weight: 700; color: #1A237E; "
                 f"margin-top: 14px; margin-bottom: 6px; letter-spacing: -0.3px;'>"
                 f"{line}</div>"
             )
-        elif re.match(r'^\(\d+\)\s', line):
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 16px; font-weight: 700; color: #333333; "
-                f"margin-top: 10px; margin-bottom: 4px; letter-spacing: -0.2px;'>"
-                f"{line}</div>"
-            )
+            
+        # (5) 일반 서술 문장
         else:
-            if line.startswith('-'):
-                html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15.5px; font-weight: 500; line-height: 1.85; "
-                    f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 5px; padding-left: 10px;'>"
-                    f"{line}</p>"
-                )
-            else:
-                html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif; font-size: 15.5px; font-weight: 500; line-height: 1.85; "
-                    f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: 15px;'>"
-                    f"{line}</p>"
-                )
+            indent = "5px" if line.startswith('-') else "15px"
+            padding = "padding-left: 10px;" if line.startswith('-') else ""
+            html_lines.append(
+                f"<p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 15.5px; font-weight: 500; line-height: 1.85; "
+                f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: {indent}; {padding}'>"
+                f"{line}</p>"
+            )
     
     main_html = "\n".join(html_lines)
+    
+    # 4. 💡 1:1 고민 Q&A 박스 포맷팅 (나눔명조 전용 프리미엄 박스)
+    qna_html = ""
+    if qna_text:
+        qna_body = qna_text.replace('\n\n', '<br><br>').replace('\n', '<br>')
+        qna_html = f"""
+        <div style='background-color: #FFFDF5; border: 2px solid #FFE082; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-family: "Nanum Myeongjo", serif !important;'>
+            <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 15.5px; line-height: 1.85; color: #111111; font-weight: 600;'>
+                {qna_body}
+            </div>
+        </div>
+        """
+        
+    return main_html + "\n" + qna_html
     
     # 3. Q&A 파트 포맷팅 (비밀 편지 스타일 하이라이트 박스)
     qna_html = ""
@@ -231,7 +266,7 @@ def td_func(val, engine):
     return f"<td class='{cls_str} ganji-cell-24' style='border:1px solid #444 !important; width:21.25%;'>{val}</td>"
 
 def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    """1인용 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
+    """1인용 감명서 표준 표지 (전체 나눔명조 강제 통일)"""
     raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -242,25 +277,25 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
+            <!-- 🌟 대제목 영역: 나눔명조 강제 적용 -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
+                <h1 style='font-family: "Nanum Myeongjo", serif !important; font-size: 28px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
-                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
+                    <span style='font-family: "Nanum Myeongjo", serif; font-size: 14px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
-            <!-- 신청인 정보 박스 -->
+            <!-- 신청인 정보 박스: 나눔명조 강제 적용 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; line-height: 1.8;'>
+                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
+                <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
                     <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Myeongjo", serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
@@ -659,7 +694,7 @@ def get_final_report_box(content_html):
 # ==============================================================================
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용 궁합/대조 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
+    """2인용 궁합/대조 감명서 표준 표지 (전체 나눔명조 강제 통일)"""
     
     raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
@@ -673,34 +708,34 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 38px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 (자간 -1.5px 및 keep-all 적용) -->
+            <!-- 🌟 대제목 영역: 나눔명조 강제 적용 -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 24px; width: 100%; box-sizing: border-box;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.5px !important; word-break: keep-all !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
+                <h1 style='font-family: "Nanum Myeongjo", serif !important; font-size: 28px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.5px !important; word-break: keep-all !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
-                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
+                    <span style='font-family: "Nanum Myeongjo", serif; font-size: 14px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
             
-            <!-- 남명 정보 박스 -->
+            <!-- 남명 정보 박스: 나눔명조 강제 적용 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px; margin-bottom: 12px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.7;'>
+                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♂️ 남명 : {clean_u_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {u_age}세 )</span></h2>
+                <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.7;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
-            <!-- 여명 정보 박스 -->
+            <!-- 여명 정보 박스: 나눔명조 강제 적용 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; line-height: 1.7;'>
+                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 21px; font-weight: 800; color: #1A237E; margin: 0 0 8px 0;'>♀️ 여명 : {clean_p_name} 님 <span style='font-size: 16px; color: #111111; font-weight: 900 !important;'>( {p_age}세 )</span></h2>
+                <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.7;'>
                     <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {p_time}</p>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 26px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Myeongjo", serif; font-size: 17px; margin-top: 26px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
@@ -709,19 +744,18 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
     """
     남명과 여명의 대운표를 사주 원국표와 동일한 너비(100%)로 상하 배치하는 HTML 박스
-    (이름표와 대운표 사이 불필요한 여백 완전 제거)
+    (이름표와 대운표 사이 폰트를 나눔명조체로 강제 통일)
     """
     
     clean_m_name = str(m_name or "남명").strip()
     clean_f_name = str(f_name or "여명").strip()
     
-    # 🌟 타이틀 바 제거 & 100% 너비 상하(Column) 배치 적용 및 간격(margin-bottom: 0px) 압축
     html = f"""
     <div style="margin-top: 15px; margin-bottom: 15px; width: 100%;">
         
         <!-- ♂️ 남명 대운 박스 (상단) -->
         <div style="width: 100%; margin-bottom: 15px;">
-            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 0px; padding-left: 5px;">
+            <div style="text-align: left; font-family: 'Nanum Myeongjo', serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 0px; padding-left: 5px;">
                 ♂️ 남명 : {clean_m_name} 님
             </div>
             <div style="width: 100%; overflow-x: auto; margin-bottom: 0px;">
@@ -731,7 +765,7 @@ def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
         
         <!-- ♀️ 여명 대운 박스 (하단) -->
         <div style="width: 100%; margin-bottom: 0px;">
-            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 0px; padding-left: 5px;">
+            <div style="text-align: left; font-family: 'Nanum Myeongjo', serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 0px; padding-left: 5px;">
                 ♀️ 여명 : {clean_f_name} 님
             </div>
             <div style="width: 100%; overflow-x: auto; margin-bottom: 0px;">
