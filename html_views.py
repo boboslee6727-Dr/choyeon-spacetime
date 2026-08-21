@@ -140,15 +140,30 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (박사님 지시사항: 폰트 황금비율 적용 및 한자 오염 원천 차단)
+    AI 생성 텍스트 포맷터 (소따옴표 안쪽만 볼드 처리 & 줄 간격 1.85 완벽 고정)
     """
     if not text:
         return ""
         
-    # 🌟 [방어막 1] AI가 강조한 **글자**의 사이즈와 색상이 오염되지 않도록 
-    # 본문과 똑같은 1em(16px) 크기에 검정색(#111111)으로 강제 고정합니다!
+    # 🌟 [방어막 0] 한자 진녹색 오염 완벽 방어 (외부 span 태그 삭제)
+    text = re.sub(r'</?span[^>]*>', '', text)
+        
+    # 🌟 [방어막 1] 디테일 텍스트 교정: 소따옴표 안쪽만 깔끔하게 굵은 검정색으로!
+    # 1-1. **'글자'** 형태 -> '<b>글자</b>' 로 교정
+    text = re.sub(r'\*\*[\'\"](.*?)[\'\"]\*\*', r"'<b style=\"font-size: 1em !important; font-weight: 800 !important; color: #111111 !important;\">\1</b>'", text)
+    # 1-2. '**글자**' 형태 -> '<b>글자</b>' 로 교정
+    text = re.sub(r'[\'\"]\*\*(.*?)\*\*[\'\"]', r"'<b style=\"font-size: 1em !important; font-weight: 800 !important; color: #111111 !important;\">\1</b>'", text)
+    # 1-3. 일반 **글자** 형태 -> <b>글자</b> 로 교정
     text = re.sub(r'\*\*(.*?)\*\*', r'<b style="font-size: 1em !important; font-weight: 800 !important; color: #111111 !important;">\1</b>', text)
+    
+    # 남은 잡동사니 기호 소각
     text = text.replace('*', '').replace('#', '')
+    
+    # 🌟 [방어막 2] 뭉텅이 텍스트 강제 절단기!
+    title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
+    text = re.sub(r'(?<!\n)(\d+\.\s+[^\d\n]{2,30}?)\s+(?=\d+\)\s)', r'\1\n', text)
+    text = re.sub(fr'(?<!\n)(\\d+\\)\\s+.*?(?:{title_kws}))\\s+([가-힣A-Z])', r'\1\n\2', text)
+    text = re.sub(fr'(?<!\n)(\\(\\d+\\)\\s+.*?(?:{title_kws}))\\s+([가-힣A-Z])', r'\1\n\2', text)
     
     # 💡 Q&A 박스 분리
     match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
@@ -170,7 +185,7 @@ def format_ai_text_to_html(text):
             
         clean_line = re.sub(r'^#+\s*', '', line)
 
-        #(1) 수석보좌관 / 장단점 특별 헤더
+        # 수석보좌관 / 장단점 특별 헤더
         if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px; font-weight: 800; color: #1A237E; "
@@ -179,7 +194,7 @@ def format_ai_text_to_html(text):
             )
             continue
         
-        #(2) "1) [소제목]: 본문" 형태 강제 교정 (제목 17px / 본문 16px)
+        # (1) "1) [소제목]: 본문" 형태 강제 교정 (제목 20px / 본문 16px / 줄간격 1.85)
         colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', clean_line)
         if colon_match:
             num = colon_match.group(1)       
@@ -188,8 +203,8 @@ def format_ai_text_to_html(text):
             
             title_part = f"{num}) {title_text}:"
             html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 17px; font-weight: 800; color: #1A237E; "
-                f"margin-top: 16px; margin-bottom: 4px; letter-spacing: -0.3px;'>"
+                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 20px; font-weight: 900; color: #1A237E; "
+                f"margin-top: 18px; margin-bottom: 8px; letter-spacing: -0.3px;'>"
                 f"{title_part}</div>"
             )
             if body_part:
@@ -200,7 +215,7 @@ def format_ai_text_to_html(text):
                 )
             continue
             
-        #(3) 숫자가 없는 "[소제목]: 본문" 형태 처리 (제목 17px / 본문 16px)
+        # (2) 숫자가 없는 "[소제목]: 본문" 형태 처리 (제목 17px / 본문 16px / 줄간격 1.85)
         colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', clean_line)
         if colon_match_no_num:
             title_part = colon_match_no_num.group(1).strip() + ":"
@@ -218,7 +233,7 @@ def format_ai_text_to_html(text):
                 )
             continue
 
-        #(4) 순수 대제목 (1. 제목) -> 22px / 900
+        # 👑 (3) 순수 대제목 (1. 제목) -> 22px / 900
         if re.match(r'^\d+\.\s', clean_line) and len(clean_line) <= 60:
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 22px; font-weight: 900; color: #000000; "
@@ -227,7 +242,7 @@ def format_ai_text_to_html(text):
             )
             continue
             
-        #(5) 순수 중/소제목 (1) 제목) -> 20px / 900
+        # 👑 (4) 순수 중/소제목 (1) 제목) -> 20px / 900
         if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 60:
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 20px; font-weight: 900; color: #1A237E; "
@@ -236,7 +251,7 @@ def format_ai_text_to_html(text):
             )
             continue
 
-        #(6) 순수 소소제목 ((1) 제목) -> 18px / 800
+        # 👑 (5) 순수 소소제목 ((1) 제목) -> 18px / 800
         if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 60:
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px; font-weight: 800; color: #333333; "
@@ -245,7 +260,7 @@ def format_ai_text_to_html(text):
             )
             continue
             
-        #(7) 일반 서술 문장 -> 16px / 500
+        # 👑 (6) 일반 서술 문장 -> 16px / 500 / 줄간격 1.85 완벽 보장
         indent = "5px" if clean_line.startswith('-') else "15px"
         padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
         html_lines.append(
@@ -256,7 +271,7 @@ def format_ai_text_to_html(text):
     
     main_html = "\n".join(html_lines)
     
-    # 💡 Q&A 박스 포맷팅 (본문과 동일한 16px 통일)
+    # 💡 Q&A 박스 포맷팅 (본문과 동일한 16px, 줄간격 1.85 통일)
     qna_html = ""
     if qna_text:
         qna_body = qna_text.replace('\n\n', '<br><br>').replace('\n', '<br>')
