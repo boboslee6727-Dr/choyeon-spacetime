@@ -147,15 +147,23 @@ def format_ai_text_to_html(text):
         text = text.replace(tag, '')
     text = text.strip()
 
-    # 2. 소따옴표 안쪽만 볼드체 (작은따옴표 증식 방지)
+    # 2. 번역기 내부 1차 청소
+    text = re.sub(r'<span[^>]*class=[\'"][^\'"]*(?:color-|ganji-)[^\'"]*[\'"][^>]*>(.*?)</span>', r'\1', text)
+
+    # 3. 소따옴표 안쪽만 볼드체
     text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
     text = text.replace('*', '').replace('#', '')
 
+    # 🌟 4. [업그레이드 절단기 방어막] (이 녀석이 지워져서 에러가 났던 것입니다!)
+    title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
+    anti_split_kws = r"분석|및|가치관|요약|성향|특징|비교|비법|전략|솔루션|방안|방법|조언|방향|지침|가이드|팁|포인트"
+
+    # 반드시 방어막 변수들이 먼저 정의된 후 아래 치환(sub) 로직이 돌아야 합니다!
     text = re.sub(fr'(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
     text = re.sub(fr'(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
     text = re.sub(fr'(\(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
 
-    # 4. Q&A 분리
+    # 5. Q&A 분리
     match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
     if match:
         main_text = text[:match.start()].strip()
@@ -174,7 +182,7 @@ def format_ai_text_to_html(text):
 
         lower_line = line.lower()
 
-        # 🚨 [박스 프리패스] 표, 대운표 등은 무사통과!
+        # 표, 대운표 등은 무사통과
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
@@ -183,33 +191,12 @@ def format_ai_text_to_html(text):
             html_lines.append(line)
             continue
 
-        # 🚨 [박사님 추리 적중! 진녹색 스파이 색출] 🚨
-        # 표가 아닌 일반 문장인데 <span>이나 <font>가 묻어있다면?
-        # 과거에 만들어둔 진녹색(17px) 껍질이므로 자비 없이 뜯어냅니다!
-        line = re.sub(r'</?(?:span|font)[^>]*>', '', line)
-
-        # 수석보좌관 헤더 (올블랙)
+        # 수석보좌관 헤더
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #000000;'>{line}</div>")
             continue
 
-        # 콜론(:) 매칭 로직 (올블랙)
-        colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', line)
-        if colon_match:
-            num = colon_match.group(1)
-            sep = colon_match.group(2) # 원래의 마침표(.)나 괄호()) 원본 사수
-            title_text = colon_match.group(3).strip()
-            body_part = colon_match.group(4).strip()
-            title_part = f"{num}{sep} {title_text}:"
-            
-            # 1. 제목은 무조건 22px 굵은 대제목(밑줄 포함)으로 웅장하게 한 줄을 차지!
-            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{title_part}</div>")
-            
-            # 2. 콜론(:) 뒤에 붙어있던 본문은 무조건 다음 줄(<p> 일반 서술)로 뚝 떨어뜨림!
-            if body_part:
-                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{body_part}</p>")
-            continue
-
+        # 🚨 [박사님 핵심 룰] 콜론(:) 강제 개행 & [시간 23:30 보호 룰] 완벽 통합
         colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):\s*(?!\d)(.*)', line)
         if colon_match:
             num = colon_match.group(1)
@@ -232,7 +219,7 @@ def format_ai_text_to_html(text):
                 html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px; color: #000000;'>{body_part}</p>")
             continue
 
-        # 🌟 절단 방지 제목 매칭 (방어막 유지)
+        # 🌟 일반 제목 매칭 
         m1 = re.match(fr'^(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
         if m1:
             html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{m1.group(1).strip()}</div>")
@@ -251,7 +238,7 @@ def format_ai_text_to_html(text):
             html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m3.group(2).strip()}</p>")
             continue
 
-        # 🚨 [수정 2] 박사님 지시대로 불필요한 80자 길이 제한 완벽 삭제!
+        # 🚨 [글자수 80자 제한 해제판]
         if re.match(r'^\d+\.\s', line):
             html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{line}</div>")
             continue
@@ -262,12 +249,18 @@ def format_ai_text_to_html(text):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
             continue
 
+        # 일반 서술 문장
+        indent = "5px" if line.startswith('-') else "15px"
+        padding = "padding-left: 10px;" if line.startswith('-') else ""
+        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}; color: #000000;'>{line}</p>")
+
+    main_html = "\n".join(html_lines)
+
     # 💡 Q&A 박스 포맷팅
     qna_html = ""
     if qna_text:
         clean_qna_body = qna_text.replace('💡', '').strip()
         qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
-        
         qna_html = f"""
         <div style='background-color: #FFFFFF; border: 2px solid #333333; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
             <div style='font-size: 20px; font-weight: 900; color: #000000; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #E0E0E0;'>
@@ -279,7 +272,23 @@ def format_ai_text_to_html(text):
         </div>
         """
 
-    return f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
+    # 🌟 [최후의 방어막 백신] 
+    kill_switch_css = """
+    <style>
+    .ai-content p span, .ai-content p font, .ai-content p [class*="color-"] {
+        color: #000000 !important;
+        font-size: 16px !important;
+        background-color: transparent !important;
+    }
+    .ai-content div span, .ai-content div font, .ai-content div [class*="color-"] {
+        color: #000000 !important;
+        font-size: inherit !important;
+        background-color: transparent !important;
+    }
+    </style>
+    """
+
+    return kill_switch_css + f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
