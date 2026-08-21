@@ -191,6 +191,10 @@ def format_ai_text_to_html(text):
             html_lines.append(line)
             continue
 
+        # 🚨 [박사님의 명검 복구!] 진녹색 17px 스파이 껍질(span, font) 강제 철거!
+        # (바로 이 한 줄이 지난번 코드 병합 때 실수로 누락되었습니다. 죄송합니다!)
+        line = re.sub(r'</?(?:span|font)[^>]*>', '', line)
+
         # 수석보좌관 헤더
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #000000;'>{line}</div>")
@@ -249,10 +253,13 @@ def format_ai_text_to_html(text):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
             continue
 
-        # 일반 서술 문장
-        indent = "5px" if line.startswith('-') else "15px"
-        padding = "padding-left: 10px;" if line.startswith('-') else ""
-        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}; color: #000000;'>{line}</p>")
+        # 일반 서술 문장 (목록형과 일반형 분리)
+        if line.startswith('-'):
+            # 🌟 목록형(-) 문장: 위아래 여백과 줄간격을 확 줄여서 밀도 있게 배치 (가독성 최상)
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.65; text-align: justify; margin: 2px 0 6px 0; padding-left: 15px; text-indent: -10px; color: #000000;'>{line}</p>")
+        else:
+            # 일반 서술 문장: 읽기 편안한 기존 여백 유지
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{line}</p>")
 
     main_html = "\n".join(html_lines)
 
