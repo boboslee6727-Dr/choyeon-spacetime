@@ -138,128 +138,141 @@ def get_global_css():
     """
 
 def format_ai_text_to_html(text):
-    """
-    AI 생성 텍스트 포맷터 (대운표 <div> 태그 100% 무손실 프리패스 장착 버전)
-    """
     if not text:
         return ""
 
-    # 🌟 [스마트 피아식별 CSS] 대운표(.daewun-cell)는 절대 건드리지 않습니다!
-    anti_color_css = """
-    <style>
-    .ai-content span:not(td span):not(th span):not(.result-table *):not(.daewun-cell *), 
-    .ai-content font:not(td font):not(th font):not(.result-table *):not(.daewun-cell *),
-    .ai-content [class*="color"]:not(td):not(th):not(tr):not(table):not(.result-table *):not(.daewun-cell *),
-    .ai-content [class*="ganji"]:not(td):not(th):not(tr):not(table):not(.result-table *):not(.daewun-cell *) {
-        color: #111111 !important;
-        font-size: 16px !important;
-        background-color: transparent !important;
-        font-weight: inherit !important;
-        letter-spacing: normal !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-    }
-    </style>
-    """
-
-    # 🌟 [1단계: 찌꺼기 철거]
+    # 1. 찌꺼기 완벽 제거
     remove_tags = ['[MALE_START]', '[MALE_END]', '[FEMALE_START]', '[FEMALE_END]', '[GUNGHAP_START]', '[GUNGHAP_END]']
     for tag in remove_tags:
         text = text.replace(tag, '')
     text = text.strip()
 
-    # 🌟 [2단계: 디테일 교정]
+    # 2. 소따옴표 안쪽만 볼드체 (작은따옴표 증식 방지)
     text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
     text = text.replace('*', '').replace('#', '')
 
-    # 🌟 [3단계: 뭉텅이 문장 절단기]
-    text = re.sub(r'([^\n])\s+(\d+\.\s)', r'\1\n\n\2', text)
-    text = re.sub(r'([^\n])\s+(\d+\)\s)', r'\1\n\n\2', text)
-    text = re.sub(r'([^\n])\s+(\(\d+\)\s)', r'\1\n\n\2', text)
+    # 3. [업그레이드 절단기] '성격 분석' 찢어짐 완벽 방지
+    title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
+    anti_split_kws = r"분석|및|가치관|요약|성향|특징|비교"
 
-    title_kws = "성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
-    p1 = r'^(\d+\.\s+.*?(?:' + title_kws + r'))\s+([가-힣A-Z\'"<])'
-    p2 = r'^(\d+\)\s+.*?(?:' + title_kws + r'))\s+([가-힣A-Z\'"<])'
-    p3 = r'^(\(\d+\)\s+.*?(?:' + title_kws + r'))\s+([가-힣A-Z\'"<])'
-    
-    text = re.sub(p1, r'\1\n\2', text, flags=re.MULTILINE)
-    text = re.sub(p2, r'\1\n\2', text, flags=re.MULTILINE)
-    text = re.sub(p3, r'\1\n\2', text, flags=re.MULTILINE)
+    text = re.sub(fr'(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
+    text = re.sub(fr'(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
+    text = re.sub(fr'(\(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
 
-    # 💡 Q&A 박스 분리
+    # 4. Q&A 분리
     match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
     if match:
-        split_idx = match.start()
-        main_text = text[:split_idx].strip()
+        main_text = text[:match.start()].strip()
         qna_text = "💡" + match.group(2).strip()
     else:
         main_text = text.strip()
         qna_text = ""
 
-    lines = str(main_text).split('\n')
+    lines = main_text.split('\n')
     html_lines = []
 
     for line in lines:
         line = line.strip()
         if not line:
             continue
-            
-        clean_line = line
-        lower_line = clean_line.lower()
 
-        # 🚨 [가장 중요한 핵심 방어막] 🚨
-        # 대운표를 구성하는 <div>, <span> 등의 HTML 태그가 들어오면 
-        # 절대 <p> 태그를 씌우지 말고 원본 100% 그대로 프리패스 시킵니다!
+        lower_line = line.lower()
+
+        # 🚨 [박스 프리패스] 표, 대운표 등은 무사통과!
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
-           lower_line.startswith('<span') or lower_line.startswith('</span') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
            lower_line.startswith('<td') or lower_line.startswith('</td') or \
            lower_line.startswith('<th') or lower_line.startswith('</th'):
-            html_lines.append(clean_line)
+            html_lines.append(line)
             continue
 
-        # 수석보좌관 헤더
-        if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #1A237E; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #1A237E;'>{clean_line}</div>")
+        # 🚨 [박사님 추리 적중! 진녹색 스파이 색출] 🚨
+        # 표가 아닌 일반 문장인데 <span>이나 <font>가 묻어있다면?
+        # 과거에 만들어둔 진녹색(17px) 껍질이므로 자비 없이 뜯어냅니다!
+        line = re.sub(r'</?(?:span|font)[^>]*>', '', line)
+
+        # 수석보좌관 헤더 (올블랙)
+        if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #000000;'>{line}</div>")
             continue
 
-        # 👑 (1) 순수 대제목 (1. 제목)
-        if re.match(r'^\d+\.\s', clean_line) and len(clean_line) <= 80:
-            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{clean_line}</div>")
+        # 콜론(:) 매칭 로직 (올블랙)
+        colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', line)
+        if colon_match:
+            num = colon_match.group(1)
+            title_text = colon_match.group(3).strip()
+            body_part = colon_match.group(4).strip()
+            title_part = f"{num}) {title_text}:"
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{title_part}</div>")
+            if body_part:
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px; color: #000000;'>{body_part}</p>")
             continue
 
-        # 👑 (2) 순수 중/소제목 (1) 제목)
-        if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 80:
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 24px; margin-bottom: 8px;'>{clean_line}</div>")
+        colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', line)
+        if colon_match_no_num:
+            title_part = colon_match_no_num.group(1).strip() + ":"
+            body_part = colon_match_no_num.group(2).strip()
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 16px; margin-bottom: 4px;'>{title_part}</div>")
+            if body_part:
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px; color: #000000;'>{body_part}</p>")
             continue
 
-        # 👑 (3) 순수 소소제목 ((1) 제목)
-        if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 80:
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #333333; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
+        # 업그레이드 뭉텅이 절단기 (올블랙)
+        m1 = re.match(fr'^(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
+        if m1:
+            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{m1.group(1).strip()}</div>")
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m1.group(2).strip()}</p>")
             continue
 
-        # 👑 (4) 일반 서술 문장
-        indent = "5px" if clean_line.startswith('-') else "15px"
-        padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
-        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}'>{clean_line}</p>")
+        m2 = re.match(fr'^(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
+        if m2:
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 8px;'>{m2.group(1).strip()}</div>")
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m2.group(2).strip()}</p>")
+            continue
+
+        m3 = re.match(fr'^(\(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
+        if m3:
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{m3.group(1).strip()}</div>")
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m3.group(2).strip()}</p>")
+            continue
+
+        # 짧게 완성되어 들어온 제목들 (올블랙)
+        if re.match(r'^\d+\.\s', line) and len(line) <= 80:
+            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{line}</div>")
+            continue
+        if re.match(r'^\d+\)\s', line) and len(line) <= 80:
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 8px;'>{line}</div>")
+            continue
+        if re.match(r'^\(\d+\)\s', line) and len(line) <= 80:
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
+            continue
+
+        # 일반 서술 문장 (올블랙)
+        indent = "5px" if line.startswith('-') else "15px"
+        padding = "padding-left: 10px;" if line.startswith('-') else ""
+        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}; color: #000000;'>{line}</p>")
 
     main_html = "\n".join(html_lines)
 
     # 💡 Q&A 박스 포맷팅
     qna_html = ""
     if qna_text:
-        qna_body = qna_text.replace('\n\n', '<br><br>').replace('\n', '<br>')
+        clean_qna_body = qna_text.replace('💡', '').strip()
+        qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
+        
         qna_html = f"""
-        <div style='background-color: #FFFDF5; border: 2px solid #FFE082; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
-            <div style='font-size: 16px; line-height: 1.85; font-weight: 600;'>
+        <div style='background-color: #FFFFFF; border: 2px solid #333333; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+            <div style='font-size: 20px; font-weight: 900; color: #000000; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #E0E0E0;'>
+                💡 Q & A
+            </div>
+            <div style='font-size: 16px; line-height: 1.85; font-weight: 600; color: #000000;'>
                 {qna_body}
             </div>
         </div>
         """
 
-    return anti_color_css + f"<div class='ai-content' style='color: #111111;'>\n{main_html}\n{qna_html}\n</div>"
+    return f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
