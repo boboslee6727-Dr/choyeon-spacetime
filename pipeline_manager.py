@@ -375,10 +375,13 @@ def render_customer_order_form():
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             
-            # 24개 컬럼 완벽 INSERT
+            # =================================================================
+            # 💡 [정상적인 DB 연결 및 데이터 저장 로직] - 폭탄 완전 제거됨!
+            # =================================================================
             conn = sqlite3.connect(DB_FILE)
-            # --- 🚨 [박사님! 여기에 폭탄과 새 도면을 쾅! 박아주십시오!] 🚨 ---
-            c.execute("DROP TABLE IF EXISTS orders")
+            c = conn.cursor()
+            
+            # 새 DB 파일에 24개짜리 테이블을 예쁘게 짓습니다.
             c.execute('''
                 CREATE TABLE IF NOT EXISTS orders (
                     order_id TEXT PRIMARY KEY,
@@ -407,18 +410,15 @@ def render_customer_order_form():
                     result_html TEXT
                 )
             ''')
-
-
-            # (원래 박사님 코드에 있던 INSERT 문 - 건드리지 마십시오!)
+            
+            # 정확히 24개 컬럼에 데이터 오차 없이 주입!
             c.execute('''
                 INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (order_id, now_str, phone_full, memo_info, name.strip(), gender, marital, u_cal, b_year, b_month, b_day, b_time, full_product_desc, f_name, f_gender, f_marital, f_cal, f_y, f_m, f_d, f_t, user_concern_text, "입금대기", ""))
-            c = conn.cursor()
-            c.execute('''
-                INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            ''', (order_id, now_str, phone_full, memo_info, name.strip(), gender, marital, u_cal, b_year, b_month, b_day, b_time, full_product_desc, f_name, f_gender, f_marital, f_cal, f_y, f_m, f_d, f_t, user_concern_text, "입금대기", ""))
+            
             conn.commit()
             conn.close()
+            # =================================================================
             
             try:
                 alert_ok, alert_msg = send_solapi_admin_alert(
