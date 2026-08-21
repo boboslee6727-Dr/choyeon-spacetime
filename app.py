@@ -1358,7 +1358,7 @@ if st.session_state.get('app_running', False):
             st.markdown(safe_cover, unsafe_allow_html=True)
 
         # =========================================================================
-        # 🧑 [1인용 및 2인용 최종 렌더링 구역] 
+        # 🧑or 🧑🧑 [1인용 및 2인용 최종 렌더링 구역] 
         # =========================================================================
         try:
             final_render_html = ""
@@ -1514,7 +1514,6 @@ if st.session_state.get('app_running', False):
             if 'final_render_html' not in locals() or final_render_html is None:
                 final_render_html = ""
 
- 
             # 1. 텍스트화 및 양끝 공백 제거
             final_render_html = str(final_render_html).strip()
             
@@ -1536,7 +1535,3 @@ if st.session_state.get('app_running', False):
             st.error(f"오류 내용: {render_error}")
             import traceback
             st.code(traceback.format_exc())
-
-
-
-
