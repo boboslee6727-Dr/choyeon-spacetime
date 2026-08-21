@@ -1539,3 +1539,4 @@ if st.session_state.get('app_running', False):
             st.error(f"오류 내용: {render_error}")
             import traceback
             st.code(traceback.format_exc())
+
