@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 75.0 Master - 신청접수/수동입금승인/열람 파이프라인 통합 완결판)
+# app.py (ver 76.0 Master - 신청접수/수동입금승인/열람 파이프라인 통합 완결판)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ from pipeline_manager import run_pipeline_router
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 75.0 Master"
+APP_VERSION = "ver 76.0 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용
