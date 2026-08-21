@@ -1441,24 +1441,41 @@ if st.session_state.get('app_running', False):
         elif u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
             m_ess, f_ess, g_ess = "", "", clean_raw
             
-            # 남명 풀이 텍스트 파싱
+            # 🌟 신청자의 성별에 따라 남명/여명 사주 원국표 분배
+            partner_fact_html = locals().get('p_part_1_fact', locals().get('part_1_fact_p', ''))
+            
+            if gender == "남성":
+                m_saju_html = part_1_fact if 'part_1_fact' in locals() else ""
+                f_saju_html = partner_fact_html
+            else:
+                m_saju_html = partner_fact_html
+                f_saju_html = part_1_fact
+            
+            if not f_saju_html:
+                f_saju_html = "<div style='color:red; font-weight:bold; padding:10px;'>🚨 파트너 사주 원국표(p_part_1_fact)가 엔진에서 생성되지 않았습니다.</div>"
+            if not m_saju_html:
+                m_saju_html = "<div style='color:red; font-weight:bold; padding:10px;'>🚨 파트너 사주 원국표(p_part_1_fact)가 엔진에서 생성되지 않았습니다.</div>"
+            
+            # [1페이지] 남명 풀이 텍스트 파싱
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
             if m_match: 
                 m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
             
-            # 여명 풀이 텍스트 파싱 + 사주 원국표 결합
+            # [2페이지] 여명 풀이 텍스트 파싱 + 사주표 + 🖨️ 새 페이지 넘김(Page Break) 강제 적용!
             f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
             if f_match: 
                 f_text = html_views.format_ai_text_to_html(f_match.group(1).strip())
-                p_saju_table = p_part_1_fact if 'p_part_1_fact' in locals() else ""
-                f_ess = f"{p_saju_table}<br>{f_text}"
+                page_break = "<div style='page-break-before: always; break-before: page;'></div>"
+                f_ess = f"{page_break}{f_saju_html}<br>{f_text}"
                 
-            # 궁합 풀이 텍스트 파싱
+            # [3페이지~] 궁합 풀이 텍스트 파싱 + 🖨️ 새 페이지 넘김(Page Break) 강제 적용!
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
             if g_match: 
-                g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
+                g_text = html_views.format_ai_text_to_html(g_match.group(1).strip())
+                page_break = "<div style='page-break-before: always; break-before: page;'></div>"
+                g_ess = f"{page_break}{g_text}"
 
-            # 대운 비교표 생성 및 마커 치환
+            # 대운 비교표 생성 및 마커 치환 (궁합 텍스트 내부)
             m_daewun_html = un_html if gender == "남성" else p_un_html
             f_daewun_html = p_un_html if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
@@ -1471,8 +1488,8 @@ if st.session_state.get('app_running', False):
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
             g_ess += score_ui + closing_ui
             
-            # 최종 3페이지 리포트 렌더링
-            final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
+            # 최종 리포트 렌더링
+            final_render_html = html_views.get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess)
 
         elif u_product.startswith("4-2"):
             if not user_entered_text:
