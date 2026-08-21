@@ -26,7 +26,7 @@ import html_views
 from pipeline_manager import run_pipeline_router
 
 # 일단 감명 엔진 자리는 비워두고(None), 주소(URL) 이동이 잘 되는지부터 적용합니다.
-run_pipeline_router(None) 
+run_pipeline_router(generate_report)
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
