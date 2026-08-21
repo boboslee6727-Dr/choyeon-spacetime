@@ -210,7 +210,20 @@ def format_ai_text_to_html(text):
                 html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{body_part}</p>")
             continue
 
-        colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', line)
+        colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):\s*(?!\d)(.*)', line)
+        if colon_match:
+            num = colon_match.group(1)
+            sep = colon_match.group(2)
+            title_text = colon_match.group(3).strip()
+            body_part = colon_match.group(4).strip()
+            title_part = f"{num}{sep} {title_text}:"
+            
+            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{title_part}</div>")
+            if body_part:
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{body_part}</p>")
+            continue
+
+        colon_match_no_num = re.match(r'^(\[.*?\])\s*:\s*(?!\d)(.*)', line)
         if colon_match_no_num:
             title_part = colon_match_no_num.group(1).strip() + ":"
             body_part = colon_match_no_num.group(2).strip()
@@ -219,7 +232,7 @@ def format_ai_text_to_html(text):
                 html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px; color: #000000;'>{body_part}</p>")
             continue
 
-        # 업그레이드 뭉텅이 절단기 (올블랙)
+        # 🌟 절단 방지 제목 매칭 (방어막 유지)
         m1 = re.match(fr'^(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
         if m1:
             html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{m1.group(1).strip()}</div>")
@@ -238,23 +251,16 @@ def format_ai_text_to_html(text):
             html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m3.group(2).strip()}</p>")
             continue
 
-        # 짧게 완성되어 들어온 제목들 (올블랙)
-        if re.match(r'^\d+\.\s', line) and len(line) <= 80:
+        # 🚨 [수정 2] 박사님 지시대로 불필요한 80자 길이 제한 완벽 삭제!
+        if re.match(r'^\d+\.\s', line):
             html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{line}</div>")
             continue
-        if re.match(r'^\d+\)\s', line) and len(line) <= 80:
+        if re.match(r'^\d+\)\s', line):
             html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 8px;'>{line}</div>")
             continue
-        if re.match(r'^\(\d+\)\s', line) and len(line) <= 80:
+        if re.match(r'^\(\d+\)\s', line):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
             continue
-
-        # 일반 서술 문장 (올블랙)
-        indent = "5px" if line.startswith('-') else "15px"
-        padding = "padding-left: 10px;" if line.startswith('-') else ""
-        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}; color: #000000;'>{line}</p>")
-
-    main_html = "\n".join(html_lines)
 
     # 💡 Q&A 박스 포맷팅
     qna_html = ""
