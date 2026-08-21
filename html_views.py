@@ -484,16 +484,19 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
         active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
         
+    # 🌟 [수정 포인트] 
+    # 1. 최상단 컨테이너에서 글자들을 위로 밀어 올리던 padding-bottom:4px 철거!
+    # 2. 모든 내부 div에 line-height: 1; 을 부여하여 유령 여백을 삭제하고 상하 정중앙(align-items: center) 완벽 구현!
     return f"""
-    <div style='flex:1; width:10%; {active_style} text-align:center; padding-bottom:4px; background-color:{bg_col}; min-width:0; display:flex; flex-direction:column; box-sizing:border-box; overflow:hidden;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px;'>{title_str}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:17px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:17px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
+    <div style='flex:1; width:10%; {active_style} text-align:center; background-color:{bg_col}; min-width:0; display:flex; flex-direction:column; box-sizing:border-box; overflow:hidden;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:24px; display:flex; align-items:center; justify-content:center; white-space:nowrap; letter-spacing:-0.5px; line-height:1;'>{title_str}</div>
+        <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center; line-height:1;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:17px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center; line-height:1;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:17px; font-weight:900; height:28px; display:flex; align-items:center; justify-content:center; line-height:1;'>{ji}</div>
+        <div style='font-size:12px; font-weight:800; color:#000000; height:22px; display:flex; align-items:center; justify-content:center; line-height:1;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden; line-height:1;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden; line-height:1;'><span style='color:#C62828;'>{y_val}</span></div>
+        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:22px; display:flex; align-items:center; justify-content:center; overflow:hidden; line-height:1;'><span style='color:#C62828;'>{d_val}</span></div>
     </div>
     """
 
@@ -534,18 +537,19 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         active_style = f"border-left: {b_left}; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc;"
         header_bg = "#3E2723"
     
+    # 🌟 padding-bottom: 4px 제거 / 모든 내부 div에 line-height: 1 추가
     return f"""
-    <div style='flex:1; width:8.33%; {active_style} text-align:center; padding-bottom:4px; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
-        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:26px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap;'>
+    <div style='flex:1; width:8.33%; {active_style} text-align:center; background-color:{bg_col}; display:flex; flex-direction:column; box-sizing:border-box; min-width:0; overflow:hidden;'>
+        <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:800; font-size:12px; height:26px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; white-space:nowrap; line-height:1;'>
             <span>{title_str}</span>
         </div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center;'>{ss_gan}</div>
-        <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{gan}</div>
-        <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center;'>{ji}</div>
-        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center;'>{ss_ji}</div>
-        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#0D47A1;'>{u_val}</span></div>
-        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{y_val}</span></div>
-        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden;'><span style='color:#C62828;'>{d_val}</span></div>
+        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center; line-height:1;'>{ss_gan}</div>
+        <div class='{gan_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center; line-height:1;'>{gan}</div>
+        <div class='{ji_cls}' style='font-size:15px; font-weight:900; height:26px; display:flex; align-items:center; justify-content:center; line-height:1;'>{ji}</div>
+        <div style='font-size:12px; font-weight:800; color:#000000; height:20px; display:flex; align-items:center; justify-content:center; line-height:1;'>{ss_ji}</div>
+        <div class='color-unsung' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden; line-height:1;'><span style='color:#0D47A1;'>{u_val}</span></div>
+        <div class='color-shinsal' style='font-size:12px; font-weight:800; border-top:1px solid #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden; line-height:1;'><span style='color:#C62828;'>{y_val}</span></div>
+        <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:20px; display:flex; align-items:center; justify-content:center; overflow:hidden; line-height:1;'><span style='color:#C62828;'>{d_val}</span></div>
     </div>
     """
 
