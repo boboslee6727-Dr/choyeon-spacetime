@@ -504,7 +504,7 @@ with st.sidebar:
             key="sub_category_2", 
             on_change=stop_ai
         )
-    elif main_category == "3. 커플 연애/결혼운 (궁합) 풀이":
+    elif main_category == "3. 연애/결혼운 (궁합) 풀이":
         u_product = st.radio(
             "상세 분석 항목:", 
             [
