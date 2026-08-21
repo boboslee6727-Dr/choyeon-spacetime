@@ -170,7 +170,7 @@ def format_ai_text_to_html(text):
             
         clean_line = re.sub(r'^#+\s*', '', line)
 
-        (1) 수석보좌관 / 장단점 특별 헤더
+        #(1) 수석보좌관 / 장단점 특별 헤더
         if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px; font-weight: 800; color: #1A237E; "
@@ -179,7 +179,7 @@ def format_ai_text_to_html(text):
             )
             continue
         
-        (2) "1) [소제목]: 본문" 형태 강제 교정 (제목 17px / 본문 16px)
+        #(2) "1) [소제목]: 본문" 형태 강제 교정 (제목 17px / 본문 16px)
         colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', clean_line)
         if colon_match:
             num = colon_match.group(1)       
@@ -200,7 +200,7 @@ def format_ai_text_to_html(text):
                 )
             continue
             
-        (3) 숫자가 없는 "[소제목]: 본문" 형태 처리 (제목 17px / 본문 16px)
+        #(3) 숫자가 없는 "[소제목]: 본문" 형태 처리 (제목 17px / 본문 16px)
         colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', clean_line)
         if colon_match_no_num:
             title_part = colon_match_no_num.group(1).strip() + ":"
@@ -218,7 +218,7 @@ def format_ai_text_to_html(text):
                 )
             continue
 
-        (4) 순수 대제목 (1. 제목) -> 22px / 900
+        #(4) 순수 대제목 (1. 제목) -> 22px / 900
         if re.match(r'^\d+\.\s', clean_line) and len(clean_line) <= 60:
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 22px; font-weight: 900; color: #000000; "
@@ -236,7 +236,7 @@ def format_ai_text_to_html(text):
             )
             continue
 
-        (6) 순수 소소제목 ((1) 제목) -> 18px / 800
+        #(6) 순수 소소제목 ((1) 제목) -> 18px / 800
         if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 60:
             html_lines.append(
                 f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px; font-weight: 800; color: #333333; "
@@ -245,7 +245,7 @@ def format_ai_text_to_html(text):
             )
             continue
             
-        (7) 일반 서술 문장 -> 16px / 500
+        #(7) 일반 서술 문장 -> 16px / 500
         indent = "5px" if clean_line.startswith('-') else "15px"
         padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
         html_lines.append(
