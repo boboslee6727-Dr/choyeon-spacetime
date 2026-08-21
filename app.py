@@ -191,14 +191,22 @@ def generate_report_for_order(order_row):
     import datetime as dt_mod
     selected_target_date = dt_mod.date.today()
 
-    # [1] 1인용(신청인) 정보 파이프라인에서 그대로 꺼내기 (기존 원본 사수)
-    name = order_row["name"]
-    gender = order_row["gender"]
-    b_date = order_row["birth_date"] # 'YYYY-MM-DD'
-    b_time = order_row["birth_time"]
-    cal_type = order_row["calendar_type"]
-    product = order_row["product"]
-    marital = order_row["marital"]
+    # [1] 1인용(신청인) 정보 꺼내기 (에러 방지용 안전장치 1000% 적용!)
+    name = order_row.get("name", "고객")
+    gender = order_row.get("gender", "여성")
+    
+    # 💡 핵심 해결: 'birth_date'가 없으면 년-월-일을 합쳐서 억지로라도 만들어줍니다!
+    b_date = order_row.get("birth_date")
+    if not b_date:
+        b_y = order_row.get("b_year", order_row.get("year", 1980))
+        b_m = order_row.get("b_month", order_row.get("month", 1))
+        b_d = order_row.get("b_day", order_row.get("day", 1))
+        b_date = f"{b_y}-{int(b_m):02d}-{int(b_d):02d}"
+
+    b_time = order_row.get("birth_time", order_row.get("b_time", "시간 모름"))
+    cal_type = order_row.get("calendar_type", order_row.get("cal_type", "양력"))
+    product = order_row.get("product", "1-1. 사주팔자 및 운세 분석")
+    marital = order_row.get("marital", "선택")
     phone_number = order_row.get("phone", "") 
     view_code = order_row.get("code", "")     
     
@@ -206,14 +214,21 @@ def generate_report_for_order(order_row):
     is_lunar = "음력" in cal_type
     is_leap = "윤달" in cal_type
 
-    # 💡 [2] 궁합(상대방) 정보 파이프라인에서 그대로 꺼내기 (박사님 지시사항 추가!)
+    # 💡 [2] 궁합(상대방) 정보 꺼내기 (마찬가지로 안전장치 적용!)
     is_2person = (product.startswith("3-") or "4-2" in product)
     if is_2person:
         p_name = order_row.get("partner_name", "상대방")
         p_gender = order_row.get("partner_gender", "여성" if gender == "남성" else "남성")
-        p_b_date = order_row.get("partner_birth_date", "1990-01-01")
-        p_b_time = order_row.get("partner_birth_time", "시간 모름")
-        p_cal_type = order_row.get("partner_calendar_type", "양력")
+        
+        p_b_date = order_row.get("partner_birth_date")
+        if not p_b_date:
+            p_y_val = order_row.get("p_year", 1980)
+            p_m_val = order_row.get("p_month", 1)
+            p_d_val = order_row.get("p_day", 1)
+            p_b_date = f"{p_y_val}-{int(p_m_val):02d}-{int(p_d_val):02d}"
+            
+        p_b_time = order_row.get("partner_birth_time", order_row.get("p_time", "시간 모름"))
+        p_cal_type = order_row.get("partner_calendar_type", order_row.get("p_cal_type", "양력"))
         p_marital = order_row.get("partner_marital", "선택")
         
         p_y, p_m, p_d = [int(v) for v in p_b_date.split("-")]
