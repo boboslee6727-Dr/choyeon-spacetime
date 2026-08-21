@@ -151,10 +151,6 @@ def format_ai_text_to_html(text):
     text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
     text = text.replace('*', '').replace('#', '')
 
-    # 3. [업그레이드 절단기] '성격 분석' 찢어짐 완벽 방지
-    title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
-    anti_split_kws = r"분석|및|가치관|요약|성향|특징|비교"
-
     text = re.sub(fr'(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
     text = re.sub(fr'(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
     text = re.sub(fr'(\(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
@@ -201,12 +197,17 @@ def format_ai_text_to_html(text):
         colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', line)
         if colon_match:
             num = colon_match.group(1)
+            sep = colon_match.group(2) # 원래의 마침표(.)나 괄호()) 원본 사수
             title_text = colon_match.group(3).strip()
             body_part = colon_match.group(4).strip()
-            title_part = f"{num}) {title_text}:"
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{title_part}</div>")
+            title_part = f"{num}{sep} {title_text}:"
+            
+            # 1. 제목은 무조건 22px 굵은 대제목(밑줄 포함)으로 웅장하게 한 줄을 차지!
+            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{title_part}</div>")
+            
+            # 2. 콜론(:) 뒤에 붙어있던 본문은 무조건 다음 줄(<p> 일반 서술)로 뚝 떨어뜨림!
             if body_part:
-                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px; color: #000000;'>{body_part}</p>")
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{body_part}</p>")
             continue
 
         colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', line)
