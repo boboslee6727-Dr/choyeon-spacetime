@@ -1437,8 +1437,8 @@ if st.session_state.get('app_running', False):
                 else:
                     final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-        # 👫 [여기서부터 2인용 그룹 시작]
-        elif u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
+        # 👫 [여기서부터 2인용 그룹 시작 - 독립된 if문으로 새출발!]
+        if u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
             m_ess, f_ess, g_ess = "", "", clean_raw
             
             # 🌟 신청자의 성별에 따라 남명/여명 사주 원국표 분배
