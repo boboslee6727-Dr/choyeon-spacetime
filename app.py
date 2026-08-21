@@ -486,7 +486,7 @@ with st.sidebar:
                 "1-1. 사주팔자 및 운세 분석", 
                 "1-2. 올 해 (특정 년도) 운세 상세분석", 
                 "1-3. 이번 달 (특정 월) 운세 상세분석", 
-                "1-4. 이번(특정) 주간 및 일 운세 상세분석"
+                "1-4. 이번(특정) 주간/일 운세 상세분석"
             ], 
             key="sub_category_1", 
             on_change=stop_ai
@@ -882,7 +882,7 @@ if st.session_state.get('app_running', False):
         if u_product.startswith("1-1"): report_title = "🏮 사주팔자 및 운세 분석"
         elif u_product.startswith("1-2"): report_title = "🏮 올 해 (특정 년도) 운세 상세분석"
         elif u_product.startswith("1-3"): report_title = "🏮 이번 달 (특정 월) 운세 상세분석"
-        elif u_product.startswith("1-4"): report_title = "🏮 이번 (특정) 주간 및 일 운세 상세분석"
+        elif u_product.startswith("1-4"): report_title = "🏮 이번 (특정) 주간/일 운세 상세분석"
         elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 분석"
         elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 분석"
         elif u_product.startswith("2-3"): report_title = "🏮 커플 연애/결혼운 특화 분석"
