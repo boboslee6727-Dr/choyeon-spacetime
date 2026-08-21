@@ -1361,6 +1361,9 @@ if st.session_state.get('app_running', False):
             safe_cover = re.sub(r'\n\s+', '\n', cover_html)
             st.markdown(safe_cover, unsafe_allow_html=True)
 
+        # =========================================================================
+        # 🧑 [1인용 렌더링 구역] (1-1 ~ 4-1)
+        # =========================================================================
         final_render_html = ""
 
         def sub_marker(text, marker_name, table_code):
@@ -1388,19 +1391,18 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-4"):
-            # 1. 주간 데이터 강제 생성
+            # 주간 데이터 생성 및 표 조립
             if hasattr(engine, 'get_weekly_calendar_data'):
                 weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
             else:
                 weekly_days_data = []
             
-            # 2. 표 HTML 강제 조립
             if hasattr(html_views, 'generate_weekly_calendar_html') and weekly_days_data:
                 weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
             else:
                 weekly_table_code = "<div style='padding:15px; text-align:center; color:#C62828; font-weight:bold; background:#FFEBEE; border-radius:10px;'>🚨 주간운표 달력 생성 엔진 누락됨 (engine.py 점검 필요)</div>"
 
-            # 3. 마커 교체 및 강제 주입
+            # 마커 교체
             if "WEEKLY_CALENDAR_HERE" in ai_output_html:
                 formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             else:
@@ -1415,7 +1417,6 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # [1인용] 타 감명서 비교 (사주)
         elif u_product.startswith("4-1"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1438,12 +1439,12 @@ if st.session_state.get('app_running', False):
                     final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
         # =========================================================================
-        # 👫 [2인용 시작] 다시 튼튼한 elif 로 연결하고 startswith("3-1")로 잠금!
+        # 👫 [2인용 렌더링 구역] (3-1 ~ 4-2)
         # =========================================================================
         elif u_product.startswith("3-1"):
             m_ess, f_ess, g_ess = "", "", clean_raw
             
-            # 🌟 신청자의 성별에 따라 남명/여명 사주 원국표 분배
+            # 신청자의 성별에 따라 남명/여명 사주 원국표 분배
             partner_fact_html = locals().get('p_part_1_fact', locals().get('part_1_fact_p', ''))
             
             if gender == "남성":
@@ -1463,14 +1464,14 @@ if st.session_state.get('app_running', False):
             if m_match: 
                 m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
             
-            # [2페이지] 여명 풀이 텍스트 파싱 + 사주표 + 🖨️ 새 페이지 넘김(Page Break) 강제 적용!
+            # [2페이지] 여명 풀이 텍스트 파싱 + 사주표 + 🖨️ 새 페이지 분할 적용
             f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
             if f_match: 
                 f_text = html_views.format_ai_text_to_html(f_match.group(1).strip())
                 page_break = "<div style='page-break-before: always; break-before: page;'></div>"
                 f_ess = f"{page_break}{f_saju_html}<br>{f_text}"
                 
-            # [3페이지~] 궁합 풀이 텍스트 파싱 + 🖨️ 새 페이지 넘김(Page Break) 강제 적용!
+            # [3페이지~] 궁합 풀이 텍스트 파싱 + 🖨️ 새 페이지 분할 적용
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
             if g_match: 
                 g_text = html_views.format_ai_text_to_html(g_match.group(1).strip())
@@ -1493,7 +1494,18 @@ if st.session_state.get('app_running', False):
             # 최종 리포트 렌더링
             final_render_html = html_views.get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess)
 
-        # [2인용] 타 궁합 감명서 비교
+        elif u_product.startswith("3-2"):
+            # 궁합용 2인 사주표가 있다면 쓰고, 없으면 1인용 사용
+            fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
+            master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
+
+        elif u_product.startswith("3-3"):
+            # 궁합용 2인 사주표가 있다면 쓰고, 없으면 1인용 사용
+            fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
+            master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
+
         elif u_product.startswith("4-2"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1516,8 +1528,10 @@ if st.session_state.get('app_running', False):
                     final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
         # =====================================================================
-        # 🌟 [수술 완료] 아래부터 끝까지 들여쓰기를 8칸으로 완벽하게 맞췄습니다!
+        # 🌟 [최종 화면 출력] 모든 조립이 끝난 후 단 한 번만 그립니다!
         # =====================================================================
+        st.markdown("---")
+
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
 
