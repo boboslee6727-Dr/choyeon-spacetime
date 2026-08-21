@@ -118,7 +118,6 @@ def get_global_css():
     /* 원국표 테이블 규격 */
     .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 12px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 2px 0 !important; text-align: center; vertical-align: middle; font-weight: 800 !important; font-size: 13px; line-height: 1.25 !important; }
-    .ganji-cell-20 { font-size: 20px !important; font-weight: 900 !important; }
 
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
@@ -140,20 +139,18 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (대운표 예외 처리 및 가독성 최적화 최종판)
+    AI 생성 텍스트 포맷터 (대운표 <div> 태그 100% 무손실 프리패스 장착 버전)
     """
     if not text:
         return ""
 
-    # 🌟 [스마트 피아식별 CSS] 
-    # 본문(p, div) 속 오염된 한자는 16px로 진압하되, 
-    # 테이블(td, th, tr, table) 안에 들어있는 대운표/원국표의 오행 색상과 폰트 굵기는 무사통과시킵니다!
+    # 🌟 [스마트 피아식별 CSS] 대운표(.daewun-cell)는 절대 건드리지 않습니다!
     anti_color_css = """
     <style>
-    .ai-content span:not(td span):not(th span):not(.result-table *), 
-    .ai-content font:not(td font):not(th font):not(.result-table *),
-    .ai-content [class*="color"]:not(td):not(th):not(tr):not(table):not(.result-table *),
-    .ai-content [class*="ganji"]:not(td):not(th):not(tr):not(table):not(.result-table *) {
+    .ai-content span:not(td span):not(th span):not(.result-table *):not(.daewun-cell *), 
+    .ai-content font:not(td font):not(th font):not(.result-table *):not(.daewun-cell *),
+    .ai-content [class*="color"]:not(td):not(th):not(tr):not(table):not(.result-table *):not(.daewun-cell *),
+    .ai-content [class*="ganji"]:not(td):not(th):not(tr):not(table):not(.result-table *):not(.daewun-cell *) {
         color: #111111 !important;
         font-size: 16px !important;
         background-color: transparent !important;
@@ -172,7 +169,7 @@ def format_ai_text_to_html(text):
         text = text.replace(tag, '')
     text = text.strip()
 
-    # 🌟 [2단계: 디테일 교정] **강조**를 '강조' (소따옴표 + 볼드)로 변환
+    # 🌟 [2단계: 디테일 교정]
     text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
     text = text.replace('*', '').replace('#', '')
 
@@ -209,10 +206,17 @@ def format_ai_text_to_html(text):
             continue
             
         clean_line = line
-
-        # 🌟 [대운표 프리패스] 만약 표(HTML table) 코드가 들어오면 쓸데없이 문단 태그로 감싸지 않고 원본 그대로 패스시킵니다!
         lower_line = clean_line.lower()
-        if lower_line.startswith('<table') or lower_line.startswith('</table') or lower_line.startswith('<tr') or lower_line.startswith('</tr') or lower_line.startswith('<td'):
+
+        # 🚨 [가장 중요한 핵심 방어막] 🚨
+        # 대운표를 구성하는 <div>, <span> 등의 HTML 태그가 들어오면 
+        # 절대 <p> 태그를 씌우지 말고 원본 100% 그대로 프리패스 시킵니다!
+        if lower_line.startswith('<div') or lower_line.startswith('</div') or \
+           lower_line.startswith('<span') or lower_line.startswith('</span') or \
+           lower_line.startswith('<table') or lower_line.startswith('</table') or \
+           lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
+           lower_line.startswith('<td') or lower_line.startswith('</td') or \
+           lower_line.startswith('<th') or lower_line.startswith('</th'):
             html_lines.append(clean_line)
             continue
 
@@ -324,8 +328,8 @@ def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_ro
         </tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800;'>천간합충</td>{gan_rel}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800;'>천간십성</td>{gan_ss}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:16px !important;'>천간</td>{gan_row}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:16px !important;'>지지</td>{ji_row}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>천간</td>{gan_row}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important;'>지지</td>{ji_row}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800;'>지지십성</td>{ji_ss}</tr>
         <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:800;'>지장간</td>{jijanggan}</tr>
         {ji_rel_rows}
@@ -337,7 +341,7 @@ def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_ro
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """사주 원국 데이터를 연산하여 표 HTML 생성"""
+    """사주 원국 데이터를 연산하여 표 HTML 생성 (24px 폰트 정공법 직접 주입)"""
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     
     hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
@@ -348,8 +352,9 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
     
-    gan_row_html = "".join([td_func(g, engine) for g in gans])
-    ji_row_html = "".join([td_func(j, engine) for j in jjis])
+    # 🌟 [핵심 정공법] td_func가 만든 <td> 태그를 가로채서, 24px 크기와 900 굵기를 인라인으로 강제 주입합니다!
+    gan_row_html = "".join([td_func(g, engine).replace("<td", "<td style='font-size: 24px; font-weight: 900;'") for g in gans])
+    ji_row_html = "".join([td_func(j, engine).replace("<td", "<td style='font-size: 24px; font-weight: 900;'") for j in jjis])
 
     ji_ss_html = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hb)}</td>" \
                  f"<td style='border:1px solid #444;'>{engine.get_ss(ds, db)}</td>" \
