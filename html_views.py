@@ -140,33 +140,37 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (에러 유발 코드 완전 삭제 및 안정성 최우선 버전)
+    AI 생성 텍스트 포맷터 (.ganji-cell-24 및 오행 색상 완벽 소각 버전)
     """
     if not text:
         return ""
 
-    # 🌟 [방어막 0] 한자 진녹색 오염 원천 차단 CSS
+    # 🌟 [물리적 제거] app.py가 몰래 입혀놓은 span 태그(ganji-cell 등)를 흔적도 없이 뜯어냅니다!
+    text = re.sub(r'<span[^>]*>', '', text)
+    text = text.replace('</span>', '')
+
+    # 🌟 [화학적 방어] 그래도 app.py가 화면 출력 직전에 또 색을 칠할까 봐, 
+    # 박사님이 찾아내신 '.ganji-cell-24'를 정조준하여 16px 검정색으로 강제 무력화시킵니다!
     anti_color_css = """
     <style>
-    .ai-content span[class*="color-"], .ai-content span[class*="ganji-"] {
+    .ai-content .ganji-cell-24,
+    .ai-content span[class*="color-"],
+    .ai-content span[class*="ganji-"] {
+        font-size: 16px !important;
         background-color: transparent !important;
-        color: inherit !important;
-        font-size: inherit !important;
-        font-weight: inherit !important;
+        color: #111111 !important;
+        font-weight: 800 !important;
         padding: 0 !important;
         border: none !important;
     }
-    .ai-content { color: #111111; }
     </style>
     """
 
-    # 🌟 [방어막 1] 소따옴표 안쪽만 볼드 (글로벌 CSS의 .b-text 재활용)
+    # 🌟 [방어막 1] 소따옴표 안쪽만 볼드
     text = re.sub(r'\*\*[\'\"](.*?)[\'\"]\*\*', r"'<b class=\"b-text\">\1</b>'", text)
     text = re.sub(r'[\'\"]\*\*(.*?)\*\*[\'\"]', r"'<b class=\"b-text\">\1</b>'", text)
     text = re.sub(r'\*\*(.*?)\*\*', r'<b class="b-text">\1</b>', text)
     text = text.replace('*', '').replace('#', '')
-
-    # 🚨 (에러를 유발했던 '뭉텅이 텍스트 강제 절단기' 정규식 코드는 박사님 지시에 따라 완전히 삭제했습니다!) 🚨
 
     # 💡 Q&A 박스 분리
     match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
@@ -188,7 +192,7 @@ def format_ai_text_to_html(text):
 
         clean_line = re.sub(r'^#+\s*', '', line)
 
-        # 수석보좌관 헤더
+        # 수석보좌관 헤더 (continue는 매우 정상 작동 중입니다!)
         if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #1A237E; text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E;'>{clean_line}</div>")
             continue
@@ -231,7 +235,7 @@ def format_ai_text_to_html(text):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #333333; margin-top: 14px; margin-bottom: 6px;'>{clean_line}</div>")
             continue
 
-        # 👑 (6) 일반 서술 문장 (줄간격 1.85)
+        # 👑 (6) 일반 서술 문장
         indent = "5px" if clean_line.startswith('-') else "15px"
         padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
         html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 4px 0 8px 0; text-indent: {indent}; {padding}'>{clean_line}</p>")
@@ -250,8 +254,9 @@ def format_ai_text_to_html(text):
         </div>
         """
 
-    # 🌟 무균실(.ai-content)에 텍스트를 담아서 내보냅니다!
-    return anti_color_css + f"<div class='ai-content'>\n{main_html}\n{qna_html}\n</div>"
+    # 🌟 본문을 '.ai-content' 무균실로 감싸서 내보냅니다.
+    return anti_color_css + f"<div class='ai-content' style='color: #111111;'>\n{main_html}\n{qna_html}\n</div>"
+
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
 # ==============================================================================
