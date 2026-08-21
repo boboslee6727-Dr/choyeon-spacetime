@@ -1370,7 +1370,7 @@ if st.session_state.get('app_running', False):
             pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
             return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
 
-        if u_product.startswith("1-1"):
+        if "1-1" in u_product:
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
@@ -1378,19 +1378,19 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("1-2"):
+        elif "1-2" in u_product:
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("1-3"):
+        elif "1-3" in u_product:
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'WOLUN_TABLE_HERE', wolun_table_code)
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("1-4"):
+        elif "1-4" in u_product:
             # 주간 데이터 생성 및 표 조립
             if hasattr(engine, 'get_weekly_calendar_data'):
                 weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
@@ -1411,13 +1411,13 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("2-"):
+        elif "2-" in u_product:
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("4-1"):
+        elif "4-1" in u_product:
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_saju_comparison_report(part_1_fact, warn_html, "")
@@ -1441,7 +1441,7 @@ if st.session_state.get('app_running', False):
         # =========================================================================
         # 👫 [2인용 렌더링 구역] (3-1 ~ 4-2)
         # =========================================================================
-        elif u_product.startswith("3-1"):
+        elif "3-1" in u_product:
             m_ess, f_ess, g_ess = "", "", clean_raw
             
             # 신청자의 성별에 따라 남명/여명 사주 원국표 분배
@@ -1494,19 +1494,19 @@ if st.session_state.get('app_running', False):
             # 최종 리포트 렌더링
             final_render_html = html_views.get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess)
 
-        elif u_product.startswith("3-2"):
+        elif "3-2" in u_product:
             # 궁합용 2인 사주표가 있다면 쓰고, 없으면 1인용 사용
             fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
             master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("3-3"):
+        elif "3-3" in u_product:
             # 궁합용 2인 사주표가 있다면 쓰고, 없으면 1인용 사용
             fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
             master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("4-2"):
+        elif "4-2" in u_product:
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
                 final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, warn_html, "")
