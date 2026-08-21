@@ -1415,27 +1415,7 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
-            m_ess, f_ess, g_ess = "", "", clean_raw
-            m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
-            if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
-            f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
-            if f_match: f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
-            g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
-            if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
-
-            m_daewun_html = un_html if gender == "남성" else p_un_html
-            f_daewun_html = p_un_html if gender == "남성" else un_html
-            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-            g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
-
-            score_ui, closing_ui = "", ""
-            if 'gh_engine' in locals():
-                score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
-                closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
-            g_ess += score_ui + closing_ui
-            final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
-
+        # 🌟 [이사 완료] 4-1 타 감명서 비교 (1인용) - 3-1 앞으로 당겨서 배치!
         elif u_product.startswith("4-1"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1456,6 +1436,43 @@ if st.session_state.get('app_running', False):
                     final_render_html = html_views.render_saju_comparison_report(part_1_fact, external_raw_box, full_ai_content)
                 else:
                     final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+
+        # 👫 [여기서부터 2인용 그룹 시작]
+        elif u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
+            m_ess, f_ess, g_ess = "", "", clean_raw
+            
+            # 남명 풀이 텍스트 파싱
+            m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
+            if m_match: 
+                m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
+            
+            # 여명 풀이 텍스트 파싱 + 사주 원국표 결합
+            f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
+            if f_match: 
+                f_text = html_views.format_ai_text_to_html(f_match.group(1).strip())
+                p_saju_table = p_part_1_fact if 'p_part_1_fact' in locals() else ""
+                f_ess = f"{p_saju_table}<br>{f_text}"
+                
+            # 궁합 풀이 텍스트 파싱
+            g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
+            if g_match: 
+                g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
+
+            # 대운 비교표 생성 및 마커 치환
+            m_daewun_html = un_html if gender == "남성" else p_un_html
+            f_daewun_html = p_un_html if gender == "남성" else un_html
+            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
+            g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
+
+            # 점수판 및 클로징 결합
+            score_ui, closing_ui = "", ""
+            if 'gh_engine' in locals():
+                score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
+                closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
+            g_ess += score_ui + closing_ui
+            
+            # 최종 3페이지 리포트 렌더링
+            final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
 
         elif u_product.startswith("4-2"):
             if not user_entered_text:
@@ -1478,14 +1495,16 @@ if st.session_state.get('app_running', False):
                 else:
                     final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
 
-    if 'final_render_html' not in locals() or final_render_html is None:
-        final_render_html = ""
+        # =====================================================================
+        # 🌟 [수술 완료] 아래부터 끝까지 들여쓰기를 8칸으로 완벽하게 맞췄습니다!
+        # =====================================================================
+        if 'final_render_html' not in locals() or final_render_html is None:
+            final_render_html = ""
 
-    final_render_html = str(final_render_html).strip()
-    safe_lines_app = []
-    for line in final_render_html.split("\n"):
-        safe_lines_app.append(line.strip())
-    final_render_html = "\n".join(safe_lines_app)
+        final_render_html = str(final_render_html).strip()
+        safe_lines_app = []
+        for line in final_render_html.split("\n"):
+            safe_lines_app.append(line.strip())
+        final_render_html = "\n".join(safe_lines_app)
 
-    st.markdown(final_render_html, unsafe_allow_html=True)
-
+        st.markdown(final_render_html, unsafe_allow_html=True)
