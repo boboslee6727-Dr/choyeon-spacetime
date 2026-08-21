@@ -48,39 +48,6 @@ def load_choyeon_db():
 
 choyeon_db = load_choyeon_db()
 
-# ==============================================================================
-# 🚪 [URL 라우팅 문지기] - 고객, 관리자, 메인 공장을 분리하는 핵심 로직
-# ==============================================================================
-# 최신 Streamlit 방식의 URL 파라미터 읽기
-mode = st.query_params.get("mode", "")
-
-# 1️⃣ 고객 신청 폼 (?mode=order)
-if mode == "order":
-    from pipeline_manager import render_customer_order_form
-    render_customer_order_form()
-    st.stop()  # 🛑 여기서 실행을 멈춰야 아래쪽 메인 공장 화면이 안 뜹니다!
-
-# 2️⃣ 관리자 패널 (?mode=admin)
-elif mode == "admin":
-    from pipeline_manager import render_admin_panel
-    
-    # 박사님의 오리지널 감명 엔진(함수)을 통째로 패널에 넘겨줍니다.
-    # (주의: 만약 generator_func 함수가 이 라우팅 코드보다 아래에 선언되어 있다면, 
-    # 이 라우팅 블록을 generator_func 함수 정의가 끝난 직후로 살짝 내려주세요)
-    render_admin_panel(generator_func)
-    st.stop()
-
-# 3️⃣ 고객 결과 열람 뷰어 (?mode=view&code=주문번호)
-elif mode == "view":
-    from pipeline_manager import render_view_page
-    order_code = st.query_params.get("code", "")
-    render_view_page(order_code)
-    st.stop()
-
-# ==============================================================================
-# 🏮 아래부터는 오리지널 app.py (초연 시공명리 메인 공장) 코드 시작!
-# (mode 값이 없을 때만 이쪽으로 넘어옵니다)
-# ==============================================================================
 
 # ==============================================================================
 # 1.5. AI 및 간지 역산 콜백 함수 (단일 정의)
@@ -794,6 +761,40 @@ with st.sidebar:
 
     if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
         components.html("<script>window.parent.print();</script>", height=0)
+
+# ==============================================================================
+# 🚪 [URL 라우팅 문지기] - 고객, 관리자, 메인 공장을 분리하는 핵심 로직
+# ==============================================================================
+# 최신 Streamlit 방식의 URL 파라미터 읽기
+mode = st.query_params.get("mode", "")
+
+# 1️⃣ 고객 신청 폼 (?mode=order)
+if mode == "order":
+    from pipeline_manager import render_customer_order_form
+    render_customer_order_form()
+    st.stop()  # 🛑 여기서 실행을 멈춰야 아래쪽 메인 공장 화면이 안 뜹니다!
+
+# 2️⃣ 관리자 패널 (?mode=admin)
+elif mode == "admin":
+    from pipeline_manager import render_admin_panel
+    
+    # 박사님의 오리지널 감명 엔진(함수)을 통째로 패널에 넘겨줍니다.
+    # (주의: 만약 generator_func 함수가 이 라우팅 코드보다 아래에 선언되어 있다면, 
+    # 이 라우팅 블록을 generator_func 함수 정의가 끝난 직후로 살짝 내려주세요)
+    render_admin_panel(generator_func)
+    st.stop()
+
+# 3️⃣ 고객 결과 열람 뷰어 (?mode=view&code=주문번호)
+elif mode == "view":
+    from pipeline_manager import render_view_page
+    order_code = st.query_params.get("code", "")
+    render_view_page(order_code)
+    st.stop()
+
+# ==============================================================================
+# 🏮 아래부터는 오리지널 app.py (초연 시공명리 메인 공장) 코드 시작!
+# (mode 값이 없을 때만 이쪽으로 넘어옵니다)
+# ==============================================================================
 
 # ==============================================================================
 # 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부
