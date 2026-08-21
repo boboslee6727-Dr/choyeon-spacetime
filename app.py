@@ -40,7 +40,7 @@ def generate_report(row):
     return test_html
 
 # 문지기 호출 (이제 generate_report가 존재하므로 에러가 나지 않습니다!)
-run_pipeline_router(generate_report)
+run_pipeline_router(generate_report_for_order)
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
