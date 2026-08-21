@@ -294,7 +294,7 @@ def format_ai_text_to_html(text):
             </div>
         </div>
         """
-    return kill_switch_css + f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
+    return f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
