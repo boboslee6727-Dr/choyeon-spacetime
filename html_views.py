@@ -118,7 +118,7 @@ def get_global_css():
     /* 원국표 테이블 규격 */
     .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 12px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 2px 0 !important; text-align: center; vertical-align: middle; font-weight: 800 !important; font-size: 13px; line-height: 1.25 !important; }
-    .ganji-cell-24 { font-size: 24px !important; font-weight: 900 !important; }
+    .ganji-cell-20 { font-size: 20px !important; font-weight: 900 !important; }
 
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
@@ -140,18 +140,20 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (White Screen 에러 원천 차단 100% 순정 무결점 버전)
+    AI 생성 텍스트 포맷터 (대운표 예외 처리 및 가독성 최적화 최종판)
     """
     if not text:
         return ""
 
-    # 🌟 [초강력 마법 갑옷 CSS] 진녹색 오염 완벽 방어
+    # 🌟 [스마트 피아식별 CSS] 
+    # 본문(p, div) 속 오염된 한자는 16px로 진압하되, 
+    # 테이블(td, th, tr, table) 안에 들어있는 대운표/원국표의 오행 색상과 폰트 굵기는 무사통과시킵니다!
     anti_color_css = """
     <style>
-    .ai-content span, 
-    .ai-content font,
-    .ai-content [class*="color"],
-    .ai-content [class*="ganji"] {
+    .ai-content span:not(td span):not(th span):not(.result-table *), 
+    .ai-content font:not(td font):not(th font):not(.result-table *),
+    .ai-content [class*="color"]:not(td):not(th):not(tr):not(table):not(.result-table *),
+    .ai-content [class*="ganji"]:not(td):not(th):not(tr):not(table):not(.result-table *) {
         color: #111111 !important;
         font-size: 16px !important;
         background-color: transparent !important;
@@ -164,25 +166,22 @@ def format_ai_text_to_html(text):
     </style>
     """
 
-    # 🌟 [1단계: 찌꺼기 철거] 오류 날 확률 0%인 순수 replace 방식
+    # 🌟 [1단계: 찌꺼기 철거]
     remove_tags = ['[MALE_START]', '[MALE_END]', '[FEMALE_START]', '[FEMALE_END]', '[GUNGHAP_START]', '[GUNGHAP_END]']
     for tag in remove_tags:
         text = text.replace(tag, '')
     text = text.strip()
 
-    # 🌟 [2단계: 디테일 교정] **강조**를 무조건 '강조' (소따옴표 + 굵은 글씨)로 통일
+    # 🌟 [2단계: 디테일 교정] **강조**를 '강조' (소따옴표 + 볼드)로 변환
     text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
     text = text.replace('*', '').replace('#', '')
 
-    # 🌟 [3단계: 뭉텅이 문장 절단기 (f-string 완전 제거 버전)] 🌟
-    # 3-1. 번호 앞에 엔터 2번 넣어서 문단 찢기
+    # 🌟 [3단계: 뭉텅이 문장 절단기]
     text = re.sub(r'([^\n])\s+(\d+\.\s)', r'\1\n\n\2', text)
     text = re.sub(r'([^\n])\s+(\d+\)\s)', r'\1\n\n\2', text)
     text = re.sub(r'([^\n])\s+(\(\d+\)\s)', r'\1\n\n\2', text)
 
-    # 3-2. 제목과 본문이 붙어있는 경우 강제 엔터 (순수 문자열 결합으로 에러 확률 0%)
     title_kws = "성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
-    
     p1 = r'^(\d+\.\s+.*?(?:' + title_kws + r'))\s+([가-힣A-Z\'"<])'
     p2 = r'^(\d+\)\s+.*?(?:' + title_kws + r'))\s+([가-힣A-Z\'"<])'
     p3 = r'^(\(\d+\)\s+.*?(?:' + title_kws + r'))\s+([가-힣A-Z\'"<])'
@@ -208,8 +207,14 @@ def format_ai_text_to_html(text):
         line = line.strip()
         if not line:
             continue
-
+            
         clean_line = line
+
+        # 🌟 [대운표 프리패스] 만약 표(HTML table) 코드가 들어오면 쓸데없이 문단 태그로 감싸지 않고 원본 그대로 패스시킵니다!
+        lower_line = clean_line.lower()
+        if lower_line.startswith('<table') or lower_line.startswith('</table') or lower_line.startswith('<tr') or lower_line.startswith('</tr') or lower_line.startswith('<td'):
+            html_lines.append(clean_line)
+            continue
 
         # 수석보좌관 헤더
         if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
@@ -231,7 +236,7 @@ def format_ai_text_to_html(text):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #333333; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
             continue
 
-        # 👑 (4) 일반 서술 문장 (가독성 극대화 18px 여백)
+        # 👑 (4) 일반 서술 문장
         indent = "5px" if clean_line.startswith('-') else "15px"
         padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
         html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: {indent}; {padding}'>{clean_line}</p>")
