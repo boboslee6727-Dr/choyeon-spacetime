@@ -140,31 +140,39 @@ def get_global_css():
 
 def format_ai_text_to_html(text):
     """
-    AI 생성 텍스트 포맷터 (소따옴표 안쪽만 볼드 처리 & 줄 간격 1.85 완벽 고정)
+    AI 생성 텍스트 포맷터 (한자 글로벌 오염 차단 무균실 + 글로벌 CSS 충돌 해소)
     """
     if not text:
         return ""
-        
-    # 🌟 [방어막 0] 한자 진녹색 오염 완벽 방어 (외부 span 태그 삭제)
-    text = re.sub(r'</?span[^>]*>', '', text)
-        
-    # 🌟 [방어막 1] 디테일 텍스트 교정: 소따옴표 안쪽만 깔끔하게 굵은 검정색으로!
-    # 1-1. **'글자'** 형태 -> '<b>글자</b>' 로 교정
-    text = re.sub(r'\*\*[\'\"](.*?)[\'\"]\*\*', r"'<b style=\"font-size: 1em !important; font-weight: 800 !important; color: #111111 !important;\">\1</b>'", text)
-    # 1-2. '**글자**' 형태 -> '<b>글자</b>' 로 교정
-    text = re.sub(r'[\'\"]\*\*(.*?)\*\*[\'\"]', r"'<b style=\"font-size: 1em !important; font-weight: 800 !important; color: #111111 !important;\">\1</b>'", text)
-    # 1-3. 일반 **글자** 형태 -> <b>글자</b> 로 교정
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b style="font-size: 1em !important; font-weight: 800 !important; color: #111111 !important;">\1</b>', text)
-    
-    # 남은 잡동사니 기호 소각
+
+    # 🌟 [초강력 방어막 0] 한자 진녹색 오염 원천 차단 CSS (무균실 쉴드)
+    # app.py가 화면 출력 직전에 한자에 강제로 색을 입혀도, AI 본문 안에서는 무효화시킵니다!
+    anti_color_css = """
+    <style>
+    .ai-content span[class*="color-"], .ai-content span[class*="ganji-"] {
+        background-color: transparent !important;
+        color: inherit !important;
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+    .ai-content { color: #111111; }
+    </style>
+    """
+
+    # 🌟 [방어막 1] 소따옴표 안쪽만 볼드 (글로벌 CSS의 .b-text 재활용)
+    text = re.sub(r'\*\*[\'\"](.*?)[\'\"]\*\*', r"'<b class=\"b-text\">\1</b>'", text)
+    text = re.sub(r'[\'\"]\*\*(.*?)\*\*[\'\"]', r"'<b class=\"b-text\">\1</b>'", text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b class="b-text">\1</b>', text)
     text = text.replace('*', '').replace('#', '')
-    
-    # 🌟 [방어막 2] 뭉텅이 텍스트 강제 절단기!
+
+    # 🌟 [방어막 2] 뭉텅이 텍스트 강제 절단기
     title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
     text = re.sub(r'(?<!\n)(\d+\.\s+[^\d\n]{2,30}?)\s+(?=\d+\)\s)', r'\1\n', text)
     text = re.sub(fr'(?<!\n)(\\d+\\)\\s+.*?(?:{title_kws}))\\s+([가-힣A-Z])', r'\1\n\2', text)
     text = re.sub(fr'(?<!\n)(\\(\\d+\\)\\s+.*?(?:{title_kws}))\\s+([가-힣A-Z])', r'\1\n\2', text)
-    
+
     # 💡 Q&A 박스 분리
     match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
     if match:
@@ -174,116 +182,84 @@ def format_ai_text_to_html(text):
     else:
         main_text = text.strip()
         qna_text = ""
-        
+
     lines = str(main_text).split('\n')
     html_lines = []
-    
+
+    # 🌟 [글로벌 CSS 충돌 해소] 
+    # 박사님의 CSS에 이미 '.report-page *'에 나눔명조가 적용되어 있으므로, 
+    # 여기서 중복으로 font-family를 넣지 않아 코드가 10배 가벼워졌습니다!
     for line in lines:
         line = line.strip()
         if not line:
             continue
-            
+
         clean_line = re.sub(r'^#+\s*', '', line)
 
-        # 수석보좌관 / 장단점 특별 헤더
+        # 수석보좌관 헤더
         if '수석보좌관' in clean_line or '장단점 정밀 비교' in clean_line or clean_line.startswith('[수석보좌관'):
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px; font-weight: 800; color: #1A237E; "
-                f"text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E; letter-spacing: -0.3px;'>"
-                f"{clean_line}</div>"
-            )
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #1A237E; text-align: center; padding-bottom: 6px; margin-top: 18px; margin-bottom: 8px; border-bottom: 2.5px solid #1A237E;'>{clean_line}</div>")
             continue
-        
-        # (1) "1) [소제목]: 본문" 형태 강제 교정 (제목 20px / 본문 16px / 줄간격 1.85)
+
+        # (1) "1) [소제목]: 본문"
         colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):(.*)', clean_line)
         if colon_match:
-            num = colon_match.group(1)       
-            title_text = colon_match.group(3).strip() 
-            body_part = colon_match.group(4).strip()  
-            
+            num = colon_match.group(1)
+            title_text = colon_match.group(3).strip()
+            body_part = colon_match.group(4).strip()
             title_part = f"{num}) {title_text}:"
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 20px; font-weight: 900; color: #1A237E; "
-                f"margin-top: 18px; margin-bottom: 8px; letter-spacing: -0.3px;'>"
-                f"{title_part}</div>"
-            )
-            if body_part:
-                html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 16px; font-weight: 500; line-height: 1.85; "
-                    f"color: #111111; text-align: justify; margin-top: 0px; margin-bottom: 12px; text-indent: 10px;'>"
-                    f"{body_part}</p>"
-                )
-            continue
             
-        # (2) 숫자가 없는 "[소제목]: 본문" 형태 처리 (제목 17px / 본문 16px / 줄간격 1.85)
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 18px; margin-bottom: 8px;'>{title_part}</div>")
+            if body_part:
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px;'>{body_part}</p>")
+            continue
+
+        # (2) "[소제목]: 본문"
         colon_match_no_num = re.match(r'^(\[.*?\])\s*:(.*)', clean_line)
         if colon_match_no_num:
             title_part = colon_match_no_num.group(1).strip() + ":"
             body_part = colon_match_no_num.group(2).strip()
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 17px; font-weight: 800; color: #1A237E; "
-                f"margin-top: 16px; margin-bottom: 4px; letter-spacing: -0.3px;'>"
-                f"{title_part}</div>"
-            )
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #1A237E; margin-top: 16px; margin-bottom: 4px;'>{title_part}</div>")
             if body_part:
-                html_lines.append(
-                    f"<p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 16px; font-weight: 500; line-height: 1.85; "
-                    f"color: #111111; text-align: justify; margin-top: 0px; margin-bottom: 12px; text-indent: 10px;'>"
-                    f"{body_part}</p>"
-                )
+                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px;'>{body_part}</p>")
             continue
 
-        # 👑 (3) 순수 대제목 (1. 제목) -> 22px / 900
+        # 👑 (3) 순수 대제목 (1. 제목)
         if re.match(r'^\d+\.\s', clean_line) and len(clean_line) <= 60:
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 22px; font-weight: 900; color: #000000; "
-                f"margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px; letter-spacing: -0.5px;'>"
-                f"{clean_line}</div>"
-            )
-            continue
-            
-        # 👑 (4) 순수 중/소제목 (1) 제목) -> 20px / 900
-        if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 60:
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 20px; font-weight: 900; color: #1A237E; "
-                f"margin-top: 18px; margin-bottom: 8px; letter-spacing: -0.3px;'>"
-                f"{clean_line}</div>"
-            )
+            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{clean_line}</div>")
             continue
 
-        # 👑 (5) 순수 소소제목 ((1) 제목) -> 18px / 800
-        if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 60:
-            html_lines.append(
-                f"<div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px; font-weight: 800; color: #333333; "
-                f"margin-top: 14px; margin-bottom: 6px; letter-spacing: -0.2px;'>"
-                f"{clean_line}</div>"
-            )
+        # 👑 (4) 순수 중/소제목 (1) 제목)
+        if re.match(r'^\d+\)\s', clean_line) and len(clean_line) <= 60:
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
             continue
-            
-        # 👑 (6) 일반 서술 문장 -> 16px / 500 / 줄간격 1.85 완벽 보장
+
+        # 👑 (5) 순수 소소제목 ((1) 제목)
+        if re.match(r'^\(\d+\)\s', clean_line) and len(clean_line) <= 60:
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #333333; margin-top: 14px; margin-bottom: 6px;'>{clean_line}</div>")
+            continue
+
+        # 👑 (6) 일반 서술 문장 (줄간격 1.85)
         indent = "5px" if clean_line.startswith('-') else "15px"
         padding = "padding-left: 10px;" if clean_line.startswith('-') else ""
-        html_lines.append(
-            f"<p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 16px; font-weight: 500; line-height: 1.85; "
-            f"color: #111111; text-align: justify; margin-top: 4px; margin-bottom: 8px; text-indent: {indent}; {padding}'>"
-            f"{clean_line}</p>"
-        )
-    
+        html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 4px 0 8px 0; text-indent: {indent}; {padding}'>{clean_line}</p>")
+
     main_html = "\n".join(html_lines)
-    
-    # 💡 Q&A 박스 포맷팅 (본문과 동일한 16px, 줄간격 1.85 통일)
+
+    # 💡 Q&A 박스 포맷팅
     qna_html = ""
     if qna_text:
         qna_body = qna_text.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"""
-        <div style='background-color: #FFFDF5; border: 2px solid #FFE082; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-family: "Nanum Myeongjo", serif !important;'>
-            <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 16px; line-height: 1.85; color: #111111; font-weight: 600;'>
+        <div style='background-color: #FFFDF5; border: 2px solid #FFE082; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+            <div style='font-size: 16px; line-height: 1.85; font-weight: 600;'>
                 {qna_body}
             </div>
         </div>
         """
-        
-    return main_html + "\n" + qna_html
+
+    # 🌟 무균실(.ai-content)에 텍스트를 담아서 내보냅니다!
+    return anti_color_css + f"<div class='ai-content'>\n{main_html}\n{qna_html}\n</div>"
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
 # ==============================================================================
