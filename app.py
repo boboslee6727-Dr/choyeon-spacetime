@@ -646,7 +646,7 @@ with st.sidebar:
     # =========================================================================
     # 🔍 [상대방] 사주간지 역산 UI
     # =========================================================================
-    is_2person = (main_category == "3-1. 커플 연애/결혼운 (궁합) 분석") or ("4-2." in u_product)
+    is_2person = ("3-1." in u_product) or ("4-2." in u_product)
     if is_2person:
         with st.expander("🔍 상대방 사주간지 역산", expanded=False):
             p_col_g1, p_col_g2 = st.columns(2)
@@ -1415,7 +1415,7 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product == "3-1. 연애/결혼운 (궁합) 풀이":
+        elif u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
             m_ess, f_ess, g_ess = "", "", clean_raw
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
             if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
