@@ -230,6 +230,51 @@ def td_func(val, engine):
     cls_str = f"color-{oh}" if oh != '무' else ""
     return f"<td class='{cls_str} ganji-cell-24' style='border:1px solid #444 !important; width:21.25%;'>{val}</td>"
 
+def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
+    """1인용 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
+    raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
+    for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
+        raw_title = raw_title.replace(tag, " ")
+    clean_title = " ".join(raw_title.split())
+    clean_u_name = str(u_name or "무명").strip()
+
+    return f"""
+    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
+        <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            
+            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
+            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
+                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
+                <div style='text-align: right; margin-top: 8px;'>
+                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
+                </div>
+            </div>
+            
+            <!-- 신청인 정보 박스 -->
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; line-height: 1.8;'>
+                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
+                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
+                </div>
+            </div>
+            
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+        </div>
+    </div>
+    <div class='page-break'></div>
+    """
+
+def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
+    """본문 상단 신상 정보 헤더 (인명 검정색 확정)"""
+    return f"""
+    <div style='font-family:"Nanum Myeongjo", serif; text-align:center; margin-bottom:10px; line-height:1.6;'>
+        <span style='font-size:19px; font-weight:800; color:{p_color}; letter-spacing:0.5px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
+        <span style='font-size:13px; letter-spacing:0.5px; white-space:nowrap;'>[<span class='b-text'>양력: {sol_str} | 음력: {lun_str}</span> <span class='b-text-point'>{time_str}</span>]</span>
+    </div>
+    """
+
 def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_rows, unsung, y_shinsal, d_shinsal, gen_shinsal):
     """사주팔자 원국 표 HTML 구조"""
     return f"""
@@ -537,51 +582,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
 # 📦 섹션 3. 1인용 개인 사주 및 운세 상품군 (상품 1-1 ~ 2-5 활성 모듈)
 # ==============================================================================
 
-def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    """1인용 감명서 표준 표지 (26px 대형 볼드 1줄 완벽 고정)"""
-    raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
-    for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
-        raw_title = raw_title.replace(tag, " ")
-    clean_title = " ".join(raw_title.split())
-    clean_u_name = str(u_name or "무명").strip()
-
-    return f"""
-    <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
-        <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
-            
-            <!-- 🌟 대제목 영역: 26px 초극태 블랙 볼드 & 1줄 완벽 고정 -->
-            <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
-                <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -0.5px !important; white-space: nowrap !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 8px;'>
-                    <span style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; color: #555555; letter-spacing: 1px;'>{version}</span>
-                </div>
-            </div>
-            
-            <!-- 신청인 정보 박스 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
-                </div>
-            </div>
-            
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
-        </div>
-    </div>
-    <div class='page-break'></div>
-    """
-
-def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
-    """본문 상단 신상 정보 헤더 (인명 검정색 확정)"""
-    return f"""
-    <div style='font-family:"Nanum Myeongjo", serif; text-align:center; margin-bottom:10px; line-height:1.6;'>
-        <span style='font-size:19px; font-weight:800; color:{p_color}; letter-spacing:0.5px; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
-        <span style='font-size:13px; letter-spacing:0.5px; white-space:nowrap;'>[<span class='b-text'>양력: {sol_str} | 음력: {lun_str}</span> <span class='b-text-point'>{time_str}</span>]</span>
-    </div>
-    """
-
 def get_intro_html():
     """시공명리학 소개 안내문"""
     return """
@@ -709,31 +709,32 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
     """
     남명과 여명의 대운표를 사주 원국표와 동일한 너비(100%)로 상하 배치하는 HTML 박스
+    (이름표와 대운표 사이 불필요한 여백 완전 제거)
     """
     
     clean_m_name = str(m_name or "남명").strip()
     clean_f_name = str(f_name or "여명").strip()
     
-    # 🌟 타이틀 바 제거 & 100% 너비 상하(Column) 배치 적용
+    # 🌟 타이틀 바 제거 & 100% 너비 상하(Column) 배치 적용 및 간격(margin-bottom: 0px) 압축
     html = f"""
     <div style="margin-top: 15px; margin-bottom: 15px; width: 100%;">
         
         <!-- ♂️ 남명 대운 박스 (상단) -->
         <div style="width: 100%; margin-bottom: 15px;">
-            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 8px; padding-left: 5px;">
+            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 0px; padding-left: 5px;">
                 ♂️ 남명 : {clean_m_name} 님
             </div>
-            <div style="width: 100%; overflow-x: auto;">
+            <div style="width: 100%; overflow-x: auto; margin-bottom: 0px;">
                 {m_daewun_html}
             </div>
         </div>
         
         <!-- ♀️ 여명 대운 박스 (하단) -->
-        <div style="width: 100%; margin-bottom: 15px;">
-            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 8px; padding-left: 5px;">
+        <div style="width: 100%; margin-bottom: 0px;">
+            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 0px; padding-left: 5px;">
                 ♀️ 여명 : {clean_f_name} 님
             </div>
-            <div style="width: 100%; overflow-x: auto;">
+            <div style="width: 100%; overflow-x: auto; margin-bottom: 0px;">
                 {f_daewun_html}
             </div>
         </div>
@@ -741,7 +742,6 @@ def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
     </div>
     """
     return html
-
 def get_gunghap_score_visual_html(gh_engine):
     """궁합 점수 및 비주얼 차트 HTML"""
     sky_blue = "#38B6FF"
