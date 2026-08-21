@@ -1362,183 +1362,169 @@ if st.session_state.get('app_running', False):
             st.markdown(safe_cover, unsafe_allow_html=True)
 
         # =========================================================================
-        # 🧑 [1인용 렌더링 구역] (1-1 ~ 4-1)
+        # 🧑 [1인용 및 2인용 최종 렌더링 구역] 
         # =========================================================================
-        final_render_html = ""
-
-        def sub_marker(text, marker_name, table_code):
-            pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
-            return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
-
-        if "1-1" in u_product:
-            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
-            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "1-2" in u_product:
-            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "1-3" in u_product:
-            wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'WOLUN_TABLE_HERE', wolun_table_code)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "1-4" in u_product:
-            # 주간 데이터 생성 및 표 조립
-            if hasattr(engine, 'get_weekly_calendar_data'):
-                weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
-            else:
-                weekly_days_data = []
-            
-            if hasattr(html_views, 'generate_weekly_calendar_html') and weekly_days_data:
-                weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
-            else:
-                weekly_table_code = "<div style='padding:15px; text-align:center; color:#C62828; font-weight:bold; background:#FFEBEE; border-radius:10px;'>🚨 주간운표 달력 생성 엔진 누락됨 (engine.py 점검 필요)</div>"
-
-            # 마커 교체
-            if "WEEKLY_CALENDAR_HERE" in ai_output_html:
-                formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            else:
-                formatted_ai = f"{weekly_table_code}<br><br>{ai_output_html}"
-
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "2-" in u_product:
-            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
-            master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "4-1" in u_product:
-            if not user_entered_text:
-                warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
-                final_render_html = html_views.render_saju_comparison_report(part_1_fact, warn_html, "")
-            else:
-                external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-                
-                formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
-                
-                golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
-                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-                
-                if hasattr(html_views, 'render_saju_comparison_report'):
-                    final_render_html = html_views.render_saju_comparison_report(part_1_fact, external_raw_box, full_ai_content)
-                else:
-                    final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
-
-        # =========================================================================
-        # 👫 [2인용 렌더링 구역] (3-1 ~ 4-2)
-        # =========================================================================
-        elif "3-1" in u_product:
-            m_ess, f_ess, g_ess = "", "", clean_raw
-            
-            # 신청자의 성별에 따라 남명/여명 사주 원국표 분배
-            partner_fact_html = locals().get('p_part_1_fact', locals().get('part_1_fact_p', ''))
-            
-            if gender == "남성":
-                m_saju_html = part_1_fact if 'part_1_fact' in locals() else ""
-                f_saju_html = partner_fact_html
-            else:
-                m_saju_html = partner_fact_html
-                f_saju_html = part_1_fact
-            
-            if not f_saju_html:
-                f_saju_html = "<div style='color:red; font-weight:bold; padding:10px;'>🚨 파트너 사주 원국표(p_part_1_fact)가 엔진에서 생성되지 않았습니다.</div>"
-            if not m_saju_html:
-                m_saju_html = "<div style='color:red; font-weight:bold; padding:10px;'>🚨 파트너 사주 원국표(p_part_1_fact)가 엔진에서 생성되지 않았습니다.</div>"
-            
-            # [1페이지] 남명 풀이 텍스트 파싱
-            m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
-            if m_match: 
-                m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
-            
-            # [2페이지] 여명 풀이 텍스트 파싱 + 사주표 + 🖨️ 새 페이지 분할 적용
-            f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
-            if f_match: 
-                f_text = html_views.format_ai_text_to_html(f_match.group(1).strip())
-                page_break = "<div style='page-break-before: always; break-before: page;'></div>"
-                f_ess = f"{page_break}{f_saju_html}<br>{f_text}"
-                
-            # [3페이지~] 궁합 풀이 텍스트 파싱 + 🖨️ 새 페이지 분할 적용
-            g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
-            if g_match: 
-                g_text = html_views.format_ai_text_to_html(g_match.group(1).strip())
-                page_break = "<div style='page-break-before: always; break-before: page;'></div>"
-                g_ess = f"{page_break}{g_text}"
-
-            # 대운 비교표 생성 및 마커 치환 (궁합 텍스트 내부)
-            m_daewun_html = un_html if gender == "남성" else p_un_html
-            f_daewun_html = p_un_html if gender == "남성" else un_html
-            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-            g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
-
-            # 점수판 및 클로징 결합
-            score_ui, closing_ui = "", ""
-            if 'gh_engine' in locals():
-                score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
-                closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
-            g_ess += score_ui + closing_ui
-            
-            # 최종 리포트 렌더링
-            final_render_html = html_views.get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess)
-
-        elif "3-2" in u_product:
-            # 궁합용 2인 사주표가 있다면 쓰고, 없으면 1인용 사용
-            fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
-            master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "3-3" in u_product:
-            # 궁합용 2인 사주표가 있다면 쓰고, 없으면 1인용 사용
-            fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
-            master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
-
-        elif "4-2" in u_product:
-            if not user_entered_text:
-                warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
-                final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, warn_html, "")
-            else:
-                external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
-                
-                formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
-                
-                golden_box_html = golden_box_gunghap_html if 'golden_box_gunghap_html' in locals() else (golden_text_html if 'golden_text_html' in locals() else "")
-                full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
-                
-                if hasattr(html_views, 'render_gunghap_comparison_report'):
-                    final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
-                else:
-                    final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
-
-        # =====================================================================
-        # 🌟 [최종 화면 출력] 모든 조립이 끝난 후 단 한 번만 그립니다!
-        # =====================================================================
-        st.markdown("---")
-
-        if 'final_render_html' not in locals() or final_render_html is None:
+        try:
             final_render_html = ""
 
-        final_render_html = str(final_render_html).strip()
-        safe_lines_app = []
-        for line in final_render_html.split("\n"):
-            safe_lines_app.append(line.strip())
-        final_render_html = "\n".join(safe_lines_app)
+            def sub_marker(text, marker_name, table_code):
+                pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
+                return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
 
-        st.markdown(final_render_html, unsafe_allow_html=True)
+            # 🌟 [안전장치] 파트너 사주 원국표 수동 조립 (3-1에서 증발 방지)
+            p_part_1_fact = str(locals().get('p_info_h', '')) + str(locals().get('p_table_html', '')) + str(locals().get('p_master_bar_html', ''))
+
+            if "1-1" in u_product:
+                daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+                sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+                formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+                master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+                final_render_html = html_views.get_final_report_box(master_comp)
+
+            elif "1-2" in u_product:
+                sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+                formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
+                master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+                final_render_html = html_views.get_final_report_box(master_comp)
+
+            elif "1-3" in u_product:
+                wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+                formatted_ai = sub_marker(ai_output_html, 'WOLUN_TABLE_HERE', wolun_table_code)
+                master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+                final_render_html = html_views.get_final_report_box(master_comp)
+
+            elif "1-4" in u_product:
+                if hasattr(engine, 'get_weekly_calendar_data'):
+                    weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
+                else:
+                    weekly_days_data = []
+                
+                if hasattr(html_views, 'generate_weekly_calendar_html') and weekly_days_data:
+                    weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
+                else:
+                    weekly_table_code = "<div style='padding:15px; text-align:center; color:#C62828; font-weight:bold; background:#FFEBEE; border-radius:10px;'>🚨 주간운표 달력 생성 엔진 누락됨</div>"
+
+                if "WEEKLY_CALENDAR_HERE" in ai_output_html:
+                    formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+                else:
+                    formatted_ai = f"{weekly_table_code}<br><br>{ai_output_html}"
+
+                master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+                final_render_html = html_views.get_final_report_box(master_comp)
+
+            elif "2-" in u_product:
+                daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+                formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+                master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
+                final_render_html = html_views.get_final_report_box(master_comp)
+
+            elif "4-1" in u_product:
+                if not user_entered_text:
+                    warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
+                    final_render_html = html_views.render_saju_comparison_report(part_1_fact, warn_html, "")
+                else:
+                    external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
+                    formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
+                    
+                    golden_box_html = golden_text_html if 'golden_text_html' in locals() else ""
+                    full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
+                    
+                    if hasattr(html_views, 'render_saju_comparison_report'):
+                        final_render_html = html_views.render_saju_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+                    else:
+                        final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
+
+            elif "3-1" in u_product:
+                m_ess, f_ess, g_ess = "", "", clean_raw
+                
+                if gender == "남성":
+                    m_saju_html = part_1_fact if 'part_1_fact' in locals() else ""
+                    f_saju_html = p_part_1_fact
+                else:
+                    m_saju_html = p_part_1_fact
+                    f_saju_html = part_1_fact
+                
+                if not f_saju_html: f_saju_html = "<div style='color:red; font-weight:bold; padding:10px;'>🚨 파트너 사주 원국표 누락</div>"
+                if not m_saju_html: m_saju_html = "<div style='color:red; font-weight:bold; padding:10px;'>🚨 남명 사주 원국표 누락</div>"
+                
+                m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
+                if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
+                
+                f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
+                if f_match: 
+                    f_text = html_views.format_ai_text_to_html(f_match.group(1).strip())
+                    page_break = "<div style='page-break-before: always; break-before: page;'></div>"
+                    f_ess = f"{page_break}{f_saju_html}<br>{f_text}"
+                    
+                g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
+                if g_match: 
+                    g_text = html_views.format_ai_text_to_html(g_match.group(1).strip())
+                    page_break = "<div style='page-break-before: always; break-before: page;'></div>"
+                    g_ess = f"{page_break}{g_text}"
+
+                m_daewun_html = un_html if gender == "남성" else p_un_html
+                f_daewun_html = p_un_html if gender == "남성" else un_html
+                
+                if hasattr(html_views, 'get_daewun_compare_box'):
+                    c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
+                else:
+                    c_daewun_html = f"<div>{m_daewun_html}<br>{f_daewun_html}</div>"
+                    
+                g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
+
+                score_ui, closing_ui = "", ""
+                if 'gh_engine' in locals():
+                    score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
+                    closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
+                g_ess += score_ui + closing_ui
+                
+                final_render_html = html_views.get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess)
+
+            elif "3-2" in u_product or "3-3" in u_product:
+                fact_box = part_1_fact_gunghap if 'part_1_fact_gunghap' in locals() else part_1_fact
+                master_comp = f"{fact_box}{ai_output_html}{part_5_closing}"
+                final_render_html = html_views.get_final_report_box(master_comp)
+
+            elif "4-2" in u_product:
+                if not user_entered_text:
+                    warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
+                    final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, warn_html, "")
+                else:
+                    external_raw_box = html_views.get_external_raw_text_box(user_entered_text)
+                    formatted_ai = sub_marker(ai_output_html, 'COUPLE_DAEWUN_TABLES_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', '')
+                    formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
+                    
+                    golden_box_html = golden_box_gunghap_html if 'golden_box_gunghap_html' in locals() else (golden_text_html if 'golden_text_html' in locals() else "")
+                    full_ai_content = golden_box_html + ("<br>" if golden_box_html else "") + formatted_ai
+                    
+                    if hasattr(html_views, 'render_gunghap_comparison_report'):
+                        final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
+                    else:
+                        final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
+
+            # =====================================================================
+            # 🌟 [최종 화면 출력] 
+            # =====================================================================
+            st.markdown("---")
+            
+            # 🚨 악명 높았던 HTML 압축/자르기 루프 (safe_lines_app) 완전 삭제!! 🚨
+            # 있는 그대로 화면에 쏩니다!
+            if final_render_html:
+                st.markdown(final_render_html, unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ 렌더링된 결과물이 비어 있습니다. (로직은 통과했으나 HTML이 생성되지 않음)")
+
+        except Exception as render_error:
+            # 숨어서 앱을 터뜨리던 에러를 화면에 강제로 띄웁니다!
+            st.error(f"🚨 [화면 렌더링 중 치명적 오류 발생] 시스템이 멈췄습니다!")
+            st.error(f"오류 내용: {render_error}")
+            import traceback
+            st.code(traceback.format_exc())
