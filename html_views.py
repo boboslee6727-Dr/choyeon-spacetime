@@ -706,6 +706,52 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     <div class='page-break'></div>
     """
 
+def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
+    """
+    남명과 여명의 대운표를 나란히 비교하는 고급 HTML 박스 생성
+    PC에서는 좌우 나란히, 모바일에서는 위아래로 자동 반응(Flexbox)합니다.
+    """
+    
+    # 남명/여명 이름이 없을 경우 기본값 처리
+    clean_m_name = str(m_name or "남명").strip()
+    clean_f_name = str(f_name or "여명").strip()
+    
+    html = f"""
+    <div style="margin-top: 30px; margin-bottom: 30px; border: 1px solid #E8EAF6; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        
+        <!-- 🌟 타이틀 영역 -->
+        <div style="background-color: #1A237E; color: white; padding: 14px 20px; font-family: 'Nanum Gothic', sans-serif; font-size: 19px; font-weight: 800; text-align: center; letter-spacing: 1px;">
+            💞 남녀 대운 흐름 종합 비교
+        </div>
+        
+        <!-- 🌟 대운표 좌우 배치 (Flexbox) -->
+        <div style="display: flex; flex-wrap: wrap; background-color: #FFFFFF; padding: 24px; gap: 24px; justify-content: center;">
+            
+            <!-- ♂️ 남명 대운 박스 -->
+            <div style="flex: 1; min-width: 280px; background-color: #F4F6F9; padding: 18px; border-radius: 10px; border-top: 4px solid #1E88E5; box-sizing: border-box;">
+                <div style="text-align: center; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 16px;">
+                    ♂️ 남명 : {clean_m_name} 님
+                </div>
+                <div style="width: 100%; overflow-x: auto;">
+                    {m_daewun_html}
+                </div>
+            </div>
+            
+            <!-- ♀️ 여명 대운 박스 -->
+            <div style="flex: 1; min-width: 280px; background-color: #FFF5F7; padding: 18px; border-radius: 10px; border-top: 4px solid #E91E63; box-sizing: border-box;">
+                <div style="text-align: center; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 16px;">
+                    ♀️ 여명 : {clean_f_name} 님
+                </div>
+                <div style="width: 100%; overflow-x: auto;">
+                    {f_daewun_html}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    """
+    return html
+
 def get_gunghap_score_visual_html(gh_engine):
     """궁합 점수 및 비주얼 차트 HTML"""
     sky_blue = "#38B6FF"
