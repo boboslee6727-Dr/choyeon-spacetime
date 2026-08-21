@@ -614,28 +614,6 @@ def render_view_page(order_id):
     # 최하단 PDF 다운로드 버튼
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
 
-# ==============================================================================
-# 🚪 [URL 라우팅 문지기] - 고객, 관리자, 메인 공장을 분리하는 핵심 로직
-# ==============================================================================
-def run_pipeline_router(generator_func):
-    """
-    URL mode를 감지해서 고객 폼, 관리자 패널, 뷰어로 안내하는 통합 문지기
-    """
-    import streamlit as st
-    mode = st.query_params.get("mode", "")
 
-    if mode == "order":
-        render_customer_order_form()
-        st.stop()  # 메인 공장 로딩 차단
-
-    elif mode == "admin":
-        # 관리자 패널로 감명 엔진(generator_func)을 넘겨줌
-        render_admin_panel(generator_func)
-        st.stop()  # 메인 공장 로딩 차단
-
-    elif mode == "view":
-        order_code = st.query_params.get("code", "")
-        render_view_page(order_code)
-        st.stop()  # 메인 공장 로딩 차단
 
 
