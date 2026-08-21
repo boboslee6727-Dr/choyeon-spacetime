@@ -1415,7 +1415,7 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # 🌟 [이사 완료] 4-1 타 감명서 비교 (1인용) - 3-1 앞으로 당겨서 배치!
+        # [1인용] 타 감명서 비교 (사주)
         elif u_product.startswith("4-1"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
@@ -1437,8 +1437,10 @@ if st.session_state.get('app_running', False):
                 else:
                     final_render_html = html_views.render_comparison_report(part_1_fact, external_raw_box, full_ai_content)
 
-        # 👫 [여기서부터 2인용 그룹 시작 - 독립된 if문으로 새출발!]
-        if u_product == "3-1. 커플 연애/결혼운 (궁합) 분석":
+        # =========================================================================
+        # 👫 [2인용 시작] 다시 튼튼한 elif 로 연결하고 startswith("3-1")로 잠금!
+        # =========================================================================
+        elif u_product.startswith("3-1"):
             m_ess, f_ess, g_ess = "", "", clean_raw
             
             # 🌟 신청자의 성별에 따라 남명/여명 사주 원국표 분배
@@ -1491,6 +1493,7 @@ if st.session_state.get('app_running', False):
             # 최종 리포트 렌더링
             final_render_html = html_views.get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess)
 
+        # [2인용] 타 궁합 감명서 비교
         elif u_product.startswith("4-2"):
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.")
