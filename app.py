@@ -26,23 +26,6 @@ import html_views
 from pipeline_manager import run_pipeline_router
 
 # ==============================================================================
-# 🚨 [임시 가짜 엔진] - 관리자 패널 에러를 막기 위한 껍데기입니다!
-# 나중에 박사님의 1,300줄 진짜 AI 코드를 이 안에 이식할 것입니다.
-# ==============================================================================
-def generate_report(row):
-    # 지금은 테스트용 가짜 결과물(HTML)만 뱉어냅니다.
-    test_html = f"""
-    <div style='padding:20px; text-align:center;'>
-        <h2>🔮 {row['name']}님의 사주 분석 (테스트 중)</h2>
-        <p>파이프라인 통과 완료! 이곳에 곧 진짜 1,300줄 AI 분석이 연결됩니다.</p>
-    </div>
-    """
-    return test_html
-
-# 문지기 호출 (이제 generate_report가 존재하므로 에러가 나지 않습니다!)
-run_pipeline_router(generate_report_for_order)
-
-# ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
 APP_VERSION = "ver 75.0 Master"
@@ -394,7 +377,7 @@ def generate_report_for_order(order_row):
     # 5. [수정] 솔라피(Solapi) 자동 발송 (2개 이상 선택시 "외 1건" 오류 방어 적용 완료)
     if phone_number and view_code:
         try:
-            view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={view_code}"
+            view_url = f"[https://choyeon-spacetime.streamlit.app/?mode=view&code=](https://choyeon-spacetime.streamlit.app/?mode=view&code=){view_code}"
             import pipeline_manager as pl
             
             safe_product_name = product
@@ -407,43 +390,10 @@ def generate_report_for_order(order_row):
 
     return report_box_clean
 
-# ------------------------------------------------------------------------------
-# 👑 [관리자 입금 승인 시 백그라운드 AI 감명서 자동 생성 및 알림톡 발송 래퍼 함수]
-# ------------------------------------------------------------------------------
-def generate_report_for_order(order_row):
-    """관리자가 입금 확인 버튼을 눌렀을 때 실행되는 감명서 완성 생성기 및 알림톡 자동 발송"""
-
-    import datetime as dt_mod
-    selected_target_date = dt_mod.date.today()
-
-    # [1] 1인용(신청인) 정보 파이프라인에서 그대로 꺼내기 (기존 원본 사수)
-    name = order_row["name"]
-    gender = order_row["gender"]
-    b_date = order_row["birth_date"] # 'YYYY-MM-DD'
-    b_time = order_row["birth_time"]
-    cal_type = order_row["calendar_type"]
-    product = order_row["product"]
-    marital = order_row["marital"]
-    phone_number = order_row.get("phone", "") 
-    view_code = order_row.get("code", "")     
-    
-    y, m, d = [int(v) for v in b_date.split("-")]
-    is_lunar = "음력" in cal_type
-    is_leap = "윤달" in cal_type
-
-    # 💡 [2] 궁합(상대방) 정보 파이프라인에서 그대로 꺼내기 (박사님 지시사항 추가!)
-    is_2person = (product.startswith("3-") or "4-2" in product)
-    if is_2person:
-        p_name = order_row.get("partner_name", "상대방")
-        p_gender = order_row.get("partner_gender", "여성" if gender == "남성" else "남성")
-        p_b_date = order_row.get("partner_birth_date", "1990-01-01")
-        p_b_time = order_row.get("partner_birth_time", "시간 모름")
-        p_cal_type = order_row.get("partner_calendar_type", "양력")
-        p_marital = order_row.get("partner_marital", "선택")
-        
-        p_y, p_m, p_d = [int(v) for v in p_b_date.split("-")]
-        p_is_lunar = "음력" in p_cal_type
-        p_is_leap = "윤달" in p_cal_type
+# ==============================================================================
+# 🚪 파이프라인 문지기 실행 (진짜 엔진 연결 완료!)
+# ==============================================================================
+run_pipeline_router(generate_report_for_order)
     
 # ==============================================================================
 # 2. 사이드바 통제 센터
