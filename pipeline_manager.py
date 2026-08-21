@@ -400,7 +400,7 @@ def render_customer_order_form():
             st.rerun()
 
 # ------------------------------------------------------------------------------
-# 2. 👑 [박사님 관리자 패널] (DB 다림질 및 솔라피 활성화 완결)
+# 2. 👑 [박사님 관리자 패널] (수동 검수 및 수동 발송 체계로 완벽 분리!)
 # ------------------------------------------------------------------------------
 def render_admin_panel(generator_func):
     st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
@@ -417,7 +417,7 @@ def render_admin_panel(generator_func):
         st.info("현재 접수된 신청 내역이 없습니다.")
         return
         
-    tab1, tab2 = st.tabs(["⏳ [입금대기] 승인 및 감명 처리", "✅ [분석완료] 발송 결과 및 링크 관리"])
+    tab1, tab2 = st.tabs(["⏳ 1단계: 입금 승인 및 리포트 생성", "✅ 2단계: 리포트 검수 및 수동 발송"])
     
     with tab1:
         pending_orders = df[df["status"] == "입금대기"]
@@ -425,46 +425,35 @@ def render_admin_panel(generator_func):
             st.success("현재 입금 대기 중인 신청건이 없습니다.")
         else:
             for _, row in pending_orders.iterrows():
-                # 💡 관리자 패널 변수명 u_product 로 완벽 수정 완료
                 with st.expander(f"📌 [{row['name']} 님] {row['u_product']} (신청일: {row['created_at']})", expanded=True):
                     st.write(f"- 연락처: **{row['phone']}** | 생년: **{row['b_year']}-{row['b_month']}-{row['b_day']} ({row['u_cal']})** | 시간: **{row['b_time']}**")
-                    if row['email']:
+                    if row['email']: 
                         st.caption(f"📝 이메일: {row['email']}")
-                    if row['user_concern']:
+                    if row['user_concern']: 
                         st.caption(f"📝 고민사연: {row['user_concern']}")
                     
                     c1, c2 = st.columns(2)
                     with c1:
-                        if st.button(f"💰 입금 확인 (감명생성 + 발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
+                        # 💡 [핵심] 고객한테 몰래 안 쏩니다! 오직 '생성'만 하고 탭2로 넘깁니다.
+                        if st.button(f"💰 입금 확인 (리포트만 조용히 생성)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
                             try:
                                 with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
                                     # 1. 감명 리포트 자동 생성
                                     html_result = generator_func(row)
                                     
-                                    # 💡 DB에 넣기 직전에 띄어쓰기를 싹 다림질하여 뷰어 에러 원천 차단!
+                                    # DB 에러 방지 다림질
                                     clean_html = str(html_result).replace("```html", "").replace("```markdown", "").replace("```", "")
                                     safe_lines = [line.strip() for line in clean_html.split("\n")]
                                     final_clean_html = "\n".join(safe_lines)
                                     
-                                    # 2. DB에 '분석완료' 상태 및 최종 결과 저장
+                                    # 2. DB에 '분석완료' 상태로 저장만 함 (문자 발송 코드는 뺐습니다!)
                                     conn = sqlite3.connect(DB_FILE)
                                     c = conn.cursor()
                                     c.execute("UPDATE orders SET status='분석완료', result_html=? WHERE order_id=?", (final_clean_html, row['order_id']))
                                     conn.commit()
                                     conn.close()
                                     
-                                    view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                                    
-                                    # 3. 💡 솔라피 고객 알림톡 자동 발송
-                                    safe_product_name = row['u_product']
-                                    if "+" in safe_product_name:
-                                        safe_product_name = safe_product_name.split("+")[0].strip() + " 외 다수"
-                                        
-                                    send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], safe_product_name, view_url)
-                                    
-                                    if send_ok: st.success(f"✅ {row['name']}님 리포트 생성 및 {send_msg}")
-                                    else: st.warning(f"⚠️ 리포트는 완성되었으나 알림톡 발송 실패: {send_msg}")
-                                        
+                                    st.success(f"✅ 리포트 생성 완료! [검수 및 수동 발송] 탭으로 이동되었습니다.")
                                     time.sleep(1)
                                     st.rerun()
                                     
@@ -482,9 +471,27 @@ def render_admin_panel(generator_func):
         else:
             for _, row in completed_orders.iterrows():
                 view_url = f"{BASE_URL}/?mode=view&code={row['order_id']}"
-                with st.expander(f"✅ [{row['name']} 님] (열람코드: {row['order_id']})", expanded=True):
+                with st.expander(f"✅ [{row['name']} 님] 리포트 대기중 (열람코드: {row['order_id']})", expanded=True):
                     st.write(f"- 연락처: **{row['phone']}** | 상품: **{row['u_product']}**")
-                    st.write(f"[리포트 바로보기]({view_url})")
+                    
+                    # 💡 [핵심] 박사님이 돋보기 들고 확인하실 수 있는 버튼
+                    st.write(f"🔍 **1단계:** [👉 여기를 눌러 AI가 쓴 리포트를 먼저 검수하세요]({view_url})")
+                    
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    
+                    # 💡 [핵심] 검수 완료 후, 박사님이 허락할 때만 고객한테 날아갑니다.
+                    if st.button(f"📩 2단계: {row['name']}님께 카톡/문자 발송 쏘기!", key=f"btn_send_{row['order_id']}", type="primary"):
+                        with st.spinner("고객님께 알림톡을 발송 중입니다..."):
+                            safe_product_name = row['u_product']
+                            if "+" in safe_product_name:
+                                safe_product_name = safe_product_name.split("+")[0].strip() + " 외 다수"
+                                
+                            send_ok, send_msg = send_solapi_auto_message(row['phone'], row['name'], safe_product_name, view_url)
+                            
+                            if send_ok: 
+                                st.success(f"✅ {send_msg}")
+                            else: 
+                                st.warning(f"⚠️ 발송 실패: {send_msg}")
 
 # ------------------------------------------------------------------------------
 # 3. 📜 [고객 전용 결과 열람창] (깔끔한 인쇄 CSS 마법 적용)
