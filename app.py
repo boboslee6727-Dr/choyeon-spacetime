@@ -23,7 +23,7 @@ import html_views
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 74.0 Master"
+APP_VERSION = "ver 75.0 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 전역 CSS 적용
@@ -423,183 +423,6 @@ def generate_report_for_order(order_row):
         p_is_lunar = "음력" in p_cal_type
         p_is_leap = "윤달" in p_cal_type
     
-    # 1. 간지 추출 및 대운수 연산
-    g_res = engine.get_ganji_from_date(y, m, d, is_lunar, is_leap)
-    y_p, m_p, d_p = g_res[0], g_res[1], g_res[2]
-    
-    h_gan, h_ji = engine.get_time_ganji(d_p[0], b_time)
-    gans = [h_gan if h_gan != "?" else "-", d_p[0], m_p[0], y_p[0]]
-    jjis = [h_ji if h_ji != "?" else "-", d_p[1], m_p[1], y_p[1]]
-    hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
-    hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
-    ds_hanja = engine.K2H_GAN.get(ds, ds)
-    
-    base_dt = dt_mod.datetime(y, m, d, 12, 0)
-    adj_mins = engine.get_total_time_adjustment(base_dt)
-    utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
-    ys_idx = engine.GAN.index(ys) if ys in engine.GAN else 0
-    order_dir = 1 if (ys_idx % 2 == 0) == (gender == '남성') else -1
-    calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
-    
-    # 2. 사주 팩트 및 시공간 파동 산출
-    gyuk, gyuk_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
-    
-    memo_info = order_row.get("email", "") 
-    concern_match = re.search(r'\[고민사연:\s*(.*?)\]', memo_info)
-    user_concern_text = concern_match.group(1).strip() if concern_match else "특별히 남긴 고민 사연이 없습니다. 다가올 운의 흐름에서 가장 주의해야 할 점과 긍정적인 덕담을 남겨주세요."
-    
-    adv_saju = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
-    adv_flags = html_views.analyze_saju_facts_advanced(adv_saju, "-", "-") if hasattr(html_views, 'analyze_saju_facts_advanced') else {}
-    adv_warning = adv_flags.get("warning_message", "정상 시공간 흐름")
-    
-    saju_summary = f"- {name}님 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({b_time})\n- 격국: {gyuk_detail}\n- 파동 경보: {adv_warning}"
-    
-    # 3. 프롬프트 매핑 및 AI 호출
-    prompt_var = "프롬프트_1_1_기본"
-    for code, var_name in [("1-1", "프롬프트_1_1_기본"), ("1-2", "프롬프트_1_2_연도운"), ("1-3", "프롬프트_1_3_월운"), ("1-4", "프롬프트_1_4_일운"), ("2-1", "프롬프트_2_1_재물운"), ("2-2", "프롬프트_2_2_직업운"), ("2-3", "프롬프트_2_3_연애운"), ("2-4", "프롬프트_2_4_건강운"), ("2-5", "프롬프트_2_5_이사개업택일"), ("3-1", "프롬프트_3_1_궁합"), ("3-2", "프롬프트_3_2_결혼택일"), ("3-3", "프롬프트_3_3_출산택일"), ("4-1", "프롬프트_4_1_사주대조"), ("4-2", "프롬프트_4_2_궁합대조")]:
-        if code in product:
-            prompt_var = var_name
-            break
-            
-    target_prompt = getattr(prompts, prompt_var, prompts.프롬프트_1_1_기본)
-    
-    prompt_input = {
-        "name": name, "gender": gender, "marital": marital, "age": dt_mod.date.today().year - y + 1,
-        "ilju_master_prompt_context": "", "saju_fact_summary": saju_summary,
-        "dw_fact_str": "대운 순환 중", "adv_warning_str": adv_warning,
-        "action_solutions": "자연스러운 기운의 순환 유지", "health_erosion_facts": "특이 침식 없음",
-        "samja_comb_facts": "특이 조합 없음", "samhyung_potential_facts": "삼형 없음",
-        "gyukgook_detail": gyuk_detail, "oheng_counts_str": "오행 균형",
-        "shinsal_str": "특이 신살 없음", "cheon_eul": "천을귀인", "samjae_str": "해당 없음",
-        "year_gongmang": "-", "day_gongmang": "-", "curr_year": dt_mod.date.today().year,
-        "cur_sewun_gan": "甲", "cur_sewun_ji": "辰", "wealth_goal": "자산 증식",
-        "career_goal": "직무 적성", "love_goal": "인연 관계", "health_goal": "건강 관리",
-        "tackil_purpose": "이사", "target_date_range": "향후 1개월", "other_reading_text": "",
-        "user_concern": user_concern_text
-    }
-    
-    class SafeDict(dict):
-        def __missing__(self, k): return '{' + k + '}'
-        
-    final_prompt = target_prompt.format_map(SafeDict(prompt_input))
-    ai_raw = call_gemini_api(final_prompt)
-    
-    # 💡 [핵심 수정] AI 마크다운 찌꺼기 완벽 클렌징
-    clean_raw = ai_raw.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-    formatted_body = html_views.format_ai_text_to_html(clean_raw)
-    
-    # 4. 프리미엄 나눔명조체 리포트 UI 완벽 조립 (표, 차트 모두 포함)
-    def get_oh_class(ganji):
-        oh = engine.get_color(ganji)
-        return f"color-{oh}" if oh != '무' else ""
-
-    counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
-    for c in gans + jjis:
-        oh = engine.get_color(c)
-        if oh in counts: counts[oh] += 1
-    
-    guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
-    guiin_str = guiin_map.get(ds_hanja, '없음')
-    curr_year = dt_mod.date.today().year
-    curr_y_ji = engine.JI[(curr_year - 1984) % 60 % 12]
-    cur_samjae = engine.get_samjae(yb, curr_y_ji)
-    samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
-    n_gong = engine.calculate_gongmang(ys, yb) or "-"
-    i_gong = engine.calculate_gongmang(ds, db) or "-"
-    
-    table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
-    master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
-    
-    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
-    w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터")
-    i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터")
-    struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조", "유형", "성향"])
-    golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyuk_detail.split(' ')[0] if gyuk_detail else "격")
-    intro_html = html_views.get_intro_html()
-    closing_html = html_views.get_closing_html(name)
-    
-    # 대운 및 세운 표 생성
-    daewun_data_list = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, dt_mod.date.today().year - y + 1, db)
-    un_html = html_views.generate_daewun_layout(daewun_data_list, "순행" if order_dir==1 else "역행", calc_d, get_oh_class)
-    
-    cur_dw_idx = max(0, ((dt_mod.date.today().year - y + 1) - calc_d) // 10)
-    c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
-    j_idx = engine.JI.index(mb) if mb in engine.JI else 0
-    dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
-    dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
-    current_daewun_age = max(0, int(cur_dw_idx) * 10 + int(calc_d))
-    start_year = y + current_daewun_age - 1
-    se_content = ""
-    for i in range(10):
-        ty = start_year + i
-        tage = current_daewun_age + i
-        base = (ty - 1984) % 60
-        tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
-        tc, tj = engine.K2H_GAN.get(tc_hangul, tc_hangul), engine.K2H_JI.get(tj_hangul, tj_hangul)
-        bg_col = "#E1F5FE" if (ty == curr_year) else "transparent"
-        se_content += html_views.get_sewun_cell(
-            f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
-            tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
-            engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, "1px solid #ccc", (ty == curr_year)
-        )
-    sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 ({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운) ]", se_content)
-    
-    # 💡 [핵심 수정] 마커(SEWUN_TABLE_HERE 등)를 실제 표 HTML로 교체
-    def sub_marker(text, marker_name, table_code):
-        pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
-        return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
-        
-    # 💡 1-4 주간운표 생성 로직 연결
-    weekly_table_code = ""
-    if "1-4" in product:
-        if hasattr(engine, 'get_weekly_calendar_data') and hasattr(html_views, 'generate_weekly_calendar_html'):
-            weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja)
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db)
-
-    formatted_body = sub_marker(formatted_body, 'DAEWUN_TABLE_HERE', un_html)
-    formatted_body = sub_marker(formatted_body, 'SEWUN_TABLE_HERE', sewun_html)
-    formatted_body = sub_marker(formatted_body, 'WOLUN_TABLE_HERE', "") 
-    formatted_body = sub_marker(formatted_body, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-
-    # 전체 페이지 조립 (사주표 + 인트로 + 황금문구 + 통변/표 + 맺음말)
-    part_1_fact = str(table_html) + str(master_bar_html)
-    master_comp = f"{part_1_fact}{intro_html}{golden_text_html}{formatted_body}{closing_html}"
-
-    cover = html_views.get_personal_cover("ver 74.0 Master", product.split(" (")[0], "🏮", name, b_date, "", b_time, dt_mod.date.today().strftime("%Y년 %m월 %d일"))
-    info_h = html_views.get_info_header("🏮", name, gender, marital, dt_mod.date.today().year - y + 1, b_date, "", b_time)
-    
-    final_html = f"{cover}<br>{info_h}<br>{master_comp}"
-    report_box = html_views.get_final_report_box(final_html)
-
-    # 💡 [핵심 해결] DB에 넣기 직전에 모든 들여쓰기를 제거! (파이프라인 소스코드 노출 버그 원천 차단)
-    safe_lines = []
-    for line in report_box.split('\n'):
-        safe_lines.append(line.strip())
-    report_box_clean = '\n'.join(safe_lines)
-
-    # 알림톡 발송 코드 싹 다 삭제!!
-    # 파이프라인(외주업체)에게 완성된 감명서만 딱 던져주고 연구소는 퇴근합니다.
-    return report_box_clean
-# ------------------------------------------------------------------------------
-# 🧭 [3대 화면 라우팅 분기] - 순환 참조 방지 처리 완료 구역
-# ------------------------------------------------------------------------------
-import pipeline_manager as pl
-pl.init_order_db()
-params = st.query_params
-
-if params.get("mode") == "admin":
-    # 👑 박사님 관리자 패널
-    pl.render_admin_panel(generate_report_for_order)
-    st.stop()
-elif params.get("mode") == "view" and params.get("code"):
-    # 📜 고객 결과 열람 화면 (안전한 get 방식으로 에러 원천 차단)
-    pl.render_view_page(params.get("code"))
-    st.stop()
-elif params.get("mode") == "order":
-    # 📱 고객 모바일 신청 접수창
-    pl.render_customer_order_form()
-    st.stop()
-
 # ==============================================================================
 # 2. 사이드바 통제 센터
 # ==============================================================================
@@ -1521,7 +1344,7 @@ if st.session_state.get('app_running', False):
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
-        # 최종 화면 렌더링
+        # 최종 화면 5렌더링
         if 'cover_html' in locals() and cover_html:
             safe_cover = re.sub(r'\n\s+', '\n', cover_html)
             st.markdown(safe_cover, unsafe_allow_html=True)
