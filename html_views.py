@@ -708,46 +708,36 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
 
 def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
     """
-    남명과 여명의 대운표를 나란히 비교하는 고급 HTML 박스 생성
-    PC에서는 좌우 나란히, 모바일에서는 위아래로 자동 반응(Flexbox)합니다.
+    남명과 여명의 대운표를 사주 원국표와 동일한 너비(100%)로 상하 배치하는 HTML 박스
     """
     
-    # 남명/여명 이름이 없을 경우 기본값 처리
     clean_m_name = str(m_name or "남명").strip()
     clean_f_name = str(f_name or "여명").strip()
     
+    # 🌟 타이틀 바 제거 & 100% 너비 상하(Column) 배치 적용
     html = f"""
-    <div style="margin-top: 30px; margin-bottom: 30px; border: 1px solid #E8EAF6; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="margin-top: 15px; margin-bottom: 15px; width: 100%;">
         
-        <!-- 🌟 타이틀 영역 -->
-        <div style="background-color: #1A237E; color: white; padding: 14px 20px; font-family: 'Nanum Gothic', sans-serif; font-size: 19px; font-weight: 800; text-align: center; letter-spacing: 1px;">
-            💞 남녀 대운 흐름 종합 비교
+        <!-- ♂️ 남명 대운 박스 (상단) -->
+        <div style="width: 100%; margin-bottom: 15px;">
+            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 8px; padding-left: 5px;">
+                ♂️ 남명 : {clean_m_name} 님
+            </div>
+            <div style="width: 100%; overflow-x: auto;">
+                {m_daewun_html}
+            </div>
         </div>
         
-        <!-- 🌟 대운표 좌우 배치 (Flexbox) -->
-        <div style="display: flex; flex-wrap: wrap; background-color: #FFFFFF; padding: 24px; gap: 24px; justify-content: center;">
-            
-            <!-- ♂️ 남명 대운 박스 -->
-            <div style="flex: 1; min-width: 280px; background-color: #F4F6F9; padding: 18px; border-radius: 10px; border-top: 4px solid #1E88E5; box-sizing: border-box;">
-                <div style="text-align: center; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #1E88E5; margin-bottom: 16px;">
-                    ♂️ 남명 : {clean_m_name} 님
-                </div>
-                <div style="width: 100%; overflow-x: auto;">
-                    {m_daewun_html}
-                </div>
+        <!-- ♀️ 여명 대운 박스 (하단) -->
+        <div style="width: 100%; margin-bottom: 15px;">
+            <div style="text-align: left; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 8px; padding-left: 5px;">
+                ♀️ 여명 : {clean_f_name} 님
             </div>
-            
-            <!-- ♀️ 여명 대운 박스 -->
-            <div style="flex: 1; min-width: 280px; background-color: #FFF5F7; padding: 18px; border-radius: 10px; border-top: 4px solid #E91E63; box-sizing: border-box;">
-                <div style="text-align: center; font-family: 'Nanum Gothic', sans-serif; font-size: 17px; font-weight: 900; color: #E91E63; margin-bottom: 16px;">
-                    ♀️ 여명 : {clean_f_name} 님
-                </div>
-                <div style="width: 100%; overflow-x: auto;">
-                    {f_daewun_html}
-                </div>
+            <div style="width: 100%; overflow-x: auto;">
+                {f_daewun_html}
             </div>
-            
         </div>
+        
     </div>
     """
     return html
@@ -779,6 +769,17 @@ def get_gunghap_score_visual_html(gh_engine):
     )
     return score_chart_html
 
+def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
+    """궁합 3분할 페이지 일괄 생성 함수 (화면 연속 / 인쇄 A4 1장씩 분할)"""
+    m_page = f"""
+    <div style='border: 1.5px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+        <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
+        {part_1_fact}
+        <div style='margin-top:15px;'>{m_ess}</div>
+    </div>
+    <div class='page-break'></div>
+    """
+    
 def get_gunghap_closing(name1, name2):
     return f"""
     <div style='margin-top: 30px; border-top: 2px dashed #444; padding-top: 18px; font-family: "Nanum Myeongjo", serif;'>
@@ -792,17 +793,6 @@ def get_gunghap_closing(name1, name2):
     </div>
     """
 
-def get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess):
-    """궁합 3분할 페이지 일괄 생성 함수 (화면 연속 / 인쇄 A4 1장씩 분할)"""
-    m_page = f"""
-    <div style='border: 1.5px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
-        <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
-        {part_1_fact}
-        <div style='margin-top:15px;'>{m_ess}</div>
-    </div>
-    <div class='page-break'></div>
-    """
-    
     f_page = f"""
     <div style='border: 1.5px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
         <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
@@ -873,7 +863,6 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
 # 📦 섹션 6. 타 감명서 1:1 대조 분석 리포트 상품군 (상품 4-1, 4-2 활성 모듈)
 # ==============================================================================
 
-
 def get_external_raw_text_box(other_text):
     return f"""
     <div style='margin-top:20px; margin-bottom:20px; padding:20px; background-color:#F5F5F5; border:1.5px solid #757575; border-radius:10px; font-family: "Nanum Myeongjo", serif;'>
@@ -941,6 +930,7 @@ def get_couple_fact_split_layout(male_block, female_block):
 
 def render_saju_comparison_report(saju_fact_html, external_raw_box, ai_content_html):
     """
+
     4-1 타 감명서 비교 (사주) 전용 뷰
     - 4-2 궁합 함수 구조를 완벽히 재활용하여 일관된 24px 대제목 및 스타일 유지
     """
