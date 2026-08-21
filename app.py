@@ -1517,7 +1517,6 @@ if st.session_state.get('app_running', False):
 
             if 'final_render_html' not in locals() or final_render_html is None:
                 final_render_html = ""
-                pass
 
             # 1. 텍스트화 및 양끝 공백 제거
             final_render_html = str(final_render_html).strip()
