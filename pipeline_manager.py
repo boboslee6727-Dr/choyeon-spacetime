@@ -153,6 +153,9 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
 def init_order_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+
+    # 🚨 [박사님! 여기에 이 한 줄을 강제로 추가해 주십시오!] 🚨
+    c.execute("DROP TABLE IF EXISTS orders")    
     c.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             order_id TEXT PRIMARY KEY,
