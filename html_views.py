@@ -281,7 +281,9 @@ def format_ai_text_to_html(text):
 def td_func(val, engine):
     oh = engine.get_color(val)
     cls_str = f"color-{oh}" if oh != '무' else ""
-    return f"<td class='{cls_str} ganji-cell-24' style='border:1px solid #444 !important; width:21.25%;'>{val}</td>"
+    
+    # 🌟 오행 색상(cls_str)은 예쁘게 살려두고, 쪼그라들었던 24px 크기와 900 굵기만 인라인으로 빵빵하게 띄웁니다!
+    return f"<td class='{cls_str}' style='font-size: 24px !important; font-weight: 900 !important; border:1px solid #444 !important; width:21.25%;'>{val}</td>"
 
 def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
     """1인용 감명서 표준 표지 (전체 나눔명조 강제 통일)"""
@@ -354,18 +356,19 @@ def get_saju_table(gan_rel, gan_ss, gan_row, ji_row, ji_ss, jijanggan, ji_rel_ro
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """사주 원국 데이터를 연산하여 표 HTML 생성 (24px 폰트 정공법 직접 주입)"""
+    """사주 원국 데이터를 연산하여 표 HTML 생성 (24px 폰트 정공법 + 日元/기준지지 붉은색 강조)"""
     gan_rel = "".join([f"<td style='border:1px solid #444;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     
     hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
+    # 🌟 [수정 1] 日元 글씨를 강렬한 붉은색(#C62828)으로 변경!
     gan_ss = f"<td style='border:1px solid #444;'>{engine.get_ss(ds, hs)}</td>" \
-             f"<td style='border:1px solid #444;'><span style='color:#1A237E; font-weight:900;'>日元</span></td>" \
+             f"<td style='border:1px solid #444;'><span style='color:#C62828; font-weight:900;'>日元</span></td>" \
              f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ms)}</td>" \
              f"<td style='border:1px solid #444;'>{engine.get_ss(ds, ys)}</td>"
 
     hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
     
-    # 🌟 [핵심 정공법] td_func가 만든 <td> 태그를 가로채서, 24px 크기와 900 굵기를 인라인으로 강제 주입합니다!
+    # 🌟 [핵심 정공법 유지] td_func가 만든 <td> 태그를 가로채서, 24px 크기와 900 굵기를 인라인으로 강제 주입!
     gan_row_html = "".join([td_func(g, engine).replace("<td", "<td style='font-size: 24px; font-weight: 900;'") for g in gans])
     ji_row_html = "".join([td_func(j, engine).replace("<td", "<td style='font-size: 24px; font-weight: 900;'") for j in jjis])
 
@@ -387,7 +390,8 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
                 if r_idx == 0:   lbl_txt = f"({jjis[r_idx]})→"
                 elif r_idx == 3: lbl_txt = f"←({jjis[r_idx]})"
                 else:            lbl_txt = f"←({jjis[r_idx]})→"
-                cells.append(f"<td style='color:#1A237E; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{lbl_txt}</td>")
+                # 🌟 [수정 2] 방향 표시(기준 지지) 글씨를 강렬한 붉은색(#C62828)으로 변경!
+                cells.append(f"<td style='color:#C62828; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important; padding:2px 0 !important; vertical-align: middle;'>{lbl_txt}</td>")
             else:
                 rel_val = engine.get_ji_rel_set(jjis[r_idx], jjis[ci])
                 txt_color = "#000" if rel_val != "-" else "#BBB"
