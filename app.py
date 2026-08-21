@@ -1533,7 +1533,7 @@ if st.session_state.get('app_running', False):
                 st.markdown(final_render_html, unsafe_allow_html=True)
             else:
                 st.warning("⚠️ 렌더링된 결과물이 비어 있습니다.")
-
+   
         except Exception as render_error:
             st.error(f"🚨 [화면 렌더링 중 치명적 오류 발생] 시스템이 멈췄습니다!")
             st.error(f"오류 내용: {render_error}")
