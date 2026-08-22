@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 75.2 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
+# html_views.py (ver 76.1 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
 # ==============================================================================
 # [핵심 반영 사항]
 # 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
@@ -601,13 +601,10 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
     """1-4 일운 분석 전용 주간 달력 HTML"""
     content = ""
-    def get_oh_class_local(char):
-        try:
-            import engine
-            oh = engine.get_color(char)
-            return f"color-{oh}" if oh != '무' else ""
-        except:
-            return ""
+        # 💡 지저분한 로컬 함수 대신, 떳떳하게 엔진의 공식 공구를 사용합니다!
+        import engine
+        gan_cls = engine.get_oh_class(gan_char)
+        ji_cls = engine.get_oh_class(ji_char)
 
     for item in weekly_days_data:
         wday = item['weekday']
