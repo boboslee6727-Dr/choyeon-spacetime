@@ -1910,16 +1910,23 @@ def get_master_system_prompt():
     )
 
 # ==============================================================================
-# 🛠️ [공용 만능 공구함] 텍스트 처리 및 CSS 클래스 변환
+# 👑 [AI 두뇌 통제 로직 및 공용 공구함 통합본]
 # ==============================================================================
 import re
 
 def extract_ganji(text):
-    """한글과 한자만 남기고 특수기호/숫자 추출"""
     if not text: return ""
     return re.sub(r'[^가-힣一-龥]', '', text)
 
 def get_oh_class(ganji):
-    """간지를 입력받아 오행 CSS 클래스명으로 반환"""
-    oh = get_color(ganji)  # engine.py 내부의 get_color 함수를 직접 호출
+    oh = get_color(ganji)
     return f"color-{oh}" if oh != '무' else ""
+
+def get_master_system_prompt():
+    return (
+        "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. "
+        "주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오.\n\n"
+        "🚨 [최고 엄수 규칙]: 어떠한 경우에도 텍스트에 색상을 입히지 마십시오! "
+        "Streamlit 색상 마크다운(예: :green[text], :red[text])이나 HTML 색상 태그(<span style='color...'>, <font color...>) 사용을 엄격히 금지합니다. "
+        "오직 순수한 검정색 텍스트와 기본 기호만 사용하여 출력하십시오."
+    )
