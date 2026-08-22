@@ -665,6 +665,20 @@ def render_admin_panel():
                                     st.session_state['s_t'] = r_btime
                                     st.session_state['s_t_select'] = r_btime
                                     
+                                    # 💡 [핵심 추가]: 상품 카테고리도 알아서 척척 선택하게 만듭니다!
+                                    if "1-" in r_prod:
+                                        st.session_state['main_category'] = "1. 사주팔자 및 운세 풀이 (종합)"
+                                        st.session_state['sub_category_1'] = r_prod
+                                    elif "2-" in r_prod:
+                                        st.session_state['main_category'] = "2. 테마별 특성화 상담"
+                                        st.session_state['sub_category_2'] = r_prod
+                                    elif "3-" in r_prod:
+                                        st.session_state['main_category'] = "3. 연애/결혼운 (궁합) 풀이"
+                                        st.session_state['sub_category_3'] = r_prod
+                                    elif "4-" in r_prod:
+                                        st.session_state['main_category'] = "4. 타 감명서 비교"
+                                        st.session_state['sub_category_4'] = r_prod
+                                    
                                     st.session_state['app_running'] = True
                                     st.session_state['ghost_order_id'] = r_oid
                                     
