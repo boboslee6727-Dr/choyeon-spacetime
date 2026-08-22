@@ -1,5 +1,5 @@
 # ==============================================================================
-# pipeline_manager.py (ver 80.0 Master - 3단 서랍장 원페이지 대시보드 및 무소음 연동)
+# pipeline_manager.py (ver 81.1 Master - 솔라피 실과금 완벽 차단 / 무과금 테스트 모드)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -65,38 +65,36 @@ def ensure_db_table_exists():
     conn.close()
 
 # ------------------------------------------------------------------------------
-# 📡 [솔라피 (Solapi) 발송 통제]
+# 📡 🚨 [솔라피 (Solapi) 무과금 테스트 모드 전환] 🚨
 # ------------------------------------------------------------------------------
-def get_solapi_auth_header(api_key, api_secret):
-    date_str = datetime.now().astimezone().isoformat()
-    salt = str(uuid.uuid4().hex)
-    signature = hmac.new(api_secret.encode('utf-8'), (date_str + salt).encode('utf-8'), hashlib.sha256).hexdigest()
-    return f"HMAC-SHA256 apiKey={api_key}, date={date_str}, salt={salt}, signature={signature}"
-
 def send_solapi_custom_message(to_phone, name, msg_body):
     try:
-        api_key = st.secrets.get("SOLAPI_API_KEY")
-        api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
-        if not api_key: return False, "설정 누락"
+        # 💸 박사님의 실제 과금을 막기 위해 API 호출부를 강제 주석 처리했습니다!
+        # api_key = st.secrets.get("SOLAPI_API_KEY")
+        # api_secret = st.secrets.get("SOLAPI_API_SECRET")
+        # from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        # if not api_key: return False, "설정 누락"
+        # headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json; charset=utf-8"}
+        # payload = {"message": {"to": to_phone.replace("-", "").strip(), "from": from_phone.replace("-", "").strip(), "text": msg_body, "subject": f"[초연명리] {name}님 리포트 도착", "type": "LMS"}}
+        # res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=10)
         
-        headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json; charset=utf-8"}
-        payload = {"message": {"to": to_phone.replace("-", "").strip(), "from": from_phone.replace("-", "").strip(), "text": msg_body, "subject": f"[초연명리] {name}님 리포트 도착", "type": "LMS"}}
-        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=10)
-        if res.status_code == 200: return True, "발송 성공"
-        else: return False, str(res.json())
+        # 가짜 발송 딜레이 (0.5초) 후 무조건 성공 반환
+        time.sleep(0.5) 
+        return True, "[테스트 모드] 솔라피 실과금 없이 가상 발송 성공"
     except Exception as e: return False, str(e)
 
 def send_solapi_admin_alert(now_str, name, product_summary, final_price):
     try:
-        api_key = st.secrets.get("SOLAPI_API_KEY")
-        api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
-        if not api_key: return False, "설정 누락"
-        admin_msg = f"접수알림/ {name.strip()}님/ {product_summary}/ {final_price:,}원"
-        headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}
-        payload = {"message": {"to": "01038576727", "from": from_phone.replace("-", "").strip(), "text": admin_msg, "type": "SMS"}}
-        requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=5)
+        # 💸 접수 시 날아오는 관리자 알림 문자도 돈이 나가지 않게 막았습니다!
+        # api_key = st.secrets.get("SOLAPI_API_KEY")
+        # api_secret = st.secrets.get("SOLAPI_API_SECRET")
+        # from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        # admin_msg = f"접수알림/ {name.strip()}님/ {product_summary}/ {final_price:,}원"
+        # headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}
+        # payload = {"message": {"to": "01038576727", "from": from_phone.replace("-", "").strip(), "text": admin_msg, "type": "SMS"}}
+        # requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=5)
+        
+        time.sleep(0.5)
         return True, "성공"
     except Exception as e: return False, str(e)
 
@@ -367,13 +365,15 @@ def render_admin_panel():
                 save_report_to_db(gid, st.session_state[f"html_{gid}"])
                 update_order_status(gid, "분석완료")
                 if row['phone']:
+                    # 💸 실과금 차단된 가상 발송 함수 호출
+                    st.toast("⏳ [테스트 모드] 발송 중입니다...")
                     send_solapi_custom_message(row['phone'], row['name'], st.session_state[f"sms_{gid}"])
                 
                 st.session_state.pop(f"html_{gid}", None)
                 st.session_state.pop(f"sms_{gid}", None)
                 st.session_state.pop('ai_feedback_prompt', None)
                 st.session_state.pop('admin_proc_id', None)
-                st.success(f"✅ [{row['name']}]님 발송 완료! 장부에 기록되었습니다.")
+                st.success(f"✅ [{row['name']}]님 발송 완료! (테스트 모드로 비용 미청구) 장부에 기록되었습니다.")
                 time.sleep(2)
                 st.rerun()
 
@@ -420,6 +420,4 @@ def run_pipeline_router():
         else: st.warning("⚠️ 올바른 링크로 접속해 주세요.")
         st.stop()
     elif mode == "factory":
-        # 💡 [핵심] 모드가 factory일 때는 st.stop()을 하지 않고 빠져나갑니다.
-        # 그러면 app.py의 아래쪽 백그라운드 공장(엔진) 로직이 조용히 실행됩니다!
         return
