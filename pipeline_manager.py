@@ -1,286 +1,425 @@
 # ==============================================================================
-# app.py (ver 80.0 Master - 무소음 백그라운드 스텔스 가동 및 자동 복귀)
+# pipeline_manager.py (ver 80.0 Master - 3단 서랍장 원페이지 대시보드 및 무소음 연동)
 # ==============================================================================
 import streamlit as st
-import streamlit.components.v1 as components
-import datetime as dt_mod
-from datetime import datetime
-from korean_lunar_calendar import KoreanLunarCalendar
+import sqlite3
 import os
-import re
+import uuid
+import pandas as pd
+from datetime import datetime
 import time
+import hmac
+import hashlib
 import json
-import math
-import pytz
-import sys
-import importlib
-from google import genai
+import requests
+import re
 
-import engine
-import prompts
-import html_views
+DB_FILE = "choyeon_orders.db"
+ADMIN_PASSWORD = "boss!631201"
 
-# 💡 [영업부 호출]: 여기서 URL을 가로채어 고객/관리자 접속을 통제합니다.
-# factory 모드일 때는 무사 통과하여 아래의 공장이 가동됩니다.
-from pipeline_manager import run_pipeline_router
-run_pipeline_router()
+PRODUCT_MAP = {
+    "1-1. 사주팔자와 운세풀이 (정가 22,000원 ➡️ 추석특가 11,000원)": "1-1. 사주팔자 및 운세 분석",
+    "1-2. 올 해 (특정 연도) 운세 상세분석 (정가 11,000원 ➡️ 추석특가 5,500원)": "1-2. 올 해 (특정 년도) 운세 상세분석",
+    "1-3. 이번 달 (특정 월) 운세 상세분석 (정가 11,000원 ➡️ 추석특가 5,500원)": "1-3. 이번 달 (특정 월) 운세 상세분석",
+    "1-4. 이번(특정) 주 및 일 운세 상세분석 (정가 4,400원 ➡️ 추석특가 2,200원)": "1-4. 이번(특정) 주간/일 운세 상세분석",
+    "2-1. 재물운 특화 분석 (정가 22,000원 ➡️ 추석특가 11,000원)": "2-1. 재물운 특화 분석",
+    "2-2. 직업/진학운 특화 분석 (정가 22,000원 ➡️ 추석특가 11,000원)": "2-2. 직업/진학운 특화 분석",
+    "2-3. 연애/결혼운 특화 분석 (정가 22,000원 ➡️ 추석특가 11,000원)": "2-3. 커플 연애/결혼운 특화 분석",
+    "2-4. 건강운 특화 분석 (정가 11,000원 ➡️ 추석특가 5,500원)": "2-4. 건강운 특화 분석",
+    "2-5. 이사 및 개업 택일 (정가 11,000원 ➡️ 추석특가 5,500원)": "2-5. 이사/개업 택일 특화 분석",
+    "3-1. 연애/결혼운 (궁합) 풀이 (정가 44,000원 ➡️ 추석특가 22,000원)": "3-1. 커플 연애/결혼운 (궁합) 분석",
+    "3-2. 결혼 택일 (정가 22,000원 ➡️ 추석특가 11,000원)": "3-2. 결혼 택일 특화 분석",
+    "3-3. 출산 택일 (정가 66,000원 ➡️ 추석특가 33,000원)": "3-3. 출산 택일 특화 분석"
+}
 
-APP_VERSION = "ver 80.0 Master"
-st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
-
-# 🧨 [진녹색 폰트 및 선 강제 초기화 - 영구 사살] 🧨
-st.markdown("""
-<style>
-    span[style*="darkgreen"], span[style*="#006400"], span[style*="#008000"], span[style*="17px"], span[style*="1px solid"] {
-        color: #2D3748 !important; font-size: 15px !important; border: none !important; background: transparent !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-if hasattr(html_views, 'get_global_css'):
-    st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
-
+U_PRODUCT_LIST = list(PRODUCT_MAP.keys())
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", "13:30 ~ 15:29 (未)시", "15:30 ~ 17:29 (申)시", "17:30 ~ 19:29 (酉)시", "19:30 ~ 21:29 (戌)시", "21:30 ~ 23:29 (亥)시", "23:30 ~ 00:29 (夜子)시"]
 
-if 'app_running' not in st.session_state: st.session_state['app_running'] = False
+def get_db_connection(): return sqlite3.connect(DB_FILE)
+def save_report_to_db(order_id, result_html):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("UPDATE orders SET result_html = ? WHERE order_id = ?", (result_html, order_id))
+    conn.commit()
+    conn.close()
 
-@st.cache_data
-def load_choyeon_db():
-    file_path = 'choyeon_db.json'
-    if not os.path.exists(file_path): return {}
+def update_order_status(order_id, status):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("UPDATE orders SET status = ? WHERE order_id = ?", (status, order_id))
+    conn.commit()
+    conn.close()
+
+def ensure_db_table_exists():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
+            order_id TEXT PRIMARY KEY, created_at TEXT, phone TEXT, email TEXT, name TEXT, gender TEXT,
+            marital TEXT, u_cal TEXT, b_year INTEGER, b_month INTEGER, b_day INTEGER, b_time TEXT,
+            u_product TEXT, f_name TEXT, f_gender TEXT, f_marital TEXT, f_cal TEXT, f_y INTEGER,
+            f_m INTEGER, f_d INTEGER, f_t TEXT, user_concern TEXT, status TEXT, result_html TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# ------------------------------------------------------------------------------
+# 📡 [솔라피 (Solapi) 발송 통제]
+# ------------------------------------------------------------------------------
+def get_solapi_auth_header(api_key, api_secret):
+    date_str = datetime.now().astimezone().isoformat()
+    salt = str(uuid.uuid4().hex)
+    signature = hmac.new(api_secret.encode('utf-8'), (date_str + salt).encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"HMAC-SHA256 apiKey={api_key}, date={date_str}, salt={salt}, signature={signature}"
+
+def send_solapi_custom_message(to_phone, name, msg_body):
     try:
-        with open(file_path, 'r', encoding='utf-8') as f: return json.load(f)
-    except Exception: return {}
-choyeon_db = load_choyeon_db()
+        api_key = st.secrets.get("SOLAPI_API_KEY")
+        api_secret = st.secrets.get("SOLAPI_API_SECRET")
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        if not api_key: return False, "설정 누락"
+        
+        headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json; charset=utf-8"}
+        payload = {"message": {"to": to_phone.replace("-", "").strip(), "from": from_phone.replace("-", "").strip(), "text": msg_body, "subject": f"[초연명리] {name}님 리포트 도착", "type": "LMS"}}
+        res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=10)
+        if res.status_code == 200: return True, "발송 성공"
+        else: return False, str(res.json())
+    except Exception as e: return False, str(e)
 
-try: _gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
-except Exception as _api_e: _gemini_client = None; st.error(f"🚨 Gemini API 키 오류: {_api_e}")
+def send_solapi_admin_alert(now_str, name, product_summary, final_price):
+    try:
+        api_key = st.secrets.get("SOLAPI_API_KEY")
+        api_secret = st.secrets.get("SOLAPI_API_SECRET")
+        from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
+        if not api_key: return False, "설정 누락"
+        admin_msg = f"접수알림/ {name.strip()}님/ {product_summary}/ {final_price:,}원"
+        headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}
+        payload = {"message": {"to": "01038576727", "from": from_phone.replace("-", "").strip(), "text": admin_msg, "type": "SMS"}}
+        requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=5)
+        return True, "성공"
+    except Exception as e: return False, str(e)
 
-@st.cache_data(show_spinner=False, ttl=86400)
-def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
-    if '1.5' in model_name: model_name = 'gemini-2.5-flash'
-    if _gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
-    max_retries = 2
-    for attempt in range(max_retries + 1):
-        try:
-            response = _gemini_client.models.generate_content(
-                model=model_name, contents=prompt_text,
-                config=genai.types.GenerateContentConfig(system_instruction=system_prompt, temperature=0.7)
-            )
-            return response.text.strip()
-        except Exception as e:
-            if attempt < max_retries: time.sleep(1); continue
-            return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
+def calculate_package_price(selected_products):
+    if not selected_products: return 0, 0, 0, 0, 0
+    total_original = sum(int(item.split('정가')[-1].split('원')[0].replace(',', '').strip()) for item in selected_products)
+    total_chuseok = sum(int(item.split('추석특가')[-1].replace('원)', '').replace(',', '').strip()) for item in selected_products)
+    count = len(selected_products)
+    rate = 0.30 if count >= 3 or any("3-" in PRODUCT_MAP[p] for p in selected_products) else (0.20 if count > 1 else 0)
+    final_price = int(round(total_chuseok * (1 - rate), -3))
+    total_rate_pct = int(((total_original - final_price) / total_original) * 100) if total_original > 0 else 0
+    return total_original, total_chuseok, int(rate*100), total_rate_pct, final_price
 
-def call_gemini_api(prompt_text, max_tokens=6000):
-    sys_role = engine.get_master_system_prompt()
-    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
-
-extract_ganji = engine.extract_ganji
-get_oh_class = engine.get_oh_class
-kst_tz = pytz.timezone('Asia/Seoul')
-
-# ==============================================================================
-# 🛡️ [공장 변수 세팅]
-# ==============================================================================
-if st.session_state.get('admin_proc_id'):
-    st.markdown("<style>[data-testid='stSidebar'] {display: none !important;}</style>", unsafe_allow_html=True)
-    selected_target_date = st.session_state.get('target_date', dt_mod.datetime.now(kst_tz).date())
-    main_category = st.session_state.get('main_category', '1. 사주팔자 및 운세 풀이 (종합)')
-    u_product = st.session_state.get('sub_category_1', '1-1. 사주팔자 및 운세 분석')
-    if "2." in main_category: u_product = st.session_state.get('sub_category_2', '2-1. 재물운 특화 분석')
-    elif "3." in main_category: u_product = st.session_state.get('sub_category_3', '3-1. 커플 연애/결혼운 (궁합) 분석')
+# ------------------------------------------------------------------------------
+# 🎯 [핵심] 완자동화 마케팅 메시지 제네레이터
+# ------------------------------------------------------------------------------
+def generate_smart_marketing_text(row, view_url):
+    name = row.get('name', '고객')
+    product = row.get('u_product', '')
+    concern = str(row.get('user_concern', '')).replace(' ', '')
+    b_year = int(row.get('b_year', 1980))
+    age = datetime.now().year - b_year + 1
     
-    name, gender, u_marital, u_cal = st.session_state.get('u_n', '고객'), st.session_state.get('u_g', '여성'), st.session_state.get('u_m_stat', '선택'), st.session_state.get('u_c', '양력')
-    b_year, b_month, b_day, b_time = st.session_state.get('s_y', 1980), st.session_state.get('s_m', 1), st.session_state.get('s_d', 1), st.session_state.get('s_t', '시간 모름')
-    is_1person = not ("3-1." in u_product)
-    is_2person = ("3-1." in u_product)
-else:
-    with st.sidebar: pass # 수동 모드 UI 생략(원본유지)
-
-# ==============================================================================
-# 3. 백그라운드 공장 스텔스 가동 (박사님 화면을 가리지 않음)
-# ==============================================================================
-if st.session_state.get('app_running', False):
-    klc = KoreanLunarCalendar()
-    b_year, b_month, b_day = st.session_state.get("s_y", 1980), st.session_state.get("s_m", 1), st.session_state.get("s_d", 1)
-
-    if "음력" in u_cal:
-        is_leap = True if "윤달" in u_cal else False
-        klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
-        sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
-        lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
-        leap_str = "윤달" if is_leap else "평달"
+    clean_product = re.sub(r'\d-\d\.\s*', '', product).split('(')[0].strip()
+    if '+' in clean_product: clean_product = clean_product.split('+')[0].strip() + " 외 패키지"
+    
+    msg = f"{name}님, 오래 기다리셨습니다. 신청하신 [{clean_product}] 정밀 분석이 완료되었습니다.\n\n"
+    msg += f"🔗 감명서 확인하기: {view_url}\n(※ 우측 상단의 'PDF 다운로드'를 눌러 평생 소장하실 수 있습니다)\n\n"
+    msg += f"🎁 [정성 후기 무료 분석 이벤트]\n감명서가 마음에 드셨다면 따뜻한 후기 한 줄 부탁드립니다! 후기 링크를 보내주시면 박사님께서 직접 [1개월 정밀 월운 감명서(11,000원 상당)]를 무료로 추가 분석해 드립니다.\n\n"
+    msg += f"💡 [박사님의 추가 맞춤 제안]\n"
+    
+    if "궁합" in product or "3-1" in product:
+        msg += "두 분의 인연법이 깊습니다. 평생의 복을 결정짓는 완벽한 날, [3-2. 결혼 택일 특화 분석]으로 최고의 시작을 준비해 보시는 것을 추천해 드립니다."
+    elif "1-2" in product or "올 해" in product:
+        msg += "올해 운의 큰 흐름을 잡으셨다면, 이제 내게 꼭 맞는 금전운의 맥점을 짚을 차례입니다. [2-1. 재물운 특화 분석]을 강력히 추천해 드립니다."
+    elif any(kw in concern for kw in ["돈", "재물", "빚", "투자", "사업", "금전"]):
+        msg += "말씀하신 재물 흐름에 대한 갈증, [2-1. 재물운 특화 분석]에서 박사님께서 가장 확실한 타개책과 내 재물 그릇을 정확히 짚어드립니다."
+    elif age >= 50 or any(kw in concern for kw in ["건강", "수술", "아파", "질병"]):
+        msg += "무엇보다 중요한 것은 건강과 체력입니다. 내 몸의 취약점과 운기의 흐름을 디테일하게 파악하는 [2-4. 건강운 특화 분석]을 꼭 확인해 보시기 바랍니다."
+    elif age <= 39 and any(kw in concern for kw in ["연애", "결혼", "이성", "이별"]):
+        msg += "나와 평생을 함께할 귀인, 인연의 흐름이 궁금하시다면 [2-3. 커플 연애/결혼운 특화 분석]을 통해 인연법을 명확히 확인해 보세요."
     else:
-        klc.setSolarDate(int(b_year), int(b_month), int(b_day))
-        sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
-        lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
-        leap_str = "윤달" if klc.isIntercalation else "평달"
+        msg += "본인의 사주 그릇을 파악하셨다면, 올해 나의 운기가 어떻게 흘러가는지 [1-2. 올해 연운 상세분석]으로 확인하여 다가올 기회를 꽉 잡으세요!"
         
-    curr_year, curr_m, curr_d = selected_target_date.year, selected_target_date.month, selected_target_date.day
-    age = curr_year - sol_y + 1
-    p_icon = "♂️" if gender == "남성" else "♀️"
-    today_str = selected_target_date.strftime("%Y년 %m월 %d일")
+    msg += "\n\n초연 시공명리 연구소를 찾아주셔서 진심으로 감사합니다."
+    return msg
 
-    def extract_time(time_str):
-        if "모름" in time_str: return 0, 0
-        match = re.search(r'(\d{2}):(\d{2})', time_str)
-        return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+# ------------------------------------------------------------------------------
+# 1. 📱 [고객 모바일 접수 화면] 
+# ------------------------------------------------------------------------------
+def render_customer_order_form():
+    ensure_db_table_exists()
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
+        .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
+        .m-title { font-family: 'Nanum Pen Script', cursive; font-size: 34px; color: #1A237E; text-align: center; margin-bottom: 20px; border-bottom: 1.5px dashed #1A237E; }
+        .guide-box { background: #FCFCFD; border: 2px solid #3F51B5; border-radius: 12px; padding: 22px; margin-top: 15px; line-height: 1.8; color: #2D3748; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .pay-title { font-size: 20px; font-weight: bold; color: #1A237E; text-align: center; margin-bottom: 12px; }
+        .bank-info-box { font-family: 'Nanum Myeongjo', serif; background: #F4F6F9; padding: 14px; border-radius: 8px; border-left: 4px solid #1A237E; font-size: 16px; line-height: 1.9; margin: 12px 0; }
+        .promo-banner { background: #FFF3E0; border: 2px solid #FF9800; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<div class='m-title'>🔮 사주박사 신청서 🔮</div>", unsafe_allow_html=True)
+    
+    if "submitted_order" in st.session_state:
+        ord_info = st.session_state["submitted_order"]
+        price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
+        st.markdown(f"""
+        <div class='guide-box'>
+        <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
+        <b>{ord_info['name']}</b>님, 환영합니다!<br>
+        신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완료되었습니다.<br><br>
+        아래 계좌로 복비를 입금해주시면 분석이 시작됩니다!
+        </div>
+        <div class='bank-info-box'>
+        💳 <b>국민은행 231402-04-133221</b><br>
+        👤 <b>예금주: 이 * 호</b><br>
+        💰 <b>복비:</b> {price_display}
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
+            del st.session_state["submitted_order"]
+            st.rerun()
+        return
 
-    # 💡 [핵심] 관리자 모드일 때는 요란한 스피너 대신 스텔스 메시지 출력
-    is_admin_mode = st.session_state.get('admin_proc_id') is not None
-    spinner_msg = "⏳ 박사님의 명령에 따라 백그라운드에서 감명서를 조용히 조립하고 있습니다..." if is_admin_mode else f"⏳ [{u_product.strip()}] 시공명리 연산 및 정밀 통변 가동 중..."
+    st.markdown("<div class='promo-banner'><b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] <br>🌕 추석 맞이 반값 특가! 🌕</b></div>", unsafe_allow_html=True)
 
-    with st.spinner(spinner_msg):
-        h, m = extract_time(b_time)
-        is_lunar_val, is_leap_val = ("음력" in u_cal), ("윤달" in u_cal)
-        try:
-            g_res = engine.get_ganji_from_date(int(b_year), int(b_month), int(b_day), is_lunar_val, is_leap_val)
-            d_pillar, m_pillar, y_pillar = g_res[2], g_res[1], g_res[0]
-        except: y_pillar, m_pillar, d_pillar = "甲子", "甲子", "甲子"
-        try:
-            t_res = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
-            if t_res and len(t_res) >= 2: y_pillar, m_pillar = t_res[0], t_res[1]
-        except: pass
-        
-        ds_hanja = engine.K2H_GAN.get(d_pillar[0], d_pillar[0])
-        t_gan, t_ji = "?", "?"
-        if "모름" not in b_time:
-            match = re.search(r'\((.*?)\)', b_time)
-            raw_ji = match.group(1).replace('朝', '').replace('夜', '') if match else "子"
-            t_ji = engine.K2H_JI.get(raw_ji, raw_ji)
-            gan_arr, ji_arr = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'], ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-            if ds_hanja in gan_arr and t_ji in ji_arr:
-                d_idx, j_idx = gan_arr.index(ds_hanja), ji_arr.index(t_ji)
-                t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
-         
-        gans = [t_gan, d_pillar[0], m_pillar[0], y_pillar[0]]
-        jjis = [t_ji, d_pillar[1], m_pillar[1], y_pillar[1]]
-        hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
-        hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
-        
-        ys_idx = engine.GAN.index(ys) if ys in engine.GAN else 0
-        order_dir = 1 if (ys_idx % 2 == 0) == (gender == '남성') else -1
-        
-        base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
-        utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=engine.get_total_time_adjustment(base_dt))
-        calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
-        
-        counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
-        for c in gans + jjis:
-            oh = engine.get_color(c)
-            if oh in counts: counts[oh] += 1
-        
-        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 미','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
-        guiin_str = guiin_map.get(ds_hanja, '없음')
-        cur_samjae = engine.get_samjae(yb, engine.JI[(curr_year - 1984) % 60 % 12])
-        n_gong = engine.calculate_gongmang(ys, yb) or "-"
-        i_gong = engine.calculate_gongmang(ds, db) or "-"
-        
-        sol_str_fmt = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
-        lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
-        time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
-        
-        report_title = "🏮 초연 시공명리 정밀 감명서"
-        u_icon_str = f"{p_icon}" 
-        cover_html = html_views.get_personal_cover(APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str)
-        info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
-        table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
-        master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, "#555", cur_samjae)
-        intro_html = html_views.get_intro_html()
+    with st.form("choyeon_customer_order_form_final"):
+        st.markdown("<b>1. 👤 신청자 본인 정보</b>", unsafe_allow_html=True)
+        name = st.text_input("이름 *(필수)", placeholder="성함을 입력하세요")
+        c_p1, c_p2, c_p3 = st.columns([1, 1.5, 1.5])
+        with c_p1: st.text_input("국번", value="010", disabled=True)
+        with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4)
+        with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4)
+        memo_info = st.text_input("이메일 (선택사항)")
+        c_g, c_m, c_c = st.columns(3)
+        with c_g: gender = st.selectbox("성별", ["여성", "남성"])
+        with c_m: marital = st.selectbox("결혼유무", ["미혼", "기혼", "돌싱", "기타"])
+        with c_c: u_cal = st.selectbox("양/음력", ["양력", "음력 평달", "음력 윤달"])
+        c_y, c_mo, c_d = st.columns(3)
+        with c_y: b_year = st.text_input("생년(YYYY) *", max_chars=4, placeholder="1990")
+        with c_mo: b_month = st.text_input("월(MM) *", max_chars=2, placeholder="06")
+        with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
+        b_time = st.selectbox("태어난 시간", idx_list)
 
-        # 대운 연산
-        c_idx = engine.GAN.index(ms) if ms in engine.GAN else 0
-        j_idx = engine.JI.index(mb) if mb in engine.JI else 0
-        cur_dw_idx = max(0, (age - calc_d) // 10)
-        dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
-        dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
-        daewun_data_list = []
-        for i in range(10):
-            val = i * 10 + calc_d
-            c_hangul = engine.GAN[(c_idx + (i + 1) * order_dir) % 10] if ms in engine.GAN else "-"
-            j_hangul = engine.JI[(j_idx + (i + 1) * order_dir) % 12] if mb in engine.JI else "-"
-            daewun_data_list.append({
-                "age_range": f"{val}~{val+9}세", "ss_gan": engine.get_ss(ds_hanja, c_hangul),
-                "c_hanja": engine.K2H_GAN.get(c_hangul, c_hangul), "c_hangul": c_hangul,
-                "j_hanja": engine.K2H_JI.get(j_hangul, j_hangul), "j_hangul": j_hangul,
-                "ss_ji": engine.get_ss(ds_hanja, j_hangul), "un_sung": engine.get_unsung(ds_hanja, j_hangul),
-                "y_shinsal": engine.get_12_shinsal(yb, j_hangul), "d_shinsal": engine.get_12_shinsal(db, j_hangul),
-                "is_current": (val <= age < val + 10), "is_first": (i == 0)
-            })
-        un_html = html_views.generate_daewun_layout(daewun_data_list, "순행" if order_dir == 1 else "역행", calc_d, get_oh_class)
-
-        w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
-        w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
-        i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
-        struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
-        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
-        golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
-        closing_html = html_views.get_closing_html(name)            
-
-        part_1_fact = str(info_h or "") + str(table_html or "") + str(master_bar_html or "")
-        part_2_intro = str(intro_html or "")
-        part_3_golden = str(golden_text_html or "")
-        part_5_closing = str(closing_html or "")
-
-        saju_fact_summary = f"- 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({hs}{hb})\n- 격국: {gyukgook_detail}\n"
-
-        target_year_val = curr_year
-        prompt_data = {
-            "name": name, "age": age, "gender": gender, "marital": u_marital,
-            "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
-            "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
-            "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
-            "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
-            "curr_year": target_year_val, "target_year": target_year_val, "curr_m": curr_m
-        }
-
-        class SafeDict(dict):
-            def __missing__(self, key): return '{' + key + '}'
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("<b>2. 🛍️ 상품 선택</b>", unsafe_allow_html=True)
+        selected_products = st.multiselect("원하시는 상품을 모두 선택해주세요 *(필수)", U_PRODUCT_LIST)
         
-        prompt_var_name = "프롬프트_1_1_기본"
-        target_prompt = getattr(prompts, prompt_var_name, getattr(prompts, "프롬프트_1_1_기본", ""))
-        formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-        
-        # 💡 [AI 조련 지시사항 주입]
-        ai_feedback = st.session_state.get('ai_feedback_prompt', '').strip()
-        if ai_feedback:
-            formatted_prompt += f"\n\n[🔥 박사님의 특별 수정 지시사항 🔥]\n{ai_feedback}\n위 지시사항을 100% 반영하여 기존과 완전히 다른 맞춤형 문구로 재생성하시오."
+        f_name, f_gender, f_marital, f_cal, f_t = "", "", "", "", "시간 모름"
+        f_y, f_m, f_d = "", "", ""
+        if any("3-" in PRODUCT_MAP[prod] for prod in selected_products):
+            st.markdown("<hr>", unsafe_allow_html=True)
+            st.markdown("<b>3. 👩‍❤️‍👨 상대방 정보 (궁합 및 택일용 필수)</b>", unsafe_allow_html=True)
+            f_name = st.text_input("상대방 이름 *(필수)")
+            f_c_g, f_c_m, f_c_c = st.columns(3)
+            with f_c_g: f_gender = st.selectbox("상대방 성별", ["남성", "여성"])
+            with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱", "기타"])
+            with f_c_c: f_cal = st.selectbox("상대방 양/음력", ["양력", "음력 평달", "음력 윤달"])
+            f_c_y, f_c_mo, f_c_d = st.columns(3)
+            with f_c_y: f_y = st.text_input("상대방 생년(YYYY) *", max_chars=4)
+            with f_c_mo: f_m = st.text_input("상대방 월(MM) *", max_chars=2)
+            with f_c_d: f_d = st.text_input("상대방 일(DD) *", max_chars=2)
+            f_t = st.selectbox("상대방 태어난 시간", idx_list, key="partner_time")
 
-        raw_response = call_gemini_api(formatted_prompt)
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("<b>4. 📝 나의 현재 고민 털어놓기 (선택)</b>", unsafe_allow_html=True)
+        user_concern_text = st.text_area("답답한 고민들을 편하게 털어놓아 보세요.", height=120)
+        agree = st.checkbox("개인정보 수집 및 제공에 동의합니다. *(필수)")
+        submitted = st.form_submit_button("🏮 사주풀이 신청하기 🏮", type="primary", use_container_width=True)
         
-        if raw_response and isinstance(raw_response, str):
-            clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            ai_output_html = html_views.format_ai_text_to_html(clean_raw)
+        if submitted:
+            if not name.strip() or not p_mid.strip() or not p_end.strip() or not b_year.isdigit() or not selected_products or not agree:
+                st.error("🚨 필수 입력값을 확인해 주십시오.")
+                return
+            
+            calc_result = calculate_package_price(selected_products)
+            total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
+            db_product_codes = " + ".join(selected_products)
+            clean_ui_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP[p]) for p in selected_products]
+            ui_product_desc = " + ".join(clean_ui_names) + f" ({final_price:,}원)"
+            order_id = str(uuid.uuid4())[:8]
+            phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      (order_id, now_str, phone_full, memo_info, name.strip(), gender, marital, u_cal, int(b_year), int(b_month), int(b_day), b_time, db_product_codes, f_name, f_gender, f_marital, f_cal, f_y, f_m, f_d, f_t, user_concern_text, "입금대기", ""))
+            conn.commit()
+            conn.close()
+            send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, final_price)
+            st.session_state["submitted_order"] = {"order_id": order_id, "name": name.strip(), "product_desc": ui_product_desc, "total_raw": total_original, "discount_amt": total_original-final_price, "rate_pct": total_rate_pct, "final_price": final_price}
+            st.rerun()
+
+# ------------------------------------------------------------------------------
+# 👑 [박사님 전용 중앙 통제실 - 3단 서랍장 SPA 플랫 구조]
+# ------------------------------------------------------------------------------
+def render_admin_panel():
+    ensure_db_table_exists()
+    
+    with st.sidebar:
+        st.markdown("<h3 style='text-align:center;'>👑 관리자 로그인</h3>", unsafe_allow_html=True)
+        pwd = st.text_input("관리자 비밀번호", type="password", key="admin_pwd_input")
+        
+    admin_pwd = st.secrets.get("ADMIN_PASSWORD", ADMIN_PASSWORD) if hasattr(st, "secrets") else ADMIN_PASSWORD
+    if pwd == admin_pwd: st.session_state['admin_logged_in'] = True
+    
+    if not st.session_state.get('admin_logged_in', False):
+        st.info("👈 좌측 사이드바에 관리자 암호를 입력하여 주십시오.")
+        return
+
+    st.subheader("👑 초연명리 통합 상황실 (One-Page Dashboard)")
+    
+    conn = get_db_connection()
+    df = pd.read_sql_query("SELECT * FROM orders ORDER BY created_at DESC", conn)
+    conn.close()
+    
+    # 💡 [진행 중인 타겟 찾기] 생성 완료된 HTML이 세션에 있는지 확인
+    active_gid, active_row = None, None
+    pending_orders = df[df["status"] == "입금대기"]
+    for _, row in pending_orders.iterrows():
+        if f"html_{row['order_id']}" in st.session_state:
+            active_gid = row['order_id']
+            active_row = row
+            break
+            
+    # =========================================================================
+    # 🔽 [서랍장 1] 영업 장부 및 대기열
+    # =========================================================================
+    with st.expander("📊 [서랍장 1] 영업 장부 및 대기열 (항상 열려있음)", expanded=(active_gid is None)):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button("💾 [1] 고객 기초 장부 (전체 DB 엑셀)", data=df.to_csv(index=False).encode('utf-8-sig'), file_name="basic_orders.csv", mime="text/csv", use_container_width=True)
+        with col2:
+            crm_df = df[['created_at', 'name', 'phone', 'u_product', 'user_concern', 'b_year']].copy()
+            st.download_button("💾 [2] 영업 마케팅 타겟 장부 (CRM용)", data=crm_df.to_csv(index=False).encode('utf-8-sig'), file_name="crm_marketing.csv", mime="text/csv", use_container_width=True)
+        
+        st.markdown("---")
+        if pending_orders.empty:
+            st.success("대기 중인 신규 주문이 없습니다.")
         else:
-            ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
-
-        def sub_marker(text, marker_name, table_code):
-            pattern = r'\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
-            return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
-
-        formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', un_html if 'un_html' in locals() and un_html else "")
-        master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
-        final_render_html = html_views.get_final_report_box(master_comp)
-
-        final_render_html = str(final_render_html).strip()
-        final_render_html = final_render_html.replace("darkgreen", "#2D3748").replace("#006400", "#2D3748").replace("#008000", "#2D3748")
-        final_render_html = final_render_html.replace("17px", "15px").replace("1px solid", "0px solid")
+            for _, row in pending_orders.iterrows():
+                r_oid = row['order_id']
+                r_name = row['name']
+                r_prod = row['u_product']
+                engine_prod = PRODUCT_MAP.get(r_prod.split('+')[0].strip(), "1-1. 사주팔자 및 운세 분석")
+                
+                if active_gid == r_oid:
+                    st.success(f"📌 [{r_name}] 감명서 작성 완료! 아래 서랍장 2, 3번을 확인하세요.")
+                else:
+                    with st.container():
+                        st.markdown(f"**📌 [{r_name}]** | 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
+                        # 💡 [핵심] 조용히 백그라운드 공장 가동 (mode=factory 로 넘김)
+                        if st.button(f"💰 입금 확인 (무소음 감명 시작) - {r_name}", key=f"pay_{r_oid}"):
+                            st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
+                            st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
+                            st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
+                            
+                            if "3-" in engine_prod:
+                                st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
+                                st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
+                            
+                            if "1-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자 및 운세 풀이 (종합)", engine_prod
+                            elif "2-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", engine_prod
+                            elif "3-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 연애/결혼운 (궁합) 풀이", engine_prod
+                            
+                            st.session_state['admin_proc_id'] = r_oid
+                            st.session_state['app_running'] = True
+                            try: st.query_params["mode"] = "factory"
+                            except: st.experimental_set_query_params(mode="factory")
+                            st.rerun()
 
     # =========================================================================
-    # 📦 [공장 생산 완료] ➔ 스텔스 모드로 즉시 admin 복귀 (서랍장 오픈)
+    # 🔽 [서랍장 2 & 3] 감명 완료 시 즉시 출현
     # =========================================================================
-    if is_admin_mode:
-        gid = st.session_state['admin_proc_id']
-        st.session_state[f'html_{gid}'] = final_render_html
-        st.session_state['app_running'] = False
+    if active_gid:
+        gid = active_gid
+        row = active_row
         
-        # 화면에 HTML을 출력하지 않고, 즉시 관리자 패널(mode=admin)로 자동 복귀!
-        try: st.query_params["mode"] = "admin"
-        except: st.experimental_set_query_params(mode="admin")
-        st.rerun()
-    else:
-        # 박사님 단독 수동 연구 모드일 때는 정상적으로 화면 출력
-        safe_cover = re.sub(r'\n\s+', '\n', cover_html)
-        st.markdown(safe_cover, unsafe_allow_html=True)
-        st.markdown(final_render_html, unsafe_allow_html=True)
+        with st.expander(f"🔍 [서랍장 2] 감명서 미리보기 및 AI 조련소 ({row['name']}님)", expanded=True):
+            st.components.v1.html(st.session_state[f"html_{gid}"], height=500, scrolling=True)
+            st.markdown("---")
+            st.markdown("#### 📝 AI 수정 지시사항 (선택)")
+            st.caption("AI의 문투나 내용이 맘에 들지 않으면 아래에 지시사항(ex: '직업운 부분을 더 긍정적으로 써줘')을 적고 다시 돌려주세요.")
+            feedback_text = st.text_input("지시사항 입력", key=f"fb_{gid}", placeholder="예: 재물운 파트에 투자 유의 내용을 강조해 줘")
+            
+            if st.button("🔴 AI 다시 돌려! (지시사항 반영 재생성)", type="secondary"):
+                st.session_state['ai_feedback_prompt'] = feedback_text
+                st.session_state['app_running'] = True
+                st.session_state['admin_proc_id'] = gid
+                try: st.query_params["mode"] = "factory"
+                except: st.experimental_set_query_params(mode="factory")
+                st.rerun()
+                
+        with st.expander(f"💌 [서랍장 3] 카톡 마케팅 발송소 ({row['name']}님)", expanded=True):
+            if f"sms_{gid}" not in st.session_state:
+                view_url = f"https://choyeon-spacetime.streamlit.app/?mode=view&code={gid}"
+                st.session_state[f"sms_{gid}"] = generate_smart_marketing_text(row, view_url)
+            
+            st.markdown("#### 💡 영업부가 작성해 온 [맞춤형 1:1 타겟팅 영업 문자] 입니다.")
+            st.caption("고객의 나이, 고민거리, 구매 상품을 분석하여 가장 확률 높은 문구를 자동 세팅했습니다. 눈으로만 확인하세요.")
+            st.info(st.session_state[f"sms_{gid}"])
+            
+            if st.button("🟢 영업부 일 잘했네! 최종 발송 및 완료 처리", type="primary"):
+                save_report_to_db(gid, st.session_state[f"html_{gid}"])
+                update_order_status(gid, "분석완료")
+                if row['phone']:
+                    send_solapi_custom_message(row['phone'], row['name'], st.session_state[f"sms_{gid}"])
+                
+                st.session_state.pop(f"html_{gid}", None)
+                st.session_state.pop(f"sms_{gid}", None)
+                st.session_state.pop('ai_feedback_prompt', None)
+                st.session_state.pop('admin_proc_id', None)
+                st.success(f"✅ [{row['name']}]님 발송 완료! 장부에 기록되었습니다.")
+                time.sleep(2)
+                st.rerun()
+
+# ------------------------------------------------------------------------------
+# 📜 [고객 전용 결과 열람창] 
+# ------------------------------------------------------------------------------
+def render_view_page(order_id):
+    ensure_db_table_exists()
+    conn = get_db_connection()
+    df = pd.read_sql_query(f"SELECT * FROM orders WHERE order_id='{order_id}'", conn)
+    conn.close()
+    if df.empty: st.error("존재하지 않거나 만료된 링크입니다."); return
+    row = df.iloc[0]
+    if row.get('status', '') != "분석완료" or not row.get('result_html', ''):
+        st.warning(f"열일 중! 💦 현재 {row.get('name','고객')}님의 사주를 꼼꼼하게 분석하고 있습니다. 완료 시 카톡 알림을 드립니다! 🚀")
+        return
+    st.markdown("<style>@media print { header {visibility: hidden;} footer {visibility: hidden;} .stApp [data-testid='stToolbar'] {display: none;} button {display: none !important;} }</style>", unsafe_allow_html=True)
+    st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
+    st.markdown(str(row['result_html']).strip(), unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# 💡 최상위 라우터 (문지기)
+# ------------------------------------------------------------------------------
+def get_safe_query_param(key):
+    try:
+        if hasattr(st, "query_params"):
+            val = st.query_params.get(key, "")
+            if isinstance(val, list): return str(val[0]) if len(val) > 0 else ""
+            return str(val)
+        else:
+            params = st.experimental_get_query_params()
+            if key in params: return str(params[key][0]) if len(params[key]) > 0 else ""
+            return ""
+    except Exception: return ""
+
+def run_pipeline_router():
+    mode = get_safe_query_param("mode")
+    code = get_safe_query_param("code")
+    
+    if mode == "order": render_customer_order_form(); st.stop()
+    elif mode == "admin": render_admin_panel(); st.stop()
+    elif mode == "view": 
+        if code: render_view_page(code)
+        else: st.warning("⚠️ 올바른 링크로 접속해 주세요.")
+        st.stop()
+    elif mode == "factory":
+        # 💡 [핵심] 모드가 factory일 때는 st.stop()을 하지 않고 빠져나갑니다.
+        # 그러면 app.py의 아래쪽 백그라운드 공장(엔진) 로직이 조용히 실행됩니다!
+        return
