@@ -601,10 +601,6 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
     """1-4 일운 분석 전용 주간 달력 HTML"""
     content = ""
-        # 💡 지저분한 로컬 함수 대신, 떳떳하게 엔진의 공식 공구를 사용합니다!
-        import engine
-        gan_cls = engine.get_oh_class(gan_char)
-        ji_cls = engine.get_oh_class(ji_char)
 
     for item in weekly_days_data:
         wday = item['weekday']
@@ -615,12 +611,13 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         gan_char = ganji_str[0] if len(ganji_str) >= 1 and ganji_str != "-" else "-"
         ji_char = ganji_str[1] if len(ganji_str) >= 2 else "-"
         
-        gan_cls = get_oh_class_local(gan_char)
-        ji_cls = get_oh_class_local(ji_char)
+        # 💡 [정석 수술 완료]: 지워진 꼼수 함수 대신, 반복문 안에서 당당하게 엔진 공구를 부릅니다!
+        import engine
+        gan_cls = engine.get_oh_class(gan_char)
+        ji_cls = engine.get_oh_class(ji_char)
         
         ss_val, unsung_val, y_shinsal_val, d_shinsal_val = "-", "-", "-", "-"
         try:
-            import engine
             ds_hanja = st.session_state.get('ds_hanja', '甲') if hasattr(st, 'session_state') else '甲'
             ss_val = engine.get_ss(ds_hanja, ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung(ds_hanja, ji_char) if ji_char != "-" else "-"
@@ -665,6 +662,13 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
             <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
         </div>
         """
+
+    return f"""
+    <div style='margin-top:14px; margin-bottom:8px; font-size:15px; font-weight:800; color:#3E2723; font-family:"Nanum Myeongjo", serif;'>📅 이번 주 운세 흐름 (일요일 ~ 토요일)</div>
+    <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:10px; table-layout:fixed; font-family:"Nanum Myeongjo", serif;'>
+        {content}
+    </div>
+    """
 
     return f"""
     <div style='margin-top:14px; margin-bottom:8px; font-size:15px; font-weight:800; color:#3E2723; font-family:"Nanum Myeongjo", serif;'>📅 이번 주 운세 흐름 (일요일 ~ 토요일)</div>
@@ -1278,3 +1282,4 @@ def analyze_samja_combination(saju_gan_data, dw_gan="-"):
 
     res_str = " / ".join(comb_results) if comb_results else "원국 특이 삼자조합 없음"
     return res_str
+
