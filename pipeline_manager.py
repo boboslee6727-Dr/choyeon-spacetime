@@ -1,5 +1,5 @@
 # ==============================================================================
-# pipeline_manager.py (ver 75.8 - 정직한 수동 검수 파이프라인 및 상품명 필터)
+# pipeline_manager.py (ver 75.9 - 관리자 비번 사이드바 원상복구 및 정밀 파이프라인)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -72,7 +72,7 @@ def ensure_db_table_exists():
     conn.close()
 
 # ------------------------------------------------------------------------------
-# 📡 [솔라피 (Solapi) 발송 함수 - 알림톡 없이 순수 LMS 안전 발송]
+# 📡 [솔라피 (Solapi) 발송 함수 - 순수 LMS 안전 발송]
 # ------------------------------------------------------------------------------
 def get_solapi_auth_header(api_key, api_secret):
     date_str = datetime.now().astimezone().isoformat()
@@ -87,9 +87,7 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
         if not api_key: return False, "설정 누락"
 
-        # 고객 문자용 깔끔한 이름 (1-1. 및 가격표 제거)
         clean_product = re.sub(r'\d-\d\.\s*', '', product).split('(')[0].strip()
-
         msg_body = f"{name}님, 신청하신 사주 분석이 완료되었습니다.\n\n🔮 신청 상품: {clean_product}\n\n아래 링크를 눌러 소름 돋는 인생 스포일러(사주 리포트)를 바로 확인해 보세요!\n\n결과 확인하기:\n{view_url}"
         
         headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json; charset=utf-8"}
@@ -261,17 +259,24 @@ def render_customer_order_form():
             st.rerun()
 
 # ------------------------------------------------------------------------------
-# 2. 👑 [박사님 관리자 패널]
+# 2. 👑 [박사님 관리자 패널 - 비번은 사이드바에!]
 # ------------------------------------------------------------------------------
 def render_admin_panel():
     ensure_db_table_exists()
-    st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
-    pwd = st.sidebar.text_input("관리자 비밀번호", type="password")
+    
+    # 💡 [핵심 복구]: 비밀번호 입력창을 다시 사이드바로 완벽하게 넣었습니다!
+    with st.sidebar:
+        st.markdown("<h3 style='text-align:center;'>👑 관리자 로그인</h3>", unsafe_allow_html=True)
+        pwd = st.text_input("관리자 비밀번호", type="password")
+        
     admin_pwd = st.secrets.get("ADMIN_PASSWORD", ADMIN_PASSWORD) if hasattr(st, "secrets") else ADMIN_PASSWORD
     if pwd != admin_pwd:
-        st.warning("🔒 관리자 암호를 입력하여 주십시오.")
+        st.info("👈 좌측 사이드바에 관리자 암호를 입력하여 주십시오.")
         return
 
+    # 비밀번호 통과 시 메인 화면에 패널 표시
+    st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
+    
     conn = get_db_connection()
     df = pd.read_sql_query("SELECT * FROM orders ORDER BY created_at DESC", conn)
     conn.close()
@@ -289,14 +294,12 @@ def render_admin_panel():
         else:
             for _, row in pending_orders.iterrows():
                 r_name = row.get('name', '고객')
-                # DB에 저장된 긴 이름들
                 r_prod = row.get('u_product', row.get('product', '1-1. 사주팔자와 운세풀이'))
                 r_date = row.get('created_at', '날짜 미상')
                 r_oid = row.get('order_id', '')
                 r_cal = row.get('u_cal', row.get('calendar_type', '양력'))
                 r_btime = row.get('b_time', row.get('birth_time', '시간 모름'))
                 
-                # 보여줄 때는 깔끔하게
                 first_raw_prod = r_prod.split('+')[0].strip()
                 engine_prod_name = PRODUCT_MAP.get(first_raw_prod, "1-1. 사주팔자 및 운세 분석")
                 clean_admin_prod = re.sub(r'\d-\d\.\s*', '', engine_prod_name) + (" 외" if "+" in r_prod else "")
@@ -304,7 +307,7 @@ def render_admin_panel():
                 with st.expander(f"📌 [{r_name}] {clean_admin_prod} (신청일: {r_date})", expanded=True):
                     st.write(f"- 연락처: {row.get('phone', '')} | 생일: {row.get('b_year')}-{row.get('b_month')}-{row.get('b_day')} ({r_cal}) | 시간: {r_btime}")
                     
-                    if st.button(f"💰 입금 확인 (리포트 작성 시작)", key=f"pay_{r_oid}", type="primary", use_container_width=True):
+                    if st.button(f"💰 입금 확인 (리포트 자동 생성)", key=f"pay_{r_oid}", type="primary", use_container_width=True):
                         with st.spinner("박사님의 감명서 생성 모드로 진입합니다..."):
                             st.session_state['u_n'] = r_name
                             st.session_state['u_g'] = row.get('gender', '여성')
@@ -324,7 +327,7 @@ def render_admin_panel():
                                 st.session_state['p_d_in'] = int(row.get('f_d', 1))
                                 st.session_state['p_t_key'] = row.get('f_t', '시간 모름')
                             
-                            # 엔진에는 철저하게 '1-1. 사주팔자 및 운세 분석' 처럼 오리지널 코드만 주입!
+                            # 엔진에는 '1-1. 사주팔자 및 운세 분석' 처럼 오리지널 코드만 주입!
                             if "1-" in engine_prod_name:
                                 st.session_state['main_category'] = "1. 사주팔자 및 운세 풀이 (종합)"
                                 st.session_state['sub_category_1'] = engine_prod_name
@@ -335,7 +338,6 @@ def render_admin_panel():
                                 st.session_state['main_category'] = "3. 연애/결혼운 (궁합) 풀이"
                                 st.session_state['sub_category_3'] = engine_prod_name
                             
-                            # "유령" 단어 완전 폐기 -> admin_proc_id 로 관리자 처리 승인
                             st.session_state['admin_proc_id'] = r_oid
                             st.session_state['app_running'] = True
                             st.query_params.clear()
