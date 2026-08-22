@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 75.0 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
+# html_views.py (ver 75.2 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
 # ==============================================================================
 # [핵심 반영 사항]
 # 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
@@ -7,6 +7,7 @@
 # 3. 동양 전통 예법 엄수: 남명/여명 인명 붉은색(朱書) 전면 배제 (품격 있는 먹색 #111111 적용)
 # 4. 서체 전면 통일: 전 표지, 원국표, 마스터바, 황금문구, 통변 본문 '나눔명조(Nanum Myeongjo)' 강제 적용
 # 5. 궁합 표지 통합: 타이틀 1줄 강제 방어 및 남/녀 생년월일 <strong> 볼드체 적용 (DRY 통일)
+# 6. [NEW] 진녹색 스파이 완벽 박멸: Streamlit 색상 마크다운 및 모든 HTML Color 태그 원천 차단
 # ==============================================================================
 import re
 import streamlit as st
@@ -125,16 +126,17 @@ def get_global_css():
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 800 !important; font-size: 13px !important; }
 
     /* ========================================================================= */
-    /* 🚨 [진녹색 간지 원천 차단] 본문(p) 안으로 침투한 오행 색상 완벽 무효화 */
+    /* 🚨 [진녹색 간지 원천 차단] 본문(p) 및 제목(div) 전체로 침투한 오행 색상 완벽 무효화! */
     /* ========================================================================= */
-    .ai-content p span, 
-    .ai-content p font, 
-    .ai-content p [style*="color"], 
-    .ai-content p [class*="color-"], 
-    .ai-content p [class*="ganji-"] {
+    .ai-content span, 
+    .ai-content font, 
+    .ai-content b,
+    .ai-content strong,
+    .ai-content em,
+    .ai-content [style*="color"], 
+    .ai-content [class*="color-"], 
+    .ai-content [class*="ganji-"] {
         color: #000000 !important;
-        font-size: 16px !important;
-        font-weight: 800 !important;
         background-color: transparent !important;
     }
     /* ========================================================================= */
@@ -157,14 +159,29 @@ def format_ai_text_to_html(text):
     if not text:
         return ""
 
+    # =====================================================================
+    # 🚨 [박사님의 명검 2.0 진화!] 어떠한 진녹색 스파이도 살아남을 수 없는 철통 방어망
+    # =====================================================================
+    # 1. Streamlit 마크다운 색상 문법 원천 삭제 (예: :green[갑목] -> 갑목)
+    text = re.sub(r':(?:red|blue|green|yellow|orange|violet|purple|gray|grey|rainbow|black|white)\[(.*?)\]', r'\1', text, flags=re.IGNORECASE)
+    
+    # 2. HTML 인라인 스타일에서 색상(color) 강제 삭제 (예: style="color: green;" -> style="")
+    text = re.sub(r'(style=[\'"][^\'"]*?)color\s*:[^;\'"]+;?([^\'"]*[\'"])', r'\1\2', text, flags=re.IGNORECASE)
+    
+    # 3. 텍스트 전체에서 span과 font 태그 자체를 줄바꿈 무관하게 아예 박멸!
+    text = re.sub(r'</?(?:span|font)[^>]*>', '', text, flags=re.IGNORECASE)
+    
+    # 4. 혹시 모를 구형 HTML color 속성 삭제 (예: color="green")
+    text = re.sub(r'\s+color=[\'"][^\'"]*[\'"]', '', text, flags=re.IGNORECASE)
+    # =====================================================================
+
     # 1. 찌꺼기 완벽 제거
     remove_tags = ['[MALE_START]', '[MALE_END]', '[FEMALE_START]', '[FEMALE_END]', '[GUNGHAP_START]', '[GUNGHAP_END]']
     for tag in remove_tags:
         text = text.replace(tag, '')
     text = text.strip()
 
-    # 2. 번역기 내부 1차 청소
-    text = re.sub(r'<span[^>]*class=[\'"][^\'"]*(?:color-|ganji-)[^\'"]*[\'"][^>]*>(.*?)</span>', r'\1', text)
+    # (번역기 내부 1차 청소는 위 명검 2.0에서 완벽히 처리됨)
 
     # 3. 소따옴표 안쪽만 볼드체
     text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
@@ -207,9 +224,7 @@ def format_ai_text_to_html(text):
             html_lines.append(line)
             continue
 
-        # 🚨 [박사님의 명검 복구!] 진녹색 17px 스파이 껍질(span, font) 강제 철거!
-        # (바로 이 한 줄이 지난번 코드 병합 때 실수로 누락되었습니다. 죄송합니다!)
-        line = re.sub(r'</?(?:span|font)[^>]*>', '', line)
+        # (진녹색 스파이 철거 로직은 상단 '명검 2.0' 단계로 격상되어 문자열 전체에 강력 적용되었습니다.)
 
         # 수석보좌관 헤더
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
