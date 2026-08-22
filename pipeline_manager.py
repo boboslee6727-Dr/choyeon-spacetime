@@ -1,5 +1,5 @@
 # ==============================================================================
-# pipeline_manager.py (ver 82.0 Master - URL 이동 없는 100% 완벽한 원페이지 스텔스)
+# pipeline_manager.py (ver 82.1 Master - KST 한국시간 동기화 및 무소음 통합)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -13,6 +13,7 @@ import hashlib
 import json
 import requests
 import re
+import pytz  # 💡 [핵심 패치] 한국 시간을 맞추기 위해 타임존 모듈 추가!
 
 DB_FILE = "choyeon_orders.db"
 ADMIN_PASSWORD = "boss!631201"
@@ -114,14 +115,42 @@ def generate_smart_marketing_text(row, view_url):
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     ensure_db_table_exists()
-    st.markdown("<h2 style='text-align:center;'>🔮 초연명리 사주박사 신청서 🔮</h2>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
+        .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
+        .m-title { font-family: 'Nanum Pen Script', cursive; font-size: 34px; color: #1A237E; text-align: center; margin-bottom: 20px; border-bottom: 1.5px dashed #1A237E; }
+        .guide-box { background: #FCFCFD; border: 2px solid #3F51B5; border-radius: 12px; padding: 22px; margin-top: 15px; line-height: 1.8; color: #2D3748; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .pay-title { font-size: 20px; font-weight: bold; color: #1A237E; text-align: center; margin-bottom: 12px; }
+        .bank-info-box { font-family: 'Nanum Myeongjo', serif; background: #F4F6F9; padding: 14px; border-radius: 8px; border-left: 4px solid #1A237E; font-size: 16px; line-height: 1.9; margin: 12px 0; }
+        .promo-banner { background: #FFF3E0; border: 2px solid #FF9800; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<div class='m-title'>🔮 사주박사 신청서 🔮</div>", unsafe_allow_html=True)
+    
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
-        st.success(f"✅ {ord_info['name']}님, 신청이 완료되었습니다! 아래 계좌로 {ord_info['final_price']:,}원을 입금해 주세요. (국민은행 231402-04-133221 이병호)")
-        if st.button("➕ 새로운 사주풀이 추가 신청", use_container_width=True):
+        price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
+        st.markdown(f"""
+        <div class='guide-box'>
+        <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
+        <b>{ord_info['name']}</b>님, 환영합니다!<br>
+        신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완료되었습니다.<br><br>
+        아래 계좌로 복비를 입금해주시면 분석이 시작됩니다!
+        </div>
+        <div class='bank-info-box'>
+        💳 <b>국민은행 231402-04-133221</b><br>
+        👤 <b>예금주: 이 * 호</b><br>
+        💰 <b>복비:</b> {price_display}
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
             del st.session_state["submitted_order"]
             st.rerun()
         return
+
+    st.markdown("<div class='promo-banner'><b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] <br>🌕 추석 맞이 반값 특가! 🌕</b></div>", unsafe_allow_html=True)
 
     with st.form("choyeon_customer_order_form_final"):
         st.markdown("<b>1. 👤 신청자 본인 정보</b>", unsafe_allow_html=True)
@@ -178,7 +207,11 @@ def render_customer_order_form():
             ui_product_desc = " + ".join(clean_ui_names) + f" ({final_price:,}원)"
             order_id = str(uuid.uuid4())[:8]
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
-            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # 💡 [핵심 패치] KST(한국 표준시)로 정확하게 DB에 기록합니다.
+            kst = pytz.timezone('Asia/Seoul')
+            now_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
+            
             conn = get_db_connection()
             c = conn.cursor()
             c.execute('INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
@@ -210,7 +243,6 @@ def render_admin_panel():
     df = pd.read_sql_query("SELECT * FROM orders ORDER BY created_at DESC", conn)
     conn.close()
     
-    # 💡 [진행 중인 타겟 찾기] 세션에 html이 있는 주문이 있으면 active 상태
     active_gid, active_row = None, None
     pending_orders = df[df["status"] == "입금대기"]
     for _, row in pending_orders.iterrows():
@@ -240,15 +272,13 @@ def render_admin_panel():
                 engine_prod = PRODUCT_MAP.get(r_prod.split('+')[0].strip(), "1-1. 사주팔자 및 운세 분석")
                 
                 with st.container():
-                    st.markdown(f"**📌 [{r_name}]** | 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
+                    st.markdown(f"**📌 [{r_name}]** | 📝 상품: {r_prod.split('+')[0][:15]}... | 🕒 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
                     
-                    # 💡 [핵심] 만약 이 손님의 감명서를 백그라운드에서 만드는 중이라면 버튼 대신 로딩바를 보여줌!
                     if st.session_state.get('app_running') and st.session_state.get('admin_proc_id') == r_oid:
                         st.info(f"⏳ [{r_name}]님의 감명서를 맹렬히 작성 중입니다. 화면을 끄지 마시고 잠시만 대기해 주십시오...")
                     elif active_gid == r_oid:
                         st.success(f"✅ [{r_name}]님 감명 완료! 아래 서랍장 2번, 3번을 열어주세요.")
                     else:
-                        # 아직 시작 안 한 손님은 [입금 확인] 버튼 노출
                         if st.button(f"💰 입금 확인 (무소음 감명 시작) - {r_name}", key=f"pay_{r_oid}"):
                             st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
                             st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
@@ -261,7 +291,6 @@ def render_admin_panel():
                             elif "2-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", engine_prod
                             elif "3-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 연애/결혼운 (궁합) 풀이", engine_prod
                             
-                            # 💡 URL 변경(mode=factory) 없이 그냥 app_running만 True로 만들고 rerun!
                             st.session_state['admin_proc_id'] = r_oid
                             st.session_state['app_running'] = True
                             st.rerun()
@@ -280,7 +309,6 @@ def render_admin_panel():
             st.caption("AI의 문투나 내용이 맘에 들지 않으면 아래에 지시사항(ex: '직업운 부분을 더 긍정적으로 써줘')을 적어주세요.")
             feedback_text = st.text_input("지시사항 입력", key=f"fb_{gid}", placeholder="예: 재물운 파트에 투자 유의 내용을 강조해 줘")
             
-            # 다시 돌릴 때도 버튼 대신 메시지로 바뀜
             if st.session_state.get('app_running') and st.session_state.get('admin_proc_id') == gid:
                 st.warning("⏳ AI가 지시사항을 100% 반영하여 감명서를 다시 쓰고 있습니다. 잠시만 대기해 주십시오...")
             else:
@@ -288,7 +316,7 @@ def render_admin_panel():
                     st.session_state['ai_feedback_prompt'] = feedback_text
                     st.session_state['app_running'] = True
                     st.session_state['admin_proc_id'] = gid
-                    st.rerun() # URL 변경 없음!
+                    st.rerun() 
                 
         with st.expander(f"💌 [서랍장 3] 카톡 마케팅 발송소 ({row['name']}님)", expanded=True):
             if f"sms_{gid}" not in st.session_state:
@@ -332,7 +360,7 @@ def render_view_page(order_id):
     st.markdown(str(row['result_html']).strip(), unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# 💡 최상위 라우터 (문지기 - 🚨이제 mode=factory 쓰레기는 버립니다!)
+# 💡 최상위 라우터
 # ------------------------------------------------------------------------------
 def get_safe_query_param(key):
     try:
@@ -355,8 +383,6 @@ def run_pipeline_router():
         st.stop()
     elif mode == "admin": 
         render_admin_panel()
-        # 💡 [핵심] 입금확인을 눌러서 app_running이 켜지면, st.stop()을 하지 않고 
-        # 그대로 뚫고 지나가서 app.py의 공장이 이 화면 바로 '밑'에서 백그라운드로 돌아가게 만듭니다!
         if st.session_state.get('app_running', False):
             return 
         st.stop()
