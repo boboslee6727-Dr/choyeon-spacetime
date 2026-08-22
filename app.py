@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 76.2 Master - 진녹색 폰트 사살 및 유령 모드 방탄 적용)
+# app.py (ver 76.7 Master - 유령 모드 방탄 적용 & 좀비 폰트 물리적 사살)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -24,20 +24,8 @@ from pipeline_manager import run_pipeline_router
 # ==============================================================================
 # 1. 초기 설정 및 공용 함수
 # ==============================================================================
-APP_VERSION = "ver 76.2 Master"
+APP_VERSION = "ver 76.7 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
-
-# 🧨 [박사님의 철천지원수 사살용 CSS]: 진녹색(darkgreen), 17px, 1px 테두리 영구 삭제 🧨
-st.markdown("""
-<style>
-    span[style*="darkgreen"], span[style*="#006400"], span[style*="#008000"], span[style*="17px"], span[style*="1px solid"] {
-        color: #2D3748 !important; 
-        font-size: 15px !important;
-        border: none !important;
-        background: transparent !important;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 if hasattr(html_views, 'get_global_css'):
     st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
@@ -442,23 +430,10 @@ with st.sidebar:
     st.markdown("---")
 
     # =========================================================================
-    # 👻 [유령 모드 강제 통제소] (사이드바 변수 변조 원천 차단!)
+    # 👻 [유령 모드 통제소] (사이드바 완벽 숨김 처리)
     # =========================================================================
     if st.session_state.get('ghost_order_id'):
         st.markdown("<style>[data-testid='stSidebar'] {display: none !important;}</style>", unsafe_allow_html=True)
-        name = st.session_state.get('u_n', name)
-        gender = st.session_state.get('u_g', gender)
-        u_marital = st.session_state.get('u_m_stat', u_marital)
-        u_cal = st.session_state.get('u_c', u_cal)
-        b_time = st.session_state.get('s_t', b_time)
-        
-        # 💡 [핵심] 상품명에서 가격 꼬리표 떼어내기! (이것 때문에 감명서가 엉망이 되었습니다)
-        raw_prod = st.session_state.get('sub_category_1', st.session_state.get('sub_category_2', st.session_state.get('sub_category_3', st.session_state.get('sub_category_4', '1-1. 사주팔자 및 운세 분석'))))
-        u_product = raw_prod.split(' (')[0].strip()
-        
-        if "3-" in u_product:
-            f_name = st.session_state.get('f_n', '상대방')
-            f_gender = st.session_state.get('f_g', '남성')
 
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
     u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
@@ -1221,13 +1196,17 @@ if st.session_state.get('app_running', False):
                 final_render_html = ""
 
             final_render_html = str(final_render_html).strip()
-            
-            if final_render_html.startswith("</div>"):
-                final_render_html = final_render_html[6:].strip()
-
+            if final_render_html.startswith("</div>"): final_render_html = final_render_html[6:].strip()
             final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
             
             if final_render_html:
+                # 🧨 [진녹색, 17px, 1px 실선 강제 원천 사살] 🧨
+                final_render_html = final_render_html.replace("darkgreen", "#2D3748")
+                final_render_html = final_render_html.replace("#006400", "#2D3748")
+                final_render_html = final_render_html.replace("#008000", "#2D3748")
+                final_render_html = final_render_html.replace("17px", "15px")
+                final_render_html = final_render_html.replace("1px solid", "0px solid")
+
                 st.markdown(final_render_html, unsafe_allow_html=True)
                 
                 # =========================================================================
@@ -1248,7 +1227,9 @@ if st.session_state.get('app_running', False):
                             row = df.iloc[0]
                             if row['phone']:
                                 v_url = f"[https://choyeon-spacetime.streamlit.app/?mode=view&code=](https://choyeon-spacetime.streamlit.app/?mode=view&code=){gid}"
-                                sp = row['product'].split("+")[0].strip() + " 외 1건" if "+" in row['product'] else row['product']
+                                row_prod = row['product']
+                                clean_names = [re.sub(r'\d-\d\.\s*', '', p.strip()) for p in row_prod.split('+')]
+                                sp = f"{clean_names[0]} 외 {len(clean_names)-1}건" if len(clean_names) > 1 else clean_names[0]
                                 ok, msg = pl.send_solapi_auto_message(row['phone'], row['name'], sp, v_url)
                                 if not ok: st.toast(f"⚠️ 카톡 발송 에러: {msg}")
                     except Exception as e:
