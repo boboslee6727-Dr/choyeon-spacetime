@@ -241,7 +241,7 @@ def render_customer_order_form():
             db_product_codes = " + ".join([PRODUCT_MAP[p] for p in selected_products])
             
             # 💡 [화면에 보여줄 이름은 1-1., 추석특가 싹 제거하고 깨끗하게!]
-            clean_ui_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP[p]) for p in selected_products]
+            clean_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP[p]) for p in selected_products]
             ui_product_desc = " + ".join(clean_names) + f" ({final_price:,}원)"
             
             order_id = str(uuid.uuid4())[:8]
