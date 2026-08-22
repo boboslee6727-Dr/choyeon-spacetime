@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 76.1 Master - 오리지널 원본 완벽 복원 및 관리자/고객 통합본)
+# app.py (ver 76.4 Master - 오리지널 원본 완벽 복원 및 관리자/고객 통합본)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -114,12 +114,13 @@ def do_auto_fill_partner():
     else: st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
 # ==============================================================================
-# 🚪 [URL 라우팅 문지기] (고객 신청 폼과 관리자 패널로 가는 문을 엽니다)
+# 🚪 [URL 라우팅 문지기] 
+# (💡 사이드바 그리기 전에 완벽하게 길을 통제합니다!)
 # ==============================================================================
 run_pipeline_router()
 
 # ==============================================================================
-# 2. 사이드바 통제 센터 (오리지널 원본 복원!)
+# 2. 사이드바 통제 센터
 # ==============================================================================
 with st.sidebar:
     def stop_ai():
@@ -442,6 +443,7 @@ with st.sidebar:
         st.session_state['user_key'] = current_user_key
         st.session_state['base_fact_cache'] = None
         st.session_state['report_essays'] = {}
+        
         # 👻 고스트 모드가 아닐 때만 정지 (원본 보호를 위한 예외 처리)
         if not st.session_state.get('ghost_order_id'):
             st.session_state['app_running'] = False
@@ -453,7 +455,7 @@ with st.sidebar:
         components.html("<script>window.parent.print();</script>", height=0)
 
 # ==============================================================================
-# 3. 메인 화면 출력 (오리지널 원본 복원 및 관리자 고스트 연동)
+# 3. 메인 화면 출력 (오리지널 원본 통변 엔진)
 # ==============================================================================
 if st.session_state.get('app_running', False):
     klc = KoreanLunarCalendar()
@@ -1200,14 +1202,17 @@ if st.session_state.get('app_running', False):
                 st.markdown(final_render_html, unsafe_allow_html=True)
                 
                 # =========================================================================
-                # 👻 [관리자 고스트 모드 방어막] (입금 확인 시 DB 저장 및 카톡 발송)
+                # 👻 [관리자 고스트 모드 처리 및 DB 저장/발송]
                 # =========================================================================
                 if st.session_state.get('ghost_order_id'):
                     import pipeline_manager as pl
                     gid = st.session_state['ghost_order_id']
+                    
+                    # 1. DB에 렌더링 결과 저장 및 상태 변경
                     pl.save_report_to_db(gid, final_render_html)
                     pl.update_order_status(gid, "분석완료")
                     
+                    # 2. 카카오톡 알림 발송
                     try:
                         conn = pl.get_db_connection()
                         import pandas as pd
