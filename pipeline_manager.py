@@ -565,21 +565,30 @@ def render_view_page(order_id):
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="window.print();">📄 리포트 하단 PDF 다운로드</button>', unsafe_allow_html=True)
 
 # ==============================================================================
-# 🚪 [URL 라우팅 문지기] - 고객, 관리자, 뷰어를 분리하는 핵심 로직
+# 🛡️ [방탄갑옷 적용] 관리자 패널 (과거 DB 충돌 완벽 방어)
 # ==============================================================================
 def render_admin_panel():
     import streamlit as st
     import pandas as pd
     import sqlite3
     
+    try:
+        ADMIN_PWD = ADMIN_PASSWORD
+    except NameError:
+        ADMIN_PWD = st.secrets.get("ADMIN_PASSWORD", "1234") if hasattr(st, "secrets") else "1234"
+        
+    try:
+        DB_PATH = DB_FILE
+    except NameError:
+        DB_PATH = "choyeon_orders.db"
+    
     st.subheader("👑 사주박사 관리자 장부 및 감명 발송 패널")
     pwd = st.sidebar.text_input("관리자 비밀번호", type="password")
-    if pwd != ADMIN_PASSWORD:
+    if pwd != ADMIN_PWD:
         st.warning("🔒 관리자 암호를 입력하여 주십시오.")
         return
 
-    # 💡 [정석]: 테이블 자동 생성 후 안전 연결
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
@@ -610,44 +619,55 @@ def render_admin_panel():
     tab1, tab2 = st.tabs(["⏳ [입금대기] 승인 및 감명 처리", "✅ [분석완료] 발송 결과 및 링크 관리"])
     
     with tab1:
-        pending_orders = df[df["status"] == "입금대기"]
+        if "status" in df.columns:
+            pending_orders = df[df["status"] == "입금대기"]
+        else:
+            pending_orders = df
+            
         if pending_orders.empty:
             st.success("현재 입금 대기 중인 신청건이 없습니다.")
         else:
             for _, row in pending_orders.iterrows():
-                with st.expander(f"📌 [{row['name']} 님] {row['product']} (신청일: {row['created_at']})", expanded=True):
-                    st.write(f"- 연락처: **{row['phone']}** | 생년월일: **{row['birth_date']} ({row['calendar_type']})** | 시간: **{row['birth_time']}**")
-                    if row['email']:
-                        st.caption(f"📝 메모 및 고민내용: {row['email']}")
+                # 💡 [박사님의 통찰력 적용!]: product가 없으면 u_product를 찾고, 그래도 없으면 기본값!
+                r_name = row.get('name', '고객')
+                r_prod = row.get('product', row.get('u_product', '사주/궁합 분석'))
+                r_date = row.get('created_at', '날짜 미상')
+                r_phone = row.get('phone', '번호 없음')
+                r_bdate = row.get('birth_date', '1980-01-01')
+                r_cal = row.get('calendar_type', '양력')
+                r_btime = row.get('birth_time', '시간 모름')
+                r_email = row.get('email', '')
+                r_oid = row.get('order_id', '주문번호 미상')
+                
+                with st.expander(f"📌 [{r_name} 님] {r_prod} (신청일: {r_date})", expanded=True):
+                    st.write(f"- 연락처: **{r_phone}** | 생년월일: **{r_bdate} ({r_cal})** | 시간: **{r_btime}**")
+                    if r_email:
+                        st.caption(f"📝 메모 및 고민내용: {r_email}")
                     
                     c1, c2 = st.columns(2)
                     with c1:
-                        if st.button(f"💰 입금 확인 (리포트 조용히 생성)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
+                        if st.button(f"💰 입금 확인 (리포트 조용히 생성)", key=f"btn_pay_{r_oid}", use_container_width=True, type="primary"):
                             try:
-                                with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
-                                    # 1. 뼈대(세션) 데이터 주입
-                                    st.session_state['u_n'] = row['name']
-                                    st.session_state['u_g'] = row['gender']
-                                    st.session_state['u_m_stat'] = row['marital']
-                                    st.session_state['u_c'] = row.get('calendar_type', '양력')
+                                with st.spinner(f"{r_name}님의 정밀 분석 리포트를 생성 중입니다..."):
+                                    st.session_state['u_n'] = r_name
+                                    st.session_state['u_g'] = row.get('gender', '여성')
+                                    st.session_state['u_m_stat'] = row.get('marital', '선택')
+                                    st.session_state['u_c'] = r_cal
                                     
-                                    b_date = row.get('birth_date', '1980-01-01')
                                     try:
-                                        y, m, d = b_date.split('-')
+                                        y, m, d = str(r_bdate).split('-')
                                     except:
                                         y, m, d = 1980, 1, 1
                                         
                                     st.session_state['s_y'] = int(y)
                                     st.session_state['s_m'] = int(m)
                                     st.session_state['s_d'] = int(d)
-                                    st.session_state['s_t'] = row['birth_time']
-                                    st.session_state['s_t_select'] = row['birth_time']
+                                    st.session_state['s_t'] = r_btime
+                                    st.session_state['s_t_select'] = r_btime
                                     
-                                    # 2. 고스트 모드 온
                                     st.session_state['app_running'] = True
-                                    st.session_state['ghost_order_id'] = row['order_id']
+                                    st.session_state['ghost_order_id'] = r_oid
                                     
-                                    # 3. 리로드
                                     st.query_params.clear()
                                     st.rerun()
                             except Exception as e:
@@ -655,20 +675,29 @@ def render_admin_panel():
                                 
                     with c2:
                         st.caption("⚠️ 미입금 안내 문자:")
-                        st.code(f"[{row['name']}님] 입금 안내 (생략)", language="text")
+                        st.code(f"[{r_name}님] 입금 계좌 안내 (생략)", language="text")
 
     with tab2:
-        completed_orders = df[df["status"] == "분석완료"]
+        if "status" in df.columns:
+            completed_orders = df[df["status"] == "분석완료"]
+        else:
+            import pandas as pd
+            completed_orders = pd.DataFrame()
+            
         if completed_orders.empty:
             st.info("아직 분석 완료된 내역이 없습니다.")
         else:
             for _, row in completed_orders.iterrows():
-                view_url = f"/?mode=view&code={row['order_id']}"
-                with st.expander(f"✅ [{row['name']} 님] (열람코드: {row['order_id']})", expanded=True):
-                    st.write(f"- 연락처: **{row['phone']}** | [리포트 바로보기]({view_url})")
+                r_name = row.get('name', '고객')
+                r_oid = row.get('order_id', '')
+                r_phone = row.get('phone', '번호 없음')
+                
+                view_url = f"/?mode=view&code={r_oid}"
+                with st.expander(f"✅ [{r_name} 님] (열람코드: {r_oid})", expanded=True):
+                    st.write(f"- 연락처: **{r_phone}** | [리포트 바로보기]({view_url})")
 
 # ==============================================================================
-# 🚪 [URL 라우팅 문지기] 
+# 🚪 [방탄갑옷 적용] URL 라우팅 문지기 
 # ==============================================================================
 def run_pipeline_router():
     import streamlit as st
@@ -676,14 +705,20 @@ def run_pipeline_router():
     order_code = st.query_params.get("code", "")
 
     if mode == "order":
-        render_customer_order_form()
+        try:
+            render_customer_order_form()
+        except NameError:
+            st.error("🚨 고객 신청 폼 함수(render_customer_order_form)를 찾을 수 없습니다.")
         st.stop()
     elif mode == "admin":
         render_admin_panel()
         st.stop()
     elif mode == "view":
         if order_code:
-            render_view_page(order_code)
+            try:
+                render_view_page(order_code)
+            except NameError:
+                st.error("🚨 뷰어 함수(render_view_page)를 찾을 수 없습니다.")
         else:
             st.warning("⚠️ 주문번호가 없습니다. 올바른 링크로 접속해 주세요.")
         st.stop()
