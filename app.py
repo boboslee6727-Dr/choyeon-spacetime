@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 76.8 Master - 버튼 사이드바 복원 및 완벽한 수동 검수 로직)
+# app.py (ver 77.0 Master - 영업부와 완벽 분리된 순수 통변 제조 공장)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -16,18 +16,18 @@ import sys
 import importlib
 from google import genai
 
-APP_VERSION = "ver 76.8 Master"
-st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
-
-# 💡 [가장 중요한 라우팅 문지기]: app.py 실행 되자마자 여기서 URL을 가로챕니다!
-from pipeline_manager import run_pipeline_router
-run_pipeline_router()
-
 import engine
 import prompts
 import html_views
 
-# 🧨 [진녹색 17px 폰트 및 선 강제 초기화]
+# 💡 [영업부 호출]: 여기서 URL을 가로채어 고객/관리자 접속을 통제합니다.
+from pipeline_manager import run_pipeline_router
+run_pipeline_router()
+
+APP_VERSION = "ver 77.0 Master"
+st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
+
+# 🧨 [진녹색 17px 폰트 및 선 강제 초기화 - 영구 사살] 🧨
 st.markdown("""
 <style>
     span[style*="darkgreen"], span[style*="#006400"], span[style*="#008000"], span[style*="17px"], span[style*="1px solid"] {
@@ -125,7 +125,7 @@ def do_auto_fill_partner():
 kst_tz = pytz.timezone('Asia/Seoul')
 
 # ==============================================================================
-# 🛡️ [완벽 방어] 관리자 통변 모드일 때는 사이드바를 완전히 숨김 처리
+# 🛡️ [공장 자동화 모드] 관리자 통변 모드일 때는 사이드바를 숨기고 변수 자동 세팅
 # ==============================================================================
 if st.session_state.get('admin_proc_id'):
     st.markdown("<style>[data-testid='stSidebar'] {display: none !important;}</style>", unsafe_allow_html=True)
@@ -160,7 +160,7 @@ if st.session_state.get('admin_proc_id'):
 
 else:
     # ==============================================================================
-    # 2. 사이드바 통제 센터 (💡 평상시 연구소 메뉴 & 모든 버튼을 이 안에 완벽 격리!)
+    # 2. 사이드바 통제 센터 (💡 박사님의 평상시 수동 조작 화면! 오리지널 복구)
     # ==============================================================================
     with st.sidebar:
         def stop_ai():
@@ -287,7 +287,6 @@ else:
             
         st.markdown("---")
 
-        # 💡 [핵심 복구 2]: [풀이가동] 버튼을 사이드바 맨 밑바닥 안으로 완벽히 집어넣었습니다!
         u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
         u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
         u_m = st.session_state.get('u_m_stat', u_marital if 'u_marital' in locals() else "")
@@ -309,9 +308,8 @@ else:
         if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
             components.html("<script>window.parent.print();</script>", height=0)
 
-
 # ==============================================================================
-# 3. 메인 화면 출력 (오리지널 원본 통변 엔진)
+# 3. 메인 화면 출력 (순수 명리 통변 생산 공장)
 # ==============================================================================
 if st.session_state.get('app_running', False):
     klc = KoreanLunarCalendar()
@@ -1056,52 +1054,18 @@ if st.session_state.get('app_running', False):
                 final_render_html = final_render_html.replace("darkgreen", "#2D3748").replace("#006400", "#2D3748").replace("#008000", "#2D3748")
                 final_render_html = final_render_html.replace("17px", "15px").replace("1px solid", "0px solid")
 
+                # 공장이 만들어낸 최종 결과물을 화면에 띄웁니다.
                 st.markdown(final_render_html, unsafe_allow_html=True)
                 
                 # =========================================================================
-                # 🧐 [관리자 정밀 검수 모드 및 수동 발송 통제소]
+                # 📦 [공장 생산 완료] ➔ 영업부(pipeline_manager)에 완성품 인계
                 # =========================================================================
                 if st.session_state.get('admin_proc_id'):
                     import pipeline_manager as pl
-                    gid = st.session_state['admin_proc_id']
-                    
-                    st.markdown("<br><br>", unsafe_allow_html=True)
-                    st.markdown("<div style='background-color:#F9FBE7; padding:25px; border-radius:12px; border:2px solid #2E7D32; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>", unsafe_allow_html=True)
-                    st.markdown("<h3 style='color:#1B5E20; text-align:center; margin-top:0;'>🧐 [관리자 정밀 검수 모드]</h3>", unsafe_allow_html=True)
-                    st.markdown("<p style='text-align:center; font-size:16px; color:#333; line-height:1.6;'>박사님, 위 감명서 내용이 완벽하게 작성되었는지 꼼꼼히 검수해 주십시오.<br>확인이 끝나면 아래의 발송 버튼을 눌러 고객에게 리포트를 전달합니다.</p>", unsafe_allow_html=True)
-                    
-                    if st.button("🚀 검수 완료! 고객에게 결과 링크 전송 및 정식 장부 기록", type="primary", use_container_width=True):
-                        with st.spinner("장부 기록 및 알림 문자 발송 중..."):
-                            pl.save_report_to_db(gid, final_render_html)
-                            pl.update_order_status(gid, "분석완료")
-                            
-                            try:
-                                conn = pl.get_db_connection()
-                                import pandas as pd
-                                df = pd.read_sql_query(f"SELECT * FROM orders WHERE order_id='{gid}'", conn)
-                                if not df.empty:
-                                    row = df.iloc[0]
-                                    if row['phone']:
-                                        v_url = f"[https://choyeon-spacetime.streamlit.app/?mode=view&code=](https://choyeon-spacetime.streamlit.app/?mode=view&code=){gid}"
-                                        row_prod = row['product']
-                                        clean_names = [re.sub(r'\d-\d\.\s*', '', p.strip()) for p in row_prod.split('+')]
-                                        sp = f"{clean_names[0]} 외 {len(clean_names)-1}건" if len(clean_names) > 1 else clean_names[0]
-                                        ok, msg = pl.send_solapi_auto_message(row['phone'], row['name'], sp, v_url)
-                                        if not ok: st.toast(f"⚠️ 카톡 발송 에러: {msg}")
-                                        else: st.toast("✅ 고객에게 문자가 성공적으로 발송되었습니다!")
-                            except Exception as e:
-                                st.toast(f"🚨 카톡 발송 시스템 오류: {e}")
-                                
-                            st.session_state['admin_proc_id'] = None
-                            st.success(f"✅ [{gid}] 정식 매출 장부 저장 및 최종 발송 완료! 3초 뒤 관리자 화면으로 복귀합니다...")
-                            time.sleep(3)
-                            
-                            try:
-                                if hasattr(st, "query_params"): st.query_params["mode"] = "admin"
-                                else: st.experimental_set_query_params(mode="admin")
-                            except: pass
-                            st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    if hasattr(pl, 'render_admin_approval_ui'):
+                        pl.render_admin_approval_ui(st.session_state['admin_proc_id'], final_render_html)
+                    else:
+                        st.warning("⏳ 영업부(pipeline_manager) 업데이트 대기 중입니다...")
                     
             else:
                 st.warning("⚠️ 렌더링된 결과물이 비어 있습니다.")
