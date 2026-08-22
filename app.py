@@ -442,7 +442,9 @@ with st.sidebar:
         st.session_state['user_key'] = current_user_key
         st.session_state['base_fact_cache'] = None
         st.session_state['report_essays'] = {}
-        st.session_state['app_running'] = False
+        # 👻 고스트 모드가 아닐 때만 정지 (원본 보호를 위한 예외 처리)
+        if not st.session_state.get('ghost_order_id'):
+            st.session_state['app_running'] = False
 
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
         st.session_state['app_running'] = True
