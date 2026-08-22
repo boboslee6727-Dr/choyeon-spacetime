@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 76.4 Master - 오리지널 원본 완벽 복원 및 관리자/고객 통합본)
+# app.py (ver 76.2 Master - 진녹색 폰트 사살 및 유령 모드 방탄 적용)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -24,8 +24,20 @@ from pipeline_manager import run_pipeline_router
 # ==============================================================================
 # 1. 초기 설정 및 공용 함수
 # ==============================================================================
-APP_VERSION = "ver 76.1 Master"
+APP_VERSION = "ver 76.2 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
+
+# 🧨 [박사님의 철천지원수 사살용 CSS]: 진녹색(darkgreen), 17px, 1px 테두리 영구 삭제 🧨
+st.markdown("""
+<style>
+    span[style*="darkgreen"], span[style*="#006400"], span[style*="#008000"], span[style*="17px"], span[style*="1px solid"] {
+        color: #2D3748 !important; 
+        font-size: 15px !important;
+        border: none !important;
+        background: transparent !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 if hasattr(html_views, 'get_global_css'):
     st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
@@ -115,7 +127,6 @@ def do_auto_fill_partner():
 
 # ==============================================================================
 # 🚪 [URL 라우팅 문지기] 
-# (💡 사이드바 그리기 전에 완벽하게 길을 통제합니다!)
 # ==============================================================================
 run_pipeline_router()
 
@@ -430,6 +441,25 @@ with st.sidebar:
         
     st.markdown("---")
 
+    # =========================================================================
+    # 👻 [유령 모드 강제 통제소] (사이드바 변수 변조 원천 차단!)
+    # =========================================================================
+    if st.session_state.get('ghost_order_id'):
+        st.markdown("<style>[data-testid='stSidebar'] {display: none !important;}</style>", unsafe_allow_html=True)
+        name = st.session_state.get('u_n', name)
+        gender = st.session_state.get('u_g', gender)
+        u_marital = st.session_state.get('u_m_stat', u_marital)
+        u_cal = st.session_state.get('u_c', u_cal)
+        b_time = st.session_state.get('s_t', b_time)
+        
+        # 💡 [핵심] 상품명에서 가격 꼬리표 떼어내기! (이것 때문에 감명서가 엉망이 되었습니다)
+        raw_prod = st.session_state.get('sub_category_1', st.session_state.get('sub_category_2', st.session_state.get('sub_category_3', st.session_state.get('sub_category_4', '1-1. 사주팔자 및 운세 분석'))))
+        u_product = raw_prod.split(' (')[0].strip()
+        
+        if "3-" in u_product:
+            f_name = st.session_state.get('f_n', '상대방')
+            f_gender = st.session_state.get('f_g', '남성')
+
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
     u_g = st.session_state.get('u_g', gender if 'gender' in locals() else "")
     u_m = st.session_state.get('u_m_stat', u_marital if 'u_marital' in locals() else "")
@@ -444,7 +474,6 @@ with st.sidebar:
         st.session_state['base_fact_cache'] = None
         st.session_state['report_essays'] = {}
         
-        # 👻 고스트 모드가 아닐 때만 정지 (원본 보호를 위한 예외 처리)
         if not st.session_state.get('ghost_order_id'):
             st.session_state['app_running'] = False
 
@@ -547,7 +576,7 @@ if st.session_state.get('app_running', False):
             oh = engine.get_color(c)
             if oh in counts: counts[oh] += 1
         
-        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 미','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         guiin_str = guiin_map.get(ds_hanja, '없음')
         curr_y_ji = engine.JI[(curr_year - 1984) % 60 % 12]
         
@@ -1202,17 +1231,15 @@ if st.session_state.get('app_running', False):
                 st.markdown(final_render_html, unsafe_allow_html=True)
                 
                 # =========================================================================
-                # 👻 [관리자 고스트 모드 처리 및 DB 저장/발송]
+                # 👻 [유령 모드 장부 저장 및 카톡 자동 발송]
                 # =========================================================================
                 if st.session_state.get('ghost_order_id'):
                     import pipeline_manager as pl
                     gid = st.session_state['ghost_order_id']
                     
-                    # 1. DB에 렌더링 결과 저장 및 상태 변경
                     pl.save_report_to_db(gid, final_render_html)
                     pl.update_order_status(gid, "분석완료")
                     
-                    # 2. 카카오톡 알림 발송
                     try:
                         conn = pl.get_db_connection()
                         import pandas as pd
@@ -1222,9 +1249,10 @@ if st.session_state.get('app_running', False):
                             if row['phone']:
                                 v_url = f"[https://choyeon-spacetime.streamlit.app/?mode=view&code=](https://choyeon-spacetime.streamlit.app/?mode=view&code=){gid}"
                                 sp = row['product'].split("+")[0].strip() + " 외 1건" if "+" in row['product'] else row['product']
-                                pl.send_solapi_auto_message(row['phone'], row['name'], sp, v_url)
+                                ok, msg = pl.send_solapi_auto_message(row['phone'], row['name'], sp, v_url)
+                                if not ok: st.toast(f"⚠️ 카톡 발송 에러: {msg}")
                     except Exception as e:
-                        st.error(f"🚨 카톡 자동 발송 중 오류: {e}")
+                        st.toast(f"🚨 카톡 발송 시스템 오류: {e}")
                         
                     st.session_state['ghost_order_id'] = None
                     st.success(f"✅ [{gid}] 장부 저장 및 분석완료 처리 성공!")
