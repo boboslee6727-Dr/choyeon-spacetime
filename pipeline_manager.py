@@ -567,7 +567,7 @@ def render_view_page(order_id):
 # ==============================================================================
 # 🚪 [URL 라우팅 문지기] - 고객, 관리자, 뷰어를 분리하는 핵심 로직
 # ==============================================================================
-def render_admin_panel(generator_func):
+def render_admin_panel():
     import streamlit as st
     import pandas as pd
     import sqlite3
@@ -578,7 +578,7 @@ def render_admin_panel(generator_func):
         st.warning("🔒 관리자 암호를 입력하여 주십시오.")
         return
 
-    # 💡 [정석]: 테이블이 없으면 자동 생성하고, 안전하게 연결하여 조회합니다.
+    # 💡 [정석]: 테이블 자동 생성 후 안전 연결
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("""
@@ -622,23 +622,40 @@ def render_admin_panel(generator_func):
                     
                     c1, c2 = st.columns(2)
                     with c1:
-                        if st.button(f"💰 입금 확인 (리포트 생성 및 발송)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
+                        if st.button(f"💰 입금 확인 (리포트 조용히 생성)", key=f"btn_pay_{row['order_id']}", use_container_width=True, type="primary"):
                             try:
                                 with st.spinner(f"{row['name']}님의 정밀 분석 리포트를 생성 중입니다..."):
-                                    if generator_func:
-                                        report_html = generator_func(row.to_dict())
-                                        save_report_to_db(row['order_id'], report_html)
-                                        update_order_status(row['order_id'], "분석완료")
-                                        st.success(f"✅ {row['name']}님 리포트 생성 및 저장 완료!")
-                                        st.rerun()
-                                    else:
-                                        st.error("🚨 리포트 생성 엔진이 연결되지 않았습니다.")
+                                    # 1. 뼈대(세션) 데이터 주입
+                                    st.session_state['u_n'] = row['name']
+                                    st.session_state['u_g'] = row['gender']
+                                    st.session_state['u_m_stat'] = row['marital']
+                                    st.session_state['u_c'] = row.get('calendar_type', '양력')
+                                    
+                                    b_date = row.get('birth_date', '1980-01-01')
+                                    try:
+                                        y, m, d = b_date.split('-')
+                                    except:
+                                        y, m, d = 1980, 1, 1
+                                        
+                                    st.session_state['s_y'] = int(y)
+                                    st.session_state['s_m'] = int(m)
+                                    st.session_state['s_d'] = int(d)
+                                    st.session_state['s_t'] = row['birth_time']
+                                    st.session_state['s_t_select'] = row['birth_time']
+                                    
+                                    # 2. 고스트 모드 온
+                                    st.session_state['app_running'] = True
+                                    st.session_state['ghost_order_id'] = row['order_id']
+                                    
+                                    # 3. 리로드
+                                    st.query_params.clear()
+                                    st.rerun()
                             except Exception as e:
                                 st.error(f"🚨 [에러] 원인: {e}")
                                 
                     with c2:
                         st.caption("⚠️ 미입금 안내 문자:")
-                        st.code(f"[{row['name']}님] 입금 계좌 안내 (생략)", language="text")
+                        st.code(f"[{row['name']}님] 입금 안내 (생략)", language="text")
 
     with tab2:
         completed_orders = df[df["status"] == "분석완료"]
@@ -653,7 +670,7 @@ def render_admin_panel(generator_func):
 # ==============================================================================
 # 🚪 [URL 라우팅 문지기] 
 # ==============================================================================
-def run_pipeline_router(generator_func):
+def run_pipeline_router():
     import streamlit as st
     mode = st.query_params.get("mode", "")
     order_code = st.query_params.get("code", "")
@@ -662,7 +679,7 @@ def run_pipeline_router(generator_func):
         render_customer_order_form()
         st.stop()
     elif mode == "admin":
-        render_admin_panel(generator_func)
+        render_admin_panel()
         st.stop()
     elif mode == "view":
         if order_code:
