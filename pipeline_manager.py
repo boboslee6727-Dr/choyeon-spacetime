@@ -1,5 +1,5 @@
 # ==============================================================================
-# pipeline_manager.py (ver 81.1 Master - 솔라피 실과금 완벽 차단 / 무과금 테스트 모드)
+# pipeline_manager.py (ver 82.0 Master - URL 이동 없는 100% 완벽한 원페이지 스텔스)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -65,35 +65,17 @@ def ensure_db_table_exists():
     conn.close()
 
 # ------------------------------------------------------------------------------
-# 📡 🚨 [솔라피 (Solapi) 무과금 테스트 모드 전환] 🚨
+# 📡 🚨 [솔라피 (Solapi) 무과금 테스트 모드 유지] 🚨
 # ------------------------------------------------------------------------------
 def send_solapi_custom_message(to_phone, name, msg_body):
     try:
-        # 💸 박사님의 실제 과금을 막기 위해 API 호출부를 강제 주석 처리했습니다!
-        # api_key = st.secrets.get("SOLAPI_API_KEY")
-        # api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        # from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
-        # if not api_key: return False, "설정 누락"
-        # headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json; charset=utf-8"}
-        # payload = {"message": {"to": to_phone.replace("-", "").strip(), "from": from_phone.replace("-", "").strip(), "text": msg_body, "subject": f"[초연명리] {name}님 리포트 도착", "type": "LMS"}}
-        # res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=10)
-        
-        # 가짜 발송 딜레이 (0.5초) 후 무조건 성공 반환
+        # 박사님 테스트 시 비용 청구를 막기 위해 API 강제 차단!
         time.sleep(0.5) 
         return True, "[테스트 모드] 솔라피 실과금 없이 가상 발송 성공"
     except Exception as e: return False, str(e)
 
 def send_solapi_admin_alert(now_str, name, product_summary, final_price):
     try:
-        # 💸 접수 시 날아오는 관리자 알림 문자도 돈이 나가지 않게 막았습니다!
-        # api_key = st.secrets.get("SOLAPI_API_KEY")
-        # api_secret = st.secrets.get("SOLAPI_API_SECRET")
-        # from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
-        # admin_msg = f"접수알림/ {name.strip()}님/ {product_summary}/ {final_price:,}원"
-        # headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}
-        # payload = {"message": {"to": "01038576727", "from": from_phone.replace("-", "").strip(), "text": admin_msg, "type": "SMS"}}
-        # requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=5)
-        
         time.sleep(0.5)
         return True, "성공"
     except Exception as e: return False, str(e)
@@ -108,38 +90,23 @@ def calculate_package_price(selected_products):
     total_rate_pct = int(((total_original - final_price) / total_original) * 100) if total_original > 0 else 0
     return total_original, total_chuseok, int(rate*100), total_rate_pct, final_price
 
-# ------------------------------------------------------------------------------
-# 🎯 [핵심] 완자동화 마케팅 메시지 제네레이터
-# ------------------------------------------------------------------------------
 def generate_smart_marketing_text(row, view_url):
-    name = row.get('name', '고객')
-    product = row.get('u_product', '')
-    concern = str(row.get('user_concern', '')).replace(' ', '')
+    name, product, concern = row.get('name', '고객'), row.get('u_product', ''), str(row.get('user_concern', '')).replace(' ', '')
     b_year = int(row.get('b_year', 1980))
     age = datetime.now().year - b_year + 1
-    
     clean_product = re.sub(r'\d-\d\.\s*', '', product).split('(')[0].strip()
     if '+' in clean_product: clean_product = clean_product.split('+')[0].strip() + " 외 패키지"
     
-    msg = f"{name}님, 오래 기다리셨습니다. 신청하신 [{clean_product}] 정밀 분석이 완료되었습니다.\n\n"
-    msg += f"🔗 감명서 확인하기: {view_url}\n(※ 우측 상단의 'PDF 다운로드'를 눌러 평생 소장하실 수 있습니다)\n\n"
-    msg += f"🎁 [정성 후기 무료 분석 이벤트]\n감명서가 마음에 드셨다면 따뜻한 후기 한 줄 부탁드립니다! 후기 링크를 보내주시면 박사님께서 직접 [1개월 정밀 월운 감명서(11,000원 상당)]를 무료로 추가 분석해 드립니다.\n\n"
-    msg += f"💡 [박사님의 추가 맞춤 제안]\n"
+    msg = f"{name}님, 오래 기다리셨습니다. 신청하신 [{clean_product}] 정밀 분석이 완료되었습니다.\n\n🔗 감명서 확인하기: {view_url}\n\n"
+    msg += f"🎁 [정성 후기 이벤트]\n감명서가 마음에 드셨다면 따뜻한 후기 부탁드립니다! 후기 링크를 주시면 박사님께서 직접 [1개월 정밀 월운 감명서(11,000원 상당)]를 무료로 분석해 드립니다.\n\n💡 [박사님의 추천]\n"
     
-    if "궁합" in product or "3-1" in product:
-        msg += "두 분의 인연법이 깊습니다. 평생의 복을 결정짓는 완벽한 날, [3-2. 결혼 택일 특화 분석]으로 최고의 시작을 준비해 보시는 것을 추천해 드립니다."
-    elif "1-2" in product or "올 해" in product:
-        msg += "올해 운의 큰 흐름을 잡으셨다면, 이제 내게 꼭 맞는 금전운의 맥점을 짚을 차례입니다. [2-1. 재물운 특화 분석]을 강력히 추천해 드립니다."
-    elif any(kw in concern for kw in ["돈", "재물", "빚", "투자", "사업", "금전"]):
-        msg += "말씀하신 재물 흐름에 대한 갈증, [2-1. 재물운 특화 분석]에서 박사님께서 가장 확실한 타개책과 내 재물 그릇을 정확히 짚어드립니다."
-    elif age >= 50 or any(kw in concern for kw in ["건강", "수술", "아파", "질병"]):
-        msg += "무엇보다 중요한 것은 건강과 체력입니다. 내 몸의 취약점과 운기의 흐름을 디테일하게 파악하는 [2-4. 건강운 특화 분석]을 꼭 확인해 보시기 바랍니다."
-    elif age <= 39 and any(kw in concern for kw in ["연애", "결혼", "이성", "이별"]):
-        msg += "나와 평생을 함께할 귀인, 인연의 흐름이 궁금하시다면 [2-3. 커플 연애/결혼운 특화 분석]을 통해 인연법을 명확히 확인해 보세요."
-    else:
-        msg += "본인의 사주 그릇을 파악하셨다면, 올해 나의 운기가 어떻게 흘러가는지 [1-2. 올해 연운 상세분석]으로 확인하여 다가올 기회를 꽉 잡으세요!"
-        
-    msg += "\n\n초연 시공명리 연구소를 찾아주셔서 진심으로 감사합니다."
+    if "궁합" in product or "3-1" in product: msg += "두 분의 인연법이 깊습니다. 완벽한 날, [3-2. 결혼 택일 특화 분석]으로 최고의 시작을 준비해 보세요."
+    elif "1-2" in product or "올 해" in product: msg += "올해 운의 큰 흐름을 잡으셨다면, 이제 내게 꼭 맞는 금전운의 맥점을 짚을 차례입니다. [2-1. 재물운 특화 분석]을 강력 추천합니다."
+    elif any(kw in concern for kw in ["돈", "재물", "빚", "투자", "금전"]): msg += "말씀하신 재물 흐름에 대한 갈증, [2-1. 재물운 특화 분석]에서 확실한 타개책을 짚어드립니다."
+    elif age >= 50 or any(kw in concern for kw in ["건강", "수술", "질병"]): msg += "무엇보다 건강이 최고입니다. 내 몸의 취약점과 운기를 파악하는 [2-4. 건강운 특화 분석]을 확인해 보세요."
+    elif age <= 39 and any(kw in concern for kw in ["연애", "결혼", "이성"]): msg += "평생을 함께할 귀인, [2-3. 커플 연애/결혼운 특화 분석]을 통해 인연법을 확인해 보세요."
+    else: msg += "올해 나의 운기가 어떻게 흘러가는지 [1-2. 올해 연운 상세분석]으로 확인하여 다가올 기회를 꽉 잡으세요!"
+    msg += "\n\n초연 시공명리 연구소를 찾아주셔서 감사합니다."
     return msg
 
 # ------------------------------------------------------------------------------
@@ -147,42 +114,14 @@ def generate_smart_marketing_text(row, view_url):
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     ensure_db_table_exists()
-    st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap');
-        .mobile-box { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 3px solid #1A237E; border-radius: 15px; padding: 20px; }
-        .m-title { font-family: 'Nanum Pen Script', cursive; font-size: 34px; color: #1A237E; text-align: center; margin-bottom: 20px; border-bottom: 1.5px dashed #1A237E; }
-        .guide-box { background: #FCFCFD; border: 2px solid #3F51B5; border-radius: 12px; padding: 22px; margin-top: 15px; line-height: 1.8; color: #2D3748; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .pay-title { font-size: 20px; font-weight: bold; color: #1A237E; text-align: center; margin-bottom: 12px; }
-        .bank-info-box { font-family: 'Nanum Myeongjo', serif; background: #F4F6F9; padding: 14px; border-radius: 8px; border-left: 4px solid #1A237E; font-size: 16px; line-height: 1.9; margin: 12px 0; }
-        .promo-banner { background: #FFF3E0; border: 2px solid #FF9800; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; font-family: 'Gowun Dodum', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<div class='m-title'>🔮 사주박사 신청서 🔮</div>", unsafe_allow_html=True)
-    
+    st.markdown("<h2 style='text-align:center;'>🔮 초연명리 사주박사 신청서 🔮</h2>", unsafe_allow_html=True)
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
-        price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
-        st.markdown(f"""
-        <div class='guide-box'>
-        <div class='pay-title'>[ 🏮 신청 접수 완료! 🏮 ]</div>
-        <b>{ord_info['name']}</b>님, 환영합니다!<br>
-        신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완료되었습니다.<br><br>
-        아래 계좌로 복비를 입금해주시면 분석이 시작됩니다!
-        </div>
-        <div class='bank-info-box'>
-        💳 <b>국민은행 231402-04-133221</b><br>
-        👤 <b>예금주: 이 * 호</b><br>
-        💰 <b>복비:</b> {price_display}
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
+        st.success(f"✅ {ord_info['name']}님, 신청이 완료되었습니다! 아래 계좌로 {ord_info['final_price']:,}원을 입금해 주세요. (국민은행 231402-04-133221 이병호)")
+        if st.button("➕ 새로운 사주풀이 추가 신청", use_container_width=True):
             del st.session_state["submitted_order"]
             st.rerun()
         return
-
-    st.markdown("<div class='promo-banner'><b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] <br>🌕 추석 맞이 반값 특가! 🌕</b></div>", unsafe_allow_html=True)
 
     with st.form("choyeon_customer_order_form_final"):
         st.markdown("<b>1. 👤 신청자 본인 정보</b>", unsafe_allow_html=True)
@@ -210,7 +149,7 @@ def render_customer_order_form():
         f_y, f_m, f_d = "", "", ""
         if any("3-" in PRODUCT_MAP[prod] for prod in selected_products):
             st.markdown("<hr>", unsafe_allow_html=True)
-            st.markdown("<b>3. 👩‍❤️‍👨 상대방 정보 (궁합 및 택일용 필수)</b>", unsafe_allow_html=True)
+            st.markdown("<b>3. 👩‍❤️‍👨 상대방 정보 (궁합/택일)</b>", unsafe_allow_html=True)
             f_name = st.text_input("상대방 이름 *(필수)")
             f_c_g, f_c_m, f_c_c = st.columns(3)
             with f_c_g: f_gender = st.selectbox("상대방 성별", ["남성", "여성"])
@@ -224,7 +163,7 @@ def render_customer_order_form():
 
         st.markdown("<hr>", unsafe_allow_html=True)
         st.markdown("<b>4. 📝 나의 현재 고민 털어놓기 (선택)</b>", unsafe_allow_html=True)
-        user_concern_text = st.text_area("답답한 고민들을 편하게 털어놓아 보세요.", height=120)
+        user_concern_text = st.text_area("답답한 고민들을 편하게 털어놓아 보세요.", height=100)
         agree = st.checkbox("개인정보 수집 및 제공에 동의합니다. *(필수)")
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 🏮", type="primary", use_container_width=True)
         
@@ -232,7 +171,6 @@ def render_customer_order_form():
             if not name.strip() or not p_mid.strip() or not p_end.strip() or not b_year.isdigit() or not selected_products or not agree:
                 st.error("🚨 필수 입력값을 확인해 주십시오.")
                 return
-            
             calc_result = calculate_package_price(selected_products)
             total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
             db_product_codes = " + ".join(selected_products)
@@ -241,7 +179,6 @@ def render_customer_order_form():
             order_id = str(uuid.uuid4())[:8]
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
             conn = get_db_connection()
             c = conn.cursor()
             c.execute('INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
@@ -253,29 +190,27 @@ def render_customer_order_form():
             st.rerun()
 
 # ------------------------------------------------------------------------------
-# 👑 [박사님 전용 중앙 통제실 - 3단 서랍장 SPA 플랫 구조]
+# 👑 [박사님 전용 중앙 통제실 - 3단 서랍장 SPA 로직]
 # ------------------------------------------------------------------------------
 def render_admin_panel():
     ensure_db_table_exists()
-    
     with st.sidebar:
         st.markdown("<h3 style='text-align:center;'>👑 관리자 로그인</h3>", unsafe_allow_html=True)
         pwd = st.text_input("관리자 비밀번호", type="password", key="admin_pwd_input")
         
     admin_pwd = st.secrets.get("ADMIN_PASSWORD", ADMIN_PASSWORD) if hasattr(st, "secrets") else ADMIN_PASSWORD
     if pwd == admin_pwd: st.session_state['admin_logged_in'] = True
-    
     if not st.session_state.get('admin_logged_in', False):
         st.info("👈 좌측 사이드바에 관리자 암호를 입력하여 주십시오.")
         return
 
-    st.subheader("👑 초연명리 통합 상황실 (One-Page Dashboard)")
+    st.subheader("👑 초연명리 통합 상황실 (URL 이동 없음)")
     
     conn = get_db_connection()
     df = pd.read_sql_query("SELECT * FROM orders ORDER BY created_at DESC", conn)
     conn.close()
     
-    # 💡 [진행 중인 타겟 찾기] 생성 완료된 HTML이 세션에 있는지 확인
+    # 💡 [진행 중인 타겟 찾기] 세션에 html이 있는 주문이 있으면 active 상태
     active_gid, active_row = None, None
     pending_orders = df[df["status"] == "입금대기"]
     for _, row in pending_orders.iterrows():
@@ -287,11 +222,10 @@ def render_admin_panel():
     # =========================================================================
     # 🔽 [서랍장 1] 영업 장부 및 대기열
     # =========================================================================
-    with st.expander("📊 [서랍장 1] 영업 장부 및 대기열 (항상 열려있음)", expanded=(active_gid is None)):
+    with st.expander("📊 [서랍장 1] 영업 장부 및 대기열 (항상 유지)", expanded=True):
         col1, col2 = st.columns(2)
-        with col1:
-            st.download_button("💾 [1] 고객 기초 장부 (전체 DB 엑셀)", data=df.to_csv(index=False).encode('utf-8-sig'), file_name="basic_orders.csv", mime="text/csv", use_container_width=True)
-        with col2:
+        with col1: st.download_button("💾 [1] 고객 기초 장부 (전체 DB)", data=df.to_csv(index=False).encode('utf-8-sig'), file_name="basic_orders.csv", mime="text/csv", use_container_width=True)
+        with col2: 
             crm_df = df[['created_at', 'name', 'phone', 'u_product', 'user_concern', 'b_year']].copy()
             st.download_button("💾 [2] 영업 마케팅 타겟 장부 (CRM용)", data=crm_df.to_csv(index=False).encode('utf-8-sig'), file_name="crm_marketing.csv", mime="text/csv", use_container_width=True)
         
@@ -305,17 +239,20 @@ def render_admin_panel():
                 r_prod = row['u_product']
                 engine_prod = PRODUCT_MAP.get(r_prod.split('+')[0].strip(), "1-1. 사주팔자 및 운세 분석")
                 
-                if active_gid == r_oid:
-                    st.success(f"📌 [{r_name}] 감명서 작성 완료! 아래 서랍장 2, 3번을 확인하세요.")
-                else:
-                    with st.container():
-                        st.markdown(f"**📌 [{r_name}]** | 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
-                        # 💡 [핵심] 조용히 백그라운드 공장 가동 (mode=factory 로 넘김)
+                with st.container():
+                    st.markdown(f"**📌 [{r_name}]** | 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
+                    
+                    # 💡 [핵심] 만약 이 손님의 감명서를 백그라운드에서 만드는 중이라면 버튼 대신 로딩바를 보여줌!
+                    if st.session_state.get('app_running') and st.session_state.get('admin_proc_id') == r_oid:
+                        st.info(f"⏳ [{r_name}]님의 감명서를 맹렬히 작성 중입니다. 화면을 끄지 마시고 잠시만 대기해 주십시오...")
+                    elif active_gid == r_oid:
+                        st.success(f"✅ [{r_name}]님 감명 완료! 아래 서랍장 2번, 3번을 열어주세요.")
+                    else:
+                        # 아직 시작 안 한 손님은 [입금 확인] 버튼 노출
                         if st.button(f"💰 입금 확인 (무소음 감명 시작) - {r_name}", key=f"pay_{r_oid}"):
                             st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
                             st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
                             st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
-                            
                             if "3-" in engine_prod:
                                 st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
                                 st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
@@ -324,14 +261,13 @@ def render_admin_panel():
                             elif "2-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", engine_prod
                             elif "3-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 연애/결혼운 (궁합) 풀이", engine_prod
                             
+                            # 💡 URL 변경(mode=factory) 없이 그냥 app_running만 True로 만들고 rerun!
                             st.session_state['admin_proc_id'] = r_oid
                             st.session_state['app_running'] = True
-                            try: st.query_params["mode"] = "factory"
-                            except: st.experimental_set_query_params(mode="factory")
                             st.rerun()
 
     # =========================================================================
-    # 🔽 [서랍장 2 & 3] 감명 완료 시 즉시 출현
+    # 🔽 [서랍장 2 & 3] 감명 완료 시 해당 화면 아래에 즉시 출현
     # =========================================================================
     if active_gid:
         gid = active_gid
@@ -341,16 +277,18 @@ def render_admin_panel():
             st.components.v1.html(st.session_state[f"html_{gid}"], height=500, scrolling=True)
             st.markdown("---")
             st.markdown("#### 📝 AI 수정 지시사항 (선택)")
-            st.caption("AI의 문투나 내용이 맘에 들지 않으면 아래에 지시사항(ex: '직업운 부분을 더 긍정적으로 써줘')을 적고 다시 돌려주세요.")
+            st.caption("AI의 문투나 내용이 맘에 들지 않으면 아래에 지시사항(ex: '직업운 부분을 더 긍정적으로 써줘')을 적어주세요.")
             feedback_text = st.text_input("지시사항 입력", key=f"fb_{gid}", placeholder="예: 재물운 파트에 투자 유의 내용을 강조해 줘")
             
-            if st.button("🔴 AI 다시 돌려! (지시사항 반영 재생성)", type="secondary"):
-                st.session_state['ai_feedback_prompt'] = feedback_text
-                st.session_state['app_running'] = True
-                st.session_state['admin_proc_id'] = gid
-                try: st.query_params["mode"] = "factory"
-                except: st.experimental_set_query_params(mode="factory")
-                st.rerun()
+            # 다시 돌릴 때도 버튼 대신 메시지로 바뀜
+            if st.session_state.get('app_running') and st.session_state.get('admin_proc_id') == gid:
+                st.warning("⏳ AI가 지시사항을 100% 반영하여 감명서를 다시 쓰고 있습니다. 잠시만 대기해 주십시오...")
+            else:
+                if st.button("🔴 AI 다시 돌려! (지시사항 반영 재생성)", type="secondary"):
+                    st.session_state['ai_feedback_prompt'] = feedback_text
+                    st.session_state['app_running'] = True
+                    st.session_state['admin_proc_id'] = gid
+                    st.rerun() # URL 변경 없음!
                 
         with st.expander(f"💌 [서랍장 3] 카톡 마케팅 발송소 ({row['name']}님)", expanded=True):
             if f"sms_{gid}" not in st.session_state:
@@ -358,14 +296,13 @@ def render_admin_panel():
                 st.session_state[f"sms_{gid}"] = generate_smart_marketing_text(row, view_url)
             
             st.markdown("#### 💡 영업부가 작성해 온 [맞춤형 1:1 타겟팅 영업 문자] 입니다.")
-            st.caption("고객의 나이, 고민거리, 구매 상품을 분석하여 가장 확률 높은 문구를 자동 세팅했습니다. 눈으로만 확인하세요.")
+            st.caption("고객의 나이, 고민거리, 구매 상품을 분석하여 가장 확률 높은 문구를 자동 세팅했습니다.")
             st.info(st.session_state[f"sms_{gid}"])
             
             if st.button("🟢 영업부 일 잘했네! 최종 발송 및 완료 처리", type="primary"):
                 save_report_to_db(gid, st.session_state[f"html_{gid}"])
                 update_order_status(gid, "분석완료")
                 if row['phone']:
-                    # 💸 실과금 차단된 가상 발송 함수 호출
                     st.toast("⏳ [테스트 모드] 발송 중입니다...")
                     send_solapi_custom_message(row['phone'], row['name'], st.session_state[f"sms_{gid}"])
                 
@@ -373,7 +310,7 @@ def render_admin_panel():
                 st.session_state.pop(f"sms_{gid}", None)
                 st.session_state.pop('ai_feedback_prompt', None)
                 st.session_state.pop('admin_proc_id', None)
-                st.success(f"✅ [{row['name']}]님 발송 완료! (테스트 모드로 비용 미청구) 장부에 기록되었습니다.")
+                st.success(f"✅ [{row['name']}]님 발송 완료! (테스트 모드로 비용 미청구)")
                 time.sleep(2)
                 st.rerun()
 
@@ -388,14 +325,14 @@ def render_view_page(order_id):
     if df.empty: st.error("존재하지 않거나 만료된 링크입니다."); return
     row = df.iloc[0]
     if row.get('status', '') != "분석완료" or not row.get('result_html', ''):
-        st.warning(f"열일 중! 💦 현재 {row.get('name','고객')}님의 사주를 꼼꼼하게 분석하고 있습니다. 완료 시 카톡 알림을 드립니다! 🚀")
+        st.warning(f"열일 중! 💦 현재 {row.get('name','고객')}님의 사주를 꼼꼼하게 분석하고 있습니다.")
         return
     st.markdown("<style>@media print { header {visibility: hidden;} footer {visibility: hidden;} .stApp [data-testid='stToolbar'] {display: none;} button {display: none !important;} }</style>", unsafe_allow_html=True)
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
     st.markdown(str(row['result_html']).strip(), unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# 💡 최상위 라우터 (문지기)
+# 💡 최상위 라우터 (문지기 - 🚨이제 mode=factory 쓰레기는 버립니다!)
 # ------------------------------------------------------------------------------
 def get_safe_query_param(key):
     try:
@@ -413,11 +350,17 @@ def run_pipeline_router():
     mode = get_safe_query_param("mode")
     code = get_safe_query_param("code")
     
-    if mode == "order": render_customer_order_form(); st.stop()
-    elif mode == "admin": render_admin_panel(); st.stop()
+    if mode == "order": 
+        render_customer_order_form()
+        st.stop()
+    elif mode == "admin": 
+        render_admin_panel()
+        # 💡 [핵심] 입금확인을 눌러서 app_running이 켜지면, st.stop()을 하지 않고 
+        # 그대로 뚫고 지나가서 app.py의 공장이 이 화면 바로 '밑'에서 백그라운드로 돌아가게 만듭니다!
+        if st.session_state.get('app_running', False):
+            return 
+        st.stop()
     elif mode == "view": 
         if code: render_view_page(code)
         else: st.warning("⚠️ 올바른 링크로 접속해 주세요.")
         st.stop()
-    elif mode == "factory":
-        return
