@@ -76,6 +76,10 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = engine.get_master_system_prompt()
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
+# 💡 로직은 engine.py에 두고, 여기서는 이름표(바로가기)만 연결합니다! (DRY 원칙)
+extract_ganji = engine.extract_ganji
+get_oh_class = engine.get_oh_class
+
 # ==============================================================================
 # 🎯 역산 콜백 함수
 # ==============================================================================
