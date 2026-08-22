@@ -1034,52 +1034,6 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "woonse_fact_str": woonse_fact_str.strip()
     }
 
-def get_weekly_calendar_data(target_date, ds_hanja):
-    """
-    고객 열람 화면에 7일간의 주간운표 표를 그리기 위해, 
-    해당 주(일요일~토요일)의 날짜, 간지, 십성, 오행 색상 데이터를 배열로 추출합니다.
-    """
-    import datetime as dt_mod
-    
-    # target_date가 속한 주의 일요일(시작일) 찾기
-    start_sun = target_date - dt_mod.timedelta(days=(target_date.weekday() + 1) % 7)
-    
-    weekly_data = []
-    days_str = ["일", "월", "화", "수", "목", "금", "토"]
-    
-    for i in range(7):
-        curr = start_sun + dt_mod.timedelta(days=i)
-        try:
-            # 해당 날짜의 일진(간지) 역산
-            y_p, m_p, d_p = get_ganji_from_date(curr.year, curr.month, curr.day)
-            gan, ji = d_p[0], d_p[1]
-        except Exception:
-            gan, ji = "甲", "子" # 에러 발생 시 기본값
-            
-        # 내담자의 일간(ds_hanja) 대비 해당 일진의 십성(육친) 연산
-        ss = get_ss(ds_hanja, ji)
-        # 지지 오행의 색상 연산
-        oh = get_color(ji)
-        
-        # 💡 기준일(target_date)과 현재 루프의 날짜(curr)가 일치하는지 확인
-        is_today_flag = (curr.year == target_date.year and curr.month == target_date.month and curr.day == target_date.day)
-        
-        # 💡 html_views.py가 찾는 모든 이름표(key) 완벽 제공
-        weekly_data.append({
-            "date": curr,
-            "day": curr.day,           # 날짜 숫자 
-            "weekday": days_str[i],    # 요일 한글 
-            "day_str": days_str[i],    
-            "gan": gan,
-            "ji": ji,
-            "ganji": f"{gan}{ji}",     # 간지 결합본
-            "ss": ss,
-            "oh": oh,
-            "is_today": is_today_flag  # 🚨 에러 원인 해결: 오늘 날짜 하이라이트용 스위치 추가!
-        })
-        
-    return weekly_data
-
 def get_weekly_daily_facts(ds, db, yb, year, month, day):
     target_dt = dt_mod.datetime(year, month, day)
     _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
@@ -1942,3 +1896,16 @@ def analyze_saju_facts_advanced(saju_data, current_dw, current_sewun):
     }
     
     return oheng, hap_chung, advanced_flags
+
+# ==============================================================================
+# 👑 [AI 두뇌 통제 로직] 시스템 프롬프트 (진녹색 스파이 원천 차단)
+# ==============================================================================
+def get_master_system_prompt():
+    return (
+        "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. "
+        "주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오.\n\n"
+        "🚨 [최고 엄수 규칙]: 어떠한 경우에도 텍스트에 색상을 입히지 마십시오! "
+        "Streamlit 색상 마크다운(예: :green[text], :red[text])이나 HTML 색상 태그(<span style='color...'>, <font color...>) 사용을 엄격히 금지합니다. "
+        "오직 순수한 검정색 텍스트와 기본 기호만 사용하여 출력하십시오."
+    )
+
