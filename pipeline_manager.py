@@ -111,7 +111,7 @@ def generate_smart_marketing_text(row, view_url):
     return msg
 
 # ------------------------------------------------------------------------------
-# 1. 📱 [고객 모바일 접수 화면] 
+# 1. 📱 [고객 모바일 접수 화면] (오리지널 UI 100% 복구본)
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     ensure_db_table_exists()
@@ -150,7 +150,13 @@ def render_customer_order_form():
             st.rerun()
         return
 
-    st.markdown("<div class='promo-banner'><b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] <br>🌕 추석 맞이 반값 특가! 🌕</b></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='promo-banner'>
+        <b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] <br>🌕 추석 맞이 반값 특가! 🌕</b><br>
+        <span style='color:#424242; font-size:14px;'>기간 한정 <b>전 상품 50% 특별 할인</b> 진행 중!</span><br>
+        <span style='color:#1A237E; font-size:13px; font-weight:bold;'>(※ 2개 이상 선택 시 추가 할인 적용!)</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.form("choyeon_customer_order_form_final"):
         st.markdown("<b>1. 👤 신청자 본인 정보</b>", unsafe_allow_html=True)
@@ -208,7 +214,8 @@ def render_customer_order_form():
             order_id = str(uuid.uuid4())[:8]
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
             
-            # 💡 [핵심 패치] KST(한국 표준시)로 정확하게 DB에 기록합니다.
+            # KST 한국 시간 유지
+            import pytz
             kst = pytz.timezone('Asia/Seoul')
             now_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
             
