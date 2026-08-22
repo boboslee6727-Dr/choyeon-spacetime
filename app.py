@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 76.7 Master - 유령 모드 방탄 적용 & 좀비 폰트 물리적 사살)
+# app.py (ver 76.4 Master - 관리자 수동 검수 철학 반영 및 진녹색 영구 사살)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -24,8 +24,20 @@ from pipeline_manager import run_pipeline_router
 # ==============================================================================
 # 1. 초기 설정 및 공용 함수
 # ==============================================================================
-APP_VERSION = "ver 76.7 Master"
+APP_VERSION = "ver 76.4 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
+
+# 🧨 [진녹색 17px 폰트 및 선 강제 초기화] 🧨
+st.markdown("""
+<style>
+    span[style*="darkgreen"], span[style*="#006400"], span[style*="#008000"], span[style*="17px"], span[style*="1px solid"] {
+        color: #2D3748 !important; 
+        font-size: 15px !important;
+        border: none !important;
+        background: transparent !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 if hasattr(html_views, 'get_global_css'):
     st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
@@ -430,9 +442,9 @@ with st.sidebar:
     st.markdown("---")
 
     # =========================================================================
-    # 👻 [유령 모드 통제소] (사이드바 완벽 숨김 처리)
+    # 🏢 [관리자 배경 작업 통제소] (사이드바 숨김 처리)
     # =========================================================================
-    if st.session_state.get('ghost_order_id'):
+    if st.session_state.get('admin_proc_id'):
         st.markdown("<style>[data-testid='stSidebar'] {display: none !important;}</style>", unsafe_allow_html=True)
 
     u_n = st.session_state.get('u_n', name if 'name' in locals() else "")
@@ -449,7 +461,7 @@ with st.sidebar:
         st.session_state['base_fact_cache'] = None
         st.session_state['report_essays'] = {}
         
-        if not st.session_state.get('ghost_order_id'):
+        if not st.session_state.get('admin_proc_id'):
             st.session_state['app_running'] = False
 
     if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
@@ -1210,33 +1222,46 @@ if st.session_state.get('app_running', False):
                 st.markdown(final_render_html, unsafe_allow_html=True)
                 
                 # =========================================================================
-                # 👻 [유령 모드 장부 저장 및 카톡 자동 발송]
+                # 🧐 [관리자 정밀 검수 모드 및 수동 발송 통제소]
                 # =========================================================================
-                if st.session_state.get('ghost_order_id'):
+                if st.session_state.get('admin_proc_id'):
                     import pipeline_manager as pl
-                    gid = st.session_state['ghost_order_id']
+                    gid = st.session_state['admin_proc_id']
                     
-                    pl.save_report_to_db(gid, final_render_html)
-                    pl.update_order_status(gid, "분석완료")
+                    st.markdown("<br><br>", unsafe_allow_html=True)
+                    st.markdown("<div style='background-color:#F9FBE7; padding:25px; border-radius:12px; border:2px solid #2E7D32; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>", unsafe_allow_html=True)
+                    st.markdown("<h3 style='color:#1B5E20; text-align:center; margin-top:0;'>🧐 [관리자 정밀 검수 모드]</h3>", unsafe_allow_html=True)
+                    st.markdown("<p style='text-align:center; font-size:16px; color:#333; line-height:1.6;'>박사님, 위 감명서 내용이 완벽하게 작성되었는지 꼼꼼히 검수해 주십시오.<br>확인이 끝나면 아래의 발송 버튼을 눌러 고객에게 리포트를 전달합니다.</p>", unsafe_allow_html=True)
                     
-                    try:
-                        conn = pl.get_db_connection()
-                        import pandas as pd
-                        df = pd.read_sql_query(f"SELECT * FROM orders WHERE order_id='{gid}'", conn)
-                        if not df.empty:
-                            row = df.iloc[0]
-                            if row['phone']:
-                                v_url = f"[https://choyeon-spacetime.streamlit.app/?mode=view&code=](https://choyeon-spacetime.streamlit.app/?mode=view&code=){gid}"
-                                row_prod = row['product']
-                                clean_names = [re.sub(r'\d-\d\.\s*', '', p.strip()) for p in row_prod.split('+')]
-                                sp = f"{clean_names[0]} 외 {len(clean_names)-1}건" if len(clean_names) > 1 else clean_names[0]
-                                ok, msg = pl.send_solapi_auto_message(row['phone'], row['name'], sp, v_url)
-                                if not ok: st.toast(f"⚠️ 카톡 발송 에러: {msg}")
-                    except Exception as e:
-                        st.toast(f"🚨 카톡 발송 시스템 오류: {e}")
-                        
-                    st.session_state['ghost_order_id'] = None
-                    st.success(f"✅ [{gid}] 장부 저장 및 분석완료 처리 성공!")
+                    if st.button("🚀 검수 완료! 고객에게 결과 링크 전송 및 정식 장부 기록", type="primary", use_container_width=True):
+                        with st.spinner("장부 기록 및 알림 문자 발송 중..."):
+                            pl.save_report_to_db(gid, final_render_html)
+                            pl.update_order_status(gid, "분석완료")
+                            
+                            try:
+                                conn = pl.get_db_connection()
+                                import pandas as pd
+                                df = pd.read_sql_query(f"SELECT * FROM orders WHERE order_id='{gid}'", conn)
+                                if not df.empty:
+                                    row = df.iloc[0]
+                                    if row['phone']:
+                                        v_url = f"[https://choyeon-spacetime.streamlit.app/?mode=view&code=](https://choyeon-spacetime.streamlit.app/?mode=view&code=){gid}"
+                                        row_prod = row['product']
+                                        clean_names = [re.sub(r'\d-\d\.\s*', '', p.strip()) for p in row_prod.split('+')]
+                                        sp = f"{clean_names[0]} 외 {len(clean_names)-1}건" if len(clean_names) > 1 else clean_names[0]
+                                        ok, msg = pl.send_solapi_auto_message(row['phone'], row['name'], sp, v_url)
+                                        if not ok: st.toast(f"⚠️ 카톡 발송 에러: {msg}")
+                                        else: st.toast("✅ 고객에게 문자가 성공적으로 발송되었습니다!")
+                            except Exception as e:
+                                st.toast(f"🚨 카톡 발송 시스템 오류: {e}")
+                                
+                            st.session_state['admin_proc_id'] = None
+                            st.success(f"✅ [{gid}] 정식 매출 장부 저장 및 최종 발송 완료! 3초 뒤 관리자 화면으로 복귀합니다...")
+                            time.sleep(3)
+                            st.query_params.clear()
+                            st.query_params["mode"] = "admin"
+                            st.rerun()
+                    st.markdown("</div>", unsafe_allow_html=True)
                     
             else:
                 st.warning("⚠️ 렌더링된 결과물이 비어 있습니다.")
