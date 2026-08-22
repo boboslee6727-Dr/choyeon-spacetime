@@ -280,7 +280,7 @@ def render_customer_order_form():
 
     st.markdown("""
     <div class='promo-banner'>
-        <b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] 🌕 추석 맞이 반값 특가! 🌕</b><br>
+        <b style='color:#E65100; font-size:17px;'>[ 8/18 ~ 9/30 ] <br>🌕 추석 맞이 반값 특가! 🌕</b><br>
         <span style='color:#424242; font-size:14px;'>기간 한정 <b>전 상품 50% 특별 할인</b> 진행 중!</span><br>
         <span style='color:#1A237E; font-size:13px; font-weight:bold;'>(※ 2개 이상 선택 시 추가 할인 적용!)</span>
     </div>
