@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 76.0 Master - 자동/수동 단일 마스터 엔진 통합 완결판)
+# app.py (ver 76.1 Master - 자동/수동 단일 마스터 엔진 통합 완결판)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -25,7 +25,7 @@ from pipeline_manager import run_pipeline_router
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 75.0 Master"
+APP_VERSION = "ver 76.1 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 if hasattr(html_views, 'get_global_css'):
