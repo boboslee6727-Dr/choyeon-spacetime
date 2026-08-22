@@ -1,5 +1,5 @@
 # ==============================================================================
-# pipeline_manager.py (ver 75.7 - 상품명 오염 방지 및 LMS 문자 100% 복원)
+# pipeline_manager.py (ver 75.8 - 정직한 수동 검수 파이프라인 및 상품명 필터)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -17,7 +17,7 @@ import re
 DB_FILE = "choyeon_orders.db"
 ADMIN_PASSWORD = "boss!631201"
 
-# 💡 [핵심 수술]: 고객용 보여주기 이름과 박사님 엔진용(내부) 이름을 완벽히 분리!
+# 💡 [상품명 번역기]: 손님용 긴 이름 -> 박사님 통변 엔진용 짧은 오리지널 이름
 PRODUCT_MAP = {
     "1-1. 사주팔자와 운세풀이 (정가 22,000원 ➡️ 추석특가 11,000원)": "1-1. 사주팔자 및 운세 분석",
     "1-2. 올 해 (특정 연도) 운세 상세분석 (정가 11,000원 ➡️ 추석특가 5,500원)": "1-2. 올 해 (특정 년도) 운세 상세분석",
@@ -72,7 +72,7 @@ def ensure_db_table_exists():
     conn.close()
 
 # ------------------------------------------------------------------------------
-# 📡 [솔라피 (Solapi) 발송 함수 - 오리지널 순수 LMS 복원]
+# 📡 [솔라피 (Solapi) 발송 함수 - 알림톡 없이 순수 LMS 안전 발송]
 # ------------------------------------------------------------------------------
 def get_solapi_auth_header(api_key, api_secret):
     date_str = datetime.now().astimezone().isoformat()
@@ -87,14 +87,13 @@ def send_solapi_auto_message(to_phone, name, product, view_url):
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
         if not api_key: return False, "설정 누락"
 
-        # 고객에게 보낼 때는 "1-1." 같은 지저분한 것 제거
-        clean_product = re.sub(r'\d-\d\.\s*', '', product)
+        # 고객 문자용 깔끔한 이름 (1-1. 및 가격표 제거)
+        clean_product = re.sub(r'\d-\d\.\s*', '', product).split('(')[0].strip()
 
         msg_body = f"{name}님, 신청하신 사주 분석이 완료되었습니다.\n\n🔮 신청 상품: {clean_product}\n\n아래 링크를 눌러 소름 돋는 인생 스포일러(사주 리포트)를 바로 확인해 보세요!\n\n결과 확인하기:\n{view_url}"
         
         headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json; charset=utf-8"}
-        # 알림톡 관련 설정 싹 지우고 오직 LMS로만 쏴서 100% 성공하게 만듭니다.
-        payload = {"message": {"to": to_phone.replace("-", "").strip(), "from": from_phone.replace("-", "").strip(), "text": msg_body, "subject": f"[사주박사] {name}님 리포트 도착", "type": "LMS"}}
+        payload = {"message": {"to": to_phone.replace("-", "").strip(), "from": from_phone.replace("-", "").strip(), "text": msg_body, "subject": f"[초연명리] {name}님 리포트 도착", "type": "LMS"}}
         res = requests.post("https://api.solapi.com/messages/v4/send", headers=headers, json=payload, timeout=10)
         
         if res.status_code == 200: return True, "발송 성공"
@@ -109,9 +108,9 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         from_phone = st.secrets.get("SOLAPI_SENDER_PHONE")
         if not api_key: return False, "설정 누락"
 
-        clean_product = re.sub(r'\d-\d\.\s*', '', product_summary)
+        clean_product = re.sub(r'\d-\d\.\s*', '', product_summary).split('(')[0].strip()
         short_time = now_str.replace("-", "/").rsplit(":", 1)[0]
-        admin_msg = f"{short_time}/ {name.strip()}님 / {clean_product} / {final_price:,}원"
+        admin_msg = f"접수알림/ {name.strip()}님/ {clean_product}/ {final_price:,}원"
         
         headers = {"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}
         payload = {"message": {"to": "01038576727", "from": from_phone.replace("-", "").strip(), "text": admin_msg, "type": "SMS"}}
@@ -131,7 +130,7 @@ def calculate_package_price(selected_products):
     return total_original, total_chuseok, int(rate*100), total_rate_pct, final_price
 
 # ------------------------------------------------------------------------------
-# 1. 📱 [고객 모바일 접수 화면]
+# 1. 📱 [고객 모바일 접수 화면] 
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     ensure_db_table_exists()
@@ -237,12 +236,12 @@ def render_customer_order_form():
             calc_result = calculate_package_price(selected_products)
             total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
             
-            # 💡 [DB에는 박사님의 엔진용 오리지널 코드로 싹 바꿔서 저장!]
-            db_product_codes = " + ".join([PRODUCT_MAP[p] for p in selected_products])
+            # DB에는 선택한 상품명을 그대로 저장 (관리자 파악용)
+            db_product_codes = " + ".join(selected_products)
             
-            # 💡 [화면에 보여줄 이름은 1-1., 추석특가 싹 제거하고 깨끗하게!]
-            clean_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP[p]) for p in selected_products]
-            ui_product_desc = " + ".join(clean_names) + f" ({final_price:,}원)"
+            # 화면 표시용: "추석특가" 등 가격표 제거한 이름 조합
+            clean_ui_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP[p]) for p in selected_products]
+            ui_product_desc = " + ".join(clean_ui_names) + f" ({final_price:,}원)"
             
             order_id = str(uuid.uuid4())[:8]
             phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
@@ -290,20 +289,23 @@ def render_admin_panel():
         else:
             for _, row in pending_orders.iterrows():
                 r_name = row.get('name', '고객')
-                r_prod = row.get('u_product', row.get('product', '1-1. 사주팔자 및 운세 분석'))
+                # DB에 저장된 긴 이름들
+                r_prod = row.get('u_product', row.get('product', '1-1. 사주팔자와 운세풀이'))
                 r_date = row.get('created_at', '날짜 미상')
                 r_oid = row.get('order_id', '')
                 r_cal = row.get('u_cal', row.get('calendar_type', '양력'))
                 r_btime = row.get('b_time', row.get('birth_time', '시간 모름'))
                 
-                # 화면 표기용 깨끗한 이름
-                clean_admin_prod = re.sub(r'\d-\d\.\s*', '', r_prod.split('+')[0].strip()) + (" 외" if "+" in r_prod else "")
+                # 보여줄 때는 깔끔하게
+                first_raw_prod = r_prod.split('+')[0].strip()
+                engine_prod_name = PRODUCT_MAP.get(first_raw_prod, "1-1. 사주팔자 및 운세 분석")
+                clean_admin_prod = re.sub(r'\d-\d\.\s*', '', engine_prod_name) + (" 외" if "+" in r_prod else "")
                 
                 with st.expander(f"📌 [{r_name}] {clean_admin_prod} (신청일: {r_date})", expanded=True):
                     st.write(f"- 연락처: {row.get('phone', '')} | 생일: {row.get('b_year')}-{row.get('b_month')}-{row.get('b_day')} ({r_cal}) | 시간: {r_btime}")
                     
-                    if st.button(f"💰 입금 확인 (리포트 자동생성 시작)", key=f"pay_{r_oid}", type="primary", use_container_width=True):
-                        with st.spinner("AI 엔진 장전 중..."):
+                    if st.button(f"💰 입금 확인 (리포트 작성 시작)", key=f"pay_{r_oid}", type="primary", use_container_width=True):
+                        with st.spinner("박사님의 감명서 생성 모드로 진입합니다..."):
                             st.session_state['u_n'] = r_name
                             st.session_state['u_g'] = row.get('gender', '여성')
                             st.session_state['u_m_stat'] = row.get('marital', '선택')
@@ -314,9 +316,7 @@ def render_admin_panel():
                             st.session_state['s_t'] = r_btime
                             st.session_state['s_t_select'] = r_btime
                             
-                            first_prod = r_prod.split(' + ')[0].strip()
-                            
-                            if "3-" in first_prod:
+                            if "3-" in engine_prod_name:
                                 st.session_state['f_n'] = row.get('f_name', '상대방')
                                 st.session_state['f_g'] = row.get('f_gender', '남성')
                                 st.session_state['p_y_in'] = int(row.get('f_y', 1980))
@@ -324,18 +324,19 @@ def render_admin_panel():
                                 st.session_state['p_d_in'] = int(row.get('f_d', 1))
                                 st.session_state['p_t_key'] = row.get('f_t', '시간 모름')
                             
-                            # 엔진에 원본 코드(예: "1-1. 사주팔자 및 운세 분석") 그대로 토스!
-                            if "1-" in first_prod:
+                            # 엔진에는 철저하게 '1-1. 사주팔자 및 운세 분석' 처럼 오리지널 코드만 주입!
+                            if "1-" in engine_prod_name:
                                 st.session_state['main_category'] = "1. 사주팔자 및 운세 풀이 (종합)"
-                                st.session_state['sub_category_1'] = first_prod
-                            elif "2-" in first_prod:
+                                st.session_state['sub_category_1'] = engine_prod_name
+                            elif "2-" in engine_prod_name:
                                 st.session_state['main_category'] = "2. 테마별 특성화 상담"
-                                st.session_state['sub_category_2'] = first_prod
-                            elif "3-" in first_prod:
+                                st.session_state['sub_category_2'] = engine_prod_name
+                            elif "3-" in engine_prod_name:
                                 st.session_state['main_category'] = "3. 연애/결혼운 (궁합) 풀이"
-                                st.session_state['sub_category_3'] = first_prod
+                                st.session_state['sub_category_3'] = engine_prod_name
                             
-                            st.session_state['ghost_order_id'] = r_oid
+                            # "유령" 단어 완전 폐기 -> admin_proc_id 로 관리자 처리 승인
+                            st.session_state['admin_proc_id'] = r_oid
                             st.session_state['app_running'] = True
                             st.query_params.clear()
                             st.rerun()
