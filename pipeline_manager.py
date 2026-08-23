@@ -91,10 +91,26 @@ def get_solapi_auth_header(api_key, api_secret):
     return f"HMAC-SHA256 apiKey={api_key}, date={date_str}, salt={salt}, signature={signature}"
 
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
-    return True, "성공" # 관리자 알림은 비용 절감을 위해 현재 단순히 패스하도록 처리
+    # 🟢 [관리자 알림 실전 모드] 고객 신청 시 박사님 폰으로 즉시 문자 발송!
+    try:
+        import requests
+        import streamlit as st
+        api_key = st.secrets["SOLAPI_API_KEY"]
+        api_secret = st.secrets["SOLAPI_API_SECRET"]
+        admin_phone = "01038576727" # 박사님 핸드폰 번호
+        
+        msg_body = f"[신규접수] {name}님 / {product_summary} / 청구액: {final_price:,}원"
+        
+        res = requests.post("https://api.solapi.com/messages/v4/send", 
+            headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}, 
+            json={"message": {"to": admin_phone, "from": admin_phone, "text": msg_body}}
+        )
+        return True, "알림 발송 완료"
+    except Exception as e:
+        return False, str(e)
 
-def send_solapi_custom_message(to_phone, name, msg_body):
-    
+def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
+    return True, "성공" # 관리자 알림은 비용 절감을 위해 현재 단순히 패스하도록 처리
     # ==============================================================================
     # ⛔ [테스트 모드] (현재 켜짐) : 돈이 나가지 않고 발송 흉내만 냅니다.
     # ==============================================================================
@@ -104,24 +120,19 @@ def send_solapi_custom_message(to_phone, name, msg_body):
     # except Exception as e: 
     #     return False, str(e)
 
-
-    # ==============================================================================
-    # 🟢 [실전 모드] (현재 켜짐) : 실제 솔라피 서버와 연결되어 요금이 차감됩니다.
-    # ==============================================================================
+def send_solapi_custom_message(to_phone, name, msg_body):
+    # 🟢 [고객 발송 실전 모드] 서랍장 3번에서 버튼 클릭 시 고객에게 마케팅 문자 발송!
     try:
-        # 💡 보안 금고에서 박사님의 황금 열쇠를 몰래 꺼내옵니다!
+        import requests
+        import streamlit as st
         api_key = st.secrets["SOLAPI_API_KEY"]
         api_secret = st.secrets["SOLAPI_API_SECRET"]
         
-        # 헤더와 데이터를 조립함과 동시에 0.1초 만에 서버로 발송!
         res = requests.post("https://api.solapi.com/messages/v4/send", 
             headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}, 
             json={"message": {"to": to_phone.replace("-", ""), "from": "01038576727", "text": msg_body}}
         )
-        
-        # 성공/실패 여부를 한 줄로 깔끔하게 반환
         return (True, "🟢 [실전 모드] 실제 발송 성공!") if res.status_code == 200 else (False, f"발송 실패: {res.text}")
-        
     except Exception as e: 
         return False, str(e)
 
@@ -289,6 +300,7 @@ def render_customer_order_form():
         """, unsafe_allow_html=True)
         
         st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
         if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
             del st.session_state["submitted_order"]
             st.rerun()
@@ -475,22 +487,34 @@ def render_admin_panel():
                     elif active_gid == r_oid:
                         st.success(f"✅ [{r_name}]님 감명 완료! 아래 서랍장 2번, 3번을 열어주세요.")
                     else:
-                        if st.button(f"💰 입금 확인 (무소음 감명 시작) - {r_name}", key=f"pay_{r_oid}"):
-                            st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
-                            st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
-                            st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
-                            if "3-" in engine_prod:
-                                st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
-                                st.session_state['f_m_stat'], st.session_state['f_c'] = row.get('f_marital', '선택'), row.get('f_cal', '양력') 
-                                st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
-                            
-                            if "1-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자 및 운세 풀이 (종합)", engine_prod
-                            elif "2-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", engine_prod
-                            elif "3-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 연애/결혼운 (궁합) 풀이", engine_prod
-                            
-                            st.session_state['admin_proc_id'] = r_oid
-                            st.session_state['app_running'] = True
-                            st.rerun()
+                        # 💡 [버튼 2개 나란히 배치] 입금확인 버튼 & 미입금 알림 버튼
+                        btn_col1, btn_col2 = st.columns([1, 1])
+                        
+                        with btn_col1:
+                            if st.button(f"💰 입금 확인 (무소음 감명 시작) - {r_name}", key=f"pay_{r_oid}"):
+                                st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
+                                st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
+                                st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
+                                if "3-" in engine_prod:
+                                    st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
+                                    st.session_state['f_m_stat'], st.session_state['f_c'] = row.get('f_marital', '선택'), row.get('f_cal', '양력') 
+                                    st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
+                                
+                                if "1-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자 및 운세 풀이 (종합)", engine_prod
+                                elif "2-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", engine_prod
+                                elif "3-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 연애/결혼운 (궁합) 풀이", engine_prod
+                                
+                                st.session_state['admin_proc_id'] = r_oid
+                                st.session_state['app_running'] = True
+                                st.rerun()
+
+                        with btn_col2:
+                            # 💡 [핵심 추가] 미입금 고객 콕 찌르기 버튼
+                            if st.button(f"🔔 미입금 안내 톡 쏘기 - {r_name}", key=f"remind_{r_oid}"):
+                                remind_msg = f"💌 [사주박사 안내]\n{r_name}님, 신청하신 감명 접수가 보류 중입니다. 혹시 바쁘셔서 잊으셨을까 봐 안내해 드려요! 😊\n\n💳 국민은행 231402-04-133221 (이*호)\n\n위 계좌로 복비가 입금되면 즉시 박사님의 정밀 분석이 시작됩니다. (입금자명이 다르다면 카톡 부탁드려요!) 🌸"
+                                if row['phone']:
+                                    send_solapi_custom_message(row['phone'], r_name, remind_msg)
+                                    st.toast(f"✅ {r_name}님께 미입금 안내 문자를 발송했습니다!")
 
     if active_gid:
         gid = active_gid
