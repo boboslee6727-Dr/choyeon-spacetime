@@ -368,7 +368,7 @@ def render_customer_order_form():
         </div>
         """, unsafe_allow_html=True)
         
-        user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="내 비밀이나 궁금한 점을 자유롭게 적어주세요.")
+        user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="속상한 일이나 궁금한 점을 자유롭게 적어유~")
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
