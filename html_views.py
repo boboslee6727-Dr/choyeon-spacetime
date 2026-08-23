@@ -208,8 +208,6 @@ def format_ai_text_to_html(text):
             html_lines.append(line)
             continue
 
-        # (진녹색 스파이 철거 로직은 상단 '명검 2.0' 단계로 격상되어 문자열 전체에 강력 적용되었습니다.)
-
         # 수석보좌관 헤더
         if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
             html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #000000;'>{line}</div>")
