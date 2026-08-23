@@ -87,13 +87,6 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
-def extract_ganji(text):
-    if not text: return ""
-    return re.sub(r'[^가-힣一-龥]', '', text)
-
-def get_oh_class(ganji):
-    oh = engine.get_color(ganji)
-    return f"color-{oh}" if oh != '무' else ""
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
 def do_auto_fill_user():
@@ -103,9 +96,9 @@ def do_auto_fill_user():
     u_rd = st.session_state.get("u_rd_rev", "")
     u_rt = st.session_state.get("u_rt_rev", "")
 
-    _ry = extract_ganji(u_ry)
-    _rm = extract_ganji(u_rm)
-    _rd = extract_ganji(u_rd)
+    _ry = engine.extract_ganji(u_ry)
+    _rm = engine.extract_ganji(u_rm)
+    _rd = engine.extract_ganji(u_rd)
 
     if not _ry and not _rm and not _rd:
         st.session_state.pop('rev_matches_user', None)
@@ -824,7 +817,7 @@ if st.session_state.get('app_running', False):
                 "y_shinsal": y_shin_val, "d_shinsal": d_shin_val, "is_current": is_active, "is_first": (i == 0)
             })
 
-        un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+        un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, engine.get_oh_class)
 
         # ----------------------------------------------------------------------
         # 상대방 대운표 연산 (2인용 전용)
@@ -910,8 +903,8 @@ if st.session_state.get('app_running', False):
             bg_col = "#E1F5FE" if is_cur_yr else "transparent"
             b_left = "1px solid #ccc"
             se_content += html_views.get_sewun_cell(
-                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
-                tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
+                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, engine.get_oh_class(tc), 
+                tj, engine.get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
                 engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr
             )
             
@@ -1206,10 +1199,6 @@ if st.session_state.get('app_running', False):
         # ==============================================================================
         # 🏮 [ver 72.5 파이프라인] 최종 화면 렌더링
         # ==============================================================================
-        if 'cover_html' in locals() and cover_html:
-            safe_cover = re.sub(r'\n\s+', '\n', cover_html)
-            st.markdown(safe_cover, unsafe_allow_html=True)
-
         final_render_html = ""
 
         def sub_marker(text, marker_name, table_code):
@@ -1326,6 +1315,13 @@ if st.session_state.get('app_running', False):
             final_render_html = final_render_html[6:].strip()
 
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
+
+        # 🚨 [박사님 통찰 반영] html_views.py로 쫓아냈던 전역 CSS를 다시 불러와서 강제 결합! 🚨
+        global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
+        safe_cover_str = re.sub(r'\n\s+', '\n', cover_html) if 'cover_html' in locals() and cover_html else ""
+        
+        # 👇 CSS(색깔) + 표지 + 본문을 절대 깨지지 않는 하나의 HTML 덩어리로 뭉칩니다.
+        final_render_html = global_css_str + safe_cover_str + final_render_html
 
         # =========================================================================
         # 📦 [공장 생산 완료] ➔ 스텔스 완료 처리 (URL 변경 없음, 그 자리에서 서랍장 오픈)
