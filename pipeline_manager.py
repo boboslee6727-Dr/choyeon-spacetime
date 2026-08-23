@@ -320,13 +320,13 @@ def render_customer_order_form():
     """, unsafe_allow_html=True)
 
     with st.form("choyeon_customer_order_form_final"):
-        st.info("👤 **1. 신청자 본인 정보**")
+        st.info("👤 **1. 신청자 정보**")
         name = st.text_input("이름 *(필수)", placeholder="성함을 입력하세요")
         c_p1, c_p2, c_p3 = st.columns([1, 1.5, 1.5])
         with c_p1: st.text_input("국번", value="010", disabled=True)
         with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4)
         with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4)
-        memo_info = st.text_input("이메일 (선택사항)")
+        memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com")
         c_g, c_m, c_c = st.columns(3)
         with c_g: gender = st.selectbox("성별", ["여성", "남성"])
         with c_m: marital = st.selectbox("결혼유무", ["미혼", "기혼", "돌싱", "기타"])
@@ -362,13 +362,13 @@ def render_customer_order_form():
         <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #FFCA28; margin-bottom: 15px;'>
             <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
             <p style='font-size: 14px; color: #424242; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
-            혼자 끙끙 앓지 말고, 답답한 고민들을 편하게 털어놓아 보세요.<br>
-            명리학적 원인 분석과 함께 <b>'현실적인 솔루션'</b>을 담아드립니다.
+            혼자 끙끙 앓지 말고, 답답한 고민들을<br> 솔직하게 털어놓아 보세요.<br>
+            명리학적 원인 분석과 함께 <br><b>'명쾌한 솔루션'</b>을 알려드릴께요!
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        user_concern = st.text_area("✍️ 나의 현재 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="현재의 상황이나 궁금한 점을 자유롭게 적어주세요.")
+        user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="현재 상황이나 궁금한 점을<br> 자유롭게 적어주세요.")
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
