@@ -137,39 +137,35 @@ def send_solapi_custom_message(to_phone, name, msg_body):
         return False, str(e)
 
 # ------------------------------------------------------------------------------
-# 0. 🧮 [패키지 복수 선택 할인 연산 엔진 - 오리지널 복원]
+# 0. 🧮 [패키지 연산 엔진 - 다중 할인 삭제 & 단순 합산 버젼 (업셀링 전략)]
 # ------------------------------------------------------------------------------
-DISCOUNT_POLICY = {
-    "two_item_rate": 0.20,      
-    "three_plus_rate": 0.30,    
-    "premium_rate": 0.30,
-    "premium_combination": ["3-1", "3-3"]
-}
-
 def calculate_package_price(selected_products):
     if not selected_products: return 0, 0, 0, 0, 0
     total_original = 0
     total_chuseok = 0
-    codes = []
     
+    import re
+
     for item in selected_products:
-        code = item.split('.')[0].strip()
-        codes.append(code)
-        orig_str = item.split('정가')[-1].split('원')[0].replace(',', '').strip()
-        total_original += int(orig_str)
-        chu_str = item.split('추석특가')[-1].replace('원)', '').replace(',', '').strip()
-        total_chuseok += int(chu_str)
+        # 💡 상품명 안에서 '원' 글자 바로 앞에 있는 숫자 덩어리를 찾습니다.
+        prices = re.findall(r'([\d,]+)원', item)
         
-    count = len(selected_products)
-    if count <= 1:
-        pkg_rate_pct = 0; final_price = total_chuseok
-    else:
-        if count >= 3 or all(p in codes for p in DISCOUNT_POLICY["premium_combination"]): rate = DISCOUNT_POLICY["three_plus_rate"]
-        else: rate = DISCOUNT_POLICY["two_item_rate"]
-        pkg_rate_pct = int(rate * 100)
-        final_price = int(round(total_chuseok * (1 - rate), -3))
+        if len(prices) >= 2:
+            orig_str = prices[0].replace(',', '')  # 정가
+            chu_str = prices[1].replace(',', '')   # 특가(할인가)
+            
+            # 단순 합산 누적
+            total_original += int(orig_str)
+            total_chuseok += int(chu_str)
         
+    # 💡 다중상품 추가 할인(20~30%) 로직 완전 삭제! 
+    # 패키지 할인율(pkg_rate_pct)은 무조건 0으로 세팅하고, 최종 가격은 특가 합산 금액으로 픽스합니다.
+    pkg_rate_pct = 0
+    final_price = total_chuseok 
+        
+    # (참고) 원래 정가 다 합친 것 대비 현재 특가가 얼마나 싼지 '총 할인율'만 보여줍니다.
     total_rate_pct = int(((total_original - final_price) / total_original) * 100) if total_original > 0 else 0
+    
     return total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price
 
 # ------------------------------------------------------------------------------
@@ -337,9 +333,19 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
-        label_text = "상담 상품 선택  \n:red[*(2개 이상 복수 선택 시 20~30% 특별할인!) (필수)*]"
+        # (박사님이 찾으신 부분을 이 코드로 통째로 덮어쓰세요!)
+        label_text = "상담 상품 선택 \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
         st.success("🛍️ **2. 상품 선택**")
-        selected_products = st.multiselect(label=label_text, options=U_PRODUCT_LIST, placeholder="상담 상품 선택")
+        
+        # 💡 selectbox는 기본적으로 무언가 1개를 무조건 고르게 하므로, 첫 줄에 '안내 문구'를 넣습니다.
+        options_with_placeholder = ["상담 상품을 선택해 주세요 (클릭)"] + U_PRODUCT_LIST
+        selected_single = st.selectbox(label=label_text, options=options_with_placeholder)
+        
+        # 💡 뒷단(계산기, DB)이 고장 나지 않도록 고른 1개를 리스트[]로 포장해 줍니다.
+        if selected_single != "상담 상품을 선택해 주세요 (클릭)":
+            selected_products = [selected_single]
+        else:
+            selected_products = []
         
         f_name, f_gender, f_marital, f_cal, f_t = "", "", "", "", "시간 모름"
         f_y, f_m, f_d = "", "", ""
