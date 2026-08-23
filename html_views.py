@@ -176,70 +176,56 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(line)
             continue
             
-        # 👑 [Level 4: 본문 나열] "- ", "* ", "★ " 기호 자동 감지 및 예쁜 리스트 처리
-        if re.match(r'^[\-★\*]\s', line):
+        # 👑 [Level 4: 본문 나열] "- ", "* ", "★ ", "•" 기호 자동 감지 (여백 축소)
+        if re.match(r'^(?:<[^>]+>)*\s*[\-★\*•]\s*', line):
             if not in_list:
-                html_lines.append("<ul style='list-style-type: none; padding-left: 15px; margin-bottom: 12px;'>")
+                html_lines.append("<ul style='list-style-type: none; padding-left: 15px; margin-bottom: 8px;'>")
                 in_list = True
             
-            bullet = line[0]
-            content = line[1:].strip()
-            # '-'나 '*' 기호는 예쁜 동그라미(•)로, '★'은 그대로 출력
+            raw_text = re.sub(r'<[^>]+>', '', line).strip()
+            bullet = raw_text[0] if raw_text else '-'
             display_bullet = '•' if bullet in ['-', '*'] else bullet
             
-            html_lines.append(f"<li style='line-height: 1.8; margin-bottom: 6px; color: #000000;'><span style='color: #000000; font-weight: bold; margin-right: 6px;'>{display_bullet}</span>{content}</li>")
+            content = re.sub(r'^((?:<[^>]+>)*\s*)[\-★\*•]\s*', r'\1', line).strip()
+            html_lines.append(f"<li style='line-height: 1.8; margin-bottom: 4px; color: #000000;'><span style='color: #000000; font-weight: bold; margin-right: 6px;'>{display_bullet}</span>{content}</li>")
             continue
             
         # ---------------------------------------------------------
-        # 👑 [박사님 지정 목차 위계 감지 로직 - 원상복구 및 직관화]
+        # 👑 [박사님 지정 목차 위계 감지 로직 - 여백(Margin) 다이어트]
         # ---------------------------------------------------------
 
-        # [Level 1: 대제목] AI가 "1. " 형태의 숫자를 적었을 때 자동 감지 (20px, 900 굵기)
-        elif re.match(r'^\d+\.\s', line):
+        # [Level 1: 대제목] "1. " 형태 (20px, 900 굵기, margin: 22px / 8px)
+        elif re.match(r'^(?:<[^>]+>)*\s*\d+\.\s', line):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{line}</div>")
+            clean_line = line.replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 22px; margin-bottom: 8px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{clean_line}</div>")
 
-        # [Level 1-B: 대제목 예비용] 혹시 AI가 마크다운 "# "을 썼을 때 방어
-        elif line.startswith("# ") or line.startswith("## "):
+        # [Level 2: 소제목] "1) " 형태 (17px, 800 굵기, margin: 16px / 6px)
+        elif re.match(r'^(?:<[^>]+>)*\s*\d+\)\s', line):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            clean_line = line.lstrip('#').strip()
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{clean_line}</div>")
+            clean_line = line.replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 16px; margin-bottom: 6px;'>{clean_line}</div>")
 
-        # [Level 2: 소제목] AI가 "1) " 형태의 숫자를 적었을 때 자동 감지 (17px, 800 굵기)
-        elif re.match(r'^\d+\)\s', line):
+        # [Level 3: 소소제목] "① " 형태 (16px, 700 굵기, margin: 10px / 4px)
+        elif re.match(r'^(?:<[^>]+>)*\s*[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
-
-        # [Level 2-B: 소제목 예비용] 혹시 AI가 마크다운 "### "을 썼을 때 방어
-        elif line.startswith("### "):
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            clean_line = line.lstrip('#').strip()
-            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
-
-        # [Level 3: 소소제목] AI가 "① " 형태의 원문자를 적었을 때 자동 감지 (16px, 700 굵기)
-        elif re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            html_lines.append(f"<div style='font-size: 16px; font-weight: 700; color: #000000; margin-top: 12px; margin-bottom: 6px;'>{line}</div>")
+            clean_line = line.replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 16px; font-weight: 700; color: #000000; margin-top: 10px; margin-bottom: 4px;'>{clean_line}</div>")
             
         # ---------------------------------------------------------
-        # 일반 문단 처리 (기호 없는 평범한 문장 -> 400 기본 굵기, 올블랙)
+        # 일반 문단 처리 (400 굵기, 올블랙, 첫 줄 들여쓰기, margin-bottom 6px로 밀착)
         else:
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
             clean_line = line.replace('#', '').strip()
-            # 💡 [핵심] text-indent: 16px; 를 추가하여 문단 첫 글자를 자동으로 밀어 넣습니다!
-            html_lines.append(f"<p style='line-height: 1.8; margin-bottom: 8px; color: #000000; text-indent: 16px;'>{clean_line}</p>")
+            html_lines.append(f"<p style='line-height: 1.8; margin-bottom: 6px; color: #000000; text-indent: 16px;'>{clean_line}</p>")
             
     if in_list:
         html_lines.append("</ul>")
@@ -252,8 +238,8 @@ def format_ai_text_to_html(text, qna_text=""):
         clean_qna_body = qna_text.replace('💡', '').strip()
         qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"""
-        <div style='background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
-            <div style='font-size: 20px; font-weight: 900; color: #000000; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #E0E0E0;'>
+        <div style='background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px; padding: 22px; margin-top: 24px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+            <div style='font-size: 20px; font-weight: 900; color: #000000; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #E0E0E0;'>
                 💡 Q & A
             </div>
             <div style='font-size: 16px; line-height: 1.85; font-weight: 600; color: #000000;'>
