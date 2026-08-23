@@ -77,9 +77,13 @@ def update_order_status(order_id, status):
     conn.close()
 
 # ------------------------------------------------------------------------------
-# 📡 [솔라피 (Solapi) 발송 엔진]
+# 📡 [솔라피 (Solapi) 발송 엔진] 
+# 💡 스위치 조작법: 
+#    - 실전 발송이 필요할 땐 ⛔[테스트 모드] 구역을 전체 주석(#) 처리하고, 
+#    - 🟢[실전 모드] 구역의 주석(#)을 전부 해제해 주십시오.
 # ------------------------------------------------------------------------------
 def get_solapi_auth_header(api_key, api_secret):
+    import hmac, hashlib
     date_str = datetime.now().astimezone().isoformat()
     salt = str(uuid.uuid4().hex)
     combined = date_str + salt
@@ -87,16 +91,39 @@ def get_solapi_auth_header(api_key, api_secret):
     return f"HMAC-SHA256 apiKey={api_key}, date={date_str}, salt={salt}, signature={signature}"
 
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
-    try:
-        time.sleep(0.5) # 테스트용 딜레이 (비용 방지용. 추후 실과금시 requests 로직으로 복원)
-        return True, "성공"
-    except Exception as e: return False, str(e)
+    return True, "성공" # 관리자 알림은 비용 절감을 위해 현재 단순히 패스하도록 처리
 
 def send_solapi_custom_message(to_phone, name, msg_body):
+    
+    # ==============================================================================
+    # ⛔ [테스트 모드] (현재 켜짐) : 돈이 나가지 않고 발송 흉내만 냅니다.
+    # ==============================================================================
+    # try:
+    #     time.sleep(0.5) # 테스트용 딜레이
+    #     return True, "[테스트 모드] 발송 성공 (비용 미청구)"
+    # except Exception as e: 
+    #     return False, str(e)
+
+
+    # ==============================================================================
+    # 🟢 [실전 모드] (현재 켜짐) : 실제 솔라피 서버와 연결되어 요금이 차감됩니다.
+    # ==============================================================================
     try:
-        time.sleep(0.5) # 테스트용 딜레이
-        return True, "[테스트 모드] 발송 성공"
-    except Exception as e: return False, str(e)
+        # 💡 보안 금고에서 박사님의 황금 열쇠를 몰래 꺼내옵니다!
+        api_key = st.secrets["SOLAPI_API_KEY"]
+        api_secret = st.secrets["SOLAPI_API_SECRET"]
+        
+        # 헤더와 데이터를 조립함과 동시에 0.1초 만에 서버로 발송!
+        res = requests.post("https://api.solapi.com/messages/v4/send", 
+            headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}, 
+            json={"message": {"to": to_phone.replace("-", ""), "from": "01038576727", "text": msg_body}}
+        )
+        
+        # 성공/실패 여부를 한 줄로 깔끔하게 반환
+        return (True, "🟢 [실전 모드] 실제 발송 성공!") if res.status_code == 200 else (False, f"발송 실패: {res.text}")
+        
+    except Exception as e: 
+        return False, str(e)
 
 # ------------------------------------------------------------------------------
 # 0. 🧮 [패키지 복수 선택 할인 연산 엔진 - 오리지널 복원]
