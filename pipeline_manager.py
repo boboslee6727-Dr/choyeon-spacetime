@@ -324,8 +324,8 @@ def render_customer_order_form():
         name = st.text_input("이름 *(필수)", placeholder="성함을 입력하세요")
         c_p1, c_p2, c_p3 = st.columns([1, 1.5, 1.5])
         with c_p1: st.text_input("국번", value="010", disabled=True)
-        with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4)
-        with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4)
+        with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4, placeholder="1234")
+        with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4, placeholder="5678")
         memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com")
         c_g, c_m, c_c = st.columns(3)
         with c_g: gender = st.selectbox("성별", ["여성", "남성"])
@@ -368,7 +368,7 @@ def render_customer_order_form():
         </div>
         """, unsafe_allow_html=True)
         
-        user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="현재 상황이나 궁금한 점을<br> 자유롭게 적어주세요.")
+        user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="내 비밀이나 궁금한 점을 자유롭게 적어주세요.")
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
