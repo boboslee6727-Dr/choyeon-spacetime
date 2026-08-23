@@ -139,7 +139,6 @@ def do_auto_fill_user():
     else:
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-
 # 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
 def do_auto_fill_partner():
     st.session_state['app_running'] = False
