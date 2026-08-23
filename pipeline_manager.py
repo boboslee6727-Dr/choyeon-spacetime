@@ -227,14 +227,14 @@ def render_customer_order_form():
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         if ord_info["discount_amt"] > 0:
-            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 패키지 할인)</span>"
+            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 특가 할인)</span>"
         else:
             price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
         st.markdown(f"""
         <div class='guide-box'>
-        <div class='pay-title'>[ 🌸 신청이 예쁘게 접수되었어요! 🌸 ]</div>
-        <b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사드립니다! 🥰<br>
+        <div class='pay-title'>[ 🌸 신청이 예쁘게 접수 완료! 🌸 ]</div>
+        <b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사합니다! 🥰<br>
         신청하신 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
         박사님께서 정성껏 사주를 분석하실 수 있도록, 아래 계좌로 복비를 입금해 주시면 확인 후 곧바로 정밀 감명이 시작됩니다! 조금만 기다려 주세요~ 💕
         </div>
@@ -250,7 +250,7 @@ def render_customer_order_form():
 
         st.markdown(f"""
         <div class='guide-box' style='margin-top:10px;'>
-        <span style='color:#1A237E; font-weight:bold;'>※ 신청자 이름이랑 입금자 이름이 다르면 카톡 채널로 알려주세요!</span><br>
+        <span style='color:#1A237E; font-weight:bold;'>※ 신청자 이름이랑 입금자 이름이 다르면 <br> 카톡 채널로 알려주세요!</span><br>
         <div style='margin-top: 10px; margin-bottom: 8px;'>
             <a href='{KAKAO_CHAT_URL}' target='_blank' style='text-decoration:none;'>
                 <div style='background-color:#FEE500; color:#191919; text-align:center; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:14px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);'>
