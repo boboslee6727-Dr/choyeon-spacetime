@@ -923,8 +923,8 @@ if st.session_state.get('app_running', False):
             bg_col = "#E8F5E9" if is_cur_m else "transparent"
             b_left = "1px solid #ccc"
             wol_content += html_views.get_wolun_cell(
-                tm, engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
-                wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
+                tm, engine.get_ss(ds_hanja, wc_hanja), wc_hanja, engine.get_oh_class(wc_hanja), 
+                wj_hanja, engine.get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                 engine.get_unsung(ds_hanja, wj_hanja), engine.get_12_shinsal(yb, wj_hanja), 
                 engine.get_12_shinsal(db, wj_hanja), bg_col, b_left, is_cur_m
             )
