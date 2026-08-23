@@ -125,22 +125,6 @@ def get_global_css():
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 800 !important; font-size: 13px !important; }
 
-    /* ========================================================================= */
-    /* 🚨 [진녹색 간지 원천 차단] 본문(p) 및 제목(div) 전체로 침투한 오행 색상 완벽 무효화! */
-    /* ========================================================================= */
-    .ai-content span, 
-    .ai-content font, 
-    .ai-content b,
-    .ai-content strong,
-    .ai-content em,
-    .ai-content [style*="color"], 
-    .ai-content [class*="color-"], 
-    .ai-content [class*="ganji-"] {
-        color: #000000 !important;
-        background-color: transparent !important;
-    }
-    /* ========================================================================= */
-
     /* 인쇄 및 PDF 저장 시 자동 A4 낱장 분할 엔진 */
     .page-break { display: none; }
 
@@ -159,8 +143,7 @@ def format_ai_text_to_html(text):
     if not text: 
         return ""
     
-    # 🚨 [박사님 지시 반영: 명검 2.0] AI가 몰래 넣는 :green[텍스트], :red[텍스트] 찌꺼기 완벽 소각!
-    # 이제 AI가 무슨 짓을 해도 진녹색 글씨는 나오지 않고, 깨끗한 텍스트만 남습니다.
+    # 🚨 [명검 2.0] AI가 몰래 넣는 :green[텍스트], :red[텍스트] 찌꺼기 완벽 소각!
     text = re.sub(r':[a-zA-Z]+\[(.*?)\]', r'\1', text)
     
     # 볼드체 변환
@@ -181,7 +164,7 @@ def format_ai_text_to_html(text):
             
         lower_line = line.lower()
         
-        # 🚨 [프리패스 게이트] 대운표/세운표의 HTML과 오행 색상이 깨지지 않도록 무사 통과시킵니다.
+        # 🚨 [프리패스 게이트] 대운표/세운표 HTML 및 오행 색상 무사 통과
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
@@ -200,13 +183,32 @@ def format_ai_text_to_html(text):
                 in_list = True
             html_lines.append(f"<li>{line[2:]}</li>")
             
-        # 헤딩(제목) 처리
+        # 👑 [디자인 1] AI가 마크다운(#)으로 제목을 줄 때 처리
         elif line.startswith("#"):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
+            header_level = len(line) - len(line.lstrip('#'))
             header_text = line.lstrip('#').strip()
-            html_lines.append(f"<h3 style='margin-top: 15px; margin-bottom: 10px; color: #111; border-bottom: 1px solid #eee; padding-bottom: 5px;'>{header_text}</h3>")
+            
+            if header_level <= 2: # 대제목 (## 1. ~) -> 18px, 매우 굵게, 밑줄 쫙!
+                html_lines.append(f"<div style='font-size: 18px; font-weight: 900; color: #111; margin-top: 22px; margin-bottom: 12px; border-bottom: 2px solid #3F51B5; padding-bottom: 6px;'>{header_text}</div>")
+            else: # 소제목 (### 1) ~) -> 16px, 굵게
+                html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #222; margin-top: 16px; margin-bottom: 8px;'>{header_text}</div>")
+        
+        # 👑 [디자인 2] AI가 '#' 없이 숫자 '1. ~' 만 적었을 때 자동 감지
+        elif re.match(r'^\d+\.\s', line): 
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 900; color: #111; margin-top: 22px; margin-bottom: 12px; border-bottom: 2px solid #3F51B5; padding-bottom: 6px;'>{line}</div>")
+            
+        # 👑 [디자인 3] AI가 '#' 없이 괄호 '1) ~' 만 적었을 때 자동 감지
+        elif re.match(r'^\d+\)\s', line): 
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #222; margin-top: 16px; margin-bottom: 8px;'>{line}</div>")
             
         # 일반 문단 처리
         else:
@@ -219,6 +221,7 @@ def format_ai_text_to_html(text):
         html_lines.append("</ul>")
         
     return "\n".join(html_lines)
+
     main_html = "\n".join(html_lines)
 
     # 💡 Q&A 박스 포맷팅
