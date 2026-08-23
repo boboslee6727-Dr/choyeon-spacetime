@@ -25,6 +25,9 @@ import html_views
 # importlib.reload(prompts)
 # importlib.reload(html_views)
 
+extract_ganji = engine.extract_ganji
+get_oh_class = engine.get_oh_class
+
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
@@ -96,9 +99,9 @@ def do_auto_fill_user():
     u_rd = st.session_state.get("u_rd_rev", "")
     u_rt = st.session_state.get("u_rt_rev", "")
 
-    _ry = engine.extract_ganji(u_ry)
-    _rm = engine.extract_ganji(u_rm)
-    _rd = engine.extract_ganji(u_rd)
+    _ry = extract_ganji(u_ry)
+    _rm = extract_ganji(u_rm)
+    _rd = extract_ganji(u_rd)
 
     if not _ry and not _rm and not _rd:
         st.session_state.pop('rev_matches_user', None)
@@ -817,7 +820,7 @@ if st.session_state.get('app_running', False):
                 "y_shinsal": y_shin_val, "d_shinsal": d_shin_val, "is_current": is_active, "is_first": (i == 0)
             })
 
-        un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, engine.get_oh_class)
+        un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
 
         # ----------------------------------------------------------------------
         # 상대방 대운표 연산 (2인용 전용)
@@ -903,8 +906,8 @@ if st.session_state.get('app_running', False):
             bg_col = "#E1F5FE" if is_cur_yr else "transparent"
             b_left = "1px solid #ccc"
             se_content += html_views.get_sewun_cell(
-                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, engine.get_oh_class(tc), 
-                tj, engine.get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
+                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
+                tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
                 engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr
             )
             
@@ -923,8 +926,8 @@ if st.session_state.get('app_running', False):
             bg_col = "#E8F5E9" if is_cur_m else "transparent"
             b_left = "1px solid #ccc"
             wol_content += html_views.get_wolun_cell(
-                tm, engine.get_ss(ds_hanja, wc_hanja), wc_hanja, engine.get_oh_class(wc_hanja), 
-                wj_hanja, engine.get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
+                tm, engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
+                wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                 engine.get_unsung(ds_hanja, wj_hanja), engine.get_12_shinsal(yb, wj_hanja), 
                 engine.get_12_shinsal(db, wj_hanja), bg_col, b_left, is_cur_m
             )
@@ -1316,11 +1319,10 @@ if st.session_state.get('app_running', False):
 
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
 
-        # 🚨 [박사님 통찰 반영] html_views.py로 쫓아냈던 전역 CSS를 다시 불러와서 강제 결합! 🚨
+        # 👇 CSS(물감통) + 표지 + 본문 완전 융합! (오행 색상 증발 완벽 방지)
         global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
         safe_cover_str = re.sub(r'\n\s+', '\n', cover_html) if 'cover_html' in locals() and cover_html else ""
         
-        # 👇 CSS(색깔) + 표지 + 본문을 절대 깨지지 않는 하나의 HTML 덩어리로 뭉칩니다.
         final_render_html = global_css_str + safe_cover_str + final_render_html
 
         # =========================================================================
@@ -1330,15 +1332,9 @@ if st.session_state.get('app_running', False):
             gid = st.session_state['admin_proc_id']
             st.session_state[f'html_{gid}'] = final_render_html
             st.session_state['app_running'] = False
-            
-            # 💡 [핵심] URL 변경(mode=factory 등) 없이 그냥 rerun()만 호출하면 
-            # 위에 있는 pipeline_manager의 render_admin_panel()이 서랍장 2,3번을 엽니다!
             st.rerun()
         else:
-            # 🚨 박사님 단독 수동 연구 모드일 때는 정상적으로 화면 출력!
-            if 'cover_html' in locals() and cover_html:
-                safe_cover = re.sub(r'\n\s+', '\n', cover_html)
-                st.markdown(safe_cover, unsafe_allow_html=True)
+            # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(final_render_html, unsafe_allow_html=True)
 
 
