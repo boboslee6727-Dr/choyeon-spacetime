@@ -187,33 +187,51 @@ def format_ai_text_to_html(text, qna_text=""):
             # '-'나 '*' 기호는 예쁜 동그라미(•)로, '★'은 그대로 출력
             display_bullet = '•' if bullet in ['-', '*'] else bullet
             
-            # 리스트 기호와 내용 모두 100% 검은색으로 통일
             html_lines.append(f"<li style='line-height: 1.8; margin-bottom: 6px; color: #000000;'><span style='color: #000000; font-weight: bold; margin-right: 6px;'>{display_bullet}</span>{content}</li>")
             continue
             
-        # 👑 [Level 1: 대제목] "1. " 형태 (또는 마크다운) -> [20px, 900(가장 굵게), 올블랙, 밝은회색 밑줄]
-        elif re.match(r'^\d+\.\s', line) or line.startswith("# ") or line.startswith("## "):
+        # ---------------------------------------------------------
+        # 👑 [박사님 지정 목차 위계 감지 로직 - 원상복구 및 직관화]
+        # ---------------------------------------------------------
+
+        # [Level 1: 대제목] AI가 "1. " 형태의 숫자를 적었을 때 자동 감지 (20px, 900 굵기)
+        elif re.match(r'^\d+\.\s', line):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{line}</div>")
+
+        # [Level 1-B: 대제목 예비용] 혹시 AI가 마크다운 "# "을 썼을 때 방어
+        elif line.startswith("# ") or line.startswith("## "):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
             clean_line = line.lstrip('#').strip()
             html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{clean_line}</div>")
-            
-        # 👑 [Level 2: 소제목] "1) " 형태 (또는 마크다운) -> [17px, 800(굵게), 올블랙]
-        elif re.match(r'^\d+\)\s', line) or line.startswith("### "):
+
+        # [Level 2: 소제목] AI가 "1) " 형태의 숫자를 적었을 때 자동 감지 (17px, 800 굵기)
+        elif re.match(r'^\d+\)\s', line):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
+
+        # [Level 2-B: 소제목 예비용] 혹시 AI가 마크다운 "### "을 썼을 때 방어
+        elif line.startswith("### "):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
             clean_line = line.lstrip('#').strip()
             html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
 
-        # 👑 [Level 3: 소소제목] "① " 형태 -> [16px, 700(약간 굵게), 올블랙]
+        # [Level 3: 소소제목] AI가 "① " 형태의 원문자를 적었을 때 자동 감지 (16px, 700 굵기)
         elif re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
             html_lines.append(f"<div style='font-size: 16px; font-weight: 700; color: #000000; margin-top: 12px; margin-bottom: 6px;'>{line}</div>")
             
+        # ---------------------------------------------------------
         # 일반 문단 처리 (기호 없는 평범한 문장 -> 400 기본 굵기, 올블랙)
         else:
             if in_list:
@@ -227,7 +245,7 @@ def format_ai_text_to_html(text, qna_text=""):
         
     main_html = "\n".join(html_lines)
 
-    # 💡 Q&A 박스 포맷팅
+    # 💡 Q&A 박스 포맷팅 (올블랙 테마)
     qna_html = ""
     if qna_text:
         clean_qna_body = qna_text.replace('💡', '').strip()
