@@ -139,7 +139,7 @@ def get_global_css():
     </style>
     """
 
-def format_ai_text_to_html(text):
+def format_ai_text_to_html(text, qna_text=""):
     if not text: 
         return ""
     
@@ -220,11 +220,9 @@ def format_ai_text_to_html(text):
     if in_list:
         html_lines.append("</ul>")
         
-    return "\n".join(html_lines)
-
     main_html = "\n".join(html_lines)
 
-    # 💡 Q&A 박스 포맷팅
+    # 💡 Q&A 박스 포맷팅 (정상 복구)
     qna_html = ""
     if qna_text:
         clean_qna_body = qna_text.replace('💡', '').strip()
@@ -239,6 +237,7 @@ def format_ai_text_to_html(text):
             </div>
         </div>
         """
+        
     return f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
