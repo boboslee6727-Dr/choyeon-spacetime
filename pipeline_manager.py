@@ -211,7 +211,7 @@ def render_customer_order_form():
     EVENT_PERIOD = "[ 8/18 ~ 9/30 ]"
     EVENT_TITLE = "🌕 추석 및 새학기 맞이 반값 특가! 🌕"
     EVENT_DESC_1 = "학생과 청년들의 힘찬 새 출발을 응원하며,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
-    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 20~30% 패키지 할인 적용!)"
+    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 20~30% 패키지 할인!)"
 
     st.markdown("""
     <style>
