@@ -146,8 +146,8 @@ def format_ai_text_to_html(text, qna_text=""):
     # 🚨 [명검 2.0] AI가 몰래 넣는 :green[텍스트], :red[텍스트] 찌꺼기 완벽 소각!
     text = re.sub(r':[a-zA-Z]+\[(.*?)\]', r'\1', text)
     
-    # 볼드체 변환
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    # 볼드체 변환 (명리용어 강조용 - 완전한 검은색 굵은 글씨)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color: #000000;">\1</b>', text)
     
     lines = text.split('\n')
     html_lines = []
@@ -164,7 +164,7 @@ def format_ai_text_to_html(text, qna_text=""):
             
         lower_line = line.lower()
         
-        # 🚨 [프리패스 게이트] 대운표/세운표 HTML 및 오행 색상 무사 통과
+        # 🚨 [프리패스 게이트] 대운표/세운표 HTML 등 무사 통과
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
@@ -176,59 +176,64 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(line)
             continue
             
-        # 리스트 처리
-        if line.startswith("- ") or line.startswith("* "):
+        # 👑 [Level 4: 본문 나열] "- ", "* ", "★ " 기호 자동 감지 및 예쁜 리스트 처리
+        if re.match(r'^[\-★\*]\s', line):
             if not in_list:
-                html_lines.append("<ul style='line-height: 1.8; margin-bottom: 10px; padding-left: 20px;'>")
+                html_lines.append("<ul style='list-style-type: none; padding-left: 15px; margin-bottom: 12px;'>")
                 in_list = True
-            html_lines.append(f"<li>{line[2:]}</li>")
             
-        # 👑 [디자인 1] AI가 마크다운(#)으로 제목을 줄 때 처리
-        elif line.startswith("#"):
+            bullet = line[0]
+            content = line[1:].strip()
+            # '-'나 '*' 기호는 예쁜 동그라미(•)로, '★'은 그대로 출력
+            display_bullet = '•' if bullet in ['-', '*'] else bullet
+            
+            # 리스트 기호와 내용 모두 100% 검은색으로 통일
+            html_lines.append(f"<li style='line-height: 1.8; margin-bottom: 6px; color: #000000;'><span style='color: #000000; font-weight: bold; margin-right: 6px;'>{display_bullet}</span>{content}</li>")
+            continue
+            
+        # 👑 [Level 1: 대제목] "1. " 형태 (또는 마크다운) -> [20px, 900(가장 굵게), 올블랙, 밝은회색 밑줄]
+        elif re.match(r'^\d+\.\s', line) or line.startswith("# ") or line.startswith("## "):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            header_level = len(line) - len(line.lstrip('#'))
-            header_text = line.lstrip('#').strip()
+            clean_line = line.lstrip('#').strip()
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{clean_line}</div>")
             
-            if header_level <= 2: # 대제목 (## 1. ~) -> 18px, 매우 굵게, 밑줄 쫙!
-                html_lines.append(f"<div style='font-size: 18px; font-weight: 900; color: #111; margin-top: 22px; margin-bottom: 12px; border-bottom: 2px solid #3F51B5; padding-bottom: 6px;'>{header_text}</div>")
-            else: # 소제목 (### 1) ~) -> 16px, 굵게
-                html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #222; margin-top: 16px; margin-bottom: 8px;'>{header_text}</div>")
-        
-        # 👑 [디자인 2] AI가 '#' 없이 숫자 '1. ~' 만 적었을 때 자동 감지
-        elif re.match(r'^\d+\.\s', line): 
+        # 👑 [Level 2: 소제목] "1) " 형태 (또는 마크다운) -> [17px, 800(굵게), 올블랙]
+        elif re.match(r'^\d+\)\s', line) or line.startswith("### "):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 900; color: #111; margin-top: 22px; margin-bottom: 12px; border-bottom: 2px solid #3F51B5; padding-bottom: 6px;'>{line}</div>")
-            
-        # 👑 [디자인 3] AI가 '#' 없이 괄호 '1) ~' 만 적었을 때 자동 감지
-        elif re.match(r'^\d+\)\s', line): 
+            clean_line = line.lstrip('#').strip()
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{clean_line}</div>")
+
+        # 👑 [Level 3: 소소제목] "① " 형태 -> [16px, 700(약간 굵게), 올블랙]
+        elif re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #222; margin-top: 16px; margin-bottom: 8px;'>{line}</div>")
+            html_lines.append(f"<div style='font-size: 16px; font-weight: 700; color: #000000; margin-top: 12px; margin-bottom: 6px;'>{line}</div>")
             
-        # 일반 문단 처리
+        # 일반 문단 처리 (기호 없는 평범한 문장 -> 400 기본 굵기, 올블랙)
         else:
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
-            html_lines.append(f"<p style='line-height: 1.8; margin-bottom: 8px; color: #333;'>{line}</p>")
+            clean_line = line.lstrip('#').strip() if line.startswith('#') else line
+            html_lines.append(f"<p style='line-height: 1.8; margin-bottom: 8px; color: #000000;'>{clean_line}</p>")
             
     if in_list:
         html_lines.append("</ul>")
         
     main_html = "\n".join(html_lines)
 
-    # 💡 Q&A 박스 포맷팅 (정상 복구)
+    # 💡 Q&A 박스 포맷팅
     qna_html = ""
     if qna_text:
         clean_qna_body = qna_text.replace('💡', '').strip()
         qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"""
-        <div style='background-color: #FFFFFF; border: 2px solid #333333; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
+        <div style='background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px; padding: 22px; margin-top: 30px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
             <div style='font-size: 20px; font-weight: 900; color: #000000; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #E0E0E0;'>
                 💡 Q & A
             </div>
