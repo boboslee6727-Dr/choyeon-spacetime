@@ -125,6 +125,22 @@ def get_global_css():
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 15px !important; border: 1px solid #444 !important; }
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 800 !important; font-size: 13px !important; }
 
+    /* ========================================================================= */
+    /* 🚨 [진녹색 간지 원천 차단] 본문(p) 및 제목(div) 전체로 침투한 오행 색상 완벽 무효화! */
+    /* ========================================================================= */
+    .ai-content span, 
+    .ai-content font, 
+    .ai-content b,
+    .ai-content strong,
+    .ai-content em,
+    .ai-content [style*="color"], 
+    .ai-content [class*="color-"], 
+    .ai-content [class*="ganji-"] {
+        color: #000000 !important;
+        background-color: transparent !important;
+    }
+    /* ========================================================================= */
+
     /* 인쇄 및 PDF 저장 시 자동 A4 낱장 분할 엔진 */
     .page-break { display: none; }
 
@@ -140,140 +156,69 @@ def get_global_css():
     """
 
 def format_ai_text_to_html(text):
-    if not text:
+    if not text: 
         return ""
-
-    # =====================================================================
-    # 🚨 [박사님의 명검 2.0 진화!] 어떠한 진녹색 스파이도 살아남을 수 없는 철통 방어망
-    # =====================================================================
-    # 1. Streamlit 마크다운 색상 문법 원천 삭제 (예: :green[갑목] -> 갑목)
-    text = re.sub(r':(?:red|blue|green|yellow|orange|violet|purple|gray|grey|rainbow|black|white)\[(.*?)\]', r'\1', text, flags=re.IGNORECASE)
     
-    # 2. HTML 인라인 스타일에서 색상(color) 강제 삭제 (예: style="color: green;" -> style="")
-    text = re.sub(r'(style=[\'"][^\'"]*?)color\s*:[^;\'"]+;?([^\'"]*[\'"])', r'\1\2', text, flags=re.IGNORECASE)
+    # 🚨 [박사님 지시 반영: 명검 2.0] AI가 몰래 넣는 :green[텍스트], :red[텍스트] 찌꺼기 완벽 소각!
+    # 이제 AI가 무슨 짓을 해도 진녹색 글씨는 나오지 않고, 깨끗한 텍스트만 남습니다.
+    text = re.sub(r':[a-zA-Z]+\[(.*?)\]', r'\1', text)
     
-    # 3. 텍스트 전체에서 span과 font 태그 자체를 줄바꿈 무관하게 아예 박멸!
-    text = re.sub(r'</?(?:span|font)[^>]*>', '', text, flags=re.IGNORECASE)
+    # 볼드체 변환
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     
-    # 4. 혹시 모를 구형 HTML color 속성 삭제 (예: color="green")
-    text = re.sub(r'\s+color=[\'"][^\'"]*[\'"]', '', text, flags=re.IGNORECASE)
-    # =====================================================================
-
-    # 1. 찌꺼기 완벽 제거
-    remove_tags = ['[MALE_START]', '[MALE_END]', '[FEMALE_START]', '[FEMALE_END]', '[GUNGHAP_START]', '[GUNGHAP_END]']
-    for tag in remove_tags:
-        text = text.replace(tag, '')
-    text = text.strip()
-
-    # (번역기 내부 1차 청소는 위 명검 2.0에서 완벽히 처리됨)
-
-    # 3. 소따옴표 안쪽만 볼드체
-    text = re.sub(r'[\'"]?\*\*(.*?)\*\*[\'"]?', r"'<b class=\"b-text\">\1</b>'", text)
-    text = text.replace('*', '').replace('#', '')
-
-    # 🌟 4. [업그레이드 절단기 방어막] (이 녀석이 지워져서 에러가 났던 것입니다!)
-    title_kws = r"성격|가치관|속마음|상|요약|성향|균형|리듬|대하여|기상도|분석|조화|궁합|지혜|처방|평행이론|이유|이격|개운|충전|처세|필요성|장단점"
-    anti_split_kws = r"분석|및|가치관|요약|성향|특징|비교|비법|전략|솔루션|방안|방법|조언|방향|지침|가이드|팁|포인트"
-
-    # 반드시 방어막 변수들이 먼저 정의된 후 아래 치환(sub) 로직이 돌아야 합니다!
-    text = re.sub(fr'(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
-    text = re.sub(fr'(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
-    text = re.sub(fr'(\(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<])', r'\1\n\2', text)
-
-    # 5. Q&A 분리
-    match = re.search(r'(?:\n\s*|^)(\d+[\.\)]\s*)?💡(.*)', text, re.DOTALL)
-    if match:
-        main_text = text[:match.start()].strip()
-        qna_text = "💡" + match.group(2).strip()
-    else:
-        main_text = text.strip()
-        qna_text = ""
-
-    lines = main_text.split('\n')
+    lines = text.split('\n')
     html_lines = []
-
+    in_list = False
+    
     for line in lines:
         line = line.strip()
         if not line:
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append("<br>")
             continue
-
+            
         lower_line = line.lower()
-
-        # 표, 대운표 등은 무사통과
+        
+        # 🚨 [프리패스 게이트] 대운표/세운표의 HTML과 오행 색상이 깨지지 않도록 무사 통과시킵니다.
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
            lower_line.startswith('<td') or lower_line.startswith('</td') or \
            lower_line.startswith('<th') or lower_line.startswith('</th'):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
             html_lines.append(line)
             continue
-
-        # 수석보좌관 헤더
-        if '수석보좌관' in line or '장단점 정밀 비교' in line or line.startswith('[수석보좌관'):
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; text-align: center; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; border-bottom: 2.5px solid #000000;'>{line}</div>")
-            continue
-
-        # 🚨 [박사님 핵심 룰] 콜론(:) 강제 개행 & [시간 23:30 보호 룰] 완벽 통합
-        colon_match = re.match(r'^(\d+)([\.\)])\s*(.*?):\s*(?!\d)(.*)', line)
-        if colon_match:
-            num = colon_match.group(1)
-            sep = colon_match.group(2)
-            title_text = colon_match.group(3).strip()
-            body_part = colon_match.group(4).strip()
-            title_part = f"{num}{sep} {title_text}:"
             
-            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{title_part}</div>")
-            if body_part:
-                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{body_part}</p>")
-            continue
-
-        colon_match_no_num = re.match(r'^(\[.*?\])\s*:\s*(?!\d)(.*)', line)
-        if colon_match_no_num:
-            title_part = colon_match_no_num.group(1).strip() + ":"
-            body_part = colon_match_no_num.group(2).strip()
-            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 16px; margin-bottom: 4px;'>{title_part}</div>")
-            if body_part:
-                html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 0 0 12px 0; text-indent: 10px; color: #000000;'>{body_part}</p>")
-            continue
-
-        # 🌟 일반 제목 매칭 
-        m1 = re.match(fr'^(\d+\.\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
-        if m1:
-            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{m1.group(1).strip()}</div>")
-            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m1.group(2).strip()}</p>")
-            continue
-
-        m2 = re.match(fr'^(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
-        if m2:
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 8px;'>{m2.group(1).strip()}</div>")
-            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m2.group(2).strip()}</p>")
-            continue
-
-        m3 = re.match(fr'^(\(\d+\)\s+.*?(?:{title_kws}))\s+(?!{anti_split_kws})([가-힣A-Z\'"<].*)', line)
-        if m3:
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{m3.group(1).strip()}</div>")
-            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{m3.group(2).strip()}</p>")
-            continue
-
-        # 🚨 [글자수 80자 제한 해제판]
-        if re.match(r'^\d+\.\s', line):
-            html_lines.append(f"<div style='font-size: 22px; font-weight: 900; color: #000000; margin-top: 28px; margin-bottom: 12px; border-bottom: 1px solid #E0E0E0; padding-bottom: 5px;'>{line}</div>")
-            continue
-        if re.match(r'^\d+\)\s', line):
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 24px; margin-bottom: 8px;'>{line}</div>")
-            continue
-        if re.match(r'^\(\d+\)\s', line):
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #000000; margin-top: 18px; margin-bottom: 8px;'>{line}</div>")
-            continue
-
-        # 일반 서술 문장 (목록형과 일반형 분리)
-        if line.startswith('-'):
-            # 🌟 목록형(-) 문장: 위아래 여백과 줄간격을 확 줄여서 밀도 있게 배치 (가독성 최상)
-            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.65; text-align: justify; margin: 2px 0 6px 0; padding-left: 15px; text-indent: -10px; color: #000000;'>{line}</p>")
+        # 리스트 처리
+        if line.startswith("- ") or line.startswith("* "):
+            if not in_list:
+                html_lines.append("<ul style='line-height: 1.8; margin-bottom: 10px; padding-left: 20px;'>")
+                in_list = True
+            html_lines.append(f"<li>{line[2:]}</li>")
+            
+        # 헤딩(제목) 처리
+        elif line.startswith("#"):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            header_text = line.lstrip('#').strip()
+            html_lines.append(f"<h3 style='margin-top: 15px; margin-bottom: 10px; color: #111; border-bottom: 1px solid #eee; padding-bottom: 5px;'>{header_text}</h3>")
+            
+        # 일반 문단 처리
         else:
-            # 일반 서술 문장: 읽기 편안한 기존 여백 유지
-            html_lines.append(f"<p style='font-size: 16px; font-weight: 500; line-height: 1.85; text-align: justify; margin: 8px 0 18px 0; text-indent: 15px; color: #000000;'>{line}</p>")
-
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<p style='line-height: 1.8; margin-bottom: 8px; color: #333;'>{line}</p>")
+            
+    if in_list:
+        html_lines.append("</ul>")
+        
+    return "\n".join(html_lines)
     main_html = "\n".join(html_lines)
 
     # 💡 Q&A 박스 포맷팅
@@ -583,10 +528,6 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
     """1-4 일운 분석 전용 주간 달력 HTML"""
     content = ""
-        # 💡 지저분한 로컬 함수 대신, 떳떳하게 엔진의 공식 공구를 사용합니다!
-        import engine
-        gan_cls = engine.get_oh_class(gan_char)
-        ji_cls = engine.get_oh_class(ji_char)
 
     for item in weekly_days_data:
         wday = item['weekday']
@@ -597,12 +538,13 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         gan_char = ganji_str[0] if len(ganji_str) >= 1 and ganji_str != "-" else "-"
         ji_char = ganji_str[1] if len(ganji_str) >= 2 else "-"
         
-        gan_cls = get_oh_class_local(gan_char)
-        ji_cls = get_oh_class_local(ji_char)
+        # 💡 [정석 수술 완료]: 지워진 꼼수 함수 대신, 반복문 안에서 당당하게 엔진 공구를 부릅니다!
+        import engine
+        gan_cls = engine.get_oh_class(gan_char)
+        ji_cls = engine.get_oh_class(ji_char)
         
         ss_val, unsung_val, y_shinsal_val, d_shinsal_val = "-", "-", "-", "-"
         try:
-            import engine
             ds_hanja = st.session_state.get('ds_hanja', '甲') if hasattr(st, 'session_state') else '甲'
             ss_val = engine.get_ss(ds_hanja, ji_char) if ji_char != "-" else "-"
             unsung_val = engine.get_unsung(ds_hanja, ji_char) if ji_char != "-" else "-"
@@ -647,6 +589,13 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
             <div class='color-shinsal-day' style='font-size:12px; font-weight:800; border-top:1px dashed #ccc; height:22px; display:flex; align-items:center; justify-content:center;'>{d_val}</div>
         </div>
         """
+
+    return f"""
+    <div style='margin-top:14px; margin-bottom:8px; font-size:15px; font-weight:800; color:#3E2723; font-family:"Nanum Myeongjo", serif;'>📅 이번 주 운세 흐름 (일요일 ~ 토요일)</div>
+    <div style='display:flex; flex-direction:row; width:100%; border:3px solid #3E2723; background:white; margin-bottom:10px; table-layout:fixed; font-family:"Nanum Myeongjo", serif;'>
+        {content}
+    </div>
+    """
 
     return f"""
     <div style='margin-top:14px; margin-bottom:8px; font-size:15px; font-weight:800; color:#3E2723; font-family:"Nanum Myeongjo", serif;'>📅 이번 주 운세 흐름 (일요일 ~ 토요일)</div>
