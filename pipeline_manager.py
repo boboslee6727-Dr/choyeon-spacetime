@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: 신청접수 ~ AI 감명 ~ 카톡 마케팅 완결 마스터 파이프라인 (ver 83.0)
+# 🏮 사주박사: 신청접수 ~ AI 감명 ~ 카톡 마케팅 완결 마스터 파이프라인 (ver 85.0)
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -454,6 +454,7 @@ def render_admin_panel():
                             st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
                             if "3-" in engine_prod:
                                 st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
+                                st.session_state['f_m_stat'], st.session_state['f_c'] = row.get('f_marital', '선택'), row.get('f_cal', '양력') 
                                 st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
                             
                             if "1-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자 및 운세 풀이 (종합)", engine_prod
