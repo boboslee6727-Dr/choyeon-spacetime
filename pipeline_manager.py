@@ -343,7 +343,7 @@ def render_customer_order_form():
             word-break: keep-all !important;
             text-overflow: clip !important;
             overflow: visible !important;
-            letter-spacing: -1.8px !important; /* 🚨 자간 3배 극한 압축 (-1.8px) */
+            letter-spacing: -2.0px !important; /* 🚨 자간 3배 극한 압축 (-1.8px) */
             font-size: 13.5px !important; /* 🚨 폰트 추가 축소 (14px -> 13.5px) */
         }
         
