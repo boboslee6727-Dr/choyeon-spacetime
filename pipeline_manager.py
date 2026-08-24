@@ -6,7 +6,8 @@ import sqlite3
 import os
 import uuid
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date, timedelta  # 🚨 [패치 1] date와 timedelta 추가!
+import datetime as dt_mod                       # 🚨 [패치 2] dt_mod 별칭 추가!
 import time
 import hmac
 import hashlib
@@ -431,10 +432,9 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         f_y, f_m, f_d = "", "", ""
         
         # 🚀 [신규 장착 1] 2-5 택일 및 4-x 비교 분석용 고객 입력 폼 활성화
-        import datetime  # 🚨 [긴급 패치] pipeline 파일 자체적으로 시간 모듈을 불러오도록 독립 선언
         p_tackil_purpose = "이사"
-        p_moving_start = datetime.date.today()
-        p_moving_end = datetime.date.today() + datetime.timedelta(days=30)
+        p_moving_start = date.today()  # dt_mod 안 쓰고 곧바로 date 사용
+        p_moving_end = date.today() + timedelta(days=30)
         p_other_text = ""
         
         check_prod = PRODUCT_MAP.get(selected_single, selected_single)
@@ -633,10 +633,9 @@ def render_admin_panel():
                                         
                                         # 택일 목적 및 기간 세션 복원
                                         if 'tackil_purpose' in meta:
-                                            import datetime  # 🚨 [예방 접종]
                                             st.session_state['tackil_purpose'] = meta['tackil_purpose']
-                                            st.session_state['moving_start'] = datetime.date.fromisoformat(meta['moving_start'])
-                                            st.session_state['moving_end'] = datetime.date.fromisoformat(meta['moving_end'])
+                                            st.session_state['moving_start'] = date.fromisoformat(meta['moving_start'])
+                                            st.session_state['moving_end'] = date.fromisoformat(meta['moving_end'])
                                             
                                         # 타 감명서 원문 세션 복원
                                         if 'other_text' in meta:
