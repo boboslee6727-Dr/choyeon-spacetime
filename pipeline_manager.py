@@ -334,28 +334,30 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
-        # 📱 [모바일 최적화 CSS] Streamlit BaseWeb 강제 자르기(ellipsis) 완전 박살 로직 (자간 극한 압축)
+        # 📱 [모바일 최적화 CSS] 자간 3배 극한 압축 및 좌우 여백(Padding) 제거 로직
         st.markdown("""
         <style>
-        /* 1. 선택된 값 (겉에 보이는 부분)의 모든 내부 요소 강제 줄바꿈 및 자간 극한 압축 */
+        /* 1. 선택된 값 (겉에 보이는 부분) 자간 3배 압축 및 폰트 축소 */
         div[data-baseweb="select"] * {
             white-space: normal !important;
             word-break: keep-all !important;
             text-overflow: clip !important;
             overflow: visible !important;
-            letter-spacing: -1.2px !important; /* 🚨 자간 극한 압축 (-0.6px -> -1.2px) */
-            font-size: 14px !important; /* 🚨 폰트 크기 미세 축소 (14.5px -> 14px) */
+            letter-spacing: -1.8px !important; /* 🚨 자간 3배 극한 압축 (-1.8px) */
+            font-size: 13.5px !important; /* 🚨 폰트 추가 축소 (14px -> 13.5px) */
         }
         
-        /* 2. 셀렉트박스 본체의 강제 높이 제한 완전 박살 */
+        /* 2. 셀렉트박스 본체의 강제 높이 제한 해제 + 좌우 헛바람(여백) 제거 */
         div[data-baseweb="select"] > div {
             height: auto !important;
             min-height: 48px !important;
             padding-top: 6px !important;
             padding-bottom: 6px !important;
+            padding-left: 4px !important;  /* 🚨 좌측 낭비 공간 최소화 */
+            padding-right: 4px !important; /* 🚨 우측 낭비 공간 최소화 */
         }
 
-        /* 3. 드롭다운 옵션 목록 (펼쳤을 때)의 높이 및 줄바꿈 강제 해제 */
+        /* 3. 드롭다운 옵션 목록 (펼쳤을 때)의 텍스트 극한 압축 */
         ul[role="listbox"] li,
         ul[role="listbox"] li * {
             white-space: normal !important;
@@ -363,8 +365,8 @@ def render_customer_order_form():
             height: auto !important;
             min-height: 45px !important;
             text-overflow: clip !important;
-            letter-spacing: -1.2px !important; /* 🚨 자간 극한 압축 */
-            font-size: 14px !important; /* 🚨 폰트 크기 동기화 */
+            letter-spacing: -1.8px !important; /* 🚨 자간 3배 극한 압축 */
+            font-size: 13.5px !important; /* 🚨 폰트 동기화 */
         }
         </style>
         """, unsafe_allow_html=True)
