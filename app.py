@@ -663,7 +663,7 @@ if st.session_state.get('app_running', False):
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
         time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
-        if u_product.startswith("1-1"): report_title = "🏮 사주팔자 및 총운세 풀이"
+        if u_product.startswith("1-1"): report_title = "🏮 사주팔자 및 총 운세 풀이"
         elif u_product.startswith("1-2"): report_title = "🏮 올 해 운세 풀이"
         elif u_product.startswith("1-3"): report_title = "🏮 이번 달 운세 풀이"
         elif u_product.startswith("1-4"): report_title = "🏮 주간 및 일일 운세 풀이"
@@ -1209,6 +1209,7 @@ if st.session_state.get('app_running', False):
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
         
+        # 🚨 [수술 완료] 확실하게 2-5 번호를 잡아서 프롬프트를 배정합니다.
         def get_prompt_var_name(u_prod):
             if "1-1" in u_prod: return "프롬프트_1_1_기본"
             if "1-2" in u_prod: return "프롬프트_1_2_연도운"
@@ -1218,13 +1219,22 @@ if st.session_state.get('app_running', False):
             if "2-2" in u_prod: return "프롬프트_2_2_직업운"
             if "2-3" in u_prod: return "프롬프트_2_3_연애운"
             if "2-4" in u_prod: return "프롬프트_2_4_건강운"
-            if "2-5" in u_prod: return "프롬프트_2_5_이사개업 택일"
+            # 💡 [핵심] prompts.py 파일 안에 있는 택일 프롬프트 변수명이 정확히 아래의 이름과 같은지 확인하십시오!
+            if "2-5" in u_prod: return "프롬프트_2_5_이사개업택일" 
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
             if "4-1" in u_prod: return "프롬프트_4_1_사주대조"
             if "4-2" in u_prod: return "프롬프트_4_2_궁합대조"
             return "프롬프트_1_1_기본"
+
+        prompt_var_name = get_prompt_var_name(u_product)
+        # 🚨 만약 prompts.py에 해당 이름이 없다면 1-1로 강제 회귀하므로 로그를 하나 띄웁니다.
+        if not hasattr(prompts, prompt_var_name):
+            st.error(f"🚨 시스템 경고: prompts.py 파일 안에 '{prompt_var_name}' 라는 변수가 없습니다! 확인해 주세요.")
+            target_prompt = getattr(prompts, "프롬프트_1_1_기본", "")
+        else:
+            target_prompt = getattr(prompts, prompt_var_name, "")
 
         prompt_var_name = get_prompt_var_name(u_product)
         target_prompt = getattr(prompts, prompt_var_name, getattr(prompts, "프롬프트_1_1_기본", ""))
