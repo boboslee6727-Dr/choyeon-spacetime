@@ -334,53 +334,22 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
-        # 📱 [모바일 최적화 CSS] 자간 3배 극한 압축 및 좌우 여백(Padding) 제거 로직
         st.markdown("""
-        <style>
-        /* 1. 선택된 값 (겉에 보이는 부분) 자간 3배 압축 및 폰트 축소 */
-        div[data-baseweb="select"] * {
-            white-space: normal !important;
-            word-break: keep-all !important;
-            text-overflow: clip !important;
-            overflow: visible !important;
-            letter-spacing: -2.0px !important; /* 🚨 자간 3배 극한 압축 (-1.8px) */
-            font-size: 13.5px !important; /* 🚨 폰트 추가 축소 (14px -> 13.5px) */
-        }
-        
-        /* 2. 셀렉트박스 본체의 강제 높이 제한 해제 + 좌우 헛바람(여백) 제거 */
-        div[data-baseweb="select"] > div {
-            height: auto !important;
-            min-height: 48px !important;
-            padding-top: 6px !important;
-            padding-bottom: 6px !important;
-            padding-left: 2px !important;  /* 🚨 좌측 낭비 공간 최소화 */
-            padding-right: 2px !important; /* 🚨 우측 낭비 공간 최소화 */
-        }
 
-        /* 3. 드롭다운 옵션 목록 (펼쳤을 때)의 텍스트 극한 압축 */
-        ul[role="listbox"] li,
-        ul[role="listbox"] li * {
-            white-space: normal !important;
-            word-break: keep-all !important;
-            height: auto !important;
-            min-height: 45px !important;
-            text-overflow: clip !important;
-            letter-spacing: -2.0px !important; /* 🚨 자간 3배 극한 압축 */
-            font-size: 13.5px !important; /* 🚨 폰트 동기화 */
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # 💡 [수정] "선택" 글자 뒤에 공백 2칸(  ) + \n 을 넣어야 완벽하게 2줄로 렌더링됩니다.
-        label_text = "상담 상품 선택  \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
+        # (박사님이 찾으신 부분을 이 코드로 통째로 덮어쓰세요!)
         st.success("🛍️ **2. 상품 선택**")
+        label_text = "상담 상품 선택  \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
         
-        # 💡 selectbox는 기본적으로 무언가 1개를 무조건 고르게 하므로, 첫 줄에 '안내 문구'를 넣습니다.
-        options_with_placeholder = ["상담 상품을 선택해 주세요 (클릭)"] + U_PRODUCT_LIST
-        selected_single = st.selectbox(label=label_text, options=options_with_placeholder)
+        # 💡 [플랜 B 가동] 말 안 듣는 selectbox 대신, 모바일에서 글씨가 짤리지 않고 예쁘게 2줄로 접히는 radio 버튼으로 교체!
+        options_with_placeholder = ["상담 상품을 선택해 주세요 (아래에서 1개 선택)"] + U_PRODUCT_LIST
+        selected_single = st.radio(
+            label=label_text, 
+            options=options_with_placeholder,
+            index=0
+        )
         
         # 💡 뒷단(계산기, DB)이 고장 나지 않도록 고른 1개를 리스트[]로 포장해 줍니다.
-        if selected_single != "상담 상품을 선택해 주세요 (클릭)":
+        if selected_single != "상담 상품을 선택해 주세요 (아래에서 1개 선택)":
             selected_products = [selected_single]
         else:
             selected_products = []
