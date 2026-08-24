@@ -179,8 +179,8 @@ def format_ai_text_to_html(text, qna_text=""):
             title_part = parts[0].strip()
             desc_part = parts[1].strip()
             line = title_part
-            # 👑 [수정] 줄간격 1.85 적용 (서론과 100% 동일)
-            forced_desc_html = f"<p style='font-size: 16px; font-weight: 600; line-height: 1.85; margin-top: 4px; margin-bottom: 14px; color: #000000; text-indent: 14px; text-align: justify;'>{desc_part}</p>"
+            # 🚨 [수정 1] 콜론 설명문: 굵기 600 -> 400, 색상 #000 -> #333333
+            forced_desc_html = f"<p style='font-size: 16px; font-weight: 400; line-height: 1.85; margin-top: 4px; margin-bottom: 14px; color: #333333; text-indent: 14px; text-align: justify;'>{desc_part}</p>"
         else:
             forced_desc_html = ""
 
@@ -224,14 +224,14 @@ def format_ai_text_to_html(text, qna_text=""):
             if forced_desc_html: html_lines.append(forced_desc_html)
 
         # ---------------------------------------------------------
-        # 💡 [일반 서술형 본문 - 줄간격 1.85 완벽 세팅!]
+        # 💡 [일반 서술형 본문 - 폰트 강도 및 색상 최적화!]
         # ---------------------------------------------------------
         else:
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
             
-            # 👑 [핵심 개선] 폰트 16px, 굵기 600, 줄간격 1.85(서론과 동일), 색상 #000000, 양쪽정렬
-            html_lines.append(f"<p style='font-size: 16px; font-weight: 600; line-height: 1.85; margin-top: 0px; margin-bottom: 14px; color: #000000; letter-spacing: -0.2px; text-indent: 14px; text-align: justify;'>{clean_line}</p>")
+            # 🚨 [수정 2] 일반 서술문: 굵기 600 -> 400 (부드럽게), 색상 #000 -> #333333 (눈편한 먹색)
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 400; line-height: 1.85; margin-top: 0px; margin-bottom: 14px; color: #333333; letter-spacing: -0.2px; text-indent: 14px; text-align: justify;'>{clean_line}</p>")
             
     if in_list:
         html_lines.append("</div>")
@@ -248,13 +248,15 @@ def format_ai_text_to_html(text, qna_text=""):
             <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px dashed #CFD8DC;'>
                 💡 사주박사 1:1 심층 솔루션 답변
             </div>
-            <div style='font-size: 16px; font-weight: 600; line-height: 1.85; color: #000000; text-indent: 14px; text-align: justify;'>
+            <!-- 🚨 [수정 3] QnA 본문: 굵기 600 -> 400, 색상 #000 -> #333333 -->
+            <div style='font-size: 16px; font-weight: 400; line-height: 1.85; color: #333333; text-indent: 14px; text-align: justify;'>
                 {qna_body}
             </div>
         </div>
         """
         
     return f"<div class='ai-content' style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif;'>\n{main_html}\n{qna_html}\n</div>"
+
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
 # ==============================================================================
