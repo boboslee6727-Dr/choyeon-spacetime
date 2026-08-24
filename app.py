@@ -663,18 +663,18 @@ if st.session_state.get('app_running', False):
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
         time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
-        if u_product.startswith("1-1"): report_title = "🏮 사주팔자와 운세풀이"
-        elif u_product.startswith("1-2"): report_title = "🏮 이번/특정 년도 운세 상세분석"
-        elif u_product.startswith("1-3"): report_title = "🏮 이번/특정 달 운세 상세분석"
-        elif u_product.startswith("1-4"): report_title = "🏮 주간 및 일일 운세 상세분석"
-        elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 분석"
-        elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 분석"
-        elif u_product.startswith("2-3"): report_title = "🏮 연애/결혼운 특화 분석"
-        elif u_product.startswith("2-4"): report_title = "🏮 건강운 특화 분석"
-        elif u_product.startswith("2-5"): report_title = "🏮 이사/개업 택일 리포트"
-        elif u_product.startswith("3-1"): report_title = "🏮 연애/결혼운 궁합 분석"
-        elif u_product.startswith("3-2"): report_title = "🏮 결혼 길일 추천 리포트"
-        elif u_product.startswith("3-3"): report_title = "🏮 출산 길일 추천 리포트"
+        if u_product.startswith("1-1"): report_title = "🏮 사주팔자 및 총운세 풀이"
+        elif u_product.startswith("1-2"): report_title = "🏮 올 해 운세 풀이"
+        elif u_product.startswith("1-3"): report_title = "🏮 이번 달 운세 풀이"
+        elif u_product.startswith("1-4"): report_title = "🏮 주간 및 일일 운세 풀이"
+        elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 풀이"
+        elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 풀이"
+        elif u_product.startswith("2-3"): report_title = "🏮 연애/결혼운 특화 풀이"
+        elif u_product.startswith("2-4"): report_title = "🏮 건강운 특화 풀이"
+        elif u_product.startswith("2-5"): report_title = "🏮 이사/개업 택일 추천"
+        elif u_product.startswith("3-1"): report_title = "🏮 연애/결혼운 (궁합- 풀이"
+        elif u_product.startswith("3-2"): report_title = "🏮 결혼 택일 추천"
+        elif u_product.startswith("3-3"): report_title = "🏮 출산 택일 추천"
         elif u_product.startswith("4-1"): report_title = "🏮 타 감명서 비교 (사주)"
         elif u_product.startswith("4-2"): report_title = "🏮 타 감명서 비교 (궁합)"
         else: report_title = "🏮 사주팔자 정밀 분석"
@@ -1330,3 +1330,5 @@ if st.session_state.get('app_running', False):
         else:
             # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(final_render_html, unsafe_allow_html=True)
+
+
