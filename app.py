@@ -784,6 +784,9 @@ if st.session_state.get('app_running', False):
                 APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
         
+        # 🚨 [수정] 박사님께서 상단에 이미 세팅해두신 'report_title' 변수를 그대로 끌어와서 대제목 간판을 만듭니다!
+        main_title_html = f"<h2 style='text-align:center; color:#1A237E; margin-top:30px; margin-bottom:15px;'>[ {report_title} ]</h2>"
+
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
         master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
@@ -1044,6 +1047,22 @@ if st.session_state.get('app_running', False):
             health_erosion_str = "특이 침식 파동 없음"
             action_solutions_str = "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
             spouse_issue_str = "배우자궁 비교적 안정적 흐름 유지"
+
+        # 🚀 [신규 장착] 2-4 건강운 특화: 4D 시계열 입체 스캔 가동 (health_erosion_str 오버라이딩)
+        if u_product.startswith("2-4") and hasattr(engine, 'analyze_health_erosion_4d'):
+            # 1) app.py 상단에서 선언된 start_year를 활용해 향후 10년 세운 지지 리스트 조립
+            temp_sewun_10_list = []
+            for i in range(10):
+                ty = start_year + i
+                temp_sewun_10_list.append({'year': ty, 'ji': engine.JI[(ty - 1984) % 60 % 12]})
+                
+            # 2) engine.py의 4D 스캔 함수 호출하여 health_erosion_str 텍스트 완벽 교체
+            health_erosion_str = engine.analyze_health_erosion_4d(
+                saju_data={'ji': [hb, db, mb, yb], 'current_dw_ji': dw_j_cur, 'current_sewun_ji': engine.JI[(curr_year - 1984) % 60 % 12]},
+                daewun_list=daewun_data_list,  # 이미 생성된 대운 리스트 재활용
+                sewun_10_list=temp_sewun_10_list,
+                curr_year=curr_year
+            )
 
         # 🌟 [신규] 천간 3자조합 궁위별(년월 vs 일시) 물상 분기 엔진 호출
         adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
