@@ -143,11 +143,11 @@ def format_ai_text_to_html(text, qna_text=""):
     if not text: 
         return ""
     
-    # 🚨 [명검 2.0] AI가 몰래 넣는 :green[텍스트], :red[텍스트] 찌꺼기 완벽 소각!
-    text = re.sub(r':[a-zA-Z]+\[(.*?)\]', r'\1', text)
+    import re
     
-    # 볼드체 변환 (명리용어 강조용 - 완전한 검은색 굵은 글씨)
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color: #000000;">\1</b>', text)
+    # 🚨 AI 찌꺼기 텍스트 소각 및 프리미엄 볼드체
+    text = re.sub(r':[a-zA-Z]+\[(.*?)\]', r'\1', text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color: #1A237E; background-color: #F4F6F9; padding: 2px 6px; border-radius: 4px; font-weight: 800;">\1</b>', text)
     
     lines = text.split('\n')
     html_lines = []
@@ -155,100 +155,124 @@ def format_ai_text_to_html(text, qna_text=""):
     
     for line in lines:
         line = line.strip()
+        
         if not line:
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            html_lines.append("<br>")
+            if in_list: html_lines.append("</div>"); in_list = False
+            html_lines.append("<div style='height: 8px;'></div>") # 표준 마진 (빈 줄)
             continue
             
         lower_line = line.lower()
         
-        # 🚨 [프리패스 게이트] 대운표/세운표 HTML 등 무사 통과
+        # [프리패스 게이트] HTML 태그 유지
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
            lower_line.startswith('<td') or lower_line.startswith('</td') or \
            lower_line.startswith('<th') or lower_line.startswith('</th'):
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
+            if in_list: html_lines.append("</div>"); in_list = False
             html_lines.append(line)
             continue
             
-        # 👑 [Level 4: 본문 나열] "- ", "* ", "★ ", "•" 기호 자동 감지 (여백 축소)
-        if re.match(r'^(?:<[^>]+>)*\s*[\-★\*•]\s*', line):
-            if not in_list:
-                html_lines.append("<ul style='list-style-type: none; padding-left: 15px; margin-bottom: 8px;'>")
-                in_list = True
-            
-            raw_text = re.sub(r'<[^>]+>', '', line).strip()
-            bullet = raw_text[0] if raw_text else '-'
-            display_bullet = '•' if bullet in ['-', '*'] else bullet
-            
-            content = re.sub(r'^((?:<[^>]+>)*\s*)[\-★\*•]\s*', r'\1', line).strip()
-            html_lines.append(f"<li style='line-height: 1.8; margin-bottom: 4px; color: #000000;'><span style='color: #000000; font-weight: bold; margin-right: 6px;'>{display_bullet}</span>{content}</li>")
-            continue
-            
         # ---------------------------------------------------------
-        # 👑 [박사님 지정 목차 위계 감지 로직 - 여백(Margin) 다이어트]
+        # 🛡️ [홍 비서의 쉴드] AI가 실수로 콜론(:)을 썼을 경우 강제 분리 로직
         # ---------------------------------------------------------
-
-        # [Level 1: 대제목] "1. " 형태 (20px, 900 굵기, margin: 22px / 8px)
-        elif re.match(r'^(?:<[^>]+>)*\s*\d+\.\s', line):
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            clean_line = line.replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #000000; margin-top: 22px; margin-bottom: 8px; border-bottom: 2px solid #EEEEEE; padding-bottom: 6px;'>{clean_line}</div>")
-
-        # [Level 2: 소제목] "1) " 형태 (17px, 800 굵기, margin: 16px / 6px)
-        elif re.match(r'^(?:<[^>]+>)*\s*\d+\)\s', line):
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            clean_line = line.replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 17px; font-weight: 800; color: #000000; margin-top: 16px; margin-bottom: 6px;'>{clean_line}</div>")
-
-        # [Level 3: 소소제목] "① " 형태 (16px, 700 굵기, margin: 10px / 4px)
-        elif re.match(r'^(?:<[^>]+>)*\s*[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            clean_line = line.replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 16px; font-weight: 700; color: #000000; margin-top: 10px; margin-bottom: 4px;'>{clean_line}</div>")
-            
-        # ---------------------------------------------------------
-        # 일반 문단 처리 (400 굵기, 올블랙, 첫 줄 들여쓰기, margin-bottom 6px로 밀착)
+        if ':' in line or '：' in line: # 반각/전각 콜론 모두 감지
+            # 단, HTML 태그 안에 있는 콜론(style='color:red' 등)은 분리하면 안 되므로 예외 처리
+            if not re.search(r'<[^>]+>', line):
+                parts = re.split(r'[:：]', line, 1)
+                title_part = parts[0].strip()
+                desc_part = parts[1].strip()
+                
+                # 1. 제목 부분 렌더링 (아래 위계질서 로직을 태우기 위해 변수 교체)
+                line = title_part
+                
+                # 2. 서술 부분은 미리 HTML로 만들어둠 (나중에 본문으로 출력)
+                forced_desc_html = f"<p style='font-size: 16px; line-height: 1.6; margin-top: 4px; margin-bottom: 12px; color: #333333; text-indent: 14px;'>{desc_part}</p>"
+            else:
+                forced_desc_html = ""
         else:
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
+            forced_desc_html = ""
+
+        # ---------------------------------------------------------
+        # 👑 [위계질서 군기 확립 구역 - 숫자 목차]
+        # ---------------------------------------------------------
+        # [1. 대제목]
+        if re.match(r'^(?:<[^>]+>)*\s*\d+\.\s', line):
+            if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
-            html_lines.append(f"<p style='line-height: 1.8; margin-bottom: 6px; color: #000000; text-indent: 16px;'>{clean_line}</p>")
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 28px; margin-bottom: 10px; border-bottom: 2px solid #E8EAF6; padding-bottom: 6px;'>{clean_line}</div>")
+            if forced_desc_html: html_lines.append(forced_desc_html)
+
+        # [1) 중제목]
+        elif re.match(r'^(?:<[^>]+>)*\s*\d+\)\s', line):
+            if in_list: html_lines.append("</div>"); in_list = False
+            clean_line = line.replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #2C3E50; margin-top: 20px; margin-bottom: 8px;'>{clean_line}</div>")
+            if forced_desc_html: html_lines.append(forced_desc_html)
+
+        # [① 소제목]
+        elif re.match(r'^(?:<[^>]+>)*\s*[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
+            if in_list: html_lines.append("</div>"); in_list = False
+            clean_line = line.replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 17px; font-weight: 700; color: #34495E; margin-top: 16px; margin-bottom: 6px; padding-left: 8px;'>{clean_line}</div>")
+            if forced_desc_html: html_lines.append(forced_desc_html)
+
+        # ---------------------------------------------------------
+        # 👑 [도형문자 위계질서 확립 구역 - 기호 목차]
+        # ---------------------------------------------------------
+        # [기호 1순위: ◆] 
+        elif re.match(r'^(?:<[^>]+>)*\s*◆\s*', line):
+            if in_list: html_lines.append("</div>"); in_list = False
+            clean_line = re.sub(r'^(?:<[^>]+>)*\s*◆\s*', '', line).replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #1A237E; margin-top: 12px; margin-bottom: 4px; padding-left: 12px;'><span style='margin-right: 6px;'>◆</span>{clean_line}</div>")
+            if forced_desc_html: html_lines.append(forced_desc_html)
+
+        # [기호 2순위: ▶] 
+        elif re.match(r'^(?:<[^>]+>)*\s*▶\s*', line):
+            if in_list: html_lines.append("</div>"); in_list = False
+            clean_line = re.sub(r'^(?:<[^>]+>)*\s*▶\s*', '', line).replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 15.5px; font-weight: 800; color: #2C3E50; margin-top: 10px; margin-bottom: 4px; padding-left: 18px;'><span style='margin-right: 6px;'>▶</span>{clean_line}</div>")
+            if forced_desc_html: html_lines.append(forced_desc_html)
+            
+        # [기호 3순위: ▷]
+        elif re.match(r'^(?:<[^>]+>)*\s*▷\s*', line):
+            if in_list: html_lines.append("</div>"); in_list = False
+            clean_line = re.sub(r'^(?:<[^>]+>)*\s*▷\s*', '', line).replace('#', '').strip()
+            html_lines.append(f"<div style='font-size: 15px; font-weight: 700; color: #455A64; margin-top: 8px; margin-bottom: 4px; padding-left: 24px;'><span style='margin-right: 6px;'>▷</span>{clean_line}</div>")
+            if forced_desc_html: html_lines.append(forced_desc_html)
+
+        # ---------------------------------------------------------
+        # 💡 [일반 서술형 문단 처리] 국어의 기본! 첫 줄 들여쓰기 장착!
+        # ---------------------------------------------------------
+        else:
+            if in_list: html_lines.append("</div>"); in_list = False
+            clean_line = line.replace('#', '').strip()
+            
+            # 💡 [핵심] 폰트 16px 고정, 표준 마진(margin-bottom 12px), 그리고 초졸도 아는 들여쓰기(text-indent 14px) 적용!
+            html_lines.append(f"<p style='font-size: 16px; line-height: 1.6; margin-top: 0px; margin-bottom: 12px; color: #333333; letter-spacing: -0.3px; text-indent: 14px;'>{clean_line}</p>")
             
     if in_list:
-        html_lines.append("</ul>")
+        html_lines.append("</div>")
         
     main_html = "\n".join(html_lines)
 
-    # 💡 Q&A 박스 포맷팅 (올블랙 테마)
+    # 💡 Q&A 박스 포맷팅
     qna_html = ""
     if qna_text:
         clean_qna_body = qna_text.replace('💡', '').strip()
         qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"""
-        <div style='background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px; padding: 22px; margin-top: 24px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
-            <div style='font-size: 20px; font-weight: 900; color: #000000; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #E0E0E0;'>
-                💡 Q & A
+        <div style='background-color: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 24px; margin-top: 24px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);'>
+            <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px dashed #CFD8DC;'>
+                💡 사주박사 1:1 심층 솔루션 답변
             </div>
-            <div style='font-size: 16px; line-height: 1.85; font-weight: 600; color: #000000;'>
+            <div style='font-size: 15px; line-height: 1.7; color: #424242; text-indent: 14px;'>
                 {qna_body}
             </div>
         </div>
         """
         
-    return f"<div class='ai-content' style='color: #000000;'>\n{main_html}\n{qna_html}\n</div>"
+    return f"<div class='ai-content' style='font-family: \"Pretendard\", \"Malgun Gothic\", sans-serif;'>\n{main_html}\n{qna_html}\n</div>"
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
