@@ -353,8 +353,8 @@ def render_customer_order_form():
             min-height: 48px !important;
             padding-top: 6px !important;
             padding-bottom: 6px !important;
-            padding-left: 4px !important;  /* 🚨 좌측 낭비 공간 최소화 */
-            padding-right: 4px !important; /* 🚨 우측 낭비 공간 최소화 */
+            padding-left: 2px !important;  /* 🚨 좌측 낭비 공간 최소화 */
+            padding-right: 2px !important; /* 🚨 우측 낭비 공간 최소화 */
         }
 
         /* 3. 드롭다운 옵션 목록 (펼쳤을 때)의 텍스트 극한 압축 */
@@ -365,7 +365,7 @@ def render_customer_order_form():
             height: auto !important;
             min-height: 45px !important;
             text-overflow: clip !important;
-            letter-spacing: -1.8px !important; /* 🚨 자간 3배 극한 압축 */
+            letter-spacing: -2.0px !important; /* 🚨 자간 3배 극한 압축 */
             font-size: 13.5px !important; /* 🚨 폰트 동기화 */
         }
         </style>
