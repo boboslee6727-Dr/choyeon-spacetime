@@ -51,8 +51,29 @@ def _to_hanja_ji(char):
 
 
 # ==============================================================================
+# 👑 [AI 두뇌 통제 로직 및 공용 공구함 통합본]
+# ==============================================================================
+def extract_ganji(text):
+    if not text: return ""
+    return re.sub(r'[^가-힣一-龥]', '', text)
+
+def get_oh_class(ganji):
+    oh = get_color(ganji)
+    return f"color-{oh}" if oh != '무' else ""
+
+def get_master_system_prompt():
+    return (
+        "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. "
+        "주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오.\n\n"
+        "🚨 [최고 엄수 규칙]: 어떠한 경우에도 텍스트에 색상을 입히지 마십시오! "
+        "Streamlit 색상 마크다운(예: :green[text], :red[text])이나 HTML 색상 태그(<span style='color...'>, <font color...>) 사용을 엄격히 금지합니다. "
+        "오직 순수한 검정색 텍스트와 기본 기호만 사용하여 출력하십시오."
+    )
+
+# ==============================================================================
 # 섹션 2. 핵심 사주 역산 및 만세력·절기 연산 로직
 # ==============================================================================
+
 def get_total_time_adjustment(dt):
     adj = -30
     if dt_mod.datetime(1954, 3, 21) <= dt <= dt_mod.datetime(1961, 8, 9, 23, 59): adj = 0
@@ -1878,7 +1899,7 @@ def analyze_saju_facts_advanced(saju_data, current_dw, current_sewun):
     """
     초연 시공명리 3대 진실(복음 고갈, 조토 흡수, 묘고 합화 소멸) 정밀 감지 엔진
     """
-    oheng, hap_chung = analyze_saju_facts(saju_data)
+    # 🚨 [수술 1] 에러를 유발하는 불필요한 유령 함수(analyze_saju_facts) 호출 삭제 완료!
     
     # 1. 복음(伏吟) 파동 감지 (일/시지 또는 월/년지 동일 글자 중복)
     is_bokgeum = (saju_data.get('day_ji') == saju_data.get('hour_ji')) or \
@@ -1895,27 +1916,71 @@ def analyze_saju_facts_advanced(saju_data, current_dw, current_sewun):
         "warning_message": "⚠️ [시공간 경고]: 복음 및 묘고 합화 파동에 따른 에너지 고갈 또는 신체 임계점 주의" if (is_bokgeum and has_vault) else "정상 시공간 흐름"
     }
     
-    return oheng, hap_chung, advanced_flags
-
+    # 🚨 [수술 2] app.py에서 `_, _, adv_flags`로 3개를 받으므로 앞자리 2개를 빈 값(None)으로 전송!
+    return None, None, advanced_flags
 
 # ==============================================================================
-# 👑 [AI 두뇌 통제 로직 및 공용 공구함 통합본]
+# [신규 추가] 2-4 건강운 전용: 4단계 시계열 건강운 입체 스캔 엔진
 # ==============================================================================
-import re
+def analyze_health_erosion_4d(saju_data, daewun_list, sewun_10_list, curr_year):
+    won_guk_ji = saju_data.get('ji', [])
+    current_dw_ji = saju_data.get('current_dw_ji', '')
+    current_sewun_ji = saju_data.get('current_sewun_ji', '')
+    
+    # ---------------------------------------------------------
+    # [1단계] 선천 원국
+    # ---------------------------------------------------------
+    has_dry_earth = any(ji in won_guk_ji for ji in ['未', '戌'])
+    has_water = any(ji in won_guk_ji for ji in ['亥', '子'])
+    if has_dry_earth and has_water:
+        fact_1_wonguk = "원국 내 조열한 흙(未·戌)이 생명수(亥·子)를 곁에서 말리는 구조적 취약성 내재."
+    else:
+        fact_1_wonguk = "원국 자체의 수기(水氣) 고갈 위험은 적으나, 대운/세운의 흐름에 따른 대비 필요."
 
-def extract_ganji(text):
-    if not text: return ""
-    return re.sub(r'[^가-힣一-龥]', '', text)
+    # ---------------------------------------------------------
+    # [2단계] 평생 8대운 스캔 (app.py의 j_hangul, c_hangul 규격 완벽 호환!)
+    # ---------------------------------------------------------
+    danger_dw_periods = []
+    for idx, dw in enumerate(daewun_list):
+        dw_ji = dw.get('j_hangul', '') 
+        if dw_ji in ['未', '戌', '午', '巳']:
+            if idx < 3: period = "초년"
+            elif idx < 6: period = "중년"
+            else: period = "말년"
+            dw_gan = dw.get('c_hangul', '')
+            danger_dw_periods.append(f"{period}({dw_gan}{dw_ji}대운)")
+            
+    if danger_dw_periods:
+        periods_str = ", ".join(list(dict.fromkeys(danger_dw_periods)))
+        fact_2_daewun = f"생애 주기 중 {periods_str} 시기에 열기가 가중되며 선천적 조토극수 파동이 크게 증폭되는 거시적 변곡점 형성."
+    else:
+        fact_2_daewun = "평생 대운의 궤적에서 극심한 한난조습의 쏠림은 방어되고 있는 평온한 흐름."
 
-def get_oh_class(ganji):
-    oh = get_color(ganji)
-    return f"color-{oh}" if oh != '무' else ""
+    # ---------------------------------------------------------
+    # [3단계] 향후 10년 세운
+    # ---------------------------------------------------------
+    danger_years = []
+    for sewun in sewun_10_list:
+        year = sewun.get('year')
+        sw_ji = sewun.get('ji', '')
+        combined_ji = won_guk_ji + [current_dw_ji, sw_ji]
+        if '未' in combined_ji and '戌' in combined_ji:
+            danger_years.append(f"{year}년")
+            
+    if danger_years:
+        fact_3_10years = f"현재 대운 내에서 향후 {', '.join(danger_years)}에 수기(水氣)가 심각하게 고갈 및 협자 압박이 가중되는 최대 주의 구간 도래."
+    else:
+        fact_3_10years = "향후 10년 내에 치명적인 조토극수 및 협자 압박 변곡점은 감지되지 않음."
 
-def get_master_system_prompt():
-    return (
-        "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. "
-        "주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오.\n\n"
-        "🚨 [최고 엄수 규칙]: 어떠한 경우에도 텍스트에 색상을 입히지 마십시오! "
-        "Streamlit 색상 마크다운(예: :green[text], :red[text])이나 HTML 색상 태그(<span style='color...'>, <font color...>) 사용을 엄격히 금지합니다. "
-        "오직 순수한 검정색 텍스트와 기본 기호만 사용하여 출력하십시오."
-    )
+    # ---------------------------------------------------------
+    # [4단계] 당장 올해 세운
+    # ---------------------------------------------------------
+    combined_curr = won_guk_ji + [current_dw_ji, current_sewun_ji]
+    if '未' in combined_curr or '戌' in combined_curr or '午' in combined_curr:
+        fact_4_current = f"당장 올해({curr_year}년)는 조열한 기운이 가세하여 만성 피로와 대사/신경계 무리가 현실화되기 쉬운 시점. 즉각적인 섭생 관리 요망."
+    else:
+        fact_4_current = f"올해({curr_year}년)는 조토극수 침식 파동의 직접적인 타격권에서 한 걸음 비껴가 있는 회복과 유지의 구간."
+
+    return f"[1. 선천 원국]: {fact_1_wonguk}\n[2. 평생 궤적]: {fact_2_daewun}\n[3. 향후 10년]: {fact_3_10years}\n[4. 당장 올해]: {fact_4_current}"
+
+
