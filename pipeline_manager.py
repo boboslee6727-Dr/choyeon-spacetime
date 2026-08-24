@@ -303,8 +303,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 <span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
 </div>
 <div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
-친구에게 '사주박사'를 소개하고 너도 한번 봐봐! 👀<br>
-친구 소개로 같이 신청하면 우리 둘 다 <b>20% 할인 쿠폰</b> 득템 혜택받는다구! ㅎㅎ💥🎉
+친구에게 '사주박사'를 소개하고 <br> 너도 한번 봐봐! 👀 친구 소개로 같이 신청하면 <br> 우리 둘 다 <b>20% 할인 쿠폰</b> 득템 혜택받는다구! 💥🎉
 </div>
 <a href="sms:?&body={share_msg}" style='display:block; text-decoration:none;'>
 <div style='background-color:#FEE500; color:#191919; text-align:center; padding:14px 20px; border-radius:10px; font-weight:bold; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%;'>
