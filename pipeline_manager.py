@@ -371,16 +371,41 @@ def render_customer_order_form():
         </style>
         """, unsafe_allow_html=True)
 
-        # 💡 [수정] "선택" 글자 뒤에 공백 2칸(  ) + \n 을 넣어야 완벽하게 2줄로 렌더링됩니다.
+        # (박사님이 찾으신 부분을 이 코드로 통째로 덮어쓰세요!)
         label_text = "상담 상품 선택  \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
         st.success("🛍️ **2. 상품 선택**")
         
-        # 💡 selectbox는 기본적으로 무언가 1개를 무조건 고르게 하므로, 첫 줄에 '안내 문구'를 넣습니다.
-        options_with_placeholder = ["상담 상품을 선택해 주세요 (클릭)"] + U_PRODUCT_LIST
-        selected_single = st.selectbox(label=label_text, options=options_with_placeholder)
+        # 💡 [플랜 D 가동] 에러나는 캡션(captions) 삭제! 문자열 포맷팅과 스페이스바 2칸(\n)만으로 2줄 완벽 분리
+        options_with_placeholder = ["상담 상품을 선택해 주세요 (아래에서 1개 체크)"] + U_PRODUCT_LIST
+        
+        # 👑 박사님 지시사항 반영: ➡️(화살표)를 기준으로 정가와 특가를 2줄로 쪼개는 마법의 함수
+        def format_product_name(item):
+            if item == "상담 상품을 선택해 주세요 (아래에서 1개 체크)": 
+                return item
+                
+            # 화살표(➡️)가 있는 텍스트만 쪼갭니다.
+            if "➡️" in item:
+                parts = item.split("➡️")
+                # 윗줄: 1-1. 사주팔자 및 운세 (정가 22,000원)
+                line1 = parts[0].strip() + ")"
+                # 아랫줄: ➡️ 특가 11,000원
+                line2 = "➡️ " + parts[1].replace(")", "").strip()
+                
+                # 끝에 스페이스바 2칸 + \n 을 넣으면 스트림릿이 완벽하게 줄바꿈을 인식합니다.
+                return f"{line1}  \n{line2}"
+                
+            return item
+
+        # 3️⃣ 스트림릿 라디오 버튼 생성 (captions 파라미터가 없으므로 버전 충돌 절대 안 남!)
+        selected_single = st.radio(
+            label=label_text, 
+            options=options_with_placeholder,
+            format_func=format_product_name,
+            index=0
+        )
         
         # 💡 뒷단(계산기, DB)이 고장 나지 않도록 고른 1개를 리스트[]로 포장해 줍니다.
-        if selected_single != "상담 상품을 선택해 주세요 (클릭)":
+        if selected_single != "상담 상품을 선택해 주세요 (아래에서 1개 체크)":
             selected_products = [selected_single]
         else:
             selected_products = []
