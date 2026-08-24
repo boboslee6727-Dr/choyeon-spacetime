@@ -90,7 +90,6 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
-
 # 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
 def do_auto_fill_user():
     st.session_state['app_running'] = False
@@ -139,7 +138,6 @@ def do_auto_fill_user():
     else:
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-
 # 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
 def do_auto_fill_partner():
     st.session_state['app_running'] = False
@@ -187,7 +185,6 @@ def do_auto_fill_partner():
             st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
     else:
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
-
 
 # ==============================================================================
 # 2. 사이드바 통제 센터 및 스텔스 모드 분기
@@ -908,8 +905,7 @@ if st.session_state.get('app_running', False):
             se_content += html_views.get_sewun_cell(
                 f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                 tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
-                engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr
-            )
+                engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr)
             
         dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
         sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
@@ -929,8 +925,7 @@ if st.session_state.get('app_running', False):
                 tm, engine.get_ss(ds_hanja, wc_hanja), wc_hanja, get_oh_class(wc_hanja), 
                 wj_hanja, get_oh_class(wj_hanja), engine.get_ss(ds_hanja, wj_hanja), 
                 engine.get_unsung(ds_hanja, wj_hanja), engine.get_12_shinsal(yb, wj_hanja), 
-                engine.get_12_shinsal(db, wj_hanja), bg_col, b_left, is_cur_m
-            )
+                engine.get_12_shinsal(db, wj_hanja), bg_col, b_left, is_cur_m)
 
         wolun_html = html_views.get_wolun_layout(f"[ 월운의 흐름 ({curr_year}년도 양력기준) ]", wol_content)
 
@@ -970,8 +965,7 @@ if st.session_state.get('app_running', False):
                 p_golden_html = html_views.get_golden_text(
                     p_name_val, p_w_val, p_i_val, 
                     p_struct_data[0], p_struct_data[1], p_struct_data[2], 
-                    mb=p_mb, gyuk_name=p_gyuk
-                )
+                    mb=p_mb, gyuk_name=p_gyuk)
                 
                 # 성별 정렬 (남명 -> 여명 순)
                 m_g_html = golden_text_html if gender == "남성" else p_golden_html
