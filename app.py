@@ -1035,19 +1035,21 @@ if st.session_state.get('app_running', False):
 
         # 🌟 [초연 시공명리 3대 진실 정밀 감지 엔진 호출]
         adv_saju_data = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
-        if hasattr(html_views, 'analyze_saju_facts_advanced'):
+        if hasattr(engine, 'analyze_saju_facts_advanced'):
             sewun_ji_param = curr_y_ji if 'curr_y_ji' in locals() else "-"
-            adv_flags = html_views.analyze_saju_facts_advanced(adv_saju_data, dw_j_cur, sewun_ji_param)
+            # 🚨 [수정 포인트] html_views -> engine으로 변경하고, 리턴값 3개 중 마지막(adv_flags)만 사용!
+            _, _, adv_flags = engine.analyze_saju_facts_advanced(adv_saju_data, dw_j_cur, sewun_ji_param)
             adv_warning_str = adv_flags.get("warning_message", "정상 시공간 흐름")
             health_erosion_str = adv_flags.get("health_erosion_facts", "특이 침식 파동 없음")
             action_solutions_str = adv_flags.get("action_solutions", "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지")
             spouse_issue_str = adv_flags.get("spouse_issue_facts", "배우자궁 비교적 안정적 흐름 유지")
         else:
+            # 🚨 [수정 포인트] 중복 에러 코드 2줄 완전 삭제 완료
             adv_warning_str = "정상 시공간 흐름"
             health_erosion_str = "특이 침식 파동 없음"
             action_solutions_str = "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
             spouse_issue_str = "배우자궁 비교적 안정적 흐름 유지"
-
+        
         # 🚀 [신규 장착] 2-4 건강운 특화: 4D 시계열 입체 스캔 가동 (health_erosion_str 오버라이딩)
         if u_product.startswith("2-4") and hasattr(engine, 'analyze_health_erosion_4d'):
             # 1) app.py 상단에서 선언된 start_year를 활용해 향후 10년 세운 지지 리스트 조립
@@ -1144,6 +1146,29 @@ if st.session_state.get('app_running', False):
         if user_entered_text:
             user_entered_text = re.sub(r'[▷▶◈\[\]\■\□\●\○\◆\◇\★\☆\※\▪\▫]', '', user_entered_text)
 
+        # 🚀 [신규 장착] 2-5 이사/개업 택일: 길일 산출 엔진 가동
+        best_moving_days_str = "길일 연산 엔진 미가동"
+        if u_product.startswith("2-5") and hasattr(engine, 'get_best_moving_opening_days'):
+            tackil_purpose_val = st.session_state.get('tackil_purpose', '이사')
+            start_d_val = st.session_state.get('moving_start', selected_target_date)
+            end_d_val = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
+            
+            try:
+                top3_days = engine.get_best_moving_opening_days(
+                    start_date=start_d_val, 
+                    end_date=end_d_val, 
+                    user_gans=gans, 
+                    user_jjis=jjis, 
+                    purpose=tackil_purpose_val
+                )
+                if top3_days:
+                    best_moving_days_str = "\n".join([f"[{i+1}순위 추천일]: {d['date']} ({d['ganji'][0]}{d['ganji'][1]}일) / 명리적합도: {d['score']}점" for i, d in enumerate(top3_days)])
+                else:
+                    best_moving_days_str = "해당 기간 내 적합한 명리적 길일이 없습니다. 기간을 넓혀주세요."
+            except Exception as e:
+                best_moving_days_str = "길일 연산 중 오류 발생"
+
+        # 프롬프트 데이터 패키징 (단 한 줄도 생략 없는 완전체)
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
@@ -1175,6 +1200,7 @@ if st.session_state.get('app_running', False):
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
+            "best_moving_days_str": best_moving_days_str,  # 🚨 [신규 엔진 변수 100% 탑재 완료]
             "other_reading_text": user_entered_text, "other_report": user_entered_text,
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
