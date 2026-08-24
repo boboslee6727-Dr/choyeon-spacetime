@@ -645,11 +645,11 @@ def get_intro_html():
     return """
     <hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">
     <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
-        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 6px; font-weight: 600; text-align: justify; text-indent: 0; line-height: 1.8;">
+        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 8px; font-weight: 600; text-align: justify; text-indent: 14px; line-height: 1.8;">
             <b>"초연 시공 명리학"</b>은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.
         </p> 
-        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 0; font-weight: 600; text-align: justify; text-indent: 0; line-height: 1.8;">
-            따라서, <b>"본 초연 시공 명리학"</b>은 기존 전통명리학에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형으로 분류하는 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.
+        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 0; font-weight: 600; text-align: justify; text-indent: 14px; line-height: 1.8;">
+            따라서, <b>"본 초연 시공 명리학적 풀이"</b>는 기존 명리학적 풀이에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형의 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.
         </p>
     </div>
     <hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">
