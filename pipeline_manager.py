@@ -334,19 +334,35 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
-        # 📱 [모바일 최적화 CSS] 상품명/가격 잘림 방지 강제 2줄 바꿈 로직 주입
+        # 📱 [모바일 최적화 CSS] 자간 축소 및 높이 제한 강제 해제 로직 주입
         st.markdown("""
         <style>
-        /* 셀렉트박스(드롭다운 옵션) 텍스트 강제 줄바꿈 및 여백 최적화 */
+        /* 1. 셀렉트박스 테두리 안의 텍스트 (선택된 상품) */
         div[data-baseweb="select"] span {
             white-space: normal !important;
             word-break: keep-all !important;
-            line-height: 1.5 !important;
+            line-height: 1.4 !important;
+            letter-spacing: -0.8px !important; /* 🚨 자간 대폭 축소 */
+            font-size: 14.5px !important; /* 🚨 폰트 크기 미세 축소로 공간 확보 */
         }
-        /* 드롭다운 펼쳐졌을 때의 옵션 글씨도 두 줄로 예쁘게 정렬 */
+        
+        /* 2. 드롭다운을 눌렀을 때 쫙 펼쳐지는 리스트 텍스트 */
         ul[data-baseweb="menu"] div {
             white-space: normal !important;
             word-break: keep-all !important;
+            line-height: 1.4 !important;
+            letter-spacing: -0.8px !important; /* 🚨 자간 대폭 축소 */
+            font-size: 14.5px !important;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+        }
+
+        /* 3. 스트림릿 셀렉트박스의 강제 높이 고정 족쇄 풀기 (가장 중요) */
+        div[data-baseweb="select"] > div {
+            height: auto !important; 
+            min-height: 48px !important;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
         }
         </style>
         """, unsafe_allow_html=True)
