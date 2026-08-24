@@ -645,12 +645,15 @@ def render_admin_panel():
                                         pass
                                 
                                 # 메타데이터가 꼬리표로 붙지 않은 순수 고민만 세션에 저장
-                                st.session_state['user_concern'] = clean_concern
+                               st.session_state['user_concern'] = clean_concern
 
-                                if "1-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자 및 운세 풀이 (종합)", engine_prod
-                                elif "2-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", engine_prod
-                                elif "3-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 연애/결혼운 (궁합) 풀이", engine_prod
-                                elif "4-" in engine_prod: st.session_state['main_category'], st.session_state['sub_category_4'] = "4. 타 감명서 비교", engine_prod
+                                # 🚨 [수술 완료] engine_prod 대신 앞의 숫자(1-, 2- 등)가 살아있는 원본 문자열 사용!
+                                r_prod_first = r_prod.split('+')[0].strip()
+                                
+                                if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", r_prod_first
+                                elif "2-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", r_prod_first
+                                elif "3-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 연애/결혼운 (궁합) 풀이", r_prod_first
+                                elif "4-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_4'] = "4. 타 감명서 비교", r_prod_first
                                 
                                 st.session_state['admin_proc_id'] = r_oid
                                 st.session_state['app_running'] = True
