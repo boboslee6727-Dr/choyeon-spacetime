@@ -237,11 +237,11 @@ def render_customer_order_form():
         <div class='pay-title'>[ 🌸 신청 접수 완료 ! 🌸 ]</div>
         <b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사합니다! <br>
         신청한 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-        아래 계좌로 🥰복비를 입금해 주시면 확인 후 곧바로 정밀 사주풀이가 시작됩니다! 💕
+        아래 계좌로 🥰복비를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이를 하여 바로 받아 보실 수 있어용~ 💕
         </div>
         """, unsafe_allow_html=True)
 
-        # 🚨 [수정] 은행 정보와 카톡 안내를 하나의 깔끔한 박스로 통합
+        # 🚨 [수정 1] 은행 정보와 카톡 안내 박스 (에러 방지를 위해 HTML 태그 정리)
         st.markdown(f"""
         <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px;'>
             
@@ -253,87 +253,87 @@ def render_customer_order_form():
             </div>
             
             <!-- 중간 점선 분리대 -->
-            <hr style='border: none; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
+            <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
             
-            <!-- 아랫부분: 카톡 안내 및 버튼 -->
-            <div style='text-align: center;'>
-                <div style='color: #1A237E; font-weight: bold; font-size: 13.5px; margin-bottom: 12px;'>
-                    ※ 신청자 이름과 입금자 이름이 다르면<br>반드시 아래 "카톡 채팅"으로 알려주세요!
-                </div>
-                <a href='{KAKAO_CHAT_URL}' target='_blank' style='text-decoration:none;'>
-                    <div style='background-color:#FEE500; color:#191919; text-align:center; padding:12px 15px; border-radius:8px; font-weight:bold; font-size:14.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
-                        💬 사주박사 카톡 1:1 채팅 문의하기
-                    </div>
-                </a>
+            <!-- 아랫부분: 카톡 안내 -->
+            <div style='text-align: center; color: #1A237E; font-weight: bold; font-size: 13.5px; margin-bottom: 12px;'>
+                ※ 신청자 이름과 입금자 이름이 다르면<br>반드시 아래 "카톡 채팅"으로 알려주세요!
             </div>
-            
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
-        🎁 <b>[ Win-Win 친구 소개 이벤트 ]</b><br>
-        친구에게 '사주박사'를 소개해 주세요. 소개받은 친구와 나 <b>두 사람 모두에게</b> <b>[20% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
-        </div>
-        """, unsafe_allow_html=True)
-
-        # 1️⃣ 카톡 공유용 변수 세팅 (그대로 유지)
-        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        share_title = "🔮 사주박사 - 내 인생 스포일러"
-        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
-
-        # 2️⃣ [수정] 중복 텍스트 및 왕관 문구 완전 삭제 + 하나의 예쁜 이벤트 박스로 통합
-        st.markdown(f"""
-        <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px;'>
-            <div style='text-align: center; margin-bottom: 12px;'>
-                <span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
-            </div>
-            <div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
-                친구에게 '사주박사'를 소개해 주세요.<br>
-                소개받은 친구와 나 <b>두 사람 모두에게</b><br>
-                <b>[20% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
-            </div>
-            
-            <button type="button" 
-               onclick="
-                    if (navigator.share) {{
-                        navigator.share({{
-                            title: '{share_title}',
-                            text: `{share_msg}`,
-                            url: '{ref_order_link}'
-                        }}).catch(function(e){{}});
-                    }} else {{
-                        window.open('sms:?&body=' + encodeURIComponent(`{share_msg}`));
-                    }}
-               " 
-               style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:15px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor:pointer;'>
-               🟡 터치해서 친구에게 카톡/문자 바로 보내기
-            </button>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+        # 🚨 [수정 2] 카톡 문의 버튼은 변수 충돌을 막기 위해 별도의 markdown으로 안전하게 출력
+        st.markdown(f"""
+        <a href='{KAKAO_CHAT_URL}' target='_blank' style='text-decoration:none;'>
+            <div style='background-color:#FEE500; color:#191919; text-align:center; padding:12px 15px; border-radius:8px; font-weight:bold; font-size:14.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top:-10px; margin-bottom: 20px; position:relative; z-index:2; width: 90%; margin-left: auto; margin-right: auto;'>
+                💬 사주박사 카톡 1:1 채팅 문의하기
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
 
-        # 3️⃣ [추가] 스트림릿 기본 버튼을 '연한 초록색'으로 칠하는 CSS 해킹
+        # 🚨 [수정 3] 중복 없는 깔끔한 이벤트 문구
+        st.markdown("""
+        <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 12px 0;'>
+        <div style='text-align: center; margin-bottom: 12px;'>
+            <span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
+        </div>
+        <div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
+            친구에게 '사주박사'를 소개해 주세요.<br>
+            소개받은 친구와 나 <b>두 사람 모두에게</b><br>
+            <b>[20% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 1️⃣ 카톡 공유용 변수 세팅 (원본 유지)
+        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
+        share_title = "🔮 사주박사 - 내 인생 스포일러"
+        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
+        
+        # 🚨 [수정 4] 에러가 났던 공유 버튼은 f-string을 빼고 포매팅하여 파싱 에러 완벽 차단
+        share_html = """
+        <div class='share-card' style='margin-bottom: 20px;'>
+            <div style='text-align:center;'>
+                <button type="button" 
+                   onclick="
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'SHARE_TITLE',
+                                text: `SHARE_MSG`,
+                                url: 'SHARE_URL'
+                            }).catch(function(e){});
+                        } else {
+                            window.open('sms:?&body=' + encodeURIComponent(`SHARE_MSG`));
+                        }
+                   " 
+                   style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:15px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor:pointer;'>
+                   🟡 터치해서 친구에게 카톡/문자 바로 보내기
+                </button>
+            </div>
+        </div>
+        """
+        share_html = share_html.replace("SHARE_TITLE", share_title).replace("SHARE_MSG", share_msg).replace("SHARE_URL", ref_order_link)
+        st.markdown(share_html, unsafe_allow_html=True)
+
+        # 3️⃣ [수정 5] 버튼 색상을 박사님 지시대로 '진한 녹색(Green)'으로 변경
         st.markdown("""
         <style>
-        /* 하단 '새로운 사주풀이 추가 신청' 버튼을 연초록색으로 디자인 */
+        /* 하단 '새로운 사주풀이 추가 신청' 버튼을 진녹색으로 디자인 */
         div.stButton > button {
-            background-color: #E8F5E9 !important; /* 연한 초록색 바탕 */
-            color: #2E7D32 !important; /* 진한 녹색 글씨 */
-            border: 1px solid #C8E6C9 !important; /* 테두리도 연초록 */
+            background-color: #4CAF50 !important; /* 진한 녹색 바탕 */
+            color: #FFFFFF !important; /* 하얀색 글씨 */
+            border: 1px solid #388E3C !important;
             font-weight: bold !important;
             border-radius: 8px !important;
         }
-        /* 버튼을 터치/클릭할 때 살짝 진해지는 효과 */
+        /* 버튼을 터치/클릭할 때 살짝 어두워지는 효과 */
         div.stButton > button:hover, div.stButton > button:active {
-            background-color: #C8E6C9 !important;
-            color: #1B5E20 !important;
+            background-color: #388E3C !important;
+            color: #FFFFFF !important;
         }
         </style>
         """, unsafe_allow_html=True)
 
-        # 4️⃣ [수정] 박사님이 지시하신 버튼
+        # 4️⃣ [수정 6] 버튼 클릭 로직
         if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
             del st.session_state["submitted_order"]
             st.rerun()
