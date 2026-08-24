@@ -334,41 +334,41 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
-        # 📱 [모바일 최적화 CSS] 자간 축소 및 높이 제한 강제 해제 로직 주입
+        # 📱 [모바일 최적화 CSS] Streamlit BaseWeb 강제 자르기(ellipsis) 완전 박살 로직
         st.markdown("""
         <style>
-        /* 1. 셀렉트박스 테두리 안의 텍스트 (선택된 상품) */
-        div[data-baseweb="select"] span {
+        /* 1. 선택된 값 (겉에 보이는 부분)의 모든 내부 요소 강제 줄바꿈 및 말줄임표 제거 */
+        div[data-baseweb="select"] * {
             white-space: normal !important;
             word-break: keep-all !important;
-            line-height: 1.4 !important;
-            letter-spacing: -0.8px !important; /* 🚨 자간 대폭 축소 */
-            font-size: 14.5px !important; /* 🚨 폰트 크기 미세 축소로 공간 확보 */
+            text-overflow: clip !important;
+            overflow: visible !important;
+            letter-spacing: -0.6px !important;
         }
         
-        /* 2. 드롭다운을 눌렀을 때 쫙 펼쳐지는 리스트 텍스트 */
-        ul[data-baseweb="menu"] div {
-            white-space: normal !important;
-            word-break: keep-all !important;
-            line-height: 1.4 !important;
-            letter-spacing: -0.8px !important; /* 🚨 자간 대폭 축소 */
-            font-size: 14.5px !important;
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
+        /* 2. 셀렉트박스 본체의 강제 높이 제한 완전 박살 (두 줄이 되면 박스도 같이 늘어남) */
+        div[data-baseweb="select"] > div {
+            height: auto !important;
+            min-height: 48px !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
         }
 
-        /* 3. 스트림릿 셀렉트박스의 강제 높이 고정 족쇄 풀기 (가장 중요) */
-        div[data-baseweb="select"] > div {
-            height: auto !important; 
-            min-height: 48px !important;
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
+        /* 3. 드롭다운 옵션 목록 (화면을 눌러서 펼쳤을 때)의 높이 및 줄바꿈 강제 해제 */
+        ul[role="listbox"] li,
+        ul[role="listbox"] li * {
+            white-space: normal !important;
+            word-break: keep-all !important;
+            height: auto !important;
+            min-height: 45px !important;
+            text-overflow: clip !important;
+            letter-spacing: -0.6px !important;
         }
         </style>
         """, unsafe_allow_html=True)
 
-        # (박사님이 찾으신 부분을 이 코드로 통째로 덮어쓰세요!)
-        label_text = "상담 상품 선택 \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
+        # 💡 [수정] "선택" 글자 뒤에 공백 2칸(  ) + \n 을 넣어야 완벽하게 2줄로 렌더링됩니다.
+        label_text = "상담 상품 선택  \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
         st.success("🛍️ **2. 상품 선택**")
         
         # 💡 selectbox는 기본적으로 무언가 1개를 무조건 고르게 하므로, 첫 줄에 '안내 문구'를 넣습니다.
