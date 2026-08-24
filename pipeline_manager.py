@@ -237,22 +237,29 @@ def render_customer_order_form():
         <div class='pay-title'>[ 🌸 신청 접수 완료 ! 🌸 ]</div>
         <b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사합니다! <br>
         신청한 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-        아래 계좌로 🥰복비를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이를 하여 바로 받아 보실 수 있어용~ 💕
+        아래 계좌로 🥰복비를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이하여 바로 받아 보실 수 있어용~ 💕
         </div>
         """, unsafe_allow_html=True)
 
         # 2️⃣ [통합 박스 1] 은행 정보 + 카톡 문의 (들여쓰기 완전 제거)
+        # 🚨 [추가] 모바일 1줄 최적화: 길었던 '특가 할인'을 '특가'로 깔끔하게 압축!
+        display_price_1line = price_display.replace("특가 할인", "특가")
+
+        # 2️⃣ [통합 박스 1] 은행 정보 + 카톡 문의 (들여쓰기 완전 제거 + 경고 문구 빨간색 강조)
         st.markdown(f"""
 <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px;'>
     <div style='font-size: 16px; line-height: 1.8; color: #31333F;'>
         💳 <b>국민은행 231402-04-133221</b><br>
         👤 <b>예금주: 이 * 호</b><br>
-        💰 <b>복비:</b> <span style='color: #E53935; font-weight: bold;'>{price_display}</span>
+        💰 <b>복비:</b> <span style='color: #E53935; font-weight: bold;'>{display_price_1line}</span>
     </div>
     <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
-    <div style='text-align: center; color: #1A237E; font-weight: bold; font-size: 13.5px; margin-bottom: 12px;'>
+    
+    <!-- 🚨 [수정] 박사님 지시 반영: 경고/강조를 위해 빨간색(#E53935)으로 변경 -->
+    <div style='text-align: center; color: #E53935; font-weight: bold; font-size: 13.5px; margin-bottom: 12px;'>
         ※ 신청자 이름과 입금자 이름이 다르면<br>반드시 아래 "카톡 채팅"으로 알려주세요!
     </div>
+    
     <a href='{KAKAO_CHAT_URL}' target='_blank' style='text-decoration:none;'>
         <div style='background-color:#FEE500; color:#191919; text-align:center; padding:12px 15px; border-radius:8px; font-weight:bold; font-size:14.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%;'>
             💬 사주박사 카톡 1:1 채팅 문의하기
@@ -289,7 +296,7 @@ def render_customer_order_form():
             }}
        " 
        style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:15px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor:pointer;'>
-       🟡 터치해서 친구에게 카톡/문자 바로 보내기
+       🟡 친구에게 카톡/문자 바로 보내기
     </button>
 </div>
 """, unsafe_allow_html=True)
