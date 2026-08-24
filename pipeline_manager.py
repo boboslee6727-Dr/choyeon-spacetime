@@ -268,36 +268,36 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        # 3️⃣ [통합 박스 2] 친구 소개 이벤트 + 공유 버튼 (에러 방지용 백틱(`) 및 들여쓰기 제거)
+        # 3️⃣ [통합 박스 2] 친구 소개 이벤트 + 공유 버튼 (들여쓰기 완전 제거 및 빵빠레 이모지 적용)
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_title = "🔮 사주박사 - 내 인생 스포일러"
         share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
 
         st.markdown(f"""
 <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 20px;'>
-    <div style='text-align: center; margin-bottom: 12px;'>
-        <span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
-    </div>
-    <div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
-        친구에게 '사주박사'를 소개해 주세요.<br>
-        소개받은 친구와 나 <b>두 사람 모두에게</b><br>
-        <b>[20% 할인 쿠폰]</b>을 팍팍 쏩니다! 💸
-    </div>
-    <button type="button" 
-       onclick="
-            if (navigator.share) {{
-                navigator.share({{
-                    title: '{share_title}',
-                    text: `{share_msg}`,
-                    url: '{ref_order_link}'
-                }}).catch(function(e){{}});
-            }} else {{
-                window.open('sms:?&body=' + encodeURIComponent(`{share_msg}`));
-            }}
-       " 
-       style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:15px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor:pointer;'>
-       🟡 친구에게 카톡/문자 바로 보내기
-    </button>
+<div style='text-align: center; margin-bottom: 12px;'>
+<span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
+</div>
+<div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
+친구에게 '사주박사'를 소개해 주세요.<br>
+소개받은 친구와 나 <b>두 사람 모두에게</b><br>
+<b>[20% 할인 쿠폰]</b>을 팍팍 쏩니다! 💥🎉
+</div>
+<button type="button" 
+   onclick="
+        if (navigator.share) {{
+            navigator.share({{
+                title: '{share_title}',
+                text: `{share_msg}`,
+                url: '{ref_order_link}'
+            }}).catch(function(e){{}});
+        }} else {{
+            window.open('sms:?&body=' + encodeURIComponent(`{share_msg}`));
+        }}
+   " 
+   style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:15px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor:pointer;'>
+   🟡 터치해서 친구에게 카톡/문자 바로 보내기
+</button>
 </div>
 """, unsafe_allow_html=True)
 
