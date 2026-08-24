@@ -20,20 +20,20 @@ ADMIN_PASSWORD = "boss!631201"
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 KAKAO_CHAT_URL = "http://pf.kakao.com/_xexizSX/chat"
 
-# 💡 [핵심] 신버전 AI와 연동하기 위한 PRODUCT_MAP 정의 (구버전의 PRODUCT_LIST 통합)
+# 💡 [핵심] 신버전 AI와 연동하기 위한 PRODUCT_MAP 정의 (모든 항목 완벽한 2줄 정렬)
 PRODUCT_MAP = {
-    "사주팔자/총운 (정가 22,000원➡️특가 11,000원)": "사주팔자 및 운세 분석",
-    "올 해 운세 (정가 11,000원➡️특가 5,500원)": "올 해 운세 상세분석",
-    "이번 달 운세 (정가 11,000원➡️특가 5,500원)": "이번 달 운세 상세분석",
-    "주간/일일 운세 (정가 4,400원➡️특가 2,200원)": "이번 주간/일 운세",
-    "재물운 (정가 22,000원➡️특가 11,000원)": "재물운 특화",
-    "직업/진학운 (정가 22,000원➡️특가 11,000원)": "직업/진학운 특화",
-    "연애/결혼운 (정가 22,000원➡️특가 11,000원)": "연애/결혼운 특화",
-    "건강운 (정가 11,000원➡️특가 5,500원)": "건강운 특화",
-    "이사/개업 택일 (정가 11,000원➡️특가 5,500원)": "이사/개업 택일",
-    "부부/연인 궁합 (정가 44,000원➡️특가 22,000원)": "연애/결혼운 (궁합)",
-    "결혼 택일 (정가 22,000원➡️특가 11,000원)": "결혼 택일 특화",
-    "출산 택일 (정가 66,000원➡️특가 33,000원)": "출산 택일 특화"
+    "1-1. 사주팔자 및 운세  \n(정가 22,000원 ➡️ 특가 11,000원)": "사주팔자 및 운세 분석",
+    "1-2. 올 해 운세  \n(정가 11,000원 ➡️ 특가 5,500원)": "올 해 운세 상세분석",
+    "1-3. 이번 달 운세  \n(정가 11,000원 ➡️ 특가 5,500원)": "이번 달 운세 상세분석",
+    "1-4. 주간/일일 운세  \n(정가 4,400원 ➡️ 특가 2,200원)": "이번 주간/일 운세",
+    "2-1. 재물운  \n(정가 22,000원 ➡️ 특가 11,000원)": "재물운 특화",
+    "2-2. 직업/진학운  \n(정가 22,000원 ➡️ 특가 11,000원)": "직업/진학운 특화",
+    "2-3. 연애/결혼운  \n(정가 22,000원 ➡️ 특가 11,000원)": "연애/결혼운 특화",
+    "2-4. 건강운  \n(정가 11,000원 ➡️ 특가 5,500원)": "건강운 특화",
+    "2-5. 이사/개업 택일  \n(정가 11,000원 ➡️ 특가 5,500원)": "이사/개업 택일",
+    "3-1. 부부/연인 궁합  \n(정가 44,000원 ➡️ 특가 22,000원)": "연애/결혼운 (궁합)",
+    "3-2. 결혼 택일  \n(정가 22,000원 ➡️ 특가 11,000원)": "결혼 택일 특화",
+    "3-3. 출산 택일  \n(정가 66,000원 ➡️ 특가 33,000원)": "출산 택일 특화"
 }
 
 U_PRODUCT_LIST = list(PRODUCT_MAP.keys())
@@ -334,22 +334,53 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
-        # (박사님이 찾으신 부분을 이 코드로 통째로 덮어쓰세요!)
+        # 📱 [모바일 최적화 CSS] 자간 3배 극한 압축 및 좌우 여백(Padding) 제거 로직
+        st.markdown("""
+        <style>
+        /* 1. 선택된 값 (겉에 보이는 부분) 자간 3배 압축 및 폰트 축소 */
+        div[data-baseweb="select"] * {
+            white-space: normal !important;
+            word-break: keep-all !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
+            letter-spacing: -1.8px !important; /* 🚨 자간 3배 극한 압축 (-1.8px) */
+            font-size: 13.5px !important; /* 🚨 폰트 추가 축소 (14px -> 13.5px) */
+        }
+        
+        /* 2. 셀렉트박스 본체의 강제 높이 제한 해제 + 좌우 헛바람(여백) 제거 */
+        div[data-baseweb="select"] > div {
+            height: auto !important;
+            min-height: 48px !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+            padding-left: 4px !important;  /* 🚨 좌측 낭비 공간 최소화 */
+            padding-right: 4px !important; /* 🚨 우측 낭비 공간 최소화 */
+        }
+
+        /* 3. 드롭다운 옵션 목록 (펼쳤을 때)의 텍스트 극한 압축 */
+        ul[role="listbox"] li,
+        ul[role="listbox"] li * {
+            white-space: normal !important;
+            word-break: keep-all !important;
+            height: auto !important;
+            min-height: 45px !important;
+            text-overflow: clip !important;
+            letter-spacing: -1.8px !important; /* 🚨 자간 3배 극한 압축 */
+            font-size: 13.5px !important; /* 🚨 폰트 동기화 */
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         # 💡 [수정] "선택" 글자 뒤에 공백 2칸(  ) + \n 을 넣어야 완벽하게 2줄로 렌더링됩니다.
         label_text = "상담 상품 선택  \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
         st.success("🛍️ **2. 상품 선택**")
         
-        # 🚨 [플랜 B 강력 가동] 말 안 듣고 글씨 잘라먹는 selectbox는 버리고,
-        # 모바일에서 글씨가 절대 짤리지 않고 예쁘게 다 보여지는 '라디오 버튼(st.radio)'으로 전격 교체!
-        options_with_placeholder = ["상담 상품을 선택해 주세요 (아래에서 1개 체크)"] + U_PRODUCT_LIST
-        selected_single = st.radio(
-            label=label_text, 
-            options=options_with_placeholder,
-            index=0
-        )
+        # 💡 selectbox는 기본적으로 무언가 1개를 무조건 고르게 하므로, 첫 줄에 '안내 문구'를 넣습니다.
+        options_with_placeholder = ["상담 상품을 선택해 주세요 (클릭)"] + U_PRODUCT_LIST
+        selected_single = st.selectbox(label=label_text, options=options_with_placeholder)
         
         # 💡 뒷단(계산기, DB)이 고장 나지 않도록 고른 1개를 리스트[]로 포장해 줍니다.
-        if selected_single != "상담 상품을 선택해 주세요 (아래에서 1개 체크)":
+        if selected_single != "상담 상품을 선택해 주세요 (클릭)":
             selected_products = [selected_single]
         else:
             selected_products = []
