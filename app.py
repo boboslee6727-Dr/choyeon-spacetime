@@ -865,6 +865,7 @@ if st.session_state.get('app_running', False):
                         "ss_ji": engine.get_ss(p_ds_hanja, p_j_hangul), "un_sung": p_u_sung_val,
                         "y_shinsal": p_y_shin_val, "d_shinsal": p_d_shin_val, "is_current": p_is_active, "is_first": (i == 0)
                     })
+
                 p_un_html = html_views.generate_daewun_layout(p_daewun_data_list, p_direction_str, p_calc_d, get_oh_class)
                 
                 # 상대방 원국표 및 마스터바 빌드
@@ -979,7 +980,6 @@ if st.session_state.get('app_running', False):
                 # 에러 발생 시에도 남명 문구 보존
                 golden_box_gunghap_html = golden_text_html
 
-        
         # 🌟 2인용 궁합(4-2 등)을 위한 상대방 황금문구 및 남녀 듀얼 황금문구 생성
         golden_box_gunghap_html = golden_text_html
         if is_2person:
