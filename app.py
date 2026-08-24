@@ -1319,6 +1319,7 @@ if st.session_state.get('app_running', False):
         
         final_render_html = global_css_str + safe_cover_str + final_render_html
 
+        
         # =========================================================================
         # 📦 [공장 생산 완료] ➔ 스텔스 완료 처리 (URL 변경 없음, 그 자리에서 서랍장 오픈)
         # =========================================================================
@@ -1330,6 +1331,5 @@ if st.session_state.get('app_running', False):
         else:
             # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(final_render_html, unsafe_allow_html=True)
-            
 
 
