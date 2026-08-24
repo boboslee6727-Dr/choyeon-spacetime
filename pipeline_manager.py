@@ -111,15 +111,28 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
         return False, str(e)
 
 def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount_amt, final_price):
-    return True, "성공" # 관리자 알림은 비용 절감을 위해 현재 단순히 패스하도록 처리
-    # ==============================================================================
-    # ⛔ [테스트 모드] (현재 켜짐) : 돈이 나가지 않고 발송 흉내만 냅니다.
-    # ==============================================================================
-    # try:
-    #     time.sleep(0.5) # 테스트용 딜레이
-    #     return True, "[테스트 모드] 발송 성공 (비용 미청구)"
-    # except Exception as e: 
-    #     return False, str(e)
+    # 🟢 [실전 모드] 박사님께 날아가는 신규 접수 알림 (연도 포함! 단문 SMS 요금 완벽 방어)
+    try:
+        import requests
+        import streamlit as st
+        api_key = st.secrets["SOLAPI_API_KEY"]
+        api_secret = st.secrets["SOLAPI_API_SECRET"]
+        admin_phone = "01038576727" # 박사님 핸드폰 번호
+        
+        # 🚨 [수정] 박사님 지시 반영: 초 단위만 절사하고 연도(YYYY)는 완벽하게 살림
+        # 예시: 2026-08-24 21:43/이호/1-1. 사주팔자/22000/11000
+        short_time = now_str[:16] # 'YYYY-MM-DD HH:MM' 형식으로 앞 16글자만 추출
+        short_prod = product_summary.split('(')[0].strip() # 상품명 뒤에 붙은 가격 찌꺼기 괄호 제거
+        
+        msg_body = f"{short_time}/{name}/{short_prod}/{base_price}/{final_price}"
+        
+        res = requests.post("https://api.solapi.com/messages/v4/send", 
+            headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}, 
+            json={"message": {"to": admin_phone, "from": admin_phone, "text": msg_body}}
+        )
+        return True, "알림 발송 완료"
+    except Exception as e:
+        return False, str(e)
 
 def send_solapi_custom_message(to_phone, name, msg_body):
     # 🟢 [고객 발송 실전 모드] 서랍장 3번에서 버튼 클릭 시 고객에게 마케팅 문자 발송!
@@ -223,33 +236,33 @@ def render_customer_order_form():
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div class='m-title'>🔮 사주박사 신청서 🔮</div>", unsafe_allow_html=True)
+    # 🚨 [수정] 박사님 지시 반영: 신청 전/후 상태에 따라 메인 간판 텍스트가 자동으로 바뀌도록 설정
+    page_title = "🔮 사주박사 신청완료 🔮" if "submitted_order" in st.session_state else "🔮 사주박사 신청서 🔮"
+    st.markdown(f"<div class='m-title'>{page_title}</div>", unsafe_allow_html=True)
     
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
         if ord_info["discount_amt"] > 0:
-            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 특가 할인)</span>"
+            price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 특가)</span>"
         else:
             price_display = f"<b style='font-size:17px;'>{ord_info['final_price']:,}원</b>"
 
         st.markdown(f"""
-        <div class='guide-box'>
-        <div class='pay-title'>[ 🌸 신청 접수 완료 ! 🌸 ]</div>
-        <b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사합니다! <br>
-        신청한 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-        아래 계좌로 🥰복비를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이하여 바로 받아 보실 수 있어용~ 💕
-        </div>
-        """, unsafe_allow_html=True)
+<div class='guide-box'>
+<div class='pay-title'>[ 🌸 신청 접수 완료 ! 🌸 ]</div>
+<b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사합니다! <br>
+신청한 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
+아래 계좌로 🥰복비를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이하여 바로 받아 보실 수 있어용~ 💕
+</div>
+""", unsafe_allow_html=True)
 
-        # 2️⃣ [통합 박스 1] 은행 정보 + 카톡 문의 (들여쓰기 완전 제거)
-        # 🚨 [추가] 모바일 1줄 최적화: 길었던 '특가 할인'을 '특가'로 깔끔하게 압축!
         display_price_1line = price_display.replace("특가 할인", "특가")
 
-        # 2️⃣ [통합 박스 1] 은행 정보 + 카톡 문의 (1줄 강제 고정 CSS 추가)
+        # 1️⃣ [통합 박스 1] 은행 정보 + 카톡 문의
         st.markdown(f"""
 <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px;'>
 <div style='font-size: 15.5px; line-height: 1.8; color: #31333F; letter-spacing: -0.5px;'>
-💳 <b>국민은행 231402-04-133221</b><br>
+💳 <b>국민은행  231 402 - 04 - 133 221</b><br>
 👤 <b>예금주: 이 * 호</b><br>
 <div style='white-space: nowrap;'>💰 <b>복비:</b> <span style='color: #E53935; font-weight: bold;'>{display_price_1line}</span></div>
 </div>
@@ -265,60 +278,41 @@ def render_customer_order_form():
 </div>
 """, unsafe_allow_html=True)
 
-        # 3️⃣ [통합 박스 2] 친구 소개 이벤트 + 공유 버튼 (들여쓰기 완전 제거 및 빵빠레 이모지 적용)
-        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        share_title = "🔮 사주박사 - 내 인생 스포일러"
-        share_msg = f"소름 돋는 인생 스포일러, 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택! 🎁\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
-
-        st.markdown(f"""
-<div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 20px;'>
-<div style='text-align: center; margin-bottom: 12px;'>
-<span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
-</div>
-<div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
-친구에게 '사주박사'를 소개해 주세요.<br>
-소개받은 친구와 나 <b>두 사람 모두에게</b><br>
-<b>[20% 할인 쿠폰]</b>을 팍팍 쏩니다! 💥🎉
-</div>
-<button type="button" 
-   onclick="
-        if (navigator.share) {{
-            navigator.share({{
-                title: '{share_title}',
-                text: `{share_msg}`,
-                url: '{ref_order_link}'
-            }}).catch(function(e){{}});
-        }} else {{
-            window.open('sms:?&body=' + encodeURIComponent(`{share_msg}`));
-        }}
-   " 
-   style='display:block; width:100%; border:none; background-color:#FEE500; color:#191919; border-radius:10px; padding:14px 20px; font-size:15px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor:pointer;'>
-   🟡 친구에게 카톡/문자 바로 보내기
-</button>
-</div>
-""", unsafe_allow_html=True)
-
-        # 4️⃣ [추가 신청 버튼] 진녹색 CSS 적용
+        # 2️⃣ [버튼] 새로운 사주풀이 추가 신청 (진녹색 커스텀 유지)
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
         st.markdown("""
 <style>
-div.stButton > button {
-    background-color: #4CAF50 !important;
-    color: #FFFFFF !important;
-    border: 1px solid #388E3C !important;
-    font-weight: bold !important;
-    border-radius: 8px !important;
-}
-div.stButton > button:hover, div.stButton > button:active {
-    background-color: #388E3C !important;
-    color: #FFFFFF !important;
-}
+div.stButton > button { background-color: #4CAF50 !important; color: #FFFFFF !important; border: 1px solid #388E3C !important; font-weight: bold !important; border-radius: 8px !important; }
+div.stButton > button:hover, div.stButton > button:active { background-color: #388E3C !important; color: #FFFFFF !important; }
 </style>
 """, unsafe_allow_html=True)
 
         if st.button("➕ 새로운 사주풀이 추가 신청하기", use_container_width=True):
             del st.session_state["submitted_order"]
             st.rerun()
-            
+
+        # 3️⃣ [통합 박스 2] 친구 소개 이벤트 + 공유 버튼 (박사님 문구 100% 반영)
+        ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
+        
+        # 실제 문자 발송 내용에도 박사님의 찰진 멘트를 그대로 적용!
+        share_msg = f"친구에게 '사주박사'를 소개하고 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택받는다구! ㅎㅎ💥🎉\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
+
+        st.markdown(f"""
+<div style='background-color: #FFFDF5; border: 1.5px solid #FFE082; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;'>
+<div style='text-align: center; margin-bottom: 12px;'>
+<span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
+</div>
+<div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
+친구에게 '사주박사'를 소개하고 너도 한번 봐봐! 👀<br>
+친구 소개로 같이 신청하면 우리 둘 다 <b>20% 할인 쿠폰</b> 득템 혜택받는다구! ㅎㅎ💥🎉
+</div>
+<a href="sms:?&body={share_msg}" style='display:block; text-decoration:none;'>
+<div style='background-color:#FEE500; color:#191919; text-align:center; padding:14px 20px; border-radius:10px; font-weight:bold; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%;'>
+🟡 친구에게 카톡/문자 바로 보내기
+</div>
+</a>
+</div>
+""", unsafe_allow_html=True)
         return
 
     st.markdown(f"""
