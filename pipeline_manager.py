@@ -334,6 +334,23 @@ def render_customer_order_form():
         with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
         b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
 
+        # 📱 [모바일 최적화 CSS] 상품명/가격 잘림 방지 강제 2줄 바꿈 로직 주입
+        st.markdown("""
+        <style>
+        /* 셀렉트박스(드롭다운 옵션) 텍스트 강제 줄바꿈 및 여백 최적화 */
+        div[data-baseweb="select"] span {
+            white-space: normal !important;
+            word-break: keep-all !important;
+            line-height: 1.5 !important;
+        }
+        /* 드롭다운 펼쳐졌을 때의 옵션 글씨도 두 줄로 예쁘게 정렬 */
+        ul[data-baseweb="menu"] div {
+            white-space: normal !important;
+            word-break: keep-all !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         # (박사님이 찾으신 부분을 이 코드로 통째로 덮어쓰세요!)
         label_text = "상담 상품 선택 \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
         st.success("🛍️ **2. 상품 선택**")
