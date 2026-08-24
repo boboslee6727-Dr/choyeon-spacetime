@@ -245,13 +245,13 @@ def render_customer_order_form():
         # 🚨 [추가] 모바일 1줄 최적화: 길었던 '특가 할인'을 '특가'로 깔끔하게 압축!
         display_price_1line = price_display.replace("특가 할인", "특가")
 
-        # 2️⃣ [통합 박스 1] 은행 정보 + 카톡 문의 (들여쓰기 완전 제거 + 빨간색 강조)
+        # 2️⃣ [통합 박스 1] 은행 정보 + 카톡 문의 (1줄 강제 고정 CSS 추가)
         st.markdown(f"""
 <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px;'>
-<div style='font-size: 16px; line-height: 1.8; color: #31333F;'>
+<div style='font-size: 15.5px; line-height: 1.8; color: #31333F; letter-spacing: -0.5px;'>
 💳 <b>국민은행 231402-04-133221</b><br>
 👤 <b>예금주: 이 * 호</b><br>
-💰 <b>복비:</b> <span style='color: #E53935; font-weight: bold;'>{display_price_1line}</span>
+<div style='white-space: nowrap;'>💰 <b>복비:</b> <span style='color: #E53935; font-weight: bold;'>{display_price_1line}</span></div>
 </div>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
 <div style='text-align: center; color: #E53935; font-weight: bold; font-size: 13.5px; margin-bottom: 12px;'>
@@ -663,7 +663,7 @@ def render_view_page(order_id):
     if df.empty: st.error("존재하지 않거나 만료된 링크입니다."); return
     row = df.iloc[0]
     if row.get('status', '') != "분석완료" or not row.get('result_html', ''):
-        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {row.get('name','고객')}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡으로 알림 팍! 쏴드릴게요! 🚀")
+        st.warning(f"열일 중! 💦 뚝딱뚝딱~ 현재 {row.get('name','고객')}님의 사주를 제가 꼼꼼하게 분석하고 있어요. 🧐✨ 입금 확인 후 하루(24시간) 안에는 무조건 도착하니 쪼금만 기다려주세요! 완성되면 카톡/문자로 알림 팍! 쏴드릴게요! 🚀")
         return
     st.markdown("<style>@media print { header {visibility: hidden;} footer {visibility: hidden;} .stApp [data-testid='stToolbar'] {display: none;} button {display: none !important;} }</style>", unsafe_allow_html=True)
     st.markdown('<button type="button" style="display:block; width:100%; background-color:#c9a764; color:white; padding:15px; border-radius:10px; border:none; font-weight:bold; margin-bottom:15px; cursor:pointer;" onclick="window.print();">📄 평생 소장용 PDF 다운로드</button>', unsafe_allow_html=True)
