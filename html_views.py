@@ -158,12 +158,12 @@ def format_ai_text_to_html(text, qna_text=""):
         
         if not line:
             if in_list: html_lines.append("</div>"); in_list = False
-            html_lines.append("<div style='height: 8px;'></div>") # 표준 마진 (빈 줄)
+            html_lines.append("<div style='height: 10px;'></div>") # 넉넉한 빈 줄 여백
             continue
             
         lower_line = line.lower()
         
-        # [프리패스 게이트] HTML 태그 유지
+        # [프리패스 게이트]
         if lower_line.startswith('<div') or lower_line.startswith('</div') or \
            lower_line.startswith('<table') or lower_line.startswith('</table') or \
            lower_line.startswith('<tr') or lower_line.startswith('</tr') or \
@@ -173,83 +173,65 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(line)
             continue
             
-        # ---------------------------------------------------------
-        # 🛡️ [홍 비서의 쉴드] AI가 실수로 콜론(:)을 썼을 경우 강제 분리 로직
-        # ---------------------------------------------------------
-        if ':' in line or '：' in line: # 반각/전각 콜론 모두 감지
-            # 단, HTML 태그 안에 있는 콜론(style='color:red' 등)은 분리하면 안 되므로 예외 처리
-            if not re.search(r'<[^>]+>', line):
-                parts = re.split(r'[:：]', line, 1)
-                title_part = parts[0].strip()
-                desc_part = parts[1].strip()
-                
-                # 1. 제목 부분 렌더링 (아래 위계질서 로직을 태우기 위해 변수 교체)
-                line = title_part
-                
-                # 2. 서술 부분은 미리 HTML로 만들어둠 (나중에 본문으로 출력)
-                forced_desc_html = f"<p style='font-size: 16px; line-height: 1.6; margin-top: 4px; margin-bottom: 12px; color: #333333; text-indent: 14px;'>{desc_part}</p>"
-            else:
-                forced_desc_html = ""
+        # 🛡️ [콜론 강제 분리 로직]
+        if (':' in line or '：' in line) and not re.search(r'<[^>]+>', line):
+            parts = re.split(r'[:：]', line, 1)
+            title_part = parts[0].strip()
+            desc_part = parts[1].strip()
+            line = title_part
+            # 👑 [수정] 줄간격 1.85 적용 (서론과 100% 동일)
+            forced_desc_html = f"<p style='font-size: 16px; font-weight: 600; line-height: 1.85; margin-top: 4px; margin-bottom: 14px; color: #000000; text-indent: 14px; text-align: justify;'>{desc_part}</p>"
         else:
             forced_desc_html = ""
 
         # ---------------------------------------------------------
-        # 👑 [위계질서 군기 확립 구역 - 숫자 목차]
+        # 👑 [위계질서 목차 구역]
         # ---------------------------------------------------------
-        # [1. 대제목]
         if re.match(r'^(?:<[^>]+>)*\s*\d+\.\s', line):
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 28px; margin-bottom: 10px; border-bottom: 2px solid #E8EAF6; padding-bottom: 6px;'>{clean_line}</div>")
+            html_lines.append(f"<div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 30px; margin-bottom: 12px; border-bottom: 2px solid #E8EAF6; padding-bottom: 6px;'>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
 
-        # [1) 중제목]
         elif re.match(r'^(?:<[^>]+>)*\s*\d+\)\s', line):
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #2C3E50; margin-top: 20px; margin-bottom: 8px;'>{clean_line}</div>")
+            html_lines.append(f"<div style='font-size: 18px; font-weight: 800; color: #2C3E50; margin-top: 22px; margin-bottom: 8px;'>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
 
-        # [① 소제목]
         elif re.match(r'^(?:<[^>]+>)*\s*[①②③④⑤⑥⑦⑧⑨⑩]\s*', line):
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
             html_lines.append(f"<div style='font-size: 17px; font-weight: 700; color: #34495E; margin-top: 16px; margin-bottom: 6px; padding-left: 8px;'>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
 
-        # ---------------------------------------------------------
-        # 👑 [도형문자 위계질서 확립 구역 - 기호 목차]
-        # ---------------------------------------------------------
-        # [기호 1순위: ◆] 
         elif re.match(r'^(?:<[^>]+>)*\s*◆\s*', line):
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = re.sub(r'^(?:<[^>]+>)*\s*◆\s*', '', line).replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #1A237E; margin-top: 12px; margin-bottom: 4px; padding-left: 12px;'><span style='margin-right: 6px;'>◆</span>{clean_line}</div>")
+            html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #1A237E; margin-top: 14px; margin-bottom: 6px; padding-left: 12px;'><span style='margin-right: 6px;'>◆</span>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
 
-        # [기호 2순위: ▶] 
         elif re.match(r'^(?:<[^>]+>)*\s*▶\s*', line):
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = re.sub(r'^(?:<[^>]+>)*\s*▶\s*', '', line).replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 15.5px; font-weight: 800; color: #2C3E50; margin-top: 10px; margin-bottom: 4px; padding-left: 18px;'><span style='margin-right: 6px;'>▶</span>{clean_line}</div>")
+            html_lines.append(f"<div style='font-size: 15.5px; font-weight: 800; color: #2C3E50; margin-top: 12px; margin-bottom: 6px; padding-left: 18px;'><span style='margin-right: 6px;'>▶</span>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
             
-        # [기호 3순위: ▷]
         elif re.match(r'^(?:<[^>]+>)*\s*▷\s*', line):
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = re.sub(r'^(?:<[^>]+>)*\s*▷\s*', '', line).replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 15px; font-weight: 700; color: #455A64; margin-top: 8px; margin-bottom: 4px; padding-left: 24px;'><span style='margin-right: 6px;'>▷</span>{clean_line}</div>")
+            html_lines.append(f"<div style='font-size: 15px; font-weight: 700; color: #455A64; margin-top: 10px; margin-bottom: 4px; padding-left: 24px;'><span style='margin-right: 6px;'>▷</span>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
 
         # ---------------------------------------------------------
-        # 💡 [일반 서술형 문단 처리] 국어의 기본! 첫 줄 들여쓰기 장착!
+        # 💡 [일반 서술형 본문 - 줄간격 1.85 완벽 세팅!]
         # ---------------------------------------------------------
         else:
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
             
-            # 💡 [핵심] 폰트 16px 고정, 표준 마진(margin-bottom 12px), 그리고 초졸도 아는 들여쓰기(text-indent 14px) 적용!
-            html_lines.append(f"<p style='font-size: 16px; line-height: 1.6; margin-top: 0px; margin-bottom: 12px; color: #333333; letter-spacing: -0.3px; text-indent: 14px;'>{clean_line}</p>")
+            # 👑 [핵심 개선] 폰트 16px, 굵기 600, 줄간격 1.85(서론과 동일), 색상 #000000, 양쪽정렬
+            html_lines.append(f"<p style='font-size: 16px; font-weight: 600; line-height: 1.85; margin-top: 0px; margin-bottom: 14px; color: #000000; letter-spacing: -0.2px; text-indent: 14px; text-align: justify;'>{clean_line}</p>")
             
     if in_list:
         html_lines.append("</div>")
@@ -262,18 +244,17 @@ def format_ai_text_to_html(text, qna_text=""):
         clean_qna_body = qna_text.replace('💡', '').strip()
         qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"""
-        <div style='background-color: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 24px; margin-top: 24px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);'>
+        <div style='background-color: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 24px; margin-top: 28px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);'>
             <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px dashed #CFD8DC;'>
                 💡 사주박사 1:1 심층 솔루션 답변
             </div>
-            <div style='font-size: 15px; line-height: 1.7; color: #424242; text-indent: 14px;'>
+            <div style='font-size: 16px; font-weight: 600; line-height: 1.85; color: #000000; text-indent: 14px; text-align: justify;'>
                 {qna_body}
             </div>
         </div>
         """
         
-    return f"<div class='ai-content' style='font-family: \"Pretendard\", \"Malgun Gothic\", sans-serif;'>\n{main_html}\n{qna_html}\n</div>"
-
+    return f"<div class='ai-content' style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif;'>\n{main_html}\n{qna_html}\n</div>"
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (원국, 대운, 세운, 월운, 주간운)
 # ==============================================================================
@@ -668,11 +649,11 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
 
     return f"""
     <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 16px; line-height: 1.85; color: #000000; margin-bottom: 18px;'>
-        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 8px;'>
-            정통 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나하셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
+        <p style='text-indent: 14px; text-align: justify; margin-top: 0; margin-bottom: 8px;'>
+            기존 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
         </p>
-        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
-            또한, 초연 시공명리학적 관점에서 <b>'{w_val}'</b>의 역동적인 시공간 파동을 지니고 있으며, <b>'{i_val}'</b>의 내면적 본성을 함께 품고 살아갑니다.
+        <p style='text-indent: 14px; text-align: justify; margin-top: 0; margin-bottom: 0;'>
+            또한, 시공명리학적으로 풀이하면 <b>'{w_val}'</b>의 역동적인 시공간 파동을 지니고 있으며, <b>'{i_val}'</b>의 내면적 본성을 함께 품고 살아갑니다.
         </p>
     </div>
     <hr style="border: 0; border-top: 2px solid #000000; margin: 20px 0;">
@@ -683,20 +664,20 @@ def get_closing_html(name):
     return f"""
     <hr style="border: 0; border-top: 2px dashed #1A237E; margin: 30px 0 20px 0;">
     <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
-        <p style="font-size: 16px; font-weight: 400; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
-        <p style="font-size: 16px; font-weight: 800; text-indent: 15px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 14px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">'사주팔자'는 태어날 때 부여받은 변하지 않는 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 스캐너(scanner)인 '운'은 늘 변화하며 흐릅니다.</p>
+        <p style="font-size: 16px; font-weight: 400; text-indent: 14px; text-align: justify; line-height: 1.85; margin-bottom: 8px; color: #111111;">따라서 오늘의 '초연 시공명리학과의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 길을 잃지 않게 돕는 '나침반'이 되기를 진심으로 기원합니다.</p>
+        <p style="font-size: 16px; font-weight: 800; text-indent: 14px; text-align: justify; line-height: 1.85; margin-bottom: 0; color: #111111;">오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
         <div style="text-align: right; margin-top: 20px; margin-bottom: 30px;">
-            <span style="font-weight: 800; font-size: 17px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
+            <span style="font-weight: 900; font-size: 17px; color: #1A237E;">- 초연 시공명리 연구소 드림 -</span>
         </div>
     </div>
     
-    <!-- 💌 고객 CRM 관리 및 카톡 채널 유도 배너 -->
+    <!-- 💌 고객 CRM 관리 및 통합 채널 유도 배너 -->
     <div style='padding: 20px; background: #F4F6F9; border-left: 5px solid #3F51B5; border-radius: 8px; font-family: "Nanum Myeongjo", serif;'>
         <b style='color:#1A237E; font-size: 16.5px; letter-spacing: -0.5px;'>💌 [사주박사의 1:1 애프터 서비스]</b><br>
         <p style='font-size: 14.5px; font-weight: 500; color: #333333; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
         {name}님, 이번 리포트에서는 사주 원국과 함께 남겨주신 고민의 핵심 원인과 타개 시기를 우선적으로 짚어드렸습니다. <br><br>
-        혹시 제 풀이를 읽고 더 깊은 이야기나 추가로 궁금한 점이 생기셨나요? 언제든 <b>'사주박사 카카오톡 채널'</b>로 편하게 말을 걸어주세요. 기존 신청자분들께는 저렴하고 친절하게 1:1 추가 상담을 도와드리고 있습니다. 늘 응원합니다! 🙏
+        혹시 제 풀이를 읽고 더 깊은 이야기나 추가로 궁금한 점이 생기셨나요? 언제든 <b>💌 [사주박사의 1:1 애프터 서비스]</b>을 통해 편하게 상담해 주세요. 기존 신청자분들께는 '사주박사'가 직접 저렴하고 친절하게 1:1 추가 상담을 도와드리고 있습니다. 늘 응원합니다! 🙏
         </p>
     </div>
     """
