@@ -403,16 +403,32 @@ else:
             elif "2-1." in u_product: 
                 wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
             elif "2-2." in u_product: 
-                career_goal = st.text_input("💼 고민되는 직업/진학 분야는?", key="career_goal", on_change=stop_ai)
+                career_purpose = st.radio("💼 상담 목적 선택", ["직업·취업·이직", "진학·입시·학업"], key="career_purpose", on_change=stop_ai)
+                if career_purpose == "진학·입시·학업":
+                    career_goal = st.text_input("🎓 고민되는 진학/전공/입시 분야는?", key="career_goal", placeholder="예: 의대 진학, 공대 vs 상경계열 선택", on_change=stop_ai)
+                else:
+                    career_goal = st.text_input("💼 고민되는 직업/이직/사업 분야는?", key="career_goal", placeholder="예: 대기업 이직, 전문직 창업", on_change=stop_ai)
             elif "2-3." in u_product:
                 love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
             elif "2-4." in u_product: 
                 health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
             elif "2-5." in u_product:
                 tackil_purpose = st.radio("🗓️ 택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
+                
+                # 🌟 [보강 1] 상단 '분석 기준 시점'과 100% 연동되는 기본 시작일/종료일(+30일) 설정
+                default_tackil_start = selected_target_date
+                default_tackil_end = selected_target_date + dt_mod.timedelta(days=30)
+                
                 col_start, col_end = st.columns(2)
-                start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
-                end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
+                start_date = col_start.date_input("시작일", value=default_tackil_start, key="moving_start", on_change=stop_ai)
+                end_date = col_end.date_input("종료일", value=default_tackil_end, key="moving_end", on_change=stop_ai)
+                
+                # 🌟 [보강 2] 이사/개업 목적별 세부 고민 입력창 동적 바인딩
+                if tackil_purpose == "개업":
+                    st.text_input("🏪 고민되는 개업/사업 분야는?", key="user_concern", placeholder="예: 카페 창업, 프랜차이즈 오픈, 매출 대박 기원", on_change=stop_ai)
+                else:
+                    st.text_input("🏡 고민되는 이사/터전 문제는?", key="user_concern", placeholder="예: 새 아파트 입주, 가내 평안, 가족 화목", on_change=stop_ai)
+
             
             # 🌟 4-1 타 감명서 비교 (사주)
             elif "4-1." in u_product:
@@ -1216,7 +1232,11 @@ if st.session_state.get('app_running', False):
             if "1-3" in u_prod: return "프롬프트_1_3_월운"
             if "1-4" in u_prod: return "프롬프트_1_4_일운"
             if "2-1" in u_prod: return "프롬프트_2_1_재물운"
-            if "2-2" in u_prod: return "프롬프트_2_2_직업운"
+            if "2-2" in u_prod:
+                if st.session_state.get('career_purpose', '직업') == '진학':
+                    return "프롬프트_2_2_진학운"
+                else:
+                    return "프롬프트_2_2_직업운"
             if "2-3" in u_prod: return "프롬프트_2_3_연애운"
             if "2-4" in u_prod: return "프롬프트_2_4_건강운"
             # 🚨 [투트랙 분기 적용 완료] tackil_purpose 변수에 따라 프롬프트를 완벽히 분리 호출합니다.
@@ -1295,17 +1315,24 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-        # -------------------------------------------------------------
-        # 🚨 [논리 수정 완료: 특수 조건인 2-5가 반드시 먼저 와야 합니다]
-        # -------------------------------------------------------------
+
+        # =====================================================================
+        # 🏮 2-5. A 이사 및 2-5 B 개업 택일 (주간 달력표 폭포수 연동)
+        # =====================================================================
         elif u_product.startswith("2-5"):
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             
+            # 🌟 [신규 연계] 택일 기준일(선택 시작일) 주간 7일 캘린더 생성
+            tackil_target_dt = st.session_state.get('moving_start', selected_target_date)
+            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+            
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
@@ -1316,29 +1343,36 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("2-"):
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+            # 🌟 불필요 마커 안전 소각
+            formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        elif u_product.startswith("3-1"):
-            m_ess, f_ess, g_ess = "", "", clean_raw
-            m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', clean_raw, re.DOTALL)
-            if m_match: m_ess = html_views.format_ai_text_to_html(m_match.group(1).strip())
-            f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', clean_raw, re.DOTALL)
-            if f_match: f_ess = html_views.format_ai_text_to_html(f_match.group(1).strip())
-            g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', clean_raw, re.DOTALL)
-            if g_match: g_ess = html_views.format_ai_text_to_html(g_match.group(1).strip())
+        # =====================================================================
+        # 🏮 3-2. 결혼 택일 (주간 달력표 연동)
+        # =====================================================================
+        elif u_product.startswith("3-2"):
+            m_target_dt = st.session_state.get('start_date_m', st.session_state.get('target_date_m', selected_target_date))
+            weekly_days_data = engine.get_weekly_calendar_data(m_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+            
+            formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+            # 2인용 표지 및 상단 팩트 결합
+            master_comp = f"{part_1_fact_gunghap}{part_2_intro}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
-            m_daewun_html = un_html if gender == "남성" else p_un_html
-            f_daewun_html = p_un_html if gender == "남성" else un_html
-            c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html)
-            g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
-
-            score_ui, closing_ui = "", ""
-            if 'gh_engine' in locals():
-                score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
-                closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val)
-            g_ess += score_ui + closing_ui
-            final_render_html = html_views.get_gunghap_three_page_report(part_1_fact, m_ess, f_ess, g_ess)
+        # =====================================================================
+        # 🏮 3-3. 출산 택일 (주간 달력표 연동)
+        # =====================================================================
+        elif u_product.startswith("3-3"):
+            d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
+            weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+            
+            formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+            # 2인용 표지 및 상단 팩트 결합
+            master_comp = f"{part_1_fact_gunghap}{part_2_intro}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("4-1"):
             if not user_entered_text:
