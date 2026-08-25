@@ -1199,9 +1199,12 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-3"):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
+            
+            current_ai_text = ai_output_html if ai_output_html else "<p>월운 분석을 불러오지 못했습니다.</p>"
+            formatted_ai = sub_marker(current_ai_text, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            master_comp = f"{part_1_fact}{part_3_golden}{formatted_ai}{part_5_closing}"
+            
+            master_comp = f"{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-4"):
