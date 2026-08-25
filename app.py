@@ -90,7 +90,7 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
-# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
+# 🎯 [신청인] 사주간지 역산 전용 콜백 함수
 def do_auto_fill_user():
     st.session_state['app_running'] = False
     u_ry = st.session_state.get("u_ry_rev", "")
@@ -117,7 +117,6 @@ def do_auto_fill_user():
             ji_char = u_rt[-1]
             rt_ji = engine.K2H_JI.get(ji_char, ji_char)
 
-        # 🌟 사이드바의 [분석 기준 시점 선택]에서 지정한 날짜의 연도를 100% 동적 추출
         target_date_val = st.session_state.get('main_target_date_picker', st.session_state.get('target_date', dt_mod.date.today()))
         base_year = target_date_val.year if hasattr(target_date_val, 'year') else dt_mod.date.today().year
 
@@ -125,10 +124,11 @@ def do_auto_fill_user():
 
         if matched_results:
             st.session_state['rev_matches_user'] = matched_results
-            # 1순위(현대 기준) 자동 바인딩
-            st.session_state['s_y'] = matched_results[0]["y"]
-            st.session_state['s_m'] = matched_results[0]["m"]
-            st.session_state['s_d'] = matched_results[0]["d"]
+            # 🌟 신청인 기본 정보 세션 100% 동기화 (양력 고정)
+            st.session_state['u_c'] = "양력"
+            st.session_state['s_y'] = int(matched_results[0]["y"])
+            st.session_state['s_m'] = int(matched_results[0]["m"])
+            st.session_state['s_d'] = int(matched_results[0]["d"])
             st.session_state['s_t'] = matched_results[0]["t"]
             st.session_state['s_t_select'] = matched_results[0]["t"]
             st.session_state.pop('rev_error_msg', None)
@@ -138,7 +138,7 @@ def do_auto_fill_user():
     else:
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-# 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
+# 🎯 [상대방] 사주간지 역산 전용 콜백 함수
 def do_auto_fill_partner():
     st.session_state['app_running'] = False
     p_ry = st.session_state.get("p_ry_rev", "")
@@ -165,7 +165,6 @@ def do_auto_fill_partner():
             ji_char_p = p_rt[-1]
             p_rt_ji = engine.K2H_JI.get(ji_char_p, ji_char_p)
 
-        # 🌟 사이드바의 [분석 기준 시점 선택]에서 지정한 날짜의 연도를 100% 동적 추출
         target_date_val = st.session_state.get('main_target_date_picker', st.session_state.get('target_date', dt_mod.date.today()))
         base_year = target_date_val.year if hasattr(target_date_val, 'year') else dt_mod.date.today().year
 
@@ -173,10 +172,11 @@ def do_auto_fill_partner():
 
         if matched_results:
             st.session_state['rev_matches_partner'] = matched_results
-            # 1순위(현대 기준) 자동 바인딩
-            st.session_state['p_y_in'] = matched_results[0]["y"]
-            st.session_state['p_m_in'] = matched_results[0]["m"]
-            st.session_state['p_d_in'] = matched_results[0]["d"]
+            # 🌟 상대방 기본 정보 세션 100% 동기화 (양력 고정)
+            st.session_state['f_c'] = "양력"
+            st.session_state['p_y_in'] = int(matched_results[0]["y"])
+            st.session_state['p_m_in'] = int(matched_results[0]["m"])
+            st.session_state['p_d_in'] = int(matched_results[0]["d"])
             st.session_state['p_t_key'] = matched_results[0]["t"]
             st.session_state['p_t_select'] = matched_results[0]["t"]
             st.session_state.pop('rev_p_error_msg', None)
@@ -1314,8 +1314,8 @@ if st.session_state.get('app_running', False):
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
-            formatted_ai = ai_output_html if ai_output_html else "<p>일운 분석을 불러오지 못했습니다.</p>"
-            formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+            current_ai_text = ai_output_html if ai_output_html else "<p>일운 분석을 불러오지 못했습니다.</p>"
+            formatted_ai = sub_marker(current_ai_text, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             
