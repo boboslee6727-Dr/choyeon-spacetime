@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 76.1 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
+# html_views.py (ver 85.1 Master - 화면 단일 프레임 & 인쇄 A4 분할 듀얼 완결본)
 # ==============================================================================
 # [핵심 반영 사항]
 # 1. 화면(Screen) 뷰: A4 바깥선 완전 제거(투명), 단일 .vip-inset-frame 안에서 연속 출력
@@ -142,9 +142,7 @@ def get_global_css():
 def format_ai_text_to_html(text, qna_text=""):
     if not text: 
         return ""
-    
-    import re
-    
+  
     # 🚨 AI 찌꺼기 텍스트 소각 및 프리미엄 볼드체
     text = re.sub(r':[a-zA-Z]+\[(.*?)\]', r'\1', text)
     text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color: #1A237E; background-color: #F4F6F9; padding: 2px 6px; border-radius: 4px; font-weight: 800;">\1</b>', text)
@@ -173,16 +171,23 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(line)
             continue
             
-        # 🛡️ [콜론 강제 분리 로직]
+        # ---------------------------------------------------------
+        # 🛡️ [일반 문장용 콜론 강제 분리 로직]
+        # 🚨 [최종 보완] 1:1 방어 및 기호(◆▶▷) 통과 로직 완벽 적용
+        # ---------------------------------------------------------
+        is_colon_split = False
+        forced_desc_html = ""
+        
         if (':' in line or '：' in line) and not re.search(r'<[^>]+>', line):
-            parts = re.split(r'[:：]', line, 1)
-            title_part = parts[0].strip()
-            desc_part = parts[1].strip()
-            line = title_part
-            # 🚨 [수정 1] 콜론 설명문: 굵기 600 -> 400, 색상 #000 -> #333333
-            forced_desc_html = f"<p style='font-size: 16px; font-weight: 400; line-height: 1.85; margin-top: 4px; margin-bottom: 14px; color: #333333; text-indent: 14px; text-align: justify;'>{desc_part}</p>"
-        else:
-            forced_desc_html = ""
+            # '1:1', '1 : 1' 등 숫자로 감싸진 콜론은 무시 (위계질서 파괴 방지)
+            # ◆, ▶, ▷ 기호로 시작하는 문장은 여기서 분리하지 않고 하단 전용 로직으로 넘김
+            if not re.search(r'\d\s*[:：]\s*\d', line) and not re.match(r'^(?:<[^>]+>)*\s*[◆▶▷]', line):
+                parts = re.split(r'[:：]', line, 1)
+                title_part = parts[0].strip()
+                desc_part = parts[1].strip()
+                line = title_part
+                forced_desc_html = f"<p style='font-size: 16px; font-weight: 400; line-height: 1.85; margin-top: 4px; margin-bottom: 14px; color: #333333; text-indent: 14px; text-align: justify;'>{desc_part}</p>"
+                is_colon_split = True
 
         # ---------------------------------------------------------
         # 👑 [위계질서 목차 구역]
@@ -205,33 +210,44 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(f"<div style='font-size: 17px; font-weight: 700; color: #34495E; margin-top: 16px; margin-bottom: 6px; padding-left: 8px;'>{clean_line}</div>")
             if forced_desc_html: html_lines.append(forced_desc_html)
 
-        elif re.match(r'^(?:<[^>]+>)*\s*◆\s*', line):
+        # ---------------------------------------------------------
+        # 💡 [기호 전용 분리 및 렌더링 구역 (◆, ▶, ▷)]
+        # ---------------------------------------------------------
+        elif re.match(r'^(?:<[^>]+>)*\s*[◆▶▷]', line):
             if in_list: html_lines.append("</div>"); in_list = False
-            clean_line = re.sub(r'^(?:<[^>]+>)*\s*◆\s*', '', line).replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 16px; font-weight: 800; color: #1A237E; margin-top: 14px; margin-bottom: 6px; padding-left: 12px;'><span style='margin-right: 6px;'>◆</span>{clean_line}</div>")
-            if forced_desc_html: html_lines.append(forced_desc_html)
-
-        elif re.match(r'^(?:<[^>]+>)*\s*▶\s*', line):
-            if in_list: html_lines.append("</div>"); in_list = False
-            clean_line = re.sub(r'^(?:<[^>]+>)*\s*▶\s*', '', line).replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 15.5px; font-weight: 800; color: #2C3E50; margin-top: 12px; margin-bottom: 6px; padding-left: 18px;'><span style='margin-right: 6px;'>▶</span>{clean_line}</div>")
-            if forced_desc_html: html_lines.append(forced_desc_html)
             
-        elif re.match(r'^(?:<[^>]+>)*\s*▷\s*', line):
-            if in_list: html_lines.append("</div>"); in_list = False
-            clean_line = re.sub(r'^(?:<[^>]+>)*\s*▷\s*', '', line).replace('#', '').strip()
-            html_lines.append(f"<div style='font-size: 15px; font-weight: 700; color: #455A64; margin-top: 10px; margin-bottom: 4px; padding-left: 24px;'><span style='margin-right: 6px;'>▷</span>{clean_line}</div>")
-            if forced_desc_html: html_lines.append(forced_desc_html)
+            symbol_match = re.search(r'([◆▶▷])', line)
+            symbol = symbol_match.group(1) if symbol_match else '▶'
+            
+            padding_left = "14px" if symbol == '◆' else ("18px" if symbol == '▶' else "24px")
+            desc_padding = str(int(padding_left.replace("px", "")) + 18) + "px"
+            
+            clean_line = re.sub(r'^(?:<[^>]+>)*\s*[◆▶▷]\s*', '', line).replace('#', '').strip()
+            
+            # 기호 문장 내 콜론 분리 (1:1 방어 동일 적용)
+            if (':' in clean_line or '：' in clean_line) and not re.search(r'\d\s*[:：]\s*\d', clean_line):
+                parts = re.split(r'[:：]', clean_line, 1)
+                title_part = parts[0].strip()
+                desc_part = parts[1].strip()
+                
+                html_lines.append(f"<div style='font-size: 15.5px; font-weight: 700; color: #2C3E50; margin-top: 12px; margin-bottom: 4px; padding-left: {padding_left};'><span style='margin-right: 6px;'>{symbol}</span>{title_part}:</div>")
+                
+                if desc_part:
+                    html_lines.append(f"<div style='font-size: 15.5px; font-weight: 400; color: #333333; line-height: 1.85; margin-bottom: 8px; padding-left: {desc_padding}; word-break: keep-all; text-align: justify;'>{desc_part}</div>")
+            else:
+                html_lines.append(f"<div style='font-size: 15.5px; font-weight: 400; color: #333333; line-height: 1.85; margin-top: 8px; margin-bottom: 8px; padding-left: {padding_left}; word-break: keep-all; text-align: justify;'><span style='margin-right: 6px;'>{symbol}</span>{clean_line}</div>")
 
         # ---------------------------------------------------------
-        # 💡 [일반 서술형 본문 - 폰트 강도 및 색상 최적화!]
+        # 💡 [일반 서술형 본문 구역]
         # ---------------------------------------------------------
         else:
             if in_list: html_lines.append("</div>"); in_list = False
             clean_line = line.replace('#', '').strip()
             
-            # 🚨 [수정 2] 일반 서술문: 굵기 600 -> 400 (부드럽게), 색상 #000 -> #333333 (눈편한 먹색)
             html_lines.append(f"<p style='font-size: 16px; font-weight: 400; line-height: 1.85; margin-top: 0px; margin-bottom: 14px; color: #333333; letter-spacing: -0.2px; text-indent: 14px; text-align: justify;'>{clean_line}</p>")
+            
+            if forced_desc_html: 
+                html_lines.append(forced_desc_html)
             
     if in_list:
         html_lines.append("</div>")
@@ -243,12 +259,13 @@ def format_ai_text_to_html(text, qna_text=""):
     if qna_text:
         clean_qna_body = qna_text.replace('💡', '').strip()
         qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
+        
+        # 🚨 [수정 완료] Q&A 박스 타이틀을 1단계 대목차 서식(20px, 900 굵기, 실선 밑줄)으로 완벽 격상
         qna_html = f"""
         <div style='background-color: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 24px; margin-top: 28px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);'>
-            <div style='font-size: 18px; font-weight: 900; color: #1A237E; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px dashed #CFD8DC;'>
+            <div style='font-size: 20px; font-weight: 900; color: #1A237E; margin-top: 0px; margin-bottom: 16px; border-bottom: 2px solid #E8EAF6; padding-bottom: 10px;'>
                 💡 사주박사 1:1 심층 솔루션 답변
             </div>
-            <!-- 🚨 [수정 3] QnA 본문: 굵기 600 -> 400, 색상 #000 -> #333333 -->
             <div style='font-size: 16px; font-weight: 400; line-height: 1.85; color: #333333; text-indent: 14px; text-align: justify;'>
                 {qna_body}
             </div>
