@@ -687,15 +687,18 @@ def get_closing_html(name):
         </div>
     </div>
     
-    <!-- 💌 고객 CRM 관리 및 통합 채널 유도 배너 -->
-    <div style='padding: 20px; background: #F4F6F9; border-left: 5px solid #3F51B5; border-radius: 8px; font-family: "Nanum Myeongjo", serif;'>
-        <b style='color:#1A237E; font-size: 16.5px; letter-spacing: -0.5px;'>💌 [사주박사의 1:1 애프터 서비스]</b><br>
-        <p style='font-size: 14.5px; font-weight: 500; color: #333333; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
-        {name}님, 이번 리포트에서는 사주 원국과 함께 남겨주신 고민의 핵심 원인과 타개 시기를 우선적으로 짚어드렸습니다. <br><br>
-        혹시 제 풀이를 읽고 더 깊은 이야기나 추가로 궁금한 점이 생기셨나요? 언제든 <b>💌 [사주박사의 1:1 애프터 서비스]</b>을 통해 편하게 상담해 주세요. 기존 신청자분들께는 '사주박사'가 직접 저렴하고 친절하게 1:1 추가 상담을 도와드리고 있습니다. 늘 응원합니다! 🙏
+    <!-- 💌 고객 CRM 관리 및 통합 채널 유도 배너 (좌측 세로줄 완전 제거판) -->
+    <div style='padding: 24px; background: #F8F9FA; border: 1.5px solid #E8EAF6; border-radius: 12px; font-family: "Nanum Myeongjo", serif; margin-top: 25px;'>
+        <div style='color:#1A237E; font-size: 18px; font-weight: 900; letter-spacing: -0.3px; margin-bottom: 12px;'>
+            💌 [사주박사의 1:1 애프터 서비스]
+        </div>
+        <p style='font-size: 16px; font-weight: 400; color: #333333; line-height: 1.85; margin: 0; text-indent: 14px; text-align: justify; word-break: keep-all;'>
+        {name}님, 이번 리포트에서는 사주 원국과 함께 남겨주신 고민의 핵심 원인과 타개 시기를 우선적으로 짚어드렸습니다.
+        </p>
+        <p style='font-size: 16px; font-weight: 400; color: #333333; line-height: 1.85; margin-top: 10px; margin-bottom: 0; text-indent: 14px; text-align: justify; word-break: keep-all;'>
+        혹시 제 풀이를 읽고 더 깊은 이야기나 추가로 궁금한 점이 생기셨나요? 언제든 <b style="color: #1A237E; font-weight: 800;">[사주박사의 1:1 애프터 서비스]</b>를 통해 편하게 상담해 주세요. 기존 신청자분들께는 '사주박사'가 직접 저렴하고 친절하게 1:1 추가 상담을 도와드리고 있습니다. 늘 응원합니다! 🙏
         </p>
     </div>
-    """
 
 def get_final_report_box(content_html):
     """A4 백지 캔버스(무선/무그림자) 안쪽 둥근 VIP 프레임 단일 래핑"""
