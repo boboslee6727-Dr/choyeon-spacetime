@@ -1227,7 +1227,7 @@ if st.session_state.get('app_running', False):
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')  # 🌟 본문 마커 소각
+            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
@@ -1236,7 +1236,7 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("2-"):
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')  # 🌟 본문 마커 소각
+            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')  
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
