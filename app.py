@@ -86,6 +86,27 @@ def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
+def call_gemini_api(prompt_text, max_tokens=6000, is_pro=False):
+    """
+    초연 시공명리 안전 제어 API 호출 함수
+    - 기본값(is_pro=False): 무조건 1원짜리 'Flash' 모델로 구동 (비용 폭탄 100% 방어)
+    - 승격시킬 때(is_pro=True): 퀄리티 테스트가 필요할 때만 수동으로 True로 켜서 Pro 모델 구동
+    """
+    sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
+    
+    # 🌟 안전 스위치: 평소에는 무조건 Flash, 원할 때만 Pro로 전환
+    target_model = 'gemini-2.5-pro' if is_pro else 'gemini-2.5-flash'
+    
+    # 문학적 깊이와 팩트 엄수의 황금 비율 온도(0.5) 적용
+    return get_ai_response(
+        sys_role=sys_role, 
+        prompt=prompt_text, 
+        model_name=target_model,
+        max_output_tokens=max_tokens,
+        temperature=0.5,
+        top_p=0.95
+    )
+
 def do_auto_fill_user():
     st.session_state['app_running'] = False
     u_ry = st.session_state.get("u_ry_rev", "").strip()
@@ -1193,7 +1214,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-2"):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+            master_comp = f"{part_1_fact}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-3"):
@@ -1201,7 +1222,7 @@ if st.session_state.get('app_running', False):
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+            master_comp = f"{part_1_fact}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-4"):
@@ -1216,7 +1237,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
+            master_comp = f"{part_1_fact}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("2-5"):
@@ -1247,7 +1268,7 @@ if st.session_state.get('app_running', False):
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
             formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            master_comp = f"{part_1_fact_gunghap}{part_2_intro}{formatted_ai}{part_5_closing}"
+            master_comp = f"{part_1_fact_gunghap}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("3-3"):
@@ -1256,7 +1277,7 @@ if st.session_state.get('app_running', False):
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
             formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            master_comp = f"{part_1_fact_gunghap}{part_2_intro}{formatted_ai}{part_5_closing}"
+            master_comp = f"{part_1_fact_gunghap}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         # =====================================================================
@@ -1304,26 +1325,3 @@ if st.session_state.get('app_running', False):
                     final_render_html = html_views.render_gunghap_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
                 else:
                     final_render_html = html_views.render_comparison_report(part_1_fact_gunghap, external_raw_box, full_ai_content)
-
-        if 'final_render_html' not in locals() or final_render_html is None:
-            final_render_html = ""
-
-        final_render_html = str(final_render_html).strip()
-        if final_render_html.startswith("</div>"):
-            final_render_html = final_render_html[6:].strip()
-
-        final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
-
-        global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
-        safe_cover_str = re.sub(r'\n\s+', '\n', cover_html) if 'cover_html' in locals() and cover_html else ""
-        
-        # 🌟 CSS + 표지 + 본문 개행 안전 결합
-        final_render_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
-
-        if is_admin_mode:
-            gid = st.session_state['admin_proc_id']
-            st.session_state[f'html_{gid}'] = final_render_html
-            st.session_state['app_running'] = False
-            st.rerun()
-        else:
-            st.markdown(final_render_html, unsafe_allow_html=True)
