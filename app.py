@@ -1412,5 +1412,3 @@ if st.session_state.get('app_running', False):
         else:
             # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(final_render_html, unsafe_allow_html=True)
-
-
