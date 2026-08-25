@@ -1219,9 +1219,18 @@ if st.session_state.get('app_running', False):
             if "2-2" in u_prod: return "프롬프트_2_2_직업운"
             if "2-3" in u_prod: return "프롬프트_2_3_연애운"
             if "2-4" in u_prod: return "프롬프트_2_4_건강운"
-            # 💡 [핵심] prompts.py 파일 안에 있는 택일 프롬프트 변수명이 정확히 아래의 이름과 같은지 확인하십시오!
-            if "2-5" in u_prod: return "프롬프트_2_5_이사개업택일" 
+            # 🚨 [투트랙 분기 적용 완료] tackil_purpose 변수에 따라 프롬프트를 완벽히 분리 호출합니다.
+            if "2-5" in u_prod: 
+                if st.session_state.get('tackil_purpose', '이사') == '개업':
+                    return "프롬프트_2_5_개업_택일"
+                else:
+                    return "프롬프트_2_5_이사_택일"
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
+            if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
+            if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
+            if "4-1" in u_prod: return "프롬프트_4_1_사주대조"
+            if "4-2" in u_prod: return "프롬프트_4_2_궁합대조"
+            return "프롬프트_1_1_기본"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
             if "4-1" in u_prod: return "프롬프트_4_1_사주대조"
@@ -1284,6 +1293,24 @@ if st.session_state.get('app_running', False):
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
+        # -------------------------------------------------------------
+        # 🚨 [논리 수정 완료: 특수 조건인 2-5가 반드시 먼저 와야 합니다]
+        # -------------------------------------------------------------
+        elif u_product.startswith("2-5"):
+            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
+            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+            wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+            
+            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            
+            master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
+            final_render_html = html_views.get_final_report_box(master_comp)
+
+        # -------------------------------------------------------------
+        # 그 외 나머지 일반 2번 상품들 (2-1 ~ 2-4)
+        # -------------------------------------------------------------
         elif u_product.startswith("2-"):
             daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
