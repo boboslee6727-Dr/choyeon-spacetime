@@ -562,7 +562,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
     """
 
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
-    """1-4 일운 및 택일 분석 전용 주간 달력 HTML (방어 코드 및 정밀 렌더링 완결판)"""
+    """1-4 일운 및 택일 분석 전용 주간 달력 HTML (중복 제거 및 KeyError 방어 완결판)"""
     import engine
     content = ""
 
@@ -578,7 +578,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         gan_cls = engine.get_oh_class(gan_char)
         ji_cls = engine.get_oh_class(ji_char)
         
-        # 십성 및 12운성/신살 매핑 (데이터셋 기반 + 엔진 실시간 보정)
+        # 십성 및 12운성/신살 매핑 (데이터셋 기반 + 실시간 방어)
         ss_val = item.get('ss_ji', '-')
         unsung_val = item.get('un_sung', '-')
         y_shinsal_val, d_shinsal_val = "-", "-"
@@ -597,7 +597,7 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         d_val = f"<span style='color:#C62828;'>({clean_d_w})</span>" if clean_d_w and clean_d_w != "-" else "<span style='color:#C62828;'>(-)</span>"
         u_val = f"<span style='color:#0D47A1;'>{unsung_val}</span>" if unsung_val != "-" else "-"
             
-        # 요일별 및 오늘 날짜 스타일 분기
+        # 요일별 및 당일 강조 스타일 분기
         if is_today:
             active_style = "border: 3px solid #2E7D32 !important;"
             header_bg = "#2E7D32"
@@ -635,7 +635,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None)
         {content}
     </div>
     """
-
 
 # ==============================================================================
 # 📦 섹션 3. 1인용 개인 사주 및 운세 상품군 (상품 1-1 ~ 2-5 활성 모듈)
@@ -711,7 +710,6 @@ def get_final_report_box(content_html):
         </div>
     </div>
     """
-
 
 # ==============================================================================
 # 📦 섹션 4. 2인용 궁합 및 커플 상품군 (상품 3-1 활성 모듈)
