@@ -82,20 +82,9 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
             if attempt < max_retries: time.sleep(1); continue
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
-def call_gemini_api(prompt_text, max_tokens=6000, is_pro=False):
-    """
-    초연 시공명리 안전 제어 API 호출 함수 (파라미터 충돌 방지 완결판)
-    """
+def call_gemini_api(prompt_text, max_tokens=6000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
-    
-    target_model = 'gemini-2.5-pro' if is_pro else 'gemini-2.5-flash'
-    
-    # 🌟 @st.cache_data가 걸려있는 get_ai_response 함수에 불필요한 인자 충격을 주지 않도록 기본 형태 유지
-    try:
-        return get_ai_response(sys_role, prompt_text, model_name=target_model)
-    except TypeError:
-        # 혹시 기존 get_ai_response가 max_tokens 등을 지원하지 않는 경우를 대비한 안전 방어
-        return get_ai_response(sys_role, prompt_text)
+    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
 def do_auto_fill_user():
     st.session_state['app_running'] = False
