@@ -939,11 +939,21 @@ if st.session_state.get('app_running', False):
         closing_html = html_views.get_closing_html(name)            
         closing_part = str(closing_html or "").strip()
 
-        part_1_fact = str(info_h or "") + str(table_html or "") + str(master_bar_html or "")
+        # 🌟 1. [1인용 표준 팩트] 단일 대제목 + 신상정보 + 사주원국 + 마스터바 + 대운표
+        main_title_html = f"<div style='font-family:\"Nanum Myeongjo\", serif; font-size:24px; font-weight:900; color:#1A237E; text-align:center; margin-top:10px; margin-bottom:18px; border-bottom:3px solid #1A237E; padding-bottom:10px;'>[ {report_title} ]</div>"
+
+        part_1_fact = (
+            str(main_title_html or "") + 
+            str(info_h or "") + 
+            str(table_html or "") + 
+            str(master_bar_html or "") + 
+            str(un_html or "")
+        )
         part_2_intro = str(intro_html or "")
         part_3_golden = str(golden_text_html or "")
         part_5_closing = str(closing_part or "")
 
+        # 🌟 2. [2인용 예외 팩트] 3- 상품군 및 4-2 전용 (남명 1장 대제목/원국/대운 ➔ 여명 1장 분할)
         part_1_fact_gunghap = part_1_fact
         if is_2person:
             u_full = str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + str(un_html or "")
@@ -954,8 +964,7 @@ if st.session_state.get('app_running', False):
             if hasattr(html_views, 'get_couple_fact_split_layout'):
                 part_1_fact_gunghap = html_views.get_couple_fact_split_layout(male_block, female_block)
             else:
-                part_1_fact_gunghap = f"{male_block}<br>{female_block}"
-
+                part_1_fact_gunghap = f"{male_block}<div class='page-break'></div>{female_block}"
         won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
         won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
         if not won_guk_vaults_str: won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
@@ -1175,9 +1184,8 @@ if st.session_state.get('app_running', False):
             return re.sub(pattern, table_code, text, flags=re.IGNORECASE)
 
         if u_product.startswith("1-1"):
-            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')  # 🌟 상단 part_1_fact에 이미 있으므로 본문 마커는 소각
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
@@ -1189,8 +1197,10 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-3"):
+            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'WOLUN_TABLE_HERE', wolun_table_code)
+            formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
@@ -1210,7 +1220,6 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("2-5"):
-            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             
@@ -1218,7 +1227,7 @@ if st.session_state.get('app_running', False):
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')  # 🌟 본문 마커 소각
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
@@ -1227,8 +1236,7 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("2-"):
-            daewun_table_code = un_html if 'un_html' in locals() and un_html else ""
-            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', daewun_table_code)
+            formatted_ai = sub_marker(ai_output_html, 'DAEWUN_TABLE_HERE', '')  # 🌟 본문 마커 소각
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
             master_comp = f"{part_1_fact}{formatted_ai}{part_5_closing}"
             final_render_html = html_views.get_final_report_box(master_comp)
