@@ -691,6 +691,46 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
 
+def get_daeun_su_accurate(utc_dt, order):
+    try:
+        sun = ephem.Sun()
+        def get_lon(dt):
+            sun.compute(dt)
+            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+
+        start_lon = get_lon(utc_dt)
+        jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
+        
+        if order == 1:
+            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
+        else:
+            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
+            
+        search_dt = utc_dt
+        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
+        
+        for _ in range(6000):
+            search_dt += step
+            curr_lon = get_lon(search_dt)
+            
+            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180:
+                curr_lon += 360
+            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180:
+                curr_lon -= 360
+                
+            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped):
+                break
+                
+        total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
+        d_su = int(round(total_days / 3.0))
+        
+        if d_su == 0: d_su = 1
+        elif d_su > 10: d_su = 10
+        
+        return d_su
+    except: 
+        return 1
+
 def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
     daewun_list = []
     c_idx = GAN.index(ms) % 10 if ms in GAN else 0
@@ -752,57 +792,6 @@ def get_daeun_fact_string(daewun_data_list):
         fact_str += f"- {age_range} 대운 ({ganji}): 주요 기운({ss})\n"
     return fact_str
 
-
-# ==============================================================================
-# [신규 장착] 1-4 주간 운세 전용: 7일간 주간 캘린더 정밀 데이터셋 산출 엔진
-# ==============================================================================
-def get_weekly_calendar_data(target_date, ds_hanja):
-    """
-    지정된 날짜(target_date)가 속한 주간(일요일~토요일 7일간)의
-    일진 간지, 일간 기준 천간/지지 십신, 12운성, 12신살 데이터를 패키징하여 반환합니다.
-    """
-    ds_h = _to_hanja(ds_hanja)
-    calendar_list = []
-    
-    # target_date 기준 해당 주의 일요일(시작일) 계산
-    # target_date.weekday() : 월(0), 화(1), ..., 토(5), 일(6)
-    days_from_sunday = (target_date.weekday() + 1) % 7
-    start_sunday = target_date - dt_mod.timedelta(days=days_from_sunday)
-    
-    weekday_kor = ["일", "월", "화", "수", "목", "금", "토"]
-    
-    for i in range(7):
-        curr_dt = start_sunday + dt_mod.timedelta(days=i)
-        try:
-            _, _, d_pillar = get_ganji_from_date(curr_dt.year, curr_dt.month, curr_dt.day)
-            c_gan = d_pillar[0] if len(d_pillar) > 0 else "甲"
-            c_ji = d_pillar[1] if len(d_pillar) > 1 else "子"
-        except Exception:
-            c_gan, c_ji = "甲", "子"
-            
-        c_gan_h = _to_hanja(c_gan)
-        c_ji_h = _to_hanja(c_ji)
-        
-        ss_gan = get_ss(ds_h, c_gan_h)
-        ss_ji = get_ss(ds_h, c_ji_h)
-        unsung_val = get_unsung(ds_h, c_ji_h)
-        
-        calendar_list.append({
-            "date": curr_dt,
-            "year": curr_dt.year,
-            "month": curr_dt.month,
-            "day": curr_dt.day,
-            "weekday": weekday_kor[i],
-            "gan": c_gan_h,
-            "ji": c_ji_h,
-            "ganji_str": f"{c_gan_h}{c_ji_h}",
-            "ss_gan": ss_gan,
-            "ss_ji": ss_ji,
-            "un_sung": unsung_val,
-            "is_target_day": (curr_dt == target_date)
-        })
-        
-    return calendar_list
 
 # ==============================================================================
 # 섹션 4. 특수 파동 및 묘고 정밀 연산 로직
@@ -1106,37 +1095,6 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "woonse_fact_str": woonse_fact_str.strip()
     }
 
-
-def get_weekly_daily_facts(ds, db, yb, year, month, day):
-    target_dt = dt_mod.datetime(year, month, day)
-    _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
-    i_gan, i_ji = d_pillar[0], d_pillar[1]
-    
-    day_wunseong = get_unsung(ds, i_ji)
-    day_12shinsal = get_dual_12_shinsal(yb, db, i_ji)
-    
-    ilju_lower_group = get_group_ss(get_ss(ds, db))
-    i_gan_group = get_group_ss(get_ss(ds, i_gan))
-    
-    m_che_first = i_gan_group
-    am_yong = get_execution_yong(i_gan_group, ilju_lower_group)
-    m_che_second = get_group_ss(get_ss(ds, i_ji))
-    pm_yong = get_execution_yong(m_che_second, ilju_lower_group)
-    
-    weekly_ganji = []
-    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
-    for i in range(7):
-        curr = start_sun + dt_mod.timedelta(days=i)
-        _, _, dp = get_ganji_from_date(curr.year, curr.month, curr.day)
-        weekly_ganji.append(f"{dp[0]}{dp[1]}")
-        
-    return {
-        "m_che_first": m_che_first, "am_yong": am_yong,
-        "m_che_second": m_che_second, "pm_yong": pm_yong,
-        "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
-        "weekly_ganji_list": ", ".join(weekly_ganji)
-    }
-
 def get_dw_fact_str(dw_g, dw_j):
     return f"천간 {dw_g}의 기운이 지지 {dw_j}의 환경을 만난 형국 (체용의 상호작용)"
 
@@ -1277,46 +1235,88 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
     fact_data.update(kwargs)
     return fact_data
 
-def get_daeun_su_accurate(utc_dt, order):
-    try:
-        sun = ephem.Sun()
-        def get_lon(dt):
-            sun.compute(dt)
-            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
-
-        start_lon = get_lon(utc_dt)
-        jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
-        
-        if order == 1:
-            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
-        else:
-            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
+# ==============================================================================
+# [신규 장착] 1-4 주간 운세 전용: 7일간 주간 캘린더 정밀 데이터셋 산출 엔진
+# ==============================================================================
+def get_weekly_calendar_data(target_date, ds_hanja):
+    """
+    지정된 날짜(target_date)가 속한 주간(일요일~토요일 7일간)의
+    일진 간지, 일간 기준 천간/지지 십신, 12운성, 12신살 데이터를 패키징하여 반환합니다.
+    """
+    ds_h = _to_hanja(ds_hanja)
+    calendar_list = []
+    
+    # target_date 기준 해당 주의 일요일(시작일) 계산
+    # target_date.weekday() : 월(0), 화(1), ..., 토(5), 일(6)
+    days_from_sunday = (target_date.weekday() + 1) % 7
+    start_sunday = target_date - dt_mod.timedelta(days=days_from_sunday)
+    
+    weekday_kor = ["일", "월", "화", "수", "목", "금", "토"]
+    
+    for i in range(7):
+        curr_dt = start_sunday + dt_mod.timedelta(days=i)
+        try:
+            _, _, d_pillar = get_ganji_from_date(curr_dt.year, curr_dt.month, curr_dt.day)
+            c_gan = d_pillar[0] if len(d_pillar) > 0 else "甲"
+            c_ji = d_pillar[1] if len(d_pillar) > 1 else "子"
+        except Exception:
+            c_gan, c_ji = "甲", "子"
             
-        search_dt = utc_dt
-        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
+        c_gan_h = _to_hanja(c_gan)
+        c_ji_h = _to_hanja(c_ji)
         
-        for _ in range(6000):
-            search_dt += step
-            curr_lon = get_lon(search_dt)
-            
-            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180:
-                curr_lon += 360
-            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180:
-                curr_lon -= 360
-                
-            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped):
-                break
-                
-        total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
-        d_su = int(round(total_days / 3.0))
+        ss_gan = get_ss(ds_h, c_gan_h)
+        ss_ji = get_ss(ds_h, c_ji_h)
+        unsung_val = get_unsung(ds_h, c_ji_h)
         
-        if d_su == 0: d_su = 1
-        elif d_su > 10: d_su = 10
+        calendar_list.append({
+            "date": curr_dt,
+            "year": curr_dt.year,
+            "month": curr_dt.month,
+            "day": curr_dt.day,
+            "weekday": weekday_kor[i],
+            "gan": c_gan_h,
+            "ji": c_ji_h,
+            "ganji": f"{c_gan_h}{c_ji_h}",
+            "ganji_str": f"{c_gan_h}{c_ji_h}",
+            "ss_gan": ss_gan,
+            "ss_ji": ss_ji,
+            "un_sung": unsung_val,
+            "is_today": (curr_dt == target_date),
+            "is_target_day": (curr_dt == target_date)
+        })
         
-        return d_su
-    except: 
-        return 1
+    return calendar_list
 
+def get_weekly_daily_facts(ds, db, yb, year, month, day):
+    target_dt = dt_mod.datetime(year, month, day)
+    _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
+    i_gan, i_ji = d_pillar[0], d_pillar[1]
+    
+    day_wunseong = get_unsung(ds, i_ji)
+    day_12shinsal = get_dual_12_shinsal(yb, db, i_ji)
+    
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    i_gan_group = get_group_ss(get_ss(ds, i_gan))
+    
+    m_che_first = i_gan_group
+    am_yong = get_execution_yong(i_gan_group, ilju_lower_group)
+    m_che_second = get_group_ss(get_ss(ds, i_ji))
+    pm_yong = get_execution_yong(m_che_second, ilju_lower_group)
+    
+    weekly_ganji = []
+    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
+    for i in range(7):
+        curr = start_sun + dt_mod.timedelta(days=i)
+        _, _, dp = get_ganji_from_date(curr.year, curr.month, curr.day)
+        weekly_ganji.append(f"{dp[0]}{dp[1]}")
+        
+    return {
+        "m_che_first": m_che_first, "am_yong": am_yong,
+        "m_che_second": m_che_second, "pm_yong": pm_yong,
+        "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
+        "weekly_ganji_list": ", ".join(weekly_ganji)
+    }
 
 # ==============================================================================
 # 섹션 6. 궁합, 택일 및 초연 시공명리 특수 파동 통합 모듈 (활성 구역)
