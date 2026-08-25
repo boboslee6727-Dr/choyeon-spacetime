@@ -1218,6 +1218,7 @@ if st.session_state.get('app_running', False):
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
             "best_moving_days_str": best_moving_days_str,  # 🚨 [신규 엔진 변수 100% 탑재 완료]
             "other_reading_text": user_entered_text, "other_report": user_entered_text,
+            "user_concern": st.session_state.get('user_concern', '오늘 하루의 운과 이번 주의 주요 변곡점을 알고 싶습니다.'),
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
         }
