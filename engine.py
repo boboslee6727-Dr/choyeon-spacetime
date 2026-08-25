@@ -754,6 +754,57 @@ def get_daeun_fact_string(daewun_data_list):
 
 
 # ==============================================================================
+# [신규 장착] 1-4 주간 운세 전용: 7일간 주간 캘린더 정밀 데이터셋 산출 엔진
+# ==============================================================================
+def get_weekly_calendar_data(target_date, ds_hanja):
+    """
+    지정된 날짜(target_date)가 속한 주간(일요일~토요일 7일간)의
+    일진 간지, 일간 기준 천간/지지 십신, 12운성, 12신살 데이터를 패키징하여 반환합니다.
+    """
+    ds_h = _to_hanja(ds_hanja)
+    calendar_list = []
+    
+    # target_date 기준 해당 주의 일요일(시작일) 계산
+    # target_date.weekday() : 월(0), 화(1), ..., 토(5), 일(6)
+    days_from_sunday = (target_date.weekday() + 1) % 7
+    start_sunday = target_date - dt_mod.timedelta(days=days_from_sunday)
+    
+    weekday_kor = ["일", "월", "화", "수", "목", "금", "토"]
+    
+    for i in range(7):
+        curr_dt = start_sunday + dt_mod.timedelta(days=i)
+        try:
+            _, _, d_pillar = get_ganji_from_date(curr_dt.year, curr_dt.month, curr_dt.day)
+            c_gan = d_pillar[0] if len(d_pillar) > 0 else "甲"
+            c_ji = d_pillar[1] if len(d_pillar) > 1 else "子"
+        except Exception:
+            c_gan, c_ji = "甲", "子"
+            
+        c_gan_h = _to_hanja(c_gan)
+        c_ji_h = _to_hanja(c_ji)
+        
+        ss_gan = get_ss(ds_h, c_gan_h)
+        ss_ji = get_ss(ds_h, c_ji_h)
+        unsung_val = get_unsung(ds_h, c_ji_h)
+        
+        calendar_list.append({
+            "date": curr_dt,
+            "year": curr_dt.year,
+            "month": curr_dt.month,
+            "day": curr_dt.day,
+            "weekday": weekday_kor[i],
+            "gan": c_gan_h,
+            "ji": c_ji_h,
+            "ganji_str": f"{c_gan_h}{c_ji_h}",
+            "ss_gan": ss_gan,
+            "ss_ji": ss_ji,
+            "un_sung": unsung_val,
+            "is_target_day": (curr_dt == target_date)
+        })
+        
+    return calendar_list
+
+# ==============================================================================
 # 섹션 4. 특수 파동 및 묘고 정밀 연산 로직
 # ==============================================================================
 def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
@@ -1054,6 +1105,7 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "ilun_che": ilun_che, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
         "woonse_fact_str": woonse_fact_str.strip()
     }
+
 
 def get_weekly_daily_facts(ds, db, yb, year, month, day):
     target_dt = dt_mod.datetime(year, month, day)
