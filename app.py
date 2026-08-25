@@ -1287,12 +1287,14 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-4"):
+            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+            wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
-            formatted_ai = sub_marker(ai_output_html, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            master_comp = f"{part_1_fact}{part_2_intro}{part_3_golden}{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
 
+            formatted_ai = sub_marker(ai_output_html, 'SEWUN_TABLE_HERE', sewun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
         # -------------------------------------------------------------
         # 🚨 [논리 수정 완료: 특수 조건인 2-5가 반드시 먼저 와야 합니다]
         # -------------------------------------------------------------
