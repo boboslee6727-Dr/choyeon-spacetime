@@ -82,7 +82,7 @@ def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash'):
             if attempt < max_retries: time.sleep(1); continue
             return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
 
-def call_gemini_api(prompt_text, max_tokens=6000):
+def call_gemini_api(prompt_text, max_tokens=8000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash')
 
