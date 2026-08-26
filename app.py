@@ -1084,8 +1084,8 @@ if st.session_state.get('need_calc', False):
             curr_y_ganji = GAN[base_y_idx % 10] + JI[base_y_idx % 12]
             time_str = f" {u_t.split('(')[0].strip()} ({hb})시" if u_t != "시간 모름" else ""
             
-            def td(c, size="18px"): return f"<td class='color-{get_color(c)}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'>{('?' if c in ['?',' ','-'] else c)}</td>"
-            
+            def td(c, size="26px"): 
+                return f"<td style='border:1px solid #444 !important; padding:2px !important; text-align:center; vertical-align:middle; width:21.25%;'><span class='color-{get_color(c)}' style='display:inline-block; width:100%; font-size:{size} !important; font-weight:900 !important; line-height:1.2 !important;'>{('?' if c in ['?',' ','-'] else c)}</span></td>"            
             disp_name = u_name if u_name.strip() else "홍길동"
             p_icon = "♂️" if u_gender == "남성" else "♀️"
             p_color = "#1A237E" if u_gender == "남성" else "#D50000"
@@ -1101,7 +1101,10 @@ if st.session_state.get('need_calc', False):
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 class='title-gothic' style='font-size: 52px !important; margin:0 !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
+                        
+                        # 🚨 [수술 포인트] h1 태그를 버리고 div로 교체하여 60px 강제 적용!!
+                        f"            <div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 60px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: 1px; word-break: keep-all; line-height: 1.3;'>초연 시공명리 사주팔자 풀이</div>\n"
+                        
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
                         f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                         f"            </div>\n"
@@ -1117,7 +1120,7 @@ if st.session_state.get('need_calc', False):
                         f"        <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
                         f"    </div>\n"
                         f"</div>"
-                    )
+                )
                 st.session_state['saved_report_cover'] = cover_html
 
                 # 🚨 [2. 사주 원국표 생성]
@@ -1527,6 +1530,8 @@ if st.session_state.get('need_calc', False):
 11. 🚨 [결핍 오행(無字)의 대체 생존 전략 명시]: 사주 원국에 특정 오행이나 십성(예: 식상, 관성 등)이 아예 없는 결핍 상태인 경우, 단순히 '~가 없다'고 단정 짓거나 뭉뚱그리지 마십시오. 해당 기운의 부재가 행동 패턴에 미치는 영향을 명시하고, "식상이 없기 때문에 외부로 자신을 표출하기보다는, 본인 사주의 가장 강한 인성(印星)을 무기 삼아 끈기와 성실함으로 성취를 이루는 전략을 쓴다"는 식으로 결핍을 극복하기 위한 '대체 생존 전략'을 논리적으로 서술하십시오.
 12. 🚨 [전통 신살 및 12운성의 전략적 앵커링]: 내담자의 특수한 성향(종교적, 예술적, 특정 직업군 등)이나 현상을 설명할 때, 막연한 심리 분석으로 바로 들어가지 마십시오. 원국에 존재하는 '천문성(天文星)', '목욕지(沐浴地)', '백호살' 등의 구체적인 고전 명리 키워드를 먼저 '앵커(닻)'처럼 명시하십시오. 그 후 "이는 현대 심리학적 관점에서 ~한 에너지로 발현됩니다"라고 재해석하여, 전문적 지식과 심리적 깊이를 동시에 충족시키십시오.
 13. 🚨 [단편적 해석과 구조적 해석의 비교 화법]: 특정 흉사나 삶의 갈등(예: 배우자 불화, 금전 손실 등)을 분석할 때, "전통 명리에서는 이를 단순히 ~살이나 ~지의 작용으로 보기도 하나, 시공명리의 관점에서는 보다 근본적인 원인을 ~한 구조적 공망과 시공간의 역동성에서 찾습니다"라는 화법을 구사하십시오. 이를 통해 단편적인 현상 위주의 해석을 넘어, 내담자에게 삶의 근본적인 원인과 구조적 맥락을 객관적이고 담담하게 설명하십시오.
+14. 🚨 [앵무새 반복 서술 절대 금지]: '월지 공망'이나 특정 '형충파해' 같은 명리적 원인을 매 문단마다 기계적으로 반복해서 언급하지 마십시오. 원인은 초반에 한두 번만 짚어주고, 이후에는 그로 인해 파생되는 현상과 현실적 조언 위주로 문장을 다채롭게 전개하십시오.
+15. 🚨 [HTML 오타 엄중 경고]: HTML 태그 작성 시 절대로 오타(예: classt)를 내지 마십시오. 제공된 <span class='sub-title'...> 양식을 토씨 하나 틀리지 말고 그대로 복사해서 사용하십시오.
 
 [문단 통제 명령 ]
 1. 모든 통변 에세이 문장은 반드시 <p style='text-indent: 1em;'> 태그로 감싸십시오.
