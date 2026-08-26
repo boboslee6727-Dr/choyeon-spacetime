@@ -1102,8 +1102,8 @@ if st.session_state.get('need_calc', False):
                         f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
                         
-                        # 🚨 [수술 포인트] h1 태그를 버리고 div로 교체하여 60px 강제 적용!!
-                        f"            <div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 60px !important; font-weight: 900 !important; margin: 0 !important; color: #111111; letter-spacing: 1px; word-break: keep-all; line-height: 1.3;'>초연 시공명리 사주팔자 풀이</div>\n"
+                        # 🚨 [원상복구 & 확대!!] h1 태그와 title-gothic 클래스 부활!! 크기만 56px로 빵빵하게!!
+                        f"            <h1 class='title-gothic' style='font-size: 56px !important; margin:0 !important; line-height: 1.3 !important; word-break: keep-all !important;'>초연 시공명리 사주팔자 풀이</h1>\n"
                         
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
                         f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
@@ -1120,7 +1120,7 @@ if st.session_state.get('need_calc', False):
                         f"        <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
                         f"    </div>\n"
                         f"</div>"
-                )
+                    )
                 st.session_state['saved_report_cover'] = cover_html
 
                 # 🚨 [2. 사주 원국표 생성]
