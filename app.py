@@ -1853,7 +1853,10 @@ if st.session_state.get('need_calc', False):
                             f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                             f"    <div style='border: 4px solid #2E7D32; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                             f"        <div style='border-bottom:4px double #2E7D32; padding-bottom:20px; margin-bottom:40px;'>\n"
-                            f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 타 감명서 비교</h1>\n"
+                            
+                            # 🚨 [비교 감명서 간판 56px 웅장하게 확대!!]
+                            f"            <h1 class='title-gothic' style='font-size: 56px !important; margin:0 !important; line-height: 1.3 !important; word-break: keep-all !important;'>초연 시공명리 타 감명서 비교</h1>\n"
+                            
                             f"            <div style='text-align: right; margin-top: 10px;'>\n"
                             f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                             f"            </div>\n"
@@ -1868,7 +1871,8 @@ if st.session_state.get('need_calc', False):
                             f"        <p style='font-size: 22px; font-weight: 800; color: #2E7D32; margin-top: 20px;'>초연 시공명리 연구소</p>\n"
                             f"    </div>\n"
                             f"</div>"
-                        )
+                    )
+                    
                     st.session_state['saved_report_2'] = other_cover_html + report_2_html + f"<div class='page-break-before'></div><div class='report-page'><div class='vip-inset-frame' style='border-color:#2E7D32;'><h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 800; border-bottom:2px solid #2E7D32; padding-bottom:15px;'>⚖️ 1:1 상세비교 본문 리포트</h1><div style='margin-top:20px;'>{c_res}</div></div></div>"
 
                 except Exception as e:
@@ -2147,7 +2151,10 @@ if st.session_state.get('need_calc', False):
                         f"<div class='report-page cover-page' style='padding:0; margin:0; width:100%; height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; -webkit-print-color-adjust: exact;'>\n"
                         f"    <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 80%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto;'>\n"
                         f"        <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>\n"
-                        f"            <h1 class='title-gothic' style='font-size: 40px !important; margin:0 !important;'>초연 시공명리 궁합풀이</h1>\n"
+                        
+                        # 🚨 [궁합풀이 간판 56px 웅장하게 확대!!]
+                        f"            <h1 class='title-gothic' style='font-size: 56px !important; margin:0 !important; line-height: 1.3 !important; word-break: keep-all !important;'>초연 시공명리 궁합풀이</h1>\n"
+                        
                         f"            <div style='text-align: right; margin-top: 10px;'>\n"
                         f"                <span class='ver-gothic' style='font-size: 14px; letter-spacing: 1px;'>{APP_VERSION}</span>\n"
                         f"            </div>\n"
