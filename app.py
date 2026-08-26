@@ -1297,7 +1297,7 @@ if st.session_state.get('need_calc', False):
                 metal_cnt = counts.get('금', 0)
                 water_cnt = counts.get('수', 0)
 
-                if u_product == "1-1. 사주팔자와 운세풀이 (기본)":
+                if u_product == "1-1. 사주팔자와 운세풀이":
                     prompt = f"""
 {db_header}
 {ilju_master_prompt_context}
