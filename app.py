@@ -580,7 +580,6 @@ with st.sidebar:
     if main_category == "1. 개인 사주팔자 풀이 (종합)":
         u_product = st.radio("상세 분석 항목:", ["1-1. 사주팔자와 운세풀이", "1-2. 올해 및 특정연도 운세 상세분석", "1-3. 이번달 및 특정월 운세 상세분석", "1-4. 특정 주간 및 특정일운 상세분석"], key="sub_cat_1")
         
-        # [신설] 1-2 선택 시 특정 연도를 직접 지정하는 사이드바 입력창
         if u_product == "1-2. 올해 및 특정연도 운세 상세분석":
             curr_yr_val = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).year
             st.number_input("📅 분석할 특정 연도 (기본값: 올해)", min_value=1900, max_value=2050, value=curr_yr_val, key="target_year_input")
@@ -895,7 +894,6 @@ if st.session_state.get('need_calc', False):
             )
             st.session_state['saved_report_cover'] = cover_html
 
-            # [상품별 리포트 메인 타이틀 분기문 배치]
             if u_product == "1-1. 사주팔자와 운세풀이":
                 report_title = "🎯 사주팔자와 운세풀이"
             elif u_product == "1-2. 올해 및 특정연도 운세 상세분석":
@@ -1023,7 +1021,7 @@ if st.session_state.get('need_calc', False):
             for char in gans + jjis:
                 if char != "?": counts[get_color(char)] += 1
             
-            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+            guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'午寅','壬':'卯巳','癸':'卯, 巳'}
             guiin_str = guiin_map.get(ds, '없음')
             direction_str = "순행" if order == 1 else "역행"
             n_gong = calculate_gongmang(ys, yb)
@@ -1031,7 +1029,7 @@ if st.session_state.get('need_calc', False):
             
             gongmang_targets = n_gong.split(',') + i_gong.split(',')
             gongmang_hits = []
-            if yb in gongmang_tㅍㄷargets: gongmang_hits.append(f"년지({yb})")
+            if yb in gongmang_targets: gongmang_hits.append(f"년지({yb})")
             if mb in gongmang_targets: gongmang_hits.append(f"월지({mb})")
             if db in gongmang_targets: gongmang_hits.append(f"일지({db})")
             if hb in gongmang_targets: gongmang_hits.append(f"시지({hb})")
@@ -1299,12 +1297,6 @@ if st.session_state.get('need_calc', False):
                 metal_cnt = counts.get('금', 0)
                 water_cnt = counts.get('수', 0)
 
-                # ----------------------------------------------------------
-                # 1) [1-1. 사주팔자와 운세풀이 (기본)] : 용어 배제 & 거두절미 팩트 에세이
-                # ----------------------------------------------------------
-                # ----------------------------------------------------------
-                # 1) [1-1. 사주팔자와 운세풀이 (기본)] : 명리용어/강조어 ' ' 진한 글씨 표기 적용
-                # ----------------------------------------------------------
                 if u_product == "1-1. 사주팔자와 운세풀이 (기본)":
                     prompt = f"""
 {db_header}
@@ -1361,7 +1353,7 @@ if st.session_state.get('need_calc', False):
 
 <h3 style='color:#1A237E; font-size: 24px; font-weight: 900;'>3. 현재 대운 및 세운 흐름 분석</h3>
 <div class='content-box-loose'>
-<p style='text-indent: 1em;'><b>'대운'(大運)의 명리학적 의미:</b> 명리학에서 **'대운'**이란 흔히 생각하는 대통할 운이 아니라, 10년 단위로 바뀌는 내 삶의 **'거대한 계절과 환경의 변화'**를 의미합니다. 원국이라는 자동차가 어떤 도로 환경을 달리고 있는지를 보여주는 나침반입니다.</p>
+<p style='text-indent: 1em;'><b>'대운'(大運)의 명리학적 의미:</b> 명리학에서 **'대운'**이란 흔히 생각하는 대통할 운이 아니라, 10년 단위로 바뀌는 내 삶의 <b>'거대한 계절과 환경의 변화'</b>를 의미합니다. 원국이라는 자동차가 어떤 도로 환경을 달리고 있는지를 보여주는 나침반입니다.</p>
 
 <span class='sub-title' style='font-size: 20px; font-weight: 900; color: #111;'>1) 대운의 흐름 분석</span>
 [DAEWUN_TABLE_HERE]
@@ -1403,9 +1395,6 @@ if st.session_state.get('need_calc', False):
 <p style='font-size: 15px; font-weight: 600; color: #333; margin-top: 5px; margin-bottom: 0; line-height: 1.7;'>본 풀이는 사주 원국의 본질과 현재 운의 큰 흐름을 짚어드린 기본 감명입니다. 특정 연도별·월별 정밀한 세부 흐름은 <b>'올해 및 특정연도 운세 상세분석'</b>을, 재물·직업 등 특정 분야의 집중 상담은 <b>'테마별 특성화 상담'</b>을 통해 확인하실 수 있습니다.</p>
 </div>
 """
-                # ----------------------------------------------------------
-                # 2) [1-2. 올해 및 특정연도 운세 상세분석]
-                # ----------------------------------------------------------
                 elif u_product == "1-2. 올해 및 특정연도 운세 상세분석":
                     target_year_val = st.session_state.get('target_year_input', curr_y)
                     prompt = f"""
@@ -1450,10 +1439,6 @@ if st.session_state.get('need_calc', False):
 - 해당 연도의 기운을 극대화하고 리스크를 우회할 실질적 처세술 및 개운 비법을 서술하십시오.
 </div>
 """
-
-                # ----------------------------------------------------------
-                # 3) [1-3 & 1-4. 월운 및 일진 상세분석]
-                # ----------------------------------------------------------
                 else:
                     prompt = f"""
 {db_header}
@@ -1497,9 +1482,6 @@ if st.session_state.get('need_calc', False):
 </div>
 """
 
-                # ----------------------------------------------------------
-                # [복원] AI 연산 호출 및 대운/세운 표 치환 실행부
-                # ----------------------------------------------------------
                 try:
                     res = model.generate_content(prompt)
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
@@ -1513,7 +1495,6 @@ if st.session_state.get('need_calc', False):
                     clean_ai_text, _ = re.subn(r'[\#\*\_\s]*\[\s*DAEWUN_TABLE_HERE\s*\][\#\*\_\s]*', daeoun_target, ai_text, flags=re.IGNORECASE)
                     clean_ai_text, _ = re.subn(r'[\#\*\_\s]*\[\s*SEWUN_TABLE_HERE\s*\][\#\*\_\s]*', sewun_target, clean_ai_text, flags=re.IGNORECASE)
 
-                    # 맺음말 상단에 굵은 점선(dashed) 분리선 적용
                     bordered_closing_html = f"<hr style='border: 0; border-top: 2px dashed #1A237E; margin: 35px 0 20px 0;'>{closing_html}"
 
                     full_content_clean = f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{clean_ai_text}<br><br>{bordered_closing_html}</div>"
@@ -1577,23 +1558,32 @@ if st.session_state.get('need_calc', False):
                 except Exception as e: 
                     st.error(f"테마별 특성화 분석 AI 연산 오류: {e}")
 
+            # ==============================================================
+            # [A-3] 4-1. 타 감명서 비교 (사주) 파이프라인
+            # ==============================================================
+            elif main_category == "4. 타 감명서 비교" and u_product == "4-1. 타 감명서 비교 (사주)":
+                comp_prompt = f"""
+[SYSTEM ROLE: CHOYEON SYSTEM CHIEF CHANCELLOR]
+당신은 '초연 박사님'을 보좌하는 수석보좌관 AI입니다.
+제출된 타 감명서 원문과 초연시공명리의 정밀 사주풀이 팩트를 1:1로 엄밀히 비교 대조하여 학술 검증 리포트를 작성하십시오.
 타 감명서의 고전적/단식적 해석(단순 신살, 오행 개수 위주)과 초연 시공명리(월령 시공간, 일주 구조, 대운 파동)의 입체적 해석을 1:1로 대조하여 차이점을 서술하십시오.
-                        c_res = call_claude_api(comp_prompt, max_tokens=10000)
-                        
-                        report_2_html = (
-                            f"<div class='page-break-before'></div>\n"
-                            f"<div class='report-page'>\n"
-                            f"<div class='vip-inset-frame' style='border-color:#2E7D32; padding:20px;'>\n"
-                            f"<h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 900; border-bottom:2px solid #2E7D32; padding-bottom:15px; margin-bottom:20px;'>⚖️ 타 감명서 학술 검증 및 1:1 대조 리포트</h1>\n"
-                            f"<div style='margin-top:20px;'>{c_res}</div>\n"
-                            f"<hr style='border:1px dashed #2E7D32; margin:30px 0;'>\n"
-                            f"<h3 style='color:#555; font-size:18px; font-weight:900; margin-bottom:10px;'>📜 [제출된 타 감명서 원문]</h3>\n"
-                            f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 14px; line-height: 1.8; color: #444; background:#F9F9F9; padding:15px; border-radius:8px;'>{other_reading_text.replace(chr(10), '<br>')}</div>\n"
-                            f"</div>\n"
-                            f"</div>"
-                        )
-                        st.session_state['saved_report_2'] = report_2_html
-
+"""
+                try:
+                    c_res = call_claude_api(comp_prompt, max_tokens=10000)
+                    
+                    report_2_html = (
+                        f"<div class='page-break-before'></div>\n"
+                        f"<div class='report-page'>\n"
+                        f"<div class='vip-inset-frame' style='border-color:#2E7D32; padding:20px;'>\n"
+                        f"<h1 style='text-align:center; color:#2E7D32; font-size: 26px; font-weight: 900; border-bottom:2px solid #2E7D32; padding-bottom:15px; margin-bottom:20px;'>⚖️ 타 감명서 학술 검증 및 1:1 대조 리포트</h1>\n"
+                        f"<div style='margin-top:20px;'>{c_res}</div>\n"
+                        f"<hr style='border:1px dashed #2E7D32; margin:30px 0;'>\n"
+                        f"<h3 style='color:#555; font-size:18px; font-weight:900; margin-bottom:10px;'>📜 [제출된 타 감명서 원문]</h3>\n"
+                        f"<div style='font-family: \"Nanum Myeongjo\", serif; font-size: 14px; line-height: 1.8; color: #444; background:#F9F9F9; padding:15px; border-radius:8px;'>{other_reading_text.replace(chr(10), '<br>')}</div>\n"
+                        f"</div>\n"
+                        f"</div>"
+                    )
+                    st.session_state['saved_report_2'] = report_2_html
                 except Exception as e:
                     st.error(f"비교 분석 가동 장애: {e}")
 
@@ -1661,22 +1651,6 @@ if st.session_state.get('need_calc', False):
 [SYSTEM ROLE: CHOYEON SYSTEM CHIEF CHANCELLOR (초연시공명리 수석보좌관)]
 당신은 '초연 박사님'을 보좌하는 수석보좌관 AI입니다.
 제출된 [{m_name_val}님과 {f_name_val}님의 외부 궁합 감명서 원문]을 박사님의 [초연시공명리 궁합 정밀 통변 팩트]와 1:1로 엄밀히 비교 대조하여 학술 검증 리포트를 작성하십시오.
-
-🚨 [궁합 1:1 원문 대조 및 학술 검증 지시]
-1. **타 궁합 감명서 목차/항목 구조 완벽 재현**: 제출된 타 감명서의 제목, 소목차, 분석 순서(예: 겉궁합, 속궁합, 오행보완, 운세교차 등)를 그대로 가져와 동일한 순서로 목차를 구성하십시오.
-2. **항목별 1:1 교차 검증**:
-   - **[타 궁합 감명서 원문 분석]**: 원문의 주장과 궁합 통변 논리를 요약하십시오.
-   - **[정통 명리 이치 검증 및 초연시공명리 재해석]**: 원문의 궁합 판단이 정통 명리 이치 및 초연 정밀 궁합 점수({gh_engine.final_score}점, 등급: {gh_engine.grade})에 위배되는지 검증하고 오류를 교정하십시오.
-3. **학술적 수용 및 앱 진화 총평 작성**:
-   - 마지막 목차인 **[4. 수석보좌관 종합 검증 및 궁합 엔진 업데이트 제안 총평]**에서는 타 궁합 감명서의 논리적 오류를 검증함과 동시에, 타 궁합 감명서에서 배울 점을 수용하여 **'초연시공명리 궁합 엔진 고도화 방향'**을 종합적으로 제안하십시오.
-4. 모든 본문 문단은 <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #000000; text-indent: 1em; text-align: justify; margin-top: 4px; margin-bottom: 12px;'> 태그로 출력하십시오.
-
-[제출된 타 궁합 감명서 원문 (목차 구조 및 분석 순서 기준점)]
-{other_reading_text}
-
-[초연시공명리 정밀 궁합 팩트]
-- 남성({m_name_val}) / 여성({f_name_val})
-- 초연 궁합 정밀 점수: {gh_engine.final_score}점 ({gh_engine.grade})
 """
                         c_res = call_claude_api(comp_prompt, max_tokens=10000)
                         
@@ -1745,7 +1719,7 @@ if st.session_state.get('need_calc', False):
                         m_marital = u_marital if u_gender == "남성" else p_marital
                         f_marital = p_marital if u_gender == "남성" else u_marital
                         
-                        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
+                        guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'午寅','壬':'卯巳','癸':'卯, 巳'}
                         
                         m_tbl = build_bazi_table("♂️", m_name, "남명", m_marital, m_age, m_sol, m_lun, m_time, m_gans, m_jjis, m_ds, m_yb, m_cnt, guiin_map.get(m_ds, '-'), calculate_gongmang(m_ys, m_yb), calculate_gongmang(m_ds, m_db), get_samjae(m_yb, curr_j), m_calc_d, "#1A237E")
                         f_tbl = build_bazi_table("♀️", f_name, "여명", f_marital, f_age, f_sol, f_lun, f_time, f_gans, f_jjis, f_ds, f_yb, f_cnt, guiin_map.get(f_ds, '-'), calculate_gongmang(f_ys, f_yb), calculate_gongmang(f_ds, f_db), get_samjae(f_yb, curr_j), f_calc_d, "#2E7D32")
@@ -1953,7 +1927,6 @@ if st.session_state.get('need_calc', False):
                         st.session_state['saved_report_gh_f'] = wrap_a4(f_page_content, "#D50000", "[ 여명 사주팔자표 및 요약 ]")
                         st.session_state['saved_report_gh_g'] = wrap_a4(g_full_content, "#1B5E20", "[ 초연 전통명리 종합 궁합풀이 ]")
 
-                        # 3-2 / 3-3 택일 전용 독립 모듈
                         if u_product in ["3-2. 결혼 택일", "3-3. 출산 택일"]:
                             s_d_val = start_date if start_date else dt_mod.date.today()
                             e_d_val = end_date if end_date else dt_mod.date.today() + dt_mod.timedelta(days=30)
@@ -1992,6 +1965,7 @@ if st.session_state.get('need_calc', False):
             st.error(f"시스템 연산 중 치명적 오류 발생: {e}")
             st.session_state['need_calc'] = False
             st.stop()
+
 # ==============================================================================
 # 🌊 7. [독립 모듈] 일진 분석 (오류 검증 완료)
 # ==============================================================================
@@ -2099,7 +2073,6 @@ if st.session_state.get('app_running', False) and st.session_state.get('run_deli
                 m_jjis = [b[1] if len(b)>1 else "?" for b in p_bazi_context]
                 f_jjis = jjis
 
-            # [수정 완료] None 값 방지 예외 방어선 적용
             s_d_val = start_date if start_date else dt_mod.date.today()
             e_d_val = end_date if end_date else dt_mod.date.today() + dt_mod.timedelta(days=30)
 
