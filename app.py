@@ -275,7 +275,6 @@ else:
                 key="sub_category_2", 
                 on_change=stop_ai
             )
-타격 지점 2: 입력창(UI) 및 프롬프트
         elif main_category == "3. 커플 연애/결혼운 (궁합) 풀이":
             u_product = st.radio(
                 "상세 분석 항목:", 
