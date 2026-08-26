@@ -36,7 +36,7 @@ st.markdown("""
     .cover-page .title-gothic { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #0054FF !important; font-weight: 900 !important; }
     .cover-page .ver-gothic { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important; color: #555555 !important; font-weight: 900 !important; }
 
-    .report-page h1 { font-size: 26px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
+    .report-page h1 { font-size: 28px !important; margin-bottom: 15px !important; color: #1A237E !important; font-weight: 900 !important; }
     .report-page h2 { font-size: 22px !important; margin-bottom: 15px !important; font-weight: 900 !important; }
     .report-page h3 { font-size: 22px !important; margin-top: 25px !important; margin-bottom: 8px !important; border-bottom: 2px solid #1A237E; padding-bottom: 5px; color: #1A237E !important; font-weight: 900 !important; }
     .report-page h4 { font-size: 18px !important; margin-top: 15px !important; margin-bottom: 8px !important; font-weight: 900 !important; }
