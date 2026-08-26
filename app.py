@@ -1769,14 +1769,7 @@ if st.session_state.get('need_calc', False):
                     ai_text = "\n".join([line.lstrip() for line in res.text.split("\n")])
                     
                     # 🚨 [AI 오지랖 완벽 절단 수술] 
-                    div_start = "<div class='content-box-loose'>"
-                    target_sub = "1) 내 삶의 무대와 타고난 기본 성향"
-                    
-                    if target_sub in ai_text and div_start in ai_text:
-                        parts = ai_text.split(target_sub)
-                        top_clean = parts[0][:parts[0].find(div_start) + len(div_start)]
-                        ai_text = top_clean + f"\n{choyeon_golden_text}\n<span class='sub-title' style='font-size: 18px; font-weight: 900; color: #111;'>{target_sub}" + parts[1]
-                    elif "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
+                    if "[CHOYEON_GOLDEN_TEXT_HERE]" in ai_text:
                         ai_text = ai_text.replace("[CHOYEON_GOLDEN_TEXT_HERE]", choyeon_golden_text)
 
                     un_html_clean = un_html.replace("\n", " ").replace("\r", "")
