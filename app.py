@@ -586,7 +586,7 @@ def check_vault_status(base_gans, base_jjis, attacker_ji):
     return results
 
 def get_gyukgook_detailed(ds, ys, ms, hs, mb):
-    ds, ys, ms, hs, mb = _to_hanja(ds), _to_hanja(ys), _to_hanja(ms), _to_hanja(hs), _to_hanja(mb)
+    # 🚨 에러의 원인이었던 _to_hanja 변환 줄을 완전히 삭제했습니다! (엔진이 이미 한자로 넘겨주므로 불필요)
     jg = JIJANGGAN.get(mb, [])
     if not jg: return "알수없음격", "지장간 정보가 없습니다."
 
