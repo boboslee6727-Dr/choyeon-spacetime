@@ -293,25 +293,26 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     """
 
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """사주 원국 HTML 생성 (로직 85.1 유지, 폰트/색상 46.7 적용)"""
+    """사주 원국 HTML 생성 (로직 85.1 유지, 폰트/색상 46.7 압도적 웅장함 적용)"""
     gan_rel = "".join([f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_gan_rel_all(i, gans)}</td>" for i in range(4)])
     hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
     
     # 🌟 日元 빨간색 강조
-    gan_ss = f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, hs)}</td>" \
-             f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'><span style='color:#C62828; font-weight:900;'>日元</span></td>" \
-             f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, ms)}</td>" \
-             f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, ys)}</td>"
+    gan_ss = f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, hs)}</td>" \
+             f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'><span style='color:#C62828; font-weight:900;'>日元</span></td>" \
+             f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, ms)}</td>" \
+             f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, ys)}</td>"
 
     hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
-    # 🌟 간지 24px 적용된 td_func 사용
-    gan_row_html = "".join([td_func(g, engine) for g in gans])
-    ji_row_html = "".join([td_func(j, engine) for j in jjis])
+    
+    # 🚨 [강제 수술 완료] 오행 색상(td_func)은 살리되, 글자만 36px 굵은 명조체로 웅장하게 강제 덮어쓰기!
+    gan_row_html = "".join([td_func(g, engine).replace(g, f"<span style='font-size: 36px !important; font-weight: 900 !important; font-family: \"Nanum Myeongjo\", \"Batang\", serif !important;'>{g}</span>") for g in gans])
+    ji_row_html = "".join([td_func(j, engine).replace(j, f"<span style='font-size: 36px !important; font-weight: 900 !important; font-family: \"Nanum Myeongjo\", \"Batang\", serif !important;'>{j}</span>") for j in jjis])
 
-    ji_ss_html = f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, hb)}</td>" \
-                 f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, db)}</td>" \
-                 f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, mb)}</td>" \
-                 f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:13px;'>{engine.get_ss(ds, yb)}</td>"
+    ji_ss_html = f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, hb)}</td>" \
+                 f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, db)}</td>" \
+                 f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, mb)}</td>" \
+                 f"<td style='border:1px solid #444; padding:2px 0 !important; font-size:14px;'>{engine.get_ss(ds, yb)}</td>"
 
     jijanggan_html = "".join([f"<td style='padding:0 !important; border:1px solid #444;'>{engine.get_jijanggan_full(ds, jjis[i])}</td>" for i in range(4)])
 
@@ -362,8 +363,9 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         </tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800; padding:2px 0 !important;'>천간합충</td>{gan_rel}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800; padding:2px 0 !important;'>천간십성</td>{gan_ss}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:16px !important; padding:0 !important;'>천간</td>{gan_row_html}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:16px !important; padding:0 !important;'>지지</td>{ji_row_html}</tr>
+        <!-- 🚨 천간/지지 라벨도 ver 46.7에 맞춰 24px로 웅장하게 확대! -->
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important; padding:4px 0 !important;'>천간</td>{gan_row_html}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444; background:#E8EAF6; color:#1A237E; font-weight:900; font-size:24px !important; padding:4px 0 !important;'>지지</td>{ji_row_html}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:800; padding:2px 0 !important;'>지지십성</td>{ji_ss_html}</tr>
         <tr><td class='header-cell-main' style='padding:0 !important; border:1px solid #444; background:#f5f5f5; font-weight:800;'>지장간</td>{jijanggan_html}</tr>
         {ji_rel_rows}
@@ -557,10 +559,11 @@ def get_intro_html():
     return """
     <hr style="border: 0; border-top: 2px solid #3E2723; margin: 25px 0;">
     <div style="margin: 0; padding: 0; font-family: 'Nanum Myeongjo', serif;">
-        <p style="margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 600; text-align: justify; text-indent: 14px; line-height: 1.8; word-break: keep-all; color: #111111;">
+        <!-- 🚨 font-weight를 600에서 400(기본)으로 수정! 이제 <b> 태그만 완벽하게 강조됩니다! -->
+        <p style="margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 400; text-align: justify; text-indent: 14px; line-height: 1.8; word-break: keep-all; color: #111111;">
             <b>"초연 시공 명리학"</b>은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.
         </p> 
-        <p style="margin-top: 0; margin-bottom: 0; font-size: 16px; font-weight: 600; text-align: justify; text-indent: 14px; line-height: 1.8; word-break: keep-all; color: #111111;">
+        <p style="margin-top: 0; margin-bottom: 0; font-size: 16px; font-weight: 400; text-align: justify; text-indent: 14px; line-height: 1.8; word-break: keep-all; color: #111111;">
             따라서, <b>"본 초연 시공 명리학적 풀이"</b>는 기존 명리학적 풀이에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형의 MBTI와 비교하면 무려 <b>225배</b> 더 정확한 사주풀이 입니다.
         </p>
     </div>
