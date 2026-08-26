@@ -1197,15 +1197,28 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-3"):
+            # 1. 안전하게 표 HTML 변수 확보 (없으면 빈 칸으로 방어)
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
             
-            current_ai_text = ai_output_html if ai_output_html else "<p>월운 분석을 불러오지 못했습니다.</p>"
-            formatted_ai = sub_marker(current_ai_text, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            # 2. AI 본문이 비어있는지 1차 방어
+            current_ai_text = ai_output_html if ai_output_html else "<p>월운 분석 결과가 생성되지 않았습니다.</p>"
             
+            # 3. 안전 마커 치환 (함수가 없거나 에러가 나도 원본이 깨지지 않게 try 처리)
+            try:
+                formatted_ai = sub_marker(current_ai_text, 'SEWUN_TABLE_HERE', sewun_table_code)
+                formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            except Exception:
+                formatted_ai = current_ai_text + f"<br>{sewun_table_code}<br>{wolun_table_code}"
+            
+            # 4. 과부하를 막기 위해 순수 본문과 하단 클로징만 가볍게 결합
             master_comp = f"{formatted_ai}{part_5_closing}"
-            final_render_html = html_views.get_final_report_box(master_comp)
+            
+            # 5. 최종 렌더링 박스 호출
+            if hasattr(html_views, 'get_final_report_box'):
+                final_render_html = html_views.get_final_report_box(master_comp)
+            else:
+                final_render_html = master_comp
 
         elif u_product.startswith("1-4"):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
