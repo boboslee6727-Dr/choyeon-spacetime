@@ -265,12 +265,10 @@ else:
                 "특성화 상품 선택:", 
                 [
                     "2-1. 재물운 특화 분석", 
-                    "2-2. 연애/결혼운 특화 분석",
-                    "2-3. 진학/입시운 특화 분석",
-                    "2-4. 직업/커리어운 특화 분석",
-                    "2-5. 건강운 특화 분석", 
-                    "2-6. 이사 택일",
-                    "2-7. 개업 택일"
+                    "2-2. 직업/진학운 특화 분석", 
+                    "2-3. 연애/결혼운 특화 분석", 
+                    "2-4. 건강운 특화 분석", 
+                    "2-5. 이사 및 개업 택일"
                 ], 
                 key="sub_category_2", 
                 on_change=stop_ai
@@ -395,22 +393,28 @@ else:
                 st.number_input("📅 분석 연도", min_value=1900, max_value=2050, value=curr_yr_val, key="target_year_input", on_change=stop_ai)
             elif "1-4." in u_product:
                 st.date_input("일운 기준일", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
-            # 🌟 [입력창 표시 로직] 하위 스위치 싹 제거하고 직관적인 1:1 매칭!
             elif "2-1." in u_product: 
                 wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
+            
+            # 🌟 [수정] 2-2 진학/직업 프롬프트 분지화용 스위치 추가
             elif "2-2." in u_product: 
+                career_purpose = st.radio("💼 상담 목적 선택", ["직업·취업·이직", "진학·입시·학업"], key="career_purpose", on_change=stop_ai)
+                if career_purpose == "진학·입시·학업":
+                    career_goal = st.text_input("🎓 고민되는 진학/전공/입시 분야는?", key="career_goal", placeholder="예: 의대 진학, 공대 vs 상경계열 선택", on_change=stop_ai)
+                else:
+                    career_goal = st.text_input("💼 고민되는 직업/이직/사업 분야는?", key="career_goal", placeholder="예: 대기업 이직, 전문직 창업", on_change=stop_ai)
+            
+            elif "2-3." in u_product:
                 love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
-            elif "2-3." in u_product: 
-                career_goal = st.text_input("🎓 고민되는 진학/전공/입시 분야는?", key="career_goal", placeholder="예: 의대 진학, 공대 vs 상경계열 선택", on_change=stop_ai)
             elif "2-4." in u_product: 
-                career_goal = st.text_input("💼 고민되는 직업/이직/사업 분야는?", key="career_goal", placeholder="예: 대기업 이직, 전문직 창업", on_change=stop_ai)
-            elif "2-5." in u_product: 
                 health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
-            elif "2-6." in u_product or "2-7." in u_product: 
-                # (택일 목적 묻는 라디오 버튼 삭제! 메뉴 이름 자체로 이미 결정됨!)
+            
+            # 🌟 2-5 이사/개업 프롬프트 분지화 스위치
+            elif "2-5." in u_product:
+                tackil_purpose = st.radio("🗓️ 택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
                 col_start, col_end = st.columns(2)
-                start_date = col_start.date_input("탐색 시작일", key="moving_start", on_change=stop_ai)
-                end_date = col_end.date_input("탐색 종료일", key="moving_end", on_change=stop_ai)
+                start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
+                end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
             
             # 🌟 4-1 타 감명서 비교 (사주)
             elif "4-1." in u_product:
@@ -774,7 +778,8 @@ if st.session_state.get('app_running', False):
             )
 
         # 🌟 대제목 타이틀(1-1 필수 요소 등) 절대 사수!
-        main_title_html = f"<h1>[ {report_title} ]</h1>"
+        main_title_html = f"<h2 style='text-align:center; color:#1A237E; margin-top:30px; margin-bottom:15px;'>[ {report_title} ]</h2>"
+
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
         master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
@@ -1169,19 +1174,19 @@ if st.session_state.get('app_running', False):
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
         
-        # 🌟 [AI 프롬프트 라우터] (prompts.py의 변수명은 구버전 그대로 두어도, 연결만 새 번호로 꽂아주면 찰떡같이 돌아갑니다!)
+        # 🌟 [AI 프롬프트 라우터] 2-2 및 2-5 분지화 완벽 연동
         def get_prompt_var_name(u_prod):
             if "1-1" in u_prod: return "프롬프트_1_1_기본"
             if "1-2" in u_prod: return "프롬프트_1_2_연도운"
             if "1-3" in u_prod: return "프롬프트_1_3_월운"
             if "1-4" in u_prod: return "프롬프트_1_4_일운"
             if "2-1" in u_prod: return "프롬프트_2_1_재물운"
-            if "2-2" in u_prod: return "프롬프트_2_3_연애운"    # (2-2 선택 시 옛날 2-3연애 프롬프트 호출)
-            if "2-3" in u_prod: return "프롬프트_2_2_진학운"    # (2-3 선택 시 진학 프롬프트 호출)
-            if "2-4" in u_prod: return "프롬프트_2_2_직업운"    # (2-4 선택 시 직업 프롬프트 호출)
-            if "2-5" in u_prod: return "프롬프트_2_4_건강운"    # (2-5 선택 시 건강 프롬프트 호출)
-            if "2-6" in u_prod: return "프롬프트_2_5_이사_택일" # (2-6 선택 시 이사 프롬프트 호출)
-            if "2-7" in u_prod: return "프롬프트_2_5_개업_택일" # (2-7 선택 시 개업 프롬프트 호출)
+            if "2-2" in u_prod: 
+                return "프롬프트_2_2_진학운" if "진학" in st.session_state.get('career_purpose', '직업') else "프롬프트_2_2_직업운"
+            if "2-3" in u_prod: return "프롬프트_2_3_연애운"
+            if "2-4" in u_prod: return "프롬프트_2_4_건강운"
+            if "2-5" in u_prod: 
+                return "프롬프트_2_5_개업_택일" if st.session_state.get('tackil_purpose', '이사') == '개업' else "프롬프트_2_5_이사_택일"
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
@@ -1282,7 +1287,6 @@ if st.session_state.get('app_running', False):
             master_comp = f"{safe_part_1}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # 🚨 [수술 타겟 1] 3-1 궁합 3분할 파싱 및 페이지 독립 강제!
         elif u_product.startswith("3-1"):
             m_ess, f_ess, g_ess = "", "", current_ai
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', current_ai, re.DOTALL)
@@ -1303,41 +1307,26 @@ if st.session_state.get('app_running', False):
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val) if hasattr(html_views, 'get_gunghap_closing') else ""
             g_ess += score_ui + closing_ui
             
-            # 🚨 3분할된 각 에세이를 VIP 액자 프레임(.vip-inset-frame)으로 감싸고, 그 사이에 강제 페이지 분할 태그 주입!
-            vip_m_ess = f"<div class='report-page'><div class='vip-inset-frame'>{safe_part_1_gh}{m_ess}</div></div>"
-            vip_f_ess = f"<div class='report-page'><div class='vip-inset-frame'>{f_ess}</div></div>"
-            vip_g_ess = f"<div class='report-page'><div class='vip-inset-frame'>{g_ess}{safe_part_5}</div></div>"
+            if hasattr(html_views, 'get_gunghap_three_page_report'):
+                final_render_html = html_views.get_gunghap_three_page_report(safe_part_1_gh, m_ess, f_ess, g_ess)
+            else:
+                final_render_html = f"{safe_part_1_gh}{m_ess}{f_ess}{g_ess}{safe_part_5}"
 
-            # html_views 함수를 타지 않고 직접 조립하여 페이지 나눔을 사수합니다.
-            final_render_html = f"""
-            {vip_m_ess}
-            <div class='page-break'></div>  <!-- 남성 사주 끝! 다음 장 분할 -->
-            {vip_f_ess}
-            <div class='page-break'></div>  <!-- 여성 사주 끝! 다음 장 분할 -->
-            {vip_g_ess}
-            """
-
-        # 🚨 [수술 완료] 3-2 결혼 택일: 세운표 + 월운표 치환!
         elif u_product.startswith("3-2"):
-            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-            wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+            m_target_dt = st.session_state.get('start_date_m', st.session_state.get('target_date_m', selected_target_date))
+            weekly_days_data = engine.get_weekly_calendar_data(m_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
-            formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            
-            # 조립 공식: [part_1_fact_gunghap] + formatted_ai(세운표+월운표) + closing_part
+            formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             master_comp = f"{safe_part_1_gh}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
-        # 🚨 [수술 완료] 3-3 출산 택일: 세운표 + 월운표 치환!
         elif u_product.startswith("3-3"):
-            sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-            wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+            d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
+            weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
-            formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            
-            # 조립 공식: [part_1_fact_gunghap] + formatted_ai(세운표+월운표) + closing_part
+            formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             master_comp = f"{safe_part_1_gh}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
@@ -1404,13 +1393,8 @@ if st.session_state.get('app_running', False):
         global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
         safe_cover_str = re.sub(r'\n\s+', '\n', cover_html) if 'cover_html' in locals() and cover_html else ""
         
-        # 🚨 [수술 타겟 2] 1차적으로 팩트가 조립된 final_render_html 앞에 CSS와 표지를 병합하되, 표지 직후 무조건 페이지 분할!
-        complete_report_html = f"""
-        {global_css_str}
-        {safe_cover_str}
-        <div class='page-break'></div>  <!-- 🚨 표지 인쇄 끝! 본문과 섞이지 않게 무조건 다음 장으로 넘김! -->
-        {final_render_html}
-        """
+        # 🌟 1차적으로 팩트가 조립된 final_render_html 앞에 CSS와 표지를 병합합니다.
+        complete_report_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
 
         # =========================================================================
         # 📦 [공장 생산 완료] ➔ 스텔스 완료 처리 (URL 변경 없음, 그 자리에서 서랍장 오픈)
@@ -1422,5 +1406,5 @@ if st.session_state.get('app_running', False):
             st.session_state['app_running'] = False
             st.rerun()
         else:
-            # 🚨 수동 연구 모드: 중복 표지 출력 삭제 완료! HTML 덩어리 하나만 출력!
+            # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(complete_report_html, unsafe_allow_html=True)
