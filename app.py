@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 85.5 Master - app 오리지널 + 2-2/2-5 분지화 + A4 폭발 방어 완결판)
+# app.py (ver 85.6 Master - app 오리지널 + 2-2/2-5 분지화 + A4 폭발 방어 완결판)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -20,10 +20,10 @@ import engine
 import prompts
 import html_views
 
-# 🔄 서브 모듈 변경 사항 즉시 반영을 위한 강제 리로드 설정
-# importlib.reload(engine)
-# importlib.reload(prompts)
-# importlib.reload(html_views)
+# 🚨 [수술 1] 서브 모듈 변경 사항 즉시 반영을 위한 강제 리로드 활성화!
+importlib.reload(engine)
+importlib.reload(prompts)
+importlib.reload(html_views)
 
 extract_ganji = engine.extract_ganji
 get_oh_class = engine.get_oh_class
@@ -31,16 +31,24 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 85.0 Master"
+APP_VERSION = "ver 85.6 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
-# 🚨 [1번 핀셋 삽입] 외주 영업부(파이프라인) 호출 문지기 🚨
+# 외주 영업부(파이프라인) 호출 문지기
 from pipeline_manager import run_pipeline_router
 run_pipeline_router()
 
 # 전역 CSS 적용
 if hasattr(html_views, 'get_global_css'):
     st.markdown(html_views.get_global_css(), unsafe_allow_html=True)
+
+# 🚨 [안전장치 CSS] html_views.py 캐싱 오류 시에도 라디오 버튼 두 줄과 제목 한 줄을 강제 보장!
+st.markdown("""
+<style>
+    div[data-testid="stRadio"] label p { font-size: 14px !important; white-space: pre-wrap !important; line-height: 1.6 !important; padding-bottom: 4px !important; }
+    .cover-page h1, .cover-page h2, .report-page h1, .report-page h2 { white-space: nowrap !important; word-break: keep-all !important; letter-spacing: -0.5px !important; }
+</style>
+""", unsafe_allow_html=True)
 
 idx_list = ["시간 모름", "00:30 ~ 01:29 (朝子)시", "01:30 ~ 03:29 (丑)시", "03:30 ~ 05:29 (寅)시", 
     "05:30 ~ 07:29 (卯)시", "07:30 ~ 09:29 (辰)시", "09:30 ~ 11:29 (巳)시", "11:30 ~ 13:29 (午)시", 
@@ -93,7 +101,7 @@ def call_gemini_api(prompt_text, max_tokens=8000):
     sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
     return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=max_tokens)
 
-# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
+# 🎯 [신청인] 사주간지 역산 전용 콜백 함수 
 def do_auto_fill_user():
     st.session_state['app_running'] = False
     u_ry = st.session_state.get("u_ry_rev", "")
@@ -117,8 +125,8 @@ def do_auto_fill_user():
         
         rt_ji = None
         if u_rt:
-            ji_char = u_rt[-1]
-            rt_ji = engine.K2H_JI.get(ji_char, ji_char)
+            ji_char = u_rt.replace("시","").strip()[-1] if u_rt.replace("시","").strip() else ""
+            if ji_char: rt_ji = engine.K2H_JI.get(ji_char, ji_char)
 
         target_date_val = st.session_state.get('main_target_date_picker', st.session_state.get('target_date', dt_mod.date.today()))
         base_year = target_date_val.year if hasattr(target_date_val, 'year') else dt_mod.date.today().year
@@ -130,8 +138,9 @@ def do_auto_fill_user():
             st.session_state['s_y'] = matched_results[0]["y"]
             st.session_state['s_m'] = matched_results[0]["m"]
             st.session_state['s_d'] = matched_results[0]["d"]
-            st.session_state['s_t'] = matched_results[0]["t"]
-            st.session_state['s_t_select'] = matched_results[0]["t"]
+            if matched_results[0]["t"] != "시간 모름":
+                st.session_state['s_t'] = matched_results[0]["t"]
+                st.session_state['s_t_select'] = matched_results[0]["t"]
             st.session_state.pop('rev_error_msg', None)
         else:
             st.session_state.pop('rev_matches_user', None)
@@ -139,7 +148,7 @@ def do_auto_fill_user():
     else:
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
-# 🎯 [상대방] 사주간지 역산 전용 콜백 함수 (분석 기준 시점 동적 연동)
+# 🎯 [상대방] 사주간지 역산 전용 콜백 함수
 def do_auto_fill_partner():
     st.session_state['app_running'] = False
     p_ry = st.session_state.get("p_ry_rev", "")
@@ -163,8 +172,8 @@ def do_auto_fill_partner():
         
         p_rt_ji = None
         if p_rt:
-            ji_char_p = p_rt[-1]
-            p_rt_ji = engine.K2H_JI.get(ji_char_p, ji_char_p)
+            ji_char_p = p_rt.replace("시","").strip()[-1] if p_rt.replace("시","").strip() else ""
+            if ji_char_p: p_rt_ji = engine.K2H_JI.get(ji_char_p, ji_char_p)
 
         target_date_val = st.session_state.get('main_target_date_picker', st.session_state.get('target_date', dt_mod.date.today()))
         base_year = target_date_val.year if hasattr(target_date_val, 'year') else dt_mod.date.today().year
@@ -176,8 +185,9 @@ def do_auto_fill_partner():
             st.session_state['p_y_in'] = matched_results[0]["y"]
             st.session_state['p_m_in'] = matched_results[0]["m"]
             st.session_state['p_d_in'] = matched_results[0]["d"]
-            st.session_state['p_t_key'] = matched_results[0]["t"]
-            st.session_state['p_t_select'] = matched_results[0]["t"]
+            if matched_results[0]["t"] != "시간 모름":
+                st.session_state['p_t_key'] = matched_results[0]["t"]
+                st.session_state['p_t_select_key'] = matched_results[0]["t"]
             st.session_state.pop('rev_p_error_msg', None)
         else:
             st.session_state.pop('rev_matches_partner', None)
@@ -326,7 +336,6 @@ else:
             if 'rev_matches_user' in st.session_state and st.session_state['rev_matches_user']:
                 matches = st.session_state['rev_matches_user']
                 if len(matches) > 1:
-                    # 🚨 [수술] 파란색(info)에서 연한 녹색 바탕(success)으로 변경
                     st.success(f"💡 일치하는 생년월일이 **{len(matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
                     cur_y_val = st.session_state.get('s_y')
                     match_opts = [m['display'] for m in matches]
@@ -343,12 +352,12 @@ else:
                                 st.session_state['s_y'] = m['y']
                                 st.session_state['s_m'] = m['m']
                                 st.session_state['s_d'] = m['d']
-                                st.session_state['s_t'] = m['t']
-                                st.session_state['s_t_select'] = m['t']
+                                if m['t'] != "시간 모름":
+                                    st.session_state['s_t'] = m['t']
+                                    st.session_state['s_t_select'] = m['t']
                                 break
                         stop_ai()
 
-                    # 🚨 [수술] 콤보박스(selectbox)를 두 줄 출력이 가능한 라디오 버튼(radio)으로 전면 교체
                     st.radio(
                         "📅 적용할 생년월일 선택:",
                         options=match_opts,
@@ -357,7 +366,8 @@ else:
                         on_change=on_select_user_match
                     )
                 else:
-                    st.success("✅ 1개의 일치하는 생년월일이 자동 입력되었습니다.")
+                    one_line_str = matches[0]['display'].replace('\n', ' ')
+                    st.success(f"✅ {one_line_str}")
 
             if 'rev_error_msg' in st.session_state:
                 st.error(st.session_state['rev_error_msg'])
@@ -397,28 +407,21 @@ else:
                 st.date_input("일운 기준일", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
             elif "2-1." in u_product: 
                 wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
-            
-            # 🌟 [수정] 2-2 진학/직업 프롬프트 분지화용 스위치 추가
             elif "2-2." in u_product: 
                 career_purpose = st.radio("💼 상담 목적 선택", ["직업·취업·이직", "진학·입시·학업"], key="career_purpose", on_change=stop_ai)
                 if career_purpose == "진학·입시·학업":
                     career_goal = st.text_input("🎓 고민되는 진학/전공/입시 분야는?", key="career_goal", placeholder="예: 의대 진학, 공대 vs 상경계열 선택", on_change=stop_ai)
                 else:
                     career_goal = st.text_input("💼 고민되는 직업/이직/사업 분야는?", key="career_goal", placeholder="예: 대기업 이직, 전문직 창업", on_change=stop_ai)
-            
             elif "2-3." in u_product:
                 love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
             elif "2-4." in u_product: 
                 health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
-            
-            # 🌟 2-5 이사/개업 프롬프트 분지화 스위치
             elif "2-5." in u_product:
                 tackil_purpose = st.radio("🗓️ 택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
                 col_start, col_end = st.columns(2)
                 start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
                 end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
-            
-            # 🌟 4-1 타 감명서 비교 (사주)
             elif "4-1." in u_product:
                 st.markdown("---")
                 st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 10px; margin-bottom: 6px;'>📄 타 감명서 비교 (사주) 원문</div>", unsafe_allow_html=True)
@@ -442,7 +445,6 @@ else:
                 if 'rev_matches_partner' in st.session_state and st.session_state['rev_matches_partner']:
                     p_matches = st.session_state['rev_matches_partner']
                     if len(p_matches) > 1:
-                        # 🚨 [수술] 연한 녹색 바탕(success) 적용
                         st.success(f"💡 상대방 일치 날짜가 **{len(p_matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
                         
                         cur_p_y_val = st.session_state.get('p_y_in')
@@ -460,12 +462,12 @@ else:
                                     st.session_state['p_y_in'] = m['y']
                                     st.session_state['p_m_in'] = m['m']
                                     st.session_state['p_d_in'] = m['d']
-                                    st.session_state['p_t_key'] = m['t']
-                                    st.session_state['p_t_select_key'] = m['t']
+                                    if m['t'] != "시간 모름":
+                                        st.session_state['p_t_key'] = m['t']
+                                        st.session_state['p_t_select_key'] = m['t']
                                     break
                             stop_ai()
 
-                        # 🚨 [수술] 라디오 버튼으로 교체하여 두 줄 표시 CSS 연동
                         st.radio(
                             "📅 적용할 상대방 생년월일 선택:",
                             options=p_match_opts,
@@ -474,7 +476,8 @@ else:
                             on_change=on_select_partner_match
                         )
                     else:
-                        st.success("✅ 상대방 생년월일이 자동 입력되었습니다.")
+                        one_line_str = p_matches[0]['display'].replace('\n', ' ')
+                        st.success(f"✅ {one_line_str}")
 
                 if 'rev_p_error_msg' in st.session_state:
                     st.error(st.session_state['rev_p_error_msg'])
@@ -550,11 +553,40 @@ else:
             st.session_state['report_essays'] = {}
             st.session_state['app_running'] = False
 
-        if st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary"):
-            st.session_state['app_running'] = True
+        btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
         if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
             components.html("<script>window.parent.print();</script>", height=0)
+
+        # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진이 활성화되는 부분!
+        if btn_single:
+            is_compare_type = (main_category == "4. 타 감명서 비교")
+
+            if not u_name.strip(): 
+                st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
+            elif is_compare_type and compare_mode == "외부 타 감명서 원문 대조" and not other_reading_text.strip():
+                st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
+            elif is_2person_product and not p_name.strip(): 
+                st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
+            else:
+                st.session_state['app_running'] = True
+                
+                # 이전 결과 완전 초기화
+                for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
+                    if key in st.session_state: del st.session_state[key]
+
+                if main_category in ["1. 개인 사주팔자 풀이 (종합)", "2. 테마별 특성화 상담"] and run_iljin_calc:
+                    st.session_state['need_calc'] = True
+                    st.session_state['run_waterfall'] = True
+                elif is_2person_product and run_delivery_calc:
+                    st.session_state['need_calc'] = True
+                    st.session_state['run_delivery_only'] = True
+                else:
+                    st.session_state['need_calc'] = True
+                    st.session_state['run_waterfall'] = False
+                    st.session_state['run_delivery_only'] = False
+                
+                st.rerun()
 
 # ==============================================================================
 # 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부 
@@ -680,6 +712,9 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("4-2"): report_title = "타 감명서 비교 (궁합)"
         else: report_title = "사주팔자 정밀 분석"
 
+        # 🌟 대제목 타이틀 렌더링 (html_views 모듈 호출)
+        main_title_html = html_views.get_main_title_html(report_title) if hasattr(html_views, 'get_main_title_html') else f"<h2 style='text-align:center;'>{report_title}</h2>"
+
         gh_score = 0
         gh_grade = ""
         partner_bazi = ["?", "?", "?", "?"]
@@ -780,10 +815,6 @@ if st.session_state.get('app_running', False):
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
             )
-
-        # 🌟 대제목 타이틀(1-1 필수 요소 등) 절대 사수!
-        # 🌟 대제목 타이틀(1-1 필수 요소 등) 절대 사수! (대괄호 삭제 및 폰트 크기 22px로 축소)
-        main_title_html = f"<h2 style='text-align:center; color:#1A237E; margin-top:30px; margin-bottom:15px; font-size:22px !important; font-weight:900; white-space:nowrap; word-break:keep-all;'>{report_title}</h2>"
 
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
@@ -935,11 +966,9 @@ if st.session_state.get('app_running', False):
         i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
         
-        # 1. 신청인 기본 황금문구 연산
         gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
         golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
 
-        # 🌟 2. 2인용 궁합(4-2 등)을 위한 상대방 간지 정밀 추출 및 듀얼 황금문구 조립
         golden_box_gunghap_html = golden_text_html
         if is_2person:
             try:
@@ -977,9 +1006,6 @@ if st.session_state.get('app_running', False):
         closing_html = html_views.get_closing_html(name)            
         closing_part = str(closing_html or "").strip()
 
-        # ======================================================================
-        # 팩트 블록 구성 (박사님 지시 완벽 설계도 - 대제목 타이틀 1순위 사수)
-        # ======================================================================
         part_1_fact = (
             str(main_title_html or "") + 
             str(info_h or "") + 
@@ -992,7 +1018,6 @@ if st.session_state.get('app_running', False):
         part_3_golden = str(golden_text_html or "")
         part_5_closing = str(closing_part or "")
 
-        # 🌟 4-2번 궁합 비교 전용 [남명 완전체 ➔ 여명 완전체] 상단 팩트
         part_1_fact_gunghap = part_1_fact
         if is_2person:
             u_full = str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + str(un_html or "")
@@ -1012,7 +1037,6 @@ if st.session_state.get('app_running', False):
             
         hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
 
-        # 🌟 [초연 시공명리 3대 진실 정밀 감지 엔진 호출]
         adv_saju_data = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
         if hasattr(engine, 'analyze_saju_facts_advanced'):
             sewun_ji_param = curr_y_ji if 'curr_y_ji' in locals() else "-"
@@ -1027,7 +1051,6 @@ if st.session_state.get('app_running', False):
             action_solutions_str = "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
             spouse_issue_str = "배우자궁 비교적 안정적 흐름 유지"
         
-        # 🚀 [신규 장착] 2-4 건강운 특화: 4D 시계열 입체 스캔 가동
         if u_product.startswith("2-4") and hasattr(engine, 'analyze_health_erosion_4d'):
             temp_sewun_10_list = []
             for i in range(10):
@@ -1055,9 +1078,6 @@ if st.session_state.get('app_running', False):
 
         w_facts = engine.get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], "丙", "午", "甲", "子")
 
-        # ======================================================================
-        # 🌟 1인용 / 2인용 사주 팩트 요약
-        # ======================================================================
         if is_2person:
             m_h_raw = male_data_pack[0] if len(male_data_pack) > 0 else ""
             m_d_p = male_data_pack[1] if len(male_data_pack) > 1 else "甲子"
@@ -1107,7 +1127,6 @@ if st.session_state.get('app_running', False):
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
         wolun_first_half, wolun_second_half = engine.get_wolun_half_periods(target_year_val, curr_m) if hasattr(engine, 'get_wolun_half_periods') else ("전반기(절입일~중기 전)", "후반기(중기~다음 절입일 전)")
 
-        # 🌟 4번 상품 외부 원문 추출 및 정제
         user_entered_text = ""
         if u_product.startswith("4-1"):
             user_entered_text = (st.session_state.get("text_4_1", "") or st.session_state.get(f"text_{u_product}", "")).strip()
@@ -1117,7 +1136,6 @@ if st.session_state.get('app_running', False):
         if user_entered_text:
             user_entered_text = re.sub(r'[▷▶◈\[\]\■\□\●\○\◆\◇\★\☆\※\▪\▫]', '', user_entered_text)
 
-        # 🚀 2-5 이사/개업 길일 산출
         best_moving_days_str = "길일 연산 엔진 미가동"
         if u_product.startswith("2-5") and hasattr(engine, 'get_best_moving_opening_days'):
             tackil_purpose_val = st.session_state.get('tackil_purpose', '이사')
@@ -1179,7 +1197,6 @@ if st.session_state.get('app_running', False):
         class SafeDict(dict):
             def __missing__(self, key): return '{' + key + '}'
         
-        # 🌟 [AI 프롬프트 라우터] 2-2 및 2-5 분지화 완벽 연동
         def get_prompt_var_name(u_prod):
             if "1-1" in u_prod: return "프롬프트_1_1_기본"
             if "1-2" in u_prod: return "프롬프트_1_2_연도운"
@@ -1215,18 +1232,13 @@ if st.session_state.get('app_running', False):
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
-        # ==============================================================================
-        # 🏮 최종 화면 렌더링 (A4 폭발 방어 & 상품별 럭셔리 컴포넌트 조립식)
-        # ==============================================================================
         final_render_html = ""
 
         def sub_marker(text, marker_name, table_code):
-            # 🔥 A4 레이아웃 폭발 100% 방어: 표 HTML에서 줄바꿈과 탭을 싹 제거하여 문자열로 압축!
             safe_table_code = str(table_code).replace('\n', ' ').replace('\r', '').replace('\t', ' ')
             pattern = r'[ \t]*\[\s*\*?\*?\s*' + marker_name + r'\s*\*?\*?\s*\]'
             return re.sub(pattern, lambda m: safe_table_code, text, flags=re.IGNORECASE)
 
-        # 🌟 레이아웃 붕괴 방지를 위해 팩트 블록들의 줄바꿈도 안전하게 압축
         safe_part_1 = str(part_1_fact).replace('\n', ' ')
         safe_part_2 = str(part_2_intro).replace('\n', ' ')
         safe_part_3 = str(part_3_golden).replace('\n', ' ')
@@ -1239,14 +1251,12 @@ if st.session_state.get('app_running', False):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            # 💡 1-1 종합사주: [원국팩트 + 인트로(유지) + 황금문구 + AI본문 + 꼬리말]
             master_comp = f"{safe_part_1}{safe_part_2}{safe_part_3}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
         elif u_product.startswith("1-2"):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            # 💡 1-2 연도운: [원국팩트 + 황금문구 + 세운표 치환 AI본문 + 꼬리말] (인트로 제거)
             master_comp = f"{safe_part_1}{safe_part_3}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
@@ -1255,7 +1265,6 @@ if st.session_state.get('app_running', False):
             sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            # 💡 1-3 월운: [원국팩트 + 황금문구 + 세운/월운표 치환 AI본문 + 꼬리말] (인트로 제거)
             master_comp = f"{safe_part_1}{safe_part_3}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
@@ -1268,7 +1277,6 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            # 💡 1-4 일운: [원국팩트 + 황금문구 + 각종표 치환 AI본문 + 꼬리말] (인트로 제거)
             master_comp = f"{safe_part_1}{safe_part_3}{formatted_ai}{safe_part_5}"
             final_render_html = html_views.get_final_report_box(master_comp)
 
@@ -1394,22 +1402,22 @@ if st.session_state.get('app_running', False):
             
         final_render_html = re.sub(r'\n\s+', '\n', final_render_html)
 
-        # 👇 CSS(물감통) + 표지 + 본문 완전 융합! (오행 색상 증발 완벽 방지)
-        global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
-        safe_cover_str = re.sub(r'\n\s+', '\n', cover_html) if 'cover_html' in locals() and cover_html else ""
+        # 🚨 [수술 2] 줄바꿈(엔터)이 <br> 태그로 변환되어 표지가 망가지는 현상을 원천 차단!
+        final_render_html = final_render_html.replace('\n', ' ')
+        safe_cover_str = cover_html.replace('\n', ' ') if 'cover_html' in locals() and cover_html else ""
         
-        # 🌟 1차적으로 팩트가 조립된 final_render_html 앞에 CSS와 표지를 병합합니다.
+        # 🚨 [수술 3] 최후의 보루: h1, h2 (표지 제목)을 감싸고 있는 대괄호를 강제로 철거합니다!
         complete_report_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
+        complete_report_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', complete_report_html)
+        complete_report_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', complete_report_html)
 
         # =========================================================================
-        # 📦 [공장 생산 완료] ➔ 스텔스 완료 처리 (URL 변경 없음, 그 자리에서 서랍장 오픈)
+        # 📦 [공장 생산 완료] ➔ 스텔스 완료 처리
         # =========================================================================
         if is_admin_mode:
             gid = st.session_state['admin_proc_id']
-            # 파이프라인에서 뽑아갈 때 화면 밖으로 튀지 않도록 complete_report_html을 저장
             st.session_state[f'html_{gid}'] = complete_report_html
             st.session_state['app_running'] = False
             st.rerun()
         else:
-            # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(complete_report_html, unsafe_allow_html=True)
