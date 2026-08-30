@@ -26,14 +26,20 @@ def get_global_css():
     }
 
     div[data-testid="stSidebar"] * { font-size: 14px !important; }
-    div[data-testid="stRadio"] label p { font-size: 14px !important; }
+    
+    /* 🚨 [수술 완료] 라디오 버튼 텍스트가 잘리지 않고 두 줄(\n)로 예쁘게 나오도록 속성 부여 */
+    div[data-testid="stRadio"] label p { 
+        font-size: 14px !important; 
+        white-space: pre-wrap !important; 
+        line-height: 1.6 !important; 
+        padding-bottom: 4px !important;
+    }
     div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
 
     .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
         font-family: 'Noto Serif KR', serif !important; 
     }
 
-    /* 🌟 본문 대제목(h1)의 위엄 살리기 (진한 남색 밑줄) */
     .report-page h1:not(.cover-page h1) {
         font-size: 26px !important;
         font-weight: 900 !important;
@@ -57,7 +63,6 @@ def get_global_css():
         width: 100% !important;
     }
 
-    /* Primary 버튼 (빨간색) */
     div.stButton > button[kind="primary"], div.stButton > button[data-testid="baseButton-primary"] { 
         background-color: #D50000 !important; 
         color: #FFFFFF !important; 
@@ -71,7 +76,6 @@ def get_global_css():
         color: #FFFFFF !important;
     }
 
-    /* Secondary 버튼 (인쇄/저장 - 초록색) */
     div.stButton > button[kind="secondary"], div.stButton > button[data-testid="baseButton-secondary"] { 
         background-color: #00A843 !important; 
         color: #FFFFFF !important; 
