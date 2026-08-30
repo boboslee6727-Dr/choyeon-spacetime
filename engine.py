@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 74.1 Master - 초연 시공명리학 통합 최종본)
+# engine.py (ver 74.2 Master - 초연 시공명리학 통합 최종본)
 # ==============================================================================
 from google import genai
 import os
@@ -11181,5 +11181,3 @@ def analyze_health_erosion_4d(saju_data, daewun_list, sewun_10_list, curr_year):
         fact_4_current = f"올해({curr_year}년)는 조토극수 침식 파동의 직접적인 타격권에서 한 걸음 비껴가 있는 회복과 유지의 구간."
 
     return f"[1. 선천 원국]: {fact_1_wonguk}\n[2. 평생 궤적]: {fact_2_daewun}\n[3. 향후 10년]: {fact_3_10years}\n[4. 당장 올해]: {fact_4_current}"
-
-
