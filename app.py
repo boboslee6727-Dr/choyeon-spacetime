@@ -570,7 +570,7 @@ else:
                 st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
             elif is_compare_type and compare_mode == "외부 타 감명서 원문 대조" and not other_reading_text.strip():
                 st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
-            elif is_2person_product and not check_f_name.strip(): 
+            elif is_2person and not check_f_name.strip():   # ◀◀ 1. 여기 수정 완료!
                 st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
             else:
                 st.session_state['app_running'] = True
@@ -579,11 +579,11 @@ else:
                 for key in ['saved_report_html', 'saved_report_2', 'saved_report_gh_cover', 'saved_report_gh_m', 'saved_report_gh_f', 'saved_report_gh_g', 'saved_report_del', 'saved_report_iljin']:
                     if key in st.session_state: del st.session_state[key]
 
-                # 50.7 원본 로직 유지: 일운, 택일 등 특수 모드 판단
+                # 특수 모드 판단
                 if main_category in ["1. 개인 사주팔자 풀이 (종합)", "2. 테마별 특성화 상담"] and run_iljin_calc:
                     st.session_state['need_calc'] = True
                     st.session_state['run_waterfall'] = True
-                elif is_2person_product and run_delivery_calc:
+                elif is_2person and run_delivery_calc:      # ◀◀ 2. 여기 수정 완료!
                     st.session_state['need_calc'] = True
                     st.session_state['run_delivery_only'] = True
                 else:
@@ -592,6 +592,7 @@ else:
                     st.session_state['run_delivery_only'] = False
                 
                 st.rerun()
+                
 # ==============================================================================
 # 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부 
 # ==============================================================================
