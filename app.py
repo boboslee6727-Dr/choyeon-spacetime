@@ -562,15 +562,28 @@ else:
         if btn_single:
             is_compare_type = (main_category == "4. 타 감명서 비교")
             
-            # 안전하게 화면 입력값을 직접 꺼내옵니다.
+            # 파이썬이 화면에 없는 변수를 찾다가 죽지 않도록, 없으면 기본값으로 살려냅니다.
+            try: r_iljin = run_iljin_calc
+            except NameError: r_iljin = False
+            
+            try: r_deliv = run_delivery_calc
+            except NameError: r_deliv = False
+            
+            try: c_mode = compare_mode
+            except NameError: c_mode = "자동대조"
+            
+            try: o_text = other_reading_text
+            except NameError: o_text = ""
+
+            # 세션에서 이름 가져오기
             check_u_name = st.session_state.get('u_n', '')
             check_f_name = st.session_state.get('f_n', '')
 
             if not check_u_name.strip(): 
                 st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
-            elif is_compare_type and compare_mode == "외부 타 감명서 원문 대조" and not other_reading_text.strip():
+            elif is_compare_type and c_mode == "외부 타 감명서 원문 대조" and not o_text.strip():
                 st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
-            elif is_2person and not check_f_name.strip():   # ◀◀ 1. 여기 수정 완료!
+            elif is_2person and not check_f_name.strip():   
                 st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
             else:
                 st.session_state['app_running'] = True
@@ -580,10 +593,10 @@ else:
                     if key in st.session_state: del st.session_state[key]
 
                 # 특수 모드 판단
-                if main_category in ["1. 개인 사주팔자 풀이 (종합)", "2. 테마별 특성화 상담"] and run_iljin_calc:
+                if main_category in ["1. 개인 사주팔자 풀이 (종합)", "2. 테마별 특성화 상담"] and r_iljin:
                     st.session_state['need_calc'] = True
                     st.session_state['run_waterfall'] = True
-                elif is_2person and run_delivery_calc:      # ◀◀ 2. 여기 수정 완료!
+                elif is_2person and r_deliv:
                     st.session_state['need_calc'] = True
                     st.session_state['run_delivery_only'] = True
                 else:
