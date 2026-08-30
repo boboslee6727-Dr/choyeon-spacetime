@@ -326,7 +326,8 @@ else:
             if 'rev_matches_user' in st.session_state and st.session_state['rev_matches_user']:
                 matches = st.session_state['rev_matches_user']
                 if len(matches) > 1:
-                    st.info(f"💡 일치하는 생년월일이 **{len(matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
+                    # 🚨 [수술] 파란색(info)에서 연한 녹색 바탕(success)으로 변경
+                    st.success(f"💡 일치하는 생년월일이 **{len(matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
                     cur_y_val = st.session_state.get('s_y')
                     match_opts = [m['display'] for m in matches]
                     default_idx = 0
@@ -347,7 +348,8 @@ else:
                                 break
                         stop_ai()
 
-                    st.selectbox(
+                    # 🚨 [수술] 콤보박스(selectbox)를 두 줄 출력이 가능한 라디오 버튼(radio)으로 전면 교체
+                    st.radio(
                         "📅 적용할 생년월일 선택:",
                         options=match_opts,
                         index=default_idx,
@@ -440,7 +442,8 @@ else:
                 if 'rev_matches_partner' in st.session_state and st.session_state['rev_matches_partner']:
                     p_matches = st.session_state['rev_matches_partner']
                     if len(p_matches) > 1:
-                        st.info(f"💡 상대방 일치 날짜가 **{len(p_matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
+                        # 🚨 [수술] 연한 녹색 바탕(success) 적용
+                        st.success(f"💡 상대방 일치 날짜가 **{len(p_matches)}건** 검색되었습니다. 적용할 날짜를 선택하세요.")
                         
                         cur_p_y_val = st.session_state.get('p_y_in')
                         p_match_opts = [m['display'] for m in p_matches]
@@ -458,11 +461,12 @@ else:
                                     st.session_state['p_m_in'] = m['m']
                                     st.session_state['p_d_in'] = m['d']
                                     st.session_state['p_t_key'] = m['t']
-                                    st.session_state['p_t_select'] = m['t']
+                                    st.session_state['p_t_select_key'] = m['t']
                                     break
                             stop_ai()
 
-                        st.selectbox(
+                        # 🚨 [수술] 라디오 버튼으로 교체하여 두 줄 표시 CSS 연동
+                        st.radio(
                             "📅 적용할 상대방 생년월일 선택:",
                             options=p_match_opts,
                             index=p_default_idx,
@@ -660,21 +664,21 @@ if st.session_state.get('app_running', False):
         lun_str_fmt = f"{lun_y}년 {lun_m:02d}월 {lun_d:02d}일 ({leap_str})"
         time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
-        if u_product.startswith("1-1"): report_title = "🏮 사주팔자 및 총 운세 풀이"
-        elif u_product.startswith("1-2"): report_title = "🏮 올 해 운세 풀이"
-        elif u_product.startswith("1-3"): report_title = "🏮 이번 달 운세 풀이"
-        elif u_product.startswith("1-4"): report_title = "🏮 주간 및 일일 운세 풀이"
-        elif u_product.startswith("2-1"): report_title = "🏮 재물운 특화 풀이"
-        elif u_product.startswith("2-2"): report_title = "🏮 직업/진학운 특화 풀이"
-        elif u_product.startswith("2-3"): report_title = "🏮 연애/결혼운 특화 풀이"
-        elif u_product.startswith("2-4"): report_title = "🏮 건강운 특화 풀이"
-        elif u_product.startswith("2-5"): report_title = "🏮 이사/개업 택일 추천"
-        elif u_product.startswith("3-1"): report_title = "🏮 연애/결혼운 (궁합) 풀이"
-        elif u_product.startswith("3-2"): report_title = "🏮 결혼 택일 추천"
-        elif u_product.startswith("3-3"): report_title = "🏮 출산 택일 추천"
-        elif u_product.startswith("4-1"): report_title = "🏮 타 감명서 비교 (사주)"
-        elif u_product.startswith("4-2"): report_title = "🏮 타 감명서 비교 (궁합)"
-        else: report_title = "🏮 사주팔자 정밀 분석"
+        if u_product.startswith("1-1"): report_title = "사주팔자 및 총 운세 풀이"
+        elif u_product.startswith("1-2"): report_title = "올 해 운세 풀이"
+        elif u_product.startswith("1-3"): report_title = "이번 달 운세 풀이"
+        elif u_product.startswith("1-4"): report_title = "주간 및 일일 운세 풀이"
+        elif u_product.startswith("2-1"): report_title = "재물운 특화 풀이"
+        elif u_product.startswith("2-2"): report_title = "직업/진학운 특화 풀이"
+        elif u_product.startswith("2-3"): report_title = "연애/결혼운 특화 풀이"
+        elif u_product.startswith("2-4"): report_title = "건강운 특화 풀이"
+        elif u_product.startswith("2-5"): report_title = "이사/개업 택일 추천"
+        elif u_product.startswith("3-1"): report_title = "연애/결혼운 (궁합) 풀이"
+        elif u_product.startswith("3-2"): report_title = "결혼 택일 추천"
+        elif u_product.startswith("3-3"): report_title = "출산 택일 추천"
+        elif u_product.startswith("4-1"): report_title = "타 감명서 비교 (사주)"
+        elif u_product.startswith("4-2"): report_title = "타 감명서 비교 (궁합)"
+        else: report_title = "사주팔자 정밀 분석"
 
         gh_score = 0
         gh_grade = ""
@@ -1408,6 +1412,3 @@ if st.session_state.get('app_running', False):
         else:
             # 🚨 수동 연구 모드: 중복 표지 출력(st.markdown(safe_cover)) 삭제 완료! HTML 덩어리 하나만 출력!
             st.markdown(complete_report_html, unsafe_allow_html=True)
-
-
-
