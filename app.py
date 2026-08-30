@@ -782,7 +782,8 @@ if st.session_state.get('app_running', False):
             )
 
         # 🌟 대제목 타이틀(1-1 필수 요소 등) 절대 사수!
-        main_title_html = f"<h2 style='text-align:center; color:#1A237E; margin-top:30px; margin-bottom:15px;'>[ {report_title} ]</h2>"
+        # 🌟 대제목 타이틀(1-1 필수 요소 등) 절대 사수! (대괄호 삭제 및 폰트 크기 22px로 축소)
+        main_title_html = f"<h2 style='text-align:center; color:#1A237E; margin-top:30px; margin-bottom:15px; font-size:22px !important; font-weight:900; white-space:nowrap; word-break:keep-all;'>{report_title}</h2>"
 
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
