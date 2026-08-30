@@ -326,8 +326,13 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
     un_content = ""
     for data in daewun_list:
         b_left = "none" if data.get("is_first", False) else "1px solid #ccc"
+        
+        # 🚨 [수술 완료] '세' 글자가 이미 있다면 제거하고 딱 한 번만 붙이도록 안전장치 적용
+        raw_age = str(data.get('age_range', ''))
+        clean_age_str = raw_age.replace("세", "").strip() + "세"
+        
         un_content += get_un_cell(
-            f"{data['age_range']}세", data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
+            clean_age_str, data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
             data["un_sung"], data.get("y_shinsal", "-"), "", "", b_left, data.get("is_current", False)
         )
@@ -535,8 +540,12 @@ def get_warning_box(title, message):
 def get_final_report_box(content_html):
     """A4 백지 캔버스 안쪽 둥근 VIP 프레임 단일 래핑 (50.7 완벽 복원)"""
     title_raw = st.session_state.get('current_report_title', '초연 전통 명리사주 풀이')
-    # 🏮 및 🎯 철거
+    # 🏮 및 🎯 철거하여 h1 타이틀용으로 정제
     clean_title = title_raw.replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
+    
+    # 🚨 [수술 완료] content_html 내부에 텍스트로 박혀 들어온 🏮, 🎯 중복 타이틀 찌꺼기 완벽 삭제
+    content_html = re.sub(r'<[^>]*>\s*\[\s*[🏮🎯].*?\]\s*<[^>]*>', '', content_html)
+    content_html = re.sub(r'\[\s*[🏮🎯].*?\]', '', content_html)
     
     return f"""
     <div class='report-page' style='page-break-before: auto;'>
