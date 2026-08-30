@@ -97,9 +97,20 @@ def get_total_time_adjustment(dt):
     return adj
 
 def extract_ganji(text):
-    g = [c for c in text if c in "甲乙丙丁戊己庚辛壬癸갑을병정무기경신임계"]
-    j = [c for c in text if c in "子丑寅卯辰巳午未申酉戌亥자축인묘진사오미신유술해"]
-    return (g[0] if g else "?") + (j[0] if j else "?")
+    text = text.replace(" ", "").replace("년", "").replace("월", "").replace("일", "").replace("시", "")
+    g_char, j_char = "?", "?"
+    
+    for c in text:
+        # 천간을 아직 못 찾았고, 문자가 천간 목록에 있다면
+        if g_char == "?" and c in "甲乙丙丁戊己庚辛壬癸갑을병정무기경신임계":
+            g_char = c
+            continue # 지지로 중복 인식되지 않도록 다음 문자로 패스
+            
+        # 지지를 아직 못 찾았고, 문자가 지지 목록에 있다면
+        if j_char == "?" and c in "子丑寅卯辰巳午未申酉戌亥자축인묘진사오미신유술해":
+            j_char = c
+            
+    return g_char + j_char
 
 def extract_pure_ganji(cell_0, cell_1):
     raw_s = str(cell_0[0] if isinstance(cell_0, (list, tuple)) else cell_0)
@@ -235,9 +246,10 @@ def auto_fill_user_ganji():
     rd = st.session_state.get("u_rd_rev", "")
     rt = st.session_state.get("u_rt_rev", "")
     
-    _ry = extract_ganji(ry) if 'extract_ganji' in globals() else ry
-    _rm = extract_ganji(rm) if 'extract_ganji' in globals() else rm
-    _rd = extract_ganji(rd) if 'extract_ganji' in globals() else rd
+    # 🚨 [50.7 순정 방식으로 원상 복구] 악성 버그 유발 금지!
+    _ry = ry.replace("년","").replace(" ","")[:2]
+    _rm = rm.replace("월","").replace(" ","")[:2]
+    _rd = rd.replace("일","").replace(" ","")[:2]
     
     if not _ry and not _rm and not _rd:
         st.session_state.pop('rev_success_msg', None)
@@ -278,17 +290,22 @@ def auto_fill_user_ganji():
                         st.session_state['s_d'] = curr_dt.day
                         
                         if rt:
-                            ji_char = rt[-1]
-                            rt_h = K2H_JI.get(ji_char, ji_char)
-                            st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
+                            clean_rt = rt.replace("시", "").strip()
+                            if clean_rt:
+                                ji_char = clean_rt[-1]
+                                rt_h = K2H_JI.get(ji_char, ji_char)
+                                st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
+                            else:
+                                st.session_state['s_t'] = "시간 모름"
                         else:
                             st.session_state['s_t'] = "시간 모름"
 
                         found = True
                         st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
                         break
-                curr_dt -= dt_mod.timedelta(days=1)
-            if found: break
+                    # 🚨 [수술 완료] 들여쓰기를 4칸 당겨 while 루프 안으로 복구!!
+                    curr_dt -= dt_mod.timedelta(days=1)
+                if found: break
         if not found: 
             st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
     else: 
@@ -302,9 +319,10 @@ def auto_fill_partner_ganji():
     p_rd = st.session_state.get("p_rd_rev", "")
     p_rt = st.session_state.get("p_rt_rev", "")
     
-    _p_ry = extract_ganji(p_ry) if 'extract_ganji' in globals() else p_ry
-    _p_rm = extract_ganji(p_rm) if 'extract_ganji' in globals() else p_rm
-    _p_rd = extract_ganji(p_rd) if 'extract_ganji' in globals() else p_rd
+    # 🚨 [50.7 순정 방식으로 원상 복구]
+    _p_ry = p_ry.replace("년","").replace(" ","")[:2]
+    _p_rm = p_rm.replace("월","").replace(" ","")[:2]
+    _p_rd = p_rd.replace("일","").replace(" ","")[:2]
 
     if not _p_ry and not _p_rm and not _p_rd:
         st.session_state.pop('rev_p_success_msg', None)
@@ -345,22 +363,26 @@ def auto_fill_partner_ganji():
                         st.session_state['p_d_in'] = curr_dt.day
                         
                         if p_rt:
-                            ji_char_p = p_rt[-1]
-                            p_rt_h = K2H_JI.get(ji_char_p, ji_char_p)
-                            st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                            clean_p_rt = p_rt.replace("시", "").strip()
+                            if clean_p_rt:
+                                ji_char_p = clean_p_rt[-1]
+                                p_rt_h = K2H_JI.get(ji_char_p, ji_char_p)
+                                st.session_state['p_t_key'] = time_map.get(p_rt_h, "시간 모름")
+                            else:
+                                st.session_state['p_t_key'] = "시간 모름"
                         else:
                             st.session_state['p_t_key'] = "시간 모름"
 
                         found = True
                         st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
                         break
-                curr_dt -= dt_mod.timedelta(days=1)
-            if found: break
+                    # 🚨 [수술 완료] 들여쓰기를 4칸 당겨 while 루프 안으로 복구!!
+                    curr_dt -= dt_mod.timedelta(days=1)
+                if found: break
         if not found: 
             st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
     else: 
         st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
-
 
 # ==============================================================================
 # 섹션 3. 명리 기초 연산 로직 (오행, 십성, 12운성, 신살, 공망, 격국 등)
@@ -690,46 +712,6 @@ def calculate_gongmang(ilgan, ilji):
         return f"{gong1}{gong2}"
     except:
         return "-"
-
-def get_daeun_su_accurate(utc_dt, order):
-    try:
-        sun = ephem.Sun()
-        def get_lon(dt):
-            sun.compute(dt)
-            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
-
-        start_lon = get_lon(utc_dt)
-        jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
-        
-        if order == 1:
-            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
-        else:
-            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
-            
-        search_dt = utc_dt
-        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
-        
-        for _ in range(6000):
-            search_dt += step
-            curr_lon = get_lon(search_dt)
-            
-            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180:
-                curr_lon += 360
-            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180:
-                curr_lon -= 360
-                
-            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped):
-                break
-                
-        total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
-        d_su = int(round(total_days / 3.0))
-        
-        if d_su == 0: d_su = 1
-        elif d_su > 10: d_su = 10
-        
-        return d_su
-    except: 
-        return 1
 
 def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
     daewun_list = []
@@ -1095,6 +1077,36 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "woonse_fact_str": woonse_fact_str.strip()
     }
 
+def get_weekly_daily_facts(ds, db, yb, year, month, day):
+    target_dt = dt_mod.datetime(year, month, day)
+    _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
+    i_gan, i_ji = d_pillar[0], d_pillar[1]
+    
+    day_wunseong = get_unsung(ds, i_ji)
+    day_12shinsal = get_dual_12_shinsal(yb, db, i_ji)
+    
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    i_gan_group = get_group_ss(get_ss(ds, i_gan))
+    
+    m_che_first = i_gan_group
+    am_yong = get_execution_yong(i_gan_group, ilju_lower_group)
+    m_che_second = get_group_ss(get_ss(ds, i_ji))
+    pm_yong = get_execution_yong(m_che_second, ilju_lower_group)
+    
+    weekly_ganji = []
+    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
+    for i in range(7):
+        curr = start_sun + dt_mod.timedelta(days=i)
+        _, _, dp = get_ganji_from_date(curr.year, curr.month, curr.day)
+        weekly_ganji.append(f"{dp[0]}{dp[1]}")
+        
+    return {
+        "m_che_first": m_che_first, "am_yong": am_yong,
+        "m_che_second": m_che_second, "pm_yong": pm_yong,
+        "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
+        "weekly_ganji_list": ", ".join(weekly_ganji)
+    }
+
 def get_dw_fact_str(dw_g, dw_j):
     return f"천간 {dw_g}의 기운이 지지 {dw_j}의 환경을 만난 형국 (체용의 상호작용)"
 
@@ -1235,88 +1247,46 @@ def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital,
     fact_data.update(kwargs)
     return fact_data
 
-# ==============================================================================
-# [신규 장착] 1-4 주간 운세 전용: 7일간 주간 캘린더 정밀 데이터셋 산출 엔진
-# ==============================================================================
-def get_weekly_calendar_data(target_date, ds_hanja):
-    """
-    지정된 날짜(target_date)가 속한 주간(일요일~토요일 7일간)의
-    일진 간지, 일간 기준 천간/지지 십신, 12운성, 12신살 데이터를 패키징하여 반환합니다.
-    """
-    ds_h = _to_hanja(ds_hanja)
-    calendar_list = []
-    
-    # target_date 기준 해당 주의 일요일(시작일) 계산
-    # target_date.weekday() : 월(0), 화(1), ..., 토(5), 일(6)
-    days_from_sunday = (target_date.weekday() + 1) % 7
-    start_sunday = target_date - dt_mod.timedelta(days=days_from_sunday)
-    
-    weekday_kor = ["일", "월", "화", "수", "목", "금", "토"]
-    
-    for i in range(7):
-        curr_dt = start_sunday + dt_mod.timedelta(days=i)
-        try:
-            _, _, d_pillar = get_ganji_from_date(curr_dt.year, curr_dt.month, curr_dt.day)
-            c_gan = d_pillar[0] if len(d_pillar) > 0 else "甲"
-            c_ji = d_pillar[1] if len(d_pillar) > 1 else "子"
-        except Exception:
-            c_gan, c_ji = "甲", "子"
-            
-        c_gan_h = _to_hanja(c_gan)
-        c_ji_h = _to_hanja(c_ji)
-        
-        ss_gan = get_ss(ds_h, c_gan_h)
-        ss_ji = get_ss(ds_h, c_ji_h)
-        unsung_val = get_unsung(ds_h, c_ji_h)
-        
-        calendar_list.append({
-            "date": curr_dt,
-            "year": curr_dt.year,
-            "month": curr_dt.month,
-            "day": curr_dt.day,
-            "weekday": weekday_kor[i],
-            "gan": c_gan_h,
-            "ji": c_ji_h,
-            "ganji": f"{c_gan_h}{c_ji_h}",
-            "ganji_str": f"{c_gan_h}{c_ji_h}",
-            "ss_gan": ss_gan,
-            "ss_ji": ss_ji,
-            "un_sung": unsung_val,
-            "is_today": (curr_dt == target_date),
-            "is_target_day": (curr_dt == target_date)
-        })
-        
-    return calendar_list
+def get_daeun_su_accurate(utc_dt, order):
+    try:
+        sun = ephem.Sun()
+        def get_lon(dt):
+            sun.compute(dt)
+            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
 
-def get_weekly_daily_facts(ds, db, yb, year, month, day):
-    target_dt = dt_mod.datetime(year, month, day)
-    _, _, d_pillar = get_ganji_from_date(target_dt.year, target_dt.month, target_dt.day)
-    i_gan, i_ji = d_pillar[0], d_pillar[1]
-    
-    day_wunseong = get_unsung(ds, i_ji)
-    day_12shinsal = get_dual_12_shinsal(yb, db, i_ji)
-    
-    ilju_lower_group = get_group_ss(get_ss(ds, db))
-    i_gan_group = get_group_ss(get_ss(ds, i_gan))
-    
-    m_che_first = i_gan_group
-    am_yong = get_execution_yong(i_gan_group, ilju_lower_group)
-    m_che_second = get_group_ss(get_ss(ds, i_ji))
-    pm_yong = get_execution_yong(m_che_second, ilju_lower_group)
-    
-    weekly_ganji = []
-    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
-    for i in range(7):
-        curr = start_sun + dt_mod.timedelta(days=i)
-        _, _, dp = get_ganji_from_date(curr.year, curr.month, curr.day)
-        weekly_ganji.append(f"{dp[0]}{dp[1]}")
+        start_lon = get_lon(utc_dt)
+        jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
         
-    return {
-        "m_che_first": m_che_first, "am_yong": am_yong,
-        "m_che_second": m_che_second, "pm_yong": pm_yong,
-        "day_wunseong": day_wunseong, "day_12shinsal": day_12shinsal,
-        "weekly_ganji_list": ", ".join(weekly_ganji)
-    }
+        if order == 1:
+            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
+        else:
+            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
+            
+        search_dt = utc_dt
+        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
+        
+        for _ in range(6000):
+            search_dt += step
+            curr_lon = get_lon(search_dt)
+            
+            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180:
+                curr_lon += 360
+            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180:
+                curr_lon -= 360
+                
+            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped):
+                break
+                
+        total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
+        d_su = int(round(total_days / 3.0))
+        
+        if d_su == 0: d_su = 1
+        elif d_su > 10: d_su = 10
+        
+        return d_su
+    except: 
+        return 1
+
 
 # ==============================================================================
 # 섹션 6. 궁합, 택일 및 초연 시공명리 특수 파동 통합 모듈 (활성 구역)
