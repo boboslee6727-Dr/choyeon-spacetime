@@ -1424,6 +1424,9 @@ if st.session_state.get('app_running', False):
         final_render_html = final_render_html.replace('\n', ' ')
         safe_cover_str = cover_html.replace('\n', ' ') if 'cover_html' in locals() and cover_html else ""
         
+        # 🚨 [핵심 수술] 빼먹었던 디자인(CSS) 변수 생성 코드를 추가했습니다!
+        global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
+
         # 🚨 [수술 3] 최후의 보루: h1, h2 (표지 제목)을 감싸고 있는 대괄호를 강제로 철거합니다!
         complete_report_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
         complete_report_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', complete_report_html)
