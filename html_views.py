@@ -228,7 +228,7 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     </div>
     """
 
-ef get_main_title_html(report_title):
+def get_main_title_html(report_title):
     """본문 대제목 렌더링 (대괄호 제거, 22px 축소, 줄바꿈 금지 적용)"""
     return f"<h2 style='text-align:center; color:#1A237E; margin-top:30px; margin-bottom:15px; font-size:22px !important; font-weight:900; white-space:nowrap; word-break:keep-all;'>{report_title}</h2>"
 
