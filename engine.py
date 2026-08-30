@@ -246,7 +246,6 @@ def auto_fill_user_ganji():
     rd = st.session_state.get("u_rd_rev", "")
     rt = st.session_state.get("u_rt_rev", "")
     
-    # 🚨 [50.7 순정 방식으로 원상 복구] 악성 버그 유발 금지!
     _ry = ry.replace("년","").replace(" ","")[:2]
     _rm = rm.replace("월","").replace(" ","")[:2]
     _rd = rd.replace("일","").replace(" ","")[:2]
@@ -258,58 +257,68 @@ def auto_fill_user_ganji():
         rm_h = K2H_GAN.get(_rm[0], _rm[0]) + K2H_JI.get(_rm[1], _rm[1])
         rd_h = K2H_GAN.get(_rd[0], _rd[0]) + K2H_JI.get(_rd[1], _rd[1])
         
-        klc_find = KoreanLunarCalendar()
-        found = False
-        
-        time_map = {
-            '자': '00:30 ~ 01:29 (朝子)시', '子': '00:30 ~ 01:29 (朝子)시',
-            '축': '01:30 ~ 03:29 (丑)시', '丑': '01:30 ~ 03:29 (丑)시',
-            '인': '03:30 ~ 05:29 (寅)시', '寅': '03:30 ~ 05:29 (寅)시',
-            '묘': '05:30 ~ 07:29 (卯)시', '卯': '05:30 ~ 07:29 (卯)시',
-            '진': '07:30 ~ 09:29 (辰)시', '辰': '07:30 ~ 09:29 (辰)시',
-            '사': '09:30 ~ 11:29 (巳)시', '巳': '09:30 ~ 11:29 (巳)시',
-            '오': '11:30 ~ 13:29 (午)시', '午': '11:30 ~ 13:29 (午)시',
-            '미': '13:30 ~ 15:29 (未)시', '未': '13:30 ~ 15:29 (未)시',
-            '신': '15:30 ~ 17:29 (申)시', '申': '15:30 ~ 17:29 (申)시',
-            '유': '17:30 ~ 19:29 (酉)시', '酉': '17:30 ~ 19:29 (酉)시',
-            '술': '19:30 ~ 21:29 (戌)시', '戌': '19:30 ~ 21:29 (戌)시',
-            '해': '21:30 ~ 23:29 (亥)시', '亥': '21:30 ~ 23:29 (亥)시'
-        }
-        
-        for y in range(2050, 1899, -1):
-            klc_find.setSolarDate(y, 7, 1)
-            gj_y = klc_find.getChineseGapJaString().split()
-            if gj_y and gj_y[0][:2] == ry_h:
-                curr_dt = dt_mod.date(y+1, 2, 28)
-                while curr_dt >= dt_mod.date(y, 1, 1):
-                    klc_find.setSolarDate(curr_dt.year, curr_dt.month, curr_dt.day)
-                    gj = klc_find.getChineseGapJaString().split()
-                    if len(gj) >= 3 and gj[0][:2] == ry_h and gj[1][:2] == rm_h and gj[2][:2] == rd_h:
-                        st.session_state['s_y'] = curr_dt.year
-                        st.session_state['s_m'] = curr_dt.month
-                        st.session_state['s_d'] = curr_dt.day
-                        
-                        if rt:
-                            clean_rt = rt.replace("시", "").strip()
-                            if clean_rt:
-                                ji_char = clean_rt[-1]
-                                rt_h = K2H_JI.get(ji_char, ji_char)
-                                st.session_state['s_t'] = time_map.get(rt_h, "시간 모름")
-                            else:
-                                st.session_state['s_t'] = "시간 모름"
-                        else:
-                            st.session_state['s_t'] = "시간 모름"
+        rt_ji = None
+        if rt:
+            clean_rt = rt.replace("시", "").strip()
+            if clean_rt:
+                rt_ji = K2H_JI.get(clean_rt[-1], clean_rt[-1])
 
-                        found = True
-                        st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
-                        break
-                    # 🚨 [수술 완료] 들여쓰기를 4칸 당겨 while 루프 안으로 복구!!
-                    curr_dt -= dt_mod.timedelta(days=1)
-                if found: break
-        if not found: 
+        # 🚨 [핵심 수술] KLC의 부정확한 루프 폐기! 박사님의 ephem 정밀 역산 엔진 즉시 호출!
+        base_year = dt_mod.datetime.now().year
+        results = search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji, base_year)
+        
+        if results:
+            best_match = results[0] # 현대(base_year)에 가장 가까운 날짜 적용
+            st.session_state['s_y'] = best_match['y']
+            st.session_state['s_m'] = best_match['m']
+            st.session_state['s_d'] = best_match['d']
+            st.session_state['s_t'] = best_match['t']
+            st.session_state['rev_success_msg'] = "✅ 자동입력 완료!"
+        else: 
             st.session_state['rev_error_msg'] = "일치하는 날짜가 없습니다."
     else: 
         st.session_state['rev_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
+
+def auto_fill_partner_ganji():
+    st.session_state['app_running'] = False
+    
+    p_ry = st.session_state.get("p_ry_rev", "")
+    p_rm = st.session_state.get("p_rm_rev", "")
+    p_rd = st.session_state.get("p_rd_rev", "")
+    p_rt = st.session_state.get("p_rt_rev", "")
+    
+    _p_ry = p_ry.replace("년","").replace(" ","")[:2]
+    _p_rm = p_rm.replace("월","").replace(" ","")[:2]
+    _p_rd = p_rd.replace("일","").replace(" ","")[:2]
+
+    if not _p_ry and not _p_rm and not _p_rd:
+        st.session_state.pop('rev_p_success_msg', None)
+    elif len(_p_ry) >= 2 and len(_p_rm) >= 2 and len(_p_rd) >= 2:
+        p_ry_h = K2H_GAN.get(_p_ry[0], _p_ry[0]) + K2H_JI.get(_p_ry[1], _p_ry[1])
+        p_rm_h = K2H_GAN.get(_p_rm[0], _p_rm[0]) + K2H_JI.get(_p_rm[1], _p_rm[1])
+        p_rd_h = K2H_GAN.get(_p_rd[0], _p_rd[0]) + K2H_JI.get(_p_rd[1], _p_rd[1])
+        
+        p_rt_ji = None
+        if p_rt:
+            clean_p_rt = p_rt.replace("시", "").strip()
+            if clean_p_rt:
+                p_rt_ji = K2H_JI.get(clean_p_rt[-1], clean_p_rt[-1])
+
+        # 🚨 [핵심 수술] 상대방 입력도 박사님의 ephem 정밀 역산 엔진으로 연결!
+        base_year = dt_mod.datetime.now().year
+        results = search_dates_by_ganji(p_ry_h, p_rm_h, p_rd_h, p_rt_ji, base_year)
+        
+        if results:
+            best_match = results[0]
+            st.session_state['p_y_in'] = best_match['y']
+            st.session_state['p_m_in'] = best_match['m']
+            st.session_state['p_d_in'] = best_match['d']
+            st.session_state['p_t_key'] = best_match['t']
+            st.session_state['rev_p_success_msg'] = "✅ 상대방 자동입력 완료!"
+        else: 
+            st.session_state['rev_p_error_msg'] = "일치하는 날짜가 없습니다."
+    else: 
+        st.session_state['rev_p_error_msg'] = "간지를 2글자씩 정확히 입력하세요."
 
 def auto_fill_partner_ganji():
     st.session_state['app_running'] = False
