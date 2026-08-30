@@ -160,63 +160,64 @@ def td_func(c, engine, size="18px"):
     return f"<td class='color-{oh}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'><span style='color:inherit !important;'>{('?' if c in ['?',' ','-'] else c)}</span></td>"
 
 def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    # 🏮 이모지 및 불필요 장식 완벽 철거
-    raw_title = str(report_title or "초연 전통 명리사주 풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
+    # 🏮 이모지 철거 및 '전통' -> '시공' 명칭 변경
+    raw_title = str(report_title or "초연 시공명리 사주풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     clean_title = " ".join(raw_title.split())
+    clean_title = clean_title.replace("전통 명리사주 풀이", "시공명리 사주풀이").replace("전통 명리사주", "시공명리 사주").replace("전통명리", "시공명리")
     clean_u_name = str(u_name or "무명").strip()
 
     return f"""
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
-        <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 700px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
-            <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 26px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -2px !important;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 10px;'>
-                    <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
+        <div style='border: 4px solid #1A237E; padding: 35px 25px; border-radius: 15px; text-align: center; background: white; width: 85%; max-width: 600px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            <div style='border-bottom:3px double #1A237E; padding-bottom:15px; margin-bottom:25px;'>
+                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 24px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -1.5px !important;'>[ {clean_title} ]</h1>
+                <div style='text-align: right; margin-top: 8px;'>
+                    <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 20px;'>{u_icon} 신청인 : {clean_u_name} 님</h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 20px 15px; border-radius: 12px;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-bottom: 12px; border-bottom: none;'>{u_icon} 신청인 : {clean_u_name} 님</h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 600; color: #555; line-height: 1.5;'>
                     <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
-                    <p style='margin: 5px 0 0 0; color: #1A237E; white-space: nowrap;'>{u_time}</p>
+                    <p style='margin: 4px 0 0 0; color: #1A237E; white-space: nowrap;'>{u_time}</p>
                 </div>
             </div>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 전통명리 연구소</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 16px; margin-top: 30px; margin-bottom: 0; font-weight: 800;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 20px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0;'>초연 시공명리 연구소</p>
         </div>
     </div>
     """
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    # 🏮 이모지 및 불필요 장식 완벽 철거
-    raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
+    raw_title = str(report_title or "초연 시공명리 궁합풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     clean_title = " ".join(raw_title.split())
+    clean_title = clean_title.replace("전통 명리궁합 풀이", "시공명리 궁합풀이").replace("전통 명리궁합", "시공명리 궁합").replace("전통명리", "시공명리")
     clean_u_name = str(u_name or "무명").strip()
     clean_p_name = str(p_name or "무명").strip()
 
     return f"""
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
-        <div style='border: 4px solid #1A237E; padding: 30px 20px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 700px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
-            <div style='border-bottom:4px double #1A237E; padding-bottom:15px; margin-bottom:25px;'>
-                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 26px !important; margin:0 !important; white-space: nowrap !important; letter-spacing: -2px !important;'>{clean_title}</h1>
-                <div style='text-align: right; margin-top: 10px;'>
-                    <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; letter-spacing: 1px;'>{version}</span>
+        <div style='border: 4px solid #1A237E; padding: 35px 25px; border-radius: 15px; text-align: center; background: white; width: 85%; max-width: 600px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
+            <div style='border-bottom:3px double #1A237E; padding-bottom:15px; margin-bottom:20px;'>
+                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 24px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -1.5px !important;'>[ {clean_title} ]</h1>
+                <div style='text-align: right; margin-top: 8px;'>
+                    <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 20px; border-radius: 15px; margin-bottom: 15px;'>
-                <h2 style='font-size: 22px; font-weight: 800; color: #1A237E; margin-bottom: 10px;'>{u_icon} 남명 : {clean_u_name} 님 <span style='font-size:15px; color:#555;'>( {u_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.6;'>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 15px; border-radius: 12px; margin-bottom: 12px;'>
+                <h2 style='font-size: 20px; font-weight: 800; color: #1A237E; margin-bottom: 8px; border-bottom: none;'>{u_icon} 남명 : {clean_u_name} 님 <span style='font-size:14px; color:#555;'>( {u_age}세 )</span></h2>
+                <div style='font-size: 14px; font-weight: 600; color: #555; line-height: 1.5;'>
                     <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 20px; border-radius: 15px;'>
-                <h2 style='font-size: 22px; font-weight: 800; color: #1A237E; margin-bottom: 10px;'>{p_icon} 여명 : {clean_p_name} 님 <span style='font-size:15px; color:#555;'>( {p_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.6;'>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 15px; border-radius: 12px;'>
+                <h2 style='font-size: 20px; font-weight: 800; color: #1A237E; margin-bottom: 8px; border-bottom: none;'>{p_icon} 여명 : {clean_p_name} 님 <span style='font-size:14px; color:#555;'>( {p_age}세 )</span></h2>
+                <div style='font-size: 14px; font-weight: 600; color: #555; line-height: 1.5;'>
                     <p style='margin: 0; white-space: nowrap;'>[양력] {p_sol} | [음력] {p_lun}</p>
                 </div>
             </div>
-            <p style='font-size: 18px; margin-top: 25px; font-weight: 800;'>{today_str}</p>
-            <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 10px;'>초연 전통명리 연구소</p>
+            <p style='font-size: 16px; margin-top: 25px; margin-bottom: 0; font-weight: 800;'>{today_str}</p>
+            <p style='font-size: 20px; font-weight: 800; color: #1A237E; margin-top: 8px; margin-bottom: 0;'>초연 시공명리 연구소</p>
         </div>
     </div>
     """
@@ -225,7 +226,7 @@ def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_s
     return f"""
     <div style='text-align:center; font-family:"Nanum Gothic", sans-serif; margin-bottom:15px; line-height:1.5;'>
         <span style='font-size:18px; font-weight:900; color:{p_color}; white-space:nowrap;'>{p_icon} {name}님 ({gender}, {marital}, {age}세)</span><br>
-        <span style='font-size:14px; font-weight:bold; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span>
+        <span style='font-size:14px; font-weight:500; color:#555; white-space:nowrap;'>[양력: {sol_str} | 음력: {lun_str} {time_str}]</span>
     </div>
     """
 
@@ -486,8 +487,8 @@ def get_gunghap_closing(name1, name2):
     return f"""
     <div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>
         <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b style='color:#1A237E;'>'조화와 상생'</b>입니다.</p>
-        <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 기운을 보완하고 다독여주는 든든한 <b style='color:#1A237E;'>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 전통 명리의 축복이 가득하시길 소망합니다.</p>
-        <div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: "Nanum Myeongjo", serif;'>- 초연 전통명리 연구소 드림 -</span></div>
+        <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 기운을 보완하고 다독여주는 든든한 <b style='color:#1A237E;'>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 초연 시공명리의 축복이 가득하시길 소망합니다.</p>
+        <div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: "Nanum Myeongjo", serif;'>- 초연 시공명리 연구소 드림 -</span></div>
     </div>
     """
 
@@ -539,18 +540,25 @@ def get_warning_box(title, message):
 
 def get_final_report_box(content_html):
     """A4 백지 캔버스 안쪽 둥근 VIP 프레임 단일 래핑 (50.7 완벽 복원)"""
-    title_raw = st.session_state.get('current_report_title', '초연 전통 명리사주 풀이')
+    title_raw = st.session_state.get('current_report_title', '초연 시공명리 사주풀이')
+    
     # 🏮 및 🎯 철거하여 h1 타이틀용으로 정제
     clean_title = title_raw.replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     
-    # 🚨 [수술 완료] content_html 내부에 텍스트로 박혀 들어온 🏮, 🎯 중복 타이틀 찌꺼기 완벽 삭제
+    # 박사님 지시: 전통 명리사주 -> 시공명리 사주풀이 변경
+    clean_title = clean_title.replace("전통 명리사주 풀이", "시공명리 사주풀이").replace("전통 명리사주", "시공명리 사주").replace("전통명리", "시공명리")
+    
+    # 대제목 양쪽에 [ ] 괄호 추가
+    final_title = f"[ {clean_title} ]"
+    
+    # 🚨 content_html 내부에 텍스트로 박혀 들어온 🏮, 🎯 중복 타이틀 찌꺼기 완벽 삭제
     content_html = re.sub(r'<[^>]*>\s*\[\s*[🏮🎯].*?\]\s*<[^>]*>', '', content_html)
     content_html = re.sub(r'\[\s*[🏮🎯].*?\]', '', content_html)
     
     return f"""
     <div class='report-page' style='page-break-before: auto;'>
         <div class='vip-inset-frame' style='border: 2px solid #1A237E; padding: 20px; border-radius: 15px; box-sizing: border-box; box-decoration-break: clone; -webkit-box-decoration-break: clone; page-break-inside: auto; break-inside: auto;'>
-            <h1 style='text-align:center; font-size: 24px; font-weight: 900; white-space: nowrap;'>{clean_title}</h1>
+            <h1 style='text-align:center; font-size: 24px; font-weight: 900; white-space: nowrap;'>{final_title}</h1>
             {content_html}
         </div>
     </div>
