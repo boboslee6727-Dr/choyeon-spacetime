@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (Ver 85.5 모듈 - 50.7 황금비율 UI/UX 및 렌더링 100% 복원)
+# html_views.py (ver 86.0 - 50.7 황금비율 UI/UX 및 렌더링 100% 완벽 복원)
 # ==============================================================================
 import re
 import streamlit as st
@@ -106,7 +106,6 @@ def get_global_css():
 
     .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
 
-    /* 🚨 [PDF 인쇄 오류 완벽 차단용 수정] 🚨 */
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
@@ -120,7 +119,6 @@ def get_global_css():
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
         
-        /* 🚨 [프레임 분할 닫기 적용] 매 페이지마다 테두리가 새로 열리고 닫히도록 복제(clone) */
         .vip-inset-frame { 
             border: 2px solid #000 !important; 
             border-radius: 20px !important; 
@@ -129,71 +127,41 @@ def get_global_css():
             -webkit-box-decoration-break: clone !important; 
         }
     }
-    </style>
-    """
+    </style>"""
 
 def format_ai_text_to_html(text, qna_text=""):
     """
-    🚨 AI 텍스트 단락 보호 및 마크다운 처리 (표 증발 오류 수술 완료)
+    🚨 50.7 완벽 호환 포맷터: 테이블 치환 마커 보호 및 볼드체 변환만 수행.
+    문단 분리(<p> 태그)는 프롬프트에서 AI가 이미 뱉어주므로 파이썬에서 강제 개입하지 않습니다.
     """
     if not text: return ""
+    # 마크다운 블록 찌꺼기 제거
     text = re.sub(r'```(?:html)?\s*', '', text)
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text) # 옥의 티 볼드체 처리
+    # 왼쪽 공백 띄어쓰기 정리
+    text = "\n".join([line.lstrip() for line in text.split("\n")])
+    # 마크다운 볼드체(**) -> HTML 태그(<b>)로 일괄 치환 (옥의 티 수술)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     
-    lines = text.split('\n')
-    html_lines = []
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            html_lines.append("<br>") 
-            continue
-            
-        # 🚨 [표 증발 방어막] 테이블 치환 마커는 절대로 <p>태그로 감싸지 않고 통과시킴
-        if "[DAEWUN_TABLE_HERE]" in line or "[SEWUN_TABLE_HERE]" in line or "[WOLWUN_TABLE_HERE]" in line or "[WEEKLY_CALENDAR_HERE]" in line or "[COUPLE_DAEWUN_TABLES_HERE]" in line:
-            html_lines.append(line)
-            continue
-
-        lower_line = line.lower()
-        # 프롬프트에서 이미 HTML 태그(<h3, <span, <div 등)를 입혀서 뱉은 경우そのまま 유지
-        if lower_line.startswith('<') or lower_line.startswith('['):
-            html_lines.append(line)
-        else:
-            # 순수 텍스트로 떨어진 문장만 50.7 표준 <p> 태그 적용
-            html_lines.append(f"<p style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; text-indent: 1em; text-align: justify;'>{line}</p>")
-
-    main_html = "\n".join(html_lines)
-
     qna_html = ""
     if qna_text:
-        clean_qna_body = qna_text.replace('💡', '').strip()
-        clean_qna_body = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna_body)
-        qna_body = clean_qna_body.replace('\n\n', '<br><br>').replace('\n', '<br>')
+        clean_qna = qna_text.replace('💡', '').strip()
+        clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna).replace('\n\n', '<br><br>').replace('\n', '<br>')
+        qna_html = f"<div style='margin-top:20px; font-weight:bold;'>💡 사주박사의 1:1 심층 솔루션 안내<br>{clean_qna}</div>"
         
-        qna_html = f"""
-        <div style='background-color: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 24px; margin-top: 20px; margin-bottom: 20px;'>
-            <div style='font-family: "Nanum Myeongjo", serif; font-size: 18px; font-weight: 900; color: #1A237E; margin-top: 0px; margin-bottom: 12px; border-bottom: 2px solid #1A237E; padding-bottom: 10px;'>
-                💡 사주박사 1:1 심층 솔루션 답변
-            </div>
-            <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; font-weight: 500; line-height: 1.8; color: #000000; text-indent: 1em; text-align: justify; word-break: keep-all;'>
-                {qna_body}
-            </div>
-        </div>
-        """
-        
-    return f"<div class='ai-content' style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif;'>\n{main_html}\n{qna_html}\n</div>"
+    return f"<div style='font-family: \"Nanum Myeongjo\", \"바탕체\", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000;'>{text}{qna_html}</div>"
+
 
 # ==============================================================================
-# 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (50.7 완벽 이식)
+# 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 
 # ==============================================================================
 
-def td_func(val, engine):
-    oh = engine.get_color(val)
-    return f"<td class='color-{oh}' style='font-size: 18px; font-weight: 900; border:1px solid #444 !important;'><span style='color:inherit !important;'>{('?' if val in ['?',' ','-'] else val)}</span></td>"
+def td_func(c, engine, size="18px"):
+    oh = engine.get_color(c)
+    return f"<td class='color-{oh}' style='font-size:{size}; font-weight:900; border:1px solid #444 !important;'><span style='color:inherit !important;'>{('?' if c in ['?',' ','-'] else c)}</span></td>"
 
 def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    # 🚨 🏮 이모지 및 불필요한 장식 철거
-    raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
+    # 🏮 이모지 및 불필요 장식 완벽 철거
+    raw_title = str(report_title or "초연 전통 명리사주 풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     clean_title = " ".join(raw_title.split())
     clean_u_name = str(u_name or "무명").strip()
 
@@ -220,9 +188,11 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
     """
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    raw_title = str(report_title or "초연 전통 명리 궁합풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
+    # 🏮 이모지 및 불필요 장식 완벽 철거
+    raw_title = str(report_title or "초연 전통 명리궁합 풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     clean_title = " ".join(raw_title.split())
-    clean_u_name, clean_p_name = str(u_name or "무명").strip(), str(p_name or "무명").strip()
+    clean_u_name = str(u_name or "무명").strip()
+    clean_p_name = str(p_name or "무명").strip()
 
     return f"""
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
@@ -414,7 +384,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
     """
 
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
-    pass # 일진 파이프라인에서만 쓰이므로 생략 가능
+    pass # 50.7에서는 일진 파이프라인 전용이므로 여기선 생략
 
 # ==============================================================================
 # 📦 섹션 3. 서술형 텍스트 박스 (인트로, 황금문구, 클로징 등)
@@ -471,7 +441,7 @@ def get_closing_html(name):
     """
 
 def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
-    return "" # 사용안함
+    return "" # 50.7에서는 사용하지 않음
 
 def get_external_raw_text_box(other_text):
     return f"""
@@ -517,7 +487,7 @@ def get_gunghap_closing(name1, name2):
     """
 
 def get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess):
-    pass # 50.7의 app.py에서 wrap_a4로 직접 분할 호출함
+    pass 
 
 def get_delivery_summary_box(best_days):
     pass
