@@ -174,7 +174,8 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
         <div style='border: 4px solid #1A237E; padding: 35px 25px; border-radius: 15px; text-align: center; background: white; width: 85%; max-width: 600px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:15px; margin-bottom:25px;'>
-                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 24px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -1.5px !important;'>[ {clean_title} ]</h1>
+                <!-- 🚨 [수술 완료] 대괄호 삭제, 폰트 22px로 축소, 한 줄 고정 속성 부여 -->
+                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 22px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; word-break: keep-all !important; letter-spacing: -1.0px !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
                 </div>
@@ -203,7 +204,8 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
         <div style='border: 4px solid #1A237E; padding: 35px 25px; border-radius: 15px; text-align: center; background: white; width: 85%; max-width: 600px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             <div style='border-bottom:3px double #1A237E; padding-bottom:15px; margin-bottom:20px;'>
-                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 24px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -1.5px !important;'>[ {clean_title} ]</h1>
+                <!-- 🚨 [수술 완료] 대괄호 삭제, 폰트 22px로 축소, 한 줄 고정 속성 부여 -->
+                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 22px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; word-break: keep-all !important; letter-spacing: -1.0px !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
                     <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
                 </div>
