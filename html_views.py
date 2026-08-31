@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 86.1 Master - 50.7 황금비율 UI/UX 및 렌더링 완벽 보강본)
+# html_views.py (ver 86.3 Master - 50.7 황금비율 UI/UX 및 렌더링 완벽 보강본)
 # ==============================================================================
 import re
 import streamlit as st
@@ -13,6 +13,7 @@ def get_global_css():
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 
     .stApp { background-color: #E8F5E9 !important; }
     
@@ -27,7 +28,7 @@ def get_global_css():
 
     div[data-testid="stSidebar"] * { font-size: 14px !important; }
     
-    /* 🚨 [수술 완료] 라디오 버튼 텍스트가 잘리지 않고 두 줄(\n)로 예쁘게 나오도록 속성 부여 */
+    /* 🚨 라디오 버튼 텍스트가 잘리지 않고 두 줄(\n)로 나오도록 속성 부여 */
     div[data-testid="stRadio"] label p { 
         font-size: 14px !important; 
         white-space: pre-wrap !important; 
@@ -40,7 +41,7 @@ def get_global_css():
         font-family: 'Noto Serif KR', serif !important; 
     }
 
-    /* 🚨 [화면/인쇄 공통 표지 박스 기본 속성 보강] */
+    /* 🚨 표지 박스 기본 속성 */
     .cover-page {
         display: flex !important;
         flex-direction: column;
@@ -56,7 +57,7 @@ def get_global_css():
         max-width: 100%;
     }
 
-    /* 🌟 [50.7 원본 유지] 본문 대제목(h1)의 위엄 살리기 (진한 남색 밑줄) */
+    /* 🌟 본문 대제목(h1)의 위엄 살리기 (진한 남색 밑줄) */
     .report-page h1:not(.cover-page h1) {
         font-size: 26px !important;
         font-weight: 900 !important;
@@ -91,7 +92,7 @@ def get_global_css():
         box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
     }
     div.stButton > button[kind="primary"]:hover, div.stButton > button[data-testid="baseButton-primary"]:hover {
-        background-color: #B71C1C !important;
+        background-color: #B71C1C !important; 
         color: #FFFFFF !important;
     }
 
@@ -104,16 +105,17 @@ def get_global_css():
         box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; 
     }
     div.stButton > button[kind="secondary"]:hover, div.stButton > button[data-testid="baseButton-secondary"]:hover {
-        background-color: #008937 !important;
+        background-color: #008937 !important; 
         color: #FFFFFF !important;
     }
 
-    /* 50.7 통변 제목 및 본문 스타일 (프롬프트 태그 완벽 지원 보강) */
+    /* 50.7 통변 제목 및 본문 스타일 */
     .ai-title-l1, .report-page h3 { font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
     .sub-title, .ai-title-l2 { font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .content-box-loose { margin-bottom: 25px !important; }
     
+    /* 🛡️ 본문 p태그와 표지 p태그 충돌 방지 */
     .ai-body-p, .report-page:not(.cover-page) p { font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 12px !important; word-break: break-all !important; }
     .cover-page p { text-indent: 0 !important; }
 
@@ -165,13 +167,11 @@ def format_ai_text_to_html(text, qna_text=""):
     if not text:
         return ""
 
-    # 1. 마크다운 코드 블록 제거 및 라인 분리
     text = re.sub(r'```(?:html)?\s*', '', text)
     lines = [line.strip() for line in text.split("\n")]
 
     html_lines = []
 
-    # 예약 마커 리스트 (원형 보존)
     preserved_markers = [
         '[DAEWUN_TABLE_HERE]', '[SEWUN_TABLE_HERE]', '[WOLUN_TABLE_HERE]',
         '[WEEKLY_CALENDAR_HERE]', '[COUPLE_DAEWUN_TABLES_HERE]',
@@ -182,33 +182,23 @@ def format_ai_text_to_html(text, qna_text=""):
         if not line:
             continue
 
-        # 예약 마커 보존
         if any(marker in line for marker in preserved_markers):
             html_lines.append(f"\n{line}\n")
             continue
 
-        # 볼드체 변환 (**text** -> <b>text</b>)
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
 
-        # 1. 대제목: 1., 2., 3. 형태
         if re.match(r'^\d+\.\s+[^\d]', line_formatted):
             html_lines.append(f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>")
-
-        # 2. 중제목: 1), 2), 3) 형태
         elif re.match(r'^\d+\)\s+', line_formatted):
             html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 8px !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>")
-
-        # 3. 소제목 및 기호: (1), (2) / ◆, ▶, ▷ 형태
         elif re.match(r'^\(\d+\)\s+', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
             html_lines.append(f"<div style='font-size: 16px !important; font-weight: 900 !important; color: #283593 !important; margin-top: 15px !important; margin-bottom: 6px !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>")
-
-        # 4. 일반 본문 문단
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</p>")
 
     parsed_content = "\n".join(html_lines)
 
-    # 5. Q&A 텍스트 연동
     qna_html = ""
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
@@ -228,9 +218,6 @@ def td_func(val, engine):
 
 def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무명", u_sol="", u_lun="", u_time="", today_str="", *args, **kwargs):
     """1인용 감명서 표준 표지 (전체 나눔명조 강제 통일 + 타이틀 1줄 강제 방어막 + 인자 불일치 예외 방어)"""
-    # kwargs 또는 args로 들어올 수 있는 변수 대응
-    u_age = kwargs.get('u_age', kwargs.get('age', args[0] if len(args) > 0 else ''))
-    
     raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -241,7 +228,6 @@ def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 사이즈를 25px로 최적화하고 자간 압축(-1.2px) 및 1줄 고정 방어막 전개 -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
                 <h1 style='font-family: "Nanum Myeongjo", serif !important; font-size: 25px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.2px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
@@ -249,7 +235,6 @@ def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무
                 </div>
             </div>
             
-            <!-- 신청인 정보 박스: 나눔명조 강제 적용 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
                 <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8;'>
@@ -265,8 +250,8 @@ def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무
     <div class='page-break'></div>
     """
 
-def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
-    """2인용(궁합/감명서 비교) 감명서 표준 표지 (타이틀 1줄 강제 방어막 적용)"""
+def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str, *args, **kwargs):
+    """2인용(궁합/감명서 비교) 감명서 표준 표지 (타이틀 1줄 강제 방어막 적용 + 인자 방어막)"""
     raw_title = str(report_title or "초연 전통 명리 궁합풀이").replace("🏮", "").replace("🎯", "")
     for tag in ["<br>", "<br/>", "<br />", "\n", "\r"]:
         raw_title = raw_title.replace(tag, " ")
@@ -279,7 +264,6 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 1인용과 동일하게 25px, 자간 압축, 1줄 강제 방어막 전개 -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
                 <h1 style='font-family: "Nanum Myeongjo", serif !important; font-size: 25px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.2px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
@@ -287,31 +271,28 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
                 </div>
             </div>
             
-            <!-- ♂️ 남성(신랑/기준) 정보 박스 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 15px;'>
-                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #1565C0; margin: 0 0 8px 0;'>{u_icon} {clean_u_name} 님 ({u_age}세)</h2>
+                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #1565C0; margin: 0 0 8px 0;'>{u_icon} 남명 : {clean_u_name} 님 ({u_age}세)</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.6;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1565C0;'>태어난 시간 : {u_time}</p>
+                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
+                    <p style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #1565C0;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
-            <!-- ♀️ 여성(신부/상대) 정보 박스 -->
             <div style='background: #FFF3E0; border: 1px solid #FBE9E7; padding: 18px 20px; border-radius: 14px; margin-bottom: 24px;'>
-                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #C62828; margin: 0 0 8px 0;'>{p_icon} {clean_p_name} 님 ({p_age}세)</h2>
+                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #C62828; margin: 0 0 8px 0;'>{p_icon} 여명 : {clean_p_name} 님 ({p_age}세)</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.6;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #C62828;'>태어난 시간 : {p_time}</p>
+                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
+                    <p style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #C62828;'>태어난 시간 : {p_time}</p>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Myeongjo", serif; font-size: 17px; margin-top: 25px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 17px !important; margin-top: 25px !important; margin-bottom: 0 !important; font-weight: 700 !important; color: #000000 !important; letter-spacing: 0.5px !important; text-align: center !important; width: 100% !important; display: block !important;'>{today_str}</p>
+            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 700 !important; color: #1A237E !important; margin-top: 8px !important; margin-bottom: 0 !important; letter-spacing: 1px !important; text-align: center !important; width: 100% !important; display: block !important;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
     """
-
 
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
@@ -415,11 +396,15 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
     """
 
 def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
+    """대운표 생성: 좌측 세로선 복원 및 '세' 중복 제거"""
     un_content = ""
     for data in daewun_list:
-        b_left = "none" if data.get("is_first", False) else "1px solid #ccc"
+        b_left = "1px solid #ccc"
+        age_str = str(data['age_range']).strip()
+        display_age = age_str if age_str.endswith("세") else f"{age_str}세"
+        
         un_content += get_un_cell(
-            f"{data['age_range']}세", data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
+            display_age, data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
             data["un_sung"], data.get("y_shinsal", "-"), "", "", b_left, data.get("is_current", False)
         )
@@ -434,13 +419,17 @@ def get_sewun_layout(title, content):
     """
 
 def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
+    """세운표 셀: 좌측 세로선 유지 및 나이 '세' 중복 제거"""
     u_val = unsung if unsung and str(unsung).strip() else "-"
     y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() else "-"
     bg_col = "#E1F5FE" if is_current else "transparent"
     
+    age_str = str(tage).strip()
+    display_tage = age_str if age_str.endswith("세") else f"{age_str}세"
+    
     return f"""
-    <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{title_str}<br>({tage}세)</div>
+    <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{title_str}<br>({display_tage})</div>
         <div style='padding:2px; font-size:12px;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{ji}</div>
@@ -476,7 +465,7 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
     """
 
 def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
-    pass # 일진 파이프라인에서만 쓰이므로 생략 가능
+    pass
 
 # ==============================================================================
 # 📦 섹션 3. 서술형 텍스트 박스 (인트로, 황금문구, 클로징 등)
@@ -533,7 +522,7 @@ def get_closing_html(name):
     """
 
 def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
-    return "" # 사용안함
+    return ""
 
 def get_external_raw_text_box(other_text):
     return f"""
@@ -579,7 +568,7 @@ def get_gunghap_closing(name1, name2):
     """
 
 def get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess):
-    pass # 50.7의 app.py에서 wrap_a4로 직접 분할 호출함
+    pass
 
 def get_delivery_summary_box(best_days):
     pass
