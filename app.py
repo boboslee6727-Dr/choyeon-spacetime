@@ -1426,3 +1426,4 @@ if st.session_state.get('app_running', False):
             st.rerun()
         else:
             st.markdown(final_clean_html, unsafe_allow_html=True)
+
