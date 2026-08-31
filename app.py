@@ -1205,63 +1205,63 @@ if st.session_state.get('app_running', False):
         {un_html}
         """
 
-        # 공통 테이블 안전 변수 로드
+        # 공통 테이블 및 텍스트 안전 변수 로드
         sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
         wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+        golden_text_code = safe_part_3 if 'safe_part_3' in locals() and safe_part_3 else ""
+        intro_block = intro_html if 'intro_html' in locals() and intro_html else ""
+
+        # ----------------------------------------------------------------------
+        # 🔒 [입금확인 보안 규칙] 입금확인 완료 시에만 직인 날인, 미입금 시 미날인
+        # ----------------------------------------------------------------------
+        is_paid = False
+        if is_admin_mode:
+            is_paid = True
+        elif st.session_state.get('is_paid', False) or st.session_state.get('payment_verified', False):
+            is_paid = True
+        elif 'admin_orders' in st.session_state:
+            curr_gid = st.session_state.get('admin_proc_id', '')
+            if curr_gid and st.session_state['admin_orders'].get(curr_gid, {}).get('is_paid', False):
+                is_paid = True
+
+        safe_part_5 = html_views.get_choyeon_sign_html() if is_paid and hasattr(html_views, 'get_choyeon_sign_html') else ""
 
         # ==============================================================================
-        # 🎯 1-1 ~ 4-2 전 상품 분기 렌더링 파이프라인
+        # 🎯 전 상품(1-1 ~ 4-2) 본문 조립 및 마커 치환 분기
         # ==============================================================================
 
         # ----------------------------------------------------------------------
-        # 1-1. 사주팔자 및 총 운세 풀이 (intro_html 단독 추가)
+        # [1계열] 종합 및 시계열 운세
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
+            # 1-1. 사주팔자 및 총 운세 풀이 (기본 5대 묶음 + intro_html + 통변)
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_GOLDEN_TEXT_HERE', safe_part_3)
+            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_GOLDEN_TEXT_HERE', golden_text_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
             
-            intro_block = intro_html if 'intro_html' in locals() and intro_html else ""
-            final_render_html = f"""
-            <div class='report-page'>
-                {base_top_block}
-                {intro_block}
-                {formatted_ai}
-            </div>
-            """
+            body_content = f"{base_top_block}{intro_block}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        # ----------------------------------------------------------------------
-        # 1-2. 올 해 운세 풀이 (연운)
-        # ----------------------------------------------------------------------
         elif u_product.startswith("1-2"):
+            # 1-2. 올 해 운세 풀이 (연운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            final_render_html = f"""
-            <div class='report-page'>
-                {base_top_block}
-                {formatted_ai}
-            </div>
-            """
+            
+            body_content = f"{base_top_block}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        # ----------------------------------------------------------------------
-        # 1-3. 이번 달 운세 풀이 (월운)
-        # ----------------------------------------------------------------------
         elif u_product.startswith("1-3"):
+            # 1-3. 이번 달 운세 풀이 (월운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            final_render_html = f"""
-            <div class='report-page'>
-                {base_top_block}
-                {formatted_ai}
-            </div>
-            """
+            
+            body_content = f"{base_top_block}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        # ----------------------------------------------------------------------
-        # 1-4. 주간 및 일일 운세 풀이 (폭포수 운세)
-        # ----------------------------------------------------------------------
         elif u_product.startswith("1-4"):
+            # 1-4. 주간 및 일일 운세 풀이 (폭포수 운세)
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
@@ -1269,17 +1269,15 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            final_render_html = f"""
-            <div class='report-page'>
-                {base_top_block}
-                {formatted_ai}
-            </div>
-            """
+            
+            body_content = f"{base_top_block}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
-        # 2-5. 이사 및 개업 택일 추천
+        # [2계열] 2030 테마별 인생 특화 분석 (2-1 ~ 2-5)
         # ----------------------------------------------------------------------
         elif u_product.startswith("2-5"):
+            # 2-5. 이사 및 개업 택일 추천
             tackil_target_dt = st.session_state.get('moving_start', selected_target_date)
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
@@ -1289,32 +1287,25 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            final_render_html = f"""
-            <div class='report-page'>
-                {base_top_block}
-                {formatted_ai}
-            </div>
-            """
+            
+            body_content = f"{base_top_block}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        # ----------------------------------------------------------------------
-        # 2-1 ~ 2-4. 2030 인생 테마별 특화 분석 (재물/연애/진학/직업)
-        # ----------------------------------------------------------------------
         elif u_product.startswith("2-"):
+            # 2-1 ~ 2-4. 재물 / 직업(진학) / 연애 / 건강 특화
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')  
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            final_render_html = f"""
-            <div class='report-page'>
-                {base_top_block}
-                {formatted_ai}
-            </div>
-            """
+            
+            body_content = f"{base_top_block}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
-        # 3-1. 연애/결혼운 (궁합) 풀이 (3단 멀티 페이지 분할)
+        # [3계열] 2인용 궁합 및 택일 분석 (3-1 ~ 3-3)
         # ----------------------------------------------------------------------
         elif u_product.startswith("3-1"):
+            # 3-1. 연애/결혼운 (궁합) 풀이 (3단 멀티 페이지 분할)
             m_ess, f_ess, g_ess = "", "", current_ai
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', current_ai, re.DOTALL)
             if m_match: m_ess = m_match.group(1).strip()
@@ -1339,134 +1330,97 @@ if st.session_state.get('app_running', False):
             if hasattr(html_views, 'get_gunghap_three_page_report'):
                 final_render_html = html_views.get_gunghap_three_page_report(safe_part_1_gh, m_ess, f_ess, g_ess)
             else:
-                final_render_html = f"""
-                <div class='report-page'>
-                    {male_info_h if 'male_info_h' in locals() else info_h}
-                    {male_table_html if 'male_table_html' in locals() else table_html}
-                    {m_ess}
-                </div>
-                <div class='report-page page-break-before'>
-                    {female_info_h if 'female_info_h' in locals() else info_h}
-                    {female_table_html if 'female_table_html' in locals() else table_html}
-                    {f_ess}
-                </div>
-                <div class='report-page page-break-before'>
-                    {main_title_html}
-                    {g_ess}
-                </div>
-                """
+                p1 = html_views.get_final_report_box(f"{male_info_h if 'male_info_h' in locals() else info_h}{male_table_html if 'male_table_html' in locals() else table_html}{m_ess}")
+                p2 = html_views.get_final_report_box(f"{female_info_h if 'female_info_h' in locals() else info_h}{female_table_html if 'female_table_html' in locals() else table_html}{f_ess}")
+                p3 = html_views.get_final_report_box(f"{main_title_html}{g_ess}")
+                final_render_html = f"{p1}<div style='page-break-before: always;'></div>{p2}<div style='page-break-before: always;'></div>{p3}"
 
-        # ----------------------------------------------------------------------
-        # 3-2. 결혼 택일 추천
-        # ----------------------------------------------------------------------
         elif u_product.startswith("3-2"):
+            # 3-2. 결혼 택일
             m_target_dt = st.session_state.get('start_date_m', st.session_state.get('target_date_m', selected_target_date))
             weekly_days_data = engine.get_weekly_calendar_data(m_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            master_comp = f"{safe_part_1_gh}{formatted_ai}"
-            final_render_html = html_views.get_final_report_box(master_comp) if hasattr(html_views, 'get_final_report_box') else f"<div class='report-page'>{master_comp}</div>"
+            
+            couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
+            body_content = f"{main_title_html}{couple_header}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        # ----------------------------------------------------------------------
-        # 3-3. 출산 택일 추천
-        # ----------------------------------------------------------------------
         elif u_product.startswith("3-3"):
+            # 3-3. 출산 택일
             d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
             weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-            master_comp = f"{safe_part_1_gh}{formatted_ai}"
-            final_render_html = html_views.get_final_report_box(master_comp) if hasattr(html_views, 'get_final_report_box') else f"<div class='report-page'>{master_comp}</div>"
+            
+            couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
+            body_content = f"{main_title_html}{couple_header}{formatted_ai}"
+            final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
-        # 4-1. 사주 비교 분석 (1인용)
+        # [4계열] 연구소 타 감명서 비교 정밀 분석 (4-1, 4-2)
         # ----------------------------------------------------------------------
         elif u_product.startswith("4-1"):
+            # 4-1. 사주 비교 분석 (1인용)
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.") if hasattr(html_views, 'get_warning_box') else "<p>경고: 원문 누락</p>"
-                final_render_html = warn_html
+                final_render_html = html_views.get_final_report_box(warn_html)
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text) if hasattr(html_views, 'get_external_raw_text_box') else f"<div>{user_entered_text}</div>"
                 formatted_ai = sub_marker(current_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
                 formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
                 
-                final_render_html = f"""
-                <div class='report-page'>
-                    {base_top_block}
-                    {external_raw_box}
-                    {formatted_ai}
-                </div>
-                """
+                body_content = f"{base_top_block}{external_raw_box}{formatted_ai}"
+                final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        # ----------------------------------------------------------------------
-        # 4-2. 궁합 비교 분석 (2인용)
-        # ----------------------------------------------------------------------
         elif u_product.startswith("4-2"):
+            # 4-2. 궁합 비교 분석 (2인용)
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.") if hasattr(html_views, 'get_warning_box') else "<p>경고: 궁합 원문 누락</p>"
-                final_render_html = warn_html
+                final_render_html = html_views.get_final_report_box(warn_html)
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text) if hasattr(html_views, 'get_external_raw_text_box') else f"<div>{user_entered_text}</div>"
                 formatted_ai = sub_marker(current_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
                 formatted_ai = sub_marker(formatted_ai, 'COUPLE_DAEWUN_TABLES_HERE', '')
                 
                 couple_header_box = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
-                final_render_html = f"""
-                <div class='report-page'>
-                    {main_title_html}
-                    {couple_header_box}
-                    {external_raw_box}
-                    {formatted_ai}
-                </div>
-                """
+                body_content = f"{main_title_html}{couple_header_box}{external_raw_box}{formatted_ai}"
+                final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ==============================================================================
-        # 🚀 [최종 패키징 및 스텔스 자동 생산 파이프라인 연계]
+        # 🚀 [최종 패키징 및 화면 렌더링]
         # ==============================================================================
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
-
-        final_render_html = str(final_render_html).strip()
-        if final_render_html.startswith("</div>"):
-            final_render_html = final_render_html[6:].strip()
 
         # 표지 HTML 및 글로벌 CSS 로드
         safe_cover_str = cover_html if 'cover_html' in locals() and cover_html else ""
         global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
 
-        # 3단 최종 결합 ([CSS] + [1페이지 표지] + [본문 리포트])
+        # 전체 리포트 3단 결합 ([전역 CSS] + [1페이지 표지] + [VIP 본문 프레임])
         complete_report_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
-        
+
         # 대제목 괄호 잔여물 정돈
         complete_report_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', complete_report_html)
         complete_report_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', complete_report_html)
 
         # ----------------------------------------------------------------------
-        # 🤖 [스텔스 파이프라인 분기] 관리자 자동 생산 vs 일반 사용자 화면 출력
+        # 🤖 [스텔스 생산 파이프라인 연계 및 출력]
         # ----------------------------------------------------------------------
         if is_admin_mode:
             gid = st.session_state.get('admin_proc_id', '')
-            
-            # 1. 세션별 완성 HTML 캐시 저장
             st.session_state[f'html_{gid}'] = complete_report_html
-            
-            # 2. 관리자 주문 대시보드 데이터 갱신 (제작 완료 플래그 On)
             if 'admin_orders' in st.session_state and gid in st.session_state['admin_orders']:
                 st.session_state['admin_orders'][gid]['html'] = complete_report_html
                 st.session_state['admin_orders'][gid]['is_generated'] = True
                 st.session_state['admin_orders'][gid]['status'] = '제작완료'
-
-            # 3. 스텔스 프로세스 종료 플래그 정리
             st.session_state['app_running'] = False
             st.session_state['admin_proc_id'] = None
-            
-            # 4. 관리자 화면으로 복귀
             st.rerun()
         else:
-            # 일반 신청자 실시간 화면 렌더링
             st.markdown(complete_report_html, unsafe_allow_html=True)
