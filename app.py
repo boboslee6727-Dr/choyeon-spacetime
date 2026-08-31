@@ -633,14 +633,11 @@ if st.session_state.get('app_running', False):
         # 🌟 대제목 렌더링 (정석대로 html_views 호출!)
         main_title_html = html_views.get_main_title_html(report_title) if hasattr(html_views, 'get_main_title_html') else f"<h2 style='text-align:center;'>{report_title}</h2>"
 
-        gh_score = 0
-        gh_grade = ""
-        partner_bazi = ["?", "?", "?", "?"]
-
         # ----------------------------------------------------------------------
         # 2인용 파트너 연산 및 표지 구성
         # ----------------------------------------------------------------------
         if is_2person:
+            # (멍청하게 들어가 있던 불필요한 초기화 3줄 삭제 완료!)
             p_y = st.session_state.get('p_y_in', 1980)
             p_m = st.session_state.get('p_m_in', 1)
             p_d = st.session_state.get('p_d_in', 1)
@@ -669,6 +666,8 @@ if st.session_state.get('app_running', False):
                         p_t_gan = gan_arr[((d_idx % 5) * 2 + j_idx) % 10]
                     else:
                         p_t_gan = "?"
+                
+                # 🚨 [정석 흐름 1] 여기서 파트너 사주가 정확히 계산되어 선언됩니다.
                 partner_bazi = [f"{p_t_gan}{p_t_ji}", p_d_p, p_m_p, p_y_p]
             except Exception:
                 partner_bazi = ["甲子", "甲子", "甲子", "甲子"]
@@ -720,11 +719,40 @@ if st.session_state.get('app_running', False):
                 if hasattr(engine, 'UniversalPrintableGunghap'):
                     gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, 10)
                     gh_engine.run_universal_logic()
+                    
+                    # 🚨 [정석 흐름 2] 엔진을 가동한 뒤에야 비로소 궁합 점수와 등급이 확정됩니다.
                     gh_score = gh_engine.final_score
                     gh_grade = gh_engine.grade
                 else:
                     gh_score = 0
-                    gh_grade = "엔진 업데이트 필요"
+                    gh_grade = ""
+            except Exception:
+                gh_score, gh_grade = 0, "점수 산출 불가"
+                
+        else:
+            # 🚨 [정석 흐름 3] 1인용 로직일 때만, 나중에 밑에서 변수를 찾지 못해 터지는 걸 막기 위해 빈 값을 선언합니다.
+            gh_score = 0
+            gh_grade = ""
+            partner_bazi = ["?", "?", "?", "?"]
+
+            u_icon_str = f"{p_icon}" 
+            cover_html = html_views.get_personal_cover(
+                APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
+            )
+            
+            male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
+            female_data_pack = partner_bazi if gender == "남성" else [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
+            
+            try:
+                if hasattr(engine, 'UniversalPrintableGunghap'):
+                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, 10)
+                    gh_engine.run_universal_logic()
+                    gh_score = gh_engine.final_score
+                    gh_grade = gh_engine.grade
+                else:
+                    gh_score = 0
+                    gh_grade = ""
+
             except Exception:
                 gh_score, gh_grade = 0, "점수 산출 불가"
                 
