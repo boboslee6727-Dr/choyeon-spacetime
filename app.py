@@ -1368,7 +1368,7 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ==============================================================================
-        # 🚀 [최종 패키징 및 화면 렌더링]
+        # 🚀 [최종 패키징 및 화면 렌더링 - 소스코드 노출 원천 차단]
         # ==============================================================================
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
@@ -1377,25 +1377,31 @@ if st.session_state.get('app_running', False):
         safe_cover_str = cover_html if 'cover_html' in locals() and cover_html else ""
         global_css_str = html_views.get_global_css() if hasattr(html_views, 'get_global_css') else ""
 
-        # 전체 리포트 3단 결합 ([전역 CSS] + [1페이지 표지] + [VIP 본문 프레임])
-        complete_report_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
+        # 전체 리포트 결합
+        raw_combined_html = f"{global_css_str}\n{safe_cover_str}\n{final_render_html}"
 
-        # 대제목 괄호 잔여물 정돈
-        complete_report_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', complete_report_html)
-        complete_report_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', complete_report_html)
+        # 1. 대제목 괄호 잔여물 정돈
+        raw_combined_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', raw_combined_html)
+        raw_combined_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', raw_combined_html)
+
+        # 2. 🛡️ [핵심] Streamlit 마크다운이 HTML을 코드로 오인하지 않도록 줄바꿈/들여쓰기 정돈
+        # 태그 앞 4칸 이상 들여쓰기 제거 (마크다운 코드블록 트리거 방지)
+        clean_report_html = re.sub(r'^[ \t]{4,}(?=<)', '', raw_combined_html, flags=re.MULTILINE)
+        # 마크다운 백틱 잔여물 완전 제거
+        clean_report_html = clean_report_html.replace('```html', '').replace('```markdown', '').replace('```', '')
 
         # ----------------------------------------------------------------------
-        # 🤖 [스텔스 생산 파이프라인 연계 및 출력]
+        # 🤖 [스텔스 생산 파이프라인 연계 및 정식 렌더링]
         # ----------------------------------------------------------------------
         if is_admin_mode:
             gid = st.session_state.get('admin_proc_id', '')
-            st.session_state[f'html_{gid}'] = complete_report_html
+            st.session_state[f'html_{gid}'] = clean_report_html
             if 'admin_orders' in st.session_state and gid in st.session_state['admin_orders']:
-                st.session_state['admin_orders'][gid]['html'] = complete_report_html
+                st.session_state['admin_orders'][gid]['html'] = clean_report_html
                 st.session_state['admin_orders'][gid]['is_generated'] = True
                 st.session_state['admin_orders'][gid]['status'] = '제작완료'
             st.session_state['app_running'] = False
             st.session_state['admin_proc_id'] = None
             st.rerun()
         else:
-            st.markdown(complete_report_html, unsafe_allow_html=True)
+            st.markdown(clean_report_html, unsafe_allow_html=True)
