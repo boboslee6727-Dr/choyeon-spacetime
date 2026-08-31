@@ -1391,41 +1391,38 @@ if st.session_state.get('app_running', False):
         if 'final_render_html' not in locals() or final_render_html is None:
             final_render_html = ""
 
-        # 표지 HTML 로드
         safe_cover_str = cover_html if 'cover_html' in locals() and cover_html else ""
 
-        # 본문 영역이 report-page/vip-inset-frame으로 감싸져 있지 않은 경우 규격 프레임 자동 적용
+        # 본문 프레임 규격 적용 (HTML 태그 앞 공백 없이 인라인 결합하여 마크다운 코드블록 오인 방지)
         if "report-page" not in final_render_html:
-            content_body = f"""
-            <div class='report-page' style='margin-top: 20px;'>
-                <div class='vip-inset-frame'>
-                    {final_render_html}
-                </div>
-            </div>
-            """
+            content_body = f"<div class='report-page' style='margin-top: 20px;'><div class='vip-inset-frame'>{final_render_html}</div></div>"
         else:
             content_body = final_render_html
 
-        # 표지와 본문 다이렉트 결합 (상단 CSS와 충돌하지 않도록 깔끔하게 조립)
+        # 전체 HTML 단순 결합
         combined_report_html = f"{safe_cover_str}\n{content_body}"
 
-        # 1. 백틱 잔여물 및 대제목 불필요 괄호 제거
+        # 1. 잔여 백틱 및 대제목 대괄호 제거
         clean_report_html = combined_report_html.replace('```html', '').replace('```markdown', '').replace('```', '')
         clean_report_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', clean_report_html)
         clean_report_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', clean_report_html)
+
+        # 2. 🛡️ 마크다운 코드블록 방지용 정밀 트림 (각 줄 시작 부분의 4칸 이상 공백/탭만 안전하게 제거)
+        clean_lines = [re.sub(r'^[ \t]+(?=<)', '', line) for line in clean_report_html.split('\n')]
+        final_clean_html = "\n".join(clean_lines)
 
         # ----------------------------------------------------------------------
         # 🤖 [스텔스 생산 파이프라인 연계 및 정식 렌더링]
         # ----------------------------------------------------------------------
         if is_admin_mode:
             gid = st.session_state.get('admin_proc_id', '')
-            st.session_state[f'html_{gid}'] = clean_report_html
+            st.session_state[f'html_{gid}'] = final_clean_html
             if 'admin_orders' in st.session_state and gid in st.session_state['admin_orders']:
-                st.session_state['admin_orders'][gid]['html'] = clean_report_html
+                st.session_state['admin_orders'][gid]['html'] = final_clean_html
                 st.session_state['admin_orders'][gid]['is_generated'] = True
                 st.session_state['admin_orders'][gid]['status'] = '제작완료'
             st.session_state['app_running'] = False
             st.session_state['admin_proc_id'] = None
             st.rerun()
         else:
-            st.markdown(clean_report_html, unsafe_allow_html=True)
+            st.markdown(final_clean_html, unsafe_allow_html=True)
