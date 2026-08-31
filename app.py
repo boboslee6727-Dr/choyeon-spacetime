@@ -704,7 +704,7 @@ if st.session_state.get('app_running', False):
             f_time_val = p_time_val if gender == "남성" else time_str_fmt
 
             cover_html = html_views.get_personal_cover(
-                VERSION, report_title, 
+                APP_VERSION, report_title, 
                 u_icon, name, u_age, sol_str, lun_str, time_str,
                 p_icon, p_name, p_age, p_sol_str, p_lun_str, p_time_str, 
                 today_str
@@ -732,7 +732,7 @@ if st.session_state.get('app_running', False):
 
             u_icon_str = f"{p_icon}" 
             cover_html = html_views.get_couple_cover(
-                VERSION, report_title, 
+               APP_VERSION, report_title, 
                 u_icon, name, u_age, sol_str, lun_str, time_str,
                 p_icon, p_name, p_age, p_sol_str, p_lun_str, p_time_str, 
                 today_str
