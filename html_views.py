@@ -224,61 +224,63 @@ def td_func(val, engine):
     return f"<td class='color-{oh}' style='font-size: 18px; font-weight: 900; border:1px solid #444 !important;'><span style='color:inherit !important;'>{('?' if val in ['?',' ','-'] else val)}</span></td>"
 
 def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_time, today_str):
-    # 🚨 🏮 이모지 및 불필요한 장식 철거
     raw_title = str(report_title or "초연 전통 명리 사주풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
-    clean_title = " ".join(raw_title.split())
+    clean_title = "&nbsp;".join(raw_title.split())
     clean_u_name = str(u_name or "무명").strip()
+    safe_color = "#1A237E" if "♂" in str(u_icon) else "#880E4F"
 
     return f"""
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
         <div style='border: 4px solid #1A237E; padding: 50px 30px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 700px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:20px; margin-bottom:40px;'>
-                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 26px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -2px !important;'>{clean_title}</h1>
+                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 26px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -2px !important; text-align: center !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 10px;'>
                     <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: #1A237E; margin-bottom: 20px;'>{u_icon} 신청인 : {clean_u_name} 님</h2>
-                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 600; color: #555; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
-                    <p style='margin: 5px 0 0 0; color: #1A237E; white-space: nowrap;'>{u_time}</p>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px; text-align: center;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 24px; font-weight: 800; color: {safe_color}; margin-bottom: 20px; text-align: center;'>{u_icon} 신청인 : {clean_u_name} 님</h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 15px; font-weight: 700; color: #444; line-height: 1.8; text-align: center;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 700; text-align: center;'>[양력] {u_sol} | [음력] {u_lun}</p>
+                    <p style='margin: 5px 0 0 0; color: {safe_color}; font-weight: 800; white-space: nowrap; text-align: center;'>{u_time}</p>
                 </div>
             </div>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 50px; font-weight: 800;'>{today_str}</p>
-            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px;'>초연 전통명리 연구소</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 50px; font-weight: 800; text-align: center;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 20px; text-align: center;'>초연 전통명리 연구소</p>
         </div>
     </div>
     """
 
 def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun, u_time, p_icon, p_name, p_age, p_sol, p_lun, p_time, today_str):
     raw_title = str(report_title or "초연 전통 명리 궁합풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
-    clean_title = " ".join(raw_title.split())
+    clean_title = "&nbsp;".join(raw_title.split())
     clean_u_name, clean_p_name = str(u_name or "무명").strip(), str(p_name or "무명").strip()
 
     return f"""
     <div class='report-page cover-page' style='margin:0 auto; width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; -webkit-print-color-adjust: exact; box-sizing: border-box;'>
         <div style='border: 4px solid #1A237E; padding: 30px 20px; border-radius: 20px; text-align: center; background: white; width: 90%; max-width: 700px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             <div style='border-bottom:4px double #1A237E; padding-bottom:15px; margin-bottom:25px;'>
-                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 26px !important; margin:0 !important; white-space: nowrap !important; letter-spacing: -2px !important;'>{clean_title}</h1>
+                <h1 class='title-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 26px !important; font-weight: 900; margin:0 !important; white-space: nowrap !important; letter-spacing: -2px !important; text-align: center !important;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 10px;'>
-                    <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; letter-spacing: 1px;'>{version}</span>
+                    <span class='ver-gothic' style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px;'>{version}</span>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 20px; border-radius: 15px; margin-bottom: 15px;'>
-                <h2 style='font-size: 22px; font-weight: 800; color: #1A237E; margin-bottom: 10px;'>{u_icon} 남명 : {clean_u_name} 님 <span style='font-size:15px; color:#555;'>( {u_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.6;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</p>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 20px; border-radius: 15px; margin-bottom: 15px; text-align: center;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-bottom: 8px; text-align: center;'>{u_icon} 남명 : {clean_u_name} 님 <span style='font-size:15px; color:#555;'>( {u_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; color: #444; line-height: 1.6; text-align: center;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 700; text-align: center;'>[양력] {u_sol} | [음력] {u_lun}</p>
+                    <p style='margin: 3px 0 0 0; color: #1A237E; font-weight: 800; white-space: nowrap; text-align: center;'>{u_time}</p>
                 </div>
             </div>
-            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 20px; border-radius: 15px;'>
-                <h2 style='font-size: 22px; font-weight: 800; color: #1A237E; margin-bottom: 10px;'>{p_icon} 여명 : {clean_p_name} 님 <span style='font-size:15px; color:#555;'>( {p_age}세 )</span></h2>
-                <div style='font-size: 15px; font-weight: 600; color: #555; line-height: 1.6;'>
-                    <p style='margin: 0; white-space: nowrap;'>[양력] {p_sol} | [음력] {p_lun}</p>
+            <div style='background:#F8F9FA; border: 1px solid #E8EAF6; padding: 15px 20px; border-radius: 15px; text-align: center;'>
+                <h2 style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #880E4F; margin-bottom: 8px; text-align: center;'>{p_icon} 여명 : {clean_p_name} 님 <span style='font-size:15px; color:#555;'>( {p_age}세 )</span></h2>
+                <div style='font-family: "Nanum Gothic", sans-serif; font-size: 14px; font-weight: 700; color: #444; line-height: 1.6; text-align: center;'>
+                    <p style='margin: 0; white-space: nowrap; font-weight: 700; text-align: center;'>[양력] {p_sol} | [음력] {p_lun}</p>
+                    <p style='margin: 3px 0 0 0; color: #880E4F; font-weight: 800; white-space: nowrap; text-align: center;'>{p_time}</p>
                 </div>
             </div>
-            <p style='font-size: 18px; margin-top: 25px; font-weight: 800;'>{today_str}</p>
-            <p style='font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 10px;'>초연 전통명리 연구소</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 18px; margin-top: 25px; font-weight: 800; text-align: center;'>{today_str}</p>
+            <p style='font-family: "Nanum Gothic", sans-serif; font-size: 22px; font-weight: 800; color: #1A237E; margin-top: 10px; text-align: center;'>초연 전통명리 연구소</p>
         </div>
     </div>
     """
