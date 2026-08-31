@@ -103,12 +103,38 @@ def get_global_css():
     }
     </style>"""
 
-def format_ai_text_to_html(text, qna_text=""):
-    """프롬프트 규칙 대응 포맷터 (차분한 폰트 규격 적용)"""
+def format_ai_text_to_html(text, qna_text="", u_name=""):
+    """
+    프롬프트 규칙 대응 포맷터 (24-20-18-16px 비례 굵기 + 긴 문장 뭉텅이 자동 줄바꿈 분할 내장):
+    """
     if not text:
         return ""
 
+    # 1. 마크다운 코드 블록 제거
     text = re.sub(r'```(?:html)?\s*', '', text)
+
+    # 2. 🎯 [신청자 이름 호칭: 최초 1회 풀네임 -> 이후 이름만]
+    if u_name and len(u_name.strip()) >= 2:
+        clean_name = u_name.strip()
+        first_name = clean_name[1:]  # 이름 (예: "영덕")
+        full_name = clean_name       # 풀네임 (예: "이영덕")
+
+        name_pattern = re.compile(rf'({full_name}|{first_name})\s*님')
+        
+        name_count = 0
+        def _name_replacer(match):
+            nonlocal name_count
+            name_count += 1
+            if name_count == 1:
+                return f"<b>{full_name}님</b>"
+            else:
+                return f"<b>{first_name}님</b>"
+
+        text = name_pattern.sub(_name_replacer, text)
+
+    # 3. 🎯 [작은따옴표 '단어' -> <b>'단어'</b> 볼드체 자동 변환]
+    text = re.sub(r"(?<!<b>)'([^'\n\r]+)'(?!</b>)", r"<b>'\1'</b>", text)
+
     lines = [line.strip() for line in text.split("\n")]
     html_lines = []
 
@@ -122,41 +148,68 @@ def format_ai_text_to_html(text, qna_text=""):
         if not line:
             continue
 
+        # 예약 마커 원형 보존
         if any(marker in line for marker in preserved_markers):
             html_lines.append(f"\n{line}\n")
             continue
 
+        # 볼드체 Markdown 변환 (**text** -> <b>text</b>)
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
 
-        # 1️⃣ 대제목 (1., 2.)
+        # 1️⃣ 대제목: 1., 2., 3. 형태 (24px, 굵기 900, 하단 밑줄 2px, 패딩 7px)
         if re.match(r'^\d+\.\s+[^\d]', line_formatted):
             html_lines.append(
-                f"<div class='ai-title-l1' style='font-size: 19px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 28px !important; margin-bottom: 12px !important; border-bottom: 1.5px solid #1A237E !important; padding-bottom: 4px !important; line-height: 1.4 !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>"
+                f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #000000 !important; margin-top: 28px !important; margin-bottom: 12px !important; border-bottom: 2px solid #000000 !important; padding-bottom: 7px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</div>"
             )
-        # 2️⃣ 중제목 (1), 2))
+
+        # 2️⃣ 중제목: 1), 2), 3) 형태 (20px, 굵기 800)
         elif re.match(r'^\d+\)\s+', line_formatted):
             html_lines.append(
-                f"<div class='sub-title' style='font-size: 16px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 18px !important; margin-bottom: 6px !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>"
+                f"<div class='sub-title' style='font-size: 20px !important; font-weight: 800 !important; color: #000000 !important; margin-top: 20px !important; margin-bottom: 8px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</div>"
             )
-        # 3️⃣ 소제목 ((1), ◆, ▶)
+
+        # 3️⃣ 소제목 및 강조 기호: (1), (2) / ◆, ▶, ▷ 형태 (18px, 굵기 700)
         elif re.match(r'^\(\d+\)\s+', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
             html_lines.append(
-                f"<div style='font-size: 15px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 14px !important; margin-bottom: 5px !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>"
+                f"<div style='font-size: 18px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 14px !important; margin-bottom: 5px !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</div>"
             )
-        # 4️⃣ 일반 본문 문단
+
+        # 4️⃣ 일반 본문 문단 (긴 뭉텅이 문장 자동 단락 분할 적용)
         else:
-            html_lines.append(
-                f"<p class='ai-body-p' style='font-size: 14.5px !important; font-weight: 400 !important; line-height: 1.8 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 10px !important; margin-top: 0 !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</p>"
-            )
+            # 🚨 [뭉텅이 방지 로직] 문장이 길 경우(220자 이상) 문맥 종결 부호 뒤에서 단락을 분리
+            if len(line_formatted) > 220 and (". " in line_formatted or "다. " in line_formatted):
+                # 문장 종결 패턴 분할
+                sentences = re.split(r'(?<=[.!?])\s+', line_formatted)
+                chunk = []
+                chunk_len = 0
+                for s in sentences:
+                    chunk.append(s)
+                    chunk_len += len(s)
+                    if chunk_len >= 160:
+                        p_text = " ".join(chunk)
+                        html_lines.append(
+                            f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #000000 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 10px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{p_text}</p>"
+                        )
+                        chunk = []
+                        chunk_len = 0
+                if chunk:
+                    p_text = " ".join(chunk)
+                    html_lines.append(
+                        f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #000000 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 10px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{p_text}</p>"
+                    )
+            else:
+                html_lines.append(
+                    f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #000000 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 10px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>"
+                )
 
     parsed_content = "\n".join(html_lines)
 
-    # 5. Q&A 텍스트 연동 (존재 시 본문 하단에 결합)
+    # 5. Q&A 텍스트 연동
     qna_html = ""
     if qna_text:
         clean_qna = str(qna_text).replace('💡', '').strip()
         clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna).replace('\n\n', '<br><br>').replace('\n', '<br>')
-        qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 사주박사의 1:1 심층 솔루션 안내<br>{clean_qna}</div>"
+        qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #000000; border-radius:4px; font-weight:bold; color:#000000; font-size:15px; line-height:1.7;'>💡 사주박사의 1:1 심층 솔루션 안내<br>{clean_qna}</div>"
 
     return f"{parsed_content}\n{qna_html}" if qna_html else parsed_content
 
