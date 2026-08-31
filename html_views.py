@@ -223,7 +223,7 @@ def td_func(val, engine):
 
 def get_personal_cover(version, report_title, u_icon="♂️", u_name="무명", u_sol="", u_lun="", u_time="", today_str=""):
     """
-    1인용 표지: 인자 누락 시에도 기본값으로 방어하여 런타임 에러 100% 원천 차단
+    1인용 정통 표지 (ver 50.7 황금 규격 + A4 상하좌우 완벽 중앙정렬 + 성별 기호 보존)
     """
     raw_title = str(report_title or "초연 시공명리 사주풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     clean_title = " ".join(raw_title.split())
@@ -232,8 +232,11 @@ def get_personal_cover(version, report_title, u_icon="♂️", u_name="무명", 
 
     return f"""
     <div class='report-page cover-page' style='margin: 0 auto !important; width: 210mm !important; min-height: 280mm !important; height: 280mm !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; background: #FFFFFF !important; padding: 0 !important; box-sizing: border-box !important; page-break-after: always !important;'>
-        <div style='border: 3.5px solid #000000 !important; padding: 50px 35px !important; border-radius: 20px !important; text-align: center !important; background: #FFFFFF !important; width: 88% !important; max-width: 680px !important; box-sizing: border-box !important; margin: auto !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;'>
+        
+        <!-- VIP 중앙 프레임 -->
+        <div style='border: 3.5px solid #000000 !important; padding: 50px 35px !important; border-radius: 20px !important; text-align: center !important; background: #FFFFFF !important; width: 88% !important; max-width: 680px !important; box-sizing: border-box !important; margin: auto !important; box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;'>
             
+            <!-- 1. 감명서 대제목 (26px, 900) -->
             <div style='border-bottom: 4px double #000000 !important; padding-bottom: 20px !important; margin-bottom: 35px !important; text-align: center !important;'>
                 <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; letter-spacing: -1.5px !important; text-align: center !important; line-height: 1.3 !important;'>{clean_title}</h1>
                 <div style='text-align: right !important; margin-top: 10px !important;'>
@@ -241,6 +244,7 @@ def get_personal_cover(version, report_title, u_icon="♂️", u_name="무명", 
                 </div>
             </div>
 
+            <!-- 2. 신청인 정보 박스 (24px, 800 + 완벽 중앙정렬) -->
             <div style='background: #F8F9FA !important; border: 1.5px solid #000000 !important; padding: 30px 20px !important; border-radius: 15px !important; text-align: center !important; margin: 0 auto 10px auto !important;'>
                 <h2 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 18px 0 !important; padding: 0 !important; text-align: center !important; line-height: 1.2 !important;'>{clean_icon} 신청인 : {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 15px !important; font-weight: 600 !important; color: #222222 !important; line-height: 1.85 !important; text-align: center !important;'>
@@ -249,6 +253,7 @@ def get_personal_cover(version, report_title, u_icon="♂️", u_name="무명", 
                 </div>
             </div>
 
+            <!-- 3. 기준일자(18px, 800) 및 연구소명(24px, 900) -->
             <div style='text-align: center !important; margin-top: 45px !important;'>
                 <p style='font-family: "Nanum Gothic", sans-serif !important; font-size: 18px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 16px 0 !important; padding: 0 !important; text-indent: 0 !important; text-align: center !important;'>{today_str}</p>
                 <p style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; text-indent: 0 !important; letter-spacing: 1.5px !important; text-align: center !important;'>초연 시공명리 연구소</p>
@@ -260,7 +265,7 @@ def get_personal_cover(version, report_title, u_icon="♂️", u_name="무명", 
 
 def get_couple_cover(version, report_title, u_icon="♂️", u_name="남명", u_age="", u_sol="", u_lun="", u_time="", p_icon="♀️", p_name="여명", p_age="", p_sol="", p_lun="", p_time="", today_str=""):
     """
-    2인용 표지: 인자 불일치 런타임 크래시 100% 원천 차단
+    2인용 정통 표지 (남명 상단, 여명 하단 고정 + ver 50.7 황금 규격)
     """
     raw_title = str(report_title or "초연 시공명리 궁합풀이").replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
     clean_title = " ".join(raw_title.split())
@@ -269,8 +274,11 @@ def get_couple_cover(version, report_title, u_icon="♂️", u_name="남명", u_
 
     return f"""
     <div class='report-page cover-page' style='margin: 0 auto !important; width: 210mm !important; min-height: 280mm !important; height: 280mm !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; background: #FFFFFF !important; padding: 0 !important; box-sizing: border-box !important; page-break-after: always !important;'>
-        <div style='border: 3.5px solid #000000 !important; padding: 40px 30px !important; border-radius: 20px !important; text-align: center !important; background: #FFFFFF !important; width: 88% !important; max-width: 680px !important; box-sizing: border-box !important; margin: auto !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;'>
+        
+        <!-- VIP 중앙 프레임 -->
+        <div style='border: 3.5px solid #000000 !important; padding: 40px 30px !important; border-radius: 20px !important; text-align: center !important; background: #FFFFFF !important; width: 88% !important; max-width: 680px !important; box-sizing: border-box !important; margin: auto !important; box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;'>
             
+            <!-- 1. 감명서 대제목 (26px, 900) -->
             <div style='border-bottom: 4px double #000000 !important; padding-bottom: 18px !important; margin-bottom: 25px !important; text-align: center !important;'>
                 <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 26px !important; font-weight: 900 !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; letter-spacing: -1.5px !important; text-align: center !important; line-height: 1.3 !important;'>{clean_title}</h1>
                 <div style='text-align: right !important; margin-top: 10px !important;'>
@@ -278,22 +286,25 @@ def get_couple_cover(version, report_title, u_icon="♂️", u_name="남명", u_
                 </div>
             </div>
 
+            <!-- 2. 남명 정보 박스 (21px, 800) -->
             <div style='background: #F8F9FA !important; border: 1.5px solid #000000 !important; padding: 18px 20px !important; border-radius: 12px !important; margin-bottom: 12px !important; text-align: center !important;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 21px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 8px 0 !important; text-align: center !important;'>{clean_u_icon} 남명 : {clean_u_name} 님 <span style='font-size:15px !important; color:#555555 !important;'>( {u_age}세 )</span></h2>
+                <h2 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 21px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 8px 0 !important; padding: 0 !important; text-align: center !important;'>{clean_u_icon} 남명 : {clean_u_name} 님 <span style='font-size:15px !important; color:#555555 !important;'>( {u_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 14.5px !important; font-weight: 600 !important; color: #111111 !important; line-height: 1.6 !important; text-align: center !important;'>
                     <p style='margin: 0 !important; padding: 0 !important; text-indent: 0 !important; text-align: center !important; white-space: nowrap !important;'>[양력] {u_sol} | [음력] {u_lun}</p>
-                    <p style='margin: 4px 0 0 0 !important; padding: 0 !important; text-indent: 0 !important; color: #000000 !important; font-weight: 800 !important; text-align: center !important; white-space: nowrap !important;'>{u_time}</p>
+                    <p style='margin: 4px 0 0 0 !important; padding: 0 !important; text-indent: 0 !important; color: #000000 !important; font-weight: 700 !important; text-align: center !important; white-space: nowrap !important;'>{u_time}</p>
                 </div>
             </div>
 
+            <!-- 3. 여명 정보 박스 (21px, 800) -->
             <div style='background: #F8F9FA !important; border: 1.5px solid #000000 !important; padding: 18px 20px !important; border-radius: 12px !important; margin-bottom: 10px !important; text-align: center !important;'>
-                <h2 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 21px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 8px 0 !important; text-align: center !important;'>{clean_p_icon} 여명 : {clean_p_name} 님 <span style='font-size:15px !important; color:#555555 !important;'>( {p_age}세 )</span></h2>
+                <h2 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 21px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 8px 0 !important; padding: 0 !important; text-align: center !important;'>{clean_p_icon} 여명 : {clean_p_name} 님 <span style='font-size:15px !important; color:#555555 !important;'>( {p_age}세 )</span></h2>
                 <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 14.5px !important; font-weight: 600 !important; color: #111111 !important; line-height: 1.6 !important; text-align: center !important;'>
                     <p style='margin: 0 !important; padding: 0 !important; text-indent: 0 !important; text-align: center !important; white-space: nowrap !important;'>[양력] {p_sol} | [음력] {p_lun}</p>
-                    <p style='margin: 4px 0 0 0 !important; padding: 0 !important; text-indent: 0 !important; color: #000000 !important; font-weight: 800 !important; text-align: center !important; white-space: nowrap !important;'>{p_time}</p>
+                    <p style='margin: 4px 0 0 0 !important; padding: 0 !important; text-indent: 0 !important; color: #000000 !important; font-weight: 700 !important; text-align: center !important; white-space: nowrap !important;'>{p_time}</p>
                 </div>
             </div>
 
+            <!-- 4. 기준일자(18px, 800) 및 연구소명(24px, 900) -->
             <div style='text-align: center !important; margin-top: 35px !important;'>
                 <p style='font-family: "Nanum Gothic", sans-serif !important; font-size: 18px !important; font-weight: 800 !important; color: #000000 !important; margin: 0 0 14px 0 !important; padding: 0 !important; text-indent: 0 !important; text-align: center !important;'>{today_str}</p>
                 <p style='font-family: "Nanum Gothic", sans-serif !important; font-size: 24px !important; font-weight: 900 !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; text-indent: 0 !important; letter-spacing: 1.5px !important; text-align: center !important;'>초연 시공명리 연구소</p>
@@ -399,9 +410,9 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
 def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
     un_content = ""
     for data in daewun_list:
-        b_left = "1px solid #444"  # 좌측 눈금선 항상 표출
+        b_left = "1px solid #444"
         un_content += get_un_cell(
-            data['age_range'],  # 🎯 뒤에 붙어있던 "세"를 완전히 제거하여 전달
+            data['age_range'],  # 중복 '세' 제거
             data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
             data["un_sung"], data.get("y_shinsal", "-"), "", "", b_left, data.get("is_current", False)
