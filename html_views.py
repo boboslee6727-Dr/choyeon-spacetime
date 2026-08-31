@@ -250,13 +250,13 @@ def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
                 <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8;'>
-                    <p style='margin: 0; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
+                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
+                    <p style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Myeongjo", serif; font-size: 17px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 18px !important; font-weight: 700 !important; color: #111111 !important; text-align: center !important; width: 100% !important; margin: 35px 0 0 0 !important; letter-spacing: 0.5px !important; display: block !important;'>{today_str}</p>
+            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 700 !important; color: #1A237E !important; text-align: center !important; width: 100% !important; margin: 10px 0 0 0 !important; letter-spacing: 1px !important; display: block !important;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
