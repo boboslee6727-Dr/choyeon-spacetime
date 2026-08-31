@@ -703,12 +703,8 @@ if st.session_state.get('app_running', False):
             f_lun_val = p_lun_str_val if gender == "남성" else lun_str_fmt
             f_time_val = p_time_val if gender == "남성" else time_str_fmt
 
-            cover_html = html_views.get_couple_cover(
-                version=APP_VERSION, 
-                report_title=report_title, 
-                u_icon="♂️", u_name=m_name_val, u_age=m_age_val, u_sol=m_sol_val, u_lun=m_lun_val, u_time=m_time_val,
-                p_icon="♀️", p_name=f_name_val, p_age=f_age_val, p_sol=f_sol_val, p_lun=f_lun_val, p_time=f_time_val, 
-                today_str=today_str
+            cover_html = html_views.get_personal_cover(
+                VERSION, report_title, u_icon, name, sol_str, lun_str, time_str, today_str
             )
             
             male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
@@ -732,9 +728,10 @@ if st.session_state.get('app_running', False):
             partner_bazi = ["?", "?", "?", "?"]
 
             u_icon_str = f"{p_icon}" 
-            cover_html = html_views.get_personal_cover(
-                APP_VERSION, report_title, u_icon_str, name, sol_str_fmt, lun_str_fmt, time_str_fmt, today_str
-            )
+            cover_html = html_views.get_couple_cover(
+                VERSION, report_title, name, u_age, sol_str, lun_str, time_str,
+                p_name, p_age, p_sol_str, p_lun_str, p_time_str, today_str
+)
 
         info_h = html_views.get_info_header(p_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
