@@ -9,7 +9,7 @@ import streamlit as st
 # ==============================================================================
 
 def get_global_css():
-    """전체 시스템 UI/UX 및 화면/인쇄 스타일시트 (차분하고 정돈된 폰트 사이즈)"""
+    """전체 시스템 UI/UX 및 화면/인쇄 스타일시트 (ver 50.5 원본 규격: 빨강 가동버튼 + 초록 인쇄버튼 + 대제목 위엄)"""
     return """<style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
@@ -25,45 +25,23 @@ def get_global_css():
         font-family: 'Nanum Gothic', sans-serif !important; 
     }
 
-    div[data-testid="stSidebar"] * { font-size: 13.5px !important; }
-    
-    div[data-testid="stRadio"] label p { 
-        font-size: 13.5px !important; 
-        white-space: pre-wrap !important; 
-        line-height: 1.5 !important; 
-        padding-bottom: 2px !important;
-    }
-    div[data-testid="stCheckbox"] label p { font-size: 13.5px !important; }
+    div[data-testid="stSidebar"] * { font-size: 14px !important; }
+    div[data-testid="stRadio"] label p { font-size: 14px !important; }
+    div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
 
     .report-page, .report-page *, .cover-page, div.cover-page *, .choyeon-premium-report, .result-table td { 
         font-family: 'Noto Serif KR', serif !important; 
     }
 
-    /* 표지 박스 */
-    .cover-page {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 900px;
-        padding: 50px 35px;
-        background: #ffffff;
-        border: 2px solid #3E2723;
-        border-radius: 12px;
-        margin: 20px auto 30px auto;
-        box-sizing: border-box;
-        width: 210mm;
-        max-width: 100%;
-    }
-
-    /* 본문 대제목 */
+    /* 본문 대제목 (진한 남색 밑줄) */
     .report-page h1:not(.cover-page h1) {
-        font-size: 22px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
         color: #1A237E !important;
         text-align: center !important;
-        border-bottom: 2.5px solid #1A237E !important;
-        padding-bottom: 8px !important;
-        margin-bottom: 20px !important;
+        border-bottom: 3px solid #1A237E !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 25px !important;
         margin-top: 0 !important;
         letter-spacing: -0.5px !important;
     }
@@ -71,12 +49,49 @@ def get_global_css():
     .b-text { font-weight: 900 !important; color: #000000 !important; display: inline-block; }
     .b-text-red { font-weight: 900 !important; color: #D50000 !important; display: inline-block; }
 
-    /* 통변 폰트 사이즈 표준화 (눈에 편한 규격) */
-    .ai-title-l1, .report-page h3 { font-size: 19px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 28px !important; margin-bottom: 12px !important; border-bottom: 1.5px solid #1A237E !important; padding-bottom: 4px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
-    .sub-title, .ai-title-l2 { font-size: 16px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 18px !important; margin-bottom: 8px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
-    .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 25px 20px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    
-    .ai-body-p, .report-page p { font-size: 14.5px !important; font-weight: 400 !important; line-height: 1.8 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 10px !important; word-break: break-all !important; }
+    /* ========================================================================== */
+    /* 🌟 [ver 50.5 원본] 버튼 공통 및 Primary(빨강) / Secondary(초록) 완벽 복원 */
+    /* ========================================================================== */
+    div.stButton > button { 
+        font-family: 'Nanum Gothic', sans-serif !important; 
+        font-weight: 900 !important; 
+        font-size: 16px !important; 
+        border-radius: 8px !important; 
+        width: 100% !important; 
+    }
+
+    /* Primary 버튼 (풀이 가동 - 빨간색) */
+    div.stButton > button[kind="primary"] { 
+        background-color: #D50000 !important; 
+        color: #FFFFFF !important; 
+        border: none !important; 
+        height: 50px !important; 
+        font-weight: 900 !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
+    }
+    div.stButton > button[kind="primary"]:hover { 
+        background-color: #B71C1C !important; 
+        color: #FFFFFF !important; 
+    }
+
+    /* Secondary 버튼 (인쇄/저장 - 초록색 #00A843) */
+    div.stButton > button[kind="secondary"] { 
+        background-color: #00A843 !important; 
+        color: #FFFFFF !important; 
+        border: none !important; 
+        height: 50px !important; 
+        font-weight: 900 !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; 
+    }
+    div.stButton > button[kind="secondary"]:hover { 
+        background-color: #008937 !important; 
+        color: #FFFFFF !important; 
+    }
+
+    .ai-title-l1 { font-size: 22px !important; font-weight: 900 !important; color: #000000 !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #000000 !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: sans-serif !important; display: block !important; }
+    .ai-title-l2 { font-size: 18px !important; font-weight: 900 !important; color: #000000 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: sans-serif !important; display: block !important; }
+    .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .ai-body-p { font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 12px !important; word-break: break-all !important; }
 
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
@@ -84,22 +99,36 @@ def get_global_css():
     .color-금 { background: #9E9E9E !important; color: #FFF !important; }
     .color-수 { background: #212121 !important; color: #FFF !important; }
 
-    .result-table { width: 100%; border-collapse: collapse !important; border: 2.5px solid #3E2723 !important; margin-bottom: 12px; table-layout: fixed; }
-    .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 12.5px; line-height: 1.2 !important; }
+    .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
+    .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 13px; line-height: 1.2 !important; }
 
-    .top-header-cell { background-color: #1A237E !important; height: 28px !important; }
-    .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 14.5px !important; border: 1px solid #444 !important; }
-    .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 900 !important; font-size: 13px !important; }
+    .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
+    .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
+    .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 900 !important; font-size: 14px !important; }
 
-    .report-page { width: 210mm; max-width: 100%; margin: 15px auto; background-color: #FFF !important; padding: 10mm 8mm; box-sizing: border-box; color: #000; }
+    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
 
+    /* PDF 인쇄 출력 전용 스타일 */
     @media print { 
         @page { size: A4 portrait; margin: 10mm; }
-        .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
+        .stSidebar, button, iframe, .print-hide, header { display: none !important; }
         body, .stApp { background-color: white !important; }
+        
+        .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
+        div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+        .element-container, .stMarkdown { margin-bottom: 0 !important; }
+        
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .report-page:last-of-type { page-break-after: auto; }
-        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 15px !important; padding: 12px !important; }
+        .page-break-before { page-break-before: always; }
+        
+        .vip-inset-frame { 
+            border: 2px solid #000 !important; 
+            border-radius: 20px !important; 
+            padding: 15px !important; 
+            box-decoration-break: clone !important; 
+            -webkit-box-decoration-break: clone !important; 
+        }
     }
     </style>"""
 
