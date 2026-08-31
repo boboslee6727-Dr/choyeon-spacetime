@@ -623,15 +623,10 @@ def get_warning_box(title, message):
     """
 
 def get_final_report_box(content_html):
-    """A4 백지 캔버스 안쪽 둥근 VIP 프레임 단일 래핑 (50.7 완벽 복원)"""
-    title_raw = st.session_state.get('current_report_title', '초연 전통 명리사주 풀이')
-    # 🏮 및 🎯 철거
-    clean_title = title_raw.replace("🏮", "").replace("🎯", "").replace("[", "").replace("]", "").strip()
-    
+    """A4 백지 캔버스 안쪽 둥근 VIP 프레임 단일 래핑 (불필요 고정 제목 제거본)"""
     return f"""
     <div class='report-page' style='page-break-before: auto;'>
         <div class='vip-inset-frame' style='border: 2px solid #1A237E; padding: 20px; border-radius: 15px; box-sizing: border-box; box-decoration-break: clone; -webkit-box-decoration-break: clone; page-break-inside: auto; break-inside: auto;'>
-            <h1 style='text-align:center; font-size: 24px; font-weight: 900; white-space: nowrap;'>{clean_title}</h1>
             {content_html}
         </div>
     </div>
