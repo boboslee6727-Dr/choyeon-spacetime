@@ -534,7 +534,7 @@ if st.session_state.get('app_running', False):
     next_year = curr_year + 1
     
     age = curr_year - sol_y + 1
-    p_icon = "♂️" if gender == "남성" else "♀️"
+    u_icon = "♂️" if gender == "남성" else "♀️"
     today_str = selected_target_date.strftime("%Y년 %m월 %d일")
 
     def extract_time(time_str):
@@ -703,30 +703,27 @@ if st.session_state.get('app_running', False):
             f_lun_val = p_lun_str_val if gender == "남성" else lun_str_fmt
             f_time_val = p_time_val if gender == "남성" else time_str_fmt
 
-            # 🎯 [1] 궁합 모드 (if 블록 내부) -> 2인용 표지(get_couple_cover, 15개) 호출
-            u_icon = "♂️" if "남" in str(gender) else "♀️"
-            p_icon = "♀️" if "여" in str(p_gender) else "♂️"
-
+            # 🎯 2인용 궁합 표지: 남명(♂️)과 여명(♀️) 데이터를 정확한 자리에 고정 바인딩
             cover_html = html_views.get_couple_cover(
                 APP_VERSION, 
                 report_title, 
-                u_icon, 
-                name, 
-                u_age, 
-                sol_str, 
-                lun_str, 
-                time_str,
-                p_icon, 
-                p_name, 
-                p_age, 
-                p_sol_str, 
-                p_lun_str, 
-                p_time_str, 
+                "♂️", 
+                m_name_val, 
+                m_age_val, 
+                m_sol_val, 
+                m_lun_val, 
+                m_time_val,
+                "♀️", 
+                f_name_val, 
+                f_age_val, 
+                f_sol_val, 
+                f_lun_val, 
+                f_time_val, 
                 today_str
             )
             
-            male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if "남" in str(gender) else partner_bazi
-            female_data_pack = partner_bazi if "남" in str(gender) else [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
+            male_data_pack = [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"] if gender == "남성" else partner_bazi
+            female_data_pack = partner_bazi if gender == "남성" else [f"{hs}{hb}", f"{ds}{db}", f"{ms}{mb}", f"{ys}{yb}"]
             
             try:
                 if hasattr(engine, 'UniversalPrintableGunghap'):
@@ -741,20 +738,19 @@ if st.session_state.get('app_running', False):
                 gh_score, gh_grade = 0, "점수 산출 불가"
                 
         else:
-            # 🎯 [2] 1인용 개인 모드 (else 블록 내부) -> 1인용 표지(get_personal_cover, 8개) 호출
+            # 🎯 1인용 개인 모드: 1인용 표지(get_personal_cover, 8개 인자) 호출
             gh_score = 0
             gh_grade = ""
             partner_bazi = ["?", "?", "?", "?"]
-            u_icon = "♂️" if "남" in str(gender) else "♀️"
 
             cover_html = html_views.get_personal_cover(
                 APP_VERSION, 
                 report_title, 
                 u_icon, 
                 name, 
-                sol_str, 
-                lun_str, 
-                time_str, 
+                sol_str_fmt, 
+                lun_str_fmt, 
+                time_str_fmt, 
                 today_str
             )
 
