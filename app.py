@@ -118,7 +118,7 @@ def call_gemini_api(prompt_text, max_tokens=8192):
         "주어진 사주 팩트 데이터와 요청된 해당 메뉴의 지침에만 근거하여, "
         "절대 도중에 문장을 끊지 말고 지정된 결론과 클로징까지 완벽하게 완결된 형태로 작성하십시오."
     )
-    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=max_tokens
+    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
