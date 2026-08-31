@@ -314,27 +314,79 @@ def get_couple_cover(version, report_title, u_icon="♂️", u_name="남명", u_
     </div>
     """
 
+def get_main_title_html(title):
+    """리포트 메인 대제목 렌더링"""
+    clean_title = str(title or "초연 시공명리 정밀 분석").strip()
+    return f"""
+    <div style='text-align: center; margin-bottom: 20px;'>
+        <h1 style='font-family: "Nanum Gothic", sans-serif !important; font-size: 22px !important; font-weight: 900 !important; color: #1A237E !important; margin: 0 0 8px 0 !important; padding-bottom: 8px !important; border-bottom: 2.5px solid #1A237E !important; letter-spacing: -0.5px !important;'>
+            {clean_title}
+        </h1>
+    </div>
+    """
+
+def get_info_header(icon="♂️", name="신청인", gender="남성", marital="선택", age=0, sol_str="", lun_str="", time_str=""):
+    """
+    신청인 기본 정보 헤더 (app.py 8개 매개변수 1:1 완벽 일치 및 기본값 방어 가드)
+    """
+    clean_icon = str(icon or ("♂️" if "남" in str(gender) else "♀️")).strip()
+    clean_name = str(name or "무명").strip()
+    marital_txt = f" / {marital}" if marital and marital != "선택" else ""
+    
+    return f"""
+    <div style='background: #F8F9FA !important; border: 1.5px solid #000000 !important; padding: 14px 18px !important; border-radius: 10px !important; margin-bottom: 15px !important; text-align: center !important;'>
+        <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 17px !important; font-weight: 800 !important; color: #000000 !important; margin-bottom: 6px !important;'>
+            {clean_icon} <span style='font-size: 18px !important;'>{clean_name}</span> 님 ({gender}{marital_txt}, {age}세)
+        </div>
+        <div style='font-family: "Nanum Gothic", sans-serif !important; font-size: 13.5px !important; font-weight: 600 !important; color: #222222 !important; line-height: 1.5 !important;'>
+            <span>[양력] {sol_str}</span> | <span>[음력] {lun_str}</span> | <span style='font-weight: 800 !important; color: #000000 !important;'>{time_str}</span>
+        </div>
+    </div>
+    """
+
+def td_func(char, engine_mod):
+    """사주원국 글자별 한자 변환 및 오행 색상 배경 렌더링"""
+    if not char or char in ['?', ' ', '-']:
+        return "<td style='border:1px solid #444;'>-</td>"
+    
+    # 1. 한글 간지를 한자로 안전 변환
+    hanja = engine_mod.K2H_GAN.get(char, engine_mod.K2H_JI.get(char, char))
+    
+    # 2. 오행 색상 클래스 취득
+    oh = engine_mod.get_color(char) if hasattr(engine_mod, 'get_color') else "토"
+    
+    return f"<td class='color-{oh}' style='font-size: 18px; font-weight: 900; border:1px solid #444 !important;'><span style='color:inherit !important;'>{hanja}</span></td>"
+
 def generate_saju_table_data(gans, jjis, ds, gender, engine):
-    """50.7 완벽 동일 사주원국 테이블 렌더링"""
+    """50.7 완벽 동일 사주원국 테이블 렌더링 (일간 한자 표준화 및 시각 표기 무결점 완성본)"""
+    # 1. 일간 한자 보정 (한글로 들어와도 엔진에서 정확히 십성 추출되도록 변환)
+    ds_hanja = engine.K2H_GAN.get(ds, ds)
+    
+    # 2. 천간합충
     gan_rel = "".join([f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_gan_rel_all(i, gans)}</span></td>" for i in range(4)])
     hs, ds_val, ms, ys = gans[0], gans[1], gans[2], gans[3]
     hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
     
-    gan_ss = f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, hs)}</span></td>" \
+    # 3. 천간십성 (일원 표시)
+    gan_ss = f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, hs)}</span></td>" \
              f"<td style='border:1px solid #444;'><span style='color:#D50000; font-weight:900;'>日元</span></td>" \
-             f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, ms)}</span></td>" \
-             f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, ys)}</span></td>"
+             f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, ms)}</span></td>" \
+             f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, ys)}</span></td>"
 
+    # 4. 천간 / 지지 글자 (td_func 연동)
     gan_row_html = "".join([td_func(g, engine) for g in gans])
     ji_row_html = "".join([td_func(j, engine) for j in jjis])
 
-    ji_ss_html = f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, hb)}</span></td>" \
-                 f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, db)}</span></td>" \
-                 f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, mb)}</span></td>" \
-                 f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds, yb)}</span></td>"
+    # 5. 지지십성
+    ji_ss_html = f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, hb)}</span></td>" \
+                 f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, db)}</span></td>" \
+                 f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, mb)}</span></td>" \
+                 f"<td style='border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_ss(ds_hanja, yb)}</span></td>"
 
-    jijanggan_html = "".join([f"<td style='padding:0; border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_jijanggan_full(ds, jjis[i])}</span></td>" for i in range(4)])
+    # 6. 지장간
+    jijanggan_html = "".join([f"<td style='padding:0; border:1px solid #444;'><span style='color:inherit !important;'>{engine.get_jijanggan_full(ds_hanja, jjis[i])}</span></td>" for i in range(4)])
 
+    # 7. 합충형파해 (일-월-시-년 4단 루프)
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
         b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
@@ -343,7 +395,8 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'><span style='color:inherit !important;'>합충형파해</span></td>" if l_idx==0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
 
-    unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_unsung(ds, jjis[i])}</span></td>" for i in range(4)])
+    # 8. 십이운성, 십이신살, 일반신살
+    unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_unsung(ds_hanja, jjis[i])}</span></td>" for i in range(4)])
     y_shinsal_tds = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_12_shinsal(yb, jjis[i])}</span></td>" for i in range(4)])
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'><span style='color:inherit !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</span></td>" for i in range(4)])
 
@@ -627,6 +680,38 @@ def get_final_report_box(content_html):
         </div>
     </div>
     """
+
+def analyze_samja_combination(adv_gan_data, dw_g_cur=""):
+    """천간 삼자조합(三字組合) 정밀 판별 및 팩트 추출"""
+    gans = [
+        adv_gan_data.get('year_gan', ''),
+        adv_gan_data.get('month_gan', ''),
+        adv_gan_data.get('day_gan', ''),
+        adv_gan_data.get('hour_gan', '')
+    ]
+    if dw_g_cur and dw_g_cur != "-":
+        gans.append(dw_g_cur)
+        
+    g_set = set([g for g in gans if g and g != "-" and g != "?"])
+    
+    # 대표 삼자조합 명리 패턴 맵
+    comb_rules = [
+        ({'甲', '丙', '戊'}, "甲-丙-戊(명예와 활동력의 발전 조합)"),
+        ({'乙', '丙', '己'}, "乙-丙-己(재능 발휘와 대인 확장 조합)"),
+        ({'庚', '壬', '戊'}, "庚-壬-戊(결실의 유통과 실리적 자산 조합)"),
+        ({'辛', '壬', '甲'}, "辛-壬-甲(전문 지식의 심화 및 지혜 조합)"),
+        ({'丁', '庚', '甲'}, "丁-庚-甲(기술/연마를 통한 성취 조합)"),
+        ({'癸', '甲', '丙'}, "癸-甲-丙(학문과 창의성의 발현 조합)")
+    ]
+    
+    matched = []
+    for req_set, desc in comb_rules:
+        if req_set.issubset(g_set):
+            matched.append(desc)
+            
+    if matched:
+        return " / ".join(matched)
+    return "원국 특이 삼자조합 없음"
 
 def get_choyeon_sign_html():
     """
