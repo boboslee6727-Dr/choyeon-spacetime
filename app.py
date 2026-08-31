@@ -80,29 +80,45 @@ except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     _gemini_client = None
 
-@st.cache_data(show_spinner=False, ttl=86400)
-def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=8000):
-    if '1.5' in model_name: model_name = 'gemini-2.5-flash'
-    if _gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+def get_ai_response(system_prompt, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=8192):
+    """8,192 풀 토큰 보장 및 끊김 방어형 AI 호출기"""
+    if '1.5' in model_name: 
+        model_name = 'gemini-2.5-flash'
+    if _gemini_client is None: 
+        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+    
     max_retries = 2
     for attempt in range(max_retries + 1):
         try:
             response = _gemini_client.models.generate_content(
-                model=model_name, contents=prompt_text,
+                model=model_name, 
+                contents=prompt_text,
                 config=genai.types.GenerateContentConfig(
                     system_instruction=system_prompt, 
                     temperature=0.7,
+                    top_p=0.95,
                     max_output_tokens=max_output_tokens
                 )
             )
-            return response.text.strip()
-        except Exception as e:
-            if attempt < max_retries: time.sleep(1); continue
-            return f"<div style='color:red;'>🚨 AI 서버 장애: {e}</div>"
+            
+            if response and response.text:
+                return response.text.strip()
+            else:
+                return "<div style='color:red;'>🚨 AI 응답 데이터가 비어 있습니다.</div>"
 
-def call_gemini_api(prompt_text, max_tokens=8000):
-    sys_role = "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. 주어진 사주 팩트 데이터에 근거하여 엄정하게 분석하십시오."
-    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=max_tokens)
+        except Exception as e:
+            if attempt < max_retries: 
+                time.sleep(1.5)
+                continue
+            return f"<div style='color:red;'>🚨 AI 서버 장애 (재시도 실패): {e}</div>"
+
+def call_gemini_api(prompt_text, max_tokens=8192):
+    sys_role = (
+        "당신은 대한민국 최고의 정통 명리학이자 초연시공명리학 권위자 '초연 박사'입니다. "
+        "주어진 사주 팩트 데이터와 요청된 해당 메뉴의 지침에만 근거하여, "
+        "절대 도중에 문장을 끊지 말고 지정된 결론과 클로징까지 완벽하게 완결된 형태로 작성하십시오."
+    )
+    return get_ai_response(sys_role, prompt_text, model_name='gemini-2.5-flash', max_output_tokens=max_tokens
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
