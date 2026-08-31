@@ -57,19 +57,20 @@ def get_global_css():
         max-width: 100%;
     }
 
-    /* 🌟 본문 대제목(h1)의 위엄 살리기 (진한 남색 밑줄) */
-    .report-page h1:not(.cover-page h1) {
+    /* 🌟 본문 대제목(h1 및 ai-title-l1) 진한 남색 밑줄 쫙 일괄 적용 */
+    .report-page h1:not(.cover-page h1), .ai-title-l1 {
         font-size: 26px !important;
         font-weight: 900 !important;
         color: #1A237E !important;
         text-align: center !important;
         border-bottom: 3px solid #1A237E !important;
         padding-bottom: 10px !important;
-        margin-bottom: 20px !important;
-        margin-top: 0 !important;
+        margin-bottom: 25px !important;
+        margin-top: 10px !important;
         letter-spacing: -0.5px !important;
         display: block !important;
         width: 100% !important;
+        font-family: 'Noto Serif KR', serif !important;
     }
 
     .b-text { font-weight: 900 !important; color: #000000 !important; display: inline-block; }
@@ -256,13 +257,13 @@ def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
                 <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 23px; font-weight: 800; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8;'>
-                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</p>
+                    <div style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></div>
+                    <div style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #1A237E;'>태어난 시간 : {u_time}</div>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 18px !important; font-weight: 700 !important; color: #111111 !important; text-align: center !important; width: 100% !important; margin: 35px 0 0 0 !important; letter-spacing: 0.5px !important; display: block !important;'>{today_str}</p>
-            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 700 !important; color: #1A237E !important; text-align: center !important; width: 100% !important; margin: 10px 0 0 0 !important; letter-spacing: 1px !important; display: block !important;'>초연 시공명리 연구소</p>
+            <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 18px !important; font-weight: 800 !important; color: #111111 !important; text-align: center !important; text-indent: 0 !important; width: 100% !important; margin-top: 35px !important; letter-spacing: 0.5px !important;'><b>{today_str}</b></div>
+            <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center !important; text-indent: 0 !important; width: 100% !important; margin-top: 10px !important; letter-spacing: 1px !important;'><b>초연 시공명리 연구소</b></div>
         </div>
     </div>
     <div class='page-break'></div>
@@ -292,21 +293,21 @@ def get_couple_cover(version, report_title, u_icon, u_name, u_age, u_sol, u_lun,
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 18px 20px; border-radius: 14px; margin-bottom: 15px;'>
                 <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #1565C0; margin: 0 0 8px 0;'>{u_icon} 남명 : {clean_u_name} 님 ({u_age}세)</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.6;'>
-                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #1565C0;'>태어난 시간 : {u_time}</p>
+                    <div style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></div>
+                    <div style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #1565C0;'>태어난 시간 : {u_time}</div>
                 </div>
             </div>
             
             <div style='background: #FFF3E0; border: 1px solid #FBE9E7; padding: 18px 20px; border-radius: 14px; margin-bottom: 24px;'>
                 <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 20px; font-weight: 800; color: #C62828; margin: 0 0 8px 0;'>{p_icon} 여명 : {clean_p_name} 님 ({p_age}세)</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.6;'>
-                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
-                    <p style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #C62828;'>태어난 시간 : {p_time}</p>
+                    <div style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 900 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></div>
+                    <div style='margin: 4px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800; color: #C62828;'>태어난 시간 : {p_time}</div>
                 </div>
             </div>
             
-            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 17px !important; margin-top: 25px !important; margin-bottom: 0 !important; font-weight: 700 !important; color: #000000 !important; letter-spacing: 0.5px !important; text-align: center !important; width: 100% !important; display: block !important;'>{today_str}</p>
-            <p style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 700 !important; color: #1A237E !important; margin-top: 8px !important; margin-bottom: 0 !important; letter-spacing: 1px !important; text-align: center !important; width: 100% !important; display: block !important;'>초연 시공명리 연구소</p>
+            <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 17px !important; font-weight: 800 !important; color: #000000 !important; text-align: center !important; text-indent: 0 !important; width: 100% !important; margin-top: 25px !important; letter-spacing: 0.5px !important;'><b>{today_str}</b></div>
+            <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; text-align: center !important; text-indent: 0 !important; width: 100% !important; margin-top: 8px !important; letter-spacing: 1px !important;'><b>초연 시공명리 연구소</b></div>
         </div>
     </div>
     <div class='page-break'></div>
