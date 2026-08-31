@@ -64,9 +64,11 @@ def get_global_css():
         text-align: center !important;
         border-bottom: 3px solid #1A237E !important;
         padding-bottom: 10px !important;
-        margin-bottom: 25px !important;
+        margin-bottom: 20px !important;
         margin-top: 0 !important;
         letter-spacing: -0.5px !important;
+        display: block !important;
+        width: 100% !important;
     }
 
     .b-text { font-weight: 900 !important; color: #000000 !important; display: inline-block; }
