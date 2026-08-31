@@ -112,7 +112,8 @@ def get_global_css():
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .content-box-loose { margin-bottom: 25px !important; }
     
-    .ai-body-p, .report-page p { font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 12px !important; word-break: break-all !important; }
+    .ai-body-p, .report-page:not(.cover-page) p { font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 12px !important; word-break: break-all !important; }
+    .cover-page p { text-indent: 0 !important; }
 
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
