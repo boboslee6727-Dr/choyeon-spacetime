@@ -161,17 +161,18 @@ def get_global_css():
 def format_ai_text_to_html(text, qna_text=""):
     """
     프롬프트 규칙 4번 대응 포맷터:
-    AI의 순수 텍스트 서식(1., 1), (1), ◆, **)을 파싱하여
-    대제목, 중제목, 소제목, 들여쓰기 문단으로 렌더링합니다.
+    대제목(1.), 중제목(1)), 소제목((1), ◆, ■), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
     """
     if not text:
         return ""
 
+    # 1. 마크다운 코드 블록 제거 및 라인 분리
     text = re.sub(r'```(?:html)?\s*', '', text)
     lines = [line.strip() for line in text.split("\n")]
 
     html_lines = []
 
+    # 예약 마커 리스트 (원형 보존)
     preserved_markers = [
         '[DAEWUN_TABLE_HERE]', '[SEWUN_TABLE_HERE]', '[WOLUN_TABLE_HERE]',
         '[WEEKLY_CALENDAR_HERE]', '[COUPLE_DAEWUN_TABLES_HERE]',
@@ -182,31 +183,48 @@ def format_ai_text_to_html(text, qna_text=""):
         if not line:
             continue
 
+        # 예약 마커 보존
         if any(marker in line for marker in preserved_markers):
             html_lines.append(f"\n{line}\n")
             continue
 
+        # 볼드체 변환 (**text** -> <b>text</b>)
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
 
-        if re.match(r'^\d+\.\s+[^\d]', line_formatted):
-            html_lines.append(f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>")
-        elif re.match(r'^\d+\)\s+', line_formatted):
-            html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 8px !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>")
-        elif re.match(r'^\(\d+\)\s+', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
-            html_lines.append(f"<div style='font-size: 16px !important; font-weight: 900 !important; color: #283593 !important; margin-top: 15px !important; margin-bottom: 6px !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</div>")
+        # 1. 대제목: 1. , 2. , 3. 형태
+        if re.match(r'^\d+\.\s+', line_formatted):
+            html_lines.append(
+                f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>"
+            )
+
+        # 2. 중제목: 1) , 2) , 3) 형태
+        elif re.match(r'^\d+\)\s*', line_formatted):
+            html_lines.append(
+                f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 8px !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>"
+            )
+
+        # 3. 🌟 소제목 및 기호: (1), (2), (3) / [1], [2] / ◆, ▶, ▷, ■, ◈, ●, • 형태 (완벽 볼드 강제)
+        elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
+            html_lines.append(
+                f"<div style='font-size: 16.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 6px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>"
+            )
+
+        # 4. 일반 본문 문단
         else:
-            html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: Noto Serif KR, serif !important;'>{line_formatted}</p>")
+            html_lines.append(
+                f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>"
+            )
 
     parsed_content = "\n".join(html_lines)
 
+    # 5. Q&A 텍스트 연동
     qna_html = ""
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
         clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna).replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 사주박사의 1:1 심층 솔루션 안내<br>{clean_qna}</div>"
 
-    return f"<div class='choyeon-premium-report' style='font-family: Noto Serif KR, serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
-
+    return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
 
 # ==============================================================================
 # 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (50.7 완벽 이식)
