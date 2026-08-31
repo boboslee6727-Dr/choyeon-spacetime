@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 85.7 Master - 정석 MVC 패턴 및 스코프 완전 정규화 버젼)
+# app.py (ver 85.8 Master - 정석 MVC 패턴 및 스코프 완전 정규화 버젼)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -205,7 +205,7 @@ def do_auto_fill_partner():
 # ==============================================================================
 is_admin_mode = st.session_state.get('admin_proc_id') is not None
 
-# 🚨 [핵심 정석] 모든 기능 동작 변수를 '최상단'에 기본값으로 선언해둡니다. (NameError 원천 차단)
+# 모든 기능 동작 변수를 '최상단'에 기본값으로 선언 (NameError 원천 차단)
 run_iljin_calc = False
 run_delivery_calc = False
 compare_mode = "자동대조"
@@ -937,9 +937,8 @@ if st.session_state.get('app_running', False):
         
         part_2_intro = str(intro_html or "")
         part_3_golden = str(golden_text_html or "")
-        part_5_closing = str(closing_part or "")
-
         part_1_fact_gunghap = part_1_fact
+
         if is_2person:
             u_full = str(info_h or "") + str(table_html or "") + str(master_bar_html or "") + str(un_html or "")
             p_full = str(p_info_h or "") + str(p_table_html or "") + str(p_master_bar_html or "") + str(p_un_html or "")
@@ -1168,28 +1167,19 @@ if st.session_state.get('app_running', False):
         safe_part_1_gh = str(part_1_fact_gunghap).replace('\n', ' ') if 'part_1_fact_gunghap' in locals() else ""
 
         # ----------------------------------------------------------------------
-        # 🔒 [입금확인 보안 규칙] 입금확인 완료 시에만 직인/서명 날인, 미입금 시 미날인
+        # 🔒 [입금확인 보안 규칙] 입금확인 완료 시에만 직인 날인, 미입금 시 미날인
         # ----------------------------------------------------------------------
         is_paid = False
-        
-        # 1. 관리자 모드에서 입금확인 후 스텔스 생산하는 경우
         if is_admin_mode:
             is_paid = True
-        # 2. 세션 내 결제/입금 완료 플래그 확인
         elif st.session_state.get('is_paid', False) or st.session_state.get('payment_verified', False):
             is_paid = True
-        # 3. 주문 딕셔너리 내 입금 상태 확인
         elif 'admin_orders' in st.session_state:
             curr_gid = st.session_state.get('admin_proc_id', '')
             if curr_gid and st.session_state['admin_orders'].get(curr_gid, {}).get('is_paid', False):
                 is_paid = True
 
-        # 입금확인 완료 시에만 정통 전서체 사각 인장 HTML 발급, 미입금 시 공백 처리
-        if is_paid:
-            safe_part_5 = html_views.get_choyeon_sign_html() if hasattr(html_views, 'get_choyeon_sign_html') else ""
-        else:
-            safe_part_5 = ""
-
+        safe_part_5 = html_views.get_choyeon_sign_html() if is_paid and hasattr(html_views, 'get_choyeon_sign_html') else ""
         current_ai = ai_output_html if 'ai_output_html' in locals() and ai_output_html else "<p>분석 결과를 불러오지 못했습니다.</p>"
 
         final_render_html = ""
@@ -1210,21 +1200,6 @@ if st.session_state.get('app_running', False):
         wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
         golden_text_code = safe_part_3 if 'safe_part_3' in locals() and safe_part_3 else ""
         intro_block = intro_html if 'intro_html' in locals() and intro_html else ""
-
-        # ----------------------------------------------------------------------
-        # 🔒 [입금확인 보안 규칙] 입금확인 완료 시에만 직인 날인, 미입금 시 미날인
-        # ----------------------------------------------------------------------
-        is_paid = False
-        if is_admin_mode:
-            is_paid = True
-        elif st.session_state.get('is_paid', False) or st.session_state.get('payment_verified', False):
-            is_paid = True
-        elif 'admin_orders' in st.session_state:
-            curr_gid = st.session_state.get('admin_proc_id', '')
-            if curr_gid and st.session_state['admin_orders'].get(curr_gid, {}).get('is_paid', False):
-                is_paid = True
-
-        safe_part_5 = html_views.get_choyeon_sign_html() if is_paid and hasattr(html_views, 'get_choyeon_sign_html') else ""
 
         # ==============================================================================
         # 🎯 전 상품(1-1 ~ 4-2) 본문 조립 및 마커 치환 분기
