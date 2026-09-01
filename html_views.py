@@ -4,9 +4,6 @@
 # ==============================================================================
 import re
 import streamlit as st
-# ==============================================================================
-# 📦 섹션 1. 글로벌 스타일 (CSS) 및 AI 통변 텍스트 포맷터
-# ==============================================================================
 def get_global_css():
     """전체 시스템 UI/UX 및 화면/인쇄 듀얼 분리 스타일시트 (나눔명조/스타일 충돌 해결)"""
     return """<style>
@@ -14,111 +11,34 @@ def get_global_css():
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
     .stApp { background-color: #E8F5E9 !important; }
- 
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] span[data-testid="stMarkdownContainer"] {
-        font-family: 'Nanum Gothic', sans-serif !important;
-    }
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] span[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
     div[data-testid="stSidebar"] * { font-size: 14px !important; }
- 
-    /* 🚨 라디오 버튼 텍스트가 잘리지 않고 두 줄(\n)로 나오도록 속성 부여 */
-    div[data-testid="stRadio"] label p {
-        font-size: 14px !important;
-        white-space: pre-wrap !important;
-        line-height: 1.6 !important;
-        padding-bottom: 4px !important;
-    }
+    /* 🚨 라디오 버튼 텍스트가 잘리지 않고 두 줄(\\n)로 나오도록 속성 부여 */
+    div[data-testid="stRadio"] label p { font-size: 14px !important; white-space: pre-wrap !important; line-height: 1.6 !important; padding-bottom: 4px !important; }
     div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
     /* 🛡️ 1. 본문 영역: 명조체(Noto Serif KR) 강제 */
-    .report-page:not(.cover-page), .report-page:not(.cover-page) *, .choyeon-premium-report, .result-table td {
-        font-family: 'Noto Serif KR', serif !important;
-    }
+    .report-page:not(.cover-page), .report-page:not(.cover-page) *, .choyeon-premium-report, .result-table td { font-family: 'Noto Serif KR', serif !important; }
     /* 🛡️ 2. 표지 영역: 나눔명조(Nanum Myeongjo) 최우선 보장 (일반 문장체 풀림 차단) */
-    .cover-page, .cover-page *, div.cover-page, div.cover-page * {
-        font-family: 'Nanum Myeongjo', serif !important;
-        box-sizing: border-box !important;
-    }
+    .cover-page, .cover-page *, div.cover-page, div.cover-page * { font-family: 'Nanum Myeongjo', serif !important; box-sizing: border-box !important; }
     /* 🛡️ 표지 내부 텍스트 여백 및 들여쓰기 초기화 */
-    .cover-page p, .cover-page div, .cover-page span, .cover-page h1, .cover-page h2 {
-        text-indent: 0 !important;
-    }
+    .cover-page p, .cover-page div, .cover-page span, .cover-page h1, .cover-page h2 { text-indent: 0 !important; }
     /* 🛡️ 표지 박스 기본 속성 (A4 인쇄 정밀 대응) */
-    .cover-page {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 0 !important;
-        background: #ffffff;
-        margin: 0 auto;
-        box-sizing: border-box;
-        width: 210mm;
-        height: 297mm;
-        min-height: 297mm;
-        page-break-after: always;
-        -webkit-print-color-adjust: exact;
-    }
-    /* 🌟 본문 대제목(h1 및 ai-title-l1) 진한 남색 밑줄 쫙 일괄 적용 */
-    .report-page:not(.cover-page) h1, .ai-title-l1 {
-        font-size: 26px !important;
-        font-weight: 900 !important;
-        color: #1A237E !important;
-        text-align: center !important;
-        border-bottom: 3px solid #1A237E !important;
-        padding-bottom: 10px !important;
-        margin-bottom: 25px !important;
-        margin-top: 10px !important;
-        letter-spacing: -0.5px !important;
-        display: block !important;
-        width: 100% !important;
-        font-family: 'Noto Serif KR', serif !important;
-    }
+    .cover-page { display: flex !important; flex-direction: column; justify-content: center; align-items: center; padding: 0 !important; background: #ffffff; margin: 0 auto; box-sizing: border-box; width: 210mm; height: 297mm; min-height: 297mm; page-break-after: always; -webkit-print-color-adjust: exact; }
+    /* 🌟 본문 대제목(h1, h3, ai-title-l1) 진한 남색 밑줄 쫙 일괄 적용 (구 중복 규칙 통합) */
+    .report-page:not(.cover-page) h1, .report-page h3, .ai-title-l1 { font-size: 26px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; margin-bottom: 25px !important; margin-top: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: 'Noto Serif KR', serif !important; }
     .b-text { font-weight: 900 !important; color: #000000 !important; display: inline-block; }
     .b-text-red { font-weight: 900 !important; color: #D50000 !important; display: inline-block; }
-    div.stButton > button {
-        font-family: 'Nanum Gothic', sans-serif !important;
-        font-weight: 900 !important;
-        font-size: 16px !important;
-        border-radius: 8px !important;
-        width: 100% !important;
-    }
-    div.stButton > button[kind="primary"], div.stButton > button[data-testid="baseButton-primary"] {
-        background-color: #D50000 !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        height: 50px !important;
-        font-weight: 900 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-    }
-    div.stButton > button[kind="primary"]:hover, div.stButton > button[data-testid="baseButton-primary"]:hover {
-        background-color: #B71C1C !important;
-        color: #FFFFFF !important;
-    }
-    div.stButton > button[kind="secondary"], div.stButton > button[data-testid="baseButton-secondary"] {
-        background-color: #00A843 !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        height: 50px !important;
-        font-weight: 900 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important;
-    }
-    div.stButton > button[kind="secondary"]:hover, div.stButton > button[data-testid="baseButton-secondary"]:hover {
-        background-color: #008937 !important;
-        color: #FFFFFF !important;
-    }
-    /* 50.7 통변 제목 및 본문 스타일 */
-    .ai-title-l1, .report-page h3 { font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
+    div.stButton > button { font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important; width: 100% !important; }
+    div.stButton > button[kind="primary"], div.stButton > button[data-testid="baseButton-primary"] { background-color: #D50000 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }
+    div.stButton > button[kind="primary"]:hover, div.stButton > button[data-testid="baseButton-primary"]:hover { background-color: #B71C1C !important; color: #FFFFFF !important; }
+    div.stButton > button[kind="secondary"], div.stButton > button[data-testid="baseButton-secondary"] { background-color: #00A843 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; }
+    div.stButton > button[kind="secondary"]:hover, div.stButton > button[data-testid="baseButton-secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
+    /* 통변 제목 및 본문 스타일 */
     .sub-title, .ai-title-l2 { font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .content-box-loose { margin-bottom: 25px !important; }
- 
     /* 🛡️ 본문 p태그와 표지 p태그 충돌 방지 */
     .ai-body-p, .report-page:not(.cover-page) p { font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 12px !important; word-break: break-all !important; }
-    .cover-page p { text-indent: 0 !important; }
     .color-목 { background: #2E7D32 !important; color: #FFF !important; }
     .color-화 { background: #C62828 !important; color: #FFF !important; }
     .color-토 { background: #F9A825 !important; color: #000 !important; }
@@ -131,35 +51,21 @@ def get_global_css():
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 900 !important; font-size: 14px !important; }
     /* 🌟 AI 통변 페이지 최상단 대제목(main-report-title) 전용 이중선 구분 */
-    .main-report-title {
-        text-align: center !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        border-bottom: 4px double #1A237E !important;
-        padding-bottom: 20px !important;
-        margin: 10px 0 30px 0 !important;
-    }    
+    .main-report-title { text-align: center !important; width: 100% !important; box-sizing: border-box !important; border-bottom: 4px double #1A237E !important; padding-bottom: 20px !important; margin: 10px 0 30px 0 !important; }
+    /* 📄 감명서 페이지 기본 프레임 (A4 규격) */
     .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
+    /* 🖨️ 인쇄 / PDF 저장 전용 규칙 */
     @media print {
         @page { size: A4 portrait; margin: 10mm; }
         .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
         body, .stApp { background-color: white !important; }
- 
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         div[data-testid="stVerticalBlock"] { gap: 0 !important; }
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
- 
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
- 
-        .vip-inset-frame {
-            border: 2px solid #000 !important;
-            border-radius: 20px !important;
-            padding: 15px !important;
-            box-decoration-break: clone !important;
-            -webkit-box-decoration-break: clone !important;
-        }
+        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 15px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
     }
     </style>"""
 
