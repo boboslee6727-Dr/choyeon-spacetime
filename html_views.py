@@ -281,6 +281,15 @@ def get_couple_cover(version="", report_title="", u_icon="♂️", u_name="무�
     <div class='page-break'></div>
     """
 
+def get_main_title_html(report_title=""):
+    """AI 통변 페이지 최상단 대제목 - 제목 밑에 굵은 밑줄로 위엄을 강조"""
+    clean_title = str(report_title or "").strip()
+    return f"""
+    <div style='text-align: center; margin: 10px 0 30px 0; padding: 0; width: 100%;'>
+        <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 28px !important; font-weight: 900 !important; color: #1A237E !important; letter-spacing: -0.5px !important; margin: 0 !important; padding: 0 0 14px 0 !important; display: inline-block !important; border-bottom: 3px solid #1A237E !important;'>{clean_title}</h2>
+    </div>
+    """
+
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
     <div style='text-align:center; font-family:"Nanum Gothic", sans-serif; margin-bottom:15px; line-height:1.5;'>
@@ -554,13 +563,95 @@ def get_gunghap_closing(name1, name2):
     """
 
 def get_gunghap_three_page_report(m_saju_html, m_ess, f_ess, g_ess):
-    pass
+    """
+    [제2원칙 최종 승인판] 궁합 3분할 페이지 일괄 생성 함수
+    - app.py 고정 환경 완벽 대응: 섞여 들어온 페이지 넘김 태그를 안전하게 분리
+    """
+    
+    # 1. 🚨 [불순물 제거 필터] app.py가 억지로 집어넣은 페이지 넘김 태그
+    pb_tag = "<div style='page-break-before: always; break-before: page;'></div>"
+    
+    # f_ess와 g_ess에서 테두리를 찢어발기는 원흉(pb_tag)만 완벽히 삭제하고 알맹이만 남깁니다.
+    clean_f_ess = str(f_ess).replace(pb_tag, "").strip() if f_ess else ""
+    clean_g_ess = str(g_ess).replace(pb_tag, "").strip() if g_ess else ""
+
+    # 2. [1페이지] ♂️ 남명 사주 요약 조립
+    m_page = f"""
+    <div style='border: 2px solid #1565C0; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+        <h1 style='text-align:center; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
+        {m_saju_html}
+        <div style='margin-top:15px;'>{m_ess}</div>
+    </div>
+    """
+    
+    # 3. [2페이지] ♀️ 여명 사주 요약 조립 (불순물이 제거된 알맹이 사용)
+    f_page = ""
+    if clean_f_ess:
+        f_page = f"""
+        <div class='page-break'></div>
+        <div style='border: 2px solid #4A148C; border-radius: 12px; padding:20px; background:#FFFFFF; margin-bottom:20px;'>
+            <h1 style='text-align:center; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
+            <div style='margin-top:15px;'>{clean_f_ess}</div>
+        </div>
+        """
+        
+    # 4. [3페이지] 🍀 커플 궁합 풀이 조립 (불순물이 제거된 알맹이 사용)
+    g_page = ""
+    if clean_g_ess:
+        g_page = f"""
+        <div class='page-break'></div>
+        <div style='border: 2px solid #1B5E20; border-radius: 12px; padding:20px; background:#FFFFFF;'>
+            <h1 style='text-align:center; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
+            <div style='margin-top:15px;'>{clean_g_ess}</div>
+        </div>
+        """
+        
+    # 5. 최종 액자(A4 VIP 프레임)에 넣어서 렌더링 반환!
+    return get_final_report_box(m_page + f_page + g_page)
 
 def get_delivery_summary_box(best_days):
-    pass
+    """출산/결혼 길일 한눈에 보기 요약 상자"""
+    summary_items = ""
+    for idx, day_info in enumerate(best_days):
+        b_time_info = day_info['best_time']
+        pillars_str = day_info.get('four_pillars', '')
+        summary_items += f"""
+        <li style="margin-bottom:6px;">
+            🏅 <b>추천 {idx+1}순위</b> (명리 종합점수: <span style="color:#C62828; font-weight:bold;">{day_info['score']}점</span>) : 
+            <b>{day_info['date']} {b_time_info['time_str']}</b> 
+            <span style="color:#555; font-size:13px;">({pillars_str})</span>
+        </li>
+        """
+    return f"""
+    <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:15px; margin-top:15px; margin-bottom:20px; font-family: 'Nanum Myeongjo', serif;">
+        <h4 style="color:#1A237E; margin-top:0; margin-bottom:10px; font-size:15px; border-bottom:1px solid #C5CAE9; padding-bottom:6px;">
+            📋 길일 한눈에 보기 (최적 길일 로드맵)
+        </h4>
+        <ul style="list-style-type:none; padding-left:0; margin:0; line-height:1.8; font-size:14px; color:#2C3E50;">
+            {summary_items}
+        </ul>
+    </div>
+    """
 
 def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b_time_pillar, gestation_warning, conception_title, conception_str, conception_msg, baby_saju_html, ai_output_html):
-    pass
+    """출산 택일 상세 추천 카드"""
+    return f"""
+    <div style="background-color:#FFFFFF; border:1px solid #E0E0E0; border-radius:12px; padding:18px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); font-family: 'Nanum Myeongjo', serif;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #F1F3F4; padding-bottom:10px; margin-bottom:12px;">
+            <h3 style="color:#1A237E; margin:0; font-size:17px; font-weight:800;">🏅 추천 {idx+1}순위 길일 : {b_date_str}</h3>
+            <span style="background-color:#E8EAF6; color:#1A237E; font-weight:bold; padding:3px 10px; border-radius:20px; font-size:13px;">명리 종합점수: {score}점</span>
+        </div>
+        <ul style="list-style-type:none; padding-left:0; margin-top:8px; line-height:1.8; color:#333; font-size:14px;">
+            <li><b>⏰ 가장 좋은 시간</b>: <span style="color:#00695C; font-weight:bold;">{b_time_str} ({b_time_pillar})</span></li>
+            {gestation_warning}
+            <li><b>{conception_title}</b>: <span style="font-weight:bold; color:#0277BD;">{conception_str}</span> <br>{conception_msg}</li>
+        </ul>
+        {baby_saju_html}
+        <div style="margin-top:12px; padding-top:12px; border-top:1px dashed #DDD;">
+            {ai_output_html}
+        </div>
+    </div>
+    """
 
 # ==============================================================================
 # 📦 섹션 5. 종합 렌더링 컨테이너 모듈 
