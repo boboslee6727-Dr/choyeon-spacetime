@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 86.4 Master - 50.7 황금비율 UI/UX 및 렌더링 완벽 보강본)
+# html_views.py (ver 86.5 Master - 50.7 황금비율 UI/UX 및 렌더링 완벽 보강본)
 # [수정] 표지 폰트: Nanum Gothic -> Nanum Myeongjo(나눔명조) / 발행일자·발행인 크게+굵게 강조
 # ==============================================================================
 import re
@@ -25,7 +25,7 @@ def get_global_css():
     /* 🛡️ 표지 박스 기본 속성 (A4 인쇄 정밀 대응) */
     .cover-page { display: flex !important; flex-direction: column; justify-content: center; align-items: center; padding: 0 !important; background: #ffffff; margin: 0 auto; box-sizing: border-box; width: 210mm; height: 297mm; min-height: 297mm; page-break-after: always; -webkit-print-color-adjust: exact; }
     /* 🌟 본문 대제목(h1, h3, ai-title-l1) 진한 남색 밑줄 쫙 일괄 적용 (구 중복 규칙 통합) */
-    .report-page:not(.cover-page) h1, .report-page h3, .ai-title-l1 { font-size: 26px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; margin-bottom: 25px !important; margin-top: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: 'Noto Serif KR', serif !important; }
+    .report-page:not(.cover-page) h1, .report-page h3, .ai-title-l1 { font-size: 26px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; margin-bottom: 25px !important; margin-top: 45px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: 'Noto Serif KR', serif !important; }
     .b-text { font-weight: 900 !important; color: #000000 !important; display: inline-block; }
     .b-text-red { font-weight: 900 !important; color: #D50000 !important; display: inline-block; }
     div.stButton > button { font-family: 'Nanum Gothic', sans-serif !important; font-weight: 900 !important; font-size: 16px !important; border-radius: 8px !important; width: 100% !important; }
@@ -72,8 +72,10 @@ def get_global_css():
 def format_ai_text_to_html(text, qna_text=""):
     """
     프롬프트 규칙 4번 대응 포맷터:
-    대제목(1.), 중제목(1)), 소제목((1), ◆, ■), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
-    (AI가 임의로 붙이는 마크다운 헤더 #, ##, ### 및 --- 구분선도 안전하게 처리)
+    대제목(1.), 중제목(1)), 소제목((1), ◆, ▶, ▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
+    (마크다운 헤더 #, ##, ### 및 --- 구분선 처리 / "라벨: 설명" 콜론 소제목을 ◆ 소제목으로 자동 승격)
+    (소제목 폰트 크기 확대 16.5px→17.5px, 소제목-본문 간격 확대 6px→14px)
+    (대제목 인라인 스타일을 get_global_css()의 .ai-title-l1 최신 값과 완전히 동기화: 26px/3px/45px)
     """
     if not text:
         return ""
@@ -95,12 +97,16 @@ def format_ai_text_to_html(text, qna_text=""):
             continue
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
+        colon_m = re.match(r'^([^:：\n]{1,20})[:：]\s+(\S.*)$', line_formatted)
+        colon_is_header = bool(colon_m) and re.search(r'[가-힣]', colon_m.group(1)) and not re.search(r'(다|요|죠|음|임|함|니다)$', colon_m.group(1))
         if re.match(r'^\d+\.\s+', line_formatted):
-            html_lines.append(f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 35px !important; margin-bottom: 15px !important; border-bottom: 2px solid #1A237E !important; padding-bottom: 5px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div class='ai-title-l1' style='font-size: 26px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; margin-top: 45px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
         elif re.match(r'^\d+\)\s*', line_formatted):
-            html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 8px !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
         elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
-            html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 6px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+        elif colon_is_header:
+            html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>◆ {line_formatted}</b></div>")
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
     parsed_content = "\n".join(html_lines)
