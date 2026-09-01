@@ -34,7 +34,7 @@ get_oh_class = engine.get_oh_class
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
 APP_VERSION = "ver 86.2 Master"
-st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
+st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
 try:
@@ -1273,7 +1273,7 @@ if st.session_state.get('app_running', False):
             # 1-1. 사주팔자 및 총 운세 풀이 (기본 5대 묶음 + intro_html + 통변)
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_GOLDEN_TEXT_HERE', golden_text_code)
+            formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', golden_text_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
             
             body_content = f"{base_top_block}{intro_block}{formatted_ai}"
