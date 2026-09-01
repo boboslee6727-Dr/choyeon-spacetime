@@ -130,6 +130,15 @@ def get_global_css():
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
     .header-cell-main, .header-cell-sub { background-color: #E8EAF6 !important; color: #000000 !important; font-weight: 900 !important; font-size: 14px !important; }
+    /* 🌟 AI 통변 페이지 최상단 대제목(main-report-title) 전용 이중선 구분 */
+    .main-report-title {
+        text-align: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border-bottom: 4px double #1A237E !important;
+        padding-bottom: 20px !important;
+        margin: 10px 0 30px 0 !important;
+    }    
     .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
     @media print {
         @page { size: A4 portrait; margin: 10mm; }
@@ -157,7 +166,7 @@ def get_global_css():
 def format_ai_text_to_html(text, qna_text=""):
     """
     프롬프트 규칙 4번 대응 포맷터:
-    대제목(1.), 중제목(1)), 소제목((1), 기호제목 (◆, ▶, ▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
+    대제목(1.), 중제목(1)), 소제목((1), ◆, ■), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
     (AI가 임의로 붙이는 마크다운 헤더 #, ##, ### 및 --- 구분선도 안전하게 처리)
     """
     if not text:
@@ -197,7 +206,7 @@ def format_ai_text_to_html(text, qna_text=""):
     return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
 
 # ==============================================================================
-# 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 (50.7 완벽 이식)
+# 📦 섹션 2. 공통 역학 테이블 및 컴포넌트 모듈 
 # ==============================================================================
 def td_func(val, engine):
     oh = engine.get_color(val)
@@ -282,11 +291,11 @@ def get_couple_cover(version="", report_title="", u_icon="♂️", u_name="무�
     """
 
 def get_main_title_html(report_title=""):
-    """AI 통변 페이지 최상단 대제목 - 제목 밑에 굵은 밑줄로 위엄을 강조"""
+    """AI 통변 페이지 최상단 대제목 - 표지와 동일한 이중선 구분선(전역 클래스 + 인라인 이중 적용)으로 위엄을 강조"""
     clean_title = str(report_title or "").strip()
     return f"""
-    <div style='text-align: center; margin: 10px 0 30px 0; padding: 0; width: 100%;'>
-        <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 28px !important; font-weight: 900 !important; color: #1A237E !important; letter-spacing: -0.5px !important; margin: 0 !important; padding: 0 0 14px 0 !important; display: inline-block !important; border-bottom: 3px solid #1A237E !important;'>{clean_title}</h2>
+    <div class='main-report-title' style='text-align: center; margin: 10px 0 30px 0; padding: 0 0 20px 0; width: 100%; box-sizing: border-box; border-bottom: 4px double #1A237E;'>
+        <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 28px !important; font-weight: 900 !important; color: #1A237E !important; letter-spacing: -0.5px !important; margin: 0 !important; padding: 0 !important; display: block !important;'>{clean_title}</h2>
     </div>
     """
 
