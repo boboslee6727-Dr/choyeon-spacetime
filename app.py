@@ -94,7 +94,7 @@ except Exception as _gemini_e:
 AI_PROVIDER = "claude"   # "claude" 또는 "gemini" 로 변경 가능
 
 # ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
-CLAUDE_MODEL_NAME = "claude-sonnet-5"
+CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001" #"claude-sonnet-5"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
 def _call_claude(prompt_text, max_tokens=32000):
