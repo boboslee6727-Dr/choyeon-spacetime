@@ -114,7 +114,7 @@ def _call_claude(prompt_text, max_tokens=32000):
         if stop_reason == "max_tokens":
             result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] 응답이 토큰 한도에 도달하여 중간에 끊겼습니다. max_tokens를 늘려 주세요.</div>"
 
-def _call_gemini(prompt_text, max_tokens=8000):
+def _call_gemini(prompt_text, max_tokens=32000):
     if gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. (GOOGLE_API_KEY 확인)</div>"
     try:
         gen_config = types.GenerateContentConfig(
@@ -140,7 +140,7 @@ def call_claude_api(prompt_text, max_tokens=32000):
         return _call_gemini(prompt_text, max_tokens=max_tokens)
     return _call_claude(prompt_text, max_tokens=max_tokens)
 
-def call_gemini_api(prompt_text, max_tokens=8000):
+def call_gemini_api(prompt_text, max_tokens=32000):
     return call_claude_api(prompt_text, max_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
