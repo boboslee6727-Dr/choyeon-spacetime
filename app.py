@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 85.9 Master - 정석 MVC 패턴 및 스코프 완전 정규화 버젼)
+# app.py (ver 86.2 Master - Gemini/Claude 동시 지원 버젼)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -8,7 +8,9 @@ from datetime import datetime
 from korean_lunar_calendar import KoreanLunarCalendar
 import os
 import re
+import anthropic
 from google import genai
+from google.genai import types
 import time
 import json
 import math
@@ -31,7 +33,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 85.7 Master"
+APP_VERSION = "ver 86.2 Master"
 st.set_page_config(page_title=f"초연 시공명리 연구소 {APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
@@ -72,61 +74,72 @@ def load_choyeon_db():
 choyeon_db = load_choyeon_db()
 
 # ==============================================================================
-# 1.5. AI 통신 콜백 함수 (Gemini 2.5 Flash 전용 정제 코드)
+# 1.5. AI 통신 및 간지 역산 콜백 함수
 # ==============================================================================
-from google.genai import types
-
 try:
-    client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
-    class GeminiModelCompat:
-        def __init__(self, genai_client): 
-            self.client = genai_client
-            
-        def generate_content(self, contents, **kwargs):
-            # config 등 전달된 kwargs를 누락 없이 100% 전달
-            return self.client.models.generate_content(
-                model="gemini-2.5-flash", 
-                contents=contents, 
-                **kwargs
-            )
-    model = GeminiModelCompat(client)
+    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+    model = client  # 하위 호환용
 except Exception as _api_e:
-    st.error(f"🚨 Gemini API 키 오류: {_api_e}")
+    st.error(f"🚨 Claude API 키 오류: {_api_e}")
     client, model = None, None
 
-def call_gemini_api(prompt_text, max_tokens=8192):
-    """
-    Gemini 2.5 Flash 전용 AI 감명서 생성 함수
-    - Claude 잔재 전면 제거 및 단일화
-    - Flash 물리적 최대 한도인 8,192 토큰 완전 개방
-    - thinking_budget=0 설정으로 8,192 토큰 전량을 본문 작성에 집중
-    - 실제 출력 분량만큼만 과금 (1건당 5~7원 수준)
-    """
-    if client is None: 
-        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+try:
+    gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+except Exception as _gemini_e:
+    gemini_client = None
+
+# ==============================================================================
+# ⚙️ [AI 공급사 전환 스위치] 여기 한 줄만 "claude" 또는 "gemini"로 바꾸면 됩니다.
+# ==============================================================================
+AI_PROVIDER = "claude"   # "claude" 또는 "gemini" 로 변경 가능
+
+# ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
+CLAUDE_MODEL_NAME = "claude-sonnet-5"
+GEMINI_MODEL_NAME = "gemini-2.5-flash"
+
+def _call_claude(prompt_text, max_tokens=32000):
+    if client is None: return "<div style='color:red;'>🚨 Claude 모델이 초기화되지 않았습니다. (ANTHROPIC_API_KEY 확인)</div>"
     try:
-        config = types.GenerateContentConfig(
+        response = client.messages.create(
+            model=CLAUDE_MODEL_NAME,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt_text}],
+        )
+        result_text = response.content[0].text.strip() if response.content else ""
+        if getattr(response, "stop_reason", None) == "max_tokens":
+            result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] 응답이 토큰 한도에 도달하여 중간에 끊겼습니다. max_tokens를 늘려 주세요.</div>"
+        return result_text
+    except Exception as e:
+        return f"<div style='color:red;'>🚨 Claude AI 서버 통신 장애: {e}</div>"
+
+def _call_gemini(prompt_text, max_tokens=32000):
+    if gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. (GOOGLE_API_KEY 확인)</div>"
+    try:
+        gen_config = types.GenerateContentConfig(
             max_output_tokens=max_tokens,
-            thinking_config=types.ThinkingConfig(thinking_budget=0)
+            # 🚨 [끊김 방지] thinking_budget=0으로 내부 추론 토큰 소모를 차단하여
+            # 실제 감명서 본문 작성에 전체 토큰 예산을 사용하도록 강제
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         )
-        
-        response = client.models.generate_content(
-            model="gemini-2.5-flash", 
-            contents=prompt_text,
-            config=config
-        )
-        
-        result_text = (response.text or "").strip()
-        
-        # 8,192 토큰 한도 도달 시 끊김 감지 안전장치
-        if response.candidates and response.candidates[0].finish_reason:
-            finish_reason = str(response.candidates[0].finish_reason).upper()
-            if "MAX_TOKENS" in finish_reason or "LENGTH" in finish_reason:
-                result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [알림: 모델 최대 출력 한도(8,192토큰)에 도달하여 작성이 완료되었습니다.]</div>"
-                
+        response = gemini_client.models.generate_content(model=GEMINI_MODEL_NAME, contents=prompt_text, config=gen_config)
+        result_text = response.text.strip() if response.text else ""
+        try:
+            finish_reason = response.candidates[0].finish_reason
+            if str(finish_reason) in ("MAX_TOKENS", "FinishReason.MAX_TOKENS"):
+                result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] 응답이 토큰 한도에 도달하여 중간에 끊겼습니다. max_output_tokens를 늘리거나 프롬프트 분량을 조정해 주세요.</div>"
+        except Exception:
+            pass
         return result_text
     except Exception as e:
         return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
+
+def call_claude_api(prompt_text, max_tokens=32000):
+    if AI_PROVIDER == "gemini":
+        return _call_gemini(prompt_text, max_tokens=max_tokens)
+    return _call_claude(prompt_text, max_tokens=max_tokens)
+
+def call_gemini_api(prompt_text, max_tokens=32000):
+    return call_claude_api(prompt_text, max_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
