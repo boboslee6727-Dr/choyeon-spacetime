@@ -94,7 +94,7 @@ except Exception as _gemini_e:
 AI_PROVIDER = "claude"   # "claude" 또는 "gemini" 로 변경 가능
 
 # ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
-CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001" #"claude-sonnet-5"
+CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001"  # "claude-sonnet-5"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
 def _call_claude(prompt_text, max_tokens=32000):
@@ -114,13 +114,15 @@ def _call_claude(prompt_text, max_tokens=32000):
         if stop_reason == "max_tokens":
             result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] 응답이 토큰 한도에 도달하여 중간에 끊겼습니다. max_tokens를 늘려 주세요.</div>"
 
+        return result_text.strip()
+    except Exception as e:
+        return f"<div style='color:red;'>🚨 Claude AI 서버 통신 장애: {e}</div>"
+
 def _call_gemini(prompt_text, max_tokens=32000):
     if gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. (GOOGLE_API_KEY 확인)</div>"
     try:
         gen_config = types.GenerateContentConfig(
             max_output_tokens=max_tokens,
-            # 🚨 [끊김 방지] thinking_budget=0으로 내부 추론 토큰 소모를 차단하여
-            # 실제 감명서 본문 작성에 전체 토큰 예산을 사용하도록 강제
             thinking_config=types.ThinkingConfig(thinking_budget=0),
         )
         response = gemini_client.models.generate_content(model=GEMINI_MODEL_NAME, contents=prompt_text, config=gen_config)
