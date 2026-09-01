@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 85.8 Master - 정석 MVC 패턴 및 스코프 완전 정규화 버젼)
+# app.py (ver 85.9 Master - 정석 MVC 패턴 및 스코프 완전 정규화 버젼)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -72,29 +72,61 @@ def load_choyeon_db():
 choyeon_db = load_choyeon_db()
 
 # ==============================================================================
-# 1.5. AI 통신 및 간지 역산 콜백 함수
+# 1.5. AI 통신 콜백 함수 (Gemini 2.5 Flash 전용 정제 코드)
 # ==============================================================================
+from google.genai import types
+
 try:
     client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
     class GeminiModelCompat:
-        def __init__(self, genai_client): self.client = genai_client
+        def __init__(self, genai_client): 
+            self.client = genai_client
+            
         def generate_content(self, contents, **kwargs):
-            return self.client.models.generate_content(model="gemini-2.5-flash", contents=contents)
+            # config 등 전달된 kwargs를 누락 없이 100% 전달
+            return self.client.models.generate_content(
+                model="gemini-2.5-flash", 
+                contents=contents, 
+                **kwargs
+            )
     model = GeminiModelCompat(client)
 except Exception as _api_e:
     st.error(f"🚨 Gemini API 키 오류: {_api_e}")
     client, model = None, None
 
-def call_claude_api(prompt_text, max_tokens=8000):
-    if client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
+def call_gemini_api(prompt_text, max_tokens=8192):
+    """
+    Gemini 2.5 Flash 전용 AI 감명서 생성 함수
+    - Claude 잔재 전면 제거 및 단일화
+    - Flash 물리적 최대 한도인 8,192 토큰 완전 개방
+    - thinking_budget=0 설정으로 8,192 토큰 전량을 본문 작성에 집중
+    - 실제 출력 분량만큼만 과금 (1건당 5~7원 수준)
+    """
+    if client is None: 
+        return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다.</div>"
     try:
-        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt_text)
-        return response.text.strip()
+        config = types.GenerateContentConfig(
+            max_output_tokens=max_tokens,
+            thinking_config=types.ThinkingConfig(thinking_budget=0)
+        )
+        
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", 
+            contents=prompt_text,
+            config=config
+        )
+        
+        result_text = (response.text or "").strip()
+        
+        # 8,192 토큰 한도 도달 시 끊김 감지 안전장치
+        if response.candidates and response.candidates[0].finish_reason:
+            finish_reason = str(response.candidates[0].finish_reason).upper()
+            if "MAX_TOKENS" in finish_reason or "LENGTH" in finish_reason:
+                result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [알림: 모델 최대 출력 한도(8,192토큰)에 도달하여 작성이 완료되었습니다.]</div>"
+                
+        return result_text
     except Exception as e:
         return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
-
-def call_gemini_api(prompt_text, max_tokens=8000):
-    return call_claude_api(prompt_text, max_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
