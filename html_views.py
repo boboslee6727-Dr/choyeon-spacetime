@@ -232,10 +232,10 @@ def get_personal_cover(version="", report_title="", u_icon="♂️", u_name="무
             </div>
  
             <!-- 중단 신청인 정보 영역 -->
-            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 30px 20px; border-radius: 15px; margin-bottom: 24px;'>
-                <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 24px !important; font-weight: 800 !important; color: #1A237E !important; margin: 0 0 20px 0 !important;'>{u_icon} 신청인 : {clean_u_name} 님</h2>
+            <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 26px 20px; border-radius: 15px; margin-bottom: 24px;'>
+                <h2 style='font-family: "Nanum Myeongjo", serif !important; font-size: 19px !important; font-weight: 800 !important; color: #1A237E !important; margin: 0 0 16px 0 !important;'>{u_icon} 신청인 : {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Myeongjo", serif !important; font-size: 15px !important; font-weight: 700 !important; color: #555555 !important; line-height: 1.8 !important;'>
-                    <div style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap;'>[양력] {u_sol} | [음력] {u_lun}</div>
+                    <div style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 700 !important;'>[양력] {u_sol} | [음력] {u_lun}</div>
                     <div style='margin: 5px 0 0 0; color: #1A237E !important; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800 !important;'>태어난 시간 : {u_time}</div>
                 </div>
             </div>
@@ -294,6 +294,7 @@ def get_couple_cover(version="", report_title="", u_icon="♂️", u_name="무�
     </div>
     <div class='page-break'></div>
     """
+
 def get_info_header(p_icon, name, gender, marital, age, sol_str, lun_str, time_str, p_color="#1A237E"):
     return f"""
     <div style='text-align:center; font-family:"Nanum Gothic", sans-serif; margin-bottom:15px; line-height:1.5;'>
