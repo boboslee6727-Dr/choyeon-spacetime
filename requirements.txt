@@ -6,4 +6,4 @@ ephem
 pytz
 anthropic
 weasyprint
-supabase
+supabase>=2.10.0
