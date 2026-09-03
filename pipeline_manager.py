@@ -454,7 +454,10 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             
             conn = get_db_connection()
             c = conn.cursor()
-            c.execute('INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+            c.execute('''INSERT INTO orders 
+                (order_id, created_at, phone, email, name, gender, marital, u_cal, b_year, b_month, b_day, b_time,
+                 u_product, f_name, f_gender, f_marital, f_cal, f_y, f_m, f_d, f_t, user_concern, status, result_html)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', 
                       (order_id, now_str, phone_full, memo_info, name.strip(), gender, marital, u_cal, int(b_year), int(b_month), int(b_day), b_time, db_product_codes, f_name, f_gender, f_marital, f_cal, f_y if f_y else 0, f_m if f_m else 0, f_d if f_d else 0, f_t, final_concern, "입금대기", ""))
             conn.commit()
             conn.close()
