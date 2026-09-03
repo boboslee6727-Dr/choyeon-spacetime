@@ -1396,7 +1396,8 @@ if st.session_state.get('app_running', False):
 
         safe_cover_str = cover_html if 'cover_html' in locals() and cover_html else ""
 
-        # 본문 프레임 규격 적용 (HTML 태그 앞 공백 없이 인라인 결합하여 마크다운 코드블록 오인 방지)if "report-page" not in final_render_html:
+        # 본문 프레임 규격 적용 (HTML 태그 앞 공백 없이 인라인 결합하여 마크다운 코드블록 오인 방지)
+        if "report-page" not in final_render_html:
             content_body = f"<div class='report-page' style='margin-top: 20px;'><div class='vip-inset-frame'>{final_render_html}</div></div>"
         else:
             content_body = final_render_html
