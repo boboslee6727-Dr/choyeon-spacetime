@@ -6,3 +6,5 @@ ephem
 google-genai
 pytz
 anthropic
+weasyprint
+supabase
