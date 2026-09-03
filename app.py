@@ -1396,15 +1396,15 @@ if st.session_state.get('app_running', False):
 
         safe_cover_str = cover_html if 'cover_html' in locals() and cover_html else ""
 
-        # 본문 프레임 규격 적용 (HTML 태그 앞 공백 없이 인라인 결합하여 마크다운 코드블록 오인 방지)
-        if "report-page" not in final_render_html:
+        # 본문 프레임 규격 적용 (HTML 태그 앞 공백 없이 인라인 결합하여 마크다운 코드블록 오인 방지)if "report-page" not in final_render_html:
             content_body = f"<div class='report-page' style='margin-top: 20px;'><div class='vip-inset-frame'>{final_render_html}</div></div>"
         else:
             content_body = final_render_html
 
-        # 🆕 [안전장치] AI가 [CHOYEON_SIGN_HERE] 표시를 빠뜨려서 맺음말이 누락된 경우, 강제로 맨 끝에 붙여줌
+        # 🆕 [안전장치] 맺음말이 누락된 경우, A4 규격 액자(report-page)로 감싸서 별도 페이지로 추가
         if closing_part and closing_part not in content_body:
-            content_body += closing_part
+            closing_page = html_views.get_final_report_box(closing_part) if hasattr(html_views, 'get_final_report_box') else f"<div class='report-page'><div class='vip-inset-frame'>{closing_part}</div></div>"
+            content_body += closing_page
 
         # 전체 HTML 단순 결합
         combined_report_html = f"{safe_cover_str}\n{content_body}"
