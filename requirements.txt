@@ -4,6 +4,6 @@ requests
 korean_lunar_calendar
 ephem
 pytz
-anthropic
+anthropic<1.0
 weasyprint
 supabase>=2.10.0
