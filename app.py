@@ -1441,6 +1441,6 @@ if st.session_state.get('app_running', False):
             st.session_state['saved_report_html'] = final_clean_html
             st.markdown(final_clean_html, unsafe_allow_html=True)
 
-# 🆕 인쇄 버튼 클릭 등으로 재실행됐을 때, 이미 만들어둔 감명서를 다시 화면에 보여줌
-elif st.session_state.get('saved_report_html') and not is_admin_mode:
-    st.markdown(st.session_state['saved_report_html'], unsafe_allow_html=True)
+        # 🆕 인쇄 버튼 클릭 등으로 재실행됐을 때, 이미 만들어둔 감명서를 다시 화면에 보여줌
+        elif st.session_state.get('saved_report_html') and not is_admin_mode:
+            st.markdown(st.session_state['saved_report_html'], unsafe_allow_html=True)
