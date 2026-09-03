@@ -35,8 +35,7 @@ st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 try:
     from pipeline_manager import run_pipeline_router
     run_pipeline_router()
-except ImportError:
-    pass
+except ImportError as e:
 
 # 전역 CSS 적용
 if hasattr(html_views, 'get_global_css'):
