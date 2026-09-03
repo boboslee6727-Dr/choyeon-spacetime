@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 86.3 Master - Gemini/Claude 동시 지원 버젼)
+# app.py (ver 86.5 Master - Gemini/Claude 동시 지원 버젼)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -33,7 +33,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 86.2 Master"
+APP_VERSION = "ver 86.5 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
@@ -94,7 +94,7 @@ except Exception as _gemini_e:
 AI_PROVIDER = "claude"   # "claude" 또는 "gemini" 로 변경 가능
 
 # ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
-CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001" #"claude-sonnet-5"
+CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001"  #"claude-sonnet-5"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
 def _call_claude(prompt_text, max_tokens=32000):
@@ -118,13 +118,13 @@ def _call_claude(prompt_text, max_tokens=32000):
     except Exception as e:
         return f"<div style='color:red;'>🚨 Claude AI 서버 통신 장애: {e}</div>"
 
-def _call_gemini(prompt_text, max_tokens=32000):
+def _call_gemini(prompt_text, max_tokens=8192):
     if gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. (GOOGLE_API_KEY 확인)</div>"
     try:
+        # Gemini 2.5 최대 출력 한도는 8192이므로 32000이 들어와도 8192로 안전 제한
+        safe_max_tokens = min(max_tokens, 8192)
         gen_config = types.GenerateContentConfig(
-            max_output_tokens=max_tokens,
-            # 🚨 [끊김 방지] thinking_budget=0으로 내부 추론 토큰 소모를 차단하여
-            # 실제 감명서 본문 작성에 전체 토큰 예산을 사용하도록 강제
+            max_output_tokens=safe_max_tokens,
             thinking_config=types.ThinkingConfig(thinking_budget=0),
         )
         response = gemini_client.models.generate_content(model=GEMINI_MODEL_NAME, contents=prompt_text, config=gen_config)
@@ -132,7 +132,7 @@ def _call_gemini(prompt_text, max_tokens=32000):
         try:
             finish_reason = response.candidates[0].finish_reason
             if str(finish_reason) in ("MAX_TOKENS", "FinishReason.MAX_TOKENS"):
-                result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] 응답이 토큰 한도에 도달하여 중간에 끊겼습니다. max_output_tokens를 늘리거나 프롬프트 분량을 조정해 주세요.</div>"
+                result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] Gemini 응답이 최대 출력 한도(8,192 토큰)에 도달하여 중간에 끊겼습니다.</div>"
         except Exception:
             pass
         return result_text
@@ -144,8 +144,8 @@ def call_claude_api(prompt_text, max_tokens=32000):
         return _call_gemini(prompt_text, max_tokens=max_tokens)
     return _call_claude(prompt_text, max_tokens=max_tokens)
 
-def call_gemini_api(prompt_text, max_tokens=32000):
-    return call_claude_api(prompt_text, max_tokens=max_tokens)
+def call_gemini_api(prompt_text, max_tokens=8192):
+    return _call_gemini(prompt_text, max_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
@@ -553,6 +553,8 @@ else:
 # 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부 
 # ==============================================================================
 if st.session_state.get('app_running', False):
+    st.session_state['app_running'] = False  # 🛡️ 진입 즉시 플래그 리셋 (중간에 오류가 나도 다음 클릭에서 재실행되지 않도록 안전장치)
+
     klc = KoreanLunarCalendar()
 
     b_year = st.session_state.get("s_y", 1980)
