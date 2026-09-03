@@ -448,7 +448,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             supply_amount_calc = round(final_price / 1.1)
             vat_amount_calc = final_price - supply_amount_calc
 
-            get_supabase_client().table("orders").insert({
+            insert_result = get_supabase_client().table("orders").insert({
                 "order_id": order_id, "created_at": now_str, "phone": phone_full, "email": memo_info,
                 "name": name.strip(), "gender": gender, "marital": marital, "u_cal": u_cal,
                 "b_year": int(b_year), "b_month": int(b_month), "b_day": int(b_day), "b_time": b_time,
@@ -457,6 +457,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
                 "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
             }).execute()
+            st.warning(f"🔍 [디버그] Supabase 저장 결과: {insert_result}")
             
             # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
             # send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, base_price_to_show, discount_amt, final_price)
