@@ -70,25 +70,17 @@ def ensure_db_table_exists():
     conn.close()
 
 def save_report_to_db(order_id, result_html):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE orders SET result_html = ? WHERE order_id = ?", (result_html, order_id))
-    conn.commit()
-    conn.close()
+    get_supabase_client().table("orders").update({"result_html": result_html}).eq("order_id", order_id).execute()
 
 def update_order_status(order_id, status):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE orders SET status = ? WHERE order_id = ?", (status, order_id))
-    conn.commit()
-    conn.close()
+    get_supabase_client().table("orders").update({"status": status}).eq("order_id", order_id).execute()
 
 def save_pdf_url_to_db(order_id, pdf_url):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE orders SET pdf_url = ? WHERE order_id = ?", (pdf_url, order_id))
-    conn.commit()
-    conn.close()
+    get_supabase_client().table("orders").update({"pdf_url": pdf_url}).eq("order_id", order_id).execute()
+
+def get_supabase_client():
+    from supabase import create_client
+    return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
 def generate_pdf_bytes(result_html):
     """감명서 HTML을 PDF 바이트로 변환합니다 (미리보기 전용, 저장고 업로드 없음)."""
@@ -453,15 +445,18 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             kst = pytz.timezone('Asia/Seoul')
             now_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
             
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute('''INSERT INTO orders 
-                (order_id, created_at, phone, email, name, gender, marital, u_cal, b_year, b_month, b_day, b_time,
-                 u_product, f_name, f_gender, f_marital, f_cal, f_y, f_m, f_d, f_t, user_concern, status, result_html)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', 
-                      (order_id, now_str, phone_full, memo_info, name.strip(), gender, marital, u_cal, int(b_year), int(b_month), int(b_day), b_time, db_product_codes, f_name, f_gender, f_marital, f_cal, f_y if f_y else 0, f_m if f_m else 0, f_d if f_d else 0, f_t, final_concern, "입금대기", ""))
-            conn.commit()
-            conn.close()
+            supply_amount_calc = round(final_price / 1.1)
+            vat_amount_calc = final_price - supply_amount_calc
+
+            get_supabase_client().table("orders").insert({
+                "order_id": order_id, "created_at": now_str, "phone": phone_full, "email": memo_info,
+                "name": name.strip(), "gender": gender, "marital": marital, "u_cal": u_cal,
+                "b_year": int(b_year), "b_month": int(b_month), "b_day": int(b_day), "b_time": b_time,
+                "u_product": db_product_codes, "f_name": f_name, "f_gender": f_gender, "f_marital": f_marital,
+                "f_cal": f_cal, "f_y": f_y if f_y else 0, "f_m": f_m if f_m else 0, "f_d": f_d if f_d else 0,
+                "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
+                "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
+            }).execute()
             
             # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
             # send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, base_price_to_show, discount_amt, final_price)
@@ -502,9 +497,8 @@ def render_admin_panel():
 
     st.subheader("👑 초연명리 통합 상황실 (URL 이동 없음)")
     
-    conn = get_db_connection()
-    df = pd.read_sql_query("SELECT * FROM orders ORDER BY created_at DESC", conn)
-    conn.close()
+    resp = get_supabase_client().table("orders").select("*").order("created_at", desc=True).execute()
+    df = pd.DataFrame(resp.data) if resp.data else pd.DataFrame(columns=["order_id","created_at","phone","email","name","gender","marital","u_cal","b_year","b_month","b_day","b_time","u_product","f_name","f_gender","f_marital","f_cal","f_y","f_m","f_d","f_t","user_concern","status","result_html","pdf_url","final_price","supply_amount","vat_amount"])
     
     active_gid, active_row = None, None
     pending_orders = df[df["status"] == "입금대기"]
@@ -672,10 +666,9 @@ def render_admin_panel():
 # 3. 📜 [고객 전용 결과 열람창] 
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
-    ensure_db_table_exists()
-    conn = get_db_connection()
-    df = pd.read_sql_query(f"SELECT * FROM orders WHERE order_id='{order_id}'", conn)
-    conn.close()
+    resp = get_supabase_client().table("orders").select("*").eq("order_id", order_id).execute()
+    df = pd.DataFrame(resp.data)
+
     if df.empty: st.error("존재하지 않거나 만료된 링크입니다."); return
     row = df.iloc[0]
     if row.get('status', '') != "분석완료" or not row.get('result_html', ''):
