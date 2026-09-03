@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 86.5 Master - Gemini/Claude 동시 지원 버젼)
+# app.py (ver 86.6 Master - Claude 전용 버젼)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -9,31 +9,26 @@ from korean_lunar_calendar import KoreanLunarCalendar
 import os
 import re
 import anthropic
-from google import genai
-from google.genai import types
 import time
 import json
 import math
 import pytz
 import sys
 import importlib
-
 import engine
 import prompts
 import html_views
-
 # 서브 모듈 변경 사항 즉시 반영 (강제 리로드)
 importlib.reload(engine)
 importlib.reload(prompts)
 importlib.reload(html_views)
-
 extract_ganji = engine.extract_ganji
 get_oh_class = engine.get_oh_class
 
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 86.5 Master"
+APP_VERSION = "ver 86.6 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
@@ -83,19 +78,8 @@ except Exception as _api_e:
     st.error(f"🚨 Claude API 키 오류: {_api_e}")
     client, model = None, None
 
-try:
-    gemini_client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
-except Exception as _gemini_e:
-    gemini_client = None
-
-# ==============================================================================
-# ⚙️ [AI 공급사 전환 스위치] 여기 한 줄만 "claude" 또는 "gemini"로 바꾸면 됩니다.
-# ==============================================================================
-AI_PROVIDER = "claude"   # "claude" 또는 "gemini" 로 변경 가능
-
 # ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
 CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001"  #"claude-sonnet-5"
-GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
 def _call_claude(prompt_text, max_tokens=32000):
     if client is None: return "<div style='color:red;'>🚨 Claude 모델이 초기화되지 않았습니다. (ANTHROPIC_API_KEY 확인)</div>"
@@ -118,34 +102,8 @@ def _call_claude(prompt_text, max_tokens=32000):
     except Exception as e:
         return f"<div style='color:red;'>🚨 Claude AI 서버 통신 장애: {e}</div>"
 
-def _call_gemini(prompt_text, max_tokens=8192):
-    if gemini_client is None: return "<div style='color:red;'>🚨 Gemini 모델이 초기화되지 않았습니다. (GOOGLE_API_KEY 확인)</div>"
-    try:
-        # Gemini 2.5 최대 출력 한도는 8192이므로 32000이 들어와도 8192로 안전 제한
-        safe_max_tokens = min(max_tokens, 8192)
-        gen_config = types.GenerateContentConfig(
-            max_output_tokens=safe_max_tokens,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
-        )
-        response = gemini_client.models.generate_content(model=GEMINI_MODEL_NAME, contents=prompt_text, config=gen_config)
-        result_text = response.text.strip() if response.text else ""
-        try:
-            finish_reason = response.candidates[0].finish_reason
-            if str(finish_reason) in ("MAX_TOKENS", "FinishReason.MAX_TOKENS"):
-                result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] Gemini 응답이 최대 출력 한도(8,192 토큰)에 도달하여 중간에 끊겼습니다.</div>"
-        except Exception:
-            pass
-        return result_text
-    except Exception as e:
-        return f"<div style='color:red;'>🚨 Gemini AI 서버 통신 장애: {e}</div>"
-
 def call_claude_api(prompt_text, max_tokens=32000):
-    if AI_PROVIDER == "gemini":
-        return _call_gemini(prompt_text, max_tokens=max_tokens)
     return _call_claude(prompt_text, max_tokens=max_tokens)
-
-def call_gemini_api(prompt_text, max_tokens=8192):
-    return _call_gemini(prompt_text, max_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
@@ -520,7 +478,7 @@ else:
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
         if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
-            components.html("<script>window.parent.print();</script>", height=0)
+            components.html("<script>setTimeout(function(){ window.parent.print(); }, 1500);</script>", height=0)
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
@@ -1207,7 +1165,7 @@ if st.session_state.get('app_running', False):
             target_prompt = getattr(prompts, prompt_var_name, "")
 
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-        raw_response = call_gemini_api(formatted_prompt)
+        raw_response = call_claude_api(formatted_prompt)
         
         if raw_response and isinstance(raw_response, str):
             clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
@@ -1476,4 +1434,9 @@ if st.session_state.get('app_running', False):
             st.session_state['admin_proc_id'] = None
             st.rerun()
         else:
+            st.session_state['saved_report_html'] = final_clean_html
             st.markdown(final_clean_html, unsafe_allow_html=True)
+
+# 🆕 인쇄 버튼 클릭 등으로 재실행됐을 때, 이미 만들어둔 감명서를 다시 화면에 보여줌
+elif st.session_state.get('saved_report_html') and not is_admin_mode:
+    st.markdown(st.session_state['saved_report_html'], unsafe_allow_html=True)
