@@ -93,7 +93,8 @@ def save_pdf_url_to_db(order_id, pdf_url):
 def generate_pdf_bytes(result_html):
     """감명서 HTML을 PDF 바이트로 변환합니다 (미리보기 전용, 저장고 업로드 없음)."""
     from weasyprint import HTML
-    full_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">{html_views.get_global_css()}</head><body>{result_html}</body></html>"""
+    font_link = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap">'
+    full_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">{font_link}{html_views.get_global_css()}</head><body>{result_html}</body></html>"""
     return HTML(string=full_html).write_pdf()
 
 def generate_and_upload_pdf(order_id, name, result_html):
@@ -595,8 +596,7 @@ def render_admin_panel():
     if active_gid:
         gid = active_gid
         row = active_row
-        
-        with st.expander(f"🔍 [서랍장 2] 감명서 미리보기 및 AI 조련소 ({row['name']}님)", expanded=True):
+        with st.expander(f"🔍 [서랍장 2] 감명서 미리보기 및 AI 수정 스튜디오 ({row['name']}님)", expanded=True):
             st.components.v1.html(st.session_state[f"html_{gid}"], height=500, scrolling=True)
             st.markdown("---")
             st.markdown("#### 📝 AI 수정 지시사항 (선택)")
