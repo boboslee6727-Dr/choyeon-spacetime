@@ -214,7 +214,10 @@ def render_customer_order_form():
     st.markdown(f"<div class='m-title'>{page_title}</div>", unsafe_allow_html=True)
     
     if "submitted_order" in st.session_state:
+        if 'debug_insert_result' in st.session_state:
+            st.warning(f"🔍 [디버그] Supabase 저장 결과: {st.session_state['debug_insert_result']}")
         ord_info = st.session_state["submitted_order"]
+
         if ord_info["discount_amt"] > 0:
             price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 특가)</span>"
         else:
@@ -457,7 +460,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
                 "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
             }).execute()
-            st.warning(f"🔍 [디버그] Supabase 저장 결과: {insert_result}")
+            st.session_state['debug_insert_result'] = str(insert_result)
             
             # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
             # send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, base_price_to_show, discount_amt, final_price)
