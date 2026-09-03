@@ -1402,6 +1402,10 @@ if st.session_state.get('app_running', False):
         else:
             content_body = final_render_html
 
+        # 🆕 [안전장치] AI가 [CHOYEON_SIGN_HERE] 표시를 빠뜨려서 맺음말이 누락된 경우, 강제로 맨 끝에 붙여줌
+        if closing_part and closing_part not in content_body:
+            content_body += closing_part
+
         # 전체 HTML 단순 결합
         combined_report_html = f"{safe_cover_str}\n{content_body}"
 
