@@ -27,7 +27,7 @@ PRODUCT_MAP = {
     "1-1. 사주팔자 및 총운세 풀이 (정가 22,000원➡️특가 11,000원)": "사주팔자 및 총 운세 풀이",
     "1-2. 올 해 운세 풀이 (정가 11,000원➡️특가 5,500원)": "올 해 운세 풀이",
     "1-3. 이번 달 운세 풀이 (정가 11,000원➡️특가 5,500원)": "이번 달 운세 풀이",
-    "1-4. 주간/일일 운세 풀이 (정가 4,400원➡️특가 2,200원)": "주간 및 일일 운세 풀이",
+    "1-4. 주간/일일 운세 풀이 (정가 5,500원➡️특가 0원)": "주간 및 일일 운세 풀이",
     "2-1. 재물운 풀이 (정가 22,000원➡️특가 11,000원)": "재물운 특화 풀이",
     "2-2. 직업/진학운 풀이 (정가 22,000원➡️특가 11,000원)": "직업/진학운 특화 풀이",
     "2-3. 연애/결혼운 풀이 (정가 22,000원➡️특가 11,000원)": "연애/결혼운 특화 풀이",
@@ -214,8 +214,6 @@ def render_customer_order_form():
     st.markdown(f"<div class='m-title'>{page_title}</div>", unsafe_allow_html=True)
     
     if "submitted_order" in st.session_state:
-        if 'debug_insert_result' in st.session_state:
-            st.warning(f"🔍 [디버그] Supabase 저장 결과: {st.session_state['debug_insert_result']}")
         ord_info = st.session_state["submitted_order"]
 
         if ord_info["discount_amt"] > 0:
@@ -460,7 +458,6 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
                 "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
             }).execute()
-            st.session_state['debug_insert_result'] = str(insert_result)
             
             # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
             # send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, base_price_to_show, discount_amt, final_price)
