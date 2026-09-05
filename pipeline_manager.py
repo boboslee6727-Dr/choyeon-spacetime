@@ -308,8 +308,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
         share_msg = f"친구에게 '사주박사'를 소개하고 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택받는다구! ㅎㅎ💥🎉\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
 
-        st.markdown(f"""
-<div style='background-color: #FFFDF5; border: 1.5px solid #FFE082; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;'>
+        st.components.v1.html(f"""
+<div style='background-color: #FFFDF5; border: 1.5px solid #FFE082; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px; font-family: sans-serif;'>
 <div style='text-align: center; margin-bottom: 12px;'>
 <span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
 </div>
@@ -322,7 +322,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 </div>
 </a>
 </div>
-""", unsafe_allow_html=True)
+""", height=220)
         return
 
     st.markdown(f"""
