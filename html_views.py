@@ -57,7 +57,7 @@ def get_global_css():
     /* 🖨️ 인쇄 / PDF 저장 전용 규칙 */
     @media print {
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-        @page { size: A4 portrait; margin: 10mm; }
+        @page { size: A4 portrait; margin: 0; }
         .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
         body, .stApp { background-color: white !important; }
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
