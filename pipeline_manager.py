@@ -98,8 +98,11 @@ def generate_pdf_bytes(result_html):
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page()
+        page = browser.new_page(viewport={"width": 794, "height": 1123})
         page.set_content(full_html, wait_until="networkidle")
+        page.evaluate("document.fonts.ready")
+        page.wait_for_timeout(500)
+        page.emulate_media(media="print")
         pdf_bytes = page.pdf(format="A4", print_background=True)
         browser.close()
     return pdf_bytes
