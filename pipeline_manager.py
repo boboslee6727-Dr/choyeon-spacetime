@@ -634,7 +634,8 @@ def render_admin_panel():
         gid = active_gid
         row = active_row
         with st.expander(f"🔍 [서랍장 2] 감명서 미리보기 및 AI 수정 스튜디오 ({row['name']}님)", expanded=True):
-            st.components.v1.html(st.session_state[f"html_{gid}"], height=500, scrolling=True)
+            preview_full_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">{html_views.get_global_css()}</head><body>{st.session_state[f"html_{gid}"]}</body></html>"""
+            st.components.v1.html(preview_full_html, height=500, scrolling=True)
             st.markdown("---")
             st.markdown("#### 📝 AI 수정 지시사항 (선택)")
             st.caption("AI의 문투나 내용이 맘에 들지 않으면 아래에 지시사항(ex: '직업운 부분을 더 긍정적으로 써줘')을 적어주세요.")
