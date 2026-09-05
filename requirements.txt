@@ -7,3 +7,4 @@ pytz
 anthropic<1.0
 weasyprint
 supabase>=2.10.0
+playwright
