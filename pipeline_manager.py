@@ -637,13 +637,14 @@ def render_admin_panel():
                 save_report_to_db(gid, st.session_state[f"html_{gid}"])
                 update_order_status(gid, "분석완료")
 
-                with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
-                    pdf_url = generate_and_upload_pdf(gid, row['name'], st.session_state[f"html_{gid}"])
-                if pdf_url:
-                    save_pdf_url_to_db(gid, pdf_url)
-                    st.success(f"📄 PDF 저장 완료: {pdf_url}")
-                else:
-                    st.warning("⚠️ PDF 생성에 실패했습니다. 기존 링크 문자로 발송됩니다.")
+                pdf_url = None
+                # with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
+                #     pdf_url = generate_and_upload_pdf(gid, row['name'], st.session_state[f"html_{gid}"])
+                # if pdf_url:
+                #     save_pdf_url_to_db(gid, pdf_url)
+                #     st.success(f"📄 PDF 저장 완료: {pdf_url}")
+                # else:
+                #     st.warning("⚠️ PDF 생성에 실패했습니다. 기존 링크 문자로 발송됩니다.")
 
                 if row['phone']:
                     st.toast("⏳ 발송 중입니다...")
