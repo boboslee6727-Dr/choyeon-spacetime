@@ -94,7 +94,8 @@ def generate_pdf_bytes(result_html):
     _ensure_chromium_installed()
 
     font_link = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap">'
-    full_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">{font_link}{html_views.get_global_css()}</head><body>{result_html}</body></html>"""
+    reset_css = "<style>html, body { margin: 0 !important; padding: 0 !important; }</style>"
+    full_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">{font_link}{reset_css}{html_views.get_global_css()}</head><body>{result_html}</body></html>"""
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -103,7 +104,7 @@ def generate_pdf_bytes(result_html):
         page.evaluate("document.fonts.ready")
         page.wait_for_timeout(500)
         page.emulate_media(media="print")
-        pdf_bytes = page.pdf(format="A4", print_background=True)
+        pdf_bytes = page.pdf(format="A4", print_background=True, margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
         browser.close()
     return pdf_bytes
 
