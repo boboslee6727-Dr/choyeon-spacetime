@@ -83,24 +83,62 @@ def get_supabase_client():
     return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
 def generate_pdf_bytes(result_html):
-    """감명서 HTML을 PDF 바이트로 변환합니다 (미리보기 전용, 저장고 업로드 없음)."""
-    from weasyprint import HTML
+    """감명서 HTML을 PDF 바이트로 변환합니다 (브라우저와 동일한 방식 - Playwright/Chromium 사용)."""
+    import subprocess, sys
+    from playwright.sync_api import sync_playwright
+
+    @st.cache_resource
+    def _ensure_chromium_installed():
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=True)
+        return True
+    _ensure_chromium_installed()
+
     font_link = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Nanum+Gothic:wght@400;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap">'
     full_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">{font_link}{html_views.get_global_css()}</head><body>{result_html}</body></html>"""
-    return HTML(string=full_html).write_pdf()
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.set_content(full_html, wait_until="networkidle")
+        pdf_bytes = page.pdf(format="A4", print_background=True)
+        browser.close()
+    return pdf_bytes
 
 def generate_and_upload_pdf(order_id, name, result_html):
-    """감명서 HTML을 실제 PDF 파일로 변환하여 Supabase Storage에 저장하고, 공개 다운로드 주소를 반환합니다."""
+    """감명서 HTML을 실제 PDF 파일로 변환하여 choyeonsaju.com(GitHub Pages)에 저장하고, 신뢰감 있는 공개 주소를 반환합니다."""
     try:
         pdf_bytes = generate_pdf_bytes(result_html)
-        from supabase import create_client
-        supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-        file_path = f"{order_id}.pdf"
-        supabase.storage.from_("reports").upload(
-            file_path, pdf_bytes,
-            {"content-type": "application/pdf", "x-upsert": "true"}
-        )
-        public_url = supabase.storage.from_("reports").get_public_url(file_path)
+
+        import base64, re
+        safe_name = re.sub(r'[^\w가-힣]', '', name)  # 파일명에 위험한 특수문자 제거
+        short_id = order_id[:8]
+        file_path = f"report/{safe_name}_{short_id}.pdf"
+
+        repo = st.secrets["GITHUB_PAGES_REPO"]
+        token = st.secrets["GITHUB_TOKEN"]
+        api_url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json"
+        }
+
+        # 같은 이름 파일이 이미 있으면 "sha" 값을 받아와야 덮어쓰기가 됨
+        existing = requests.get(api_url, headers=headers)
+        sha = existing.json().get("sha") if existing.status_code == 200 else None
+
+        payload = {
+            "message": f"감명서 PDF 업로드: {name} ({order_id})",
+            "content": base64.b64encode(pdf_bytes).decode("utf-8"),
+        }
+        if sha:
+            payload["sha"] = sha
+
+        res = requests.put(api_url, headers=headers, json=payload)
+        if res.status_code not in (200, 201):
+            st.error(f"🚨 GitHub 업로드 실패: {res.status_code} {res.text}")
+            return None
+
+        public_url = f"https://choyeonsaju.com/{file_path}"
         return public_url
     except Exception as e:
         st.error(f"🚨 PDF 생성/업로드 오류: {e}")
@@ -638,13 +676,13 @@ def render_admin_panel():
                 update_order_status(gid, "분석완료")
 
                 pdf_url = None
-                # with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
-                #     pdf_url = generate_and_upload_pdf(gid, row['name'], st.session_state[f"html_{gid}"])
-                # if pdf_url:
-                #     save_pdf_url_to_db(gid, pdf_url)
-                #     st.success(f"📄 PDF 저장 완료: {pdf_url}")
-                # else:
-                #     st.warning("⚠️ PDF 생성에 실패했습니다. 기존 링크 문자로 발송됩니다.")
+                with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
+                    pdf_url = generate_and_upload_pdf(gid, row['name'], st.session_state[f"html_{gid}"])
+                if pdf_url:
+                    save_pdf_url_to_db(gid, pdf_url)
+                    st.success(f"📄 PDF 저장 완료: {pdf_url}")
+                else:
+                    st.warning("⚠️ PDF 생성에 실패했습니다. 기존 링크 문자로 발송됩니다.")
 
                 if row['phone']:
                     st.toast("⏳ 발송 중입니다...")
@@ -652,9 +690,8 @@ def render_admin_panel():
                         final_msg = f"[초연 시공명리] {row['name']}님, 감명서가 완성되었습니다.\n아래 파일을 눌러 바로 확인하세요.\n{pdf_url}"
                     else:
                         final_msg = st.session_state[f"sms_{gid}"]
-                    # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
-                    # send_solapi_custom_message(row['phone'], row['name'], final_msg)
-                
+                    send_solapi_custom_message(row['phone'], row['name'], final_msg)
+
                 st.session_state.pop(f"html_{gid}", None)
                 st.session_state.pop(f"sms_{gid}", None)
                 st.session_state.pop(f"pdf_preview_{gid}", None)
