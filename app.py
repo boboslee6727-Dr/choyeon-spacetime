@@ -83,7 +83,7 @@ except Exception as _api_e:
 # ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
 CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001"  #"claude-sonnet-5"
 
-def _call_claude(prompt_text, max_tokens=32000):
+def _call_claude(prompt_text, max_tokens=64000):
     if client is None: return "<div style='color:red;'>🚨 Claude 모델이 초기화되지 않았습니다. (ANTHROPIC_API_KEY 확인)</div>"
     try:
         result_text = ""
@@ -104,7 +104,7 @@ def _call_claude(prompt_text, max_tokens=32000):
     except Exception as e:
         return f"<div style='color:red;'>🚨 Claude AI 서버 통신 장애: {e}</div>"
 
-def call_claude_api(prompt_text, max_tokens=32000):
+def call_claude_api(prompt_text, max_tokens=64000):
     return _call_claude(prompt_text, max_tokens=max_tokens)
 
 # 🎯 [신청인] 사주간지 역산 전용 콜백
