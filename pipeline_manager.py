@@ -340,8 +340,45 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     </div>
     """, unsafe_allow_html=True)
 
+    # 👇 여기에 ①번 코드(상품 선택 블록) 삽입
+    st.markdown("""
+    <style>
+    div[data-testid="stSelectbox"] label p { font-size: 17px !important; font-weight: 900 !important; color: #1A237E !important; }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] * { font-size: 16px !important; font-weight: 800 !important; }
+    div[data-testid="stRadio"] { margin-left: 14px !important; padding-left: 10px !important; border-left: 3px solid #C5CAE9 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.success("🛍️ **1. 상품 선택**")
+    MAIN_CATEGORIES = {
+        "1. 개인 사주팔자 풀이 (종합)": "1-",
+        "2. 테마별 특성화 상담": "2-",
+        "3. 커플 연애/결혼운 (궁합) 풀이": "3-",
+    }
+    main_category = st.selectbox("어떤 상담을 원하십니까?", list(MAIN_CATEGORIES.keys()), key="order_main_category")
+    prefix = MAIN_CATEGORIES[main_category]
+    category_options = [item for item in U_PRODUCT_LIST if item.startswith(prefix)]
+
+    def format_product_name(item):
+        if " (" in item:
+            formatted = item.replace(" (", "  \n(")
+            formatted = formatted.replace("➡️", ") ➡️ ")
+            if formatted.endswith(")"): formatted = formatted[:-1]
+            return formatted
+        return item
+
+    selected_single = st.radio(
+        label="세부 상품 선택 :red[*(필수)*]",
+        options=category_options,
+        format_func=format_product_name,
+        index=0,
+        key="order_sub_product"
+    )
+    selected_products = [selected_single]
+    # 👆 여기까지 삽입
+
     with st.form("choyeon_customer_order_form_final"):
-        st.info("👤 **1. 신청자 정보**")
+        st.info("👤 **2. 신청자 정보**")
         name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요")
         st.markdown("""
         <style>
@@ -377,27 +414,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         ul[role="listbox"] li, ul[role="listbox"] li * { white-space: normal !important; word-break: keep-all !important; height: auto !important; min-height: 45px !important; text-overflow: clip !important; letter-spacing: -1.8px !important; font-size: 13.5px !important; }
         </style>
         """, unsafe_allow_html=True)
-
-        label_text = "상담 상품 선택  \n:red[*(원하시는 상품을 1개만 선택해 주세요) (필수)*]"
-        st.success("🛍️ **2. 상품 선택**")
-        
-        def format_product_name(item):
-            if " (" in item:
-                formatted = item.replace(" (", "  \n(")
-                formatted = formatted.replace("➡️", ") ➡️ ")
-                if formatted.endswith(")"): formatted = formatted[:-1]
-                return formatted
-            return item
-
-        selected_single = st.radio(
-            label=label_text, 
-            options=U_PRODUCT_LIST,
-            format_func=format_product_name,
-            index=0
-        )
-        
-        selected_products = [selected_single]
-        
+             
         f_name, f_gender, f_marital, f_cal, f_t = "", "", "", "", "시간 모름"
         f_y, f_m, f_d = "", "", ""
         
@@ -406,8 +423,6 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         p_moving_end = date.today() + timedelta(days=30)
         p_other_text = ""
         
-        check_prod = PRODUCT_MAP.get(selected_single, selected_single)
-
         # 🆕 [버그 수정] 기존 check_prod(매핑된 값)에는 "2-6"/"3-" 등 숫자가 없어 조건이 항상 거짓이었음.
         # 반드시 selected_single(가격이 붙은 원본 키)을 기준으로 판별해야 함.
         is_tackil_moving = "2-6." in selected_single
