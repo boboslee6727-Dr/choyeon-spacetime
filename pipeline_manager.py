@@ -29,10 +29,12 @@ PRODUCT_MAP = {
     "1-3. 이번 달 운세 풀이 (정가 11,000원➡️특가 5,500원)": "이번 달 운세 풀이",
     "1-4. 주간/일일 운세 풀이 (정가 5,500원➡️특가 0원)": "주간 및 일일 운세 풀이",
     "2-1. 재물운 풀이 (정가 22,000원➡️특가 11,000원)": "재물운 특화 풀이",
-    "2-2. 직업/진학운 풀이 (정가 22,000원➡️특가 11,000원)": "직업/진학운 특화 풀이",
-    "2-3. 연애/결혼운 풀이 (정가 22,000원➡️특가 11,000원)": "연애/결혼운 특화 풀이",
-    "2-4. 건강운 풀이 (정가 11,000원➡️특가 5,500원)": "건강운 특화 풀이",
-    "2-5. 이사/개업 택일 (정가 11,000원➡️특가 5,500원)": "이사/개업 택일 추천",
+    "2-2. 연애/결혼운 풀이 (정가 22,000원➡️특가 11,000원)": "연애/결혼운 특화 풀이",
+    "2-3. 진학운 풀이 (정가 22,000원➡️특가 11,000원)": "진학운 특화 풀이",
+    "2-4. 직업운 풀이 (정가 22,000원➡️특가 11,000원)": "직업운 특화 풀이",
+    "2-5. 건강운 풀이 (정가 11,000원➡️특가 5,500원)": "건강운 특화 풀이",
+    "2-6. 이사 택일 (정가 11,000원➡️특가 5,500원)": "이사 택일 추천",
+    "2-7. 개업 택일 (정가 11,000원➡️특가 5,500원)": "개업 택일 추천",
     "3-1. 부부/연인 궁합 풀이 (정가 44,000원➡️특가 22,000원)": "연애/결혼운 (궁합) 풀이",
     "3-2. 결혼 택일 추천 (정가 22,000원➡️특가 11,000원)": "결혼 택일 추천",
     "3-3. 출산 택일 추천 (정가 66,000원➡️특가 33,000원)": "출산 택일 추천"
@@ -405,20 +407,22 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         p_other_text = ""
         
         check_prod = PRODUCT_MAP.get(selected_single, selected_single)
-        
-        if "2-5" in check_prod:
+
+        # 🆕 [버그 수정] 기존 check_prod(매핑된 값)에는 "2-6"/"3-" 등 숫자가 없어 조건이 항상 거짓이었음.
+        # 반드시 selected_single(가격이 붙은 원본 키)을 기준으로 판별해야 함.
+        is_tackil_moving = "2-6." in selected_single
+        is_tackil_opening = "2-7." in selected_single
+
+        if is_tackil_moving or is_tackil_opening:
+            p_tackil_purpose = "이사" if is_tackil_moving else "개업"
             st.info("🗓️ **택일 상세 정보 (필수)**")
-            p_tackil_purpose = st.radio("택일 목적", ["이사", "개업"])
             col_start, col_end = st.columns(2)
             p_moving_start = col_start.date_input("희망 시작일")
             p_moving_end = col_end.date_input("희망 종료일")
-            
-        if "4-" in check_prod:
-            st.info("📄 **타 감명서 원문 입력 (필수)**")
-            p_other_text = st.text_area("비교할 감명서(사주/궁합) 내용을 붙여넣어 주세요.", height=150)
 
-        if any("3-" in PRODUCT_MAP.get(prod, prod) for prod in selected_products) or "4-2" in check_prod:
-            st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 비교용 필수)**")
+        # 🆕 [버그 수정] 3-1(궁합), 3-2(결혼택일), 3-3(출산택일) 전부 상대방 정보가 필요함.
+        if "3-" in selected_single:
+            st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 택일용 필수)**")
             f_name = st.text_input("상대방 이름 *(필수)")
             f_c_g, f_c_m, f_c_c = st.columns(3)
             with f_c_g: f_gender = st.selectbox("상대방 성별", ["남성", "여성"])
@@ -459,12 +463,10 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             final_concern = f"[{inflow_code}] {user_concern}" if inflow_code != "직접접속" else user_concern
 
             meta_data = {}
-            if "2-5" in check_prod:
+            if is_tackil_moving or is_tackil_opening:
                 meta_data['tackil_purpose'] = p_tackil_purpose
                 meta_data['moving_start'] = p_moving_start.isoformat()
                 meta_data['moving_end'] = p_moving_end.isoformat()
-            if "4-" in check_prod:
-                meta_data['other_text'] = p_other_text
                 
             if meta_data:
                 final_concern += f"\n\n---META_START---\n{json.dumps(meta_data)}\n---META_END---"
@@ -514,7 +516,6 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 "final_price": final_price
             }
             st.rerun()
-
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 전용 중앙 통제실 - 3단 서랍장 SPA 로직]
 # ------------------------------------------------------------------------------
@@ -569,7 +570,8 @@ def render_admin_panel():
                 r_oid = row['order_id']
                 r_name = row['name']
                 r_prod = row['u_product']
-                engine_prod = PRODUCT_MAP.get(r_prod.split('+')[0].strip(), "1-1. 사주팔자 및 운세 분석")
+                r_prod_first = r_prod.split('+')[0].strip()
+                engine_prod = PRODUCT_MAP.get(r_prod_first, "1-1. 사주팔자 및 총 운세 풀이")
                 
                 with st.container():
                     st.markdown(f"**📌 [{r_name}]** | 📝 상품: {r_prod.split('+')[0][:15]}... | 🕒 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
@@ -587,7 +589,8 @@ def render_admin_panel():
                                 st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
                                 st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
                                 
-                                if "3-" in engine_prod or "4-2" in engine_prod:
+                                # 🆕 [버그 수정] engine_prod(값)가 아니라 r_prod_first(원본 키)로 판별해야 정확함
+                                if "3-" in r_prod_first:
                                     st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
                                     st.session_state['f_m_stat'], st.session_state['f_c'] = row.get('f_marital', '선택'), row.get('f_cal', '양력') 
                                     st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
@@ -605,26 +608,18 @@ def render_admin_panel():
                                             st.session_state['tackil_purpose'] = meta['tackil_purpose']
                                             st.session_state['moving_start'] = date.fromisoformat(meta['moving_start'])
                                             st.session_state['moving_end'] = date.fromisoformat(meta['moving_end'])
-                                            
-                                        if 'other_text' in meta:
-                                            if "4-1" in engine_prod: st.session_state['text_4_1'] = meta['other_text']
-                                            elif "4-2" in engine_prod: st.session_state['text_4_2'] = meta['other_text']
                                     except Exception:
                                         pass
                                 
                                 st.session_state['user_concern'] = clean_concern
-
-                                r_prod_first = r_prod.split('+')[0].strip()
                                 
                                 if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", r_prod_first
                                 elif "2-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", r_prod_first
                                 elif "3-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 연애/결혼운 (궁합) 풀이", r_prod_first
-                                elif "4-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_4'] = "4. 타 감명서 비교", r_prod_first
                                 
                                 st.session_state['admin_proc_id'] = r_oid
                                 st.session_state['app_running'] = True
                                 st.rerun()
-
                         with btn_col2:
                             if st.button(f"🔔 미입금 안내 톡 쏘기 - {r_name}", key=f"remind_{r_oid}"):
                                 remind_msg = f"💌 [사주박사 안내]\n{r_name}님, 신청하신 감명 접수가 보류 중입니다. 혹시 바쁘셔서 잊으셨을까 봐 안내해 드려요! 😊\n\n💳 국민은행 231402-04-133221 (이*호)\n\n위 계좌로 복비가 입금되면 즉시 박사님의 정밀 분석이 시작됩니다. (입금자명이 다르다면 카톡 부탁드려요!) 🌸"
