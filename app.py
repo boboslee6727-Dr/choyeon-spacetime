@@ -1168,6 +1168,16 @@ if st.session_state.get('app_running', False):
             target_prompt = getattr(prompts, prompt_var_name, "")
 
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
+
+        # 🆕 관리자가 입력한 'AI 수정 지시사항'을 실제로 프롬프트에 반영
+        feedback_note = st.session_state.get('ai_feedback_prompt', '').strip()
+        if feedback_note:
+            formatted_prompt += f"""
+
+        🚨 [관리자 최우선 수정 지시사항 - 반드시 100% 반영하여 다시 작성할 것]
+        {feedback_note}
+        """
+
         raw_response = call_claude_api(formatted_prompt)
         
         if raw_response and isinstance(raw_response, str):
