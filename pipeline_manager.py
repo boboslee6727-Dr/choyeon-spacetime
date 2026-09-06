@@ -18,7 +18,7 @@ import pytz
 import html_views
 DB_FILE = "choyeon_orders.db"
 
-ADMIN_PASSWORD = "boss!631201"
+ADMIN_PASSWORD = None  # 코드에는 절대 실제 비밀번호를 적지 않습니다
 BASE_URL = "https://choyeon-spacetime.streamlit.app"
 KAKAO_CHAT_URL = "http://pf.kakao.com/_xexizSX/chat"
 
@@ -532,8 +532,11 @@ def render_admin_panel():
         st.markdown("<h3 style='text-align:center;'>👑 관리자 로그인</h3>", unsafe_allow_html=True)
         pwd = st.text_input("관리자 비밀번호", type="password", key="admin_pwd_input")
         
-    admin_pwd = st.secrets.get("ADMIN_PASSWORD", ADMIN_PASSWORD) if hasattr(st, "secrets") else ADMIN_PASSWORD
-    if pwd == admin_pwd: st.session_state['admin_logged_in'] = True
+    admin_pwd = st.secrets.get("ADMIN_PASSWORD") if hasattr(st, "secrets") else None
+    if not admin_pwd:
+        st.error("🚨 관리자 비밀번호가 설정되지 않았습니다. Streamlit Secrets에 ADMIN_PASSWORD를 등록해주세요.")
+    elif pwd == admin_pwd:
+        st.session_state['admin_logged_in'] = True
     if not st.session_state.get('admin_logged_in', False):
         st.info("👈 좌측 사이드바에 관리자 암호를 입력하여 주십시오.")
         return
