@@ -463,7 +463,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="속상한 일이나 궁금한 점을 자유롭게 적어요~")
 
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-        agree = st.checkbox("개인정보 수집 및 감명 제공에 동의합니다. *(필수)")
+        agree = st.checkbox("개인정보 수집 및 사주풀이 서비스 제공에 동의합니다. *(필수)")
+        agree_marketing = st.checkbox("이벤트, 할인 등 마케팅 정보 문자 수신에 동의합니다. (선택)")
         submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", type="primary", use_container_width=True)
         
         if submitted:
@@ -489,8 +490,19 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             if not name.strip() or not p_mid.strip() or not p_end.strip() or not b_year.isdigit() or not selected_products or not agree:
                 st.error("🚨 필수 입력값을 확인해 주십시오.")
                 return
-            
-            calc_result = calculate_package_price(selected_products)
+
+            # 🆕 [만 14세 미만 자기신고 차단] 개인정보보호법상 만 14세 미만은 법정대리인 동의 없이 서비스 이용 불가
+            try:
+                kst_today = datetime.now(pytz.timezone('Asia/Seoul')).date()
+                birth_y, birth_m, birth_d = int(b_year), int(b_month) if b_month.isdigit() else 1, int(b_day) if b_day.isdigit() else 1
+                calc_age = kst_today.year - birth_y - ((kst_today.month, kst_today.day) < (birth_m, birth_d))
+            except Exception:
+                calc_age = 99  # 계산 실패 시 안전하게 통과(생년월일 형식 오류는 위 필수값 체크에서 이미 걸러짐)
+
+            if calc_age < 14:
+                st.error("🚨 만 14세 미만은 법정대리인의 동의 없이 서비스를 이용하실 수 없습니다. 카카오 채팅으로 문의해 주세요.")
+                return
+
             total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
             discount_amt = total_original - final_price
             effective_rate = total_rate_pct if total_original > 0 else 0
@@ -516,6 +528,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 "f_cal": f_cal, "f_y": f_y if f_y else 0, "f_m": f_m if f_m else 0, "f_d": f_d if f_d else 0,
                 "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
                 "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
+                "marketing_agree": agree_marketing,
             }).execute()
             
             # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
