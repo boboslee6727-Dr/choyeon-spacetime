@@ -1149,11 +1149,11 @@ if st.session_state.get('app_running', False):
             if "1-4" in u_prod: return "프롬프트_1_4_일운"
             if "2-1" in u_prod: return "프롬프트_2_1_재물운"
             if "2-2" in u_prod: 
-                return "프롬프트_2_2_진학운" if "진학" in st.session_state.get('career_purpose', '직업') else "프롬프트_2_2_직업운"
-            if "2-3" in u_prod: return "프롬프트_2_3_연애운"
-            if "2-4" in u_prod: return "프롬프트_2_4_건강운"
+                return "프롬프트_2_3_진학운" if "진학" in st.session_state.get('career_purpose', '직업') else "프롬프트_2_4_직업운"
+            if "2-3" in u_prod: return "프롬프트_2_2_연애운"
+            if "2-4" in u_prod: return "프롬프트_2_5_건강운"
             if "2-5" in u_prod: 
-                return "프롬프트_2_5_개업_택일" if st.session_state.get('tackil_purpose', '이사') == '개업' else "프롬프트_2_5_이사_택일"
+                return "프롬프트_2_7_개업_택일" if st.session_state.get('tackil_purpose', '이사') == '개업' else "프롬프트_2_6_이사_택일"
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
