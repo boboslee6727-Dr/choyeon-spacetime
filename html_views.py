@@ -137,7 +137,6 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
     <div class='report-page cover-page' style='padding:0; margin:0 auto; width:210mm; height:297mm; min-height:297mm; display:flex; flex-direction:column; justify-content:center; align-items:center; page-break-after: always; box-sizing: border-box; -webkit-print-color-adjust: exact;'>
         <div style='border: 4px solid #1A237E; padding: 42px 24px; border-radius: 20px; text-align: center; background: #FFFFFF; width: 92%; max-width: 680px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; box-sizing: border-box;'>
             
-            <!-- 🌟 대제목 영역: 사이즈를 25px로 최적화하고 자간 압축(-1.2px) 및 1줄 고정 방어막 전개 -->
             <div style='border-bottom: 4px double #1A237E; padding-bottom: 16px; margin-bottom: 28px; width: 100%; box-sizing: border-box;'>
                 <h1 style='font-family: "Nanum Myeongjo", serif !important; font-size: 28px !important; font-weight: 900 !important; margin: 0 !important; padding: 0 !important; color: #111111 !important; letter-spacing: -1.2px !important; white-space: nowrap !important; word-break: keep-all !important; line-height: 1.2 !important; text-align: center;'>{clean_title}</h1>
                 <div style='text-align: right; margin-top: 8px;'>
@@ -145,7 +144,6 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
                 </div>
             </div>
             
-            <!-- 신청인 정보 박스: 나눔명조 강제 적용 -->
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 22px 20px; border-radius: 14px; margin-bottom: 24px;'>
                 <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin: 0 0 10px 0;'>{u_icon} {clean_u_name} 님</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.8;'>
@@ -155,7 +153,7 @@ def get_personal_cover(version, report_title, u_icon, u_name, u_sol, u_lun, u_ti
             </div>
             
             <p style='font-family: "Nanum Myeongjo", serif; font-size: 18px; margin-top: 35px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 8px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 20px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
         </div>
     </div>
     <div class='page-break'></div>
@@ -182,27 +180,26 @@ def get_couple_cover(version="", report_title="", u_icon="♂️", u_name="무�
             <div style='background: #F8F9FA; border: 1px solid #E8EAF6; padding: 16px 18px; border-radius: 14px; margin-bottom: 14px;'>
                 <h2 style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 24px !important; font-weight: 800 !important; color: #1565C0 !important; margin: 0 0 6px 0 !important;'>{u_icon} 남명 : {clean_u_name} 님 ({u_age}세)</h2>
                 <div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 16px !important; line-height: 1.6;'>
-                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 800 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></div>
-                    <p style='margin: 3px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800 !important; color: #1565C0;'>태어난 시간 : {u_time}</div>
+                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 800 !important;'>[양력] {u_sol} | [음력] {u_lun}</strong></p>
+                    <p style='margin: 3px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800 !important; color: #1565C0;'>태어난 시간 : {u_time}</p>
                 </div>
             </div>
             <div style='background: #FFF3E0; border: 1px solid #FBE9E7; padding: 16px 18px; border-radius: 14px; margin-bottom: 22px;'>
                 <h2 style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 24px !important; font-weight: 800 !important; color: #C62828 !important; margin: 0 0 6px 0 !important;'>{p_icon} 여명 : {clean_p_name} 님 ({p_age}세)</h2>
                 <div style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 16px !important; line-height: 1.6;'>
-                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 800 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></div>
-                    <p style='margin: 3px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800 !important; color: #C62828;'>태어난 시간 : {p_time}</div>
+                    <p style='margin: 0; text-align: center !important; width: 100% !important; white-space: nowrap; color: #000000;'><strong style='font-weight: 800 !important;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
+                    <p style='margin: 3px 0 0 0; text-align: center !important; width: 100% !important; white-space: nowrap; font-weight: 800 !important; color: #C62828;'>태어난 시간 : {p_time}</p>
                 </div>
             </div>
             <!-- 하단 발행일자 및 연구소명 (크고 굵게 강조) -->
             <div style='margin-top: 32px !important; text-align: center !important;'>
-                <p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px !important; font-weight: 800 !important; color: #111111 !important; letter-spacing: 0.5px !important; line-height: 1.2 !important; margin: 0 0 12px 0 !important; display: block !important;'>{today_str}</div>
-                <p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 24px !important; font-weight: 800 !important; color: #1A237E !important; letter-spacing: 1px !important; line-height: 1.2 !important; margin: 0 !important; display: block !important;'>초연 시공명리 연구소</div>
+                <p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 18px !important; font-weight: 800 !important; color: #111111 !important; letter-spacing: 0.5px !important; line-height: 1.2 !important; margin: 0 0 24px 0 !important; display: block !important;'>{today_str}</p>
+                <p style='font-family: \"Nanum Myeongjo\", serif !important; font-size: 24px !important; font-weight: 800 !important; color: #1A237E !important; letter-spacing: 1px !important; line-height: 1.2 !important; margin: 0 !important; display: block !important;'>초연 시공명리 연구소</p>
             </div>
         </div>
     </div>
     <div class='page-break'></div>
     """
-
 def get_main_title_html(report_title=""):
     """AI 통변 페이지 최상단 대제목 - 표지와 동일한 이중선 구분선(전역 클래스 + 인라인 이중 적용)으로 위엄을 강조"""
     clean_title = str(report_title or "").strip()
