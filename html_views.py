@@ -77,6 +77,7 @@ def format_ai_text_to_html(text, qna_text=""):
     (마크다운 헤더 #, ##, ### 및 --- 구분선 처리 / "라벨: 설명" 콜론 소제목을 ◆ 소제목으로 자동 승격)
     (소제목 폰트 크기 확대 16.5px→17.5px, 소제목-본문 간격 확대 6px→14px)
     (대제목 인라인 스타일을 get_global_css()의 .ai-title-l1 최신 값과 완전히 동기화: 26px/3px/45px)
+    (🆕 ◆▶▷ 등 기호 뒤 콜론이 있으면 소제목/본문을 분리하여 강제 줄바꿈 처리)
     """
     if not text:
         return ""
@@ -105,7 +106,13 @@ def format_ai_text_to_html(text, qna_text=""):
         elif re.match(r'^\d+\)\s*', line_formatted):
             html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
         elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
-            html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+            bullet_split = re.match(r'^(.*?[:：])\s*(\S.*)$', line_formatted)
+            if bullet_split:
+                bullet_title, bullet_body = bullet_split.group(1), bullet_split.group(2)
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
+                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{bullet_body}</p>")
+            else:
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
         elif colon_is_header:
             html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>◆ {line_formatted}</b></div>")
         else:
