@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 86.6 Master - Claude 전용 버젼)
+# app.py (ver 86.7 Master - Claude 전용 버젼)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 86.6 Master"
+APP_VERSION = "ver 86.7 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
@@ -1130,7 +1130,7 @@ if st.session_state.get('app_running', False):
             "career_goal": st.session_state.get('career_goal', '직업 적성'),
             "love_goal": st.session_state.get('love_goal', '인연 관계'),
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
-            "user_concern": st.session_state.get('user_concern', '특별히 남기신 고민 사항 없음'),
+            "user_concern": st.session_state.get('user_concern', '').strip() or "(특별히 남기신 고민 사항 없음)",
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
             "best_moving_days_str": best_moving_days_str,
