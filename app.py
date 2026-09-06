@@ -1130,6 +1130,7 @@ if st.session_state.get('app_running', False):
             "career_goal": st.session_state.get('career_goal', '직업 적성'),
             "love_goal": st.session_state.get('love_goal', '인연 관계'),
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
+            "user_concern": st.session_state.get('user_concern', '특별히 남기신 고민 사항 없음'),
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
             "best_moving_days_str": best_moving_days_str,
