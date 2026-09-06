@@ -277,7 +277,7 @@ else:
         if main_category == "1. 개인 사주팔자 풀이 (종합)":
             u_product = st.radio("상세 분석 항목:", ["1-1. 사주팔자와 운세풀이", "1-2. 올 해 (특정 연도) 운세 상세분석", "1-3. 이번 달 (특정 월) 운세 상세분석", "1-4. 이번(특정) 주 및 일 운세 상세분석"], key="sub_category_1", on_change=stop_ai)
         elif main_category == "2. 테마별 특성화 상담":
-            u_product = st.radio("특성화 상품 선택:", ["2-1. 재물운 특화 분석", "2-2. 직업/진학운 특화 분석", "2-3. 연애/결혼운 특화 분석", "2-4. 건강운 특화 분석", "2-5. 이사 및 개업 택일"], key="sub_category_2", on_change=stop_ai)
+            u_product = st.radio("특성화 상품 선택:", ["2-1. 재물운 특화 분석", "2-2. 연애/결혼운 특화 분석", "2-3. 진학운 특화 분석", "2-4. 직업운 특화 분석", "2-5. 건강운 특화 분석", "2-6. 이사 택일", "2-7. 개업 택일"], key="sub_category_2", on_change=stop_ai)
         elif main_category == "3. 커플 연애/결혼운 (궁합) 풀이":
             u_product = st.radio("상세 분석 항목:", ["3-1. 연애/결혼운 (궁합) 풀이", "3-2. 결혼 택일", "3-3. 출산 택일"], key="sub_category_3", on_change=stop_ai)
         elif main_category == "4. 타 감명서 비교":
@@ -371,13 +371,17 @@ else:
                 run_iljin_calc = st.checkbox("🔮 일운 운세 분석 가동", value=False)
                 if run_iljin_calc: target_date = st.date_input("일운 기준일", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
             elif "2-1." in u_product: wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
-            elif "2-2." in u_product: 
-                career_purpose = st.radio("💼 상담 목적 선택", ["직업·취업·이직", "진학·입시·학업"], key="career_purpose", on_change=stop_ai)
-                career_goal = st.text_input("고민되는 진학/직업 분야는?", key="career_goal", on_change=stop_ai)
-            elif "2-3." in u_product: love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
-            elif "2-4." in u_product: health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
-            elif "2-5." in u_product:
-                tackil_purpose = st.radio("🗓️ 택일 목적", ["이사", "개업"], key="tackil_purpose", on_change=stop_ai)
+            elif "2-2." in u_product: love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
+            elif "2-3." in u_product: career_goal = st.text_input("고민되는 진학 분야는?", key="career_goal", on_change=stop_ai)
+            elif "2-4." in u_product: career_goal = st.text_input("고민되는 직업 분야는?", key="career_goal", on_change=stop_ai)
+            elif "2-5." in u_product: health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
+            elif "2-6." in u_product:
+                st.session_state['tackil_purpose'] = "이사"
+                col_start, col_end = st.columns(2)
+                start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
+                end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
+            elif "2-7." in u_product:
+                st.session_state['tackil_purpose'] = "개업"
                 col_start, col_end = st.columns(2)
                 start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
                 end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
@@ -626,10 +630,12 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-3"): report_title = "이번 달 운세 풀이"
         elif u_product.startswith("1-4"): report_title = "주간 및 일일 운세 풀이"
         elif u_product.startswith("2-1"): report_title = "재물운 특화 풀이"
-        elif u_product.startswith("2-2"): report_title = "직업/진학운 특화 풀이"
-        elif u_product.startswith("2-3"): report_title = "연애/결혼운 특화 풀이"
-        elif u_product.startswith("2-4"): report_title = "건강운 특화 풀이"
-        elif u_product.startswith("2-5"): report_title = "이사/개업 택일 추천"
+        elif u_product.startswith("2-2"): report_title = "연애/결혼운 특화 풀이"
+        elif u_product.startswith("2-3"): report_title = "진학운 특화 풀이"
+        elif u_product.startswith("2-4"): report_title = "직업운 특화 풀이"
+        elif u_product.startswith("2-5"): report_title = "건강운 특화 풀이"
+        elif u_product.startswith("2-6"): report_title = "이사 택일 추천"
+        elif u_product.startswith("2-7"): report_title = "개업 택일 추천"
         elif u_product.startswith("3-1"): report_title = "연애/결혼운 (궁합) 풀이"
         elif u_product.startswith("3-2"): report_title = "결혼 택일 추천"
         elif u_product.startswith("3-3"): report_title = "출산 택일 추천"
@@ -1148,12 +1154,12 @@ if st.session_state.get('app_running', False):
             if "1-3" in u_prod: return "프롬프트_1_3_월운"
             if "1-4" in u_prod: return "프롬프트_1_4_일운"
             if "2-1" in u_prod: return "프롬프트_2_1_재물운"
-            if "2-2" in u_prod: 
-                return "프롬프트_2_3_진학운" if "진학" in st.session_state.get('career_purpose', '직업') else "프롬프트_2_4_직업운"
-            if "2-3" in u_prod: return "프롬프트_2_2_연애운"
-            if "2-4" in u_prod: return "프롬프트_2_5_건강운"
-            if "2-5" in u_prod: 
-                return "프롬프트_2_7_개업_택일" if st.session_state.get('tackil_purpose', '이사') == '개업' else "프롬프트_2_6_이사_택일"
+            if "2-2" in u_prod: return "프롬프트_2_2_연애운"
+            if "2-3" in u_prod: return "프롬프트_2_3_진학운"
+            if "2-4" in u_prod: return "프롬프트_2_4_직업운"
+            if "2-5" in u_prod: return "프롬프트_2_5_건강운"
+            if "2-6" in u_prod: return "프롬프트_2_6_이사_택일"
+            if "2-7" in u_prod: return "프롬프트_2_7_개업_택일"
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
