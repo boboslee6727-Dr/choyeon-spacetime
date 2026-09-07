@@ -438,9 +438,9 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         # 🆕 [버그 수정] 3-1(궁합), 3-2(결혼택일), 3-3(출산택일) 전부 상대방 정보가 필요함.
         if "3-" in selected_single:
             st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 택일용 필수)**")
+            st.caption(f"상대방 성별: **{f_gender}** (위에서 자동으로 설정됨)")
             f_name = st.text_input("상대방 이름 *(필수)")
-            f_c_g, f_c_m, f_c_c = st.columns(3)
-            with f_c_g: f_gender = st.selectbox("상대방 성별", ["남성", "여성"])
+            f_c_m, f_c_c = st.columns(2)
             with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱", "기타"])
             with f_c_c: f_cal = st.selectbox("상대방 양/음력", ["양력", "음력 평달", "음력 윤달"])
             f_c_y, f_c_mo, f_c_d = st.columns(3)
