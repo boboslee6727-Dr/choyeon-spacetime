@@ -280,7 +280,7 @@ def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color,
         <div>🔢 대운수: {calc_d}</div>
         <div>💥 오행: 木({m}) 火({f}) 土({e}) 金({mtl}) 水({w})</div>
         <div>🌟 천을귀인: {guiin}</div>
-        <div>🎯 공망: [일] {i_gong}</div>
+        <div>🎯 공망: [년] {n_gong} [일] {i_gong}</div>
         <div>🌪️ 삼재: <span style='color:{samjae_color};'>{cur_samjae}</span></div>
     </div>
     """
@@ -297,6 +297,7 @@ def get_un_layout(title, content):
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() and str(y_shinsal).strip() != "None" else "-"
+    d_val = d_shinsal if d_shinsal and str(d_shinsal).strip() and str(d_shinsal).strip() != "None" else "-"
     bg_col = "#FFF9C4" if is_current else "transparent"
     
     return f"""
@@ -308,6 +309,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
         <div style='padding:2px; font-size:12px;'>{ss_ji}</div>
         <div style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
         <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+        <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
     </div>
     """
 
@@ -338,6 +340,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
     """세운표 셀: 좌측 세로선 유지 및 나이 '세' 중복 제거"""
     u_val = unsung if unsung and str(unsung).strip() else "-"
     y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() else "-"
+    d_val = d_shinsal if d_shinsal and str(d_shinsal).strip() and str(d_shinsal).strip() != "None" else "-"
     bg_col = "#E1F5FE" if is_current else "transparent"
     
     age_str = str(tage).strip()
@@ -352,6 +355,7 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
         <div style='padding:2px; font-size:12px;'>{ss_ji}</div>
         <div style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
         <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+        <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
     </div>
     """
 
@@ -366,6 +370,7 @@ def get_wolun_layout(title, content):
 def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() else "-"
+    d_val = d_shinsal if d_shinsal and str(d_shinsal).strip() and str(d_shinsal).strip() != "None" else "-"
     bg_col = "#E8F5E9" if is_current else "transparent"
     
     return f"""
@@ -377,11 +382,34 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
         <div style='padding:2px; font-size:12px;'>{ss_ji}</div>
         <div style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
         <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+        <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
     </div>
     """
 
-def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None):
-    pass
+def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None, engine=None):
+    if not weekly_days_data:
+        return ""
+    cells = ""
+    for day in weekly_days_data:
+        bg_col = "#FFF9C4" if day.get("is_today") else "transparent"
+        gan_cls = engine.get_oh_class(day['gan']) if engine and hasattr(engine, 'get_oh_class') else ""
+        ji_cls = engine.get_oh_class(day['ji']) if engine and hasattr(engine, 'get_oh_class') else ""
+        cells += f"""
+        <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
+            <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{day['day_num']}일({day['weekday_kr']})</div>
+            <div style='padding:2px; font-size:12px;'>{day['ss_gan']}</div>
+            <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{day['gan']}</div>
+            <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{day['ji']}</div>
+            <div style='padding:2px; font-size:12px;'>{day['ss_ji']}</div>
+            <div style='font-size:11px; border-top:1px solid #ccc;'>{day['unsung']}</div>
+        </div>
+        """
+    return f"""
+    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 이번 주 일진 흐름 ]</div>
+    <div style='display:flex; flex-direction:row; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>
+        {cells}
+    </div>
+    """
 
 # ==============================================================================
 # 📦 섹션 3. 서술형 텍스트 박스 (인트로, 황금문구, 클로징 등)
