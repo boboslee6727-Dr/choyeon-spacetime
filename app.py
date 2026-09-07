@@ -853,7 +853,10 @@ if st.session_state.get('app_running', False):
                     p_is_active = (p_val <= p_age_val < p_val + 10)
                     p_u_sung_val = engine.get_unsung(p_ds_hanja, p_j_hanja) if p_j_hanja != "-" else "-"
                     p_y_shin_val = engine.get_12_shinsal(p_yb, p_j_hangul) if p_j_hangul != "-" else "-"
-                    p_d_shin_val = engine.get_12_shinsal(p_db, p_j_hangul) if p_j_hangul != "-" else "-"
+                    p_db_hanja_for_shinsal = engine.K2H_JI.get(p_db, p_db)
+                    p_d_shin_val = engine.get_12_shinsal(p_db_hanja_for_shinsal, p_j_hangul) if p_j_hangul != "-" else "-"
+                    if not p_d_shin_val or p_d_shin_val == "-":
+                        p_d_shin_val = engine.get_12_shinsal(p_db, p_j_hangul) if p_j_hangul != "-" else "-"
                     
                     p_daewun_data_list.append({
                         "age_range": f"{p_val}~{p_val+9}세", "ss_gan": engine.get_ss(p_ds_hanja, p_c_hangul),
