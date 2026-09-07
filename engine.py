@@ -417,6 +417,7 @@ def get_unsung(dg, ji):
     return "-"
 
 def get_12_shinsal(base_ji, target_ji):
+    return "카나리아테스트999"
     b_h = _to_hanja_ji(base_ji)
     t_h = _to_hanja_ji(target_ji)
     if not b_h or not t_h: return "-"
