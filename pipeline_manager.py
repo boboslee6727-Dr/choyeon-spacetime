@@ -377,174 +377,162 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     selected_products = [selected_single]
     # 👆 여기까지 삽입
 
-    with st.form("choyeon_customer_order_form_final"):
-        st.info("👤 **2. 신청자 정보**")
-        name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요")
-        st.markdown("""
-        <style>
-        div[data-testid="stTextInput"] input[disabled] {
-            -webkit-text-fill-color: #31333F !important;
-            color: #31333F !important;
-            opacity: 1 !important;
-            background-color: transparent !important;
-            cursor: default !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        c_p1, c_p2, c_p3 = st.columns([1, 1.5, 1.5])
-        with c_p1: st.text_input("국번", value="010", disabled=True)
-        with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4, placeholder="1234")
-        with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4, placeholder="5678")
-        memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com")
-        c_g, c_m, c_c = st.columns(3)
-        with c_g: gender = st.selectbox("성별", ["여성", "남성"])
-        with c_m: marital = st.selectbox("결혼유무", ["미혼", "기혼", "돌싱", "기타"])
-        with c_c: u_cal = st.selectbox("양/음력", ["양력", "음력 평달", "음력 윤달"])
-        c_y, c_mo, c_d = st.columns(3)
-        with c_y: b_year = st.text_input("생년(YYYY) *", max_chars=4, placeholder="1990")
-        with c_mo: b_month = st.text_input("월(MM) *", max_chars=2, placeholder="06")
-        with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15")
-        b_time = st.selectbox("태어난 시간", TIME_OPTIONS)
+    def sync_partner_gender_order():
+        u_val = st.session_state.get('order_gender', '여성')
+        st.session_state['order_f_gender'] = '남성' if u_val == '여성' else '여성'
 
-        st.markdown("""
-        <style>
-        div[data-baseweb="select"] * { white-space: normal !important; word-break: keep-all !important; text-overflow: clip !important; overflow: visible !important; letter-spacing: -1.8px !important; font-size: 13.5px !important; }
-        div[data-baseweb="select"] > div { height: auto !important; min-height: 48px !important; padding-top: 6px !important; padding-bottom: 6px !important; padding-left: 4px !important; padding-right: 4px !important; }
-        ul[role="listbox"] li, ul[role="listbox"] li * { white-space: normal !important; word-break: keep-all !important; height: auto !important; min-height: 45px !important; text-overflow: clip !important; letter-spacing: -1.8px !important; font-size: 13.5px !important; }
-        </style>
-        """, unsafe_allow_html=True)
-             
-        f_name, f_gender, f_marital, f_cal, f_t = "", "", "", "", "시간 모름"
-        f_y, f_m, f_d = "", "", ""
-        
-        p_tackil_purpose = "이사"
-        p_moving_start = date.today()
-        p_moving_end = date.today() + timedelta(days=30)
-        p_other_text = ""
-        
-        # 🆕 [버그 수정] 기존 check_prod(매핑된 값)에는 "2-6"/"3-" 등 숫자가 없어 조건이 항상 거짓이었음.
-        # 반드시 selected_single(가격이 붙은 원본 키)을 기준으로 판별해야 함.
-        is_tackil_moving = "2-6." in selected_single
-        is_tackil_opening = "2-7." in selected_single
+    def sync_user_gender_order():
+        f_val = st.session_state.get('order_f_gender', '남성')
+        st.session_state['order_gender'] = '여성' if f_val == '남성' else '남성'
 
+    is_couple_product = "3-" in selected_single
+
+    st.info("👤 **2. 신청자 정보**")
+    name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요", key="order_name")
+    c_p1, c_p2, c_p3 = st.columns([1, 1.5, 1.5])
+    with c_p1: st.text_input("국번", value="010", disabled=True)
+    with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4, placeholder="1234", key="order_p_mid")
+    with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4, placeholder="5678", key="order_p_end")
+    memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com", key="order_email")
+
+    c_g, c_m, c_c = st.columns(3)
+    with c_g: gender = st.selectbox("성별", ["여성", "남성"], key="order_gender", on_change=sync_partner_gender_order)
+    with c_m: marital = st.selectbox("결혼유무", ["미혼", "기혼", "돌싱", "기타"], key="order_marital")
+    with c_c: u_cal = st.selectbox("양/음력", ["양력", "음력 평달", "음력 윤달"], key="order_u_cal")
+
+    c_y, c_mo, c_d = st.columns(3)
+    with c_y: b_year = st.text_input("생년(YYYY) *", max_chars=4, placeholder="1990", key="order_b_year")
+    with c_mo: b_month = st.text_input("월(MM) *", max_chars=2, placeholder="06", key="order_b_month")
+    with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15", key="order_b_day")
+    b_time = st.selectbox("태어난 시간", TIME_OPTIONS, key="order_b_time")
+
+    f_name, f_marital, f_cal, f_t = "", "", "", "시간 모름"
+    f_y, f_m, f_d = "", "", ""
+    if "order_f_gender" not in st.session_state:
+        st.session_state["order_f_gender"] = "남성"
+    f_gender = st.session_state["order_f_gender"]
+
+    p_tackil_purpose = "이사"
+    p_moving_start = date.today()
+    p_moving_end = date.today() + timedelta(days=30)
+
+    is_tackil_moving = "2-6." in selected_single
+    is_tackil_opening = "2-7." in selected_single
+
+    if is_tackil_moving or is_tackil_opening:
+        p_tackil_purpose = "이사" if is_tackil_moving else "개업"
+        st.info("🗓️ **택일 상세 정보 (필수)**")
+        col_start, col_end = st.columns(2)
+        p_moving_start = col_start.date_input("희망 시작일", key="order_moving_start")
+        p_moving_end = col_end.date_input("희망 종료일", key="order_moving_end")
+
+    if is_couple_product:
+        st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 택일용 필수)**")
+        f_name = st.text_input("상대방 이름 *(필수)", key="order_f_name")
+        f_c_g, f_c_m, f_c_c = st.columns(3)
+        with f_c_g:
+            f_gender = st.selectbox("상대방 성별", ["남성", "여성"], key="order_f_gender", on_change=sync_user_gender_order)
+        with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱", "기타"], key="order_f_marital")
+        with f_c_c: f_cal = st.selectbox("상대방 양/음력", ["양력", "음력 평달", "음력 윤달"], key="order_f_cal")
+        f_c_y, f_c_mo, f_c_d = st.columns(3)
+        with f_c_y: f_y = st.text_input("상대방 생년(YYYY) *", max_chars=4, key="order_f_y")
+        with f_c_mo: f_m = st.text_input("상대방 월(MM) *", max_chars=2, key="order_f_m")
+        with f_c_d: f_d = st.text_input("상대방 일(DD) *", max_chars=2, key="order_f_d")
+        f_t = st.selectbox("상대방 태어난 시간", TIME_OPTIONS, key="order_f_t")
+
+    st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #FFCA28; margin-bottom: 15px;'>
+        <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
+        <p style='font-size: 14px; color: #424242; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
+        혼자 끙끙 앓지 말고, 답답한 고민들을<br> 솔직하게 털어놓아 보세요.<br>
+        명리학적 원인 분석과 함께 <br><b>'명쾌한 솔루션'</b>을 알려드릴께요!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="속상한 일이나 궁금한 점을 자유롭게 적어요~", key="order_user_concern")
+
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    agree = st.checkbox("개인정보 수집 및 사주풀이 서비스 제공에 동의합니다. *(필수)", key="order_agree")
+    agree_marketing = st.checkbox("이벤트, 할인 등 마케팅 정보 문자 수신에 동의합니다. (선택)", key="order_agree_marketing")
+    submitted = st.button("🏮 사주풀이 신청하기 ", type="primary", use_container_width=True)
+
+    if submitted:
+        inflow_code = "직접접속"
+        try:
+            src_val = st.query_params.get("src", "")
+            if src_val == "insta": inflow_code = "인스타그램"
+            elif src_val == "x" or src_val == "twitter": inflow_code = "트위터(X)"
+            elif src_val == "kmong": inflow_code = "크몽"
+        except: pass
+
+        final_concern = f"[{inflow_code}] {user_concern}" if inflow_code != "직접접속" else user_concern
+        meta_data = {}
         if is_tackil_moving or is_tackil_opening:
-            p_tackil_purpose = "이사" if is_tackil_moving else "개업"
-            st.info("🗓️ **택일 상세 정보 (필수)**")
-            col_start, col_end = st.columns(2)
-            p_moving_start = col_start.date_input("희망 시작일")
-            p_moving_end = col_end.date_input("희망 종료일")
+            meta_data['tackil_purpose'] = p_tackil_purpose
+            meta_data['moving_start'] = p_moving_start.isoformat()
+            meta_data['moving_end'] = p_moving_end.isoformat()
 
-        # 🆕 [버그 수정] 3-1(궁합), 3-2(결혼택일), 3-3(출산택일) 전부 상대방 정보가 필요함.
-        if "3-" in selected_single:
-            st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 택일용 필수)**")
-            st.caption(f"상대방 성별: **{f_gender}** (위에서 자동으로 설정됨)")
-            f_name = st.text_input("상대방 이름 *(필수)")
-            f_c_m, f_c_c = st.columns(2)
-            with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱", "기타"])
-            with f_c_c: f_cal = st.selectbox("상대방 양/음력", ["양력", "음력 평달", "음력 윤달"])
-            f_c_y, f_c_mo, f_c_d = st.columns(3)
-            with f_c_y: f_y = st.text_input("상대방 생년(YYYY) *", max_chars=4)
-            with f_c_mo: f_m = st.text_input("상대방 월(MM) *", max_chars=2)
-            with f_c_d: f_d = st.text_input("상대방 일(DD) *", max_chars=2)
-            f_t = st.selectbox("상대방 태어난 시간", TIME_OPTIONS)
+        if meta_data:
+            final_concern += f"\n\n---META_START---\n{json.dumps(meta_data)}\n---META_END---"
 
-        st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
-        st.markdown("""
-        <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #FFCA28; margin-bottom: 15px;'>
-            <b style='color:#1A237E; font-size: 16px;'>💡 [ 사주박사 1:1 비밀상담소 ]</b>
-            <p style='font-size: 14px; color: #424242; line-height: 1.7; margin-top: 8px; margin-bottom: 0;'>
-            혼자 끙끙 앓지 말고, 답답한 고민들을<br> 솔직하게 털어놓아 보세요.<br>
-            명리학적 원인 분석과 함께 <br><b>'명쾌한 솔루션'</b>을 알려드릴께요!
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="속상한 일이나 궁금한 점을 자유롭게 적어요~")
+        if not name.strip() or not p_mid.strip() or not p_end.strip() or not b_year.isdigit() or not selected_products or not agree:
+            st.error("🚨 필수 입력값을 확인해 주십시오.")
+            return
 
-        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-        agree = st.checkbox("개인정보 수집 및 사주풀이 서비스 제공에 동의합니다. *(필수)")
-        agree_marketing = st.checkbox("이벤트, 할인 등 마케팅 정보 문자 수신에 동의합니다. (선택)")
-        submitted = st.form_submit_button("🏮 사주풀이 신청하기 ", type="primary", use_container_width=True)
-        
-        if submitted:
-            inflow_code = "직접접속"
-            try:
-                src_val = st.query_params.get("src", "")
-                if src_val == "insta": inflow_code = "인스타그램"
-                elif src_val == "x" or src_val == "twitter": inflow_code = "트위터(X)"
-                elif src_val == "kmong": inflow_code = "크몽"
-            except: pass
-            
-            final_concern = f"[{inflow_code}] {user_concern}" if inflow_code != "직접접속" else user_concern
+        try:
+            kst_today = datetime.now(pytz.timezone('Asia/Seoul')).date()
+            birth_y = int(b_year)
+            birth_m = int(b_month) if b_month.isdigit() else 1
+            birth_d = int(b_day) if b_day.isdigit() else 1
+            calc_age = kst_today.year - birth_y - ((kst_today.month, kst_today.day) < (birth_m, birth_d))
+        except Exception:
+            calc_age = 99
 
-            meta_data = {}
-            if is_tackil_moving or is_tackil_opening:
-                meta_data['tackil_purpose'] = p_tackil_purpose
-                meta_data['moving_start'] = p_moving_start.isoformat()
-                meta_data['moving_end'] = p_moving_end.isoformat()
-                
-            if meta_data:
-                final_concern += f"\n\n---META_START---\n{json.dumps(meta_data)}\n---META_END---"
+        if calc_age < 14:
+            st.error("🚨 만 14세 미만은 법정대리인의 동의 없이 서비스를 이용하실 수 없습니다. 카카오 채팅으로 문의해 주세요.")
+            return
 
-            if not name.strip() or not p_mid.strip() or not p_end.strip() or not b_year.isdigit() or not selected_products or not agree:
-                st.error("🚨 필수 입력값을 확인해 주십시오.")
-                return
+        calc_result = calculate_package_price(selected_products)
+        total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
+        discount_amt = total_original - final_price
+        effective_rate = total_rate_pct if total_original > 0 else 0
+        base_price_to_show = total_original
 
-            # 🆕 [만 14세 미만 자기신고 차단] 개인정보보호법상 만 14세 미만은 법정대리인 동의 없이 서비스 이용 불가
-            try:
-                kst_today = datetime.now(pytz.timezone('Asia/Seoul')).date()
-                birth_y, birth_m, birth_d = int(b_year), int(b_month) if b_month.isdigit() else 1, int(b_day) if b_day.isdigit() else 1
-                calc_age = kst_today.year - birth_y - ((kst_today.month, kst_today.day) < (birth_m, birth_d))
-            except Exception:
-                calc_age = 99  # 계산 실패 시 안전하게 통과(생년월일 형식 오류는 위 필수값 체크에서 이미 걸러짐)
+        db_product_codes = " + ".join(selected_products)
+        clean_ui_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP.get(p, p)) for p in selected_products]
+        ui_product_desc = " + ".join(clean_ui_names) + f" ({final_price:,}원)"
+        order_id = str(uuid.uuid4())[:8]
+        phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
 
-            if calc_age < 14:
-                st.error("🚨 만 14세 미만은 법정대리인의 동의 없이 서비스를 이용하실 수 없습니다. 카카오 채팅으로 문의해 주세요.")
-                return
+        kst = pytz.timezone('Asia/Seoul')
+        now_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
 
-            calc_result = calculate_package_price(selected_products)
-            total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
-            discount_amt = total_original - final_price
-            effective_rate = total_rate_pct if total_original > 0 else 0
-            base_price_to_show = total_original
+        supply_amount_calc = round(final_price / 1.1)
+        vat_amount_calc = final_price - supply_amount_calc
 
-            db_product_codes = " + ".join(selected_products)
-            clean_ui_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP.get(p, p)) for p in selected_products]
-            ui_product_desc = " + ".join(clean_ui_names) + f" ({final_price:,}원)"
-            order_id = str(uuid.uuid4())[:8]
-            phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
-            
-            kst = pytz.timezone('Asia/Seoul')
-            now_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
-            
-            supply_amount_calc = round(final_price / 1.1)
-            vat_amount_calc = final_price - supply_amount_calc
+        insert_result = get_supabase_client().table("orders").insert({
+            "order_id": order_id, "created_at": now_str, "phone": phone_full, "email": memo_info,
+            "name": name.strip(), "gender": gender, "marital": marital, "u_cal": u_cal,
+            "b_year": int(b_year), "b_month": int(b_month), "b_day": int(b_day), "b_time": b_time,
+            "u_product": db_product_codes, "f_name": f_name, "f_gender": f_gender, "f_marital": f_marital,
+            "f_cal": f_cal, "f_y": f_y if f_y else 0, "f_m": f_m if f_m else 0, "f_d": f_d if f_d else 0,
+            "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
+            "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
+            "marketing_agree": agree_marketing,
+        }).execute()
 
-            insert_result = get_supabase_client().table("orders").insert({
-                "order_id": order_id, "created_at": now_str, "phone": phone_full, "email": memo_info,
-                "name": name.strip(), "gender": gender, "marital": marital, "u_cal": u_cal,
-                "b_year": int(b_year), "b_month": int(b_month), "b_day": int(b_day), "b_time": b_time,
-                "u_product": db_product_codes, "f_name": f_name, "f_gender": f_gender, "f_marital": f_marital,
-                "f_cal": f_cal, "f_y": f_y if f_y else 0, "f_m": f_m if f_m else 0, "f_d": f_d if f_d else 0,
-                "f_t": f_t, "user_concern": final_concern, "status": "입금대기", "result_html": "",
-                "final_price": final_price, "supply_amount": supply_amount_calc, "vat_amount": vat_amount_calc,
-                "marketing_agree": agree_marketing,
-            }).execute()
-            
-            # 🚨 [테스트용] 실전 발송 전까지는 주석 처리해두셔도 무방합니다.
-            # send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, base_price_to_show, discount_amt, final_price)
-            
-            st.session_state["submitted_order"] = {
-                "order_id": order_id, 
-                "name": name.strip(), 
-                "product_desc": ui_product_desc, 
-                "total_raw": base_price_to_show, 
-                "discount_amt": discount_amt, 
-                "rate_pct": effective_rate, 
-                "final_price": final_price
-            }
-            st.rerun()
+        st.session_state["submitted_order"] = {
+            "order_id": order_id,
+            "name": name.strip(),
+            "product_desc": ui_product_desc,
+            "total_raw": base_price_to_show,
+            "discount_amt": discount_amt,
+            "rate_pct": effective_rate,
+            "final_price": final_price
+        }
+        st.rerun()
 # ------------------------------------------------------------------------------
 # 2. 👑 [박사님 전용 중앙 통제실 - 3단 서랍장 SPA 로직]
 # ------------------------------------------------------------------------------
