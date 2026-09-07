@@ -1035,7 +1035,18 @@ if st.session_state.get('app_running', False):
             shinsal_raw = []
         shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', str(s)) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
 
-        w_facts = engine.get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], "丙", "午", "甲", "子")
+        _now_kst = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
+        _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
+        _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
+
+        w_facts = engine.get_woonse_analysis_facts(
+            ds, db, dw_g_cur, dw_j_cur,
+            engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12],
+            _cur_wol_pillar[0], _cur_wol_pillar[1],
+            _today_pillar_d[0], _today_pillar_d[1],
+            age=age, dw_start_age=current_daewun_age, target_dt=_now_kst,
+            hour=_now_kst.hour, minute=_now_kst.minute
+        )
 
         if is_2person:
             m_h_raw = male_data_pack[0] if len(male_data_pack) > 0 else ""
@@ -1122,7 +1133,7 @@ if st.session_state.get('app_running', False):
             "age_prompt": engine.get_age_prompt(age), "gender_prompt": engine.get_gender_prompt(gender), 
             "marital_prompt": engine.get_marital_prompt(gender, u_marital), "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
             "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
-            "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중",
+            "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
             "adv_warning_str": adv_warning_str,
@@ -1131,6 +1142,10 @@ if st.session_state.get('app_running', False):
             "action_solutions": action_solutions_str,
             "spouse_issue_facts": spouse_issue_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
+            "woonse_fact_str": w_facts.get("woonse_fact_str", "폭포수 체용 데이터 없음"),
+            "sewun_kw": w_facts.get("sewun_kw", "변화 감지"),
+            "wolun_kw": w_facts.get("wolun_kw", "변화 감지"),
+            "ilun_kw": w_facts.get("ilun_kw", "변화 감지"),
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
             "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
