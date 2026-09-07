@@ -1305,8 +1305,7 @@ if st.session_state.get('app_running', False):
             # 2-5. 이사 및 개업 택일 추천
             tackil_target_dt = st.session_state.get('moving_start', selected_target_date)
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
-            
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
@@ -1364,8 +1363,7 @@ if st.session_state.get('app_running', False):
             # 3-2. 결혼 택일
             m_target_dt = st.session_state.get('start_date_m', st.session_state.get('target_date_m', selected_target_date))
             weekly_days_data = engine.get_weekly_calendar_data(m_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
-            
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
             
@@ -1377,8 +1375,7 @@ if st.session_state.get('app_running', False):
             # 3-3. 출산 택일
             d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
             weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
-            
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
             
