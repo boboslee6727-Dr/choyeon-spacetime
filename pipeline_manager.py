@@ -503,6 +503,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 st.error("🚨 만 14세 미만은 법정대리인의 동의 없이 서비스를 이용하실 수 없습니다. 카카오 채팅으로 문의해 주세요.")
                 return
 
+            calc_result = calculate_package_price(selected_products)
             total_original, total_chuseok, pkg_rate_pct, total_rate_pct, final_price = calc_result
             discount_amt = total_original - final_price
             effective_rate = total_rate_pct if total_original > 0 else 0
