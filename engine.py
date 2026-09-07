@@ -1134,7 +1134,7 @@ def get_daeun_su_accurate(utc_dt, order):
     except: 
         return 1
 
-def get_weekly_calendar_data(target_date, ds_hanja):
+def get_weekly_calendar_data(target_date, ds_hanja, yb=None, db=None):
     """지정된 날짜가 속한 한 주(일~토)의 일별 간지/십성/12운성 데이터 생성"""
     target_dt = dt_mod.datetime(target_date.year, target_date.month, target_date.day)
     start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
@@ -1152,6 +1152,8 @@ def get_weekly_calendar_data(target_date, ds_hanja):
             "ss_gan": get_ss(ds_hanja, d_gan),
             "ss_ji": get_ss(ds_hanja, d_ji),
             "unsung": get_unsung(ds_hanja, d_ji),
+            "y_shinsal": get_12_shinsal(yb, d_ji) if yb else "-",
+            "d_shinsal": get_12_shinsal(db, d_ji) if db else "-",
             "is_today": (curr.date() == target_dt.date())
         })
     return result
