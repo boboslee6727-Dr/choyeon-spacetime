@@ -800,7 +800,11 @@ if st.session_state.get('app_running', False):
             is_active = (val <= age < val + 10)
             u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
             y_shin_val = engine.get_12_shinsal(yb, j_hangul) if j_hangul != "-" else "-"
-            d_shin_val = engine.get_12_shinsal(db, j_hangul) if j_hangul != "-" else "-"
+            
+            db_hanja_for_shinsal = engine.K2H_JI.get(db, db)
+            d_shin_val = engine.get_12_shinsal(db_hanja_for_shinsal, j_hangul) if j_hangul != "-" else "-"
+            if not d_shin_val or d_shin_val == "-":
+                d_shin_val = engine.get_12_shinsal(db, j_hangul) if j_hangul != "-" else "-"
             
             daewun_data_list.append({
                 "age_range": f"{val}~{val+9}세", "ss_gan": engine.get_ss(ds_hanja, c_hangul),
@@ -1303,7 +1307,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-4"):
             # 1-4. 주간 및 일일 운세 풀이 (폭포수 운세)
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
