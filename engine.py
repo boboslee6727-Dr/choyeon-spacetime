@@ -1158,6 +1158,93 @@ def get_weekly_calendar_data(target_date, ds_hanja, yb=None, db=None):
         })
     return result
 
+def _get_term_day(y, m):
+    """해당 월의 절입일(월주가 바뀌는 날)을 찾아 반환"""
+    _, p1, _ = get_true_year_month_pillar(y, m, 1, 12, 0)
+    for d in range(2, 12):
+        _, pd, _ = get_true_year_month_pillar(y, m, d, 12, 0)
+        if pd != p1:
+            return d, pd
+    return 5, p1
+
+def _is_daewun_first_half(age, dw_start_age):
+    """대운 진입 후 0~4년차(전반기,천간) / 5~9년차(후반기,지지) 판정"""
+    year_in_dw = age - dw_start_age
+    return 0 <= year_in_dw <= 4
+
+def _is_sewun_first_half(target_dt):
+    """입춘(대략 2/4)~입추(대략 8/7) 전이면 전반기(천간), 아니면 후반기(지지)"""
+    y = target_dt.year
+    ipchun = dt_mod.datetime(y, 2, 4)
+    ipchu = dt_mod.datetime(y, 8, 7)
+    return ipchun <= target_dt < ipchu
+
+def _is_wolun_first_half(target_dt):
+    """절입일~중기(약 절입일+15일) 전이면 전반기(천간), 아니면 후반기(지지)"""
+    y, m, d = target_dt.year, target_dt.month, target_dt.day
+    term_day, _ = _get_term_day(y, m)
+    mid_day = term_day + 15
+    return d < mid_day
+
+def _is_ilun_first_half(hour, minute):
+    """조자시(00:30)~오시 끝(13:29)이면 전반기(천간), 미시(13:30)~야자시면 후반기(지지)"""
+    total_min = hour * 60 + minute
+    return 30 <= total_min < 810  # 00:30 ~ 13:29
+
+def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolun_g, wolun_j, ilun_g, ilun_j,
+                                age=None, dw_start_age=None, target_dt=None, hour=None, minute=None):
+    """
+    폭포수 체용 분석 (전/후반기 분리 반영판)
+    - 각 레벨(대운/세운/월운/일운)을 천간(전반기)/지지(후반기)로 분리 계산
+    - 지금이 어느 반기인지 판정하여, 그 반기의 체(體) 값을 다음 단계 실행분석에 연결
+    """
+    ilju_ss = get_ss(ds, db)
+    ilju_lower_group = ilju_ss if isinstance(ilju_ss, str) else (ilju_ss[0] if isinstance(ilju_ss, (list, tuple)) and len(ilju_ss) > 0 else '비겁')
+
+    # 1. 대운 — 천간(전반)/지지(후반) 체 각각 계산
+    dw_che_1 = get_group_ss(get_ss(ds, dw_g_cur))   # 전반기(천간)
+    dw_che_2 = get_group_ss(get_ss(ds, dw_j_cur))   # 후반기(지지)
+    dw_is_first = _is_daewun_first_half(age, dw_start_age) if (age is not None and dw_start_age is not None) else True
+    dw_che_active = dw_che_1 if dw_is_first else dw_che_2
+
+    # 2. 세운 — 천간(전반)/지지(후반) 체 각각 계산, 세운의 실행은 대운의 '활성 체'와 대조
+    sewun_che_1 = get_group_ss(get_ss(ds, sewun_g))
+    sewun_che_2 = get_group_ss(get_ss(ds, sewun_j))
+    sewun_is_first = _is_sewun_first_half(target_dt) if target_dt else True
+    sewun_che_active = sewun_che_1 if sewun_is_first else sewun_che_2
+    s_yong = get_execution_yong(sewun_che_active, ilju_lower_group)
+    sewun_kw = get_matrix_keyword(dw_che_active, s_yong)
+
+    # 3. 월운 — 천간(전반)/지지(후반) 체 각각 계산, 월운의 실행은 세운의 '활성 체'와 대조
+    wolun_che_1 = get_group_ss(get_ss(ds, wolun_g))
+    wolun_che_2 = get_group_ss(get_ss(ds, wolun_j))
+    wolun_is_first = _is_wolun_first_half(target_dt) if target_dt else True
+    wolun_che_active = wolun_che_1 if wolun_is_first else wolun_che_2
+    w_yong = get_execution_yong(wolun_che_active, ilju_lower_group)
+    wolun_kw = get_matrix_keyword(sewun_che_active, w_yong)
+
+    # 4. 일운 — 천간(전반)/지지(후반) 체 각각 계산, 일운의 실행은 월운의 '활성 체'와 대조
+    ilun_che_1 = get_group_ss(get_ss(ds, ilun_g))
+    ilun_che_2 = get_group_ss(get_ss(ds, ilun_j))
+    ilun_is_first = _is_ilun_first_half(hour, minute) if (hour is not None and minute is not None) else True
+    ilun_che_active = ilun_che_1 if ilun_is_first else ilun_che_2
+    i_yong = get_execution_yong(ilun_che_active, ilju_lower_group)
+    ilun_kw = get_matrix_keyword(wolun_che_active, i_yong)
+
+    woonse_fact_str = f"""
+- [대운 체(전반기/천간): {dw_che_1}] / [대운 체(후반기/지지): {dw_che_2}] / 현재 활성: {dw_che_active} ({'전반기' if dw_is_first else '후반기'})
+- [세운 체(전반기/천간): {sewun_che_1}] / [세운 체(후반기/지지): {sewun_che_2}] / 현재 활성: {sewun_che_active} + 실행({s_yong}) ➔ 키워드: [{sewun_kw}]
+- [월운 체(전반기/천간): {wolun_che_1}] / [월운 체(후반기/지지): {wolun_che_2}] / 현재 활성: {wolun_che_active} + 실행({w_yong}) ➔ 키워드: [{wolun_kw}]
+- [일운 체(전반기/천간): {ilun_che_1}] / [일운 체(후반기/지지): {ilun_che_2}] / 현재 활성: {ilun_che_active} + 실행({i_yong}) ➔ 키워드: [{ilun_kw}]
+"""
+    return {
+        "dw_che": dw_che_active, "dw_che_1": dw_che_1, "dw_che_2": dw_che_2,
+        "sewun_che": sewun_che_active, "sewun_yong": s_yong, "sewun_kw": sewun_kw,
+        "wolun_che": wolun_che_active, "wolun_yong": w_yong, "wolun_kw": wolun_kw,
+        "ilun_che": ilun_che_active, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
+        "woonse_fact_str": woonse_fact_str.strip()
+    }
+
 # ==============================================================================
 # 섹션 6. 궁합, 택일 및 초연 시공명리 특수 파동 통합 모듈 (활성 구역)
 # ==============================================================================
