@@ -585,7 +585,8 @@ def get_childbirth_taegil_card(border_col, idx, b_date_str, score, b_time_str, b
 # ==============================================================================
 
 def get_couple_fact_split_layout(male_block, female_block):
-    pass
+    """남명/여명 사주 원국 블록을 궁합 표지 뒤에 나란히 배치"""
+    return f"{male_block}<br>{female_block}"
 
 def render_saju_comparison_report(saju_fact_html, external_raw_box, ai_content_html):
     master_body = f"""
