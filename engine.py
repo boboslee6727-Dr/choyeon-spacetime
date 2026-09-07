@@ -1134,6 +1134,28 @@ def get_daeun_su_accurate(utc_dt, order):
     except: 
         return 1
 
+def get_weekly_calendar_data(target_date, ds_hanja):
+    """지정된 날짜가 속한 한 주(일~토)의 일별 간지/십성/12운성 데이터 생성"""
+    target_dt = dt_mod.datetime(target_date.year, target_date.month, target_date.day)
+    start_sun = target_dt - dt_mod.timedelta(days=(target_dt.weekday() + 1) % 7)
+    weekday_kr = ['일', '월', '화', '수', '목', '금', '토']
+    result = []
+    for i in range(7):
+        curr = start_sun + dt_mod.timedelta(days=i)
+        _, _, d_pillar = get_ganji_from_date(curr.year, curr.month, curr.day)
+        d_gan, d_ji = d_pillar[0], d_pillar[1]
+        result.append({
+            "day_num": curr.day,
+            "weekday_kr": weekday_kr[i],
+            "gan": d_gan,
+            "ji": d_ji,
+            "ss_gan": get_ss(ds_hanja, d_gan),
+            "ss_ji": get_ss(ds_hanja, d_ji),
+            "unsung": get_unsung(ds_hanja, d_ji),
+            "is_today": (curr.date() == target_dt.date())
+        })
+    return result
+
 # ==============================================================================
 # 섹션 6. 궁합, 택일 및 초연 시공명리 특수 파동 통합 모듈 (활성 구역)
 # ==============================================================================
