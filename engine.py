@@ -1173,15 +1173,14 @@ def _is_daewun_first_half(age, dw_start_age):
     return 0 <= year_in_dw <= 4
 
 def _is_sewun_first_half(target_dt):
-    """입춘(대략 2/4)~입추(대략 8/7) 전이면 전반기(천간), 아니면 후반기(지지)"""
     y = target_dt.year
-    ipchun = dt_mod.datetime(y, 2, 4)
-    ipchu = dt_mod.datetime(y, 8, 7)
-    return ipchun <= target_dt < ipchu
+    naive_dt = target_dt.replace(tzinfo=None) if target_dt.tzinfo else target_dt
+    return dt_mod.datetime(y, 2, 4) <= naive_dt < dt_mod.datetime(y, 8, 7)
 
 def _is_wolun_first_half(target_dt):
     """절입일~중기(약 절입일+15일) 전이면 전반기(천간), 아니면 후반기(지지)"""
-    y, m, d = target_dt.year, target_dt.month, target_dt.day
+    naive_dt = target_dt.replace(tzinfo=None) if target_dt.tzinfo else target_dt
+    y, m, d = naive_dt.year, naive_dt.month, naive_dt.day
     term_day, _ = _get_term_day(y, m)
     mid_day = term_day + 15
     return d < mid_day
