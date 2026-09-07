@@ -1353,7 +1353,7 @@ if st.session_state.get('app_running', False):
             g_ess += score_ui + closing_ui
             
             if hasattr(html_views, 'get_gunghap_three_page_report'):
-                final_render_html = html_views.get_gunghap_three_page_report(safe_part_1_gh, m_ess, f_ess, g_ess)
+                final_render_html = html_views.get_gunghap_three_page_report(male_block, m_ess, female_block, f_ess, g_ess)
             else:
                 p1 = html_views.get_final_report_box(f"{male_info_h if 'male_info_h' in locals() else info_h}{male_table_html if 'male_table_html' in locals() else table_html}{m_ess}")
                 p2 = html_views.get_final_report_box(f"{female_info_h if 'female_info_h' in locals() else info_h}{female_table_html if 'female_table_html' in locals() else table_html}{f_ess}")
@@ -1432,7 +1432,7 @@ if st.session_state.get('app_running', False):
             content_body = final_render_html
 
         # 🆕 [안전장치] 맺음말이 누락된 경우, A4 규격 액자(report-page)로 감싸서 별도 페이지로 추가
-        if closing_part and closing_part not in content_body:
+        if closing_part and closing_part not in content_body and not u_product.startswith("3-"):
             closing_page = html_views.get_final_report_box(closing_part) if hasattr(html_views, 'get_final_report_box') else f"<div class='report-page'><div class='vip-inset-frame'>{closing_part}</div></div>"
             content_body += closing_page
 
