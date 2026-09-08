@@ -794,7 +794,7 @@ if st.session_state.get('app_running', False):
         actual_yb = st.session_state['global_jjis'][3] if 'global_jjis' in st.session_state else yb
         actual_db = st.session_state['global_jjis'][1] if 'global_jjis' in st.session_state else db
         
-        st.error(f"🔍 디버그: actual_yb={actual_yb} / actual_db={actual_db} / j_hangul 예시={engine.JI[0]}")
+        st.error(f"🔍 디버그: yb={repr(yb)} / db={repr(db)}")
 
         daewun_data_list = []
         for i in range(10):
