@@ -790,6 +790,12 @@ if st.session_state.get('app_running', False):
         dw_g_cur = engine.GAN[(c_idx + (cur_dw_idx+1)*order_dir)%10]
         dw_j_cur = engine.JI[(j_idx + (cur_dw_idx+1)*order_dir)%12]
         
+        # 🚨 [핵심 수술]: 오염된 yb, db 변수 대신 세션에서 순수 '년지/일지 한자'를 직접 추출
+        actual_yb = st.session_state['global_jjis'][3] if 'global_jjis' in st.session_state else yb
+        actual_db = st.session_state['global_jjis'][1] if 'global_jjis' in st.session_state else db
+        
+        st.error(f"🔍 디버그: actual_yb={actual_yb} / actual_db={actual_db} / j_hangul 예시={engine.JI[0]}")
+
         daewun_data_list = []
         for i in range(10):
             val = i * 10 + calc_d
@@ -799,12 +805,12 @@ if st.session_state.get('app_running', False):
             j_hanja = engine.K2H_JI.get(j_hangul, j_hangul)
             is_active = (val <= age < val + 10)
             u_sung_val = engine.get_unsung(ds_hanja, j_hanja) if j_hanja != "-" else "-"
-            y_shin_val = engine.get_12_shinsal(yb, j_hangul) if j_hangul != "-" else "-"
             
-            db_hanja_for_shinsal = engine.K2H_JI.get(db, db)
-            d_shin_val = engine.get_12_shinsal(db_hanja_for_shinsal, j_hangul) if j_hangul != "-" else "-"
-            if not d_shin_val or d_shin_val == "-":
-                d_shin_val = engine.get_12_shinsal(db, j_hangul) if j_hangul != "-" else "-"
+            # 년지 12신살 (정화된 actual_yb 사용)
+            y_shin_val = engine.get_12_shinsal(actual_yb, j_hangul) if j_hangul != "-" else "-"
+            
+            # 🚨 일지 12신살 (정화된 actual_db 사용 - 변수 충돌 영구 박멸!)
+            d_shin_val = engine.get_12_shinsal(actual_db, j_hangul) if j_hangul != "-" else "-"
             
             daewun_data_list.append({
                 "age_range": f"{val}~{val+9}세", "ss_gan": engine.get_ss(ds_hanja, c_hangul),
