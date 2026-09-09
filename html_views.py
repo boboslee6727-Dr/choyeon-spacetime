@@ -393,15 +393,17 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None,
     if not weekly_days_data:
         return ""
     cells = ""
+    header_color_map = {'일': '#C62828', '토': '#1565C0'}
     for day in weekly_days_data:
         bg_col = "#FFF9C4" if day.get("is_today") else "transparent"
         gan_cls = engine.get_oh_class(day['gan']) if engine and hasattr(engine, 'get_oh_class') else ""
         ji_cls = engine.get_oh_class(day['ji']) if engine and hasattr(engine, 'get_oh_class') else ""
         y_val = day.get('y_shinsal', '-')
         d_val = day.get('d_shinsal', '-')
+        header_bg = header_color_map.get(day['weekday_kr'], '#424242')
         cells += f"""
         <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
-            <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{day['day_num']}일({day['weekday_kr']})</div>
+            <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{day['day_num']}일({day['weekday_kr']})</div>
             <div style='padding:2px; font-size:12px;'>{day['ss_gan']}</div>
             <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{day['gan']}</div>
             <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{day['ji']}</div>
