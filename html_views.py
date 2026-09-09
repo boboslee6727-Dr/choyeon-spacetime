@@ -313,7 +313,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
     </div>
     """
 
- def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
+def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
     """대운표 생성: 좌측 세로선 복원 및 '세' 중복 제거"""
     un_content = ""
     for data in daewun_list:
