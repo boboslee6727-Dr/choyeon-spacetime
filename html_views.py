@@ -249,6 +249,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 
     unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_unsung(ds, jjis[i])}</span></td>" for i in range(4)])
     y_shinsal_tds = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_12_shinsal(yb, jjis[i])}</span></td>" for i in range(4)])
+    d_shinsal_tds = "".join([f"<td style='color:#1565C0; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_12_shinsal(db, jjis[i])}</span></td>" for i in range(4)])
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'><span style='color:inherit !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</span></td>" for i in range(4)])
 
     table_html = f"""
@@ -268,7 +269,8 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>지장간</span></td>{jijanggan_html}</tr>
         {ji_rel_rows}
         <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>십이운성</span></td>{unsung}</tr>
-        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>십이신살</span></td>{y_shinsal_tds}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>년지 12신살</span></td>{y_shinsal_tds}</tr>
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>일지 12신살</span></td>{d_shinsal_tds}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>일반신살</span></td>{gen_shinsal}</tr>
     </table>
     """
@@ -395,6 +397,8 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None,
         bg_col = "#FFF9C4" if day.get("is_today") else "transparent"
         gan_cls = engine.get_oh_class(day['gan']) if engine and hasattr(engine, 'get_oh_class') else ""
         ji_cls = engine.get_oh_class(day['ji']) if engine and hasattr(engine, 'get_oh_class') else ""
+        y_val = day.get('y_shinsal', '-')
+        d_val = day.get('d_shinsal', '-')
         cells += f"""
         <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
             <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{day['day_num']}일({day['weekday_kr']})</div>
@@ -403,10 +407,12 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None,
             <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{day['ji']}</div>
             <div style='padding:2px; font-size:12px;'>{day['ss_ji']}</div>
             <div style='font-size:11px; border-top:1px solid #ccc;'>{day['unsung']}</div>
+            <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+            <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
         </div>
         """
     return f"""
-    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 이번 주 일진 흐름 ]</div>
+    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 이번 주 일운 흐름 ]</div>
     <div style='display:flex; flex-direction:row; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>
         {cells}
     </div>
