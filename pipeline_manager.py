@@ -665,8 +665,15 @@ def render_admin_panel():
                     st.session_state['admin_proc_id'] = gid
                     st.rerun() 
 
-            st.markdown("---")
-            if st.button("📄 PDF 미리보기 생성", key=f"pdf_preview_btn_{gid}"):
+            st.download_button(
+                label="🌐 브라우저용 HTML 다운로드 (PDF 임시 대안)",
+                data=preview_full_html.encode('utf-8'),
+                file_name=f"{row['name']}_미리보기.html",
+                mime="text/html",
+                key=f"html_download_{gid}"
+            )
+            st.caption("👆 다운로드한 파일을 더블클릭해서 여신 후, Ctrl+P로 'PDF로 저장'하시면 됩니다. (packages.txt 문제와 무관하게 항상 작동)")
+
                 with st.spinner("📄 실제 PDF 결과물을 만드는 중... (저장고에는 저장되지 않습니다)"):
                     try:
                         st.session_state[f"pdf_preview_{gid}"] = generate_pdf_bytes(st.session_state[f"html_{gid}"])
