@@ -297,7 +297,7 @@ def get_un_layout(title, content):
 def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsal, d_shinsal, bg_col, b_left, is_current=False):
     u_val = unsung if unsung and str(unsung).strip() else "-"
     y_val = y_shinsal if y_shinsal and str(y_shinsal).strip() and str(y_shinsal).strip() != "None" else "-"
-    d_val = "카나리아B"
+    d_val = f"RECV:{repr(d_shinsal)}"
     bg_col = "#FFF9C4" if is_current else "transparent"
     
     return f"""
