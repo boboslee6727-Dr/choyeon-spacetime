@@ -56,7 +56,7 @@ def get_global_css():
     /* 🖨️ 인쇄 / PDF 저장 전용 규칙 */
     @media print {
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-        @page { size: A4 portrait; margin: 0; }
+        @page { size: A4 portrait; margin: 15mm 12mm; }
         .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
         body, .stApp { background-color: white !important; }
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
@@ -65,7 +65,7 @@ def get_global_css():
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .report-page:last-of-type { page-break-after: auto; }
         .page-break-before { page-break-before: always; }
-        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 15px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
+        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
     }
     </style>"""
 
@@ -106,6 +106,9 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
         elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
             bullet_split = re.match(r'^(.*?[:：])\s*(\S.*)$', line_formatted)
+            # 🚨 콜론 직전이 숫자(시간 표기: "9:00", "23:30" 등)면 소제목 구분자가 아니므로 분리하지 않음
+            if bullet_split and re.search(r'\d$', re.sub(r'[:：]$', '', bullet_split.group(1))):
+                bullet_split = None
             if bullet_split:
                 bullet_title, bullet_body = bullet_split.group(1), bullet_split.group(2)
                 html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
