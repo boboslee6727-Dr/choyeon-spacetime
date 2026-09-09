@@ -810,9 +810,6 @@ if st.session_state.get('app_running', False):
             # 🚨 일지 12신살 (정화된 actual_db 사용 - 변수 충돌 영구 박멸!)
             d_shin_val = engine.get_12_shinsal(actual_db, j_hangul) if j_hangul != "-" else "-"
             
-            if i == 0:
-                st.error(f"🔍 정밀디버그 | actual_yb={repr(actual_yb)} | actual_db={repr(actual_db)} | j_hangul={repr(j_hangul)} | y_shin_val={repr(y_shin_val)} | d_shin_val={repr(d_shin_val)}")
-            
             daewun_data_list.append({
                 "age_range": f"{val}~{val+9}세", "ss_gan": engine.get_ss(ds_hanja, c_hangul),
                 "c_hanja": c_hanja, "c_hangul": c_hangul, "j_hanja": j_hanja, "j_hangul": j_hangul,
@@ -1316,7 +1313,7 @@ if st.session_state.get('app_running', False):
 
         elif u_product.startswith("1-4"):
             # 1-4. 주간 및 일일 운세 풀이 (폭포수 운세)
-            weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
@@ -1333,7 +1330,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("2-5"):
             # 2-5. 이사 및 개업 택일 추천
             tackil_target_dt = st.session_state.get('moving_start', selected_target_date)
-            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
@@ -1391,7 +1388,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("3-2"):
             # 3-2. 결혼 택일
             m_target_dt = st.session_state.get('start_date_m', st.session_state.get('target_date_m', selected_target_date))
-            weekly_days_data = engine.get_weekly_calendar_data(m_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
@@ -1403,7 +1400,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("3-3"):
             # 3-3. 출산 택일
             d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
-            weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
