@@ -794,8 +794,6 @@ if st.session_state.get('app_running', False):
         actual_yb = st.session_state['global_jjis'][3] if 'global_jjis' in st.session_state else yb
         actual_db = st.session_state['global_jjis'][1] if 'global_jjis' in st.session_state else db
         
-        st.error(f"🔍 디버그: yb={repr(yb)} / db={repr(db)}")
-
         daewun_data_list = []
         for i in range(10):
             val = i * 10 + calc_d
@@ -811,6 +809,9 @@ if st.session_state.get('app_running', False):
             
             # 🚨 일지 12신살 (정화된 actual_db 사용 - 변수 충돌 영구 박멸!)
             d_shin_val = engine.get_12_shinsal(actual_db, j_hangul) if j_hangul != "-" else "-"
+            
+            if i == 0:
+                st.error(f"🔍 정밀디버그 | actual_yb={repr(actual_yb)} | actual_db={repr(actual_db)} | j_hangul={repr(j_hangul)} | y_shin_val={repr(y_shin_val)} | d_shin_val={repr(d_shin_val)}")
             
             daewun_data_list.append({
                 "age_range": f"{val}~{val+9}세", "ss_gan": engine.get_ss(ds_hanja, c_hangul),
