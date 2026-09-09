@@ -313,6 +313,22 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
     </div>
     """
 
+ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func):
+    """대운표 생성: 좌측 세로선 복원 및 '세' 중복 제거"""
+    un_content = ""
+    for data in daewun_list:
+        b_left = "1px solid #ccc"
+        age_str = str(data['age_range']).strip()
+        display_age = age_str if age_str.endswith("세") else f"{age_str}세"
+        
+        un_content += get_un_cell(
+            display_age, data["ss_gan"], data["c_hanja"], get_oh_class_func(data["c_hangul"]), 
+            data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"], 
+            data["un_sung"], data.get("y_shinsal", "-"), data.get("d_shinsal", "-"), "-", b_left, data.get("is_current", False)
+        )
+    return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
+
+
 def get_sewun_layout(title, content):
     return f"""
     <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
