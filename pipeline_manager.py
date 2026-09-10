@@ -235,6 +235,11 @@ def generate_smart_marketing_text(row, view_url):
 # ------------------------------------------------------------------------------
 def render_customer_order_form():
     ensure_db_table_exists()
+
+    # 🎁 카카오 채널 쿠폰 자동 채우기: URL의 ?serial=쿠폰번호 를 감지해서 미리 입력해둠
+    _serial_from_url = get_safe_query_param("serial")
+    if _serial_from_url and "order_coupon_code" not in st.session_state:
+        st.session_state["order_coupon_code"] = _serial_from_url
     
     EVENT_PERIOD = "[ 8/18 ~ 9/30 ]"
     EVENT_TITLE = "🌕 추석 및 새학기 맞이 반값 특가! 🌕"
@@ -453,6 +458,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
     user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="속상한 일이나 궁금한 점을 자유롭게 적어요~", key="order_user_concern")
 
+    coupon_code = st.text_input("🎁 할인 쿠폰 번호 (카카오톡 발급)", placeholder="발급받으신 쿠폰 번호를 입력해 주세요", key="order_coupon_code")
+
     st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
     agree = st.checkbox("개인정보 수집 및 사주풀이 서비스 제공에 동의합니다. *(필수)", key="order_agree")
     agree_marketing = st.checkbox("이벤트, 할인 등 마케팅 정보 문자 수신에 동의합니다. (선택)", key="order_agree_marketing")
@@ -473,6 +480,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             meta_data['tackil_purpose'] = p_tackil_purpose
             meta_data['moving_start'] = p_moving_start.isoformat()
             meta_data['moving_end'] = p_moving_end.isoformat()
+        if coupon_code and coupon_code.strip():
+            meta_data['coupon_code'] = coupon_code.strip()
 
         if meta_data:
             final_concern += f"\n\n---META_START---\n{json.dumps(meta_data)}\n---META_END---"
