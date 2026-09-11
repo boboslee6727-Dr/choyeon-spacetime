@@ -240,7 +240,22 @@ def render_customer_order_form():
     _serial_from_url = get_safe_query_param("serial")
     if _serial_from_url and "order_coupon_code" not in st.session_state:
         st.session_state["order_coupon_code"] = _serial_from_url
-    
+
+    # 🎯 특정 상품 바로가기: URL의 ?product=1-4 등을 감지해서 대제목/소제목을 미리 선택해둠
+    _product_from_url = get_safe_query_param("product")
+    if _product_from_url and "order_main_category" not in st.session_state:
+        _prefix_from_url = _product_from_url.split("-")[0] + "-"
+        _main_cat_map = {
+            "1-": "1. 개인 사주팔자 풀이 (종합)",
+            "2-": "2. 테마별 특성화 상담",
+            "3-": "3. 커플 연애/결혼운 (궁합) 풀이",
+        }
+        if _prefix_from_url in _main_cat_map:
+            st.session_state["order_main_category"] = _main_cat_map[_prefix_from_url]
+            _matched_products = [p for p in U_PRODUCT_LIST if p.startswith(f"{_product_from_url}.")]
+            if _matched_products:
+                st.session_state["order_sub_product"] = _matched_products[0]
+
     EVENT_PERIOD = "[ 8/18 ~ 9/30 ]"
     EVENT_TITLE = "🌕 추석 및 새학기 맞이 반값 특가! 🌕"
     EVENT_DESC_1 = "학생과 청년들의 힘찬 새 출발을 응원하며,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
