@@ -457,7 +457,7 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
             기존 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
         </p>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 0;'>
-            또한, 시공명리학적으로 풀이하면 <b>'{w_val}'</b>의 역동적인 시공간 파동을 지니고 있으며, <b>'{i_val}'</b>의 내면적 본성을 함께 품고 살아갑니다.
+            또한, 시공명리학적으로 풀이하면 <b>'{w_val}'</b>의 시공간에서 태어났으며, <b>'{i_val}'</b>과 같은 내면적 성품을 갖고 살아가고 있습니다.
         </p>
     </div>
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
