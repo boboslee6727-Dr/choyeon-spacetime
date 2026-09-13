@@ -549,6 +549,10 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             "marketing_agree": agree_marketing,
         }).execute()
 
+        _alert_ok, _alert_msg = send_solapi_admin_alert(now_str, name.strip(), ui_product_desc, base_price_to_show, discount_amt, final_price)
+        if not _alert_ok:
+            st.toast(f"⚠️ 관리자 알림 발송 실패: {_alert_msg}")
+
         st.session_state["submitted_order"] = {
             "order_id": order_id,
             "name": name.strip(),
