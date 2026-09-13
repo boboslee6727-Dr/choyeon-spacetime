@@ -301,10 +301,11 @@ def render_customer_order_form():
         st.markdown(f"""
 <div style='background-color: #F8F9FA; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px;'>
 <div style='font-size: 15.5px; line-height: 1.8; color: #31333F; letter-spacing: -0.5px;'>
-💳 <b>국민은행  231 402 - 04 - 133 221</b><br>
+💳 <b>국민은행  231402-04-133221</b><br>
 👤 <b>예금주: 이 * 호</b><br>
 <div style='white-space: nowrap;'>💰 <b>복비:</b> <span style='color: #E53935; font-weight: bold;'>{display_price_1line}</span></div>
 </div>
+<button onclick="navigator.clipboard.writeText('23140204133221'); this.innerText='✅ 복사 완료!'; setTimeout(()=>{{this.innerText='📋 계좌번호 복사하기'}}, 2000);" style='width:100%; margin-top:12px; padding:12px; background-color:#1A237E; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14.5px; cursor:pointer;'>📋 계좌번호 복사하기</button>
 <hr style='border: 0; border-top: 1px dashed #BDBDBD; margin: 15px 0;'>
 <div style='text-align: center; color: #E53935; font-weight: bold; font-size: 13.5px; margin-bottom: 12px;'>
 ※ 신청자 이름과 입금자 이름이 다르면<br>반드시 아래 "카톡 채팅"으로 알려주세요!
