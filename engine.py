@@ -655,7 +655,42 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
 
-def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None):
+def get_daeun_su_accurate(utc_dt, order):
+    try:
+        sun = ephem.Sun()
+        def get_lon(dt):
+            sun.compute(dt)
+            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+        start_lon = get_lon(utc_dt)
+        jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
+        if order == 1: 
+            t_lon_unwrapped = min([l for l in jeol_lons if l > start_lon] + [l + 360 for l in jeol_lons if l <= start_lon])
+        else: 
+            t_lon_unwrapped = max([l for l in jeol_lons if l <= start_lon] + [l - 360 for l in jeol_lons if l > start_lon])
+        search_dt = utc_dt
+        step = dt_mod.timedelta(minutes=10) if order == 1 else dt_mod.timedelta(minutes=-10)
+        for _ in range(6000):
+            search_dt += step
+            curr_lon = get_lon(search_dt)
+            if order == 1 and curr_lon < start_lon and (start_lon - curr_lon) > 180: 
+                curr_lon += 360
+            elif order == -1 and curr_lon > start_lon and (curr_lon - start_lon) > 180: 
+                curr_lon -= 360
+            if (order == 1 and curr_lon >= t_lon_unwrapped) or (order == -1 and curr_lon <= t_lon_unwrapped): 
+                break
+        total_days = abs((search_dt - utc_dt).total_seconds()) / 86400.0
+        d_su = int(round(total_days / 3.0))
+        return max(1, min(10, d_su))
+    except: 
+        return 1
+
+def get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, age, db=None, utc_dt=None):
+    # calc_d 값이 전달되지 않았거나 태년 천문 시각(utc_dt)이 있는 경우 정확한 대운수 연산 적용
+    if utc_dt is not None:
+        calc_d = get_daeun_su_accurate(utc_dt, order_dir)
+    elif not calc_d:
+        calc_d = 1
+
     daewun_list = []
     c_idx = GAN.index(ms) % 10 if ms in GAN else 0
     j_idx = JI.index(mb) % 12 if mb in JI else 0
@@ -825,10 +860,14 @@ def get_won_guk_vaults_str(jjis):
 # 섹션 5. 운세 풀이, 체용(體用) 5x5 확장 & 초연 시공명리 특수 파동 연산 모듈
 # ==============================================================================
 def get_age_prompt(age):
-    if age < 20: return f"현재 {age}세 미성년자/학생이므로 학업, 진학, 부모와의 관계, 성장기 성격 형성에 집중하여 서술하십시오."
-    elif age < 40: return f"현재 {age}세 청년층이므로 사회 초년/취업, 직장 운, 첫 취직/이직, 연애 및 취업/결혼 준비에 집중하여 서술하십시오."
-    elif age < 60: return f"현재 {age}세 중년층이므로 직장 내 승진/책임, 사업 확장, 재물 축적, 자녀 양육 및 건강 관리에 집중하여 서술하십시오."
-    else: return f"현재 {age}세 노년층이므로 은퇴 후 삶, 노후 재정 안정, 자녀와의 관계, 건강 관리 및 삶의 보람에 집중하여 서술하십시오."
+    if age < 20:
+        return f"신청자는 청소년기(10대, 현재 {age}세)입니다. 학업 진학운과 부모 형제운을 최우선으로 상세히 분석하고 재물 사업운은 축소하십시오."
+    elif age < 40:
+        return f"신청자는 청년기(20~30대, 현재 {age}세) MZ세대입니다. 고리타분한 명리 용어를 버리고 직업은 '스타트업, 프리랜서, 워라밸, 퍼스널 브랜딩', 연애는 '소개팅, 썸, 연인 간의 소통' 등 2030 청년들이 100% 공감할 수 있는 세련되고 트렌디한 어휘로 통변하십시오."
+    elif age < 60:
+        return f"신청자는 중장년기(40~50대, 현재 {age}세)입니다. 재성운과 관직 명예운에 집중하여 현실적인 자산 관리와 사회적 성취를 중심으로 서술하십시오."
+    else:
+        return f"신청자 노년기(60대 이상, 현재 {age}세)입니다. 건강운 및 심리적 평안, 노후 자산 안정을 최우선으로 깊이 다루십시오."
 
 def get_gender_prompt(gender):
     if gender == "여성": return "여성 내담자(여명)이므로 육친 적용 시 관성(官星)을 배우자/남편으로, 식상(食傷)을 자식으로 엄격히 적용하십시오."
@@ -845,9 +884,43 @@ def update_user_gender(): st.session_state["u_g"] = get_opposite_gender(st.sessi
 
 def get_yukchin_rule(gender, marital):
     if gender == '남성':
-        return f"★ 육친 통변 규칙 (남성용) ★\n- 현재 상태: {marital}\n1. 아내=정재(편재) / 연인=편재(정재) / 자녀=관성(식상 풀이 금지)\n2. 아버지=편재(정재) / 어머니=정인(편인)\n3. 장모=식상 / 형제=비견 / 자매=겁재"
+        return (
+            f"\n🚨 [육친 통변 특수부대 절대 규칙 (남성용)]:\n"
+            f"- 본 내담자는 남성(현재 상태: {marital})입니다. 아래의 명리학적 육친 생극제화 및 대체 규칙을 100% 엄수하십시오.\n"
+            f"1. 👨‍👩‍👦 [핵심 가족]:\n"
+            f"   - 아내(부인) = 정재 (정재가 없으면 편재로 대체)\n"
+            f"   - 애인(여친) = 편재 (편재가 없으면 정재로 대체)\n"
+            f"   - 자녀 = 관성(정관/편관) 🚨(경고: 남명에서 '식상'을 자녀로 풀이하는 즉시 치명적 오류로 간주함!)\n"
+            f"2. 👵👴 [부모 및 조부모]:\n"
+            f"   - 아버지 = 편재 (없으면 정재) / 어머니 = 정인 (없으면 편인)\n"
+            f"   - 조부(할아버지) = 편인 / 조모(할머니) = 상관\n"
+            f"3. 🏠 [처가 및 형제]:\n"
+            f"   - 장모(처가) = 식상 (아내를 생하는 기운)\n"
+            f"   - 동성 형제(형/남동생) = 비견 / 이성 형제(누나/여동생) = 겁재\n"
+            f"4. 🚨 [상태별 호칭 맞춤형 타겟팅]: 내담자의 현재 혼인 상태({marital})를 반드시 반영하십시오.\n"
+            f"   - 기혼: '현재 아내/배우자'로 칭할 것.\n"
+            f"   - 미혼: '미래의 인연'으로 칭할 것.\n"
+            f"   - 🚨돌싱(이혼/사별): '과거의 인연(전처)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.\n"
+        )
     else:
-        return f"★ 육친 통변 규칙 (여성용) ★\n- 현재 상태: {marital}\n1. 남편=정관(편관) / 연인=편관(정관) / 자녀=식상(관성 풀이 금지)\n2. 아버지=편재(정재) / 어머니=정인(편인)\n3. 시어머니=재성 / 자매=비견 / 형제=겁재"
+        return (
+            f"\n🚨 [육친 통변 특수부대 절대 규칙 (여성용)]:\n"
+            f"- 본 내담자는 여성(현재 상태: {marital})입니다. 아래의 명리학적 육친 생극제화 및 대체 규칙을 100% 엄수하십시오.\n"
+            f"1. 👩‍❤️‍👨 [핵심 가족]:\n"
+            f"   - 남편 = 정관 (정관이 없으면 편관으로 대체)\n"
+            f"   - 애인(남친) = 편관 (편관이 없으면 정관으로 대체)\n"
+            f"   - 자녀 = 식상(식신/상관) 🚨(경고: 여명에서 '관성'을 자녀로 풀이하는 즉시 치명적 오류로 간주함!)\n"
+            f"2. 👵👴 [부모 및 조부모]:\n"
+            f"   - 아버지 = 편재 (없으면 정재) / 어머니 = 정인 (없으면 편인)\n"
+            f"   - 조부(외할아버지) = 편인 / 조모(외할머니) = 상관\n"
+            f"3. 🏠 [시댁 및 자매]:\n"
+            f"   - 시어머니(시댁) = 재성 (남편을 생하는 기운)\n"
+            f"   - 동성 형제(언니/여동생) = 비견 / 이성 형제(오빠/남동생) = 겁재\n"
+            f"4. 🚨 [상태별 호칭 맞춤형 타겟팅]: 내담자의 현재 혼인 상태({marital})를 반드시 반영하십시오.\n"
+            f"   - 기혼: '현재 남편/배우자'로 칭할 것.\n"
+            f"   - 미혼: '미래의 인연'으로 칭할 것.\n"
+            f"   - 🚨돌싱(이혼/사별): '과거의 인연(전 남편)'에 대한 성찰이나 '새로운 인연(재혼운)'으로 변환하여 카운슬링할 것.\n"
+        )
 
 def get_universal_analysis(ds, mb, db, gans, jjis):
     db_h = _to_hanja(db)
