@@ -114,7 +114,7 @@ def format_ai_text_to_html(text, qna_text=""):
                 html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{bullet_body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
         elif colon_is_header:
             html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>◆ {line_formatted}</b></div>")
         else:
