@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 86.7 Master - Claude 전용 버젼)
+# app.py (ver 86.8 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 86.7 Master"
+APP_VERSION = "ver 86.8 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
@@ -1195,7 +1195,8 @@ if st.session_state.get('app_running', False):
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
             "best_moving_days_str": best_moving_days_str,
-            "other_reading_text": user_entered_text, "other_report": user_entered_text,
+            "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
+            "other_report": user_entered_text,
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
         }
