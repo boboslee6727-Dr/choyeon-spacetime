@@ -501,13 +501,15 @@ def get_ji_rel_rows_html(jjis):
     return ji_rel_rows
 
 def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
+    # 🚨 한자 변환(_to_hanja) 전에, 원본 값이 비어있는지 먼저 확인 (변환 후엔 "-"가 ""로 바뀌어 감지 불가)
+    if gans[idx] in ["?", "-", " ", ""] or jjis[idx] in ["?", "-", " ", ""]:
+        return []
+    
     gans = [_to_hanja(g) for g in gans]
     jjis = [_to_hanja(j) for j in jjis]
     dc, mc, yc = gans[1], gans[2], gans[3]
     dj, mj, yj = jjis[1], jjis[2], jjis[3]
     cur_g, cur_j = gans[idx], jjis[idx]
-    
-    if cur_g in ["?", "-", " "] or cur_j in ["?", "-", " "]: return []
     gj = cur_g + cur_j
     noble, ausp, evil = [], [], []
     
