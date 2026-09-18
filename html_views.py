@@ -101,9 +101,9 @@ def format_ai_text_to_html(text, qna_text=""):
         colon_m = re.match(r'^([^:：\n]{1,20})[:：]\s+(\S.*)$', line_formatted)
         colon_is_header = bool(colon_m) and re.search(r'[가-힣]', colon_m.group(1)) and not re.search(r'(다|요|죠|음|임|함|니다)$', colon_m.group(1))
         if re.match(r'^\d+\.\s+', line_formatted):
-            html_lines.append(f"<div class='ai-title-l1' style='font-size: 26px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; margin-top: 45px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div class='ai-title-l1' style='font-size: 23px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; margin-top: 45px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
         elif re.match(r'^\d+\)\s*', line_formatted):
-            html_lines.append(f"<div class='sub-title' style='font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div class='sub-title' style='font-size: 18.5px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
         elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
             bullet_split = re.match(r'^(.*?[:：])\s*(\S.*)$', line_formatted)
             # 🚨 콜론 직전이 숫자(시간 표기: "9:00", "23:30" 등)면 소제목 구분자가 아니므로 분리하지 않음
@@ -111,12 +111,12 @@ def format_ai_text_to_html(text, qna_text=""):
                 bullet_split = None
             if bullet_split:
                 bullet_title, bullet_body = bullet_split.group(1), bullet_split.group(2)
-                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{bullet_body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
         elif colon_is_header:
-            html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>◆ {line_formatted}</b></div>")
+            html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>◆ {line_formatted}</b></div>")
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
     parsed_content = "\n".join(html_lines)
@@ -481,10 +481,11 @@ def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html)
     return ""
 
 def get_external_raw_text_box(other_text):
+    other_text_html = str(other_text).replace('\n', '<br>')
     return f"""
     <div style='margin-top:25px; margin-bottom:25px; padding:24px; background-color:#F9F9F9; border-radius:8px; font-family: "Nanum Myeongjo", serif;'>
         <h3 style='color:#555; font-size:18px; font-weight:900; margin-bottom:10px;'>📜 [제출된 타 감명서 원문]</h3>
-        <div style='font-size: 14px; line-height: 1.8; color: #444; word-break: keep-all;'>{other_text}</div>
+        <div style='font-size: 14px; line-height: 1.8; color: #444; word-break: keep-all;'>{other_text_html}</div>
     </div>
     """
 
