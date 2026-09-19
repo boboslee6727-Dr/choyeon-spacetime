@@ -481,11 +481,19 @@ def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html)
     return ""
 
 def get_external_raw_text_box(other_text):
-    other_text_html = str(other_text).replace('\n', '<br>')
+    # 빈 줄(문단 구분)을 기준으로 나누고, 각 문단을 AI 본문과 동일한 <p> 스타일로 렌더링
+    raw = str(other_text).strip()
+    paragraphs = [p.strip() for p in re.split(r'\n\s*\n', raw) if p.strip()]
+    if not paragraphs:
+        paragraphs = [raw]
+    para_html = "".join([
+        f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{p.replace(chr(10), ' ')}</p>"
+        for p in paragraphs
+    ])
     return f"""
-    <div style='margin-top:25px; margin-bottom:25px; padding:24px; background-color:#F9F9F9; border-radius:8px; font-family: "Nanum Myeongjo", serif;'>
+    <div style='margin-top:25px; margin-bottom:25px; padding:24px; background-color:#F9F9F9; border-radius:8px; font-family: "Noto Serif KR", serif;'>
         <h3 style='color:#555; font-size:18px; font-weight:900; margin-bottom:10px;'>📜 [제출된 타 감명서 원문]</h3>
-        <div style='font-size: 14px; line-height: 1.8; color: #444; word-break: keep-all;'>{other_text_html}</div>
+        {para_html}
     </div>
     """
 
