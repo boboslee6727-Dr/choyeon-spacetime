@@ -1477,7 +1477,7 @@ if st.session_state.get('app_running', False):
             content_body = final_render_html
 
         # 🆕 [안전장치] 맺음말이 누락된 경우, A4 규격 액자(report-page)로 감싸서 별도 페이지로 추가
-        if closing_part and closing_part not in content_body and not u_product.startswith("3-"):
+        if closing_part and closing_part not in content_body and not u_product.startswith("3-") and not u_product.startswith("4-"):
             closing_page = html_views.get_final_report_box(closing_part) if hasattr(html_views, 'get_final_report_box') else f"<div class='report-page'><div class='vip-inset-frame'>{closing_part}</div></div>"
             content_body += closing_page
 
