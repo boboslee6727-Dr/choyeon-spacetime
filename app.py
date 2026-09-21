@@ -1124,7 +1124,7 @@ if st.session_state.get('app_running', False):
         cur_sewun_gan_val = engine.GAN[cur_sewun_base % 10]
         cur_sewun_ji_val = engine.JI[cur_sewun_base % 12]
 
-        ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db)
+        ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db, gender)
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
         wolun_first_half, wolun_second_half = engine.get_wolun_half_periods(target_year_val, curr_m) if hasattr(engine, 'get_wolun_half_periods') else ("전반기(절입일~중기 전)", "후반기(중기~다음 절입일 전)")
 
