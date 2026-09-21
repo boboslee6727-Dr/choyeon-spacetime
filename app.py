@@ -1219,11 +1219,12 @@ if st.session_state.get('app_running', False):
             "f_dynamic_shinsal_fact_str": f_dynamic_shinsal_fact_str,
             "dynamic_shinsal_fact_str": engine.get_dynamic_shinsal_fact_str(1, gans, jjis, gender, engine._is_daewun_first_half(age, current_daewun_age)),
             "ohang_supply_str": engine.get_ohang_deficiency_supply_str(counts, [
-                ("대운", dw_g_cur), ("대운", dw_j_cur),
-                ("세운", engine.GAN[(curr_year-1984)%60%10]), ("세운", engine.JI[(curr_year-1984)%60%12]),
-                ("월운", _cur_wol_pillar[0]), ("월운", _cur_wol_pillar[1]),
-                ("일운", _today_pillar_d[0]), ("일운", _today_pillar_d[1]),
-            ]),            "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
+                ("대운", dw_g_cur, dw_j_cur, engine._is_daewun_first_half(age, current_daewun_age)),
+                ("세운", engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], engine._is_sewun_first_half(_now_kst)),
+                ("월운", _cur_wol_pillar[0], _cur_wol_pillar[1], engine._is_wolun_first_half(_now_kst)),
+                ("일운", _today_pillar_d[0], _today_pillar_d[1], engine._is_ilun_first_half(_now_kst.hour, _now_kst.minute)),
+            ]),        
+            "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
         }
 
