@@ -1915,11 +1915,11 @@ def analyze_health_erosion_4d(saju_data, daewun_list, sewun_10_list, curr_year):
 
     return f"[1. 선천 원국]: {fact_1_wonguk}\n[2. 평생 궤적]: {fact_2_daewun}\n[3. 향후 10년]: {fact_3_10years}\n[4. 당장 올해]: {fact_4_current}"
 
-def get_ohang_deficiency_supply_str(counts, level_ganji_list):
+def get_ohang_deficiency_supply_str(counts, level_phase_data):
     """
-    원국에 결핍된 오행이, 현재 대운/세운/월운/일운 중 어디서 공급되고 있는지 실시간 판정.
-    counts: {'목':n,'화':n,'토':n,'금':n,'수':n} 원국 오행 개수
-    level_ganji_list: [(레벨이름, 간지문자), ...] 예: [("대운", dw_g_cur), ("대운", dw_j_cur), ("세운", sewun_g), ...]
+    원국에 결핍된 오행이, 대운/세운/월운/일운 각 단계의 '현재 활성화된 반기'에서 실제로 공급되고 있는지 정밀 판정.
+    level_phase_data: [(레벨이름, 천간문자, 지지문자, 지금이_전반기인가_bool), ...]
+    예: [("대운", dw_g_cur, dw_j_cur, _is_daewun_first_half(age, dw_start_age)), ...]
     """
     missing = [oh for oh, c in counts.items() if c == 0]
     if not missing:
@@ -1927,13 +1927,22 @@ def get_ohang_deficiency_supply_str(counts, level_ganji_list):
 
     lines = []
     for oh in missing:
-        supplying_levels = []
-        for level_name, char in level_ganji_list:
-            if char and get_color(char) == oh:
-                supplying_levels.append(level_name)
-        if supplying_levels:
-            unique_levels = list(dict.fromkeys(supplying_levels))
-            lines.append(f"- 원국에 없는 {oh} 기운이 현재 {', '.join(unique_levels)}에서 공급되고 있어, 평생 결핍되어 있던 {oh}의 작용이 지금 시기에 실질적으로 발동될 수 있음")
+        active_hits = []   # 지금 활성화된 반기에서 실제로 발동 중
+        latent_hits = []   # 아직 비활성 반기에 잠재만 되어 있음
+        for level_name, gan_char, ji_char, is_first_half in level_phase_data:
+            active_char = gan_char if is_first_half else ji_char
+            latent_char = ji_char if is_first_half else gan_char
+            phase_label = "전반기(천간)" if is_first_half else "후반기(지지)"
+            latent_phase_label = "후반기(지지)" if is_first_half else "전반기(천간)"
+            if active_char and get_color(active_char) == oh:
+                active_hits.append(f"{level_name} {phase_label}")
+            if latent_char and get_color(latent_char) == oh:
+                latent_hits.append(f"{level_name} {latent_phase_label}")
+
+        if active_hits:
+            lines.append(f"- 원국에 없는 {oh} 기운이 현재 {', '.join(dict.fromkeys(active_hits))}에서 실질적으로 활성화되어 발동 중임")
+        elif latent_hits:
+            lines.append(f"- 원국에 없는 {oh} 기운이 {', '.join(dict.fromkeys(latent_hits))}에 존재하나, 아직 활성화되지 않은 반기라 잠재된 상태이며 향후 그 반기가 도래하면 발동될 것")
         else:
-            lines.append(f"- 원국에 없는 {oh} 기운이 현재 대운·세운·월운·일운 어디에서도 공급되지 않아, 여전히 결핍 상태로 잠재되어 있음")
+            lines.append(f"- 원국에 없는 {oh} 기운이 현재 대운·세운·월운·일운 어디에도 없어 여전히 결핍 상태임")
     return "\n".join(lines)
