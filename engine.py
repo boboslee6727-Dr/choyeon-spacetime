@@ -1901,3 +1901,26 @@ def analyze_health_erosion_4d(saju_data, daewun_list, sewun_10_list, curr_year):
         fact_4_current = f"올해({curr_year}년)는 조토극수 침식 파동의 직접적인 타격권에서 한 걸음 비껴가 있는 회복과 유지의 구간."
 
     return f"[1. 선천 원국]: {fact_1_wonguk}\n[2. 평생 궤적]: {fact_2_daewun}\n[3. 향후 10년]: {fact_3_10years}\n[4. 당장 올해]: {fact_4_current}"
+
+def get_ohang_deficiency_supply_str(counts, level_ganji_list):
+    """
+    원국에 결핍된 오행이, 현재 대운/세운/월운/일운 중 어디서 공급되고 있는지 실시간 판정.
+    counts: {'목':n,'화':n,'토':n,'금':n,'수':n} 원국 오행 개수
+    level_ganji_list: [(레벨이름, 간지문자), ...] 예: [("대운", dw_g_cur), ("대운", dw_j_cur), ("세운", sewun_g), ...]
+    """
+    missing = [oh for oh, c in counts.items() if c == 0]
+    if not missing:
+        return "원국에 오행 결핍 없음 (모든 오행 보유)"
+
+    lines = []
+    for oh in missing:
+        supplying_levels = []
+        for level_name, char in level_ganji_list:
+            if char and get_color(char) == oh:
+                supplying_levels.append(level_name)
+        if supplying_levels:
+            unique_levels = list(dict.fromkeys(supplying_levels))
+            lines.append(f"- 원국에 없는 {oh} 기운이 현재 {', '.join(unique_levels)}에서 공급되고 있어, 평생 결핍되어 있던 {oh}의 작용이 지금 시기에 실질적으로 발동될 수 있음")
+        else:
+            lines.append(f"- 원국에 없는 {oh} 기운이 현재 대운·세운·월운·일운 어디에서도 공급되지 않아, 여전히 결핍 상태로 잠재되어 있음")
+    return "\n".join(lines)
