@@ -1158,6 +1158,23 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 best_moving_days_str = "길일 연산 중 오류 발생"
 
+        # 🚨 궁합용: 남명/여명 각각의 신살 반기별 재해석 재료 준비
+        m_gans_val = gans if gender == "남성" else (p_gans if 'p_gans' in locals() else gans)
+        m_jjis_val = jjis if gender == "남성" else (p_jjis if 'p_jjis' in locals() else jjis)
+        f_gans_val = (p_gans if 'p_gans' in locals() else gans) if gender == "남성" else gans
+        f_jjis_val = (p_jjis if 'p_jjis' in locals() else jjis) if gender == "남성" else jjis
+
+        if is_2person:
+            p_cur_dw_idx_safe = max(0, (p_age_val - p_calc_d) // 10) if 'p_age_val' in locals() and 'p_calc_d' in locals() else 0
+            p_current_daewun_age = p_cur_dw_idx_safe * 10 + (p_calc_d if 'p_calc_d' in locals() else 0)
+            m_current_daewun_age = current_daewun_age if gender == "남성" else p_current_daewun_age
+            f_current_daewun_age = p_current_daewun_age if gender == "남성" else current_daewun_age
+            m_dynamic_shinsal_fact_str = engine.get_dynamic_shinsal_fact_str(1, m_gans_val, m_jjis_val, "남성", engine._is_daewun_first_half(m_age_val, m_current_daewun_age))
+            f_dynamic_shinsal_fact_str = engine.get_dynamic_shinsal_fact_str(1, f_gans_val, f_jjis_val, "여성", engine._is_daewun_first_half(f_age_val, f_current_daewun_age))
+        else:
+            m_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
+            f_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
+
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
@@ -1198,6 +1215,8 @@ if st.session_state.get('app_running', False):
             "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
             "other_report": user_entered_text,
             "wolryeong_fact": w_val,
+            "m_dynamic_shinsal_fact_str": m_dynamic_shinsal_fact_str,
+            "f_dynamic_shinsal_fact_str": f_dynamic_shinsal_fact_str,
             "dynamic_shinsal_fact_str": engine.get_dynamic_shinsal_fact_str(1, gans, jjis, gender, engine._is_daewun_first_half(age, current_daewun_age)),
             "ohang_supply_str": engine.get_ohang_deficiency_supply_str(counts, [
                 ("대운", dw_g_cur), ("대운", dw_j_cur),
