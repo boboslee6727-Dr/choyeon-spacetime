@@ -1285,19 +1285,20 @@ if st.session_state.get('app_running', False):
         # ==============================================================================
         # 📦 1인용 공통 본문 상단 기본 5대 묶음 (1-1 ~ 2-5, 4-1 사용)
         # ==============================================================================
+        # 공통 테이블 및 텍스트 안전 변수 로드
+        sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
+        wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
+        golden_text_code = safe_part_3 if 'safe_part_3' in locals() and safe_part_3 else ""
+        intro_block = intro_html if 'intro_html' in locals() and intro_html else ""
+
         base_top_block = f"""
         {main_title_html}
         {info_h}
         {table_html}
         {master_bar_html}
         {un_html}
+        {golden_text_code}
         """
-
-        # 공통 테이블 및 텍스트 안전 변수 로드
-        sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
-        wolun_table_code = wolun_html if 'wolun_html' in locals() and wolun_html else ""
-        golden_text_code = safe_part_3 if 'safe_part_3' in locals() and safe_part_3 else ""
-        intro_block = intro_html if 'intro_html' in locals() and intro_html else ""
 
         # ==============================================================================
         # 🎯 전 상품(1-1 ~ 4-2) 본문 조립 및 마커 치환 분기
