@@ -1527,18 +1527,31 @@ class UniversalPrintableGunghap:
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
-def get_ilju_master_prompt_context(user_ilju_key, choyeon_db):
+def get_ilju_master_prompt_context(user_ilju_key, choyeon_db, gender=None):
     ilju_full_db = choyeon_db.get("ilju_full_master", {})
     ilju_master_data = ilju_full_db.get(user_ilju_key, {})
     
     if not ilju_master_data:
         return ""
+
+    # 🚨 "family" 필드에 남명/여명 설명이 한 문장에 섞여 있는 경우, 신청자 성별에 맞는 부분만 추출
+    family_raw = ilju_master_data.get('family', '')
+    family_filtered = family_raw
+    if gender and "남명" in family_raw and "여명" in family_raw:
+        m_match = re.search(r'남명\s*[:：]\s*(.*?)(?=여명\s*[:：]|$)', family_raw)
+        f_match = re.search(r'여명\s*[:：]\s*(.*)$', family_raw)
+        m_part = m_match.group(1).strip() if m_match else ""
+        f_part = f_match.group(1).strip() if f_match else ""
+        if gender == "남성" and m_part:
+            family_filtered = f"남명: {m_part}"
+        elif gender == "여성" and f_part:
+            family_filtered = f"여명: {f_part}"
         
     return f"""
 🎯 [초연 시공명리의 뼈때리는 팩트폭격 - {user_ilju_key}일주 전용 마스터 비기]
 - 물상 및 성향 요약: {ilju_master_data.get('summary', '')}
 - 심리적 관점: {ilju_master_data.get('psychology', '')}
-- 육친적 관점: {ilju_master_data.get('family', '')}
+- 육친적 관점: {family_filtered}
 - 사회적 관점: {ilju_master_data.get('society', '')}
 - 지장간 좌법(座法) 분석: {ilju_master_data.get('jijanggan_zaBeob', '')}
 - 인종법(引從法) 숨겨진 내면: {ilju_master_data.get('injong_beob', '')}
