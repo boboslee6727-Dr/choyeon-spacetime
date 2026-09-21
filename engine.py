@@ -1079,117 +1079,39 @@ def get_weekly_daily_facts(ds, db, yb, year, month, day):
         "weekly_ganji_list": ", ".join(weekly_ganji)
     }
 
-def get_saju_fact_sheet(ys, yb, ms, mb, ds, db, hs, hb, name, gender, marital, 
-                        birth_year=None, age=None,
-                        dw_g_cur=None, dw_j_cur=None, curr_y_ganji=None, cur_wol_g=None, cur_wol_j=None, 
-                        target_year=None, target_month=None, target_day=None, **kwargs):
-    now_dt = dt_mod.datetime.now()
-    calc_year = target_year if target_year else now_dt.year
-    calc_month = target_month if target_month else now_dt.month
-    calc_day = target_day if target_day else now_dt.day
+# ==============================================================================
+# 신살의 "현재 활성 반기(전반기/후반기)"에 따른 동적 재해석 데이터
+# 박사님이 직접 채워나가는 영역입니다. 형식: "신살명": {"전반기": "...", "후반기": "..."}
+# ==============================================================================
+SHINSAL_PHASE_REINTERPRET = {
+    "나체도화": {
+        "후반기": "노년기·기혼 상태에서는 성적 매력의 과시가 아니라, 심미안과 문화적 감수성으로 승화되어 발현되는 경향이 있음",
+    },
+    "고란살": {
+        "후반기": "젊은 시절의 '자녀 복 약함'이라는 숙명적 해석보다는, 노년기에는 정신적 자산과 개인적 유산을 스스로 구축하는 자립성으로 재해석될 수 있음",
+    },
+}
 
-    if age is not None: calc_age = age
-    elif birth_year is not None: calc_age = calc_year - int(birth_year) + 1
-    else: calc_age = 40
+def get_shinsal_phase_note(shinsal_name, is_first_half):
+    """특정 신살이, 지금 활성화된 반기(전반기/후반기)에 따라 재해석 문구를 갖고 있으면 반환. 없으면 빈 문자열."""
+    phase_key = "전반기" if is_first_half else "후반기"
+    entry = SHINSAL_PHASE_REINTERPRET.get(shinsal_name, {})
+    return entry.get(phase_key, "")
 
-    age_p = get_age_prompt(calc_age)
-    gender_p = get_gender_prompt(gender)
-    marital_p = get_marital_prompt(gender, marital)
-    yukchin_r = get_yukchin_rule(gender, marital)
-
-    ss_unsung_str = f"년주:{get_ss(ds, ys)}{get_ss(ds, yb)}({get_unsung(ds, yb)}) / 월주:{get_ss(ds, ms)}{get_ss(ds, mb)}({get_unsung(ds, mb)}) / 일주:{ds}(본인){get_ss(ds, db)}({get_unsung(ds, db)}) / 시주:{get_ss(ds, hs)}{get_ss(ds, hb)}({get_unsung(ds, hb)})"
-    gyukgook, gyukgook_detail = get_gyukgook_detailed(ds, ys, ms, hs, mb)
-    counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
-    for c in [ys, yb, ms, mb, ds, db, hs, hb]: counts[get_color(c)] += 1
-    oheng_str = f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}"
-
-    # 1. 일지 십성 및 하위 그룹 안전 추출
-    ilju_ss_raw = get_ss(ds, db)
-    ilju_ss_name = ilju_ss_raw if isinstance(ilju_ss_raw, str) else (ilju_ss_raw[0] if isinstance(ilju_ss_raw, (list, tuple)) and len(ilju_ss_raw) > 0 else "비견")
-    ilju_lower_group = get_group_ss(ilju_ss_name)
-
-    # 2. 당일(연/월/일) 기준 천문 절기 3주(연주, 월주, 일주) 일괄 동적 산출
-    current_pillars = get_ganji_from_date(calc_year, calc_month, calc_day)
-    dyn_y_pillar = current_pillars[0]
-    dyn_m_pillar = current_pillars[1]
-    dyn_d_pillar = current_pillars[2]
-
-    # 세운 간지 동적 확정 (인입값 우선, 누락 시 기준일 연간지 사용)
-    if curr_y_ganji and len(curr_y_ganji) >= 2:
-        s_gan, s_ji = str(curr_y_ganji[0]), str(curr_y_ganji[1])
-    else:
-        s_gan, s_ji = dyn_y_pillar[0], dyn_y_pillar[1]
-    sewun_ji_val = s_ji
-
-    # 월운 간지 동적 확정 (인입값 우선, 누락 시 기준일 절기 월간지 사용)
-    if cur_wol_g and cur_wol_j:
-        cur_w_g, cur_w_j = str(cur_wol_g), str(cur_wol_j)
-    else:
-        cur_w_g, cur_w_j = dyn_m_pillar[0], dyn_m_pillar[1]
-
-    # 일운 간지 동적 확정 (기준일 일간지)
-    ilun_g_val, ilun_j_val = dyn_d_pillar[0], dyn_d_pillar[1]
-
-    # 대운 간지 안전 확보 (대운 누락 시 사주 월주를 시작점으로 보정)
-    cur_dw_g = str(dw_g_cur) if dw_g_cur else ms
-    cur_dw_j = str(dw_j_cur) if dw_j_cur else mb
-
-    # 3. 폭포수 체용 파동 종합 연산 (동적 데이터 전달)
-    woonse_res = get_woonse_analysis_facts(
-        ds, db, cur_dw_g, cur_dw_j, 
-        s_gan, s_ji, 
-        cur_w_g, cur_w_j, 
-        ilun_g_val, ilun_j_val
-    )
-
-    dw_fact_str = get_dw_fact_str(woonse_res['dw_che'], woonse_res['dw_yong'], woonse_res['dw_kw'])
-    sewun_fact_str = f"체운(무대): {woonse_res['sewun_che']} / 용운(사건): {woonse_res['sewun_yong']} ➔ 도출 키워드: {woonse_res['sewun_kw']}"
-    wol_fact_str = f"체운(무대): {woonse_res['wolun_che']} / 용운(사건): {woonse_res['wolun_yong']} ➔ 도출 키워드: {woonse_res['wolun_kw']}"
-    woonse_fact_str = woonse_res["woonse_fact_str"]
-
-    weekly_daily_res = get_weekly_daily_facts(ds, db, yb, calc_year, calc_month, calc_day)
-    am_che = weekly_daily_res.get('m_che_first', '오전 체(무대)')
-    am_yong = weekly_daily_res.get('am_yong', '오전 용(사건)')
-    pm_che = weekly_daily_res.get('m_che_second', '오후 체(무대)')
-    pm_yong = weekly_daily_res.get('pm_yong', '오후 용(사건)')
-    daily_fact_str = f"오전 체용: [{am_che} + {am_yong}] / 오후 체용: [{pm_che} + {pm_yong}] (12운성: {weekly_daily_res.get('day_wunseong', '건록')}, 12신살: {weekly_daily_res.get('day_12shinsal', '망신살')})"
-
-    yongshin_str = get_yongshin_analysis(counts, mb, ds)
-    goshin_gwasook_str = get_goshin_gwasook(yb, gender)
-    samhyung_fact_str = check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_ji_val, cur_wol_j)
-    samjae_val = get_samjae(yb, db) if 'get_samjae' in globals() else "해당 없음"
-    dw_end_val = calc_age + 9
-    hang_un_vaults_val = get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]) if dw_j_cur else "대운 입고 작용 없음"
-
-    fact_data = {
-        "ys": ys, "yb": yb, "ms": ms, "mb": mb, "ds": ds, "db": db, "hs": hs, "hb": hb,
-        "ss_unsung_str": ss_unsung_str, "gyukgook_detail": gyukgook_detail,
-        "yongshin_str": yongshin_str, "goshin_gwasook_str": goshin_gwasook_str,
-        "samhyung_fact_str": samhyung_fact_str, "gongmang_actual": calculate_gongmang(ds, db),
-        "year_gongmang": calculate_gongmang(ys, yb), "day_gongmang": calculate_gongmang(ds, db),
-        "shinsal_str": ", ".join(get_general_shinsal_filtered(2, [hs, ds, ms, ys], [hb, db, mb, yb], gender)),
-        "s12_str": get_all_12_shinsal(yb, mb, db, hb), "won_guk_vaults_str": get_won_guk_vaults_str([yb, mb, db, hb]),
-        "oheng_force_str": oheng_str, "oheng_counts_str": oheng_str, "oheng_force_summary": oheng_str,
-        "samjae_str": samjae_val, "dw_end_age": dw_end_val, "hang_un_vaults_str": hang_un_vaults_val,
-        "weekly_ganji_list": weekly_daily_res.get('weekly_ganji_list', '월~일 주간 간지 데이터'),
-        "t_month": calc_month, "t_day": calc_day, "m_ilgan": ds, "m_ilji": db,
-        "m_che_first": am_che, "am_yong": am_yong, "m_che_second": pm_che, "pm_yong": pm_yong,
-        "day_wunseong": weekly_daily_res.get('day_wunseong', '건록'),
-        "day_12shinsal": weekly_daily_res.get('day_12shinsal', '망신살'), "daily_fact_str": daily_fact_str,
-        "cheon_eul": {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}.get(ds, '없음'),
-        "curr_y": calc_year, "curr_m": calc_month, "curr_d": calc_day,
-        "disp_name": name, "name": name, "gender": gender, "marital": marital,
-        "u_age": calc_age, "u_gender": gender, "u_marital": marital,
-        "age_prompt": age_p, "gender_prompt": gender_p, "marital_prompt": marital_p,
-        "yukchin_rule": yukchin_r, "dw_fact_str": dw_fact_str, 
-        "sewun_fact_str": sewun_fact_str, "wol_fact_str": wol_fact_str,
-        "woonse_fact_str": woonse_fact_str,
-        "dw_kw": woonse_res['dw_kw'],
-        "sewun_kw": woonse_res['sewun_kw'],
-        "wolun_kw": woonse_res['wolun_kw']
-    }
-    fact_data.update(kwargs)
-    return fact_data
+def get_dynamic_shinsal_fact_str(idx, gans, jjis, gender, is_daewun_first_half):
+    """신살 목록을 계산하고, 반기별 재해석 문구가 있으면 함께 붙여서 텍스트로 반환 (연구용 4-1/4-2 전용)"""
+    raw_list = get_general_shinsal_filtered(idx, gans, jjis, gender)
+    if not raw_list:
+        return "특이 신살 없음"
+    lines = []
+    for item in raw_list:
+        clean_name = re.sub(r'<[^>]+>', '', str(item))
+        note = get_shinsal_phase_note(clean_name, is_daewun_first_half)
+        if note:
+            lines.append(f"- {clean_name}: (현재 대운 {'전반기' if is_daewun_first_half else '후반기'} 활성 → {note})")
+        else:
+            lines.append(f"- {clean_name}")
+    return "\n".join(lines)
 
 def get_daeun_su_accurate(utc_dt, order):
     try:
