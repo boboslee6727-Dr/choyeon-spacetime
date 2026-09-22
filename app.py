@@ -647,6 +647,8 @@ if st.session_state.get('app_running', False):
         
         n_gong = engine.calculate_gongmang(ys, yb) or "-"
         i_gong = engine.calculate_gongmang(ds, db) or "-"
+        year_gongmang_sipseong = ", ".join([f"{c}({engine.get_ss(ds, c)})" for c in n_gong if c not in ["-", " "]]) if n_gong and n_gong != "-" else "공망 해당 없음"
+        day_gongmang_sipseong = ", ".join([f"{c}({engine.get_ss(ds, c)})" for c in i_gong if c not in ["-", " "]]) if i_gong and i_gong != "-" else "공망 해당 없음"
         cur_samjae = engine.get_samjae(yb, curr_y_ji)
         samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
         
@@ -1216,6 +1218,8 @@ if st.session_state.get('app_running', False):
             "ilun_kw": w_facts.get("ilun_kw", "변화 감지"),
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
+            "year_gongmang_sipseong": year_gongmang_sipseong,
+            "day_gongmang_sipseong": day_gongmang_sipseong,
             "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
             "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
             "shinsal_str": shinsal_str, "cheon_eul": guiin_str, "samjae_str": cur_samjae,
