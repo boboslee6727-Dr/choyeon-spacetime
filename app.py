@@ -958,8 +958,14 @@ if st.session_state.get('app_running', False):
         struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
         ideal_spouse_data = choyeon_db.get("ideal_spouse", {}).get(i_key, {})
         ideal_spouse_fact = ideal_spouse_data.get("남명" if gender == "남성" else "여명", "이상적 배우자상 데이터 없음")
-
-        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)        
+        w_detail = choyeon_db.get("wolryeong_detail", {}).get(w_key, {})
+        wolryeong_detail_fact = (
+            f"심리적 환경: {w_detail.get('심리적_환경','정보없음')} / "
+            f"가문적 배경: {w_detail.get('가문적_배경','정보없음')} / "
+            f"사회적 공간: {w_detail.get('사회적_공간','정보없음')}"
+        ) if w_detail else "60월령 상세 데이터 없음"
+        
+        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
         golden_box_gunghap_html = golden_text_html
         if is_2person:
             try:
@@ -1229,6 +1235,8 @@ if st.session_state.get('app_running', False):
             "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
             "other_report": user_entered_text,
             "wolryeong_fact": w_val,
+            "ideal_spouse_fact": ideal_spouse_fact,
+            "wolryeong_detail_fact": wolryeong_detail_fact,
             "m_dynamic_shinsal_fact_str": m_dynamic_shinsal_fact_str,
             "f_dynamic_shinsal_fact_str": f_dynamic_shinsal_fact_str,
             "dynamic_shinsal_fact_str": engine.get_dynamic_shinsal_fact_str(1, gans, jjis, gender, engine._is_daewun_first_half(age, current_daewun_age)),
