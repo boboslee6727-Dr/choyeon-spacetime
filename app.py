@@ -957,9 +957,9 @@ if st.session_state.get('app_running', False):
         i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
         ideal_spouse_data = choyeon_db.get("ideal_spouse", {}).get(i_key, {})
-        
-        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)        golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
-        
+        ideal_spouse_fact = ideal_spouse_data.get("남명" if gender == "남성" else "여명", "이상적 배우자상 데이터 없음")
+
+        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)        
         golden_box_gunghap_html = golden_text_html
         if is_2person:
             try:
@@ -1189,6 +1189,7 @@ if st.session_state.get('app_running', False):
             "ilju_master_prompt_context": ilju_master_context,
             "age_prompt": engine.get_age_prompt(age), "gender_prompt": engine.get_gender_prompt(gender), 
             "marital_prompt": engine.get_marital_prompt(gender, u_marital), "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
+            "ideal_spouse_fact": ideal_spouse_fact,
             "m_ideal_spouse_fact": m_ideal_spouse_fact,
             "f_ideal_spouse_fact": f_ideal_spouse_fact,
             "m_marital": m_marital_val,
