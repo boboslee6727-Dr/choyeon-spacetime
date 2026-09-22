@@ -99,7 +99,7 @@ def format_ai_text_to_html(text, qna_text=""):
     for line in lines:
         if not line:
             continue
-        if re.fullmatch(r'[-*_]{3,}', line):
+        if re.fullmatch(r'[-*_＊·•]{2,}', line):
             continue
         if any(marker in line for marker in preserved_markers):
             html_lines.append(f"\n{line}\n")
