@@ -17,6 +17,12 @@ def get_global_css():
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+    @font-face {
+        font-family: 'LXGW Seal';
+        src: url('https://cdn.jsdelivr.net/gh/lxgw/LxgwSeal@0.001-alpha.7.24/TTF/LXGWSeal-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-display: swap;
+    }
     .stApp { background-color: #E8F5E9 !important; }
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] span[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
     div[data-testid="stSidebar"] * { font-size: 14px !important; }
@@ -133,7 +139,6 @@ def format_ai_text_to_html(text, qna_text=""):
         clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna).replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 사주박사의 1:1 심층 솔루션 안내<br>{clean_qna}</div>"
     return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
- 
  
 # ==============================================================================
 # PART 1. 공통 사주표 / 대운·세운·월운·주간표 컴포넌트 (전통/시공 공용)
@@ -431,7 +436,6 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None,
     </div>
     """
  
- 
 # ==============================================================================
 # PART 2. 서술형 안내문구 (인트로 / 클로징 등 공용 문구)
 # ==============================================================================
@@ -489,7 +493,6 @@ def get_closing_html(name):
  
 def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
     return ""
- 
  
 # ==============================================================================
 # PART 3. 궁합 · 택일 부가 컴포넌트 및 종합 렌더링 컨테이너
@@ -628,8 +631,7 @@ def get_final_report_box(content_html):
         </div>
     </div>
     """
- 
- 
+  
 # ==============================================================================
 # PART 4. 초연 시공명리 '타 감명서 비교(4-1/4-2)' 전용 렌더링
 # ※ 향후 비교 기능이 보강되며 추가되는 렌더링 함수는 이 PART 4 맨 뒤에 계속 이어서 추가하면 됩니다.
@@ -673,3 +675,33 @@ def render_gunghap_comparison_report(couple_fact_html, external_raw_box, ai_cont
 def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
     master_body = f"{part_1_fact}{external_raw_box}{ai_comparison_html}"
     return get_final_report_box(master_body)
+
+def get_choyeon_sign_html():
+    """붉은 인주 느낌의 사각 낙관 두 개('樵燃時空' / '四柱博士')를 그려서 반환"""
+    def _seal_box(ch1, ch2, ch3, ch4, rotate):
+        return f"""
+        <div style="
+            width: 90px; height: 90px;
+            background-color: #B71C1C;
+            border: 2px solid #7B1010;
+            border-radius: 3px;
+            transform: rotate({rotate}deg);
+            box-shadow: 1px 2px 5px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            padding: 5px;
+            box-sizing: border-box;
+        ">
+            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch1}</div>
+            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch2}</div>
+            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch3}</div>
+            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch4}</div>
+        </div>
+        """
+    return f"""
+    <div style="display:flex; justify-content:flex-end; gap:14px; margin:25px 40px 10px 0;">
+        {_seal_box('樵','燃','時','空', -4)}
+        {_seal_box('四','柱','博','士', 3)}
+    </div>
+    """
