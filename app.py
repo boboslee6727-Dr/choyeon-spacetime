@@ -211,6 +211,7 @@ is_admin_mode = st.session_state.get('admin_proc_id') is not None
 # 모든 기능 동작 변수를 '최상단'에 기본값으로 선언 (NameError 원천 차단)
 run_iljin_calc = False
 run_delivery_calc = False
+is_vip_package = False
 compare_mode = "자동대조"
 other_reading_text = ""
 start_date = None
@@ -395,6 +396,12 @@ else:
         if is_1person:
             if u_product.startswith("1-"):
                 is_vip_package = st.checkbox("👑 VIP 패키지 모드", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val", on_change=stop_ai)
+                if is_vip_package:
+                    st.caption("💡 VIP 모드: 1-1→1-2→1-3→1-4 순서대로 감명하면 이전 내용 위에 계속 쌓여서 저장됩니다.")
+                    if st.button("🗑️ VIP 누적 내용 초기화", key="btn_vip_reset", use_container_width=True):
+                        st.session_state['vip_stack_html'] = []
+                        st.session_state.pop('saved_report_html', None)
+                        st.success("VIP 누적 내용을 초기화했습니다.")
             if "2-1." in u_product: wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
             elif "2-2." in u_product: love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
             elif "2-3." in u_product: career_goal = st.text_input("고민되는 진학 분야는?", key="career_goal", on_change=stop_ai)
@@ -1562,8 +1569,16 @@ if st.session_state.get('app_running', False):
             st.session_state['admin_proc_id'] = None
             st.rerun()
         else:
-            st.session_state['saved_report_html'] = final_clean_html
-            st.markdown(final_clean_html, unsafe_allow_html=True)
+            if is_vip_package:
+                if 'vip_stack_html' not in st.session_state:
+                    st.session_state['vip_stack_html'] = []
+                st.session_state['vip_stack_html'].append(final_clean_html)
+                combined_vip_html = "<div style='page-break-before: always;'></div>".join(st.session_state['vip_stack_html'])
+                st.session_state['saved_report_html'] = combined_vip_html
+                st.markdown(combined_vip_html, unsafe_allow_html=True)
+            else:
+                st.session_state['saved_report_html'] = final_clean_html
+                st.markdown(final_clean_html, unsafe_allow_html=True)
 
 elif st.session_state.get('saved_report_html') and not is_admin_mode:
     st.markdown(st.session_state['saved_report_html'], unsafe_allow_html=True)
