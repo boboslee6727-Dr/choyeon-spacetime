@@ -1329,7 +1329,7 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         # [1계열] 종합 및 시계열 운세
         # ----------------------------------------------------------------------
-       if u_product.startswith("1-1"):
+        if u_product.startswith("1-1"):
             # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변 — golden_text는 위에서 이미 보여줬으므로 본문 안 마커는 빈 값으로 제거)
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
