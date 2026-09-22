@@ -1256,6 +1256,8 @@ if st.session_state.get('app_running', False):
             "shinsal_str": shinsal_str, "cheon_eul": guiin_str, "samjae_str": cur_samjae,
             "curr_year": target_year_val, "cur_sewun_gan": cur_sewun_gan_val, "cur_sewun_ji": cur_sewun_ji_val,
             "target_year": target_year_val, "curr_m": curr_m, "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
+            "cheon_eul_timing_fact_str": cheon_eul_timing_fact_str,
+            "dohwa_mangsin_yeokma_fact_str": dohwa_mangsin_yeokma_fact_str,
             "gh_score": gh_score, "gh_grade": gh_grade,
             "first_half_period": seun_first_half if "1-2" in u_product else wolun_first_half,
             "second_half_period": seun_second_half if "1-2" in u_product else wolun_second_half,
