@@ -70,8 +70,7 @@ def get_global_css():
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         div[data-testid="stVerticalBlock"] { gap: 0 !important; }
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
-        .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
-        .report-page:last-of-type { page-break-after: auto; }
+        .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; 
         .page-break-before { page-break-before: always; }
         .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
     }
