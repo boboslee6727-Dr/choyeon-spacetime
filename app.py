@@ -842,6 +842,7 @@ if st.session_state.get('app_running', False):
             })
 
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+        daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
 
         # ----------------------------------------------------------------------
         # 상대방 대운표 연산 (2인용 전용)
@@ -920,6 +921,7 @@ if st.session_state.get('app_running', False):
         start_year = int(sol_y) + current_daewun_age - 1
 
         se_content = ""
+        sewun_years_list = []
         for i in range(10):
             ty = start_year + i
             tage = current_daewun_age + i
@@ -933,9 +935,11 @@ if st.session_state.get('app_running', False):
                 f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                 tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
                 engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr)
+            sewun_years_list.append(f"{ty}년({tc}{tj})")
             
         dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
         sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
+        sewun_full_fact_str = " / ".join(sewun_years_list)
 
         wol_content = ""
         for i in range(12):
@@ -1216,6 +1220,8 @@ if st.session_state.get('app_running', False):
             "action_solutions": action_solutions_str,
             "spouse_issue_facts": spouse_issue_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
+            "daewun_full_fact_str": daewun_full_fact_str,
+            "sewun_full_fact_str": sewun_full_fact_str,
             "woonse_fact_str": w_facts.get("woonse_fact_str", "폭포수 체용 데이터 없음"),
             "sewun_kw": w_facts.get("sewun_kw", "변화 감지"),
             "wolun_kw": w_facts.get("wolun_kw", "변화 감지"),
@@ -1362,10 +1368,10 @@ if st.session_state.get('app_running', False):
         # [1계열] 종합 및 시계열 운세
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
-            # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변)
+            # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변 — golden_text는 위에서 이미 보여줬으므로 본문 안 마커는 빈 값으로 제거)
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', golden_text_code)
+            formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
             
             body_content = f"""
