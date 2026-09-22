@@ -1112,6 +1112,17 @@ if st.session_state.get('app_running', False):
             shinsal_raw = []
         shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', str(s)) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
 
+        try:
+            palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
+            shinsal_by_palace_parts = []
+            for p_idx, p_name in palace_names.items():
+                p_raw = engine.get_general_shinsal_filtered(p_idx, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
+                p_clean = [re.sub(r'<[^>]+>', '', str(s)) for s in p_raw]
+                shinsal_by_palace_parts.append(f"{p_name}: {', '.join(p_clean) if p_clean else '없음'}")
+            shinsal_by_palace_str = " / ".join(shinsal_by_palace_parts)
+        except Exception:
+            shinsal_by_palace_str = shinsal_str
+
         _now_kst = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
         _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
