@@ -264,12 +264,11 @@ else:
         st.caption(f"💡 현재 지정 기준일: **{selected_target_date.year}년 {selected_target_date.month}월 {selected_target_date.day}일**")
         st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
 
-        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>📋 분석 상품 선택</div>", unsafe_allow_html=True
 
-        # 🆕 대제목(main_category)은 크고 굵게, 하위 상품(라디오)은 들여쓰기된 소제목처럼 보이도록 스타일 적용
         st.markdown("""
         <style>
-        div[data-testid="stSelectbox"] label p { font-size: 17px !important; font-weight: 900 !important; color: #1A237E !important; }
+        div[data-testid="stSelectbox"] label p { font-size: 15px !important; font-weight: 900 !important; color: #000000 !important; }
         div[data-testid="stSelectbox"] div[data-baseweb="select"] * { font-size: 16px !important; font-weight: 800 !important; }
         div[data-testid="stRadio"] { margin-left: 14px !important; padding-left: 10px !important; border-left: 3px solid #C5CAE9 !important; }
         div[data-testid="stRadio"] label p { font-size: 13.5px !important; font-weight: 500 !important; color: #333333 !important; }
@@ -373,7 +372,7 @@ else:
                 del st.session_state['rev_error_msg']
 
         # 👤 신청인 기본 정보 입력
-        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n", on_change=stop_ai)
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai)
@@ -396,10 +395,7 @@ else:
         if is_1person:
             if u_product.startswith("1-"):
                 is_vip_package = st.checkbox("👑 VIP 패키지 모드", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val", on_change=stop_ai)
-            if "1-4." in u_product:
-                run_iljin_calc = st.checkbox("🔮 일운 운세 분석 가동", value=False)
-                if run_iljin_calc: target_date = st.date_input("일운 기준일", value=selected_target_date, key="daily_calc_date", on_change=stop_ai)
-            elif "2-1." in u_product: wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
+            if "2-1." in u_product: wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
             elif "2-2." in u_product: love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
             elif "2-3." in u_product: career_goal = st.text_input("고민되는 진학 분야는?", key="career_goal", on_change=stop_ai)
             elif "2-4." in u_product: career_goal = st.text_input("고민되는 직업 분야는?", key="career_goal", on_change=stop_ai)
