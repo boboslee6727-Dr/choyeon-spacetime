@@ -458,6 +458,28 @@ def get_intro_html():
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
     """
  
+def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_name="알수없음격"):
+    SEASON_SOLAR_TERMS = {
+        '寅': '입춘과 경칩 사이의 이른 봄(寅月)', '卯': '경칩과 청명 사이의 완연한 봄(卯月)',
+        '辰': '청명과 입하 사이의 봄과 여름의 환절기(辰月)', '巳': '입하와 망종 사이의 이른 여름(巳月)',
+        '午': '망종과 소서 사이의 완연한 여름(午月)', '未': '소서와 입추 사이의 가장 무더운 여름(未月)',
+        '申': '입추와 백로 사이의 이른 가을(申月)', '酉': '백로와 한로 사이의 완연한 가을(酉月)',
+        '戌': '한로와 입동 사이의 가을과 겨울의 환절기(戌月)', '亥': '입동과 대설 사이의 이른 겨울(亥月)',
+        '子': '대설과 소한 사이의 완연한 한겨울(子月)', '丑': '소한과 입춘 사이의 가장 추운 겨울(丑月)'
+    }
+    wol_korean_str = SEASON_SOLAR_TERMS.get(mb, f"{mb}월")
+    return f"""
+    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
+        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
+            기존 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
+        </p>
+        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 0;'>
+            또한, 시공명리학적으로 풀이하면 <b>'{w_val}'</b>의 시공간에서 태어났으며, <b>'{i_val}'</b>과 같은 내면적 성품을 갖고 살아가고 있습니다.
+        </p>
+    </div>
+    <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
+    """
+
 def get_closing_html(name):
     return f"""
     <div style='margin-top: 30px;'>
@@ -467,7 +489,8 @@ def get_closing_html(name):
         <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 인생의 길흉화복과 명리에 대한 더 깊은 지혜가 필요하실 때 언제든 <b>'초연 시공명리 연구소 사주박사'</b>를 찾아 주십시오.</p>
         <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
         <div style='text-align: right; margin-top: 30px;'>
-            <span style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 사주박사 드림 -</span>
+            <div style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 -</div>
+            <div style='font-weight: 900; font-size: 18px; color: #1A237E; margin-top: 4px;'>사주박사 드림</div>
         </div>
     </div>
     """
@@ -624,28 +647,6 @@ def get_final_report_box(content_html):
 # ※ 향후 비교 기능이 보강되며 추가되는 렌더링 함수는 이 PART 4 맨 뒤에 계속 이어서 추가하면 됩니다.
  
 # ==============================================================================
- 
-def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_name="알수없음격"):
-    SEASON_SOLAR_TERMS = {
-        '寅': '입춘과 경칩 사이의 이른 봄(寅月)', '卯': '경칩과 청명 사이의 완연한 봄(卯月)',
-        '辰': '청명과 입하 사이의 봄과 여름의 환절기(辰月)', '巳': '입하와 망종 사이의 이른 여름(巳月)',
-        '午': '망종과 소서 사이의 완연한 여름(午月)', '未': '소서와 입추 사이의 가장 무더운 여름(未月)',
-        '申': '입추와 백로 사이의 이른 가을(申月)', '酉': '백로와 한로 사이의 완연한 가을(酉月)',
-        '戌': '한로와 입동 사이의 가을과 겨울의 환절기(戌月)', '亥': '입동과 대설 사이의 이른 겨울(亥月)',
-        '子': '대설과 소한 사이의 완연한 한겨울(子月)', '丑': '소한과 입춘 사이의 가장 추운 겨울(丑月)'
-    }
-    wol_korean_str = SEASON_SOLAR_TERMS.get(mb, f"{mb}월")
-    return f"""
-    <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
-        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
-            기존 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
-        </p>
-        <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 0;'>
-            또한, 시공명리학적으로 풀이하면 <b>'{w_val}'</b>의 시공간에서 태어났으며, <b>'{i_val}'</b>과 같은 내면적 성품을 갖고 살아가고 있습니다.
-        </p>
-    </div>
-    <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
-    """
  
 def get_external_raw_text_box(other_text):
     # 빈 줄(문단 구분)을 기준으로 나누고, 각 문단을 AI 본문과 동일한 <p> 스타일로 렌더링
