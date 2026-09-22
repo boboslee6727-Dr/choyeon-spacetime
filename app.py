@@ -956,10 +956,10 @@ if st.session_state.get('app_running', False):
         w_val = choyeon_db.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
         i_val = choyeon_db.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         struct_data = choyeon_db.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+        ideal_spouse_data = choyeon_db.get("ideal_spouse", {}).get(i_key, {})
         
-        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
-        golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
-
+        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)        golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
+        
         golden_box_gunghap_html = golden_text_html
         if is_2person:
             try:
@@ -976,7 +976,8 @@ if st.session_state.get('app_running', False):
                 p_w_val = choyeon_db.get("wolryeong", {}).get(p_w_key, f"[{p_w_key}] 시공간 데이터 없음")
                 p_i_val = choyeon_db.get("ilju", {}).get(p_i_key, f"[{p_i_key}] 성품 데이터 없음")
                 p_struct_data = choyeon_db.get("ilju_structure", {}).get(p_i_key, ["구조 미상", "유형 미상", "성향 미상"])
-                
+                p_ideal_spouse_data = choyeon_db.get("ideal_spouse", {}).get(p_i_key, {})
+
                 p_gyuk, _ = engine.get_gyukgook_detailed(p_ds, p_ys, p_ms, p_hs, p_mb)
                 
                 p_golden_html = html_views.get_golden_text(
@@ -1175,11 +1176,23 @@ if st.session_state.get('app_running', False):
             m_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
             f_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
 
+        # 🚨 궁합용: 남명/여명 이상적 배우자상 + 혼인상태(돌싱 포함) 준비
+        male_ideal_data = ideal_spouse_data if gender == "남성" else (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {})
+        female_ideal_data = (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {}) if gender == "남성" else ideal_spouse_data
+        m_ideal_spouse_fact = male_ideal_data.get("남명", "이상적 배우자상 데이터 없음")
+        f_ideal_spouse_fact = female_ideal_data.get("여명", "이상적 배우자상 데이터 없음")
+        m_marital_val = u_marital if gender == "남성" else st.session_state.get("f_m_stat", "선택")
+        f_marital_val = st.session_state.get("f_m_stat", "선택") if gender == "남성" else u_marital
+
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
             "age_prompt": engine.get_age_prompt(age), "gender_prompt": engine.get_gender_prompt(gender), 
             "marital_prompt": engine.get_marital_prompt(gender, u_marital), "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
+            "m_ideal_spouse_fact": m_ideal_spouse_fact,
+            "f_ideal_spouse_fact": f_ideal_spouse_fact,
+            "m_marital": m_marital_val,
+            "f_marital": f_marital_val,
             "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
@@ -1221,9 +1234,7 @@ if st.session_state.get('app_running', False):
             "ohang_supply_str": engine.get_ohang_deficiency_supply_str(counts, [
                 ("대운", dw_g_cur, dw_j_cur, engine._is_daewun_first_half(age, current_daewun_age)),
                 ("세운", engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], engine._is_sewun_first_half(_now_kst)),
-                ("월운", _cur_wol_pillar[0], _cur_wol_pillar[1], engine._is_wolun_first_half(_now_kst)),
-                ("일운", _today_pillar_d[0], _today_pillar_d[1], engine._is_ilun_first_half(_now_kst.hour, _now_kst.minute)),
-            ]),        
+            ]),       
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name
         }
