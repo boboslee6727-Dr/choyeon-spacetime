@@ -850,6 +850,9 @@ if st.session_state.get('app_running', False):
         target_shinsal_names = ["년살", "망신살", "역마살"]
         cheon_eul_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if dw['j_hanja'] in guiin_branches]
         shinsal_daewun_matches = []
+        gosin_gwasook_ji, gosin_gwasook_label = engine.get_goshin_gwasook_ji(db, gender) if hasattr(engine, 'get_goshin_gwasook_ji') else (None, None)
+        gosin_gwasook_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if gosin_gwasook_ji and dw['j_hanja'] == gosin_gwasook_ji]
+
         for dw in daewun_data_list:
             hits = [s for s in [dw.get('y_shinsal'), dw.get('d_shinsal')] if s in target_shinsal_names]
             if hits:
@@ -934,33 +937,24 @@ if st.session_state.get('app_running', False):
         sewun_years_list = []
         cheon_eul_sewun_matches = []
         shinsal_sewun_matches = []
+        gosin_gwasook_sewun_matches = []
         for i in range(10):
-            ty = start_year + i
-            tage = current_daewun_age + i
-            base = (ty - 1984) % 60
-            tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
-            tc, tj = engine.K2H_GAN.get(tc_hangul, tc_hangul), engine.K2H_JI.get(tj_hangul, tj_hangul)
-            is_cur_yr = (ty == curr_year)
-            bg_col = "#E1F5FE" if is_cur_yr else "transparent"
-            b_left = "1px solid #ccc"
-            y_shin_this_year = engine.get_12_shinsal(yb, tj)
-            d_shin_this_year = engine.get_12_shinsal(db, tj)
-            se_content += html_views.get_sewun_cell(
-                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
-                tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
-                y_shin_this_year, d_shin_this_year, bg_col, b_left, is_cur_yr)
+            ...
             sewun_years_list.append(f"{ty}년({tc}{tj})")
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
             hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
             if hits:
                 shinsal_sewun_matches.append(f"{ty}년({tc}{tj}): {'/'.join(dict.fromkeys(hits))}")
+            if gosin_gwasook_ji and tj == gosin_gwasook_ji:
+                gosin_gwasook_sewun_matches.append(f"{ty}년({tc}{tj})")
             
         dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
         sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
         sewun_full_fact_str = " / ".join(sewun_years_list)
         cheon_eul_timing_fact_str = " / ".join(cheon_eul_daewun_matches + cheon_eul_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
         dohwa_mangsin_yeokma_fact_str = " / ".join(shinsal_daewun_matches + shinsal_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
+        gosin_gwasook_timing_fact_str = (f"{gosin_gwasook_label}({gosin_gwasook_ji}): " + " / ".join(gosin_gwasook_daewun_matches + gosin_gwasook_sewun_matches)) if gosin_gwasook_ji and (gosin_gwasook_daewun_matches or gosin_gwasook_sewun_matches) else "향후 10년 내 해당 대운·세운 없음"
 
         wol_content = ""
         for i in range(12):
@@ -1254,6 +1248,7 @@ if st.session_state.get('app_running', False):
             "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
             "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
             "shinsal_str": shinsal_str, "cheon_eul": guiin_str, "samjae_str": cur_samjae,
+            "gosin_gwasook_timing_fact_str": gosin_gwasook_timing_fact_str,
             "curr_year": target_year_val, "cur_sewun_gan": cur_sewun_gan_val, "cur_sewun_ji": cur_sewun_ji_val,
             "target_year": target_year_val, "curr_m": curr_m, "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
             "cheon_eul_timing_fact_str": cheon_eul_timing_fact_str,
