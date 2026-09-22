@@ -940,7 +940,20 @@ if st.session_state.get('app_running', False):
         shinsal_sewun_matches = []
         gosin_gwasook_sewun_matches = []
         for i in range(10):
-            ...
+            ty = start_year + i
+            tage = current_daewun_age + i
+            base = (ty - 1984) % 60
+            tc_hangul, tj_hangul = engine.GAN[base % 10], engine.JI[base % 12]
+            tc, tj = engine.K2H_GAN.get(tc_hangul, tc_hangul), engine.K2H_JI.get(tj_hangul, tj_hangul)
+            is_cur_yr = (ty == curr_year)
+            bg_col = "#E1F5FE" if is_cur_yr else "transparent"
+            b_left = "1px solid #ccc"
+            y_shin_this_year = engine.get_12_shinsal(yb, tj)
+            d_shin_this_year = engine.get_12_shinsal(db, tj)
+            se_content += html_views.get_sewun_cell(
+                f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
+                tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
+                y_shin_this_year, d_shin_this_year, bg_col, b_left, is_cur_yr)
             sewun_years_list.append(f"{ty}년({tc}{tj})")
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
