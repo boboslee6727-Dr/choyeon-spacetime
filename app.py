@@ -968,7 +968,9 @@ if st.session_state.get('app_running', False):
         ) if w_detail else "60월령 상세 데이터 없음"
         
         gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
+        golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
         golden_box_gunghap_html = golden_text_html
+
         if is_2person:
             try:
                 p_ys = partner_bazi[3][0] if len(partner_bazi[3]) > 0 else "甲"
