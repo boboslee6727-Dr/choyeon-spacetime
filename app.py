@@ -1362,13 +1362,22 @@ if st.session_state.get('app_running', False):
         # [1계열] 종합 및 시계열 운세
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
-            # 1-1. 사주팔자 및 총 운세 풀이 (기본 5대 묶음 + intro_html + 통변)
+            # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변)
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', golden_text_code)
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
             
-            body_content = f"{base_top_block}{intro_block}{formatted_ai}"
+            body_content = f"""
+            {main_title_html}
+            {info_h}
+            {table_html}
+            {master_bar_html}
+            {un_html}
+            {intro_block}
+            {golden_text_code}
+            {formatted_ai}
+            """
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("1-2"):
