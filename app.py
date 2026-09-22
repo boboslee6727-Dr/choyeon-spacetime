@@ -512,10 +512,10 @@ else:
                     other_reading_text = st.text_area("비교할 타 감명서 (궁합) 원문을 넣어 주세요.", height=150, key="text_4_2")
 
         st.markdown("---")
+        st.checkbox("🖋️ 낙관(인장) 미리보기 (박사님 테스트 전용 - 실제 고객 결제 로직에는 영향 없음)", value=False, key="preview_sign_val", on_change=stop_ai)
         
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
-        btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
-        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
+        btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
             st.session_state['print_click_count'] = st.session_state.get('print_click_count', 0) + 1
             print_key = f"print_trigger_{st.session_state['print_click_count']}"
             components.html(f"<script id='{print_key}'>setTimeout(function(){{ window.parent.print(); }}, 1500);</script>", height=0)
@@ -846,6 +846,14 @@ if st.session_state.get('app_running', False):
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
 
+        guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
+        target_shinsal_names = ["년살", "망신살", "역마살"]
+        cheon_eul_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if dw['j_hanja'] in guiin_branches]
+        shinsal_daewun_matches = []
+        for dw in daewun_data_list:
+            hits = [s for s in [dw.get('y_shinsal'), dw.get('d_shinsal')] if s in target_shinsal_names]
+            if hits:
+                shinsal_daewun_matches.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): {'/'.join(dict.fromkeys(hits))}")
         # ----------------------------------------------------------------------
         # 상대방 대운표 연산 (2인용 전용)
         # ----------------------------------------------------------------------
@@ -924,6 +932,8 @@ if st.session_state.get('app_running', False):
 
         se_content = ""
         sewun_years_list = []
+        cheon_eul_sewun_matches = []
+        shinsal_sewun_matches = []
         for i in range(10):
             ty = start_year + i
             tage = current_daewun_age + i
@@ -933,15 +943,24 @@ if st.session_state.get('app_running', False):
             is_cur_yr = (ty == curr_year)
             bg_col = "#E1F5FE" if is_cur_yr else "transparent"
             b_left = "1px solid #ccc"
+            y_shin_this_year = engine.get_12_shinsal(yb, tj)
+            d_shin_this_year = engine.get_12_shinsal(db, tj)
             se_content += html_views.get_sewun_cell(
                 f"{ty}년", tage, engine.get_ss(ds_hanja, tc), tc, get_oh_class(tc), 
                 tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
-                engine.get_12_shinsal(yb, tj), engine.get_12_shinsal(db, tj), bg_col, b_left, is_cur_yr)
+                y_shin_this_year, d_shin_this_year, bg_col, b_left, is_cur_yr)
             sewun_years_list.append(f"{ty}년({tc}{tj})")
+            if tj in guiin_branches:
+                cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
+            hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
+            if hits:
+                shinsal_sewun_matches.append(f"{ty}년({tc}{tj}): {'/'.join(dict.fromkeys(hits))}")
             
         dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
         sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
         sewun_full_fact_str = " / ".join(sewun_years_list)
+        cheon_eul_timing_fact_str = " / ".join(cheon_eul_daewun_matches + cheon_eul_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
+        dohwa_mangsin_yeokma_fact_str = " / ".join(shinsal_daewun_matches + shinsal_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
 
         wol_content = ""
         for i in range(12):
@@ -1338,6 +1357,8 @@ if st.session_state.get('app_running', False):
             curr_gid = st.session_state.get('admin_proc_id', '')
             if curr_gid and st.session_state['admin_orders'].get(curr_gid, {}).get('is_paid', False):
                 is_paid = True
+        elif st.session_state.get('preview_sign_val', False):
+            is_paid = True
 
         safe_part_5 = html_views.get_choyeon_sign_html() if is_paid and hasattr(html_views, 'get_choyeon_sign_html') else ""
         current_ai = ai_output_html if 'ai_output_html' in locals() and ai_output_html else "<p>분석 결과를 불러오지 못했습니다.</p>"
