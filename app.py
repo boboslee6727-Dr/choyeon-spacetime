@@ -269,7 +269,6 @@ else:
 
         st.markdown("""
         <style>
-        div[data-testid="stSelectbox"] label p { font-size: 15px !important; font-weight: 900 !important; color: #000000 !important; }
         div[data-testid="stSelectbox"] div[data-baseweb="select"] * { font-size: 16px !important; font-weight: 800 !important; }
         div[data-testid="stRadio"] { margin-left: 14px !important; padding-left: 10px !important; border-left: 3px solid #C5CAE9 !important; }
         div[data-testid="stRadio"] label p { font-size: 13.5px !important; font-weight: 500 !important; color: #333333 !important; }
