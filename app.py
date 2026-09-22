@@ -388,6 +388,8 @@ else:
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
         st.session_state["s_t"] = b_time
 
+        st.text_area("💬 고민 사연 (선택사항)", value=st.session_state.get("user_concern", ""), placeholder="속상한 일이나 궁금한 점을 자유롭게 적어주세요", key="user_concern", on_change=stop_ai)
+
         # 🌟 상품별 특수 입력 분기
         is_1person = not (main_category == "3. 커플 연애/결혼운 (궁합) 풀이" or "4-2." in u_product)
         is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
