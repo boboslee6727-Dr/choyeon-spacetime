@@ -515,7 +515,8 @@ else:
         st.checkbox("🖋️ 낙관(인장) 미리보기 (박사님 테스트 전용 - 실제 고객 결제 로직에는 영향 없음)", value=False, key="preview_sign_val", on_change=stop_ai)
         
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
-        btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
+        btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
+        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
             st.session_state['print_click_count'] = st.session_state.get('print_click_count', 0) + 1
             print_key = f"print_trigger_{st.session_state['print_click_count']}"
             components.html(f"<script id='{print_key}'>setTimeout(function(){{ window.parent.print(); }}, 1500);</script>", height=0)
