@@ -264,7 +264,7 @@ else:
         st.caption(f"💡 현재 지정 기준일: **{selected_target_date.year}년 {selected_target_date.month}월 {selected_target_date.day}일**")
         st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
 
-        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>📋 분석 상품 선택</div>", unsafe_allow_html=True
+        st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
         st.markdown("""
         <style>
