@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.0 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 86.9 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.0 Master"
+APP_VERSION = "ver 86.9 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 외주 영업부(파이프라인) 호출 문지기
@@ -266,8 +266,10 @@ else:
 
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>📋 분석 상품 선택</div>", unsafe_allow_html=True)
 
+        # 🆕 대제목(main_category)은 크고 굵게, 하위 상품(라디오)은 들여쓰기된 소제목처럼 보이도록 스타일 적용
         st.markdown("""
         <style>
+        div[data-testid="stSelectbox"] label p { font-size: 17px !important; font-weight: 900 !important; color: #1A237E !important; }
         div[data-testid="stSelectbox"] div[data-baseweb="select"] * { font-size: 16px !important; font-weight: 800 !important; }
         div[data-testid="stRadio"] { margin-left: 14px !important; padding-left: 10px !important; border-left: 3px solid #C5CAE9 !important; }
         div[data-testid="stRadio"] label p { font-size: 13.5px !important; font-weight: 500 !important; color: #333333 !important; }
