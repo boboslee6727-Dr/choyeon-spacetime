@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 86.6 - 전통명리/시공명리 구조 재정리판)
+# engine.py (ver 87.0 - 전통명리/시공명리 구조 재정리판)
 # 재정리 기준: 전통명리 코어 -> 공용 실무 유틸 -> 초연 시공명리 확장(맨 마지막, 향후 계속 추가)
 # 함수 로직은 전혀 수정하지 않았고, 배치 순서와 섹션 주석만 재정리했습니다.
 # ==============================================================================
@@ -1188,21 +1188,56 @@ class UniversalPrintableGunghap:
         s3 = max(0, min(10, s3))
         p3 = int((s3 / 10) * 100)
  
-        s4 = 5
-        bad_iljus, goran, nache = ["甲寅", "乙卯", "庚申", "辛酉", "戊辰", "戊戌"], ["甲寅", "乙巳", "丁巳", "戊申", "辛亥"], ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"]
-        m_ilju, f_ilju = m_g[2] + m_j[2], f_g[2] + f_j[2]
-        if m_ilju in bad_iljus or m_ilju in goran or m_ilju in nache: s4 -= 1
-        if f_ilju in bad_iljus or f_ilju in goran or f_ilju in nache: s4 -= 1
-        s4 = max(0, min(5, s4))
-        p4 = int((s4 / 5) * 100)
- 
+        s4 = 10
+        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음양", "음양차착", "음욕", "의처의부", "일인", "홍염"]
+
+        def _day_pillar_evil(g, j, gender):
+            # get_general_shinsal_filtered는 [시,일,월,년] 순서를 요구하므로 변환
+            reordered_g = [g[3], g[2], g[1], g[0]]
+            reordered_j = [j[3], j[2], j[1], j[0]]
+            return get_general_shinsal_filtered(1, reordered_g, reordered_j, gender)
+
+        m_evil = _day_pillar_evil(m_g, m_j, "남성")
+        f_evil = _day_pillar_evil(f_g, f_j, "여성")
+        for _flag in RISK_SHINSAL + ["여연살"]:
+            if any(_flag in x for x in m_evil): s4 -= 1
+        for _flag in RISK_SHINSAL + ["남연살"]:
+            if any(_flag in x for x in f_evil): s4 -= 1
+
+        # 음양 극단 치우침 (8글자 중 양/음 어느 한쪽으로 7개 이상 쏠림)
+        _yang_chars = set("甲丙戊庚壬子寅辰午申戌")
+        def _eum_yang_extreme(g, j):
+            all_chars = [_to_hanja(c) for c in (g + j)]
+            yang_cnt = sum(1 for c in all_chars if c in _yang_chars)
+            return yang_cnt >= 7 or yang_cnt <= 1
+        if _eum_yang_extreme(m_g, m_j): s4 -= 1
+        if _eum_yang_extreme(f_g, f_j): s4 -= 1
+
+        # 관살혼잡(여성) / 재성혼잡(남성)
+        def _has_honjap(day_gan, chars, type_a, type_b):
+            ss_list = [get_ss(day_gan, c) for c in chars]
+            return (type_a in ss_list) and (type_b in ss_list)
+        if _has_honjap(m_g[2], m_g + m_j, "정재", "편재"): s4 -= 1   # 남성 재성혼잡
+        if _has_honjap(f_g[2], f_g + f_j, "정관", "편관"): s4 -= 1   # 여성 관살혼잡
+
+        # 비겁·식상 폭주(브레이크 없음): 비겁+식상 5개 이상인데 관성·인성이 0개
+        def _ss_count(day_gan, chars, ss_names):
+            return sum(1 for c in chars if get_ss(day_gan, c) in ss_names)
+        BIGYEOP_SIKSANG = ['비견', '겁재', '식신', '상관']
+        GWAN_IN = ['정관', '편관', '편인', '정인']
+        if _ss_count(m_g[2], m_g + m_j, BIGYEOP_SIKSANG) >= 5 and _ss_count(m_g[2], m_g + m_j, GWAN_IN) == 0: s4 -= 1
+        if _ss_count(f_g[2], f_g + f_j, BIGYEOP_SIKSANG) >= 5 and _ss_count(f_g[2], f_g + f_j, GWAN_IN) == 0: s4 -= 1
+
+        s4 = max(0, min(10, s4))
+        p4 = int((s4 / 10) * 100)
+
         s5 = min(10, self.daeun_score)
         p5 = int((s5 / 10) * 100)
- 
+
         risk = 0.0
         if il_rel == "충": risk += 0.10
         elif il_rel in ["형", "원진"]: risk += 0.05
- 
+
         def count_ss_groups_local(dc, chars):
             res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
             for c in chars:
@@ -1213,26 +1248,41 @@ class UniversalPrintableGunghap:
                         if group_ss in res: res[group_ss] += 1
                     except Exception: pass
             return res
- 
+
         m_ss, f_ss = count_ss_groups_local(m_g[2], m_g + m_j), count_ss_groups_local(f_g[2], f_g + f_j)
         if m_ss['비겁'] >= 4: risk += 0.05
         if m_ss['재성'] == 0: risk += 0.05
         if f_ss['식상'] >= 4: risk += 0.05
         if f_ss['관성'] >= 4 or f_ss['관성'] == 0: risk += 0.05
-        risk = min(0.20, risk)
+
+        # 개인별 복음/卯戌합 리스크 반영 (marriage_bogeum_facts와 같은 계산 재사용)
+        m_bazi = {'year_g': m_g[0], 'year_j': m_j[0], 'month_g': m_g[1], 'month_j': m_j[1],
+                  'day_g': m_g[2], 'day_j': m_j[2], 'time_g': m_g[3], 'time_j': m_j[3]}
+        f_bazi = {'year_g': f_g[0], 'year_j': f_j[0], 'month_g': f_g[1], 'month_j': f_j[1],
+                  'day_g': f_g[2], 'day_j': f_j[2], 'time_g': f_g[3], 'time_j': f_j[3]}
+        for _bazi in (m_bazi, f_bazi):
+            _person_risk = 0.0
+            for _line in engine.analyze_love_and_marriage_patterns(_bazi).get('fact_summary_text', []):
+                if '복음' in _line:
+                    _person_risk = max(_person_risk, 0.04)
+                elif '卯·戌' in _line:
+                    _person_risk = max(_person_risk, 0.03)
+            risk += _person_risk
+
+        risk = min(0.22, risk)
         p6_safety = int((1.0 - risk) * 100)
- 
+
         base_bonus = 40
         sub_total = base_bonus + s1 + s2 + s3 + s4 + s5
         self.final_score = max(40, min(100, int(sub_total * (1.0 - risk))))
- 
+
         if self.final_score >= 90: self.grade = "천생연분 (최고의 인연)"
         elif self.final_score >= 85: self.grade = "상생연분 (함께하면 좋은 인연)"
         elif self.final_score >= 80: self.grade = "동행연분 (편안하고 안정적인 인연)"
         elif self.final_score >= 70: self.grade = "보완연분 (서로를 채워주는 인연)"
         elif self.final_score >= 60: self.grade = "성장연분 (이해하며 맞춰가는 인연)"
         else: self.grade = "조율연분 (인내와 배려가 필요한 인연)"
- 
+
         self.details = [
             {"label": "내면의 유대감", "pct": p1, "color": "#9b59b6"},
             {"label": "환경 조화", "pct": p2, "color": "#2ecc71"},
@@ -1241,7 +1291,6 @@ class UniversalPrintableGunghap:
             {"label": "대운 기상도 조화", "pct": p5, "color": "#8e44ad"},
             {"label": "리스크 방어력", "pct": p6_safety, "color": "#e74c3c"}
         ]
- 
  
 # --- 2-4. 이사/개업/택일 실무 로직 ---
  
