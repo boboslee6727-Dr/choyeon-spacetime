@@ -1295,6 +1295,19 @@ if st.session_state.get('app_running', False):
             m_spouse_issue_str = spouse_issue_str
             f_spouse_issue_str = spouse_issue_str
 
+        # 🚨 궁합용: marriage_bogeum_facts(복음/卯戌합)를 남녀 각각 계산해서 합치기 (신청자 1인 기준 값을 덮어씀)
+        if is_2person and hasattr(engine, 'analyze_love_and_marriage_patterns'):
+            m_bazi_dict = {'year_g': m_gans_val[3], 'year_j': m_jjis_val[3], 'month_g': m_gans_val[2], 'month_j': m_jjis_val[2],
+                           'day_g': m_gans_val[1], 'day_j': m_jjis_val[1], 'time_g': m_gans_val[0], 'time_j': m_jjis_val[0]}
+            f_bazi_dict = {'year_g': f_gans_val[3], 'year_j': f_jjis_val[3], 'month_g': f_gans_val[2], 'month_j': f_jjis_val[2],
+                           'day_g': f_gans_val[1], 'day_j': f_jjis_val[1], 'time_g': f_gans_val[0], 'time_j': f_jjis_val[0]}
+            _couple_marriage_lines = []
+            for _bd in (m_bazi_dict, f_bazi_dict):
+                _res = engine.analyze_love_and_marriage_patterns(_bd)
+                if isinstance(_res, dict) and _res.get('fact_summary_text'):
+                    _couple_marriage_lines.extend([l for l in _res['fact_summary_text'] if '복음' in l or '卯·戌' in l])
+            marriage_bogeum_facts = "\n".join(_couple_marriage_lines) if _couple_marriage_lines else ""
+
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
