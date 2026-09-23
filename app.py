@@ -649,7 +649,9 @@ if st.session_state.get('app_running', False):
         for c in gans + jjis:
             oh = engine.get_color(c)
             if oh in counts: counts[oh] += 1
-        
+
+        yongshin_fact_str = engine.get_yongshin_analysis(counts, mb, ds) if hasattr(engine, 'get_yongshin_analysis') else ""        
+
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         guiin_str = guiin_map.get(ds_hanja, '없음')
         curr_y_ji = engine.JI[(curr_year - 1984) % 60 % 12]
@@ -1108,7 +1110,30 @@ if st.session_state.get('app_running', False):
         if hasattr(html_views, 'analyze_samja_combination'):
             samja_comb_facts = html_views.analyze_samja_combination(adv_gan_data, dw_g_cur)
         else:
-            samja_comb_facts = "원국 특이 삼자조합 없음"
+            bazi_dict = {
+                'year_g': ys, 'year_j': yb,
+                'month_g': ms, 'month_j': mb,
+                'day_g': ds, 'day_j': db,
+                'time_g': hs, 'time_j': hb,
+            }
+            
+            _samja_funcs = [
+            'analyze_super_wealth_patterns',
+            'analyze_zishui_jiapja_and_gapwood_patterns',
+            'analyze_love_and_marriage_patterns',
+            'analyze_spacetime_distortion_and_fukim',
+            'analyze_jijanggan_spacetime_dynamics',
+            'analyze_cosmic_gravity_and_samhyeong_patterns',
+            ]
+            
+            _samja_lines = []
+            for _fname in _samja_funcs:
+                if hasattr(engine, _fname):
+                    _result = getattr(engine, _fname)(bazi_dict)
+                    if isinstance(_result, dict) and _result.get('fact_summary_text'):
+                        _samja_lines.extend(_result['fact_summary_text'])
+            
+            samja_comb_facts = "\n".join(_samja_lines) if _samja_lines else "원국 특이 삼자조합 없음"
         
         try:
             shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
@@ -1260,6 +1285,7 @@ if st.session_state.get('app_running', False):
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
             "adv_warning_str": adv_warning_str,
             "health_erosion_facts": health_erosion_str,
+            "yongshin_fact_str": yongshin_fact_str,
             "samja_comb_facts": samja_comb_facts,
             "action_solutions": action_solutions_str,
             "spouse_issue_facts": spouse_issue_str,
