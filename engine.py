@@ -13,11 +13,8 @@ import ephem
 import re
 from korean_lunar_calendar import KoreanLunarCalendar
  
- 
 # ==============================================================================
- 
 # PART 0. 시스템 상수 및 공용 유틸 (변경 없음)
- 
 # ==============================================================================
  
 K2H_GAN = {
@@ -73,13 +70,9 @@ def get_master_system_prompt():
         "오직 순수한 검정색 텍스트와 기본 기호만 사용하여 출력하십시오."
     )
  
- 
 # ==============================================================================
- 
 # PART 1. 전통명리 코어 엔진 (정통 명리학 기초 계산)
- 
 # ==============================================================================
- 
  
 # --- 1-1. 만세력 · 절기 연산 ---
  
@@ -783,11 +776,84 @@ def get_daeun_fact_string(daewun_data_list):
         fact_str += f"- {age_range} 대운 ({ganji}): 주요 기운({ss})\n"
     return fact_str
  
- 
 # --- 1-4. 용신 · 기타 보조 ---
  
+# --- 오행 상생상극 순환 헬퍼 함수 ---
+_OHAENG_CYCLE = ['목', '화', '토', '금', '수']  # 상생 순서: 목생화, 화생토, 토생금, 금생수, 수생목
+
+def _oh_next(e):
+    """e가 생(生)해주는 다음 오행 (e의 자식)"""
+    return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) + 1) % 5]
+
+def _oh_prev(e):
+    """e를 생(生)해주는 이전 오행 (e의 부모)"""
+    return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) - 1) % 5]
+
+def _oh_controls(e):
+    """e가 극(剋)하는 오행"""
+    return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) + 2) % 5]
+
+def _oh_controlled_by(e):
+    """e를 극(剋)하는 오행"""
+    return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) - 2) % 5]
+
 def get_yongshin_analysis(counts, mb, ds):
-    return f"사주 오행 분포(목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}) 및 월지 {mb} 조후 밸런스를 고려한 용신 분석"
+    """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출."""
+    dm = get_color(ds)  # 일간 오행
+    if not dm or dm not in _OHAENG_CYCLE:
+        return "일간 오행을 판별할 수 없어 용신 분석을 생략합니다."
+
+    biguk, inseong = dm, _oh_prev(dm)
+    siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
+
+    support = counts.get(biguk, 0) + counts.get(inseong, 0)
+    drain = counts.get(siksang, 0) + counts.get(jaeseong, 0) + counts.get(gwanseong, 0)
+
+    # 득령(월지) 가중치: 월지 오행이 힘을 보태는 쪽에 +1
+    mb_elem = get_color(mb)
+    deukryeong_note = ""
+    if mb_elem in (biguk, inseong):
+        support += 1
+        deukryeong_note = f"월지({mb})가 일간을 돕는 오행({mb_elem})이라 득령"
+    elif mb_elem in (siksang, jaeseong, gwanseong):
+        drain += 1
+        deukryeong_note = f"월지({mb})가 일간의 기운을 빼가는 오행({mb_elem})이라 실령"
+
+    is_strong = support > drain
+    eok_bu_candidates = [siksang, jaeseong, gwanseong] if is_strong else [inseong, biguk]
+    # 원국에 가장 부족한(개수가 적은) 오행을 억부용신으로
+    eok_bu_yongshin = min(eok_bu_candidates, key=lambda e: counts.get(e, 0))
+
+    # 조후용신: 월지 계절 기준 (겨울은 따뜻하게, 여름은 차갑게)
+    winter, summer = {'亥', '子', '丑'}, {'巳', '午', '未'}
+    johu_yongshin = '화' if mb in winter else ('수' if mb in summer else None)
+
+    if johu_yongshin and counts.get(johu_yongshin, 0) == 0:
+        # 예외 원칙: 조후 필요 오행이 원국에 아예 없고 계절도 극단적이면 조후가 억부를 우선함
+        final_yongshin = johu_yongshin
+        confidence_note = (
+            f"원국에 {johu_yongshin} 기운이 전혀 없고 계절도 극단적({mb}월)이라, "
+            f"억부(신{'강' if is_strong else '약'} → {eok_bu_yongshin})보다 조후를 우선하여 {final_yongshin}을 용신으로 확정"
+        )
+    elif johu_yongshin and johu_yongshin == eok_bu_yongshin:
+        final_yongshin = eok_bu_yongshin
+        confidence_note = f"억부(신{'강' if is_strong else '약'})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
+    else:
+        final_yongshin = eok_bu_yongshin
+        confidence_note = f"억부상 신{'강' if is_strong else '약'}이므로 {final_yongshin}을 용신으로 삼음"
+        if johu_yongshin:
+            confidence_note += f" (계절상으로는 {johu_yongshin}도 보조적으로 필요)"
+
+    huishin, hanshin = _oh_prev(final_yongshin), _oh_next(final_yongshin)
+    gishin = _oh_controlled_by(final_yongshin)
+    gushin = _oh_prev(gishin)
+
+    return (
+        f"일간({ds}, {dm})은 원국 내 지원세력(비겁+인성)={support} vs 소모세력(식상+재성+관성)={drain}로 "
+        f"신{'강' if is_strong else '약'}합니다. {deukryeong_note}. "
+        f"{confidence_note}. "
+        f"용신={final_yongshin}, 희신={huishin}, 기신={gishin}, 구신={gushin}, 한신={hanshin}."
+    )
  
 def get_goshin_gwasook_ji(day_ji, gender):
     """일지 기준 방합 그룹으로 고신살(남명)/과숙살(여명) 지지를 산출.
@@ -804,11 +870,8 @@ def get_goshin_gwasook_ji(day_ji, gender):
             return (gosin_ji if gender == "남성" else gwasook_ji), ("고신" if gender == "남성" else "과숙")
     return None, None
  
- 
 # ==============================================================================
- 
 # PART 2. 공용 실무 유틸 (프롬프트 보조 · 궁합점수 · 택일 · 화면 표시용)
- 
 # ==============================================================================
  
  
@@ -1313,13 +1376,9 @@ def search_dates_by_ganji(ry_h, rm_h, rd_h, rt_ji=None, base_year=None):
  
  
 # ==============================================================================
- 
 # PART 3. 초연 시공명리 확장 엔진 (박사님 고유 이론)
- 
 # ※ 향후 4-1/4-2 비교 결과로 보강되는 새 엔진은 이 PART 3 맨 뒤에 계속 이어서 추가하면 됩니다.
- 
 # ==============================================================================
- 
  
 # --- 3-1. 체용(體用) 폭포수 & 전/후반기(천간/지지) 재해석 ---
  
