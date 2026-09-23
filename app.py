@@ -1432,6 +1432,7 @@ if st.session_state.get('app_running', False):
             {intro_block}
             {golden_text_code}
             {formatted_ai}
+            {closing_part}
             """
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
@@ -1440,7 +1441,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = formatted_ai + safe_part_5
             
-            body_content = f"{base_top_block}{formatted_ai}"
+            body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("1-3"):
@@ -1449,7 +1450,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = formatted_ai + safe_part_5
             
-            body_content = f"{base_top_block}{formatted_ai}"
+            body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("1-4"):
@@ -1462,7 +1463,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = formatted_ai + safe_part_5
             
-            body_content = f"{base_top_block}{formatted_ai}"
+            body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
@@ -1479,7 +1480,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = formatted_ai + safe_part_5
             
-            body_content = f"{base_top_block}{formatted_ai}"
+            body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("2-"):
@@ -1489,7 +1490,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
             formatted_ai = formatted_ai + safe_part_5
             
-            body_content = f"{base_top_block}{formatted_ai}"
+            body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
