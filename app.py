@@ -1126,14 +1126,28 @@ if st.session_state.get('app_running', False):
             'analyze_cosmic_gravity_and_samhyeong_patterns',
             ]
             
-            _samja_lines = []
+            _all_samja_lines = []
             for _fname in _samja_funcs:
                 if hasattr(engine, _fname):
                     _result = getattr(engine, _fname)(bazi_dict)
                     if isinstance(_result, dict) and _result.get('fact_summary_text'):
-                        _samja_lines.extend(_result['fact_summary_text'])
+                        _all_samja_lines.extend(_result['fact_summary_text'])
             
-            samja_comb_facts = "\n".join(_samja_lines) if _samja_lines else "원국 특이 삼자조합 없음"
+            # 내용에 따라 어울리는 상품 테마별로 분류
+            _wonjin_lines = [l for l in _all_samja_lines if '원진귀문' in l]
+            _career_lines = [l for l in _all_samja_lines if '丁·癸 중력' in l]
+            _health_lines = [l for l in _all_samja_lines if '寅巳申' in l]
+            _wealth_extra_lines = [l for l in _all_samja_lines if '토(土) 영역 확장' in l]
+            _marriage_lines = [l for l in _all_samja_lines if '복음' in l or '卯·戌' in l]
+            _routed = set(_wonjin_lines + _career_lines + _health_lines + _wealth_extra_lines + _marriage_lines)
+            _general_lines = [l for l in _all_samja_lines if l not in _routed]
+            
+            samja_comb_facts = "\n".join(_general_lines) if _general_lines else "원국 특이 삼자조합 없음"
+            love_wonjin_facts = "\n".join(_wonjin_lines) if _wonjin_lines else ""
+            career_aptitude_facts = "\n".join(_career_lines) if _career_lines else ""
+            health_samhyeong_facts = "\n".join(_health_lines) if _health_lines else ""
+            wealth_earth_facts = "\n".join(_wealth_extra_lines) if _wealth_extra_lines else ""
+            marriage_bogeum_facts = "\n".join(_marriage_lines) if _marriage_lines else ""
         
         try:
             shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
@@ -1287,6 +1301,11 @@ if st.session_state.get('app_running', False):
             "health_erosion_facts": health_erosion_str,
             "yongshin_fact_str": yongshin_fact_str,
             "samja_comb_facts": samja_comb_facts,
+            "love_wonjin_facts": love_wonjin_facts,
+            "career_aptitude_facts": career_aptitude_facts,
+            "health_samhyeong_facts": health_samhyeong_facts,
+            "wealth_earth_facts": wealth_earth_facts,
+            "marriage_bogeum_facts": marriage_bogeum_facts,
             "action_solutions": action_solutions_str,
             "spouse_issue_facts": spouse_issue_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
