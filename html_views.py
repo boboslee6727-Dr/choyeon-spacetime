@@ -13,7 +13,7 @@ import streamlit as st
  
 def get_global_css():
     """전체 시스템 UI/UX 및 화면/인쇄 듀얼 분리 스타일시트 (나눔명조/스타일 충돌 해결)"""
-    return """<style>
+    return """<link rel="preload" href="https://cdn.jsdelivr.net/gh/lxgw/LxgwSeal@0.001-alpha.7.24/TTF/LXGWSeal-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous"><style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&display=swap");
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
@@ -21,7 +21,7 @@ def get_global_css():
         font-family: 'LXGW Seal';
         src: url('https://cdn.jsdelivr.net/gh/lxgw/LxgwSeal@0.001-alpha.7.24/TTF/LXGWSeal-Regular.ttf') format('truetype');
         font-weight: 400;
-        font-display: swap;
+        font-display: block;
     }
     .stApp { background-color: #E8F5E9 !important; }
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] span[data-testid="stMarkdownContainer"] { font-family: 'Nanum Gothic', sans-serif !important; }
