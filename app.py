@@ -516,10 +516,14 @@ else:
         
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
-        if st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary"):
-            st.session_state['print_click_count'] = st.session_state.get('print_click_count', 0) + 1
-            print_key = f"print_trigger_{st.session_state['print_click_count']}"
-            components.html(f"<script id='{print_key}'>setTimeout(function(){{ window.parent.print(); }}, 1500);</script>", height=0)
+
+        components.html("""
+            <button onclick="window.parent.print();" style="
+                width:100%; height:50px; font-family:'Nanum Gothic', sans-serif; font-weight:900; font-size:16px;
+                border-radius:8px; border:none; background-color:#00A843; color:#FFFFFF; cursor:pointer;">
+                🖨️ 풀이 결과 인쇄 / PDF 저장
+            </button>
+        """, height=60)
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
@@ -1382,6 +1386,7 @@ if st.session_state.get('app_running', False):
             is_paid = True
 
         safe_part_5 = html_views.get_choyeon_sign_html() if is_paid and hasattr(html_views, 'get_choyeon_sign_html') else ""
+        closing_part = html_views.get_closing_html(name, sign_html=safe_part_5).strip()
         current_ai = ai_output_html if 'ai_output_html' in locals() and ai_output_html else "<p>분석 결과를 불러오지 못했습니다.</p>"
 
         final_render_html = ""
@@ -1416,7 +1421,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"""
             {main_title_html}
@@ -1433,7 +1438,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-2"):
             # 1-2. 올 해 운세 풀이 (연운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1442,7 +1447,7 @@ if st.session_state.get('app_running', False):
             # 1-3. 이번 달 운세 풀이 (월운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1455,7 +1460,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1472,7 +1477,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1482,7 +1487,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')  
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1505,7 +1510,7 @@ if st.session_state.get('app_running', False):
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html) if hasattr(html_views, 'get_daewun_compare_box') else ""
             
             g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
-            g_ess = sub_marker(g_ess, 'CHOYEON_SIGN_HERE', safe_part_5)
+            g_ess = g_ess + safe_part_5
 
             score_ui, closing_ui = "", ""
             if 'gh_engine' in locals() and hasattr(html_views, 'get_gunghap_score_visual_html'):
@@ -1527,7 +1532,7 @@ if st.session_state.get('app_running', False):
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
             body_content = f"{main_title_html}{couple_header}{formatted_ai}"
@@ -1539,7 +1544,7 @@ if st.session_state.get('app_running', False):
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
+            formatted_ai = formatted_ai + safe_part_5
             
             couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
             body_content = f"{main_title_html}{couple_header}{formatted_ai}"
@@ -1555,8 +1560,7 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.get_final_report_box(warn_html)
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text) if hasattr(html_views, 'get_external_raw_text_box') else f"<div>{user_entered_text}</div>"
-                formatted_ai = sub_marker(current_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-                formatted_ai = sub_marker(formatted_ai, 'DAEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
                 formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
                 
                 body_content = f"{base_top_block}{external_raw_box}{formatted_ai}"
@@ -1569,8 +1573,7 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.get_final_report_box(warn_html)
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text) if hasattr(html_views, 'get_external_raw_text_box') else f"<div>{user_entered_text}</div>"
-                formatted_ai = sub_marker(current_ai, 'CHOYEON_SIGN_HERE', safe_part_5)
-                formatted_ai = sub_marker(formatted_ai, 'COUPLE_DAEWUN_TABLES_HERE', '')
+                formatted_ai = sub_marker(current_ai, 'COUPLE_DAEWUN_TABLES_HERE', '')
                 
                 couple_header_box = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
                 body_content = f"{main_title_html}{couple_header_box}{external_raw_box}{formatted_ai}"
