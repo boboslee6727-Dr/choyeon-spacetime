@@ -680,31 +680,18 @@ def render_comparison_report(part_1_fact, external_raw_box, ai_comparison_html):
     return get_final_report_box(master_body)
 
 def get_choyeon_sign_html():
-    """붉은 인주 느낌의 사각 낙관 두 개('樵燃時空' / '四柱博士')를 그려서 반환"""
-    def _seal_box(ch1, ch2, ch3, ch4, rotate):
-        return f"""
-        <div style="
-            width: 90px; height: 90px;
-            background-color: #B71C1C;
-            border: 2px solid #7B1010;
-            border-radius: 3px;
-            transform: rotate({rotate}deg);
-            box-shadow: 1px 2px 5px rgba(0,0,0,0.3);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            padding: 5px;
-            box-sizing: border-box;
-        ">
-            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch1}</div>
-            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch2}</div>
-            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch3}</div>
-            <div style="color:#FFF; font-family:'Noto Serif KR', serif; font-weight:900; font-size:19px; display:flex; align-items:center; justify-content:center;">{ch4}</div>
-        </div>
-        """
-    return f"""
-    <div style="display:flex; justify-content:flex-end; gap:14px; margin:25px 40px 10px 0;">
-        {_seal_box('樵','燃','時','空', -4)}
-        {_seal_box('四','柱','博','士', 3)}
+    """붉은 인주색 전서체 글자, 흰 바탕의 정사각형 낙관 1개 ('樵燃時空' / '四柱博士', 반듯하게)"""
+    return """
+    <div style="
+        display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+        width: 130px; height: 130px;
+        border: 4.5px solid #BC1E18;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        padding: 6px;
+        box-sizing: border-box;
+    ">
+        <div style="font-family:'LXGW Seal', 'Batang', serif; font-size:23px; line-height:1.3; color:#BC1E18; letter-spacing:2px; text-align:center; white-space:nowrap; font-weight:bold;">樵燃時空</div>
+        <div style="font-family:'LXGW Seal', 'Batang', serif; font-size:23px; line-height:1.3; color:#BC1E18; letter-spacing:2px; text-align:center; white-space:nowrap; font-weight:bold;">四柱博士</div>
     </div>
     """
