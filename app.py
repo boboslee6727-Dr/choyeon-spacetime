@@ -1421,6 +1421,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
+            formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', '')
             formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"""
