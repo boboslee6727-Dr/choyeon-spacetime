@@ -1283,6 +1283,18 @@ if st.session_state.get('app_running', False):
         m_marital_val = u_marital if gender == "남성" else st.session_state.get("f_m_stat", "선택")
         f_marital_val = st.session_state.get("f_m_stat", "선택") if gender == "남성" else u_marital
 
+        # 🚨 궁합용: 남명/여명 각각의 배우자궁 안정성(spouse_issue_facts) 준비
+        if is_2person and hasattr(engine, 'analyze_saju_facts_advanced'):
+            m_adv_saju_data = {'year_ji': m_jjis_val[3], 'month_ji': m_jjis_val[2], 'day_ji': m_jjis_val[1], 'hour_ji': m_jjis_val[0]}
+            f_adv_saju_data = {'year_ji': f_jjis_val[3], 'month_ji': f_jjis_val[2], 'day_ji': f_jjis_val[1], 'hour_ji': f_jjis_val[0]}
+            _, _, m_adv_flags = engine.analyze_saju_facts_advanced(m_adv_saju_data, dw_j_cur, sewun_ji_param)
+            _, _, f_adv_flags = engine.analyze_saju_facts_advanced(f_adv_saju_data, dw_j_cur, sewun_ji_param)
+            m_spouse_issue_str = m_adv_flags.get("spouse_issue_facts", "배우자궁 비교적 안정적 흐름 유지")
+            f_spouse_issue_str = f_adv_flags.get("spouse_issue_facts", "배우자궁 비교적 안정적 흐름 유지")
+        else:
+            m_spouse_issue_str = spouse_issue_str
+            f_spouse_issue_str = spouse_issue_str
+
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
             "ilju_master_prompt_context": ilju_master_context,
