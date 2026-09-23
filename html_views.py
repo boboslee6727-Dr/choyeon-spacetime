@@ -480,9 +480,9 @@ def get_closing_html(name, sign_html=""):
     return f"""
     <div style='margin-top: 30px;'>
         <hr style='border: 0; border-top: 2px dashed #1A237E; margin: 35px 0 20px 0;'>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><b>'사주(四柱)'</b>는 태어날 때 부여받은 바코드(bar-code)와 같지만, 우리가 살아가며 마주하는 <b>'운(運)'</b>은 늘 변화하며 흐릅니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 <b>'초연 시공명리와의 인연'</b>이 <b>{name}님의 삶이라는 긴 여정</b>에서 올바른 방향을 잡는 든든한 <b>'나침반'</b>이 되기를 진심으로 기원합니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 인생의 길흉화복과 명리에 대한 더 깊은 지혜가 필요하실 때 언제든 <b>'초연 시공명리 연구소 사주박사'</b>를 찾아 주십시오.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><b>'사주팔자(四柱八字)'</b>는 태어날 때 부여받은 <b>바코드(bar-code)</b>와 같지만, 우리가 살아가며 마주하는 <b>'운(運)'</b>은 늘 변화하며 흐릅니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 올바른 방향을 잡는 든든한 <b>'나침반'</b>이 되기를 진심으로 기원합니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 <b>'인생의 길흉화복'</b>과 <b>'명리에 대한 더 깊은 지혜'</b>가 필요하실 때 언제든 <b>'초연 시공명리 연구소 사주박사'</b>를 찾아 주십시오.</p>
         <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
         <div style='display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 30px;'>
             <div style='text-align: right;'>
