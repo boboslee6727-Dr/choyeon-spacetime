@@ -108,6 +108,13 @@ def get_total_time_adjustment(dt):
         if s <= dt <= e: adj -= 60; break
     return adj
  
+def lunar_to_solar(y, m, d, is_leap=False):
+    """음력 날짜(y, m, d)를 양력(year, month, day)으로 변환"""
+    klc = KoreanLunarCalendar()
+    if klc.setLunarDate(y, m, d, is_leap):
+        return klc.solarYear, klc.solarMonth, klc.solarDay
+    return y, m, d  # 변환 실패 시 원본 반환 (안전장치)
+
 def get_true_year_month_pillar(year, month, day, hour, minute):
     kst = pytz.timezone('Asia/Seoul')
     dt_kst = kst.localize(datetime(year, month, day, hour, minute))
