@@ -512,12 +512,13 @@ else:
                     other_reading_text = st.text_area("비교할 타 감명서 (궁합) 원문을 넣어 주세요.", height=150, key="text_4_2")
 
         st.markdown("---")
-        st.checkbox("🖋️ 낙관(인장) 미리보기 (박사님 테스트 전용 - 실제 고객 결제 로직에는 영향 없음)", value=False, key="preview_sign_val", on_change=stop_ai)
+        st.checkbox("🖋️ 낙관(인장) 미리보기", value=False, key="preview_sign_val", on_change=stop_ai)
         
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
         components.html("""
+            <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap" rel="stylesheet">
             <button onclick="window.parent.print();" style="
                 width:100%; height:50px; font-family:'Nanum Gothic', sans-serif; font-weight:900; font-size:16px;
                 border-radius:8px; border:none; background-color:#00A843; color:#FFFFFF; cursor:pointer;">
@@ -1200,6 +1201,8 @@ if st.session_state.get('app_running', False):
         _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
 
+        dw_gj_cur = dw_g_cur + dw_j_cur  # 제목용 짧은 대운 간지 (예: 戊午)
+
         try:
             w_facts = engine.get_woonse_analysis_facts(
                 ds, db, dw_g_cur, dw_j_cur,
@@ -1353,6 +1356,7 @@ if st.session_state.get('app_running', False):
             "m_marital": m_marital_val,
             "f_marital": f_marital_val,
             "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
+            "dw_gj_cur": dw_gj_cur,
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
