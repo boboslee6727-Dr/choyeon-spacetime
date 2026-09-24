@@ -60,7 +60,7 @@ def get_global_css():
     .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 13px; line-height: 1.2 !important; }
     /* 🌟 대운/세운/월운/일운표의 십성·운성·신살 글자를 원국표와 동일한 굵기로 통일 */
-    .un-sub-text { font-weight: 900 !important; }
+    .un-sub-text { font-weight: 900 !important; font-size: 13px !important; }
     .ganji-cell-24 { font-size: 24px !important; font-weight: 900 !important; }
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
@@ -345,7 +345,7 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
  
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
-        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{title_str}</div>
+        <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; white-space:nowrap; border-bottom:1px solid #ccc;'>{title_str}</div>
         <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{ji}</div>
@@ -570,14 +570,14 @@ def get_gunghap_three_page_report(male_saju_html, m_ess, female_saju_html, f_ess
     clean_g_ess = str(g_ess).replace(pb_tag, "").strip() if g_ess else ""
  
     m_content = f"""
-        <h1 style='text-align:center !important; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
+        <h1 style='text-align:center !important; color:#1565C0; font-weight:800; border-bottom:2px solid #1565C0; padding-bottom:10px; margin-bottom:15px; margin-top:0 !important; font-size:21px;'>[ ♂️ 남명 사주 요약 ]</h1>
         {male_saju_html}
         <div style='margin-top:15px;'>{clean_m_ess}</div>
     """
     m_page = get_final_report_box(m_content)
  
     f_content = f"""
-        <h1 style='text-align:center !important; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
+        <h1 style='text-align:center !important; color:#4A148C; font-weight:800; border-bottom:2px solid #4A148C; padding-bottom:10px; margin-bottom:15px; margin-top:0 !important; font-size:21px;'>[ ♀️ 여명 사주 요약 ]</h1>
         {female_saju_html}
         <div style='margin-top:15px;'>{clean_f_ess}</div>
     """
