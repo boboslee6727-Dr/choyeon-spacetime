@@ -1323,7 +1323,7 @@ class UniversalPrintableGunghap:
                   'day_g': f_g[2], 'day_j': f_j[2], 'time_g': f_g[3], 'time_j': f_j[3]}
         for _bazi in (m_bazi, f_bazi):
             _person_risk = 0.0
-            for _line in engine.analyze_love_and_marriage_patterns(_bazi).get('fact_summary_text', []):
+            for _line in analyze_love_and_marriage_patterns(_bazi).get('fact_summary_text', []):
                 if '복음' in _line:
                     _person_risk = max(_person_risk, 0.04)
                 elif '卯·戌' in _line:
