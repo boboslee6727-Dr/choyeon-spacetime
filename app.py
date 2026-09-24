@@ -517,16 +517,9 @@ else:
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
-        components.html("""
-            <style>
-            @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
-            </style>
-            <button onclick="window.parent.print();" style="
-                width:100%; height:50px; font-family:'Nanum Gothic', sans-serif; font-weight:800; font-size:16px;
-                border-radius:8px; border:none; background-color:#00A843; color:#FFFFFF; cursor:pointer;">
-                🖨️ 풀이 결과 인쇄 / PDF 저장
-            </button>
-        """, height=60)
+        btn_print = st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary")
+        if btn_print:
+            components.html("<script>window.parent.print();</script>", height=0)
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
@@ -1204,6 +1197,8 @@ if st.session_state.get('app_running', False):
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
 
         dw_gj_cur = dw_g_cur + dw_j_cur  # 제목용 짧은 대운 간지 (예: 戊午)
+        sewun_gj_cur = engine.GAN[(curr_year-1984)%60%10] + engine.JI[(curr_year-1984)%60%12]  # 제목용 짧은 세운 간지 (예: 丙午)
+        sewun_gj_han_cur = engine.get_han_reading(sewun_gj_cur)  # 한글 발음 (예: 병오)
 
         try:
             w_facts = engine.get_woonse_analysis_facts(
@@ -1375,9 +1370,11 @@ if st.session_state.get('app_running', False):
             "action_solutions": action_solutions_str,
             "m_spouse_issue_facts": m_spouse_issue_str,
             "f_spouse_issue_facts": f_spouse_issue_str,
+            "dw_gj_han_cur": dw_gj_han_cur,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
             "daewun_full_fact_str": daewun_full_fact_str,
+            "sewun_gj_han_cur": sewun_gj_han_cur,
             "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
             "woonse_fact_str": w_facts.get("woonse_fact_str", "[⚠️ 시스템 오류: 폭포수 체용 데이터 계산 실패 — 이 항목에 근거해 재물·구체적 사건을 절대 단정하지 말고, 세운 십성의 일반적 의미만 원론적으로 서술할 것]"),
