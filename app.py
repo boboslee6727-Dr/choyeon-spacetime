@@ -1623,13 +1623,22 @@ if st.session_state.get('app_running', False):
             f_match = re.search(r'\[FEMALE_START\](.*?)\[FEMALE_END\]', current_ai, re.DOTALL)
             if f_match: f_ess = f_match.group(1).strip()
             g_match = re.search(r'\[GUNGHAP_START\](.*?)\[GUNGHAP_END\]', current_ai, re.DOTALL)
-            if g_match: g_ess = g_match.group(1).strip()
+            if g_match:
+                g_ess = g_match.group(1).strip()
+            else:
+                # 🚨 AI가 [GUNGHAP_START]~[GUNGHAP_END] 태그를 제대로 못 닫았을 때,
+                # 남명/여명 파트가 궁합란에 중복으로 섞이지 않도록 그 부분을 빼고 나머지만 사용
+                g_ess = current_ai
+                if m_match: g_ess = g_ess.replace(m_match.group(0), "")
+                if f_match: g_ess = g_ess.replace(f_match.group(0), "")
+                g_ess = g_ess.strip()
 
             m_daewun_html = un_html if gender == "남성" else (p_un_html if 'p_un_html' in locals() else un_html)
             f_daewun_html = (p_un_html if 'p_un_html' in locals() else un_html) if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html) if hasattr(html_views, 'get_daewun_compare_box') else ""
             
             g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
+            g_ess = sub_marker(g_ess, 'DAEWUN_TABLE_HERE', c_daewun_html)  # AI가 마커 이름을 줄여 쓰는 경우 대비
             g_ess = g_ess + safe_part_5
 
             score_ui, closing_ui = "", ""
