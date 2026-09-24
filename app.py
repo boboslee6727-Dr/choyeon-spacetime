@@ -518,9 +518,11 @@ else:
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
         components.html("""
-            <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap" rel="stylesheet">
+            <style>
+            @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800;900&display=swap');
+            </style>
             <button onclick="window.parent.print();" style="
-                width:100%; height:50px; font-family:'Nanum Gothic', sans-serif; font-weight:900; font-size:16px;
+                width:100%; height:50px; font-family:'Nanum Gothic', sans-serif; font-weight:800; font-size:16px;
                 border-radius:8px; border:none; background-color:#00A843; color:#FFFFFF; cursor:pointer;">
                 🖨️ 풀이 결과 인쇄 / PDF 저장
             </button>
