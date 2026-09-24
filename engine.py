@@ -798,8 +798,11 @@ def _oh_controlled_by(e):
     return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) - 2) % 5]
 
 def get_yongshin_analysis(counts, mb, ds):
-    """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출."""
-    dm = get_color(ds)  # 일간 오행
+    """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출.
+    억부용신과 조후용신이 다르고 조후 필요 오행이 희박(1개 이하)하며 계절도 극단적인 경우,
+    두 용신이 상생 관계면 겸용 용신으로, 상극 관계면 조후 불균형을 '증상'으로만 짚고
+    억부용신 단독 체제를 유지한다(조후 오행을 억지로 보강하면 용신을 해치는 모순을 방지)."""
+    dm = get_color(ds)
     if not dm or dm not in _OHAENG_CYCLE:
         return "일간 오행을 판별할 수 없어 용신 분석을 생략합니다."
 
@@ -809,7 +812,6 @@ def get_yongshin_analysis(counts, mb, ds):
     support = counts.get(biguk, 0) + counts.get(inseong, 0)
     drain = counts.get(siksang, 0) + counts.get(jaeseong, 0) + counts.get(gwanseong, 0)
 
-    # 득령(월지) 가중치: 월지 오행이 힘을 보태는 쪽에 +1
     mb_elem = get_color(mb)
     deukryeong_note = ""
     if mb_elem in (biguk, inseong):
@@ -821,23 +823,33 @@ def get_yongshin_analysis(counts, mb, ds):
 
     is_strong = support > drain
     eok_bu_candidates = [siksang, jaeseong, gwanseong] if is_strong else [inseong, biguk]
-    # 원국에 가장 부족한(개수가 적은) 오행을 억부용신으로
     eok_bu_yongshin = min(eok_bu_candidates, key=lambda e: counts.get(e, 0))
 
-    # 조후용신: 월지 계절 기준 (겨울은 따뜻하게, 여름은 차갑게)
     winter, summer = {'亥', '子', '丑'}, {'巳', '午', '未'}
     johu_yongshin = '화' if mb in winter else ('수' if mb in summer else None)
 
-    if johu_yongshin and counts.get(johu_yongshin, 0) == 0:
-        # 예외 원칙: 조후 필요 오행이 원국에 아예 없고 계절도 극단적이면 조후가 억부를 우선함
-        final_yongshin = johu_yongshin
-        confidence_note = (
-            f"원국에 {johu_yongshin} 기운이 전혀 없고 계절도 극단적({mb}월)이라, "
-            f"억부(신{'강' if is_strong else '약'} → {eok_bu_yongshin})보다 조후를 우선하여 {final_yongshin}을 용신으로 확정"
-        )
-    elif johu_yongshin and johu_yongshin == eok_bu_yongshin:
+    secondary_yongshin = None  # 겸용 용신(상생 관계일 때만 채움)
+
+    if johu_yongshin and johu_yongshin == eok_bu_yongshin:
         final_yongshin = eok_bu_yongshin
         confidence_note = f"억부(신{'강' if is_strong else '약'})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
+    elif johu_yongshin and counts.get(johu_yongshin, 0) <= 1:
+        # 조후 필요 오행이 희박(1개 이하)하고 계절도 극단적인 경우 → 상생/상극으로 처리 분기
+        is_friendly = (johu_yongshin == _oh_prev(eok_bu_yongshin)) or (eok_bu_yongshin == _oh_prev(johu_yongshin))
+        if is_friendly:
+            final_yongshin = eok_bu_yongshin
+            secondary_yongshin = johu_yongshin
+            confidence_note = (
+                f"억부상 {eok_bu_yongshin}, 조후상 {johu_yongshin}이 모두 필요하고 두 기운이 상생 관계이므로, "
+                f"{eok_bu_yongshin}과 {johu_yongshin}을 함께 쓰는 겸용 용신으로 확정"
+            )
+        else:
+            final_yongshin = eok_bu_yongshin
+            confidence_note = (
+                f"억부상 신{'강' if is_strong else '약'}이므로 {eok_bu_yongshin}을 용신으로 삼되, "
+                f"조후상 필요한 {johu_yongshin}이 {eok_bu_yongshin}과 상극 관계라 억지로 보강할 수 없어, "
+                f"조후 불균형({mb}월 한습/조열)으로 인한 현실적 애로는 별도의 증상으로만 짚고 보강 대상으로는 삼지 않음"
+            )
     else:
         final_yongshin = eok_bu_yongshin
         confidence_note = f"억부상 신{'강' if is_strong else '약'}이므로 {final_yongshin}을 용신으로 삼음"
@@ -848,11 +860,18 @@ def get_yongshin_analysis(counts, mb, ds):
     gishin = _oh_controlled_by(final_yongshin)
     gushin = _oh_prev(gishin)
 
+    label = (
+        f"[용신={final_yongshin}"
+        + (f" (겸용:{secondary_yongshin})" if secondary_yongshin else "")
+        + f" / 희신(용신을 돕는 이로운 기운)={huishin} / "
+        f"기신(용신을 해치는 해로운 기운, 반드시 피해야 함)={gishin} / 구신={gushin} / 한신={hanshin}] "
+    )
+
     return (
+        label +
         f"일간({ds}, {dm})은 원국 내 지원세력(비겁+인성)={support} vs 소모세력(식상+재성+관성)={drain}로 "
         f"신{'강' if is_strong else '약'}합니다. {deukryeong_note}. "
-        f"{confidence_note}. "
-        f"용신={final_yongshin}, 희신={huishin}, 기신={gishin}, 구신={gushin}, 한신={hanshin}."
+        f"{confidence_note}."
     )
  
 def get_goshin_gwasook_ji(day_ji, gender):
