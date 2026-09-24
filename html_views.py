@@ -230,7 +230,7 @@ def get_couple_cover(version="", report_title="", u_icon="♂️", u_name="무�
                 </div>
             </div>
             <div style='background: #FFF3E0; border: 1px solid #FBE9E7; padding: 16px 18px; border-radius: 14px; margin-bottom: 22px;'>
-                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 800; color: #C62828; margin: 0 0 6px 0;'>{p_icon} 여명 : {clean_p_name} 님 ({p_age}세)</h2>
+                <h2 style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 800; color: #C62828; margin: 0 0 6px 0;'>{p_icon} 여명 : <span style='color:#000000 !important;'>{clean_p_name}</span> 님 ({p_age}세)</h2>
                 <div style='font-family: "Nanum Myeongjo", serif; font-size: 16px; line-height: 1.6;'>
                     <p style='margin: 0; text-align: center; white-space: nowrap; color: #000000;'><strong style='font-weight: 800;'>[양력] {p_sol} | [음력] {p_lun}</strong></p>
                     <p style='margin: 3px 0 0 0; text-align: center; white-space: nowrap; font-weight: 800; color: #C62828;'>태어난 시간 : {p_time}</p>
