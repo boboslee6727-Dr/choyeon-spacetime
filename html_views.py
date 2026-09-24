@@ -530,7 +530,7 @@ def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
  
 def get_gunghap_score_visual_html(gh_engine):
     t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
-    bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:130px; font-size:13px; font-weight:bold; color:#555;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:35px; font-size:12px; font-weight:bold;'>{d['pct']}%</div></div>" for d in gh_engine.details])
+    bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:150px; font-size:13px; font-weight:bold; color:#555; white-space:nowrap;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:40px; font-size:12px; font-weight:bold; white-space:nowrap;'>{d['pct']}%</div></div>" for d in gh_engine.details])
     return f"""
     <h2 style='text-align:center; margin-top:40px; font-size:22px; font-weight:900;'>📊 최종 궁합 점수</h2>
     <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
