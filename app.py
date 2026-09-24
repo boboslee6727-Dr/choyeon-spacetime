@@ -403,11 +403,11 @@ else:
                         st.session_state['vip_stack_html'] = []
                         st.session_state.pop('saved_report_html', None)
                         st.success("VIP 누적 내용을 초기화했습니다.")
-            if "2-1." in u_product: wealth_goal = st.text_input("💰 고민되는 금전 문제는?", key="wealth_goal", on_change=stop_ai)
-            elif "2-2." in u_product: love_goal = st.text_input("💘 고민되는 연애/이성 문제는?", key="love_goal", on_change=stop_ai)
-            elif "2-3." in u_product: career_goal = st.text_input("고민되는 진학 분야는?", key="career_goal", on_change=stop_ai)
-            elif "2-4." in u_product: career_goal = st.text_input("고민되는 직업 분야는?", key="career_goal", on_change=stop_ai)
-            elif "2-5." in u_product: health_goal = st.text_input("🩺 좋지 않은 건강 부위는?", key="health_goal", on_change=stop_ai)
+            if "2-1." in u_product: user_concern = st.text_input("💰 고민되는 금전 문제는?", key="user_concern", on_change=stop_ai)
+            elif "2-2." in u_product: user_concern = st.text_input("💘 고민되는 연애/이성 문제는?", key="user_concern", on_change=stop_ai)
+            elif "2-3." in u_product: user_concern = st.text_input("고민되는 진학 분야는?", key="user_concern", on_change=stop_ai)
+            elif "2-4." in u_product: user_concern = st.text_input("고민되는 직업 분야는?", key="user_concern", on_change=stop_ai)
+            elif "2-5." in u_product: user_concern = st.text_input("🩺 좋지 않은 건강 부위는?", key="user_concern", on_change=stop_ai)
             elif "2-6." in u_product:
                 st.session_state['tackil_purpose'] = "이사"
                 col_start, col_end = st.columns(2)
@@ -853,6 +853,15 @@ if st.session_state.get('app_running', False):
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
 
+        # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
+        _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
+        _daewun_che_parts = []
+        for dw in daewun_data_list[:_current_dw_idx + 1]:
+            che_1 = engine.get_group_ss(dw['ss_gan'])
+            che_2 = engine.get_group_ss(dw['ss_ji'])
+            _daewun_che_parts.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): 전반기체({che_1})/후반기체({che_2})")
+        daewun_che_flow_str = " / ".join(_daewun_che_parts) if _daewun_che_parts else "대운 체 흐름 정보 없음"
+
         guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
         target_shinsal_names = ["년살", "망신살", "역마살"]
         cheon_eul_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if dw['j_hanja'] in guiin_branches]
@@ -945,6 +954,13 @@ if st.session_state.get('app_running', False):
         cheon_eul_sewun_matches = []
         shinsal_sewun_matches = []
         gosin_gwasook_sewun_matches = []
+        # 🚨 초연시공명리 폭포수 체용: 일주 자체 그룹과 현재 대운 활성 체(둘 다 이 10년 내내 고정값)
+        # w_facts를 기다리지 않고, 필요한 값만 가볍게 직접 계산(순서 의존성 제거)
+        ilju_lower_group = engine.get_group_ss(engine.get_ss(ds_hanja, db))
+        _dw_che_1_tmp = engine.get_group_ss(engine.get_ss(ds_hanja, dw_g_cur))
+        _dw_che_2_tmp = engine.get_group_ss(engine.get_ss(ds_hanja, dw_j_cur))
+        _dw_che_for_sewun = _dw_che_1_tmp if engine._is_daewun_first_half(age, current_daewun_age) else _dw_che_2_tmp
+        sewun_che_flow_parts = []
         for i in range(10):
             ty = start_year + i
             tage = current_daewun_age + i
@@ -961,6 +977,14 @@ if st.session_state.get('app_running', False):
                 tj, get_oh_class(tj), engine.get_ss(ds_hanja, tj), engine.get_unsung(ds_hanja, tj), 
                 y_shin_this_year, d_shin_this_year, bg_col, b_left, is_cur_yr)
             sewun_years_list.append(f"{ty}년({tc}{tj})")
+            # 🚨 이 해의 전반기(천간)/후반기(지지) 체 → 용 → 대운 키워드 매칭
+            _che_1 = engine.get_group_ss(engine.get_ss(ds_hanja, tc))
+            _che_2 = engine.get_group_ss(engine.get_ss(ds_hanja, tj))
+            _yong_1 = engine.get_execution_yong(_che_1, ilju_lower_group)
+            _yong_2 = engine.get_execution_yong(_che_2, ilju_lower_group)
+            _kw_1 = engine.get_matrix_keyword(_dw_che_for_sewun, _yong_1)
+            _kw_2 = engine.get_matrix_keyword(_dw_che_for_sewun, _yong_2)
+            sewun_che_flow_parts.append(f"{ty}년({tc}{tj}): 전반기[체({_che_1})→{_kw_1}] / 후반기[체({_che_2})→{_kw_2}]")
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
             hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
@@ -972,6 +996,8 @@ if st.session_state.get('app_running', False):
         dw_title_hanja = f"({engine.K2H_GAN.get(dw_g_cur, dw_g_cur)}{engine.K2H_JI.get(dw_j_cur, dw_j_cur)}대운 기준)"
         sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
         sewun_full_fact_str = " / ".join(sewun_years_list)
+        sewun_che_flow_str = " / ".join(sewun_che_flow_parts)
+
         cheon_eul_timing_fact_str = " / ".join(cheon_eul_daewun_matches + cheon_eul_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
         dohwa_mangsin_yeokma_fact_str = " / ".join(shinsal_daewun_matches + shinsal_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
         gosin_gwasook_timing_fact_str = (f"{gosin_gwasook_label}({gosin_gwasook_ji}): " + " / ".join(gosin_gwasook_daewun_matches + gosin_gwasook_sewun_matches)) if gosin_gwasook_ji and (gosin_gwasook_daewun_matches or gosin_gwasook_sewun_matches) else "향후 10년 내 해당 대운·세운 없음"
@@ -1166,6 +1192,10 @@ if st.session_state.get('app_running', False):
         except Exception:
             shinsal_by_palace_str = shinsal_str
 
+        jaeseong_status_fact_str = engine.get_jaeseong_status_fact_str(
+            ds_hanja, gans, jjis, yb, year_gongmang_sipseong, day_gongmang_sipseong, cur_samjae
+        )
+
         _now_kst = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
         _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
@@ -1325,6 +1355,7 @@ if st.session_state.get('app_running', False):
             "adv_warning_str": adv_warning_str,
             "health_erosion_facts": health_erosion_str,
             "yongshin_fact_str": yongshin_fact_str,
+            "jaeseong_status_fact_str": jaeseong_status_fact_str,
             "samja_comb_facts": samja_comb_facts,
             "love_wonjin_facts": love_wonjin_facts,
             "career_aptitude_facts": career_aptitude_facts,
@@ -1335,7 +1366,9 @@ if st.session_state.get('app_running', False):
             "m_spouse_issue_facts": m_spouse_issue_str,
             "f_spouse_issue_facts": f_spouse_issue_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
+            "daewun_che_flow_str": daewun_che_flow_str,
             "daewun_full_fact_str": daewun_full_fact_str,
+            "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
             "woonse_fact_str": w_facts.get("woonse_fact_str", "폭포수 체용 데이터 없음"),
             "sewun_kw": w_facts.get("sewun_kw", "변화 감지"),
@@ -1493,7 +1526,6 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', '')
-            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"""
             {main_title_html}
@@ -1511,7 +1543,6 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-2"):
             # 1-2. 올 해 운세 풀이 (연운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1520,7 +1551,6 @@ if st.session_state.get('app_running', False):
             # 1-3. 이번 달 운세 풀이 (월운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1533,7 +1563,6 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1550,7 +1579,6 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
-            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -1560,7 +1588,6 @@ if st.session_state.get('app_running', False):
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')  
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
-            formatted_ai = formatted_ai + safe_part_5
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
