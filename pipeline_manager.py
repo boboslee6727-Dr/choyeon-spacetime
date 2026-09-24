@@ -451,16 +451,16 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
     if is_couple_product:
         st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 택일용 필수)**")
-        f_name = st.text_input("상대방 이름 *(필수)", key="order_f_name")
+        f_name = st.text_input("상대방 이름 *(필수)", placeholder="이름을 입력하세요", key="order_f_name")
         f_c_g, f_c_m, f_c_c = st.columns(3)
         with f_c_g:
             f_gender = st.selectbox("상대방 성별", ["남성", "여성"], key="order_f_gender", on_change=sync_user_gender_order)
         with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱", "기타"], key="order_f_marital")
         with f_c_c: f_cal = st.selectbox("상대방 양/음력", ["양력", "음력 평달", "음력 윤달"], key="order_f_cal")
         f_c_y, f_c_mo, f_c_d = st.columns(3)
-        with f_c_y: f_y = st.text_input("상대방 생년(YYYY) *", max_chars=4, key="order_f_y")
-        with f_c_mo: f_m = st.text_input("상대방 월(MM) *", max_chars=2, key="order_f_m")
-        with f_c_d: f_d = st.text_input("상대방 일(DD) *", max_chars=2, key="order_f_d")
+        with f_c_y: f_y = st.text_input("상대방 생년(YYYY) *", max_chars=4, placeholder="1990", key="order_f_y")
+        with f_c_mo: f_m = st.text_input("상대방 월(MM) *", max_chars=2, placeholder="06", key="order_f_m")
+        with f_c_d: f_d = st.text_input("상대방 일(DD) *", max_chars=2, placeholder="15", key="order_f_d")
         f_t = st.selectbox("상대방 태어난 시간", TIME_OPTIONS, key="order_f_t")
 
     st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
