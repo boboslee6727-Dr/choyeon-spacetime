@@ -661,8 +661,8 @@ def calculate_gongmang(ilgan, ilji):
         return f"{gong1}{gong2}"
     except:
         return "-"
- 
- def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseong, day_gongmang_sipseong, curr_samjae):
+
+def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseong, day_gongmang_sipseong, curr_samjae):
     """재물운 종합 팩트: 재성(정재·편재)의 궁위, 십이운성, 십이신살, 공망, 삼재 여부를 한 번에 산출."""
     palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
     parts = []
