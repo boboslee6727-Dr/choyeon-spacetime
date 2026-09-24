@@ -59,6 +59,8 @@ def get_global_css():
     .color-수 { background: #212121 !important; color: #FFF !important; }
     .result-table { width: 100%; border-collapse: collapse !important; border: 3px solid #3E2723 !important; margin-bottom: 15px; table-layout: fixed; }
     .result-table td { border: 1px solid #444 !important; padding: 1px 0 !important; text-align: center; vertical-align: middle; font-weight: 900 !important; font-size: 13px; line-height: 1.2 !important; }
+    /* 🌟 대운/세운/월운/일운표의 십성·운성·신살 글자를 원국표와 동일한 굵기로 통일 */
+    .un-sub-text { font-weight: 900 !important; }
     .ganji-cell-24 { font-size: 24px !important; font-weight: 900 !important; }
     .top-header-cell { background-color: #1A237E !important; height: 30px !important; }
     .top-header-cell td { background-color: #1A237E !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 16px !important; border: 1px solid #444 !important; }
@@ -344,13 +346,13 @@ def get_un_cell(title_str, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_sh
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{title_str}</div>
-        <div style='padding:2px; font-size:12px;'>{ss_gan}</div>
+        <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{ji}</div>
-        <div style='padding:2px; font-size:12px;'>{ss_ji}</div>
-        <div style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
-        <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
-        <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
+        <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_ji}</div>
+        <div class='un-sub-text' style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
+        <div class='un-sub-text' style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+        <div class='un-sub-text' style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
     </div>
     """
  
@@ -390,13 +392,13 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
     return f"""
     <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; line-height:1.2; border-bottom:1px solid #ccc;'>{title_str}<br>({display_tage})</div>
-        <div style='padding:2px; font-size:12px;'>{ss_gan}</div>
+        <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{ji}</div>
-        <div style='padding:2px; font-size:12px;'>{ss_ji}</div>
-        <div style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
-        <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
-        <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
+        <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_ji}</div>
+        <div class='un-sub-text' style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
+        <div class='un-sub-text' style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+        <div class='un-sub-text' style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
     </div>
     """
  
@@ -417,13 +419,13 @@ def get_wolun_cell(tm, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, unsung, y_shinsa
     return f"""
     <div style='flex:1; border-left:{b_left}; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
         <div style='background-color:#3E2723; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{tm}월</div>
-        <div style='padding:2px; font-size:12px;'>{ss_gan}</div>
+        <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_gan}</div>
         <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{gan}</div>
         <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{ji}</div>
-        <div style='padding:2px; font-size:12px;'>{ss_ji}</div>
-        <div style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
-        <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
-        <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
+        <div class='un-sub-text' style='padding:2px; font-size:12px;'>{ss_ji}</div>
+        <div class='un-sub-text' style='font-size:11px; border-top:1px solid #ccc;'>{u_val}</div>
+        <div class='un-sub-text' style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+        <div class='un-sub-text' style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
     </div>
     """
  
@@ -442,13 +444,13 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None,
         cells += f"""
         <div style='flex:1; border-left:1px solid #ccc; text-align:center; padding-bottom:3px; background-color:{bg_col};'>
             <div style='background-color:{header_bg}; color:#FFFFFF; font-weight:900; padding:4px 0; font-size:12px; border-bottom:1px solid #ccc;'>{day['day_num']}일({day['weekday_kr']})</div>
-            <div style='padding:2px; font-size:12px;'>{day['ss_gan']}</div>
+            <div class='un-sub-text' style='padding:2px; font-size:12px;'>{day['ss_gan']}</div>
             <div class='{gan_cls}' style='font-size:16px; font-weight:900;'>{day['gan']}</div>
             <div class='{ji_cls}' style='font-size:16px; font-weight:900;'>{day['ji']}</div>
-            <div style='padding:2px; font-size:12px;'>{day['ss_ji']}</div>
-            <div style='font-size:11px; border-top:1px solid #ccc;'>{day['unsung']}</div>
-            <div style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
-            <div style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
+            <div class='un-sub-text' style='padding:2px; font-size:12px;'>{day['ss_ji']}</div>
+            <div class='un-sub-text' style='font-size:11px; border-top:1px solid #ccc;'>{day['unsung']}</div>
+            <div class='un-sub-text' style='font-size:11px; color:#C62828; border-top:1px solid #ccc;'>{y_val}</div>
+            <div class='un-sub-text' style='font-size:11px; color:#1565C0; border-top:1px solid #ccc;'>{d_val}</div>
         </div>
         """
     return f"""
