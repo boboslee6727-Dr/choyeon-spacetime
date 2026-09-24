@@ -662,7 +662,32 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
  
- 
+ def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseong, day_gongmang_sipseong, curr_samjae):
+    """재물운 종합 팩트: 재성(정재·편재)의 궁위, 십이운성, 십이신살, 공망, 삼재 여부를 한 번에 산출."""
+    palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
+    parts = []
+    for idx in range(4):
+        g, j = gans[idx], jjis[idx]
+        for label, char in [("천간", g), ("지지", j)]:
+            ss = get_ss(ds_hanja, char)
+            if ss in ("정재", "편재"):
+                unsung = get_unsung(ds_hanja, j)
+                shinsal = get_12_shinsal(yb, j)
+                parts.append(f"{palace_names[idx]}({label} {char}, {ss}): 십이운성={unsung}, 십이신살={shinsal}")
+
+    result = " / ".join(parts) if parts else "원국에 재성(정재·편재) 없음"
+
+    gongmang_notes = []
+    if year_gongmang_sipseong in ("정재", "편재"):
+        gongmang_notes.append("년지공망이 재성 공망")
+    if day_gongmang_sipseong in ("정재", "편재"):
+        gongmang_notes.append("일지공망이 재성 공망")
+    if gongmang_notes:
+        result += " / " + ", ".join(gongmang_notes)
+
+    result += f" / 삼재 여부: {curr_samjae}"
+    return result
+
 # --- 1-3. 대운수 계산 ---
  
 # (참고: 원본에 get_daeun_su_accurate 함수가 두 번 정의되어 있었습니다.
