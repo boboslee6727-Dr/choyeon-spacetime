@@ -76,20 +76,19 @@ def get_global_css():
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         div[data-testid="stVerticalBlock"] { gap: 0 !important; }
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
-        .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; 
+        .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .page-break-before { page-break-before: always; }
         .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
-    }
-    </style>"""
+    </style>
+    """
  
 def format_ai_text_to_html(text, qna_text=""):
     """
     프롬프트 규칙 4번 대응 포맷터:
-    대제목(1.), 중제목(1)), 소제목((1), ◆, ▶, ▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
-    (마크다운 헤더 #, ##, ### 및 --- 구분선 처리 / "라벨: 설명" 콜론 소제목을 ◆ 소제목으로 자동 승격)
-    (소제목 폰트 크기 16.5px, 소제목-본문 간격 확대 6px→14px)
-    (대제목 인라인 스타일을 get_global_css()의 .ai-title-l1 최신 값과 완전히 동기화: 26px/3px/45px)
-    (🆕 ◆▶▷ 등 기호 뒤 콜론이 있으면 소제목/본문을 분리하여 강제 줄바꿈 처리)
+    대제목(1.), 중제목(1)), 소제목((1)), 소소제목(①②③), 강조기호(◆▶▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
+    (마크다운 헤더 #, ##, ### 및 --- 구분선은 전부 제거하고 절대 특수 서식으로 승격하지 않음)
+    ("라벨: 설명" 콜론 패턴을 소제목으로 자동 승격하던 기능 완전 제거 — 규칙 위반이 그대로 드러나도록 함)
+    (색상은 전부 검정 통일, 위계는 font-weight 숫자 강약으로만 구분)
     """
     if not text:
         return ""
@@ -101,6 +100,13 @@ def format_ai_text_to_html(text, qna_text=""):
         '[WEEKLY_CALENDAR_HERE]', '[COUPLE_DAEWUN_TABLES_HERE]',
         '[GOLDEN_TEXT_HERE]', '[CHOYEON_SIGN_HERE]'
     ]
+
+    def _split_title_body(s):
+        m = re.match(r'^(.*?[:：])\s*(\S.*)$', s)
+        if m and re.search(r'\d$', re.sub(r'[:：]$', '', m.group(1))):
+            return None
+        return m
+
     for line in lines:
         if not line:
             continue
@@ -111,33 +117,49 @@ def format_ai_text_to_html(text, qna_text=""):
             continue
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
-        colon_m = re.match(r'^([^:：\n]{1,20})[:：]\s+(\S.*)$', line_formatted)
-        colon_is_header = bool(colon_m) and re.search(r'[가-힣]', colon_m.group(1)) and not re.search(r'(다|요|죠|음|임|함|니다)$', colon_m.group(1))
+
         if re.match(r'^\d+\.\s+', line_formatted):
-            html_lines.append(f"<div class='ai-title-l1' style='font-size: 23px !important; font-weight: 900 !important; color: #1A237E !important; text-align: left !important; margin-top: 45px !important; margin-bottom: 25px !important; border-bottom: 3px solid #1A237E !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div class='ai-title-l1' style='font-size: 21.5px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
+
         elif re.match(r'^\d+\)\s*', line_formatted):
-            html_lines.append(f"<div class='sub-title' style='font-size: 18.5px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
-        elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted) or re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
-            bullet_split = re.match(r'^(.*?[:：])\s*(\S.*)$', line_formatted)
-            # 🚨 콜론 직전이 숫자(시간 표기: "9:00", "23:30" 등)면 소제목 구분자가 아니므로 분리하지 않음
-            if bullet_split and re.search(r'\d$', re.sub(r'[:：]$', '', bullet_split.group(1))):
-                bullet_split = None
-            if bullet_split:
-                bullet_title, bullet_body = bullet_split.group(1), bullet_split.group(2)
-                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{bullet_title}</b></div>")
-                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{bullet_body}</p>")
+            html_lines.append(f"<div class='sub-title' style='font-size: 19.5px !important; font-weight: 800 !important; color: #000000 !important; margin-top: 24px !important; margin-bottom: 11px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+
+        elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted):
+            split = _split_title_body(line_formatted)
+            if split:
+                title, body = split.group(1), split.group(2)
+                html_lines.append(f"<div style='font-size: 18.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
-        elif colon_is_header:
-            html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 900 !important; color: #1A237E !important; margin-top: 16px !important; margin-bottom: 14px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>◆ {line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 18.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+
+        elif re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩]\s*', line_formatted):
+            split = _split_title_body(line_formatted)
+            if split:
+                title, body = split.group(1), split.group(2)
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 600 !important; color: #000000 !important; margin-top: 15px !important; margin-bottom: 9px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
+            else:
+                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 600 !important; color: #000000 !important; margin-top: 15px !important; margin-bottom: 9px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+
+        elif re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
+            split = _split_title_body(line_formatted)
+            if split:
+                title, body = split.group(1), split.group(2)
+                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
+            else:
+                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
+
     parsed_content = "\n".join(html_lines)
     qna_html = ""
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
         clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna).replace('\n\n', '<br><br>').replace('\n', '<br>')
-        qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 사주박사의 1:1 심층 솔루션 안내<br>{clean_qna}</div>"
+        qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 고민 상담 Q&A<br>{clean_qna}</div>"
     return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
  
 # ==============================================================================
