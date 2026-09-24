@@ -1640,14 +1640,14 @@ if st.session_state.get('app_running', False):
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html) if hasattr(html_views, 'get_daewun_compare_box') else ""
             
             g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
-            g_ess = sub_marker(g_ess, 'DAEWUN_TABLE_HERE', c_daewun_html)  # AI가 마커 이름을 줄여 쓰는 경우 대비
-            g_ess = g_ess + safe_part_5
+            g_ess = sub_marker(g_ess, 'DAEWUN_TABLE_HERE', c_daewun_html)
 
             score_ui, closing_ui = "", ""
             if 'gh_engine' in locals() and hasattr(html_views, 'get_gunghap_score_visual_html'):
                 score_ui = html_views.get_gunghap_score_visual_html(gh_engine)
                 closing_ui = html_views.get_gunghap_closing(m_name_val, f_name_val) if hasattr(html_views, 'get_gunghap_closing') else ""
             g_ess += score_ui + closing_ui
+            g_ess = g_ess + safe_part_5   # 🚨 낙관은 점수·맺음말 뒤, 문서 맨 끝에 오도록 순서 이동
             
             if hasattr(html_views, 'get_gunghap_three_page_report'):
                 final_render_html = html_views.get_gunghap_three_page_report(male_block, m_ess, female_block, f_ess, g_ess)
