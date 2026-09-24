@@ -789,7 +789,8 @@ if st.session_state.get('app_running', False):
                 else:
                     gh_score = 0
                     gh_grade = ""
-            except Exception:
+            except Exception as e:
+                st.error(f"⚠️ 궁합 엔진 오류: {e}")
                 gh_score, gh_grade = 0, "점수 산출 불가"
                 
         else:
