@@ -42,6 +42,16 @@ JIJANGGAN = {
     '午': ['丙', '己', '丁'], '未': ['丁', '乙', '己'], '申': ['戊', '壬', '庚'],
     '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬']
 }
+
+# 🚨 한자 간지 → 한글 발음 변환 (기존 K2H_GAN / K2H_JI 표를 거꾸로 재사용, 별도 표 관리 안 함)
+_H2K_MAP = {}
+for _k, _v in {**K2H_GAN, **K2H_JI}.items():
+    if _k != _v:
+        _H2K_MAP[_v] = _k
+
+def get_han_reading(hanja_str):
+    """한자 간지 문자열(예: '戊午')을 한글 발음(예: '무오')으로 변환"""
+    return ''.join(_H2K_MAP.get(ch, ch) for ch in hanja_str)
  
 def _to_hanja(char):
     if not char or char in ["?", " ", "-"]: return ""
