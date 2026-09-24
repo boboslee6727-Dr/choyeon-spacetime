@@ -81,7 +81,7 @@ except Exception as _api_e:
     client, model = None, None
 
 # ⚙️ 사용할 모델명. 필요시 여기서 바꾸세요.
-CLAUDE_MODEL_NAME = "claude-haiku-4-5-20251001"  #"claude-sonnet-5"
+CLAUDE_MODEL_NAME = "claude-sonnet-5"  #"claude-haiku-4-5-20251001"
 
 def _call_claude(prompt_text, max_tokens=64000):
     if client is None: return "<div style='color:red;'>🚨 Claude 모델이 초기화되지 않았습니다. (ANTHROPIC_API_KEY 확인)</div>"
