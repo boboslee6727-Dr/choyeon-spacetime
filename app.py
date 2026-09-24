@@ -1197,6 +1197,8 @@ if st.session_state.get('app_running', False):
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
 
         dw_gj_cur = dw_g_cur + dw_j_cur  # 제목용 짧은 대운 간지 (예: 戊午)
+        dw_gj_han_cur = engine.get_han_reading(dw_gj_cur)  # 한글 발음 (예: 무오)
+
         sewun_gj_cur = engine.GAN[(curr_year-1984)%60%10] + engine.JI[(curr_year-1984)%60%12]  # 제목용 짧은 세운 간지 (예: 丙午)
         sewun_gj_han_cur = engine.get_han_reading(sewun_gj_cur)  # 한글 발음 (예: 병오)
 
