@@ -1461,6 +1461,8 @@ if st.session_state.get('app_running', False):
         else:
             target_prompt = getattr(prompts, prompt_var_name, "")
 
+        st.warning(f"🔍 DEBUG: u_product='{u_product}' → 선택된 프롬프트명='{prompt_var_name}' | 글자수: {len(target_prompt)}자 | 앞부분: {target_prompt[:150]}")
+
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
 
         # 🆕 관리자가 입력한 'AI 수정 지시사항'을 실제로 프롬프트에 반영
