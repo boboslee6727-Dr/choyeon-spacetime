@@ -600,10 +600,15 @@ if st.session_state.get('app_running', False):
         except Exception:
             y_pillar, m_pillar, d_pillar = "甲子", "甲子", "甲子"
             
+        # 🚨 음력이면 반드시 양력으로 변환한 뒤 절기(태양황경) 계산에 넣어야 함
+        s_year, s_month, s_day = int(b_year), int(b_month), int(b_day)
+        if is_lunar_val:
+            s_year, s_month, s_day = engine.lunar_to_solar(int(b_year), int(b_month), int(b_day), is_leap_val)
+
         lon = 0
         if hasattr(engine, 'get_true_year_month_pillar'):
             try:
-                t_res = engine.get_true_year_month_pillar(int(b_year), int(b_month), int(b_day), h, m)
+                t_res = engine.get_true_year_month_pillar(s_year, s_month, s_day, h, m)
                 if t_res and len(t_res) >= 2:
                     y_pillar = t_res[0]
                     m_pillar = t_res[1]
