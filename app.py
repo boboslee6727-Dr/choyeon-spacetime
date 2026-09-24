@@ -637,7 +637,7 @@ if st.session_state.get('app_running', False):
         hs, ds, ms, ys = gans[0], gans[1], gans[2], gans[3]
         hb, db, mb, yb = jjis[0], jjis[1], jjis[2], jjis[3]
         
-        base_dt = dt_mod.datetime(int(b_year), int(b_month), int(b_day), 12, 0)
+        base_dt = dt_mod.datetime(s_year, s_month, s_day, 12, 0)
         adj_mins = engine.get_total_time_adjustment(base_dt)
         utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
         
@@ -892,7 +892,12 @@ if st.session_state.get('app_running', False):
                 p_ys_idx = engine.GAN.index(p_ys) if p_ys in engine.GAN else 0
                 p_order_dir = 1 if (p_ys_idx % 2 == 0) == (f_gender_val == '남성') else -1
                 
-                p_base_dt = dt_mod.datetime(p_y, p_m, p_d, 12, 0)
+                # 🚨 상대방도 음력이면 반드시 양력으로 변환한 뒤 대운수 계산에 넣어야 함
+                p_s_year, p_s_month, p_s_day = int(p_y), int(p_m), int(p_d)
+                if p_is_lunar:
+                    p_s_year, p_s_month, p_s_day = engine.lunar_to_solar(int(p_y), int(p_m), int(p_d), p_is_leap)
+
+                p_base_dt = dt_mod.datetime(p_s_year, p_s_month, p_s_day, 12, 0)
                 p_adj_mins = engine.get_total_time_adjustment(p_base_dt)
                 p_utc_dt = p_base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=p_adj_mins)
                 
