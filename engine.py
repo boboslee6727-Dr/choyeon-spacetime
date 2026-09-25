@@ -2109,4 +2109,98 @@ def analyze_health_erosion_4d(saju_data, daewun_list, sewun_10_list, curr_year):
         fact_4_current = f"올해({curr_year}년)는 조토극수 침식 파동의 직접적인 타격권에서 한 걸음 비껴가 있는 회복과 유지의 구간."
  
     return f"[1. 선천 원국]: {fact_1_wonguk}\n[2. 평생 궤적]: {fact_2_daewun}\n[3. 향후 10년]: {fact_3_10years}\n[4. 당장 올해]: {fact_4_current}"
+
+# --- 3-5. 종괴(積聚)/괴강·백호 파동 · 암·종양 리스크 판정 (신규 추가) ---
+
+GOEGANG_ILJU = {'庚辰', '庚戌', '壬辰', '壬戌'}
+BAEKHO_GANJI = {'甲辰', '乙未', '丙戌', '丁丑', '戊辰', '壬戌', '癸丑'}
+
+def analyze_tumor_risk_facts(bazi_dict, won_guk_gan, won_guk_ji, daewun_list, sewun_10_list, curr_year, current_dw_j):
+    """
+    종괴(積聚)/암 관련 명리 파동을 4단계(원국/평생궤적/10년/올해)로 판정.
+    괴강살·백호대살 존재 여부와, 묘고가 풀리지 않고 계속 입고되는 정체 흐름을 결합하여 서술.
+    """
+    day_gan = _to_hanja(bazi_dict.get('day_g', ''))
+    day_ji = _to_hanja(bazi_dict.get('day_j', ''))
+    ilju = f"{day_gan}{day_ji}"
+
+    all_ganji = []
+    for pos in ['year', 'month', 'day', 'time']:
+        g = _to_hanja(bazi_dict.get(f'{pos}_g', ''))
+        j = _to_hanja(bazi_dict.get(f'{pos}_j', ''))
+        if g and j:
+            all_ganji.append(f"{g}{j}")
+
+    has_goegang = ilju in GOEGANG_ILJU
+    has_baekho = any(gj in BAEKHO_GANJI for gj in all_ganji)
+
+    if has_goegang or has_baekho:
+        names = [n for n, flag in [("괴강살", has_goegang), ("백호대살", has_baekho)] if flag]
+        fact_1 = f"원국에 {'·'.join(names)}이 존재하여, 응어리진 기운이 신체 특정 부위에 정체·축적되기 쉬운 체질적 취약성 내재."
+    else:
+        fact_1 = "원국 자체에 강한 응어리(종괴) 파동은 없으나, 대운/세운의 묘고 입고 흐름은 정기적으로 점검할 필요."
+
+    danger_dw_periods = []
+    for idx, dw in enumerate(daewun_list):
+        dw_ji_h = _to_hanja(dw.get('j_hangul', ''))
+        if any('입고' in v for v in check_vault_status(won_guk_gan, won_guk_ji, dw_ji_h)):
+            period = "초년" if idx < 3 else ("중년" if idx < 6 else "말년")
+            danger_dw_periods.append(f"{period}({dw.get('c_hangul','')}{dw.get('j_hangul','')}대운)")
+
+    if danger_dw_periods:
+        fact_2 = f"생애 주기 중 {', '.join(dict.fromkeys(danger_dw_periods))} 시기에 묘고가 풀리지 않고 뭉치는 흐름이 반복되니, 이 시기 정기 건강검진이 특히 중요."
+    else:
+        fact_2 = "평생 대운의 궤적에서 묘고가 계속 입고만 되는 정체 흐름은 뚜렷하지 않은 안정적 구간."
+
+    danger_years = []
+    for sewun in sewun_10_list:
+        sw_ji_h = _to_hanja(sewun.get('ji', ''))
+        if any('입고' in v for v in check_vault_status(won_guk_gan, won_guk_ji, sw_ji_h)):
+            danger_years.append(f"{sewun.get('year')}년")
+
+    if danger_years:
+        fact_3 = f"현재 대운 내에서 향후 {', '.join(danger_years)}에 묘고 입고가 겹치니 이 시기 정밀 검진을 권장."
+    else:
+        fact_3 = "향후 10년 내에 뚜렷한 묘고 입고·정체 변곡점은 감지되지 않음."
+
+    curr_dw_ji_h = _to_hanja(current_dw_j) if current_dw_j else ''
+    is_danger_now = curr_dw_ji_h and any('입고' in v for v in check_vault_status(won_guk_gan, won_guk_ji, curr_dw_ji_h))
+    fact_4 = (f"당장 올해({curr_year}년)는 묘고 입고 기운이 작용해 몸 안에 정체된 것이 쌓이기 쉬운 시점. 정기 검진과 순환 관리 요망."
+              if is_danger_now else f"올해({curr_year}년)는 묘고 입고로 인한 정체 파동에서 비교적 자유로운 구간.")
+
+    return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
+
+
+# --- 3-6. 노년기 인지기능(치매) 관련 수기(水氣) 파동 판정 (신규 추가) ---
+
+def analyze_cognitive_decline_facts(won_guk_ji, daewun_list, sewun_10_list, curr_year, age):
+    """
+    水氣(전통적으로 뇌수·정신을 상징)의 고갈 여부를, 특히 말년(대략 60세 이후) 시기에 집중하여 판정.
+    """
+    has_water = any(ji in won_guk_ji for ji in ['亥', '子'])
+    fact_1 = ("원국에 수기(水氣)가 자리하고 있어 정신적 균형을 지탱하는 바탕은 갖추어져 있으나, 대운의 흐름에 따라 기복이 있을 수 있음."
+              if has_water else
+              "원국에 수기(水氣)를 담당하는 글자가 없어, 나이가 들수록 총명함과 정신적 균형을 지켜주는 기운이 상대적으로 약한 편.")
+
+    danger_dw_periods = []
+    for idx, dw in enumerate(daewun_list):
+        if idx >= 6 and dw.get('j_hangul', '') in ['未', '戌', '午', '巳']:
+            danger_dw_periods.append(f"말년({dw.get('c_hangul','')}{dw.get('j_hangul','')}대운)")
+
+    if danger_dw_periods and age >= 55:
+        fact_2 = f"{', '.join(dict.fromkeys(danger_dw_periods))} 시기에 수기가 메마르는 흐름이 겹쳐, 이 시기 인지기능과 기억력 관리에 더욱 신경 써야 할 구간."
+    else:
+        fact_2 = "말년 대운의 궤적에서 뚜렷한 수기 고갈 변곡점은 아직 감지되지 않음."
+
+    danger_years = [f"{sw.get('year')}년" for sw in sewun_10_list if sw.get('ji', '') in ['未', '戌']]
+    fact_3 = (f"향후 10년 중 {', '.join(danger_years)}에 수기 고갈이 가중되는 구간이 있어, 이 무렵 인지건강 검진을 권장."
+              if danger_years and age >= 60 else
+              "향후 10년 내에 인지기능과 직결되는 뚜렷한 수기 고갈 변곡점은 감지되지 않음.")
+
+    fact_4 = (f"올해({curr_year}년) 기준, 신청자의 나이({age}세)를 고려할 때 인지건강에 특별히 더 신경 써야 할 민감한 시기이니 꾸준한 두뇌 활동과 정서적 안정이 중요."
+              if age >= 65 else
+              f"올해({curr_year}년)는 예방적 관리 차원에서 꾸준한 생활 습관을 유지하면 충분한 시기.")
+
+    return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
+
  
