@@ -670,13 +670,13 @@ if st.session_state.get('app_running', False):
         
         if u_product.startswith("1-1"): report_title = "사주팔자 및 총 운세 풀이"
         elif u_product.startswith("1-2"): report_title = "올 해의 운세 상세풀이"
-        elif u_product.startswith("1-3"): report_title = "이번 달 운세 상세풀이"
-        elif u_product.startswith("1-4"): report_title = "주간 및 일일 운세 풀이"
-        elif u_product.startswith("2-1"): report_title = "재물운 특화 풀이"
-        elif u_product.startswith("2-2"): report_title = "연애운 특성화 풀이"
-        elif u_product.startswith("2-3"): report_title = "진학운 특성화 풀이"
-        elif u_product.startswith("2-4"): report_title = "직업운 특성화 풀이"
-        elif u_product.startswith("2-5"): report_title = "건강운 특성화 풀이"
+        elif u_product.startswith("1-3"): report_title = "이 달의 운세 상세풀이"
+        elif u_product.startswith("1-4"): report_title = "주간 및 일일의 운세 풀이"
+        elif u_product.startswith("2-1"): report_title = "재물운 특성 풀이"
+        elif u_product.startswith("2-2"): report_title = "연애운 특성 풀이"
+        elif u_product.startswith("2-3"): report_title = "진학운 특성 풀이"
+        elif u_product.startswith("2-4"): report_title = "직업운 특성 풀이"
+        elif u_product.startswith("2-5"): report_title = "건강운 특성 풀이"
         elif u_product.startswith("2-6"): report_title = "이사 택일 추천"
         elif u_product.startswith("2-7"): report_title = "개업 택일 추천"
         elif u_product.startswith("3-1"): report_title = "연애/결혼운 (궁합) 풀이"
@@ -1461,10 +1461,7 @@ if st.session_state.get('app_running', False):
         else:
             target_prompt = getattr(prompts, prompt_var_name, "")
 
-        st.warning(f"🔍 DEBUG: u_product='{u_product}' → 선택된 프롬프트명='{prompt_var_name}' | 글자수: {len(target_prompt)}자 | 앞부분: {target_prompt[:150]}")
-
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
-
         # 🆕 관리자가 입력한 'AI 수정 지시사항'을 실제로 프롬프트에 반영
         feedback_note = st.session_state.get('ai_feedback_prompt', '').strip()
         if feedback_note:
