@@ -2115,21 +2115,19 @@ def analyze_health_erosion_4d(saju_data, daewun_list, sewun_10_list, curr_year):
 GOEGANG_ILJU = {'庚辰', '庚戌', '壬辰', '壬戌'}
 BAEKHO_GANJI = {'甲辰', '乙未', '丙戌', '丁丑', '戊辰', '壬戌', '癸丑'}
 
-def analyze_tumor_risk_facts(bazi_dict, won_guk_gan, won_guk_ji, daewun_list, sewun_10_list, curr_year, current_dw_j):
-    """
-    종괴(積聚)/암 관련 명리 파동을 4단계(원국/평생궤적/10년/올해)로 판정.
-    괴강살·백호대살 존재 여부와, 묘고가 풀리지 않고 계속 입고되는 정체 흐름을 결합하여 서술.
-    """
-    day_gan = _to_hanja(bazi_dict.get('day_g', ''))
-    day_ji = _to_hanja(bazi_dict.get('day_j', ''))
-    ilju = f"{day_gan}{day_ji}"
+GOEGANG_ILJU = {'庚辰', '庚戌', '壬辰', '壬戌'}
+BAEKHO_GANJI = {'甲辰', '乙未', '丙戌', '丁丑', '戊辰', '壬戌', '癸丑'}
 
-    all_ganji = []
-    for pos in ['year', 'month', 'day', 'time']:
-        g = _to_hanja(bazi_dict.get(f'{pos}_g', ''))
-        j = _to_hanja(bazi_dict.get(f'{pos}_j', ''))
-        if g and j:
-            all_ganji.append(f"{g}{j}")
+def analyze_tumor_risk_facts(gans, jjis, daewun_list, sewun_10_list, curr_year, current_dw_j):
+    """
+    gans, jjis: [시(hour), 일(day), 월(month), 년(year)] 순서의 4글자 리스트.
+    종괴(積聚)/암 관련 명리 파동을 4단계(원국/평생궤적/10년/올해)로 판정.
+    """
+    gans_h = [_to_hanja(g) for g in gans]
+    jjis_h = [_to_hanja(j) for j in jjis]
+
+    ilju = f"{gans_h[1]}{jjis_h[1]}"   # 일간+일지 (index 1 = 일)
+    all_ganji = [f"{g}{j}" for g, j in zip(gans_h, jjis_h)]
 
     has_goegang = ilju in GOEGANG_ILJU
     has_baekho = any(gj in BAEKHO_GANJI for gj in all_ganji)
@@ -2143,7 +2141,7 @@ def analyze_tumor_risk_facts(bazi_dict, won_guk_gan, won_guk_ji, daewun_list, se
     danger_dw_periods = []
     for idx, dw in enumerate(daewun_list):
         dw_ji_h = _to_hanja(dw.get('j_hangul', ''))
-        if any('입고' in v for v in check_vault_status(won_guk_gan, won_guk_ji, dw_ji_h)):
+        if any('입고' in v for v in check_vault_status(gans_h, jjis_h, dw_ji_h)):
             period = "초년" if idx < 3 else ("중년" if idx < 6 else "말년")
             danger_dw_periods.append(f"{period}({dw.get('c_hangul','')}{dw.get('j_hangul','')}대운)")
 
@@ -2155,7 +2153,7 @@ def analyze_tumor_risk_facts(bazi_dict, won_guk_gan, won_guk_ji, daewun_list, se
     danger_years = []
     for sewun in sewun_10_list:
         sw_ji_h = _to_hanja(sewun.get('ji', ''))
-        if any('입고' in v for v in check_vault_status(won_guk_gan, won_guk_ji, sw_ji_h)):
+        if any('입고' in v for v in check_vault_status(gans_h, jjis_h, sw_ji_h)):
             danger_years.append(f"{sewun.get('year')}년")
 
     if danger_years:
@@ -2164,12 +2162,11 @@ def analyze_tumor_risk_facts(bazi_dict, won_guk_gan, won_guk_ji, daewun_list, se
         fact_3 = "향후 10년 내에 뚜렷한 묘고 입고·정체 변곡점은 감지되지 않음."
 
     curr_dw_ji_h = _to_hanja(current_dw_j) if current_dw_j else ''
-    is_danger_now = curr_dw_ji_h and any('입고' in v for v in check_vault_status(won_guk_gan, won_guk_ji, curr_dw_ji_h))
+    is_danger_now = curr_dw_ji_h and any('입고' in v for v in check_vault_status(gans_h, jjis_h, curr_dw_ji_h))
     fact_4 = (f"당장 올해({curr_year}년)는 묘고 입고 기운이 작용해 몸 안에 정체된 것이 쌓이기 쉬운 시점. 정기 검진과 순환 관리 요망."
               if is_danger_now else f"올해({curr_year}년)는 묘고 입고로 인한 정체 파동에서 비교적 자유로운 구간.")
 
     return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
-
 
 # --- 3-6. 노년기 인지기능(치매) 관련 수기(水氣) 파동 판정 (신규 추가) ---
 
