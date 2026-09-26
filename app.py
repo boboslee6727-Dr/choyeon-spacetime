@@ -1153,6 +1153,16 @@ if st.session_state.get('app_running', False):
                 curr_year=curr_year,
                 current_dw_j=dw_j_cur
             )
+            health_siksang_str = engine.analyze_siksang_drain_facts(
+                counts=counts,
+                mb=mb,
+                ds=ds,
+                daewun_list=daewun_data_list,
+                sewun_10_list=temp_sewun_10_list,
+                curr_year=curr_year,
+                current_dw_j=dw_j_cur,
+                age=age
+            )
 
         adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
         if hasattr(html_views, 'analyze_samja_combination'):
@@ -1389,9 +1399,8 @@ if st.session_state.get('app_running', False):
             "health_erosion_facts": health_erosion_str,
             "health_tumor_facts": health_tumor_str,
             "health_cognitive_facts": health_cognitive_str,
+            "health_siksang_facts": health_siksang_str,
             "yongshin_fact_str": yongshin_fact_str, 
-            "health_erosion_facts": health_erosion_str,
-            "yongshin_fact_str": yongshin_fact_str,
             "jaeseong_status_fact_str": jaeseong_status_fact_str,
             "samja_comb_facts": samja_comb_facts,
             "love_wonjin_facts": love_wonjin_facts,
