@@ -679,6 +679,7 @@ def calculate_gongmang(ilgan, ilji):
     except:
         return "-"
 
+
 def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseong, day_gongmang_sipseong, curr_samjae):
     """재물운 종합 팩트: 재성(정재·편재)의 궁위, 십이운성, 십이신살, 공망, 삼재 여부를 한 번에 산출."""
     palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
@@ -2199,5 +2200,70 @@ def analyze_cognitive_decline_facts(won_guk_ji, daewun_list, sewun_10_list, curr
               f"올해({curr_year}년)는 예방적 관리 차원에서 꾸준한 생활 습관을 유지하면 충분한 시기.")
 
     return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
+
+def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr_year, current_dw_j, age):
+    """
+    일간이 신약(身弱)한 상태에서 식상(食傷) 대운·세운이 겹쳐 들어와 기운이 과도하게 빠지는(설기) 시기를 판정.
+    고령자는 원기 회복력이 약해 이 설기 효과가 더 크게 체감되므로 나이에 따라 경고 수위를 달리한다.
+    """
+    dm = get_color(ds)
+    if not dm or dm not in _OHAENG_CYCLE:
+        return "일간 오행을 판별할 수 없어 식상 설기 분석을 생략합니다."
+
+    biguk, inseong = dm, _oh_prev(dm)
+    siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
+
+    support = counts.get(biguk, 0) + counts.get(inseong, 0)
+    drain = counts.get(siksang, 0) + counts.get(jaeseong, 0) + counts.get(gwanseong, 0)
+
+    mb_elem = get_color(mb)
+    if mb_elem in (biguk, inseong):
+        support += 1
+    elif mb_elem in (siksang, jaeseong, gwanseong):
+        drain += 1
+
+    is_weak = not (support > drain)
+
+    if not is_weak:
+        return ("[1. 선천 원국]: 일간이 신강(身强)하여 식상운이 겹쳐도 오히려 기운을 잘 발산시키는 흐름이니 크게 걱정할 필요 없음.\n"
+                "[2. 평생 궤적]: 신강한 원국이라 식상 대운이 겹치는 시기라도 건강상 큰 소모 위험은 낮음.\n"
+                "[3. 향후 10년]: 신강한 바탕 위에서 식상운이 오히려 활력으로 작용할 가능성이 높음.\n"
+                f"[4. 당장 올해]: 올해({curr_year}년)도 기운이 과도하게 빠질 걱정은 적은 편.")
+
+    fact_1 = "일간이 신약(身弱)한 원국이라, 식상운이 겹쳐 들어올 때 기운이 과도하게 빠져나가는 설기(泄氣)에 취약한 체질."
+
+    danger_dw_periods = []
+    for idx, dw in enumerate(daewun_list):
+        dw_ji = dw.get('j_hangul', '')
+        if get_color(dw_ji) == siksang:
+            period = "초년" if idx < 3 else ("중년" if idx < 6 else "말년")
+            danger_dw_periods.append(f"{period}({dw.get('c_hangul','')}{dw_ji}대운)")
+    fact_2 = (f"생애 주기 중 {', '.join(dict.fromkeys(danger_dw_periods))} 시기에 식상 대운이 들어와 기운 소모가 커지는 흐름이 반복됨."
+              if danger_dw_periods else "평생 대운의 궤적에서 식상운이 두드러지게 겹치는 시기는 뚜렷하지 않음.")
+
+    curr_dw_is_siksang = get_color(current_dw_j) == siksang if current_dw_j else False
+    danger_years = []
+    for sewun in sewun_10_list:
+        sw_ji = sewun.get('ji', '')
+        if get_color(sw_ji) == siksang:
+            tag = "(대운까지 겹침)" if curr_dw_is_siksang else ""
+            danger_years.append(f"{sewun.get('year')}년{tag}")
+    fact_3 = (f"현재 대운 내에서 향후 {', '.join(danger_years)}에 식상 기운이 가중되니 체력 관리가 중요."
+              if danger_years else "향후 10년 내에 식상운이 두드러지게 겹치는 변곡점은 감지되지 않음.")
+
+    is_danger_now = curr_dw_is_siksang or any(get_color(sw.get('ji', '')) == siksang and sw.get('year') == curr_year for sw in sewun_10_list)
+    if is_danger_now:
+        if age >= 65:
+            age_note = " 특히 연세가 있으신 만큼 원기 회복력이 젊을 때보다 약해 이 흐름이 평소보다 크게 체감될 수 있으니, 무리한 활동을 삼가고 충분한 휴식이 꼭 필요."
+        elif age >= 50:
+            age_note = " 중년 이후이신 만큼 평소보다 체력 관리에 조금 더 신경 쓰시는 게 좋음."
+        else:
+            age_note = ""
+        fact_4 = f"올해({curr_year}년)는 식상 기운이 강하게 작용해 기운이 빠지기 쉬운 시점.{age_note}"
+    else:
+        fact_4 = f"올해({curr_year}년)는 식상운의 직접적인 소모 파동에서 비교적 자유로운 구간."
+
+    return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
+
 
  
