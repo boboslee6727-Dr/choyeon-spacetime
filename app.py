@@ -671,12 +671,12 @@ if st.session_state.get('app_running', False):
         if u_product.startswith("1-1"): report_title = "사주팔자 및 총 운세 풀이"
         elif u_product.startswith("1-2"): report_title = "올 해의 운세 상세풀이"
         elif u_product.startswith("1-3"): report_title = "이 달의 운세 상세풀이"
-        elif u_product.startswith("1-4"): report_title = "주간 및 일일의 운세 풀이"
-        elif u_product.startswith("2-1"): report_title = "재물운 특성 풀이"
-        elif u_product.startswith("2-2"): report_title = "연애운 특성 풀이"
-        elif u_product.startswith("2-3"): report_title = "진학운 특성 풀이"
-        elif u_product.startswith("2-4"): report_title = "직업운 특성 풀이"
-        elif u_product.startswith("2-5"): report_title = "건강운 특성 풀이"
+        elif u_product.startswith("1-4"): report_title = "이 번주 및 일운의 운세 풀이"
+        elif u_product.startswith("2-1"): report_title = "재물운의 특성 풀이"
+        elif u_product.startswith("2-2"): report_title = "연애운의 특성 풀이"
+        elif u_product.startswith("2-3"): report_title = "진학운의 특성 풀이"
+        elif u_product.startswith("2-4"): report_title = "직업운의 특성 풀이"
+        elif u_product.startswith("2-5"): report_title = "건강운의 특성 풀이"
         elif u_product.startswith("2-6"): report_title = "이사 택일 추천"
         elif u_product.startswith("2-7"): report_title = "개업 택일 추천"
         elif u_product.startswith("3-1"): report_title = "연애/결혼운 (궁합) 풀이"
@@ -1138,6 +1138,21 @@ if st.session_state.get('app_running', False):
                 sewun_10_list=temp_sewun_10_list,
                 curr_year=curr_year
             )
+            health_cognitive_str = engine.analyze_cognitive_decline_facts(
+                won_guk_ji=[hb, db, mb, yb],
+                daewun_list=daewun_data_list,
+                sewun_10_list=temp_sewun_10_list,
+                curr_year=curr_year,
+                age=age
+            )
+            health_tumor_str = engine.analyze_tumor_risk_facts(
+                gans=[hs, ds, ms, ys],
+                jjis=[hb, db, mb, yb],
+                daewun_list=daewun_data_list,
+                sewun_10_list=temp_sewun_10_list,
+                curr_year=curr_year,
+                current_dw_j=dw_j_cur
+            )
 
         adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
         if hasattr(html_views, 'analyze_samja_combination'):
@@ -1372,6 +1387,10 @@ if st.session_state.get('app_running', False):
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
             "adv_warning_str": adv_warning_str,
             "health_erosion_facts": health_erosion_str,
+            "health_tumor_facts": health_tumor_str,
+            "health_cognitive_facts": health_cognitive_str,
+            "yongshin_fact_str": yongshin_fact_str, 
+            "health_erosion_facts": health_erosion_str,
             "yongshin_fact_str": yongshin_fact_str,
             "jaeseong_status_fact_str": jaeseong_status_fact_str,
             "samja_comb_facts": samja_comb_facts,
@@ -1413,6 +1432,7 @@ if st.session_state.get('app_running', False):
             "career_goal": st.session_state.get('career_goal', '직업 적성'),
             "love_goal": st.session_state.get('love_goal', '인연 관계'),
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
+
             "user_concern": st.session_state.get('user_concern', '').strip() or "(특별히 남기신 고민 사항 없음)",
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
