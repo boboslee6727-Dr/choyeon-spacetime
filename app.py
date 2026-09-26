@@ -388,7 +388,8 @@ else:
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
         st.session_state["s_t"] = b_time
 
-        st.text_area("💬 고민 사연 (선택사항)", value=st.session_state.get("user_concern", ""), placeholder="속상한 일이나 궁금한 점을 자유롭게 적어주세요", key="user_concern", on_change=stop_ai)
+        if not any(f"2-{n}." in u_product for n in range(1, 6)):
+            st.text_area("💬 고민 사연 (선택사항)", value=st.session_state.get("user_concern", ""), placeholder="속상한 일이나 궁금한 점을 자유롭게 적어주세요", key="user_concern", on_change=stop_ai)
 
         # 🌟 상품별 특수 입력 분기
         is_1person = not (main_category == "3. 커플 연애/결혼운 (궁합) 풀이" or "4-2." in u_product)
@@ -1441,8 +1442,8 @@ if st.session_state.get('app_running', False):
             "career_goal": st.session_state.get('career_goal', '직업 적성'),
             "love_goal": st.session_state.get('love_goal', '인연 관계'),
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
-
             "user_concern": st.session_state.get('user_concern', '').strip() or "(특별히 남기신 고민 사항 없음)",
+
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
             "best_moving_days_str": best_moving_days_str,
