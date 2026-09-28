@@ -31,6 +31,19 @@ get_oh_class = engine.get_oh_class
 APP_VERSION = "ver 87.1 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
+# 화면 하단 "Hosted with Streamlit" 표시 숨기기 시도
+components.html("""
+<script>
+function hideBadge(w) {
+  try {
+    w.document.querySelectorAll('[href*="streamlit.io"], [class*="viewerBadge"], [class*="ViewerBadge"]').forEach(function(e){ e.style.display = 'none'; });
+  } catch (err) {}
+}
+var n = 0;
+var t = setInterval(function(){ hideBadge(window.parent); hideBadge(window.top); n++; if (n > 20) clearInterval(t); }, 500);
+</script>
+""", height=0)
+
 # 외주 영업부(파이프라인) 호출 문지기
 try:
     from pipeline_manager import run_pipeline_router
