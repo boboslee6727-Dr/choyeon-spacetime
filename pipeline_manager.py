@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: (ver 86.8) 신청접수 ~ AI 감명 ~ 솔라피 가동
+# 🏮 사주박사: (ver 86.9) 신청접수 ~ AI 감명 ~ 솔라피 가동
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -427,10 +427,14 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
     st.info("👤 **2. 신청자 정보**")
     name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요", key="order_name")
-    c_p1, c_p2, c_p3 = st.columns([1, 1.5, 1.5])
-    with c_p1: st.text_input("국번", value="010", disabled=True)
-    with c_p2: p_mid = st.text_input("연락처 중간 4자리 *(필수)", max_chars=4, placeholder="1234", key="order_p_mid")
-    with c_p3: p_end = st.text_input("연락처 끝 4자리 *(필수)", max_chars=4, placeholder="5678", key="order_p_end")
+    phone_input = st.text_input("휴대폰 번호 *(필수)", max_chars=13, placeholder="예) 010-1234-5678", key="order_phone")
+    _digits = re.sub(r'\D', '', phone_input or '')
+    phone_full = f"{_digits[:3]}-{_digits[3:7]}-{_digits[7:]}" if (len(_digits) == 11 and _digits.startswith('010')) else None
+    if phone_input:
+        if phone_full:
+            st.caption(f"✅ 입력하신 번호: **{phone_full}** (본인 번호가 맞는지 확인해 주세요)")
+        else:
+            st.caption("⚠️ 010으로 시작하는 숫자 11자리를 입력해 주세요. (예: 010-1234-5678)")
     memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com", key="order_email")
 
     c_g, c_m, c_c = st.columns(3)
@@ -519,7 +523,11 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         if meta_data:
             final_concern += f"\n\n---META_START---\n{json.dumps(meta_data)}\n---META_END---"
 
-        if not name.strip() or not p_mid.strip() or not p_end.strip() or not b_year.isdigit() or not selected_products or not agree:
+        if not phone_full:
+            st.error("🚨 휴대폰 번호를 010으로 시작하는 숫자 11자리로 입력해 주세요. (예: 01012345678)")
+            return
+
+        if not name.strip() or not b_year.isdigit() or not selected_products or not agree:
             st.error("🚨 필수 입력값을 확인해 주십시오.")
             return
 
@@ -546,7 +554,6 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         clean_ui_names = [re.sub(r'\d-\d\.\s*', '', PRODUCT_MAP.get(p, p)) for p in selected_products]
         ui_product_desc = " + ".join(clean_ui_names) + f" ({final_price:,}원)"
         order_id = str(uuid.uuid4())[:8]
-        phone_full = f"010-{p_mid.strip()}-{p_end.strip()}"
 
         kst = pytz.timezone('Asia/Seoul')
         now_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
