@@ -1525,7 +1525,7 @@ if st.session_state.get('app_running', False):
         
         if raw_response and isinstance(raw_response, str):
             clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            ai_output_html = html_views.format_ai_text_to_html(clean_raw)
+            ai_output_html = html_views.format_ai_text_to_html(clean_raw, applicant_name=name)
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
