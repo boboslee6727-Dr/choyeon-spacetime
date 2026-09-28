@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.1 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 87.2 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,7 +28,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.1 Master"
+APP_VERSION = "ver 87.2 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
