@@ -146,11 +146,26 @@ def generate_and_upload_pdf(order_id, name, result_html):
             st.error(f"🚨 GitHub 업로드 실패: {res.status_code} {res.text}")
             return None
 
-        public_url = f"https://choyeonsaju.com/{file_path}"
+        from urllib.parse import quote
+        public_url = f"https://choyeonsaju.com/{quote(file_path)}"
         return public_url
     except Exception as e:
         st.error(f"🚨 PDF 생성/업로드 오류: {e}")
         return None
+
+def wait_until_pdf_opens(pdf_url, max_wait_sec=240):
+    """올린 PDF가 인터넷에서 실제로 열릴 때까지 최대 4분 기다립니다."""
+    waited = 0
+    while waited <= max_wait_sec:
+        try:
+            r = requests.head(pdf_url, timeout=10, allow_redirects=True)
+            if r.status_code == 200:
+                return True
+        except Exception:
+            pass
+        time.sleep(10)
+        waited += 10
+    return False
 
 # ------------------------------------------------------------------------------
 # 📡 [솔라피 (Solapi) 발송 엔진] 
@@ -737,8 +752,14 @@ def render_admin_panel():
                 with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
                     pdf_url = generate_and_upload_pdf(gid, row['name'], st.session_state[f"html_{gid}"])
                 if pdf_url:
-                    save_pdf_url_to_db(gid, pdf_url)
-                    st.success(f"📄 PDF 저장 완료: {pdf_url}")
+                    with st.spinner("⏳ PDF 주소가 열릴 때까지 확인 중입니다 (최대 4분)..."):
+                        pdf_ready = wait_until_pdf_opens(pdf_url)
+                    if pdf_ready:
+                        save_pdf_url_to_db(gid, pdf_url)
+                        st.success(f"📄 PDF 저장 완료: {pdf_url}")
+                    else:
+                        st.error(f"🚨 PDF 주소가 4분이 지나도 열리지 않습니다. 이 주소를 박사님께서 확인해 주세요: {pdf_url}")
+                        pdf_url = None
                 else:
                     st.warning("⚠️ PDF 생성에 실패했습니다. 기존 링크 문자로 발송됩니다.")
 
@@ -756,7 +777,7 @@ def render_admin_panel():
                 st.session_state.pop('ai_feedback_prompt', None)
                 st.session_state.pop('admin_proc_id', None)
                 st.success(f"✅ [{row['name']}]님 발송 완료!")
-                time.sleep(2)
+                time.sleep(2 if pdf_url else 20)
                 st.rerun()
 
 # ------------------------------------------------------------------------------
