@@ -31,16 +31,17 @@ get_oh_class = engine.get_oh_class
 APP_VERSION = "ver 87.1 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
-# 화면 하단 "Hosted with Streamlit" 표시 숨기기 시도
+# 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
 components.html("""
 <script>
-function hideBadge(w) {
+function hideBadge(w, wide) {
   try {
-    w.document.querySelectorAll('[href*="streamlit.io"], [class*="viewerBadge"], [class*="ViewerBadge"]').forEach(function(e){ e.style.display = 'none'; });
+    var sel = '[href*="streamlit.io"], [class*="viewerBadge"], [class*="ViewerBadge"]';
+    if (wide) sel += ', [href*="github.com"], img[src*="githubusercontent.com"], img[src*="avatar"], [class*="profileContainer"], [class*="ProfileContainer"]';
+    w.document.querySelectorAll(sel).forEach(function(e){ e.style.display = 'none'; });
   } catch (err) {}
 }
-var n = 0;
-var t = setInterval(function(){ hideBadge(window.parent); hideBadge(window.top); n++; if (n > 20) clearInterval(t); }, 500);
+setInterval(function(){ hideBadge(window.parent, false); hideBadge(window.top, true); }, 1000);
 </script>
 """, height=0)
 
@@ -533,7 +534,9 @@ else:
 
         btn_print = st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary")
         if btn_print:
-            components.html("<script>window.parent.print();</script>", height=0)
+            import time as _time
+            _nonce = _time.time()
+            components.html(f"<script>/* {_nonce} */ window.parent.print();</script>", height=0)
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
