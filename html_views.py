@@ -125,6 +125,8 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
         # 작은따옴표('...') 및 큰따옴표("...")로 감싼 강조어도 볼드 처리 (고민 사연 인용 포함)
         line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", line_formatted)
+        line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
+        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", line_formatted)
         line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
 
