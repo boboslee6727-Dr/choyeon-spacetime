@@ -84,7 +84,7 @@ def get_global_css():
     </style>
     """
  
-def format_ai_text_to_html(text, qna_text=""):
+def format_ai_text_to_html(text, qna_text="", applicant_name=""):
     """
     프롬프트 규칙 4번 대응 포맷터:
     대제목(1.), 중제목(1)), 소제목((1)), 소소제목(①②③), 강조기호(◆▶▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
@@ -94,6 +94,11 @@ def format_ai_text_to_html(text, qna_text=""):
     """
     if not text:
         return ""
+
+    if applicant_name and applicant_name.strip():
+        _name = re.escape(applicant_name.strip())
+        text = re.sub(rf"(?<!<b>)(?<!['\"])({_name}님)(?!['\"])", r"<b>\1</b>", text)
+
     text = re.sub(r'```(?:html)?\s*', '', text)
     lines = [line.strip() for line in text.split("\n")]
     html_lines = []
@@ -118,6 +123,9 @@ def format_ai_text_to_html(text, qna_text=""):
             html_lines.append(f"\n{line}\n")
             continue
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
+        # 작은따옴표('...') 및 큰따옴표("...")로 감싼 강조어도 볼드 처리 (고민 사연 인용 포함)
+        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", line_formatted)
+        line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
 
         if re.match(r'^\d+\.\s+', line_formatted):
@@ -160,7 +168,10 @@ def format_ai_text_to_html(text, qna_text=""):
     qna_html = ""
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
-        clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna).replace('\n\n', '<br><br>').replace('\n', '<br>')
+        clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna)
+        clean_qna = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", clean_qna)
+        clean_qna = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', clean_qna)
+        clean_qna = clean_qna.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 고민 상담 Q&A<br>{clean_qna}</div>"
     return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
  
@@ -504,8 +515,7 @@ def get_closing_html(name, sign_html=""):
     return f"""
     <div style='margin-top: 30px;'>
         <hr style='border: 0; border-top: 2px dashed #1A237E; margin: 35px 0 20px 0;'>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><b>'사주팔자(四柱八字)'</b>는 태어날 때 부여받은 <b>바코드(bar-code)</b>와 같지만, 우리가 살아가며 마주하는 <b>'운(運)'</b>은 늘 변화하며 흐릅니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 올바른 방향을 잡는 든든한 <b>'나침반'</b>이 되기를 진심으로 기원합니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><b>'사주팔자(四柱八字)'</b>는 태어날 때 부여받은 <b>바코드(bar-code)</b>와 같지만, 우리가 살아가며 마주하는 <b>'운(運)'</b>은 늘 변화하며 흐릅니다. 따라서 오늘의 '초연 시공명리와의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 올바른 방향을 잡는 든든한 <b>'나침반'</b>이 되기를 진심으로 기원합니다.</p>
         <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 <b>'인생의 길흉화복'</b>과 <b>'명리에 대한 더 깊은 지혜'</b>가 필요하실 때 언제든 <b>'초연 시공명리 연구소 사주박사'</b>를 찾아 주십시오.</p>
         <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
         <div style='display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 30px;'>
