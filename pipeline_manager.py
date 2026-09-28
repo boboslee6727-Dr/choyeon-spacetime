@@ -291,7 +291,7 @@ def render_customer_order_form():
     </style>
     """, unsafe_allow_html=True)
     
-    page_title = "🔮 사주박사 신청완료 🔮" if "submitted_order" in st.session_state else "🔮 사주박사 신청서 🔮"
+    page_title = "🔮사주박사 신청완료🔮" if "submitted_order" in st.session_state else "🔮사주박사 신청서🔮"
     st.markdown(f"<div class='m-title'>{page_title}</div>", unsafe_allow_html=True)
     
     if "submitted_order" in st.session_state:
@@ -306,8 +306,8 @@ def render_customer_order_form():
 <div class='guide-box'>
 <div class='pay-title'>[ 🌸 신청 접수 완료 ! 🌸 ]</div>
 <b style='color:#1A237E; font-size:17px;'>{ord_info['name']}</b>님, 소중한 인연에 감사합니다! <br>
-신청한 <b>"{ord_info['product_desc']}"</b> 접수가 완벽하게 끝났어요.<br><br>
-아래 계좌로 🥰복비를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이하여 바로 받아 보실 수 있어용~ 💕
+<b>"{ord_info['product_desc']}"</b> 접수가 완료되었습니다.<br><br>
+아래 계좌로 <b>🥰복비</b>를 입금해 주시면 입금확인 후 곧바로 정성껏 사주풀이하여 바로 받아 보실 수 있어용~ 💕
 </div>
 """, unsafe_allow_html=True)
 
@@ -346,7 +346,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             st.rerun()
 
         ref_order_link = f"{BASE_URL}/?mode=order&ref={ord_info['order_id']}"
-        share_msg = f"친구에게 '사주박사'를 소개하고 너도 한번 봐봐! 👀\\n친구 소개로 같이 신청하면 우리 둘 다 20% 할인 쿠폰 득템 혜택받는다구! ㅎㅎ💥🎉\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
+        share_msg = f"친구에게 '사주박사'를 소개하고 너도 한번 봐봐! 친구 소개로 같이 신청하면 우리 둘 다 쿠폰 득템 혜택받는다구! ㅎㅎ💥🎉\\n\\n👇 아래 링크에서 신청해봐!\\n{ref_order_link}"
 
         st.components.v1.html(f"""
 <div style='background-color: #FFFDF5; border: 1.5px solid #FFE082; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px; font-family: sans-serif;'>
@@ -354,7 +354,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 <span style='font-size: 17px; font-weight: bold; color: #E53935;'>🎁 [ Win-Win 친구 소개 이벤트 ]</span>
 </div>
 <div style='font-size: 14.5px; color: #31333F; line-height: 1.6; text-align: center; margin-bottom: 15px;'>
-친구에게 '사주박사'를 소개하고 <br> 너도 한번 봐봐! 👀 친구 소개로 같이 신청하면 <br> 우리 둘 다 <b>20% 할인 쿠폰</b> 득템 혜택받는다구! 💥🎉
+친구에게 '사주박사'를 소개하고 <br> 너도 한번 봐봐! 친구 소개로 같이 신청하면 <br> 우리 둘 다 <b>할인 쿠폰</b> 득템 혜택받는다구! 💥🎉
 </div>
 <a href="sms:?&body={share_msg}" style='display:block; text-decoration:none;'>
 <div style='background-color:#FEE500; color:#191919; text-align:center; padding:14px 20px; border-radius:10px; font-weight:bold; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%;'>
