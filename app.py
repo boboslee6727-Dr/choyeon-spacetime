@@ -536,7 +536,12 @@ else:
         if btn_print:
             import time as _time
             _nonce = _time.time()
-            components.html(f"<script>/* {_nonce} */ window.parent.print();</script>", height=0)
+            components.html(f"""
+            <script>
+            /* {_nonce} */
+            setTimeout(function() {{ window.top.print(); }}, 1200);
+            </script>
+            """, height=0)
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
