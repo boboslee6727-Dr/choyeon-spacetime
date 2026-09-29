@@ -74,7 +74,6 @@ def get_global_css():
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
         @page { size: A4 portrait; margin: 15mm 12mm; }
         .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
-        html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main, div[data-testid="stAppViewBlockContainer"] { height: auto !important; max-height: none !important; overflow: visible !important; }
         body, .stApp { background-color: white !important; }
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         div[data-testid="stVerticalBlock"] { gap: 0 !important; }
