@@ -532,22 +532,28 @@ else:
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
-        btn_print = st.button("🖨️ 풀이 결과 PDF 다운로드", key="btn_print", use_container_width=True, type="secondary")
+        btn_print = st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary")
         if btn_print:
             _saved_html = st.session_state.get('saved_report_html', '')
             if not _saved_html:
                 st.warning("⚠️ 먼저 [초연 시공명리 풀이 가동] 버튼으로 감명서를 만들어 주세요.")
             else:
-                with st.spinner("📄 PDF를 만드는 중입니다... (잠시만 기다려 주세요)"):
+                with st.spinner("📄 인쇄 준비 중입니다... (잠시만 기다려 주세요)"):
                     _pdf_bytes = generate_pdf_bytes(_saved_html)
-                st.download_button(
-                    label="⬇️ 완성된 PDF 다운로드",
-                    data=_pdf_bytes,
-                    file_name="사주풀이_결과.pdf",
-                    mime="application/pdf",
-                    key="btn_print_download",
-                    use_container_width=True
-                )
+                import base64 as _b64
+                _pdf_b64 = _b64.b64encode(_pdf_bytes).decode('utf-8')
+                components.html(f"""
+                <script>
+                var byteChars = atob("{_pdf_b64}");
+                var byteNumbers = new Array(byteChars.length);
+                for (var i = 0; i < byteChars.length; i++) {{ byteNumbers[i] = byteChars.charCodeAt(i); }}
+                var byteArray = new Uint8Array(byteNumbers);
+                var blob = new Blob([byteArray], {{type: 'application/pdf'}});
+                var blobUrl = URL.createObjectURL(blob);
+                var w = window.top.open(blobUrl, '_blank');
+                if (w) {{ setTimeout(function() {{ w.print(); }}, 800); }}
+                </script>
+                """, height=0)
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
