@@ -47,7 +47,7 @@ setInterval(function(){ hideBadge(window.parent, false); hideBadge(window.top, t
 
 # 외주 영업부(파이프라인) 호출 문지기
 try:
-    from pipeline_manager import run_pipeline_router
+    from pipeline_manager import run_pipeline_router, generate_pdf_bytes
     run_pipeline_router()
 except Exception as e:
     st.error(f"🚨 파이프라인 라우터 오류: {e}")
@@ -532,27 +532,22 @@ else:
         # 🚨 [가동 모터] 버튼을 눌렀을 때 엔진 활성화! 
         btn_single = st.button("✨ [초연 시공명리 풀이 가동]", key="btn_run", use_container_width=True, type="primary")
 
-        btn_print = st.button("🖨️ 풀이 결과 인쇄 / PDF 저장", key="btn_print", use_container_width=True, type="secondary")
+        btn_print = st.button("🖨️ 풀이 결과 PDF 다운로드", key="btn_print", use_container_width=True, type="secondary")
         if btn_print:
-            import time as _time
-            _nonce = _time.time()
-            components.html(f"""
-            <script>
-            /* {_nonce} */
-            (function() {{
-                var tries = 0;
-                var timer = setInterval(function() {{
-                    tries++;
-                    var doc = window.top.document;
-                    var ready = doc.querySelector('.choyeon-premium-report') || doc.querySelector('.cover-page');
-                    if (ready || tries > 40) {{
-                        clearInterval(timer);
-                        setTimeout(function() {{ window.top.print(); }}, 400);
-                    }}
-                }}, 200);
-            }})();
-            </script>
-            """, height=0)
+            _saved_html = st.session_state.get('saved_report_html', '')
+            if not _saved_html:
+                st.warning("⚠️ 먼저 [초연 시공명리 풀이 가동] 버튼으로 감명서를 만들어 주세요.")
+            else:
+                with st.spinner("📄 PDF를 만드는 중입니다... (잠시만 기다려 주세요)"):
+                    _pdf_bytes = generate_pdf_bytes(_saved_html)
+                st.download_button(
+                    label="⬇️ 완성된 PDF 다운로드",
+                    data=_pdf_bytes,
+                    file_name="사주풀이_결과.pdf",
+                    mime="application/pdf",
+                    key="btn_print_download",
+                    use_container_width=True
+                )
 
         if btn_single:
             check_u_name = st.session_state.get('u_n', '')
