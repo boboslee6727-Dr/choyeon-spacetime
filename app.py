@@ -539,7 +539,18 @@ else:
             components.html(f"""
             <script>
             /* {_nonce} */
-            setTimeout(function() {{ window.top.print(); }}, 1200);
+            (function() {{
+                var tries = 0;
+                var timer = setInterval(function() {{
+                    tries++;
+                    var doc = window.top.document;
+                    var ready = doc.querySelector('.choyeon-premium-report') || doc.querySelector('.cover-page');
+                    if (ready || tries > 40) {{
+                        clearInterval(timer);
+                        setTimeout(function() {{ window.top.print(); }}, 400);
+                    }}
+                }}, 200);
+            }})();
             </script>
             """, height=0)
 
