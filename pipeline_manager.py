@@ -205,6 +205,69 @@ def send_solapi_custom_message(to_phone, name, msg_body):
     except Exception as e: 
         return False, str(e)
 
+def send_solapi_kakao_first(to_phone, name, link_url, sms_text):
+    """카톡(알림톡)을 먼저 보내고, 카톡이 안 되면 솔라피가 문자로 자동 대체 발송합니다.
+    카톡 설정값(Secrets)이 없거나 솔라피가 접수를 거절하면 예전처럼 문자로 바로 보냅니다."""
+    try:
+        pf_id = st.secrets.get("KAKAO_PF_ID", "")
+        template_id = st.secrets.get("KAKAO_TEMPLATE_ID", "")
+    except Exception:
+        pf_id, template_id = "", ""
+    if not pf_id or not template_id:
+        return send_solapi_custom_message(to_phone, name, sms_text)
+    try:
+        api_key = st.secrets["SOLAPI_API_KEY"]
+        api_secret = st.secrets["SOLAPI_API_SECRET"]
+        res = requests.post("https://api.solapi.com/messages/v4/send",
+            headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"},
+            json={"message": {
+                "to": to_phone.replace("-", ""),
+                "from": "01038576727",
+                "kakaoOptions": {
+                    "pfId": pf_id,
+                    "templateId": template_id,
+                    "variables": {"#{이름}": name},
+                    "buttons": [{"buttonName": "감명서 확인하기", "buttonType": "WL", "linkMo": link_url, "linkPc": link_url}]
+                }
+            }}
+        )
+        if res.status_code == 200:
+            return True, "카톡 발송 접수 (카톡이 안 되면 문자로 자동 대체됩니다)"
+        ok, msg = send_solapi_custom_message(to_phone, name, sms_text)
+        return ok, f"카톡 접수가 거절되어 문자로 대신 발송: {msg} (사유: {res.text[:100]})"
+    except Exception:
+        return send_solapi_custom_message(to_phone, name, sms_text)
+
+def send_solapi_kakao_receipt(to_phone, name, product_name, price_text):
+    """'접수 완료'를 카톡(알림톡)으로 보냅니다. 카톡이 안 되면 솔라피가 문자로 자동 대체 발송합니다.
+    접수 알림 양식(KAKAO_TEMPLATE_ID_RECEIPT)이 아직 설정되지 않았으면 아무것도 보내지 않습니다."""
+    try:
+        pf_id = st.secrets.get("KAKAO_PF_ID", "")
+        template_id = st.secrets.get("KAKAO_TEMPLATE_ID_RECEIPT", "")
+    except Exception:
+        return False, "카톡 접수 알림 설정 없음"
+    if not pf_id or not template_id:
+        return False, "카톡 접수 알림 설정 없음"
+    try:
+        api_key = st.secrets["SOLAPI_API_KEY"]
+        api_secret = st.secrets["SOLAPI_API_SECRET"]
+        res = requests.post("https://api.solapi.com/messages/v4/send",
+            headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"},
+            json={"message": {
+                "to": to_phone.replace("-", ""),
+                "from": "01038576727",
+                "kakaoOptions": {
+                    "pfId": pf_id,
+                    "templateId": template_id,
+                    "variables": {"#{이름}": name, "#{상품명}": product_name}
+                }
+            }},
+            timeout=10
+        )
+        return (True, "접수 카톡 발송 접수") if res.status_code == 200 else (False, f"접수 카톡 거절: {res.text[:100]}")
+    except Exception as e:
+        return False, str(e)
+
 # ------------------------------------------------------------------------------
 # 0. 🧮 [패키지 연산 엔진]
 # ------------------------------------------------------------------------------
