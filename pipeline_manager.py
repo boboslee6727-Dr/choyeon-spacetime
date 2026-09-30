@@ -438,14 +438,24 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
     st.info("👤 **2. 신청자 정보**")
     name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요", key="order_name")
-    phone_input = st.text_input("휴대폰 번호 *(필수)", max_chars=13, placeholder="예) 010-1234-5678", key="order_phone")
+    def _format_phone_on_enter():
+        raw = st.session_state.get("order_phone", "")
+        digits = re.sub(r'\D', '', raw or '')
+        if len(digits) == 11 and digits.startswith('010'):
+            st.session_state["order_phone"] = f"{digits[:3]}-{digits[3:7]}-{digits[7:]}"
+
+    phone_input = st.text_input(
+        "휴대폰 번호 *(필수)", max_chars=13, placeholder="예) 010-1234-5678",
+        key="order_phone", on_change=_format_phone_on_enter
+    )
     _digits = re.sub(r'\D', '', phone_input or '')
     phone_full = f"{_digits[:3]}-{_digits[3:7]}-{_digits[7:]}" if (len(_digits) == 11 and _digits.startswith('010')) else None
     if phone_input:
         if phone_full:
-            st.caption(f"✅ 입력하신 번호: **{phone_full}** (본인 번호가 맞는지 확인해 주세요)")
+            st.caption("⚠️ 본인의 핸드폰 번호가 맞는지 확인해 주세요.")
         else:
             st.caption("⚠️ 010으로 시작하는 숫자 11자리를 입력해 주세요. (예: 010-1234-5678)")
+
     memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com", key="order_email")
 
     c_g, c_m, c_c = st.columns(3)
