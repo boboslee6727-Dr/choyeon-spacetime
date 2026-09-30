@@ -410,15 +410,12 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     </style>
     """, unsafe_allow_html=True)
 
-    st.success("🛍️ **1. 상품 선택**")
+    st.success("🛍️ **1. 상품 선택** (여러 개를 함께 고르시면 할인이 적용됩니다 🎁)")
     MAIN_CATEGORIES = {
         "1. 개인 사주팔자 풀이 (종합)": "1-",
         "2. 테마별 특성화 상담": "2-",
         "3. 커플 연애/결혼운 (궁합) 풀이": "3-",
     }
-    main_category = st.selectbox("어떤 상담을 원하십니까?", list(MAIN_CATEGORIES.keys()), key="order_main_category")
-    prefix = MAIN_CATEGORIES[main_category]
-    category_options = [item for item in U_PRODUCT_LIST if item.startswith(prefix)]
 
     def format_product_name(item):
         if " (" in item:
@@ -428,15 +425,13 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             return formatted
         return item
 
-    selected_single = st.radio(
-        label="세부 상품 선택 :red[*(필수)*]",
-        options=category_options,
-        format_func=format_product_name,
-        index=0,
-        key="order_sub_product"
-    )
-    selected_products = [selected_single]
-    # 👆 여기까지 삽입
+    selected_products = []
+    for cat_name, prefix in MAIN_CATEGORIES.items():
+        cat_items = [item for item in U_PRODUCT_LIST if item.startswith(prefix)]
+        with st.expander(f"📂 {cat_name}", expanded=(prefix == "1-")):
+            for item in cat_items:
+                if st.checkbox(format_product_name(item), key=f"order_chk_{item}"):
+                    selected_products.append(item)
 
     def sync_partner_gender_order():
         u_val = st.session_state.get('order_gender', '여성')
