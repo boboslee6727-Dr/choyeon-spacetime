@@ -594,22 +594,18 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     # 🚨 흉살 우선순위: 백호/괴강/양인은 무조건 표시, 현침살은 중요도 낮춰 맨 뒤로
     MUST_SHOW_EVIL = ["백호대살", "괴강살", "양인살"]
     EVIL_PRIORITY = [
-        "간여지동", "고란살", "도화살", "탕화살", "비인살", "효신살",
-        "음양차착", "의처의부", "남연살", "여연살", "나체도화", "홍염살",
-        "음욕살", "철쇄개금", "교신성", "육수살", "십악대패살", "평두살",
-        "철사관", "교신", "퇴신", "곡각살", "현침살",
+        "간여지동", "고란살", "탕화살", "비인살",
+        "홍염살", "나체도화", "도화살",
+        "음양차착", "의처의부", "남연살", "여연살", "음욕살",
+        "십악대패살", "철쇄개금", "철사관", "곡각살", "육수살", "평두살",
+        "현침살", "교신성", "교신", "퇴신", "복신",
     ]
 
     noble = list(dict.fromkeys(noble))
     ausp = list(dict.fromkeys(ausp))
     evil = list(dict.fromkeys(evil))
 
-    # 복신은 흉살 목록에서 분리해 "좋은 것 묶음"으로 합산
-    bok_in_evil = "복신" in evil
-    if bok_in_evil:
-        evil.remove("복신")
-
-    good_pool = noble + ausp + (["복신"] if bok_in_evil else [])
+    good_pool = noble + ausp
     MAX_GOOD = 4
     shown_good = good_pool[:MAX_GOOD]
 
@@ -621,12 +617,12 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
 
     MAX_TOTAL = 6
     remain = max(2, MAX_TOTAL - len(shown_good))  # 흉살은 최소 2개 자리 보장
-    shown_evil = ordered_evil[:remain]
+    rest_slots = max(0, remain - len(must_evil))
+    shown_evil = must_evil + rest_evil[:rest_slots]
 
     result = []
     for n in shown_good:
-        color = '#0D47A1' if n != "복신" else '#C62828'
-        result.append(f"<span style='color:{color};'>{n}</span>")
+        result.append(f"<span style='color:#0D47A1;'>{n}</span>")
     for e in shown_evil:
         result.append(f"<span style='color:#C62828;'>{e}</span>")
     return result
