@@ -615,8 +615,8 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     rest_evil.sort(key=lambda x: EVIL_PRIORITY.index(x) if x in EVIL_PRIORITY else 999)
     ordered_evil = must_evil + rest_evil
 
-    MAX_TOTAL = 6
-    remain = max(2, MAX_TOTAL - len(shown_good))  # 흉살은 최소 2개 자리 보장
+    MAX_TOTAL = 7
+    remain = max(2, MAX_TOTAL - len(shown_good))  # 흉살은 최소 3개 자리 보장
     rest_slots = max(0, remain - len(must_evil))
     shown_evil = must_evil + rest_evil[:rest_slots]
 
