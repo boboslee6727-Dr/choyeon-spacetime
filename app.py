@@ -1816,15 +1816,39 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         if is_admin_mode:
             gid = st.session_state.get('admin_proc_id', '')
-            st.session_state[f'html_{gid}'] = final_clean_html
-            st.session_state['saved_report_html'] = final_clean_html
-            if 'admin_orders' in st.session_state and gid in st.session_state['admin_orders']:
-                st.session_state['admin_orders'][gid]['html'] = final_clean_html
-                st.session_state['admin_orders'][gid]['is_generated'] = True
-                st.session_state['admin_orders'][gid]['status'] = '제작완료'
-            st.session_state['app_running'] = False
-            st.session_state['admin_proc_id'] = None
-            st.rerun()
+            _pkg_queue = st.session_state.get('admin_pkg_queue', [])
+
+            if _pkg_queue:
+                # 🆕 패키지 자동화: 지금 만든 결과를 쌓아두고, 대기열의 다음 상품으로 자동 진행
+                if 'vip_stack_html' not in st.session_state:
+                    st.session_state['vip_stack_html'] = []
+                st.session_state['vip_stack_html'].append(final_clean_html)
+
+                next_product = _pkg_queue[0]
+                st.session_state['admin_pkg_queue'] = _pkg_queue[1:]
+                if "1-" in next_product: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", next_product
+                elif "2-" in next_product: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", next_product
+                elif "3-" in next_product: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 연애/결혼운 (궁합) 풀이", next_product
+
+                st.session_state['app_running'] = True
+                st.rerun()
+            else:
+                # 대기열이 비었으면(마지막 상품까지 다 끝났으면) 지금까지 쌓인 걸 합쳐서 완결
+                if st.session_state.get('vip_stack_html'):
+                    combined = "<div style='page-break-before: always;'></div>".join(st.session_state['vip_stack_html'] + [final_clean_html])
+                    st.session_state.pop('vip_stack_html', None)
+                else:
+                    combined = final_clean_html
+
+                st.session_state[f'html_{gid}'] = combined
+                st.session_state['saved_report_html'] = combined
+                if 'admin_orders' in st.session_state and gid in st.session_state['admin_orders']:
+                    st.session_state['admin_orders'][gid]['html'] = combined
+                    st.session_state['admin_orders'][gid]['is_generated'] = True
+                    st.session_state['admin_orders'][gid]['status'] = '제작완료'
+                st.session_state['app_running'] = False
+                st.session_state['admin_proc_id'] = None
+                st.rerun()
         else:
             if is_vip_package:
                 if 'vip_stack_html' not in st.session_state:
