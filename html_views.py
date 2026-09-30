@@ -80,7 +80,9 @@ def get_global_css():
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .page-break-before { page-break-before: always; }
-        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
+        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
+        .report-page h1, .report-page h2, .ai-title-l1 { margin-top: 0 !important; }
+        div[style*="display:flex"][style*="row-reverse"] { page-break-inside: avoid !important; break-inside: avoid !important; }
     </style>
     """
  
@@ -130,38 +132,38 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
         line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
 
-        if re.match(r'^\d+\.\s+', line_formatted):
-            html_lines.append(f"<div class='ai-title-l1' style='font-size: 21.5px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
+if re.match(r'^\d+\.\s+', line_formatted):
+            html_lines.append(f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
 
         elif re.match(r'^\d+\)\s*', line_formatted):
-            html_lines.append(f"<div class='sub-title' style='font-size: 19.5px !important; font-weight: 800 !important; color: #000000 !important; margin-top: 24px !important; margin-bottom: 11px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+            html_lines.append(f"<div class='sub-title' style='font-size: 20px !important; font-weight: 700 !important; color: #1A237E !important; margin-top: 24px !important; margin-bottom: 11px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important; border-left: 4px solid #1A237E !important; padding-left: 10px !important;'><b>{line_formatted}</b></div>")
 
         elif re.match(r'^\(\d+\)\s*', line_formatted) or re.match(r'^\[\d+\]\s*', line_formatted):
             split = _split_title_body(line_formatted)
             if split:
                 title, body = split.group(1), split.group(2)
-                html_lines.append(f"<div style='font-size: 18.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<div style='font-size: 17px !important; font-weight: 700 !important; color: #333333 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 18.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 17px !important; font-weight: 700 !important; color: #333333 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
 
         elif re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩]\s*', line_formatted):
             split = _split_title_body(line_formatted)
             if split:
                 title, body = split.group(1), split.group(2)
-                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 600 !important; color: #000000 !important; margin-top: 15px !important; margin-bottom: 9px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 400 !important; color: #333333 !important; margin-top: 15px !important; margin-bottom: 9px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important; text-decoration: underline !important; text-underline-offset: 3px !important;'><b>{title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 600 !important; color: #000000 !important; margin-top: 15px !important; margin-bottom: 9px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 400 !important; color: #333333 !important; margin-top: 15px !important; margin-bottom: 9px !important; line-height: 1.4 !important; font-family: \"Noto Serif KR\", serif !important; display: block !important; text-decoration: underline !important; text-underline-offset: 3px !important;'><b>{line_formatted}</b></div>")
 
         elif re.match(r'^[◆▶▷■◈●•]\s*', line_formatted):
             split = _split_title_body(line_formatted)
             if split:
                 title, body = split.group(1), split.group(2)
-                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 400 !important; font-style: italic !important; color: #555555 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 400 !important; font-style: italic !important; color: #555555 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
 
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
