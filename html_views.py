@@ -80,9 +80,11 @@ def get_global_css():
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .page-break-before { page-break-before: always; }
-        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 0 !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
+        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; }
         .report-page h1, .report-page h2, .ai-title-l1 { margin-top: 0 !important; }
         div[style*="display:flex"][style*="row-reverse"] { page-break-inside: avoid !important; break-inside: avoid !important; }
+        .cover-page { display: block !important; }
+        .cover-page > div { margin: 90px auto 0 auto !important; }
     </style>
     """
  
