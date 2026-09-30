@@ -1817,6 +1817,7 @@ if st.session_state.get('app_running', False):
         if is_admin_mode:
             gid = st.session_state.get('admin_proc_id', '')
             st.session_state[f'html_{gid}'] = final_clean_html
+            st.session_state['saved_report_html'] = final_clean_html
             if 'admin_orders' in st.session_state and gid in st.session_state['admin_orders']:
                 st.session_state['admin_orders'][gid]['html'] = final_clean_html
                 st.session_state['admin_orders'][gid]['is_generated'] = True
