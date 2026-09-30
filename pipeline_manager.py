@@ -666,7 +666,8 @@ def render_admin_panel():
                 r_oid = row['order_id']
                 r_name = row['name']
                 r_prod = row['u_product']
-                r_prod_first = r_prod.split('+')[0].strip()
+                r_prod_list = [p.strip() for p in r_prod.split('+') if p.strip()]
+                r_prod_first = r_prod_list[0] if r_prod_list else r_prod.strip()
                 engine_prod = PRODUCT_MAP.get(r_prod_first, "1-1. 사주팔자 및 총 운세 풀이")
                 
                 with st.container():
@@ -712,10 +713,15 @@ def render_admin_panel():
                                 if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", r_prod_first
                                 elif "2-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", r_prod_first
                                 elif "3-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 연애/결혼운 (궁합) 풀이", r_prod_first
-                                
+
+                                # 🆕 패키지 자동화: 남은 상품들을 대기열에 저장
+                                st.session_state['admin_pkg_queue'] = r_prod_list[1:]  # 첫 상품 뺀 나머지
+                                st.session_state.pop('vip_stack_html', None)  # 이전 찌꺼기 제거
+
                                 st.session_state['admin_proc_id'] = r_oid
                                 st.session_state['app_running'] = True
                                 st.rerun()
+
                         with btn_col2:
                             if st.button(f"🔔 미입금 안내 톡 쏘기 - {r_name}", key=f"remind_{r_oid}"):
                                 remind_msg = f"💌 [사주박사 안내]\n{r_name}님, 신청하신 감명 접수가 보류 중입니다. 혹시 바쁘셔서 잊으셨을까 봐 안내해 드려요! 😊\n\n💳 국민은행 231402-04-133221 (이*호)\n\n위 계좌로 복비가 입금되면 즉시 박사님의 정밀 분석이 시작됩니다. (입금자명이 다르다면 카톡 부탁드려요!) 🌸"
