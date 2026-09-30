@@ -217,7 +217,30 @@ def calculate_package_price(selected_products):
         if len(prices) >= 2:
             total_original += int(prices[0].replace(',', ''))
             total_chuseok += int(prices[1].replace(',', ''))
-    return total_original, total_chuseok, 0, int(((total_original - total_chuseok) / total_original) * 100) if total_original > 0 else 0, total_chuseok
+
+    # 🎁 패키지(2개 이상) 추가 할인: 개수 기준과 금액 기준 중 더 유리한 쪽 적용
+    n = len(selected_products)
+    if n >= 4:
+        count_based_pct = 20
+    elif n == 3:
+        count_based_pct = 15
+    elif n == 2:
+        count_based_pct = 10
+    else:
+        count_based_pct = 0
+
+    if total_chuseok >= 100000:
+        amount_based_pct = 20
+    elif total_chuseok >= 50000:
+        amount_based_pct = 10
+    else:
+        amount_based_pct = 0
+
+    extra_discount_pct = max(count_based_pct, amount_based_pct)
+    final_price = int(total_chuseok * (1 - extra_discount_pct / 100))
+
+    total_rate_pct = int(((total_original - final_price) / total_original) * 100) if total_original > 0 else 0
+    return total_original, total_chuseok, extra_discount_pct, total_rate_pct, final_price
 
 # ------------------------------------------------------------------------------
 # 🎯 [자동화 마케팅 메시지 제네레이터]
@@ -576,6 +599,9 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         if not _alert_ok:
             st.toast(f"⚠️ 관리자 알림 발송 실패: {_alert_msg}")
 
+        # 신청자에게 '접수 완료' 카톡 발송 (설정이 없으면 조용히 건너뜀)
+        send_solapi_kakao_receipt(phone_full, name.strip(), " + ".join(clean_ui_names), f"{final_price:,}원")
+
         st.session_state["submitted_order"] = {
             "order_id": order_id,
             "name": name.strip(),
@@ -776,7 +802,9 @@ def render_admin_panel():
                         final_msg = f"[초연 시공명리] {row['name']}님, 감명서가 완성되었습니다.\n아래 파일을 눌러 바로 확인하세요.\n{pdf_url}"
                     else:
                         final_msg = st.session_state[f"sms_{gid}"]
-                    send_solapi_custom_message(row['phone'], row['name'], final_msg)
+                    _kakao_link = pdf_url if pdf_url else f"{BASE_URL}/?mode=view&code={gid}"
+                    _ok, _msg = send_solapi_kakao_first(row['phone'], row['name'], _kakao_link, final_msg)
+                    st.toast(f"📨 {_msg}")
 
                 st.session_state.pop(f"html_{gid}", None)
                 st.session_state.pop(f"sms_{gid}", None)
