@@ -292,7 +292,7 @@ def render_customer_order_form():
     EVENT_PERIOD = "[ 10/1 ~ 10/31 ]"
     EVENT_TITLE = "🍁 가을맞이 깊어가는 인연 특가! 🍁"
     EVENT_DESC_1 = "선선해진 가을, 한 해를 차분히 돌아보시라는 마음으로,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
-    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 최대 20% 패키지 할인!)"    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 최대 20% 패키지 할인!)"
+    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 최대 20% 패키지 할인!)"
 
     st.markdown("""
     <style>
