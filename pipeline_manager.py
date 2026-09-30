@@ -283,23 +283,16 @@ def render_customer_order_form():
 
     # 🎯 특정 상품 바로가기: URL의 ?product=1-4 등을 감지해서 대제목/소제목을 미리 선택해둠
     _product_from_url = get_safe_query_param("product")
-    if _product_from_url and "order_main_category" not in st.session_state:
-        _prefix_from_url = _product_from_url.split("-")[0] + "-"
-        _main_cat_map = {
-            "1-": "1. 개인 사주팔자 풀이 (종합)",
-            "2-": "2. 테마별 특성화 상담",
-            "3-": "3. 커플 연애/결혼운 (궁합) 풀이",
-        }
-        if _prefix_from_url in _main_cat_map:
-            st.session_state["order_main_category"] = _main_cat_map[_prefix_from_url]
-            _matched_products = [p for p in U_PRODUCT_LIST if p.startswith(f"{_product_from_url}.")]
-            if _matched_products:
-                st.session_state["order_sub_product"] = _matched_products[0]
+    if _product_from_url and f"order_chk_url_applied_{_product_from_url}" not in st.session_state:
+        _matched_products = [p for p in U_PRODUCT_LIST if p.startswith(f"{_product_from_url}.")]
+        if _matched_products:
+            st.session_state[f"order_chk_{_matched_products[0]}"] = True
+        st.session_state[f"order_chk_url_applied_{_product_from_url}"] = True
 
-    EVENT_PERIOD = "[ 8/18 ~ 9/30 ]"
-    EVENT_TITLE = "🌕 추석 및 새학기 맞이 반값 특가! 🌕"
-    EVENT_DESC_1 = "학생과 청년들의 힘찬 새 출발을 응원하며,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
-    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 20~30% 패키지 할인!)"
+    EVENT_PERIOD = "[ 10/1 ~ 10/31 ]"
+    EVENT_TITLE = "🍁 가을맞이 깊어가는 인연 특가! 🍁"
+    EVENT_DESC_1 = "선선해진 가을, 한 해를 차분히 돌아보시라는 마음으로,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
+    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 최대 20% 패키지 할인!)"    EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 최대 20% 패키지 할인!)"
 
     st.markdown("""
     <style>
@@ -441,7 +434,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         f_val = st.session_state.get('order_f_gender', '남성')
         st.session_state['order_gender'] = '여성' if f_val == '남성' else '남성'
 
-    is_couple_product = "3-" in selected_single
+    is_couple_product = any(item.startswith("3-") for item in selected_products)
 
     st.info("👤 **2. 신청자 정보**")
     name = st.text_input("이름 *(필수)", placeholder="이름을 입력하세요", key="order_name")
@@ -476,8 +469,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     p_moving_start = date.today()
     p_moving_end = date.today() + timedelta(days=30)
 
-    is_tackil_moving = "2-6." in selected_single
-    is_tackil_opening = "2-7." in selected_single
+    is_tackil_moving = any("2-6." in item for item in selected_products)
+    is_tackil_opening = any("2-7." in item for item in selected_products)
 
     if is_tackil_moving or is_tackil_opening:
         p_tackil_purpose = "이사" if is_tackil_moving else "개업"
