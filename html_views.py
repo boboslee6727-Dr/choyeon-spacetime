@@ -131,8 +131,8 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
         line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", line_formatted)
         line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
-
-if re.match(r'^\d+\.\s+', line_formatted):
+        
+        if re.match(r'^\d+\.\s+', line_formatted):
             html_lines.append(f"<div class='ai-title-l1' style='font-size: 24px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
 
         elif re.match(r'^\d+\)\s*', line_formatted):
