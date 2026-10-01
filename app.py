@@ -23,8 +23,6 @@ import html_views
 importlib.reload(engine)
 importlib.reload(prompts)
 importlib.reload(html_views)
-import pipeline_manager
-importlib.reload(pipeline_manager)
 
 extract_ganji = engine.extract_ganji
 get_oh_class = engine.get_oh_class
