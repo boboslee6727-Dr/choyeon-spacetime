@@ -189,7 +189,9 @@ def send_solapi_admin_alert(now_str, name, product_summary, base_price, discount
             headers={"Authorization": get_solapi_auth_header(api_key, api_secret), "Content-Type": "application/json"}, 
             json={"message": {"to": admin_phone, "from": admin_phone, "text": msg_body}}
         )
-        return True, "알림 발송 완료"
+        if res.status_code == 200:
+            return True, "알림 발송 완료"
+        return False, f"발송 실패: {res.text[:150]}"
     except Exception as e:
         return False, str(e)
 
@@ -239,15 +241,15 @@ def send_solapi_kakao_first(to_phone, name, link_url, sms_text):
         return send_solapi_custom_message(to_phone, name, sms_text)
 
 def send_solapi_kakao_receipt(to_phone, name, product_name, price_text):
-    """'접수 완료'를 카톡(알림톡)으로 보냅니다. 카톡이 안 되면 솔라피가 문자로 자동 대체 발송합니다.
-    접수 알림 양식(KAKAO_TEMPLATE_ID_RECEIPT)이 아직 설정되지 않았으면 아무것도 보내지 않습니다."""
+    """'접수 완료'를 카톡(알림톡)으로 보냅니다. 카톡이 안 되거나 양식이 아직 준비되지 않았으면 문자로 대신 보냅니다."""
+    fallback_sms = f"[사주박사] {name}님, 신청이 정상적으로 접수되었습니다. 신청 상품: {product_name} 진행 상황은 문자로 안내해 드립니다."
     try:
         pf_id = st.secrets.get("KAKAO_PF_ID", "")
         template_id = st.secrets.get("KAKAO_TEMPLATE_ID_RECEIPT", "")
     except Exception:
-        return False, "카톡 접수 알림 설정 없음"
+        pf_id, template_id = "", ""
     if not pf_id or not template_id:
-        return False, "카톡 접수 알림 설정 없음"
+        return send_solapi_custom_message(to_phone, name, fallback_sms)
     try:
         api_key = st.secrets["SOLAPI_API_KEY"]
         api_secret = st.secrets["SOLAPI_API_SECRET"]
