@@ -228,8 +228,7 @@ def send_solapi_kakao_first(to_phone, name, link_url, sms_text):
                 "kakaoOptions": {
                     "pfId": pf_id,
                     "templateId": template_id,
-                    "variables": {"#{이름}": name},
-                    "buttons": [{"buttonName": "감명서 확인하기", "buttonType": "WL", "linkMo": link_url, "linkPc": link_url}]
+                    "variables": {"#{이름}": name, "#{링크}": link_url}
                 }
             }}
         )
@@ -734,10 +733,11 @@ def render_admin_panel():
                 engine_prod = PRODUCT_MAP.get(r_prod_first, "1-1. 사주팔자 및 총 운세 풀이")
                 
                 with st.container():
-                    st.markdown(f"**📌 [{r_name}]** | 📝 상품: {r_prod.split('+')[0][:15]}... | 🕒 신청일: {row['created_at']} | 💬 고민: {row['user_concern']}")
+                    st.markdown(f"**📌 [{r_name}]** | 📝 상품: {r_prod.split('+')[0][:15]}... | 🕒 신청일: {row['created_at']}")
+                    st.caption(f"💬 고민: {row['user_concern']}")
                     
                     if st.session_state.get('app_running') and st.session_state.get('admin_proc_id') == r_oid:
-                        st.info(f"⏳ [{r_name}]님의 감명서를 맹렬히 작성 중입니다. 화면을 끄지 마시고 잠시만 대기해 주십시오...")
+                        st.info(f"⏳ [{r_name}]님의 감명서를 작성 중입니다. 화면을 끄지 마시고 잠시만 대기해 주십시오...")
                     elif active_gid == r_oid:
                         st.success(f"✅ [{r_name}]님 감명 완료! 아래 서랍장 2번, 3번을 열어주세요.")
                     else:
@@ -864,7 +864,7 @@ def render_admin_panel():
             st.markdown("#### 💡 영업부가 작성해 온 [맞춤형 1:1 타겟팅 영업 문자] 입니다.")
             st.info(st.session_state[f"sms_{gid}"])
             
-            if st.button("🟢 최종 발송 및 완료 처리 해!", type="primary"):
+            if st.button("🟢 최종 발송 및 완료 처리!", type="primary"):
                 save_report_to_db(gid, st.session_state[f"html_{gid}"])
                 update_order_status(gid, "분석완료")
 
