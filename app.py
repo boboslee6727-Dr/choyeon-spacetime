@@ -407,7 +407,29 @@ else:
         st.session_state["s_t"] = b_time
 
         if not any(f"2-{n}." in u_product for n in range(1, 6)):
-            st.text_area("💬 고민 사연 (선택사항)", value=st.session_state.get("user_concern", ""), placeholder="속상한 일이나 궁금한 점을 자유롭게 적어주세요", key="user_concern", on_change=stop_ai)
+            _concern_examples_admin = {
+                "1-1": "제 사주에서 가장 눈여겨봐야 할 부분이 궁금해요",
+                "1-2": "올해 안에 큰 변화가 있을까요?",
+                "1-3": "이번 달에 중요한 결정을 내려도 될까요?",
+                "1-4": "이번 주에 중요한 약속을 잡아도 될까요?",
+                "2-1": "올해 재물이 들어오는지 나가는지 궁금해요",
+                "2-2": "좋은 인연이 언제쯤 생길까요?",
+                "2-3": "원하는 곳에 합격할 수 있을까요?",
+                "2-4": "지금 이직을 해도 괜찮을까요?",
+                "2-5": "요즘 건강이 안 좋은데 언제쯤 나아질까요?",
+                "2-6": "이사하기 좋은 시기가 언제인가요?",
+                "2-7": "가게를 열기 좋은 날짜가 언제인가요?",
+                "3-1": "이 사람과 잘 맞을지 궁금해요",
+                "3-2": "저희 결혼식 날짜로 좋은 날이 언제인가요?",
+                "3-3": "아이를 가지기 좋은 시기가 언제인가요?",
+            }
+            _admin_placeholder = "속상한 일이나 궁금한 점을 자유롭게 적어주세요"
+            for _code, _ex in _concern_examples_admin.items():
+                if u_product.startswith(_code):
+                    _admin_placeholder = "예) " + _ex
+                    break
+
+            st.text_area("💬 고민 상담 Q&A (선택사항)", value=st.session_state.get("user_concern", ""), placeholder=_admin_placeholder, key="user_concern", on_change=stop_ai)
 
         # 🌟 상품별 특수 입력 분기
         is_1person = not (main_category == "3. 커플 연애/결혼운 (궁합) 풀이" or "4-2." in u_product)
