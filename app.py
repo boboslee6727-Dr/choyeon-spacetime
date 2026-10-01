@@ -1355,7 +1355,7 @@ if st.session_state.get('app_running', False):
             user_entered_text = re.sub(r'[▷▶◈\[\]\■\□\●\○\◆\◇\★\☆\※\▪\▫]', '', user_entered_text)
 
         best_moving_days_str = "길일 연산 엔진 미가동"
-        if u_product.startswith("2-5") and hasattr(engine, 'get_best_moving_opening_days'):
+        if (u_product.startswith("2-6") or u_product.startswith("2-7")) and hasattr(engine, 'get_best_moving_opening_days'):
             tackil_purpose_val = st.session_state.get('tackil_purpose', '이사')
             start_d_val = st.session_state.get('moving_start', selected_target_date)
             end_d_val = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
