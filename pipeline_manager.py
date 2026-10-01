@@ -741,10 +741,10 @@ def render_admin_panel():
                     elif active_gid == r_oid:
                         st.success(f"✅ [{r_name}]님 감명 완료! 아래 서랍장 2번, 3번을 열어주세요.")
                     else:
-                        btn_col1, btn_col2, btn_col3, btn_col_spacer = st.columns([1.4, 0.9, 0.35, 2.5], gap="small")
+                        btn_col1, btn_col2, btn_col3 = st.columns(3, gap="small")
                         
                         with btn_col1:
-                            if st.button("💰 입금 확인 (무소음 감명 시작)", key=f"pay_{r_oid}"):
+                            if st.button("💰 입금 확인", key=f"pay_{r_oid}"):
                                 st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
                                 st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
                                 st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
@@ -786,27 +786,27 @@ def render_admin_panel():
                                 st.rerun()
 
                         with btn_col2:
-                            if st.button("🔔 미입금 안내 톡 쏘기", key=f"remind_{r_oid}"):
+                            if st.button("🔔 미입금 재촉", key=f"remind_{r_oid}"):
                                 remind_msg = f"💌 [사주박사 안내]\n{r_name}님, 신청하신 감명 접수가 보류 중입니다. 혹시 바쁘셔서 잊으셨을까 봐 안내해 드려요! 😊\n\n💳 국민은행 231402-04-133221 (이*호)\n\n위 계좌로 복비가 입금되면 즉시 박사님의 정밀 분석이 시작됩니다. (입금자명이 다르시면 꼭 카톡으로 알려주세요!)"
                                 if row['phone']:
                                     send_solapi_custom_message(row['phone'], r_name, remind_msg)
                                     st.toast(f"✅ {r_name}님께 미입금 안내 문자를 발송했습니다!")
                         with btn_col3:
                             if st.session_state.get(f"confirm_del_{r_oid}"):
-                                st.warning("정말 삭제할까요?")
-                                c_yes, c_no = st.columns(2)
+                                st.caption("정말 삭제할까요?")
+                                c_yes, c_no = st.columns(2, gap="small")
                                 with c_yes:
-                                    if st.button("✅ 네", key=f"del_yes_{r_oid}"):
+                                    if st.button("✅ 네", key=f"del_yes_{r_oid}", use_container_width=True):
                                         get_supabase_client().table("orders").delete().eq("order_id", r_oid).execute()
                                         st.session_state.pop(f"confirm_del_{r_oid}", None)
                                         st.toast(f"🗑️ [{r_name}]님 신청을 삭제했습니다.")
                                         st.rerun()
                                 with c_no:
-                                    if st.button("취소", key=f"del_no_{r_oid}"):
+                                    if st.button("취소", key=f"del_no_{r_oid}", use_container_width=True):
                                         st.session_state.pop(f"confirm_del_{r_oid}", None)
                                         st.rerun()
                             else:
-                                if st.button("🗑️ 삭제", key=f"del_{r_oid}"):
+                                if st.button("🗑️ 삭제", key=f"del_{r_oid}", use_container_width=True):
                                     st.session_state[f"confirm_del_{r_oid}"] = True
                                     st.rerun()
     if active_gid:
