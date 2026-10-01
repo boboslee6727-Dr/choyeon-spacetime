@@ -97,9 +97,6 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
     if not text:
         return ""
 
-    if applicant_name and applicant_name.strip():
-        _name = re.escape(applicant_name.strip())
-        text = re.sub(rf"(?<!<b>)(?<!['\"])({_name}님)(?!['\"])", r"<span style='font-weight:600;'>\1</span>", text)
     text = re.sub(r'```(?:html)?\s*', '', text)
     lines = [line.strip() for line in text.split("\n")]
     html_lines = []
@@ -124,12 +121,13 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
             html_lines.append(f"\n{line}\n")
             continue
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
-        # 작은따옴표('...') 및 큰따옴표("...")로 감싼 강조어도 볼드 처리 (고민 사연 인용 포함)
-        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", line_formatted)
-        line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
         line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", line_formatted)
         line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<span style=\'font-weight:600;\'>"\1"</span>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
+        # 🚨 이름 강조는 반드시 따옴표 처리가 다 끝난 '뒤'에, 이 줄에만 적용 (순서 중요!)
+        if applicant_name and applicant_name.strip():
+            _name = re.escape(applicant_name.strip())
+            line_formatted = re.sub(rf"(?<!['\">])({_name}님)(?!['\"<])", r"<span style='font-weight:600;'>\1</span>", line_formatted)
         
         if re.match(r'^\d+\.\s*', line_formatted):
             html_lines.append(f"<div class='ai-title-l1' style='font-size: 22px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
@@ -518,9 +516,9 @@ def get_closing_html(name, sign_html=""):
     return f"""
     <div style='margin-top: 30px;'>
         <hr style='border: 0; border-top: 2px dashed #1A237E; margin: 35px 0 20px 0;'>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><b>'사주팔자(四柱八字)'</b>는 태어날 때 부여받은 <b>바코드(bar-code)</b>와 같지만, 우리가 살아가며 마주하는 <b>'운(運)'</b>은 늘 변화하며 흐릅니다. 따라서 오늘의 '초연 시공명리와의 인연'이 <b>{name}님</b>의 삶이라는 긴 여정에서 올바른 방향을 잡는 든든한 <b>'나침반'</b>이 되기를 진심으로 기원합니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 <b>'인생의 길흉화복'</b>과 <b>'명리에 대한 더 깊은 지혜'</b>가 필요하실 때 언제든 <b>'초연 시공명리 연구소 사주박사'</b>를 찾아 주십시오.</p>
-        <p style='text-indent: 15px; font-size: 16px; line-height: 1.8; font-weight: bold; margin-bottom: 0px;'>오늘 닿은 귀한 인연에 다시 한 번 깊이 감사드립니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><span style="font-weight:600;">'사주팔자(四柱八字)'</span>는 태어날 때 부여받은 <span style="font-weight:600;">바코드(bar-code)</span>와 같지만, 우리가 살아가며 마주하는 <span style="font-weight:600;">'운(運)'</span>은 늘 변화하며 흐릅니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <span style="font-weight:600;">{name}님</span>의 삶이라는 긴 여정에서 올바른 방향을 잡는 든든한 <span style="font-weight:600;">'나침반'</span>이 되기를 진심으로 기원합니다.</p>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 <span style="font-weight:600;">'인생의 길흉화복'</span>과 <span style="font-weight:600;">'명리에 대한 더 깊은 지혜'</span>가 필요하실 때 언제든 <span style="font-weight:600;">'초연 시공명리 연구소 사주박사'</span>를 찾아 주십시오.</p>
         <div style='display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 30px;'>
             <div style='text-align: right;'>
                 <div style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 -</div>
