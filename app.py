@@ -1276,9 +1276,12 @@ if st.session_state.get('app_running', False):
 
         dw_gj_cur = dw_g_cur + dw_j_cur  # 제목용 짧은 대운 간지 (예: 戊午)
         dw_gj_han_cur = engine.get_han_reading(dw_gj_cur)  # 한글 발음 (예: 무오)
-
         sewun_gj_cur = engine.GAN[(curr_year-1984)%60%10] + engine.JI[(curr_year-1984)%60%12]  # 제목용 짧은 세운 간지 (예: 丙午)
         sewun_gj_han_cur = engine.get_han_reading(sewun_gj_cur)  # 한글 발음 (예: 병오)
+        wolun_gj_cur = _cur_wol_pillar[0] + _cur_wol_pillar[1]       # 월운 간지 (한자, 예: 庚申)
+        wolun_gj_han_cur = engine.get_han_reading(wolun_gj_cur)      # 한글 발음 (예: 경신)
+        ilun_gj_cur = _today_pillar_d[0] + _today_pillar_d[1]        # 일운 간지 (한자, 예: 甲子)
+        ilun_gj_han_cur = engine.get_han_reading(ilun_gj_cur)        # 한글 발음 (예: 갑자)
 
         try:
             w_facts = engine.get_woonse_analysis_facts(
@@ -1424,17 +1427,24 @@ if st.session_state.get('app_running', False):
 
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
-            "ilju_master_prompt_context": ilju_master_context,
             "age_prompt": engine.get_age_prompt(age), "gender_prompt": engine.get_gender_prompt(gender), 
+            "m_marital": m_marital_val,
+            "f_marital": f_marital_val,
             "marital_prompt": engine.get_marital_prompt(gender, u_marital), "yukchin_rule": engine.get_yukchin_rule(gender, u_marital),
+            "curr_year": target_year_val, "cur_sewun_gan": cur_sewun_gan_val, "cur_sewun_ji": cur_sewun_ji_val,
+            "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
+            "ilju_master_prompt_context": ilju_master_context,
+            "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
+            "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
+            "shinsal_str": shinsal_str, "shinsal_by_palace_str": shinsal_by_palace_str, "cheon_eul": guiin_str, "samjae_str": cur_samjae,
+            "gosin_gwasook_timing_fact_str": gosin_gwasook_timing_fact_str,
+            "year_gongmang": n_gong, "day_gongmang": i_gong,
+            "year_gongmang_sipseong": year_gongmang_sipseong,
+            "day_gongmang_sipseong": day_gongmang_sipseong,
             "ideal_spouse_fact": ideal_spouse_fact,
             "m_ideal_spouse_fact": m_ideal_spouse_fact,
             "f_ideal_spouse_fact": f_ideal_spouse_fact,
-            "m_marital": m_marital_val,
-            "f_marital": f_marital_val,
             "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
-            "dw_gj_cur": dw_gj_cur,
-            "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
             "adv_warning_str": adv_warning_str,
@@ -1453,38 +1463,37 @@ if st.session_state.get('app_running', False):
             "action_solutions": action_solutions_str,
             "m_spouse_issue_facts": m_spouse_issue_str,
             "f_spouse_issue_facts": f_spouse_issue_str,
+            "dw_gj_cur": dw_gj_cur,
             "dw_gj_han_cur": dw_gj_han_cur,
+            "sewun_gj_cur": sewun_gj_cur,
+            "sewun_gj_han_cur": sewun_gj_han_cur,
+            "wolun_gj_cur": wolun_gj_cur,
+            "wolun_gj_han_cur": wolun_gj_han_cur,
+            "ilun_gj_cur": ilun_gj_cur,
+            "ilun_gj_han_cur": ilun_gj_han_cur,
+            "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
             "daewun_full_fact_str": daewun_full_fact_str,
-            "sewun_gj_han_cur": sewun_gj_han_cur,
             "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
             "woonse_fact_str": w_facts.get("woonse_fact_str", "[⚠️ 시스템 오류: 폭포수 체용 데이터 계산 실패 — 이 항목에 근거해 재물·구체적 사건을 절대 단정하지 말고, 세운 십성의 일반적 의미만 원론적으로 서술할 것]"),
             "sewun_kw": w_facts.get("sewun_kw", "변화 감지"),
             "wolun_kw": w_facts.get("wolun_kw", "변화 감지"),
             "ilun_kw": w_facts.get("ilun_kw", "변화 감지"),
-            "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
-            "year_gongmang": n_gong, "day_gongmang": i_gong,
-            "year_gongmang_sipseong": year_gongmang_sipseong,
-            "day_gongmang_sipseong": day_gongmang_sipseong,
-            "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
-            "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
-            "shinsal_str": shinsal_str, "shinsal_by_palace_str": shinsal_by_palace_str, "cheon_eul": guiin_str, "samjae_str": cur_samjae,
-            "gosin_gwasook_timing_fact_str": gosin_gwasook_timing_fact_str,
-            "curr_year": target_year_val, "cur_sewun_gan": cur_sewun_gan_val, "cur_sewun_ji": cur_sewun_ji_val,
+
             "target_year": target_year_val, "curr_m": curr_m, "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
             "cheon_eul_timing_fact_str": cheon_eul_timing_fact_str,
             "dohwa_mangsin_yeokma_fact_str": dohwa_mangsin_yeokma_fact_str,
             "gh_score": gh_score, "gh_grade": gh_grade,
             "first_half_period": seun_first_half if "1-2" in u_product else wolun_first_half,
             "second_half_period": seun_second_half if "1-2" in u_product else wolun_second_half,
+
             "wealth_goal": st.session_state.get('wealth_goal', '자산 증식'),
             "career_goal": st.session_state.get('career_goal', '직업 적성'),
             "love_goal": st.session_state.get('love_goal', '인연 관계'),
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
             "user_concern": st.session_state.get('user_concern', '').strip() or "(특별히 남기신 고민 사항 없음)",
-
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
             "best_moving_days_str": best_moving_days_str,
@@ -1843,6 +1852,7 @@ if st.session_state.get('app_running', False):
                     st.session_state.pop('vip_stack_html', None)
                 else:
                     combined = final_clean_html
+                combined += html_views.get_promo_block_html(5500)
 
                 st.session_state[f'html_{gid}'] = combined
                 st.session_state['saved_report_html'] = combined
