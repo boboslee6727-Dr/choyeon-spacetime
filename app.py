@@ -51,6 +51,8 @@ setInterval(function(){ hideBadge(window.parent, false); hideBadge(window.top, t
 
 # 외주 영업부(파이프라인) 호출 문지기
 try:
+    import pipeline_manager
+    importlib.reload(pipeline_manager)
     from pipeline_manager import run_pipeline_router, generate_pdf_bytes
     run_pipeline_router()
 except Exception as e:
