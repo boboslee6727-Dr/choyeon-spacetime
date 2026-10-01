@@ -99,8 +99,7 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
 
     if applicant_name and applicant_name.strip():
         _name = re.escape(applicant_name.strip())
-        text = re.sub(rf"(?<!<b>)(?<!['\"])({_name}님)(?!['\"])", r"<b>\1</b>", text)
-
+        text = re.sub(rf"(?<!<b>)(?<!['\"])({_name}님)(?!['\"])", r"<span style='font-weight:600;'>\1</span>", text)
     text = re.sub(r'```(?:html)?\s*', '', text)
     lines = [line.strip() for line in text.split("\n")]
     html_lines = []
@@ -126,13 +125,13 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
             continue
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
         # 작은따옴표('...') 및 큰따옴표("...")로 감싼 강조어도 볼드 처리 (고민 사연 인용 포함)
-        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", line_formatted)
+        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", line_formatted)
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
-        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", line_formatted)
-        line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', line_formatted)
+        line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", line_formatted)
+        line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<span style=\'font-weight:600;\'>"\1"</span>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
         
-        if re.match(r'^\d+\.\s+', line_formatted):
+        if re.match(r'^\d+\.\s*', line_formatted):
             html_lines.append(f"<div class='ai-title-l1' style='font-size: 22px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
 
         elif re.match(r'^\d+\)\s*', line_formatted):
@@ -173,8 +172,8 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
         clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna)
-        clean_qna = re.sub(r"'([^'\n]{1,80})'", r"<b>'\1'</b>", clean_qna)
-        clean_qna = re.sub(r'"([^"\n]{1,80})"', r'<b>"\1"</b>', clean_qna)
+        clean_qna = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", clean_qna)
+        clean_qna = re.sub(r'"([^"\n]{1,80})"', r'<span style=\'font-weight:600;\'>"\1"</span>', clean_qna)
         clean_qna = clean_qna.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 고민 상담 Q&A<br>{clean_qna}</div>"
     return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
