@@ -741,7 +741,7 @@ def render_admin_panel():
                     elif active_gid == r_oid:
                         st.success(f"✅ [{r_name}]님 감명 완료! 아래 서랍장 2번, 3번을 열어주세요.")
                     else:
-                        btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 0.6])
+                        btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 0.5], gap="small")
                         
                         with btn_col1:
                             if st.button("💰 입금 확인 (무소음 감명 시작)", key=f"pay_{r_oid}"):
