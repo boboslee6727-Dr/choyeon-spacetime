@@ -310,28 +310,22 @@ def calculate_package_price(selected_products):
 # 🎯 [자동화 마케팅 메시지 제네레이터]
 # ------------------------------------------------------------------------------
 def generate_smart_marketing_text(row, view_url):
-    name, product, concern = row.get('name', '고객'), row.get('u_product', ''), str(row.get('user_concern', '')).replace(' ', '')
-    clean_product = re.sub(r'\d-\d\.\s*', '', product).split('(')[0].strip()
-    if '+' in clean_product: clean_product = clean_product.split('+')[0].strip() + " 외 패키지"
-    
-    msg = f"💌 {name}님! 오래 기다리셨습니다.\n마침내 {name}님만을 위한 [{clean_product}] 정밀 분석 감명서가 완성되었어요! 🎉\n\n"
-    msg += f"아래 링크를 꾹 눌러서, 인생의 나침반이 되어줄 평생 소장용 리포트를 바로 확인해 보세요.\n(※ 우측 상단의 'PDF 다운로드' 버튼을 누르시면 폰에 평생 간직하실 수 있답니다 📱✨)\n\n"
-    msg += f"🔗 감명서 열어보기: {view_url}\n\n"
-    msg += f"🎁 [깜짝 후기 이벤트!]\n감명서가 마음에 쏙 드셨다면 따뜻한 후기 한 줄 부탁드려요! 후기 링크를 남겨주시면, 사주박사가 직접 [1개월 정밀 월운 감명서(11,000원 상당)]를 추가로 무료 분석해 드립니다. 🥰 놓치지 마세요!\n\n"
-    msg += f"💡 [사주박사의 따뜻한 추가 제안]\n"
-    
-    if any(kw in concern for kw in ["직업", "취업", "이직", "진로", "시험", "합격"]): msg += f"적어주신 진로와 직업 고민들, 꼼꼼히 읽어보았습니다. [2-2. 직업/진학운 특화 분석]을 통해 내게 가장 잘 맞는 길과 합격운의 타이밍을 찾아보아요! 🎯"
-    elif any(kw in concern for kw in ["돈", "재물", "빚", "투자", "사업", "금전"]): msg += f"적어주신 금전에 대한 답답한 고민들, 다 읽어보았습니다. [2-1. 재물운 특화 분석]을 통해 확실한 타개책을 사주박사와 함께 찾아보아요! 💪"
-    elif any(kw in concern for kw in ["건강", "수술", "아파", "질병"]): msg += f"무엇보다 가장 중요한 건 건강이랍니다. 내 몸의 취약점과 운기의 흐름을 짚어주는 [2-4. 건강운 특화 분석]도 꼭 챙겨보시길 바라요. 🌿"
-    elif any(kw in concern for kw in ["이사", "개업", "오픈"]): msg += f"새로운 시작을 앞두고 계시는군요! 복이 굴러들어오는 완벽한 날을 잡아주는 [2-5. 이사/개업 택일]을 통해 가장 좋은 기운을 끌어당겨 보세요! 🏡✨"
-    elif "1-1" in product: msg += f"사주 그릇을 확인하셨으니, 올해 남은 운기가 어떻게 흘러갈지 [1-2. 올 해 운세 상세분석]으로 다가올 기회를 꽉! 잡아보세요. 🍀"
-    elif "1-2" in product: msg += f"올해의 큰 흐름을 파악하셨다면, 이번 달의 디테일한 길흉화복을 짚어볼 차례예요! [1-3. 이번 달 운세 상세분석]으로 계획을 세워보세요. 🗓️"
-    elif "2-3" in product: msg += f"나의 연애/결혼운을 확인하셨다면, 이제 나와 상대방의 진짜 속마음과 합을 맞춰볼 시간이에요! [3-1. 궁합 풀이]를 강력 추천해 드립니다! 💑"
-    elif "3-1" in product: msg += f"두 분의 인연이 참으로 소중합니다. 평생의 복을 좌우할 완벽한 날, [3-2. 결혼 택일]로 가장 눈부신 시작을 준비해 보시는 건 어떨까요? 🕊️"
-    elif "3-2" in product: msg += f"두 분의 아름다운 출발을 축하드립니다! 🥳 예쁜 천사를 맞이할 준비가 되셨다면 [3-3. 출산 택일]도 사주박사가 함께할게요! 👶🍼"
-    else: msg += f"나의 전체적인 사주 그릇을 확인하셨으니, 올해 남은 운기가 어떻게 흘러갈지 [1-2. 올 해 연운 상세분석]으로 기회를 꽉! 잡아보세요. 🍀"
-        
-    msg += "\n\n 🔮사주박사🔮를 찾아주셔서 진심으로 감사합니다. 앞으로 펼쳐질 눈부신 날들을 온 마음 다해 응원할게요! 늘 꽃길만 걸으세요! 🌸✨"
+    name = row.get('name', '고객')
+    product = row.get('u_product', '')
+
+    # 상품명을 상품 개수와 무관하게 정확히 추출 (괄호 자르기보다 '+' 분리를 먼저 수행)
+    raw_items = [p.strip() for p in product.split('+') if p.strip()]
+    clean_items = [re.sub(r'^\d-\d\.\s*', '', item).split('(')[0].strip() for item in raw_items]
+    clean_items = [c for c in clean_items if c]
+    if len(clean_items) >= 2:
+        clean_product = f"{clean_items[0]} 외 {len(clean_items)-1}건"
+    else:
+        clean_product = clean_items[0] if clean_items else "감명서"
+
+    msg = f"💌 {name}님, [{clean_product}] 감명서가 완성되었습니다.\n\n"
+    msg += f"🔗 감명서 확인하기: {view_url}\n"
+    msg += "(우측 상단 'PDF 다운로드' 버튼을 누르시면 저장하실 수 있습니다.)\n\n"
+    msg += "🔮사주박사🔮를 찾아주셔서 감사합니다."
     return msg
 
 # ------------------------------------------------------------------------------
@@ -578,7 +572,34 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     </div>
     """, unsafe_allow_html=True)
 
-    user_concern = st.text_area("✍️ 나만의 고민 털어놓기 (선택사항)", height=100, max_chars=500, placeholder="속상한 일이나 궁금한 점을 자유롭게 적어요~", key="order_user_concern")
+    _concern_examples = {
+        "1-1": "제 사주에서 가장 눈여겨봐야 할 부분이 궁금해요",
+        "1-2": "올해 안에 큰 변화가 있을까요?",
+        "1-3": "이번 달에 중요한 결정을 내려도 될까요?",
+        "1-4": "이번 주에 중요한 약속을 잡아도 될까요?",
+        "2-1": "올해 재물이 들어오는지 나가는지 궁금해요",
+        "2-2": "좋은 인연이 언제쯤 생길까요?",
+        "2-3": "원하는 곳에 합격할 수 있을까요?",
+        "2-4": "지금 이직을 해도 괜찮을까요?",
+        "2-5": "요즘 건강이 안 좋은데 언제쯤 나아질까요?",
+        "2-6": "이사하기 좋은 시기가 언제인가요?",
+        "2-7": "가게를 열기 좋은 날짜가 언제인가요?",
+        "3-1": "이 사람과 잘 맞을지 궁금해요",
+        "3-2": "저희 결혼식 날짜로 좋은 날이 언제인가요?",
+        "3-3": "아이를 가지기 좋은 시기가 언제인가요?",
+    }
+    _matched_examples = []
+    for _item in selected_products:
+        for _code, _ex in _concern_examples.items():
+            if _item.startswith(_code) and _ex not in _matched_examples:
+                _matched_examples.append(_ex)
+                break
+    if _matched_examples:
+        _placeholder_text = "예) " + " / ".join(_matched_examples[:2])
+    else:
+        _placeholder_text = "속상한 일이나 궁금한 점을 자유롭게 적어요~"
+
+    user_concern = st.text_area("✍️ 고민 상담 Q&A (선택사항)", height=100, max_chars=500, placeholder=_placeholder_text, key="order_user_concern")
 
     coupon_code = st.text_input("🎁 할인 쿠폰 번호 (카카오톡 발급)", placeholder="발급받으신 쿠폰 번호를 입력해 주세요", key="order_coupon_code")
 
