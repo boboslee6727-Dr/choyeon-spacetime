@@ -793,10 +793,10 @@ def render_admin_panel():
                                     st.toast(f"✅ {r_name}님께 미입금 안내 문자를 발송했습니다!")
                         with btn_col3:
                             if st.session_state.get(f"confirm_del_{r_oid}"):
-                                st.warning(f"⚠️ [{r_name}]님 신청을 정말 삭제할까요? 되돌릴 수 없습니다.")
+                                st.warning("정말 삭제할까요?")
                                 c_yes, c_no = st.columns(2)
                                 with c_yes:
-                                    if st.button("✅ 네, 삭제", key=f"del_yes_{r_oid}"):
+                                    if st.button("✅ 네", key=f"del_yes_{r_oid}"):
                                         get_supabase_client().table("orders").delete().eq("order_id", r_oid).execute()
                                         st.session_state.pop(f"confirm_del_{r_oid}", None)
                                         st.toast(f"🗑️ [{r_name}]님 신청을 삭제했습니다.")
