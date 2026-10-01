@@ -744,7 +744,7 @@ def render_admin_panel():
                         btn_col1, btn_col2, btn_col3 = st.columns(3, gap="small")
                         
                         with btn_col1:
-                            if st.button("💰 입금 확인(감명 시작)", key=f"pay_{r_oid}", use_container_width=True):
+                            if st.button("💰 입금 확인(무소음 감명 시작)", key=f"pay_{r_oid}", use_container_width=True):
                                 st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
                                 st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
                                 st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
