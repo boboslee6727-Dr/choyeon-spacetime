@@ -1690,8 +1690,8 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         # [2계열] 2030 테마별 인생 특화 분석 (2-1 ~ 2-5)
         # ----------------------------------------------------------------------
-        elif u_product.startswith("2-5"):
-            # 2-5. 이사 및 개업 택일 추천
+        elif u_product.startswith("2-6") or u_product.startswith("2-7"):
+            # 2-6. 이사 택일 / 2-7. 개업 택일
             tackil_target_dt = st.session_state.get('moving_start', selected_target_date)
             weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, tackil_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
@@ -1704,7 +1704,7 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("2-"):
-            # 2-1 ~ 2-4. 재물 / 직업(진학) / 연애 / 건강 특화
+            # 2-1 ~ 2-5. 재물 / 연애 / 진학 / 직업 / 건강 특화
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')  
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
