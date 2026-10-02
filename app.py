@@ -1770,7 +1770,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("3-3"):
             # 3-3. 출산 택일
             d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
-            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = formatted_ai + safe_part_5
