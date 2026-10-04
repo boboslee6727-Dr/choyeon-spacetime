@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.2 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 87.3 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.2 Master"
+APP_VERSION = "ver 87.3 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -229,6 +229,8 @@ is_admin_mode = st.session_state.get('admin_proc_id') is not None
 # 모든 기능 동작 변수를 '최상단'에 기본값으로 선언 (NameError 원천 차단)
 run_iljin_calc = False
 run_delivery_calc = False
+delivery_best_days = []
+delivery_top5_str = "(해당 없음)"
 is_vip_package = False
 compare_mode = "자동대조"
 other_reading_text = ""
@@ -842,7 +844,7 @@ if st.session_state.get('app_running', False):
             
             try:
                 if hasattr(engine, 'UniversalPrintableGunghap'):
-                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, 10)
+                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack)
                     gh_engine.run_universal_logic()
                     gh_score = gh_engine.final_score
                     gh_grade = gh_engine.grade
@@ -852,7 +854,20 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"⚠️ 궁합 엔진 오류: {e}")
                 gh_score, gh_grade = 0, "점수 산출 불가"
-                
+
+            # 👶 3-3 출산 택일: 명리 기반 출산 추천일 TOP5 계산
+            if u_product.startswith("3-3"):
+                try:
+                    _d_start = st.session_state.get('delivery_start_date', dt_mod.date.today())
+                    _d_end = st.session_state.get('delivery_end_date', _d_start + dt_mod.timedelta(days=365))
+                    delivery_best_days = engine.get_optimized_delivery_days(
+                        _d_start, _d_end, male_data_pack, female_data_pack,
+                        st.session_state.get('last_period_date', None),
+                        st.session_state.get('period_cycle', 30))
+                    delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days)
+                except Exception as e:
+                    st.error(f"⚠️ 출산 택일 계산 오류: {e}")
+            
         else:
             # 🎯 1인용 개인 모드: 1인용 표지(get_personal_cover, 8개 인자) 호출
             gh_score = 0
@@ -1009,6 +1024,19 @@ if st.session_state.get('app_running', False):
                 p_master_bar_html = html_views.get_master_bar(p_calc_d, p_counts['목'], p_counts['화'], p_counts['토'], p_counts['금'], p_counts['수'], p_guiin_str, p_n_gong, p_i_gong, p_samjae_color, p_samjae)
             except Exception:
                 p_un_html = "<p style='text-align:center;'>상대방 대운 연산 중</p>"
+
+            # 🌟 궁합 점수의 '인생 흐름의 조화' 항목: 두 사람의 현재 대운 지지를 넘겨 정확히 재산출
+            try:
+                _p_cur = [d for d in p_daewun_data_list if d.get('is_current')] if 'p_daewun_data_list' in locals() else []
+                _p_dw_ji = _p_cur[0]['j_hanja'] if _p_cur else None
+                _m_dw_ji, _f_dw_ji = (dw_j_cur, _p_dw_ji) if gender == "남성" else (_p_dw_ji, dw_j_cur)
+                if hasattr(engine, 'UniversalPrintableGunghap') and 'male_data_pack' in locals():
+                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, _m_dw_ji, _f_dw_ji)
+                    gh_engine.run_universal_logic()
+                    gh_score = gh_engine.final_score
+                    gh_grade = gh_engine.grade
+            except Exception as e:
+                st.error(f"⚠️ 궁합 점수 재산출 오류: {e}")
 
         # ----------------------------------------------------------------------
         # 세운 및 월운 연산
@@ -1186,11 +1214,14 @@ if st.session_state.get('app_running', False):
             action_solutions_str = "자연스러운 기운의 순환을 유지하며 긍정적 마음가짐 유지"
             spouse_issue_str = "배우자궁 비교적 안정적 흐름 유지"
 
+        if hasattr(engine, 'get_spouse_palace_facts'):
+            spouse_issue_str = engine.get_spouse_palace_facts(ds, [hs, ds, ms, ys], [hb, db, mb, yb], gender)
+
         health_cognitive_str = "특이 인지 파동 없음"
         health_tumor_str = "특이 종괴 파동 없음"
         health_siksang_str = "특이 식상 소진 파동 없음"
         
-        if u_product.startswith("2-4") and hasattr(engine, 'analyze_health_erosion_4d'):
+        if u_product.startswith("2-5") and hasattr(engine, 'analyze_health_erosion_4d'):
             temp_sewun_10_list = []
             for i in range(10):
                 ty = start_year + i
@@ -1430,6 +1461,9 @@ if st.session_state.get('app_running', False):
             _, _, f_adv_flags = engine.analyze_saju_facts_advanced(f_adv_saju_data, dw_j_cur, sewun_ji_param)
             m_spouse_issue_str = m_adv_flags.get("spouse_issue_facts", "배우자궁 비교적 안정적 흐름 유지")
             f_spouse_issue_str = f_adv_flags.get("spouse_issue_facts", "배우자궁 비교적 안정적 흐름 유지")
+            if hasattr(engine, 'get_spouse_palace_facts'):
+                m_spouse_issue_str = engine.get_spouse_palace_facts(m_gans_val[1], m_gans_val, m_jjis_val, "남성")
+                f_spouse_issue_str = engine.get_spouse_palace_facts(f_gans_val[1], f_gans_val, f_jjis_val, "여성")
         else:
             m_spouse_issue_str = spouse_issue_str
             f_spouse_issue_str = spouse_issue_str
@@ -1446,6 +1480,32 @@ if st.session_state.get('app_running', False):
                 if isinstance(_res, dict) and _res.get('fact_summary_text'):
                     _couple_marriage_lines.extend([l for l in _res['fact_summary_text'] if '복음' in l or '卯·戌' in l])
             marriage_bogeum_facts = "\n".join(_couple_marriage_lines) if _couple_marriage_lines else ""
+
+        # 🚨 프롬프트의 자리표시자 이름과 재료 이름을 맞추기 위한 팩트 준비
+        alternative_space_str = "필요할 때는 물리적 거리를 두는 지혜(각자의 개인 시간과 공간 확보, 각자의 사회활동 유지, 잠시 떨어져 지내는 시간)로 부딪히는 기운을 완화할 수 있음"
+        f_gender_str = f_gender_val if 'f_gender_val' in locals() else ("여성" if gender == "남성" else "남성")
+        if is_2person:
+            spouse_issue_all_str = f"남명: {m_spouse_issue_str} || 여명: {f_spouse_issue_str}"
+            if 'gh_engine' in locals() and hasattr(engine, 'get_gunghap_harmony_facts'):
+                harmony_index_str = engine.get_gunghap_harmony_facts(gh_engine)
+                shinsal_risk_str = engine.get_gunghap_risk_facts(gh_engine)
+            else:
+                harmony_index_str = "궁합 조화도 산출 정보 없음"
+                shinsal_risk_str = "신살 위험 요소 산출 정보 없음"
+        else:
+            spouse_issue_all_str = spouse_issue_str
+            try:
+                _ss_grp = [engine.get_group_ss(engine.get_ss(ds, c)) for c in [hs, ms, ys, hb, db, mb, yb]]
+                _wealth_n = _ss_grp.count('재성')
+                _peace_n = sum(1 for x in _ss_grp if x in ('인성', '비겁'))
+                _balance = "재물 쪽으로 기운이 쏠려 있음" if _wealth_n > _peace_n + 1 else ("내면의 안정 쪽 비중이 큼" if _peace_n > _wealth_n + 1 else "재물과 내면 평화가 대체로 균형을 이룸")
+                harmony_index_str = f"재물을 뜻하는 재성 {_wealth_n}개, 내면의 안정과 버팀목을 뜻하는 인성·비겁 {_peace_n}개 → {_balance}"
+            except Exception:
+                harmony_index_str = "재물과 내면 평화의 균형 정보 없음"
+            if hasattr(engine, 'get_love_shinsal_risk_facts'):
+                shinsal_risk_str = engine.get_love_shinsal_risk_facts([hs, ds, ms, ys], [hb, db, mb, yb], gender)
+            else:
+                shinsal_risk_str = "연애 관련 신살 판정 정보 없음"
 
         prompt_data = {
             "name": name, "age": age, "gender": gender, "marital": u_marital,
@@ -1514,6 +1574,15 @@ if st.session_state.get('app_running', False):
             "love_goal": st.session_state.get('love_goal', '인연 관계'),
             "health_goal": st.session_state.get('health_goal', '건강 관리'),
             "study_goal": st.session_state.get('study_goal', '학업 전반'),
+            "delivery_top5_str": delivery_top5_str,
+            "baby_gender": st.session_state.get('baby_gender', '미정'),
+            "curr_sewun_gan": cur_sewun_gan_val, "curr_sewun_ji": cur_sewun_ji_val,
+            "f_gender": f_gender_str,
+            "samhyung_potential_facts": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
+            "spouse_issue_facts": spouse_issue_all_str,
+            "alternative_space_facts": alternative_space_str,
+            "harmony_index_facts": harmony_index_str,
+            "shinsal_risk_facts": shinsal_risk_str,
             "user_concern": st.session_state.get('user_concern', '').strip() or "(특별히 남기신 고민 사항 없음)",
             "tackil_purpose": st.session_state.get('tackil_purpose', '이사'),
             "target_date_range": f"{st.session_state.get('moving_start', selected_target_date)} ~ {st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))}",
@@ -1758,7 +1827,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("3-2"):
             # 3-2. 결혼 택일
             m_target_dt = st.session_state.get('start_date_m', st.session_state.get('target_date_m', selected_target_date))
-            weekly_days_data = engine.get_weekly_calendar_data(tackil_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
+            weekly_days_data = engine.get_weekly_calendar_data(m_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, m_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""            
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
             formatted_ai = formatted_ai + safe_part_5
@@ -1768,11 +1837,9 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("3-3"):
-            # 3-3. 출산 택일
-            d_target_dt = st.session_state.get('delivery_start_date', selected_target_date)
-            weekly_days_data = engine.get_weekly_calendar_data(d_target_dt, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
-            weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, d_target_dt.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
-            formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+            # 3-3. 출산 택일 (엔진이 계산한 TOP5 요약 상자 삽입)
+            delivery_summary_code = html_views.get_delivery_summary_box(delivery_best_days) if hasattr(html_views, 'get_delivery_summary_box') else ""
+            formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', delivery_summary_code)
             formatted_ai = formatted_ai + safe_part_5
             
             couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
