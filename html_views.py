@@ -607,22 +607,37 @@ def get_gunghap_three_page_report(male_saju_html, m_ess, female_saju_html, f_ess
     return f"{m_page}{f_page}{g_page}"
  
 def get_delivery_summary_box(best_days):
-    """출산/결혼 길일 한눈에 보기 요약 상자"""
+    """출산 길일 한눈에 보기 요약 상자 (날짜·요일·점수·자연분만/낮 시간대·합궁 가임기간)"""
+    def _md(s):
+        try:
+            return f"{int(s[5:7])}월 {int(s[8:10])}일"
+        except Exception:
+            return str(s)
+
     summary_items = ""
-    for idx, day_info in enumerate(best_days):
-        b_time_info = day_info['best_time']
+    for idx, day_info in enumerate(best_days or []):
+        dt = day_info.get('delivery_dt')
+        weekday = day_info.get('weekday_kr', '')
+        date_txt = f"{dt.year}년 {dt.month}월 {dt.day}일({weekday})" if dt else str(day_info.get('date', ''))
+        t_any = day_info['best_time']['time_str']
+        t_day = day_info.get('best_day_time', {}).get('time_str', t_any)
         pillars_str = day_info.get('four_pillars', '')
+        conception = ""
+        if day_info.get('conception_start'):
+            conception = (f"<br><span style='color:#555; font-size:13px;'>❤️ 합궁 가임기간 {_md(day_info['conception_start'])} ~ "
+                          f"{_md(day_info['conception_end'])} (최적일 {_md(day_info['conception_date'])})</span>")
         summary_items += f"""
-        <li style="margin-bottom:6px;">
+        <li style="margin-bottom:10px;">
             🏅 <b>추천 {idx+1}순위</b> (명리 종합점수: <span style="color:#C62828; font-weight:bold;">{day_info['score']}점</span>) :
-            <b>{day_info['date']} {b_time_info['time_str']}</b>
-            <span style="color:#555; font-size:13px;">({pillars_str})</span>
+            <b>{date_txt}</b><br>
+            <span style="font-size:13px;">⏰ 자연분만 추천 <b>{t_any}</b> &nbsp;|&nbsp; 🏥 낮 시간대(제왕절개 가능) 추천 <b>{t_day}</b></span><br>
+            <span style="color:#555; font-size:13px;">({pillars_str})</span>{conception}
         </li>
         """
     return f"""
     <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:15px; margin-top:15px; margin-bottom:20px; font-family: 'Nanum Myeongjo', serif;">
         <h4 style="color:#1A237E; margin-top:0; margin-bottom:10px; font-size:15px; border-bottom:1px solid #C5CAE9; padding-bottom:6px;">
-            📋 길일 한눈에 보기 (최적 길일 로드맵)
+            📋 출산 길일 한눈에 보기 (최적 길일 로드맵)
         </h4>
         <ul style="list-style-type:none; padding-left:0; margin:0; line-height:1.8; font-size:14px; color:#2C3E50;">
             {summary_items}
