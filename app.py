@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.3 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 87.4 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.3 Master"
+APP_VERSION = "ver 87.4 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -1407,7 +1407,7 @@ if st.session_state.get('app_running', False):
         if user_entered_text:
             user_entered_text = re.sub(r'[▷▶◈\[\]\■\□\●\○\◆\◇\★\☆\※\▪\▫]', '', user_entered_text)
 
-        best_moving_days_str = "길일 연산 엔진 미가동"
+        best_moving_days_str = "(이번 신청에서는 별도로 선별된 길일 정보가 없음)"
         if (u_product.startswith("2-6") or u_product.startswith("2-7")) and hasattr(engine, 'get_best_moving_opening_days'):
             tackil_purpose_val = st.session_state.get('tackil_purpose', '이사')
             start_d_val = st.session_state.get('moving_start', selected_target_date)
@@ -1426,7 +1426,7 @@ if st.session_state.get('app_running', False):
                 else:
                     best_moving_days_str = "해당 기간 내 적합한 명리적 길일이 없습니다. 기간을 넓혀주세요."
             except Exception as e:
-                best_moving_days_str = "길일 연산 중 오류 발생"
+                best_moving_days_str = "(길일 선별 정보를 불러오지 못함)"
 
         # 🚨 궁합용: 남명/여명 각각의 신살 반기별 재해석 재료 준비
         m_gans_val = gans if gender == "남성" else (p_gans if 'p_gans' in locals() else gans)
@@ -1559,7 +1559,7 @@ if st.session_state.get('app_running', False):
             "daewun_full_fact_str": daewun_full_fact_str,
             "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
-            "woonse_fact_str": w_facts.get("woonse_fact_str", "[⚠️ 시스템 오류: 폭포수 체용 데이터 계산 실패 — 이 항목에 근거해 재물·구체적 사건을 절대 단정하지 말고, 세운 십성의 일반적 의미만 원론적으로 서술할 것]"),
+            "woonse_fact_str": w_facts.get("woonse_fact_str", "[⚠️ 이 항목은 근거 자료가 부족함 — 이 항목에 근거해 재물·구체적 사건을 절대 단정하지 말고, 세운 십성의 일반적 의미만 원론적으로 서술할 것]"),
             "sewun_kw": w_facts.get("sewun_kw", "변화 감지"),
             "wolun_kw": w_facts.get("wolun_kw", "변화 감지"),
             "ilun_kw": w_facts.get("ilun_kw", "변화 감지"),
@@ -1837,9 +1837,69 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         elif u_product.startswith("3-3"):
-            # 3-3. 출산 택일 (엔진이 계산한 TOP5 요약 상자 삽입)
+            # 3-3. 출산 택일 (엔진이 계산한 TOP5 요약 상자 + 순위별 아기 사주표·마스터바·대운표 삽입)
             delivery_summary_code = html_views.get_delivery_summary_box(delivery_best_days) if hasattr(html_views, 'get_delivery_summary_box') else ""
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', delivery_summary_code)
+
+            _baby_gender = st.session_state.get('baby_gender', '미정')
+            _OH_KR = ['목', '화', '토', '금', '수']
+
+            def _baby_chart_html(di, bg):
+                """순위별 '아기 완성 명식' 머리글 + 사주원국표 + 마스터바 (자연분만 추천 시각 기준)"""
+                if not di or 'chart' not in di:
+                    return ""
+                y_p, m_p, d_p, h_p = di['chart']
+                gans = [h_p[0], d_p[0], m_p[0], y_p[0]]
+                jjis = [h_p[1], d_p[1], m_p[1], y_p[1]]
+                table = html_views.generate_saju_table_data(gans, jjis, d_p[0], "여성" if bg == "여아" else "남성", engine)
+                cnt = {k: 0 for k in _OH_KR}
+                for c in gans + jjis:
+                    o = engine.get_color(c)
+                    if o in cnt: cnt[o] += 1
+                guiin = {'甲': '丑, 未', '乙': '子, 申', '丙': '酉, 亥', '丁': '酉, 亥', '戊': '丑, 未', '己': '子, 申', '庚': '丑, 未', '辛': '寅, 午', '壬': '卯, 巳', '癸': '卯, 巳'}.get(d_p[0], '없음')
+                n_gong = engine.calculate_gongmang(y_p[0], y_p[1]) or "-"
+                i_gong = engine.calculate_gongmang(d_p[0], d_p[1]) or "-"
+                dw_parts = [f"{g} {di['baby_daewun'][g]['calc_d']}({di['baby_daewun'][g]['dir']})" for g in ('남아', '여아') if bg in ('미정', g)]
+                dt_ = di['delivery_dt']
+                head = (f"<div style='text-align:center; margin:10px 0 12px 0; line-height:1.6;'>"
+                        f"<span style='font-size:17px; font-weight:900; color:#1A237E;'>👶 아기 완성 명식 — {dt_.year}년 {dt_.month}월 {dt_.day}일({di['weekday_kr']}) {di['best_time']['time_str']}</span><br>"
+                        f"<span style='font-size:13px; font-weight:bold; color:#555;'>(명리 종합점수 {di['score']}점 · 자연분만 추천 시각 기준)</span></div>")
+                bar = ("<div style='border:2px solid #3E2723; margin-top:12px; padding:8px 10px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 16px; "
+                       "font-weight:900; font-size:12px; border-radius:8px;'>"
+                       f"<div>🔢 대운수: {' / '.join(dw_parts)}</div>"
+                       f"<div>💥 오행: 木({cnt['목']}) 火({cnt['화']}) 土({cnt['토']}) 金({cnt['금']}) 水({cnt['수']})</div>"
+                       f"<div>🌟 천을귀인: {guiin}</div>"
+                       f"<div>🎯 공망: [년] {n_gong} [일] {i_gong}</div>"
+                       f"<div>🌪️ 출생 후 첫 삼재: {di.get('first_samjae', '해당 없음')}</div></div>")
+                note = ""
+                day_t = di.get('best_day_time', {})
+                if day_t and day_t.get('time_str') != di['best_time']['time_str']:
+                    note = (f"<div style='margin-top:8px; font-size:13px; font-weight:bold; color:#555;'>🏥 낮 시간대(제왕절개 가능) 추천 {day_t['time_str']}에는 시주만 "
+                            f"<span style='color:#1A237E;'>{day_t['time_pillar']}</span>(으)로 바뀝니다. (년·월·일 기둥은 같습니다)</div>")
+                return head + table + bar + note
+
+            def _baby_daewun_html(di, bg):
+                """순위별 아기 대운표 (성별 미정이면 남아·여아 두 가지, 정해졌으면 해당 성별만)"""
+                if not di or 'baby_daewun' not in di:
+                    return ""
+                out = ""
+                for g, icon, col in (('남아', '♂️', '#1565C0'), ('여아', '♀️', '#4A148C')):
+                    if bg in ('미정', g):
+                        bd = di['baby_daewun'][g]
+                        out += (f"<div style='font-size:16px; font-weight:900; color:{col}; margin:10px 0 4px 0;'>{icon} {g}일 때의 대운</div>"
+                                + html_views.generate_daewun_layout(bd['list'], bd['dir'], bd['calc_d'], engine.get_oh_class))
+                return out
+
+            def _unwrap_marker(text, name):
+                # AI 문장 처리 과정에서 마커가 <p>...</p> 로 감싸져도 표가 깨지지 않도록 벗겨냄
+                return re.sub(r"<(p|div)[^>]*>\s*\[\s*\*?\*?\s*" + name + r"\s*\*?\*?\s*\]\s*</\1>", "[" + name + "]", text, flags=re.IGNORECASE)
+
+            for _k in range(1, 6):
+                _di = delivery_best_days[_k - 1] if _k <= len(delivery_best_days) else None
+                for _name, _builder in ((f"BABY_SAJU_{_k}_HERE", _baby_chart_html), (f"BABY_DAEWUN_{_k}_HERE", _baby_daewun_html)):
+                    formatted_ai = _unwrap_marker(formatted_ai, _name)
+                    formatted_ai = sub_marker(formatted_ai, _name, _builder(_di, _baby_gender) if _di else "")
+
             formatted_ai = formatted_ai + safe_part_5
             
             couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
