@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 87.3 - 상품별 정리판)
+# engine.py (ver 87.5 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -8,6 +8,9 @@
 #                 (새 명리 기반 버전만 남김), 괴강·백호 상수 중복 정의 삭제
 #   ② 출산 택일 채점이 엔진 공용 상수(GOEGANG_ILJU, BAEKHO_GANJI)를 쓰도록 통일
 #   ③ auto_fill_partner_ganji 안의 오타(rt_h → p_rt_h) 수정
+#   ④ [신규] get_spouse_palace_facts / get_love_shinsal_risk_facts (2-2 연애운 · 3-1 궁합 · 3-2 결혼택일 공용 실제 팩트)
+#   ⑤ [신규] get_gunghap_harmony_facts / get_gunghap_risk_facts (3-1 궁합용 조화도·위험 신살 팩트)
+#   ⑥ [신규] get_baby_daewun_info / get_baby_first_samjae_text (3-3 출산택일: 순위별 아기 대운표·첫 삼재), 추천일 결과에 chart·baby_daewun 추가
 # ==============================================================================
 import os
 import streamlit as st
@@ -293,7 +296,7 @@ def get_all_12_shinsal(yb, mb, db, hb):
     try:
         results = [get_12_shinsal(yb, yb), get_12_shinsal(yb, mb), get_12_shinsal(yb, db), get_12_shinsal(yb, hb)]
         return ", ".join(results)
-    except: return "년지 기준 12신살 연산 완료"
+    except: return "년지 기준 12신살 풀이 완료"
 
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
@@ -1735,6 +1738,86 @@ def analyze_love_and_marriage_patterns(bazi_dict):
     return results
 
 
+def get_spouse_palace_facts(ds, gans, jjis, gender):
+    """
+    배우자궁(일지)의 안정성 팩트 문자열을 만듭니다. (gans, jjis 는 [시, 일, 월, 년] 순서)
+    - 일지와 월지·년지·시지의 합충형파해, 일지의 십성(배우자별 유무), 일지 공망, 고신·과숙을 종합합니다.
+    - 결과는 AI 에게 전달하는 '팩트'이며, 문장 안의 전문 용어는 AI 가 일상어로 풀어 쓰게 되어 있습니다.
+    """
+    ds = _to_hanja(ds)
+    gans = [_to_hanja(g) for g in gans]
+    jjis = [_to_hanja_ji(j) for j in jjis]
+    if len(jjis) < 4 or not jjis[1] or jjis[1] not in JI:
+        return "배우자궁 판정에 필요한 일지 정보가 부족함"
+    dj = jjis[1]
+    others = [("월지", jjis[2]), ("년지", jjis[3]), ("시지", jjis[0])]
+    bad, good = [], []
+    for nm, j in others:
+        if not j or j not in JI:
+            continue
+        rel = get_ji_rel_set(dj, j)
+        if rel == "-":
+            continue
+        tags = [x.strip() for x in rel.split(",")]
+        neg = [t for t in tags if t in ("충", "형", "원진", "파", "해", "귀문")]
+        pos = [t for t in tags if t in ("육합", "반합", "방합")]
+        if neg: bad.append(f"일지({dj})–{nm}({j}): {'·'.join(neg)}")
+        if pos: good.append(f"일지({dj})–{nm}({j}): {'·'.join(pos)}")
+
+    is_male = (gender == "남성")
+    ss = get_ss(ds, dj)
+    if is_male:
+        if ss in ("정재", "편재"): good.append(f"배우자궁에 아내별({ss})이 자리해 인연이 직접적임")
+        elif ss in ("비견", "겁재"): bad.append(f"배우자궁에 경쟁·분산의 기운({ss})이 앉아 재물·배우자 문제로 다툼 소지")
+    else:
+        if ss in ("정관", "편관"): good.append(f"배우자궁에 남편별({ss})이 자리해 인연이 직접적임")
+        elif ss in ("상관", "식신"): bad.append(f"배우자궁에 남편별을 누르는 기운({ss})이 앉아 주관이 강해질 수 있음")
+
+    # 일지 공망 (년주 기준 공망)
+    try:
+        if gans[3] and jjis[3]:
+            gm = calculate_gongmang(gans[3], jjis[3])
+            if gm and gm != "-" and dj in gm:
+                bad.append(f"일지({dj})가 년주 기준 공망에 해당해 배우자 인연이 늦거나 허전함을 느끼기 쉬움")
+    except Exception:
+        pass
+
+    # 고신·과숙
+    try:
+        gg_ji, gg_label = get_goshin_gwasook_ji(dj, gender)
+        if gg_ji and gg_ji in jjis and gg_ji != dj:
+            bad.append(f"{gg_label}({gg_ji})이 원국에 있어 외로움을 느끼기 쉬운 기운")
+    except Exception:
+        pass
+
+    if not bad and not good:
+        return "배우자궁(일지)이 다른 지지와 특별한 합충 없이 비교적 안정적인 흐름"
+    parts = []
+    if bad: parts.append("흔들릴 수 있는 요소: " + "; ".join(bad))
+    if good: parts.append("받쳐주는 요소: " + "; ".join(good))
+    verdict = "배우자궁이 흔들리기 쉬운 구조" if len(bad) >= 2 else ("배우자궁에 약간의 주의가 필요한 구조" if bad else "배우자궁이 비교적 안정적인 구조")
+    return f"[{verdict}] " + " / ".join(parts)
+def get_love_shinsal_risk_facts(gans, jjis, gender):
+    """연애·이성 문제와 관련된 신살(홍염·음욕·도화·간여지동·고란 등)이 어느 기둥에 있는지 AI 용 팩트 문자열로 만듭니다.
+    gans, jjis : [시, 일, 월, 년] 순서"""
+    LOVE = ["홍염살", "음욕살", "도화살", "나체도화", "간여지동", "고란살", "음양차착", "의처의부", "남연살", "여연살", "비인살", "원진", "귀문"]
+    pillar_names = ["시주", "일주", "월주", "년주"]
+    found = []
+    gans = [_to_hanja(g) for g in gans]
+    jjis = [_to_hanja_ji(j) for j in jjis]
+    try:
+        for i in range(4):
+            tags = [re.sub(r"<[^>]+>", "", x).strip() for x in get_general_shinsal_filtered(i, gans, jjis, gender)]
+            hit = [t for t in tags if any(k in t for k in LOVE)]
+            if hit:
+                found.append(f"{pillar_names[i]}: " + ", ".join(dict.fromkeys(hit)))
+    except Exception:
+        return "연애 관련 신살 판정 정보 없음"
+    if not found:
+        return "연애·이성 문제와 관련해 특별히 두드러진 신살 없음"
+    return "연애 관련 신살 분포 — " + " / ".join(found)
+
+
 # ---- 3-C. [2-3 진학운] [2-4 직업운] : 전용 계산 함수 없음 (PART 1·2 공통 함수 사용) ----
 
 
@@ -2202,6 +2285,50 @@ class UniversalPrintableGunghap:
         ]
 
 
+def get_gunghap_harmony_facts(gh_engine):
+    """궁합 점수 엔진의 6대 조화도(%)와 종합점수를 AI 용 팩트 문자열로 만듭니다. (harmony_index_facts)"""
+    try:
+        det = " / ".join(f"{d['label']} {d['pct']}%" for d in gh_engine.details)
+        return f"궁합 종합 {gh_engine.final_score}점({gh_engine.grade}) — 6대 조화도: {det}"
+    except Exception:
+        return "궁합 조화도 산출 정보 없음"
+
+
+def get_gunghap_risk_facts(gh_engine):
+    """두 사람 각자의 일주 흉살, 음양 치우침, 재성·관살 혼잡, 비겁·식상 폭주를 AI 용 팩트 문자열로 만듭니다. (shinsal_risk_facts)"""
+    try:
+        RISK = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음양차착", "음욕살", "의처의부", "홍염살", "괴강살", "양인살"]
+        def _tags(g, j, gender):
+            g = [_to_hanja(x) for x in g]
+            j = [_to_hanja_ji(x) for x in j]
+            lst = get_general_shinsal_filtered(1, [g[3], g[2], g[1], g[0]], [j[3], j[2], j[1], j[0]], gender)
+            return [re.sub(r"<[^>]+>", "", x).strip() for x in lst]
+        def _person(label, g, j, gender):
+            g = [_to_hanja(x) for x in g]
+            j = [_to_hanja_ji(x) for x in j]
+            items = []
+            ev = _tags(g, j, gender)
+            hit = [t for t in ev if any(r[:2] in t for r in RISK)]
+            if hit: items.append("일주의 주의 신살 — " + ", ".join(dict.fromkeys(hit)))
+            yang = set("甲丙戊庚壬子寅辰午申戌")
+            chars = [_to_hanja(c) for c in (g + j)]
+            yc = sum(1 for c in chars if c in yang)
+            if yc >= 7: items.append("양의 기운이 지나치게 치우침")
+            elif yc <= 1: items.append("음의 기운이 지나치게 치우침")
+            ss_list = [get_ss(g[2], c) for c in (g + j)]
+            if gender == "남성" and "정재" in ss_list and "편재" in ss_list: items.append("재성 혼잡(정재·편재가 함께 있음)")
+            if gender == "여성" and "정관" in ss_list and "편관" in ss_list: items.append("관살 혼잡(정관·편관이 함께 있음)")
+            grp = [get_group_ss(s) for s in ss_list]
+            if sum(1 for x in grp if x in ("비겁", "식상")) >= 5 and not any(x in ("관성", "인성") for x in grp):
+                items.append("비겁·식상이 지나치게 많고 관성·인성의 브레이크가 없음")
+            return f"{label}: " + ("; ".join(items) if items else "특별히 두드러진 위험 신살 없음")
+        m = _person(f"남명({gh_engine.app})", gh_engine.m_g, gh_engine.m_j, "남성")
+        f = _person(f"여명({gh_engine.p_name})", gh_engine.f_g, gh_engine.f_j, "여성")
+        return m + " || " + f
+    except Exception as e:
+        return "신살 위험 요소 산출 정보 없음"
+
+
 # ---- 4-B. [3-2 결혼 택일] : 전용 계산 함수 없음 (주간 달력 get_weekly_calendar_data 사용) ----
 
 
@@ -2440,6 +2567,7 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack):
         evaluated.append({
             'time_str': slot['time_str'], 'ji': slot['ji'], 'score': sc, 'daytime': slot['daytime'],
             'pillars': f"{y_p}년 {m_p}월 {d_p}일 {h_p}시", 'time_pillar': h_p, 'year_pillar': y_p,
+            'chart': (y_p, m_p, d_p, h_p), 'hm': slot['hm'],
             'good': good, 'warn': warn,
         })
     evaluated.sort(key=lambda x: x['score'], reverse=True)
@@ -2512,7 +2640,49 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
             picked.append(item)
             if len(picked) >= top_n:
                 break
+    # 뽑힌 날짜에만 아기 대운표 데이터(남아·여아)를 계산해 붙임
+    for item in picked:
+        slot_best = next((x for x in item['all_time_slots'] if x['time_str'] == item['best_time']['time_str']), None)
+        if slot_best:
+            item['chart'] = slot_best['chart']
+            item['baby_daewun'] = {g: get_baby_daewun_info(slot_best['chart'], item['delivery_dt'], slot_best['hm'], key)
+                                   for g, key in (('남아', '남성'), ('여아', '여성'))}
+            item['first_samjae'] = get_baby_first_samjae_text(item['delivery_dt'].year, slot_best['chart'][0][1])
     return picked
+
+def get_baby_daewun_info(chart, delivery_dt, hm, gender):
+    """아기 완성 사주 chart=(년주, 월주, 일주, 시주)로 성별(gender='남성'/'여성')별 대운표 데이터를 만듭니다.
+    반환: {'dir': '순행'/'역행', 'calc_d': 대운수, 'list': [대운 10개 정보]} (list 형식은 html_views.generate_daewun_layout 과 동일)"""
+    y_p, m_p, d_p, _h_p = chart
+    ys, yb, ms, mb, ds, db = y_p[0], y_p[1], m_p[0], m_p[1], d_p[0], d_p[1]
+    order_dir = 1 if (GAN.index(ys) % 2 == 0) == (gender == '남성') else -1
+    base_dt = dt_mod.datetime(delivery_dt.year, delivery_dt.month, delivery_dt.day, hm[0], hm[1])
+    adj_mins = get_total_time_adjustment(base_dt)
+    utc_dt = base_dt - dt_mod.timedelta(hours=9) + dt_mod.timedelta(minutes=adj_mins)
+    calc_d = get_daeun_su_accurate(utc_dt, order_dir)
+    c_idx, j_idx = GAN.index(ms), JI.index(mb)
+    items = []
+    for i in range(10):
+        c = GAN[(c_idx + (i + 1) * order_dir) % 10]
+        j = JI[(j_idx + (i + 1) * order_dir) % 12]
+        val = i * 10 + calc_d
+        items.append({
+            "age_range": f"{val}~{val + 9}세", "ss_gan": get_ss(ds, c), "c_hanja": c, "c_hangul": c,
+            "j_hanja": j, "j_hangul": j, "ss_ji": get_ss(ds, j), "un_sung": get_unsung(ds, j),
+            "y_shinsal": get_12_shinsal(yb, j), "d_shinsal": get_12_shinsal(db, j),
+            "is_current": False, "is_first": (i == 0),
+        })
+    return {'dir': "순행" if order_dir == 1 else "역행", 'calc_d': calc_d, 'list': items}
+
+
+def get_baby_first_samjae_text(birth_year, year_ji):
+    """아기가 태어난 다음 해부터 처음 만나는 삼재(3년)의 연도를 알려줍니다. 예) '2036~2038년'"""
+    for k in range(1, 13):
+        y = birth_year + k
+        if get_samjae(year_ji, JI[(y - 1984) % 60 % 12]) != "해당 없음":
+            return f"{y}~{y + 2}년"
+    return "해당 없음"
+
 
 def get_delivery_facts_str(best_days):
     """AI에게 넘길 '엔진이 계산한 출산 추천일' 팩트 문자열을 만듭니다. (이 목록 밖의 날짜는 쓰지 못하게 하기 위함)"""
@@ -2530,4 +2700,10 @@ def get_delivery_facts_str(best_days):
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
+        if d.get('baby_daewun'):
+            for g in ('남아', '여아'):
+                bd = d['baby_daewun'][g]
+                seq = ", ".join(f"{x['age_range']} {x['c_hanja']}{x['j_hanja']}({x['ss_gan']}/{x['ss_ji']}, {x['un_sung']})" for x in bd['list'][:8])
+                lines.append(f"   └ {g} 대운({bd['dir']}, 대운수 {bd['calc_d']}): {seq}")
+            lines.append(f"   └ 출생 후 첫 삼재: {d.get('first_samjae', '해당 없음')}")
     return "\n".join(lines)
