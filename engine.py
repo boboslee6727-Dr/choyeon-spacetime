@@ -2764,6 +2764,5 @@ def get_delivery_facts_str(best_days):
             for g in ('남아', '여아'):
                 bd = d['baby_daewun'][g]
                 seq = ", ".join(f"{x['age_range']} {x['c_hanja']}{x['j_hanja']}({x['ss_gan']}/{x['ss_ji']}, {x['un_sung']})" for x in bd['list'][:8])
-                lines.append(f"   └ {g} 대운({bd['dir']}, 대운수 {bd['calc_d']}): {seq}")
-            lines.append(f"   └ 출생 후 첫 삼재: {d.get('first_samjae', '해당 없음')}")
+                lines.append(f"   └ {g} 대운({bd['dir']}, 대운수 {bd['calc_d']}): {seq}")            
     return "\n".join(lines)
