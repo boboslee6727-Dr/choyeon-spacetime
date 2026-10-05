@@ -854,20 +854,7 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"⚠️ 궁합 엔진 오류: {e}")
                 gh_score, gh_grade = 0, "점수 산출 불가"
-
-            # 👶 3-3 출산 택일: 명리 기반 출산 추천일 TOP5 계산
-            if u_product.startswith("3-3"):
-                try:
-                    _d_start = st.session_state.get('delivery_start_date', dt_mod.date.today())
-                    _d_end = st.session_state.get('delivery_end_date', _d_start + dt_mod.timedelta(days=365))
-                    delivery_best_days = engine.get_optimized_delivery_days(
-                        _d_start, _d_end, male_data_pack, female_data_pack,
-                        st.session_state.get('last_period_date', None),
-                        st.session_state.get('period_cycle', 30))
-                    delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days)
-                except Exception as e:
-                    st.error(f"⚠️ 출산 택일 계산 오류: {e}")
-            
+                       
         else:
             # 🎯 1인용 개인 모드: 1인용 표지(get_personal_cover, 8개 인자) 호출
             gh_score = 0
@@ -1037,6 +1024,23 @@ if st.session_state.get('app_running', False):
                     gh_grade = gh_engine.grade
             except Exception as e:
                 st.error(f"⚠️ 궁합 점수 재산출 오류: {e}")
+
+            # 👶 3-3 출산 택일: 부모의 출산 시점 대운까지 반영하여 추천일 TOP5 계산
+            if u_product.startswith("3-3"):
+                try:
+                    _d_start = st.session_state.get('delivery_start_date', dt_mod.date.today())
+                    _d_end = st.session_state.get('delivery_end_date', _d_start + dt_mod.timedelta(days=365))
+                    _pa = {'birth_year': int(sol_y), 'dw': daewun_data_list}
+                    _pp = {'birth_year': int(p_y), 'dw': p_daewun_data_list if 'p_daewun_data_list' in locals() else []}
+                    _parent_dw_info = {'아버지': _pa if gender == "남성" else _pp, '어머니': _pp if gender == "남성" else _pa}
+                    delivery_best_days = engine.get_optimized_delivery_days(
+                        _d_start, _d_end, male_data_pack, female_data_pack,
+                        st.session_state.get('last_period_date', None),
+                        st.session_state.get('period_cycle', 30),
+                        parent_dw_info=_parent_dw_info)
+                    delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days)
+                except Exception as e:
+                    st.error(f"⚠️ 출산 택일 계산 오류: {e}")
 
         # ----------------------------------------------------------------------
         # 세운 및 월운 연산
