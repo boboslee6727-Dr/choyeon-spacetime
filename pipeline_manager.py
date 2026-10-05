@@ -803,6 +803,7 @@ def render_admin_panel():
                                 st.session_state.pop('vip_stack_html', None)  # 이전 찌꺼기 제거
 
                                 st.session_state['admin_proc_id'] = r_oid
+                                st.session_state['last_order_id'] = r_oid
                                 st.session_state['app_running'] = True
                                 st.rerun()
 
