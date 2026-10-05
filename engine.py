@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 87.6 - 상품별 정리판)
+# engine.py (ver 87.7 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -12,6 +12,7 @@
 #   ⑤ [신규] get_gunghap_harmony_facts / get_gunghap_risk_facts (3-1 궁합용 조화도·위험 신살 팩트)
 #   ⑥ [신규] get_baby_daewun_info / get_baby_first_samjae_text (3-3 출산택일: 순위별 아기 대운표·첫 삼재), 추천일 결과에 chart·baby_daewun 추가
 #   ⑦ [수정] 출산택일 합궁 가임기간을 의학 표준(배란 5일 전~배란일)으로, 출산 후보를 임신 39주~41주로 조정, 생리 시작·배란 예정일 정보 추가
+#   ⑧ [수정] 출산택일 채점에 '출산 시점 부모의 대운 지지'를 반영 (get_optimized_delivery_days 의 parent_dw_info)
 # ==============================================================================
 import os
 import streamlit as st
@@ -22,6 +23,7 @@ import pytz
 import ephem
 import re
 from korean_lunar_calendar import KoreanLunarCalendar
+
 
 # ==============================================================================
 # PART 0. 시스템 상수 · 한자/한글 변환 · 공용 유틸 (모든 상품 공통)
@@ -2366,6 +2368,9 @@ _REL_SCORE_WOLJI = {'충': -4, '형': -2, '원진': -1.5, '파': -1, '해': -1, 
 # 아기 사주 내부 지지끼리 (충·형이 크게 감점)
 _REL_SCORE_INNER = {'충': -7, '형': -4, '원진': -3, '파': -2, '해': -2, '자형': -1.5, '귀문': -1, '육합': 4, '반합': 3, '방합': 1.5, '암합': 1}
 
+# 출산 시점 부모의 대운 지지 ↔ 아기 일지·월지
+_REL_SCORE_DW = {'충': -5, '형': -3, '원진': -2, '파': -1, '해': -1, '자형': -1, '육합': 3, '반합': 2, '방합': 1}
+
 _CHEONEUL_MAP = {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}
 
 _MUNCHANG_MAP = {'甲':'巳','乙':'午','丙':'申','丁':'酉','戊':'申','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}
@@ -2414,7 +2419,7 @@ def _delivery_parent_info(pack):
         'cnt': _delivery_count_oh(chars),
     }
 
-def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack):
+def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
     """
     완성된 아기 사주(년·월·일·시)를 명리 기준으로 채점합니다. (기본 60점 + 가감, 50~98점)
     ① 아기 사주 자체: 오행 고름·조후·신강신약 균형·지지 충형·흉일(십악대패/백호/괴강)·길신(귀인/문창/건록)
@@ -2548,6 +2553,19 @@ def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack):
             warn.append(f"부모에게 이미 넘치는 {k}(오행) 기운이 더 쌓임")
     score += max(-4.0, min(6.0, fill))
  
+    # 출산 시점 부모의 대운(지지)과 아기 사주의 조화 — parent_dw = {'아버지': '午', '어머니': '子'}
+    if parent_dw:
+        dw_sum = 0.0
+        for who, dji in parent_dw.items():
+            if not dji:
+                continue
+            e1, t1 = _delivery_rel_effect(dj, dji, _REL_SCORE_DW, same_bonus=0.5)
+            e2, _t2 = _delivery_rel_effect(jis[1], dji, _REL_SCORE_DW, same_bonus=0.0)
+            dw_sum += e1 + 0.5 * e2
+            if '충' in t1: warn.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 충돌함")
+            elif '육합' in t1 or '반합' in t1: good.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 합하여 힘이 됨")
+        score += max(-10.0, min(6.0, dw_sum))
+
     final = round(max(50.0, min(98.0, score)), 1)
     return final, list(dict.fromkeys(good)), list(dict.fromkeys(warn))
 
@@ -2565,7 +2583,8 @@ def _delivery_slot_charts(delivery_date):
     return charts
 
 def _delivery_parent_dw_at(parent_dw_info, delivery_dt):
-    """출산일(세는 나이 기준) 시점의 부모 각자의 대운을 찾습니다."""
+    """출산일(세는 나이 기준) 시점의 부모 각자의 대운을 찾습니다.
+    parent_dw_info = {'아버지': {'birth_year': 1993, 'dw': [{'age_range': '6~15세', 'c_hanja': '丁', 'j_hanja': '巳'}, ...]}, '어머니': {...}}"""
     out = {}
     for who, info in (parent_dw_info or {}).items():
         try:
@@ -2595,7 +2614,8 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_d
     return evaluated
 
 def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None):
-    """출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
+    """
+    출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
     - male_pack / female_pack : [시주, 일주, 월주, 년주] 순서의 간지 리스트 (예: ["壬子","戊寅","庚申","癸酉"])
     - last_period_date / period_cycle : 마지막 생리 시작일과 주기가 있으면, 배란 예정일에서 계산한
       현실적인 출산 가능 범위(임신 39주 0일~41주 0일, 계획 분만 기준)에 드는 날짜만 후보로 삼고 합궁 가임기간도 계산합니다.
