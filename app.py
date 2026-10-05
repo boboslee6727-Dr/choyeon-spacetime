@@ -1869,7 +1869,7 @@ if st.session_state.get('app_running', False):
                 guiin = {'甲': '丑, 未', '乙': '子, 申', '丙': '酉, 亥', '丁': '酉, 亥', '戊': '丑, 未', '己': '子, 申', '庚': '丑, 未', '辛': '寅, 午', '壬': '卯, 巳', '癸': '卯, 巳'}.get(d_p[0], '없음')
                 n_gong = engine.calculate_gongmang(y_p[0], y_p[1]) or "-"
                 i_gong = engine.calculate_gongmang(d_p[0], d_p[1]) or "-"
-                dw_parts = [f"{g} {di['baby_daewun'][g]['calc_d']}({di['baby_daewun'][g]['dir']})" for g in ('남아', '여아') if bg in ('미정', g)]
+                dw_parts = [f"{g} {di['baby_daewun'][g]['calc_d']}" for g in ('남아', '여아') if bg in ('미정', g)]
                 dt_ = di['delivery_dt']
                 head = (f"<div style='text-align:center; margin:10px 0 12px 0; line-height:1.6;'>"
                         f"<span style='font-size:17px; font-weight:900; color:#1A237E;'>👶 아기 완성 명식 — {dt_.year}년 {dt_.month}월 {dt_.day}일({di['weekday_kr']}) {di['best_time']['time_str']}</span><br>"
@@ -1879,8 +1879,7 @@ if st.session_state.get('app_running', False):
                        f"<div>🔢 대운수: {' / '.join(dw_parts)}</div>"
                        f"<div>💥 오행: 木({cnt['목']}) 火({cnt['화']}) 土({cnt['토']}) 金({cnt['금']}) 水({cnt['수']})</div>"
                        f"<div>🌟 천을귀인: {guiin}</div>"
-                       f"<div>🎯 공망: [년] {n_gong} [일] {i_gong}</div>"
-                       f"<div>🌪️ 출생 후 첫 삼재: {di.get('first_samjae', '해당 없음')}</div></div>")
+                       f"<div>🎯 공망: [년] {n_gong} [일] {i_gong}</div></div>")
                 note = ""
                 day_t = di.get('best_day_time', {})
                 if day_t and day_t.get('time_str') != di['best_time']['time_str']:
