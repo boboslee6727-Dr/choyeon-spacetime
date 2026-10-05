@@ -23,7 +23,6 @@ import ephem
 import re
 from korean_lunar_calendar import KoreanLunarCalendar
 
-
 # ==============================================================================
 # PART 0. 시스템 상수 · 한자/한글 변환 · 공용 유틸 (모든 상품 공통)
 # ==============================================================================
@@ -2579,7 +2578,7 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack):
     evaluated.sort(key=lambda x: x['score'], reverse=True)
     return evaluated
 
-def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21):
+def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None):
     """
     출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
     - male_pack / female_pack : [시주, 일주, 월주, 년주] 순서의 간지 리스트 (예: ["壬子","戊寅","庚申","癸酉"])
