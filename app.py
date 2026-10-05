@@ -1884,7 +1884,7 @@ if st.session_state.get('app_running', False):
                 day_t = di.get('best_day_time', {})
                 if day_t and day_t.get('time_str') != di['best_time']['time_str']:
                     note = (f"<div style='margin-top:8px; font-size:13px; font-weight:bold; color:#555;'>🏥 낮 시간대(제왕절개 가능) 추천 {day_t['time_str']}에는 시주만 "
-                            f"<span style='color:#1A237E;'>{day_t['time_pillar']}</span>(으)로 바뀝니다. (년·월·일 기둥은 같습니다)</div>")
+                            f"<span style='color:#1A237E;'>{day_t['time_pillar']}</span>(으)로 바뀝니다.</div>")
                 return head + table + bar + note
 
             def _baby_daewun_html(di, bg):
