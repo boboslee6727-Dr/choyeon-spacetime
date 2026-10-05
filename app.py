@@ -1888,7 +1888,7 @@ if st.session_state.get('app_running', False):
                 if day_t and day_t.get('time_str') != di['best_time']['time_str']:
                     note = (f"<div style='margin-top:8px; font-size:13px; font-weight:bold; color:#555;'>🏥 낮 시간대(제왕절개 가능) 추천 {day_t['time_str']}에는 시주만 "
                             f"<span style='color:#1A237E;'>{day_t['time_pillar']}</span>(으)로 바뀝니다.</div>")
-                return head + table + bar + note
+                return f"<div style='break-inside: avoid; page-break-inside: avoid;'>{head}{table}{bar}{note}</div>"
 
             def _baby_daewun_html(di, bg):
                 """순위별 아기 대운표 (성별 미정이면 남아·여아 두 가지, 정해졌으면 해당 성별만)"""
@@ -1898,8 +1898,9 @@ if st.session_state.get('app_running', False):
                 for g, icon, col in (('남아', '♂️', '#1565C0'), ('여아', '♀️', '#4A148C')):
                     if bg in ('미정', g):
                         bd = di['baby_daewun'][g]
-                        out += (f"<div style='font-size:16px; font-weight:900; color:{col}; margin:10px 0 4px 0;'>{icon} {g}일 때의 대운</div>"
-                                + html_views.generate_daewun_layout(bd['list'], bd['dir'], bd['calc_d'], engine.get_oh_class))
+                        out += ("<div style='break-inside: avoid; page-break-inside: avoid;'>"
+                                f"<div style='font-size:16px; font-weight:900; color:{col}; margin:10px 0 4px 0;'>{icon} {g}일 때의 대운</div>"
+                                + html_views.generate_daewun_layout(bd['list'], bd['dir'], bd['calc_d'], engine.get_oh_class) + "</div>")
                 return out
 
             def _unwrap_marker(text, name):
@@ -1912,8 +1913,10 @@ if st.session_state.get('app_running', False):
                     formatted_ai = _unwrap_marker(formatted_ai, _name)
                     formatted_ai = sub_marker(formatted_ai, _name, _builder(_di, _baby_gender) if _di else "")
 
-            formatted_ai = formatted_ai + safe_part_5
-            
+           # 각 순위는 새 페이지에서 시작 (표가 페이지 중간에서 잘리는 것을 방지)
+            formatted_ai = re.sub(r"(<div class='sub-title'[^>]*><b>\d\)\s*\d순위)", r"<div style='break-before: page; page-break-before: always;'></div>\1", formatted_ai)
+            formatted_ai = formatted_ai + safe_part_5            
+
             couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
             body_content = f"{main_title_html}{couple_header}<div style='break-before: page; page-break-before: always;'></div>{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
