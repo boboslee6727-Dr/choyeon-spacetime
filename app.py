@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.4 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 87.6 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.4 Master"
+APP_VERSION = "ver 87.6 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -548,6 +548,7 @@ else:
                     delivery_start_date = col_d1.date_input("탐색 시작일", value=today_dt, key="delivery_start_date", on_change=stop_ai)
                     delivery_end_date = col_d2.date_input("탐색 종료일", value=today_dt + dt_mod.timedelta(days=365), key="delivery_end_date", on_change=stop_ai)
                     baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], key="baby_gender", on_change=stop_ai)
+                    st.caption("※ 마지막 생리 시작일은 '가장 최근 생리 첫날', 탐색 시작·종료일은 '출산 희망 기간'입니다. 후보 출산일은 임신 39주~41주 사이(계획 분만 기준)에서 고릅니다.")
             elif "4-2." in u_product:
                 st.markdown("---")
                 compare_mode = st.radio("대조 분석 모드", ["전통 명리학과 1:1 자동 대조", "외부 타 감명서 원문 대조"], index=0, key="compare_mode_2")
@@ -854,7 +855,8 @@ if st.session_state.get('app_running', False):
             except Exception as e:
                 st.error(f"⚠️ 궁합 엔진 오류: {e}")
                 gh_score, gh_grade = 0, "점수 산출 불가"
-                       
+
+            
         else:
             # 🎯 1인용 개인 모드: 1인용 표지(get_personal_cover, 8개 인자) 호출
             gh_score = 0
@@ -1843,6 +1845,10 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("3-3"):
             # 3-3. 출산 택일 (엔진이 계산한 TOP5 요약 상자 + 순위별 아기 사주표·마스터바·대운표 삽입)
             delivery_summary_code = html_views.get_delivery_summary_box(delivery_best_days) if hasattr(html_views, 'get_delivery_summary_box') else ""
+            if delivery_best_days:
+                delivery_summary_code += ("<div style='font-size:13px; color:#555; margin:-8px 0 18px 0; line-height:1.7;'>"
+                                          "※ 자연분만은 진통이 오는 시각을, 제왕절개는 정해진 수술 시각을 따릅니다. 유도분만은 날짜는 정할 수 있으나 출생 시각은 진행 속도에 따라 달라지므로 시간대는 참고용입니다. "
+                                          "분만 방식과 시기는 임신 경과와 산모·아기 상태에 따른 담당 의료진의 판단이 우선입니다.</div>")
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', delivery_summary_code)
 
             _baby_gender = st.session_state.get('baby_gender', '미정')
