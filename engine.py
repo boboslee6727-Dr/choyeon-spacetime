@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 87.5 - 상품별 정리판)
+# engine.py (ver 87.6 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -11,6 +11,7 @@
 #   ④ [신규] get_spouse_palace_facts / get_love_shinsal_risk_facts (2-2 연애운 · 3-1 궁합 · 3-2 결혼택일 공용 실제 팩트)
 #   ⑤ [신규] get_gunghap_harmony_facts / get_gunghap_risk_facts (3-1 궁합용 조화도·위험 신살 팩트)
 #   ⑥ [신규] get_baby_daewun_info / get_baby_first_samjae_text (3-3 출산택일: 순위별 아기 대운표·첫 삼재), 추천일 결과에 chart·baby_daewun 추가
+#   ⑦ [수정] 출산택일 합궁 가임기간을 의학 표준(배란 5일 전~배란일)으로, 출산 후보를 임신 39주~41주로 조정, 생리 시작·배란 예정일 정보 추가
 # ==============================================================================
 import os
 import streamlit as st
@@ -2334,6 +2335,11 @@ def get_gunghap_risk_facts(gh_engine):
 
 # ---- 4-C. [3-3 출산 택일] 아기 완성 사주 채점 → 추천일 TOP5 → AI 팩트 문자열 ----
 
+# ── 합궁·분만 시기 의학 기준 (필요하면 이 숫자만 바꾸면 됩니다) ──
+_FERTILE_DAYS_BEFORE_OVULATION = 5    # 정자는 몸 안에서 최대 5일 살 수 있어 배란 5일 전부터 임신 가능 → 가임기간 = 배란 5일 전 ~ 배란일(6일)
+_DELIVERY_AFTER_OVULATION_MIN = 259   # 임신 39주 0일 (배란일 + 259일) : 계획 분만(제왕절개·유도)은 보통 39주 이후
+_DELIVERY_AFTER_OVULATION_MAX = 273   # 임신 41주 0일 (배란일 + 273일)
+
 _DELIVERY_TIME_SLOTS = [
     {'time_str': '00:30 ~ 01:29 (조자)시', 'ji': '子', 'hm': (1, 0),  'daytime': False},
     {'time_str': '01:30 ~ 03:29 (축)시',   'ji': '丑', 'hm': (2, 30), 'daytime': False},
@@ -2360,9 +2366,6 @@ _REL_SCORE_WOLJI = {'충': -4, '형': -2, '원진': -1.5, '파': -1, '해': -1, 
 
 # 아기 사주 내부 지지끼리 (충·형이 크게 감점)
 _REL_SCORE_INNER = {'충': -7, '형': -4, '원진': -3, '파': -2, '해': -2, '자형': -1.5, '귀문': -1, '육합': 4, '반합': 3, '방합': 1.5, '암합': 1}
-
-# 출산 시점 부모의 대운 지지 ↔ 아기 일지·월지
-_REL_SCORE_DW = {'충': -5, '형': -3, '원진': -2, '파': -1, '해': -1, '자형': -1, '육합': 3, '반합': 2, '방합': 1}
 
 _CHEONEUL_MAP = {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}
 
@@ -2412,7 +2415,7 @@ def _delivery_parent_info(pack):
         'cnt': _delivery_count_oh(chars),
     }
 
-def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
+def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack):
     """
     완성된 아기 사주(년·월·일·시)를 명리 기준으로 채점합니다. (기본 60점 + 가감, 50~98점)
     ① 아기 사주 자체: 오행 고름·조후·신강신약 균형·지지 충형·흉일(십악대패/백호/괴강)·길신(귀인/문창/건록)
@@ -2546,19 +2549,6 @@ def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=No
             warn.append(f"부모에게 이미 넘치는 {k}(오행) 기운이 더 쌓임")
     score += max(-4.0, min(6.0, fill))
  
-    # 출산 시점 부모의 대운(지지)과 아기 사주의 조화 — parent_dw = {'아버지': '午', '어머니': '子'}
-    if parent_dw:
-        dw_sum = 0.0
-        for who, dji in parent_dw.items():
-            if not dji:
-                continue
-            e1, t1 = _delivery_rel_effect(dj, dji, _REL_SCORE_DW, same_bonus=0.5)
-            e2, _t2 = _delivery_rel_effect(jis[1], dji, _REL_SCORE_DW, same_bonus=0.0)
-            dw_sum += e1 + 0.5 * e2
-            if '충' in t1: warn.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 충돌함")
-            elif '육합' in t1 or '반합' in t1: good.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 합하여 힘이 됨")
-        score += max(-10.0, min(6.0, dw_sum))
-
     final = round(max(50.0, min(98.0, score)), 1)
     return final, list(dict.fromkeys(good)), list(dict.fromkeys(warn))
 
@@ -2575,27 +2565,11 @@ def _delivery_slot_charts(delivery_date):
         charts.append((slot, y_p, m_p, d_p, h_p))
     return charts
 
-def _delivery_parent_dw_at(parent_dw_info, delivery_dt):
-    """출산일(세는 나이 기준) 시점의 부모 각자의 대운을 찾습니다."""
-    out = {}
-    for who, info in (parent_dw_info or {}).items():
-        try:
-            age = delivery_dt.year - int(info['birth_year']) + 1
-            for dw in info['dw']:
-                start = int(str(dw['age_range']).split('~')[0])
-                if start <= age < start + 10:
-                    out[who] = {'ji': dw['j_hanja'], 'gz': dw['c_hanja'] + dw['j_hanja'], 'age': age, 'range': dw['age_range']}
-                    break
-        except Exception:
-            continue
-    return out
-
-
-def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_dw=None):
+def get_all_time_scores_for_date(delivery_date, male_pack, female_pack):
     """한 날짜의 12개 시간대를 각각 완성 사주로 채점하여 높은 순으로 반환합니다."""
     evaluated = []
     for slot, y_p, m_p, d_p, h_p in _delivery_slot_charts(delivery_date):
-        sc, good, warn = evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw)
+        sc, good, warn = evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack)
         evaluated.append({
             'time_str': slot['time_str'], 'ji': slot['ji'], 'score': sc, 'daytime': slot['daytime'],
             'pillars': f"{y_p}년 {m_p}월 {d_p}일 {h_p}시", 'time_pillar': h_p, 'year_pillar': y_p,
@@ -2605,42 +2579,44 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_d
     evaluated.sort(key=lambda x: x['score'], reverse=True)
     return evaluated
 
-def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None)
+def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21):
     """
     출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
     - male_pack / female_pack : [시주, 일주, 월주, 년주] 순서의 간지 리스트 (예: ["壬子","戊寅","庚申","癸酉"])
     - last_period_date / period_cycle : 마지막 생리 시작일과 주기가 있으면, 배란 예정일에서 계산한
-      현실적인 출산 가능 범위(임신 38~41주)에 드는 날짜만 후보로 삼고 합궁 가임기간도 계산합니다.
+      현실적인 출산 가능 범위(임신 39주 0일~41주 0일, 계획 분만 기준)에 드는 날짜만 후보로 삼고 합궁 가임기간도 계산합니다.
+      (생리 시작일을 1일차로 세고, 배란 예정일 = 다음 생리 시작 14일 전. 주기를 더할 때마다 달력상 생리 시작일이 조금씩 앞당겨지는 것도 자동으로 반영됩니다.)
     - 날짜 순위는 (전체 최고 시간대 점수 + 낮 시간대 최고 점수)의 평균으로 정합니다. (제왕절개 가능 시간 반영)
     """
     today = dt_mod.date.today()
     cycle = int(period_cycle) if period_cycle else 30
-    windows = []   # (출산 가능 시작일, 출산 가능 종료일, 배란예정일)
+    windows = []   # (출산 가능 시작일, 출산 가능 종료일, 배란예정일, 그 주기의 생리 시작일)
     if last_period_date:
         k = 0
         while k < 40:
-            ovul = last_period_date + dt_mod.timedelta(days=k * cycle + cycle - 14)
-            if ovul + dt_mod.timedelta(days=2) >= today:
-                windows.append((ovul + dt_mod.timedelta(days=252), ovul + dt_mod.timedelta(days=273), ovul))
-            if ovul + dt_mod.timedelta(days=252) > end_date:
+            cyc_start = last_period_date + dt_mod.timedelta(days=k * cycle)
+            ovul = cyc_start + dt_mod.timedelta(days=cycle - 14)
+            if ovul >= today:   # 이미 지나간 배란기는 제외
+                windows.append((ovul + dt_mod.timedelta(days=_DELIVERY_AFTER_OVULATION_MIN),
+                                ovul + dt_mod.timedelta(days=_DELIVERY_AFTER_OVULATION_MAX), ovul, cyc_start))
+            if ovul + dt_mod.timedelta(days=_DELIVERY_AFTER_OVULATION_MIN) > end_date:
                 break
             k += 1
  
     candidates = []
     cur = start_date
     while cur <= end_date:
-        ovul = None
+        ovul, cyc_start = None, None
         if windows:
-            for w_s, w_e, o in windows:
+            for w_s, w_e, o, c_s in windows:
                 if w_s <= cur <= w_e:
-                    ovul = o; break
+                    ovul, cyc_start = o, c_s; break
             if ovul is None:
                 cur += dt_mod.timedelta(days=1); continue
         else:
             ovul = cur - dt_mod.timedelta(days=266)
  
-        pdw = _delivery_parent_dw_at(parent_dw_info, cur)
-        slots = get_all_time_scores_for_date(cur, male_pack, female_pack, {w: v['ji'] for w, v in pdw.items()})
+        slots = get_all_time_scores_for_date(cur, male_pack, female_pack)
         if not slots:
             cur += dt_mod.timedelta(days=1); continue
         best_any = slots[0]
@@ -2658,12 +2634,14 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
             'best_time': {'time_str': best_any['time_str'], 'time_pillar': best_any['time_pillar'], 'ji': best_any['ji'], 'score': best_any['score']},
             'best_day_time': {'time_str': best_day['time_str'], 'time_pillar': best_day['time_pillar'], 'ji': best_day['ji'], 'score': best_day['score'], 'pillars': best_day['pillars']},
             'good': best_any['good'], 'warn': best_any['warn'],
-            'conception_date': (ovul - dt_mod.timedelta(days=1)).strftime("%Y-%m-%d"),
-            'conception_start': (ovul - dt_mod.timedelta(days=2)).strftime("%Y-%m-%d"),
-            'conception_end': (ovul + dt_mod.timedelta(days=2)).strftime("%Y-%m-%d"),
+            'conception_date': (ovul - dt_mod.timedelta(days=1)).strftime("%Y-%m-%d"),   # 합궁 최적일 = 배란 예정 전날
+            'conception_start': (ovul - dt_mod.timedelta(days=_FERTILE_DAYS_BEFORE_OVULATION)).strftime("%Y-%m-%d"),
+            'conception_end': ovul.strftime("%Y-%m-%d"),                                     # 가임기간 끝 = 배란 예정일
+            'ovulation_date': ovul.strftime("%Y-%m-%d"),
+            'cycle_start': cyc_start.strftime("%Y-%m-%d") if cyc_start else None,            # 임신이 시작되는 주기의 생리 시작일
+            'period_end': (cyc_start + dt_mod.timedelta(days=6)).strftime("%Y-%m-%d") if cyc_start else None,  # 생리 약 1주일(7일간)
             'daeun_dir': ({'남아': '순행', '여아': '역행'} if y_p[0] in "甲丙戊庚壬" else {'남아': '역행', '여아': '순행'}),
             'all_time_slots': slots,
-            'parent_dw': pdw,
         })
         cur += dt_mod.timedelta(days=1)
  
@@ -2718,6 +2696,16 @@ def get_baby_first_samjae_text(birth_year, year_ji):
     return "해당 없음"
 
 
+def _delivery_conception_text(d):
+    """합궁(임신 시도) 시기를 '생리 → 배란 → 가임기간' 순서로 풀어쓴 문장을 만듭니다."""
+    def md(s):
+        return f"{int(s[5:7])}월 {int(s[8:10])}일"
+    base = f"합궁 가임기간 {md(d['conception_start'])} ~ {md(d['conception_end'])} (배란 예정일 {md(d['ovulation_date'])}, 가장 가능성이 높은 최적일 {md(d['conception_date'])})"
+    if d.get('cycle_start'):
+        base = f"임신이 시작되는 주기의 생리 시작 {md(d['cycle_start'])}(약 1주일간 {md(d['cycle_start'])}~{md(d['period_end'])}) → " + base
+    return base
+
+
 def get_delivery_facts_str(best_days):
     """AI에게 넘길 '엔진이 계산한 출산 추천일' 팩트 문자열을 만듭니다. (이 목록 밖의 날짜는 쓰지 못하게 하기 위함)"""
     if not best_days:
@@ -2729,13 +2717,11 @@ def get_delivery_facts_str(best_days):
             f"[{i}순위] {dt.year}년 {dt.month}월 {dt.day}일({d['weekday_kr']}) / 종합 {d['score']}점 / "
             f"자연분만 추천 {d['best_time']['time_str']} (완성 명식 {d['four_pillars']}) / "
             f"낮 시간대(제왕절개 가능) 추천 {d['best_day_time']['time_str']} (완성 명식 {d['best_day_time']['pillars']}) / "
-            f"합궁 가임기간 {d['conception_start'][5:]} ~ {d['conception_end'][5:]} (최적 {d['conception_date'][5:]}) / "
+            f"{_delivery_conception_text(d)} / "
             f"아기 대운 방향: 남아 {d['daeun_dir']['남아']}, 여아 {d['daeun_dir']['여아']} / "
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
-        if d.get('parent_dw'):
-            lines.append("   └ 출산 시점 부모 대운: " + " / ".join(f"{w} {v['age']}세 (대운 {v['range']} {v['gz']})" for w, v in d['parent_dw'].items()))
         if d.get('baby_daewun'):
             for g in ('남아', '여아'):
                 bd = d['baby_daewun'][g]
