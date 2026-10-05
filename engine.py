@@ -2361,6 +2361,9 @@ _REL_SCORE_WOLJI = {'충': -4, '형': -2, '원진': -1.5, '파': -1, '해': -1, 
 # 아기 사주 내부 지지끼리 (충·형이 크게 감점)
 _REL_SCORE_INNER = {'충': -7, '형': -4, '원진': -3, '파': -2, '해': -2, '자형': -1.5, '귀문': -1, '육합': 4, '반합': 3, '방합': 1.5, '암합': 1}
 
+# 출산 시점 부모의 대운 지지 ↔ 아기 일지·월지
+_REL_SCORE_DW = {'충': -5, '형': -3, '원진': -2, '파': -1, '해': -1, '자형': -1, '육합': 3, '반합': 2, '방합': 1}
+
 _CHEONEUL_MAP = {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}
 
 _MUNCHANG_MAP = {'甲':'巳','乙':'午','丙':'申','丁':'酉','戊':'申','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}
@@ -2409,7 +2412,7 @@ def _delivery_parent_info(pack):
         'cnt': _delivery_count_oh(chars),
     }
 
-def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack):
+def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
     """
     완성된 아기 사주(년·월·일·시)를 명리 기준으로 채점합니다. (기본 60점 + 가감, 50~98점)
     ① 아기 사주 자체: 오행 고름·조후·신강신약 균형·지지 충형·흉일(십악대패/백호/괴강)·길신(귀인/문창/건록)
@@ -2543,6 +2546,19 @@ def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack):
             warn.append(f"부모에게 이미 넘치는 {k}(오행) 기운이 더 쌓임")
     score += max(-4.0, min(6.0, fill))
  
+    # 출산 시점 부모의 대운(지지)과 아기 사주의 조화 — parent_dw = {'아버지': '午', '어머니': '子'}
+    if parent_dw:
+        dw_sum = 0.0
+        for who, dji in parent_dw.items():
+            if not dji:
+                continue
+            e1, t1 = _delivery_rel_effect(dj, dji, _REL_SCORE_DW, same_bonus=0.5)
+            e2, _t2 = _delivery_rel_effect(jis[1], dji, _REL_SCORE_DW, same_bonus=0.0)
+            dw_sum += e1 + 0.5 * e2
+            if '충' in t1: warn.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 충돌함")
+            elif '육합' in t1 or '반합' in t1: good.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 합하여 힘이 됨")
+        score += max(-10.0, min(6.0, dw_sum))
+
     final = round(max(50.0, min(98.0, score)), 1)
     return final, list(dict.fromkeys(good)), list(dict.fromkeys(warn))
 
@@ -2559,11 +2575,27 @@ def _delivery_slot_charts(delivery_date):
         charts.append((slot, y_p, m_p, d_p, h_p))
     return charts
 
-def get_all_time_scores_for_date(delivery_date, male_pack, female_pack):
+def _delivery_parent_dw_at(parent_dw_info, delivery_dt):
+    """출산일(세는 나이 기준) 시점의 부모 각자의 대운을 찾습니다."""
+    out = {}
+    for who, info in (parent_dw_info or {}).items():
+        try:
+            age = delivery_dt.year - int(info['birth_year']) + 1
+            for dw in info['dw']:
+                start = int(str(dw['age_range']).split('~')[0])
+                if start <= age < start + 10:
+                    out[who] = {'ji': dw['j_hanja'], 'gz': dw['c_hanja'] + dw['j_hanja'], 'age': age, 'range': dw['age_range']}
+                    break
+        except Exception:
+            continue
+    return out
+
+
+def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_dw=None):
     """한 날짜의 12개 시간대를 각각 완성 사주로 채점하여 높은 순으로 반환합니다."""
     evaluated = []
     for slot, y_p, m_p, d_p, h_p in _delivery_slot_charts(delivery_date):
-        sc, good, warn = evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack)
+        sc, good, warn = evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw)
         evaluated.append({
             'time_str': slot['time_str'], 'ji': slot['ji'], 'score': sc, 'daytime': slot['daytime'],
             'pillars': f"{y_p}년 {m_p}월 {d_p}일 {h_p}시", 'time_pillar': h_p, 'year_pillar': y_p,
@@ -2573,7 +2605,7 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack):
     evaluated.sort(key=lambda x: x['score'], reverse=True)
     return evaluated
 
-def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21):
+def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None)
     """
     출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
     - male_pack / female_pack : [시주, 일주, 월주, 년주] 순서의 간지 리스트 (예: ["壬子","戊寅","庚申","癸酉"])
@@ -2607,7 +2639,8 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
         else:
             ovul = cur - dt_mod.timedelta(days=266)
  
-        slots = get_all_time_scores_for_date(cur, male_pack, female_pack)
+        pdw = _delivery_parent_dw_at(parent_dw_info, cur)
+        slots = get_all_time_scores_for_date(cur, male_pack, female_pack, {w: v['ji'] for w, v in pdw.items()})
         if not slots:
             cur += dt_mod.timedelta(days=1); continue
         best_any = slots[0]
@@ -2630,6 +2663,7 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
             'conception_end': (ovul + dt_mod.timedelta(days=2)).strftime("%Y-%m-%d"),
             'daeun_dir': ({'남아': '순행', '여아': '역행'} if y_p[0] in "甲丙戊庚壬" else {'남아': '역행', '여아': '순행'}),
             'all_time_slots': slots,
+            'parent_dw': pdw,
         })
         cur += dt_mod.timedelta(days=1)
  
@@ -2700,6 +2734,8 @@ def get_delivery_facts_str(best_days):
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
+        if d.get('parent_dw'):
+            lines.append("   └ 출산 시점 부모 대운: " + " / ".join(f"{w} {v['age']}세 (대운 {v['range']} {v['gz']})" for w, v in d['parent_dw'].items()))
         if d.get('baby_daewun'):
             for g in ('남아', '여아'):
                 bd = d['baby_daewun'][g]
