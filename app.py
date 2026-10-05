@@ -569,6 +569,9 @@ else:
             else:
                 with st.spinner("📄 인쇄 준비 중입니다... (잠시만 기다려 주세요)"):
                     _pdf_bytes = generate_pdf_bytes(_saved_html)
+                _pn = re.sub(r'[^\w가-힣]', '', re.sub(r'\d-\d\.\s*', '', str(u_product).split('(')[0]))
+                _fname = "_".join([x for x in (st.session_state.get('u_n', ''), _pn, st.session_state.get('last_order_id', '')) if x]) + ".pdf"
+                st.download_button("⬇️ PDF 파일로 저장", data=_pdf_bytes, file_name=_fname, mime="application/pdf", key="dl_pdf_named")
                 import base64 as _b64
                 _pdf_b64 = _b64.b64encode(_pdf_bytes).decode('utf-8')
                 components.html(f"""
@@ -1912,7 +1915,7 @@ if st.session_state.get('app_running', False):
             formatted_ai = formatted_ai + safe_part_5
             
             couple_header = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
-            body_content = f"{main_title_html}{couple_header}{formatted_ai}"
+            body_content = f"{main_title_html}{couple_header}<div style='break-before: page; page-break-before: always;'></div>{formatted_ai}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
