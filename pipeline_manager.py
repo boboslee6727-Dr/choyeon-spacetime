@@ -86,6 +86,34 @@ def get_supabase_client():
     from supabase import create_client
     return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
+def _add_page_numbers(pdf_bytes, skip_cover=True, align="center", bottom_mm=7.5):
+    """PDF 각 페이지 하단에 '현재쪽 / 전체쪽'을 찍습니다. (align: 'center' 또는 'right')"""
+    import io
+    from pypdf import PdfReader, PdfWriter
+    from reportlab.pdfgen import canvas
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    total = len(reader.pages)
+    writer = PdfWriter()
+    for i, page in enumerate(reader.pages, start=1):
+        if not (skip_cover and i == 1):
+            w, h = float(page.mediabox.width), float(page.mediabox.height)
+            buf = io.BytesIO()
+            c = canvas.Canvas(buf, pagesize=(w, h))
+            c.setFont("Helvetica", 9)
+            c.setFillGray(0.35)
+            y = bottom_mm * 72 / 25.4
+            if align == "right":
+                c.drawRightString(w - 14 * 72 / 25.4, y, f"{i} / {total}")
+            else:
+                c.drawCentredString(w / 2, y, f"{i} / {total}")
+            c.save()
+            buf.seek(0)
+            page.merge_page(PdfReader(buf).pages[0])
+        writer.add_page(page)
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
 def generate_pdf_bytes(result_html):
     """감명서 HTML을 PDF 바이트로 변환합니다 (브라우저와 동일한 방식 - Playwright/Chromium 사용)."""
     import subprocess, sys
@@ -110,7 +138,11 @@ def generate_pdf_bytes(result_html):
         page.emulate_media(media="print")
         pdf_bytes = page.pdf(format="A4", print_background=True, margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
         browser.close()
-    return pdf_bytes
+    try:
+        return _add_page_numbers(pdf_bytes)
+    except Exception as _e:
+        print(f"쪽번호 삽입 실패(번호 없이 진행): {_e}")
+        return pdf_bytes
 
 def generate_and_upload_pdf(order_id, name, result_html):
     """감명서 HTML을 실제 PDF 파일로 변환하여 choyeonsaju.com(GitHub Pages)에 저장하고, 신뢰감 있는 공개 주소를 반환합니다."""
