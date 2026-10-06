@@ -1899,12 +1899,13 @@ if st.session_state.get('app_running', False):
                 head = (f"<div style='text-align:center; margin:10px 0 12px 0; line-height:1.6;'>"
                         f"<span style='font-size:17px; font-weight:900; color:#1A237E;'>👶 아기 완성 명식 — {dt_.year}년 {dt_.month}월 {dt_.day}일({di['weekday_kr']}) {di['best_time']['time_str']}</span><br>"
                         f"<span style='font-size:13px; font-weight:bold; color:#555;'>(명리 종합점수 {di['score']}점 · 자연분만 추천 시각 기준)</span></div>")
-                bar = ("<div style='border:2px solid #3E2723; margin-top:12px; padding:8px 10px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 16px; "
-                       "font-weight:900; font-size:12px; border-radius:8px;'>"
-                       f"<div>🔢 대운수: {' / '.join(dw_parts)}</div>"
-                       f"<div>💥 오행: 木({cnt['목']}) 火({cnt['화']}) 土({cnt['토']}) 金({cnt['금']}) 水({cnt['수']})</div>"
-                       f"<div>🌟 천을귀인: {guiin}</div>"
-                       f"<div>🎯 공망: [년] {n_gong} [일] {i_gong}</div></div>")
+                _dw = '/'.join(f"{g}({di['baby_daewun'][g]['calc_d']},{di['baby_daewun'][g]['dir']})" for g in ('남아', '여아') if bg in ('미정', g))
+                bar = ("<div style='border:2px solid #3E2723; margin-top:12px; padding:8px; display:flex; flex-wrap:nowrap; justify-content:space-between; gap:0 6px; white-space:nowrap; "
+                       "font-weight:900; font-size:11.5px; border-radius:8px;'>"
+                       f"<div>🔢 대운수: {_dw}</div>"
+                       f"<div>💥 오행: 木{cnt['목']} 火{cnt['화']} 土{cnt['토']} 金{cnt['금']} 水{cnt['수']}</div>"
+                       f"<div>🌟 천을귀인: {guiin.replace(', ', '·')}</div>"
+                       f"<div>🎯 공망: [일] {i_gong}</div></div>")
                 note = ""
                 day_t = di.get('best_day_time', {})
                 if day_t and day_t.get('time_str') != di['best_time']['time_str']:
