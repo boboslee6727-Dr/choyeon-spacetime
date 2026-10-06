@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 88.1 - 상품별 정리판)
+# engine.py (ver 88.3 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -17,6 +17,8 @@
 #   ⑩ [개편] 출산택일 채점을 7궁위 방식으로: 일주 35>월주 24>시주 14>년주 9>대운 흐름 8>오행·조후 6>부모조화 4 (일간 기준 십성·12운성·12신살·귀인)
 #   ⑪ [확정 개편] 출산택일 100점: 일지30·월지15·시지9·월간6·년지5·시간3·년간2 + 오행4·조후4·공망2(해공 반영) + 대운흐름10(구조는 순행·역행 무관) + 부모조화10(보조)
 #        월간=월령적합4+십성2(60월령 규칙), 가임기간=배란5일전~다음날(7일), 후보=임신39주~41주, 표시점수=전체 출생 시각 중 백분위(_SCORE_DISPLAY)
+#   ⑫ [수정] 가임기간 설명에 연도·다음 생리 예정일 추가, '합궁' 표현을 '가임기간'으로 통일
+#   ⑬ [신규] get_earliest_delivery_start: 마지막 생리 시작일·주기로 출산택일 '탐색 시작일' 기본값을 자동 계산
 # ==============================================================================
 import os
 import streamlit as st
@@ -2816,6 +2818,7 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
             'ovulation_date': ovul.strftime("%Y-%m-%d"),
             'cycle_start': cyc_start.strftime("%Y-%m-%d") if cyc_start else None,            # 임신이 시작되는 주기의 생리 시작일
             'period_end': (cyc_start + dt_mod.timedelta(days=6)).strftime("%Y-%m-%d") if cyc_start else None,  # 생리 약 1주일(7일간)
+            'next_period': (cyc_start + dt_mod.timedelta(days=cycle)).strftime("%Y-%m-%d") if cyc_start else None,  # 그 주기의 다음 생리 예정일
             'daeun_dir': ({'남아': '순행', '여아': '역행'} if y_p[0] in "甲丙戊庚壬" else {'남아': '역행', '여아': '순행'}),
             'all_time_slots': slots,
             'parent_dw': pdw,
@@ -3005,13 +3008,27 @@ def get_baby_first_samjae_text(birth_year, year_ji):
     return "해당 없음"
 
 
+def get_earliest_delivery_start(last_period_date, period_cycle=30, today=None):
+    """마지막 생리 시작일과 주기로, 앞으로 올 가장 가까운 배란기에 임신했을 때의 가장 이른 출산 가능일(임신 39주 0일)을 돌려줍니다.
+    신혼부부·임신을 준비하는 부부의 '탐색 시작일' 기본값으로 쓰입니다."""
+    today = today or dt_mod.date.today()
+    cycle = int(period_cycle) if period_cycle else 30
+    for k in range(0, 40):
+        ovul = last_period_date + dt_mod.timedelta(days=k * cycle + cycle - 14)
+        if ovul >= today:                      # 이미 지나간 배란기는 제외 (get_optimized_delivery_days 와 같은 기준)
+            return ovul + dt_mod.timedelta(days=_DELIVERY_AFTER_OVULATION_MIN)
+    return today
+
+
 def _delivery_conception_text(d):
-    """합궁(임신 시도) 시기를 '생리 → 배란 → 가임기간' 순서로 풀어쓴 문장을 만듭니다."""
-    def md(s):
-        return f"{int(s[5:7])}월 {int(s[8:10])}일"
-    base = f"합궁 가임기간 {md(d['conception_start'])} ~ {md(d['conception_end'])} (배란 예정일 {md(d['ovulation_date'])}, 가장 가능성이 높은 최적일 {md(d['conception_date'])})"
+    """가임기간(임신 가능성이 높은 시기)을 '그 달 생리 시작 예상 → 배란 예정 → 가임기간 → 다음 생리 예정일' 순서로 연도까지 풀어씁니다."""
+    def ymd(s):
+        return f"{int(s[:4])}년 {int(s[5:7])}월 {int(s[8:10])}일"
+    base = (f"가임기간 {ymd(d['conception_start'])} ~ {ymd(d['conception_end'])} (배란 예정일 {ymd(d['ovulation_date'])}, "
+            f"임신 가능성이 가장 높은 날 {ymd(d['conception_date'])})")
     if d.get('cycle_start'):
-        base = f"임신이 시작되는 주기의 생리 시작 {md(d['cycle_start'])}(약 1주일간 {md(d['cycle_start'])}~{md(d['period_end'])}) → " + base
+        nxt = f", 다음 생리 예정일 {ymd(d['next_period'])}의 약 2주 전" if d.get('next_period') else ""
+        base = (f"그 주기의 생리 시작 예상 {ymd(d['cycle_start'])}(약 1주일간 {ymd(d['cycle_start'])}~{ymd(d['period_end'])}) → ") + base + nxt
     return base
 
 
