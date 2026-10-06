@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 87.8 - 상품별 정리판)
+# engine.py (ver 87.9 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -14,6 +14,7 @@
 #   ⑦ [수정] 출산택일 합궁 가임기간을 의학 표준(배란 5일 전~배란일)으로, 출산 후보를 임신 39주~41주로 조정, 생리 시작·배란 예정일 정보 추가
 #   ⑧ [수정] 출산택일 채점에 '출산 시점 부모의 대운 지지'를 반영 (get_optimized_delivery_days 의 parent_dw_info)
 #   ⑨ [개편] 출산택일 채점을 100점 체계로 개편: 월령 30·일주 35·균형/조후/시주 10·신살/귀인 10·부모조화 10(보조)·대운흐름 5 (_W_* 상수로 조정)
+#   ⑩ [개편] 출산택일 채점을 7궁위 방식으로: 일주 35>월주 24>시주 14>년주 9>대운 흐름 8>오행·조후 6>부모조화 4 (일간 기준 십성·12운성·12신살·귀인)
 # ==============================================================================
 import os
 import streamlit as st
@@ -2420,13 +2421,16 @@ def _delivery_parent_info(pack):
         'cnt': _delivery_count_oh(chars),
     }
 
-# ── 출산택일 배점표 (합계 100점) : 박사님이 숫자만 바꾸면 됩니다 (6개를 더해 100이 되게 맞추세요) ──
-_W_WOLRYEONG = 30   # 월령(월지): 득령(일간의 월지 12운성) + 격(월지 십성의 순용/역용·제화) ※ 반반
-_W_ILJU      = 35   # 일주: 일지 12운성 + 일지 십성(배우자궁) + 흉일(십악대패·백호·괴강) + 월지-일지 충합
-_W_BALANCE   = 10   # 오행 균형 + 조후 + 시주(시지 충합·십성)
-_W_SHINSAL   = 10   # 신살·귀인 (천을·문창·학당·월덕·건록 가점 / 양인·원진·귀문·공망 감점)
-_W_PARENT    = 10   # 부모와의 조화 (보조 기준: 일지·띠·시지·월지 합충, 부족 오행 보완, 부모 대운 지지)
-_W_DAEWUN    = 5    # 대운 흐름 (10대 인성 → 20대 비겁 → 30대 식상 → 40대 재성 → 50대 관성)
+# ── 출산택일 배점표 (합계 100점) : 일간을 기준으로 7글자를 궁위별로 평가합니다 ──
+# 순서(큰 → 작은):  일주 > 월주 > 시주 > 년주 > 대운 흐름 > 오행·조후 > 부모 조화(보조)
+# 박사님이 숫자만 바꾸시면 됩니다 (7개를 더해 100이 되게 맞추세요)
+_W_ILJU      = 35   # 일주: 일지 12운성 10 · 일지 십성 8 · 일지 신살(12신살 4 + 귀인·일반신살 5) · 흉일 3 · 월지/시지와 충합 5
+_W_WOLJU     = 24   # 월주: 월지 12운성(득령) 6 · 월지 십성·격 8 · 월간 십성 4 · 월주 신살 3 · 월간의 뿌리 3
+_W_SIJU      = 14   # 시주: 시지 12운성 4 · 시지 십성 3 · 시간 십성 2 · 시주 신살 3 · 시간의 뿌리 2
+_W_NYEONJU   = 9    # 년주: 년지 12운성 2 · 년지 십성 2 · 년간 십성 2 · 년주 귀인·신살 2 · 년간의 뿌리 1
+_W_DAEWUN    = 8    # 대운 흐름: 10대 인성 → 20대 비겁 → 30대 식상 → 40대 재성 → 50대 관성
+_W_BALANCE   = 6    # 오행 균형 3 + 조후 3
+_W_PARENT    = 4    # 부모와의 조화(보조): 일지·띠·시지·월지 합충, 부족 오행 보완, 부모 대운 지지
 
 _UNSUNG_POWER = {'건록': 1.0, '제왕': 1.0, '관대': 0.8, '장생': 0.8, '목욕': 0.5, '쇠': 0.5, '양': 0.5,
                  '병': 0.3, '태': 0.3, '사': 0.1, '묘': 0.1, '절': 0.1}
@@ -2435,8 +2439,10 @@ _SS_GROUP = {'비견': '비겁', '겁재': '비겁', '식신': '식상', '상관
 _SS_SUNYONG = ('정인', '식신', '정재', '정관')                  # 월지가 이 십성이면 순용(길)
 _SS_JEHWA = {'편관': ('식신', '편인', '정인'), '상관': ('정인', '편인', '정재', '편재'), '겁재': ('정관', '편관'),
              '편인': ('편재',), '편재': ('식신', '상관', '정관', '편관')}   # 역용 격이 제화(다스림)되는 조건
-_ILJI_SS_SCORE = {'정인': 1.0, '식신': 1.0, '정재': 1.0, '정관': 1.0, '편재': 0.6, '비견': 0.6,
-                  '편인': 0.4, '편관': 0.4, '상관': 0.35, '겁재': 0.35}
+_SS_QUALITY = {'정인': 1.0, '식신': 1.0, '정재': 1.0, '정관': 1.0, '편재': 0.6, '비견': 0.6,
+               '편인': 0.4, '편관': 0.4, '상관': 0.35, '겁재': 0.35}   # 각 궁위에 놓인 십성의 길흉(일반 기준)
+_SHIN12_SCORE = {'장성살': 1.0, '반안살': 1.0, '화개살': 0.7, '지살': 0.6, '역마살': 0.6, '년살': 0.5,
+                 '천살': 0.4, '월살': 0.3, '육해살': 0.3, '망신살': 0.2, '겁살': 0.2, '재살': 0.2}   # 12신살의 길흉(기본값)
 _YANGIN_MAP = {'甲': '卯', '丙': '午', '戊': '午', '庚': '酉', '壬': '子'}
 _WOLDEOK_MAP = {'寅': '丙', '午': '丙', '戌': '丙', '申': '壬', '子': '壬', '辰': '壬', '亥': '甲', '卯': '甲', '未': '甲', '巳': '庚', '酉': '庚', '丑': '庚'}
 _DAEWUN_IDEAL = ((15, '인성'), (25, '비겁'), (35, '식상'), (45, '재성'), (55, '관성'))
@@ -2446,22 +2452,84 @@ def _delivery_clamp01(x):
     return max(0.0, min(1.0, x))
 
 
+def _delivery_shin12(*bases_and_target):
+    """12신살 길흉 점수(0~1)와 이름. 인자: (기준지지1, [기준지지2, ...], 대상지지) — 기준이 둘이면 평균."""
+    *bases, target = bases_and_target
+    vals, names = [], []
+    for b in bases:
+        try:
+            nm = get_12_shinsal(b, target)
+        except Exception:
+            continue
+        vals.append(_SHIN12_SCORE.get(nm, 0.5)); names.append(nm)
+    return (sum(vals) / len(vals) if vals else 0.5), names
+
+
+def _delivery_gui(dm, j, label, gm, extra_pos=0.0):
+    """한 지지(j)의 귀인·일반신살 점수(0~1)와 설명. (가점: 천을·문창·건록·학당 / 감점: 양인·공망)"""
+    pos, neg, good, warn = float(extra_pos), 0.0, [], []
+    if j in _CHEONEUL_MAP.get(dm, ""): pos += 2; good.append(f"{label}에 천을귀인(귀인의 도움을 받는 기운)이 자리함")
+    if j == _MUNCHANG_MAP.get(dm): pos += 2; good.append(f"{label}에 문창귀인(총명함과 학업 성취를 돕는 기운)이 자리함")
+    if j == _GEONROK_MAP.get(dm): pos += 2; good.append(f"{label}에 건록(스스로 서는 든든한 힘)이 자리함")
+    if get_unsung(dm, j) == '장생': pos += 2; good.append(f"{label}에 학당귀인(배움과 지혜를 돕는 기운)이 자리함")
+    if j == _YANGIN_MAP.get(dm): neg += 2; warn.append(f"{label}에 양인(기운이 지나치게 강하고 날카로운 기운)이 있음")
+    if gm and gm != "-" and j in gm: neg += 1; warn.append(f"{label}에 공망(비어 있는 자리)이 걸림")
+    return _delivery_clamp01(0.5 + (pos - neg) / 6.0), good, warn
+
+
+def _delivery_rel_frac(a, b):
+    """두 지지의 충합 점수(0~1)와 설명 태그"""
+    t = _delivery_rel_tags(a, b)
+    if '충' in t: return 0.0, 'chung'
+    if any(x in t for x in ('육합', '반합', '방합')): return 1.0, 'hap'
+    if any(x in t for x in ('형', '원진', '해', '파')): return 0.3, 'bad'
+    if 'same' in t: return 0.8, ''
+    if '자형' in t: return 0.5, ''
+    return 0.7, ''
+
+
 def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
-    """아기 완성 사주(년·월·일·시)를 100점 만점으로 채점합니다. (월령·일주 중심, 부모 조화는 보조)
-    반환: {'total': 합계, 'parts': {항목: 점수}, 'good': [...], 'warn': [...]}"""
+    """아기 완성 사주(년·월·일·시)를 100점 만점으로 채점합니다. 일간을 기준으로 7글자를 궁위별로 평가합니다.
+    반환: {'total': 합계, 'parts': {궁위: 점수}, 'good': [...], 'warn': [...]}"""
     good, warn = [], []
     gans = [y_p[0], m_p[0], d_p[0], h_p[0]]
     jis = [y_p[1], m_p[1], d_p[1], h_p[1]]          # 년·월·일·시
-    dm, dj, mj, hj = d_p[0], d_p[1], m_p[1], h_p[1]
+    dm = d_p[0]
+    yg, mg, hg = gans[0], gans[1], gans[3]
+    yj, mj, dj, hj = jis
     cnt = _delivery_count_oh(gans + jis)
+    gm = calculate_gongmang(dm, dj)
 
-    # ───────── 1) 월령(월지) ─────────
-    un_m = get_unsung(dm, mj)
-    deuk = _UNSUNG_POWER.get(un_m, 0.5)
+    # ═════════ 일주 (일지 중심) ═════════
+    un_d = get_unsung(dm, dj); zwa = _UNSUNG_POWER.get(un_d, 0.5)
+    if zwa >= 0.8: good.append(f"일주의 일지에서 일간이 든든히 뿌리내림({un_d})")
+    elif zwa <= 0.1: warn.append(f"일주의 일지에서 일간의 뿌리가 약함({un_d})")
+    ss_d = get_ss(dm, dj); ilji_ss = _SS_QUALITY.get(ss_d, 0.5)
+    if ilji_ss >= 1.0: good.append(f"일지에 {ss_d}이 자리해 배우자궁이 안정적")
+    elif ilji_ss <= 0.4: warn.append(f"일지에 {ss_d}이 자리해 배우자궁에 주의가 필요함")
+    sh_d, sh_names = _delivery_shin12(yj, dj)
+    if sh_names and sh_names[0] in ('장성살', '반안살'): good.append(f"일지에 {sh_names[0]}(든든하고 안정된 기운)이 자리함")
+    elif sh_names and sh_names[0] in ('망신살', '겁살', '재살'): warn.append(f"일지에 {sh_names[0]}(구설이나 손실에 유의할 기운)이 자리함")
+    gui_d, g1, w1 = _delivery_gui(dm, dj, "일지", gm); good += g1; warn += w1
+    flag = 1.0
+    if d_p in _SIPAK_DAEPAE: flag = 0.0; warn.append("십악대패일에 해당하여 이 날은 피하는 것이 좋음")
+    elif d_p in BAEKHO_GANJI: flag = 0.4; warn.append("백호대살 일주로 기운이 매우 거셈")
+    elif d_p in GOEGANG_ILJU: flag = 0.5; warn.append("괴강 일주로 기운이 지나치게 강함")
+    md, kmd = _delivery_rel_frac(mj, dj)
+    if kmd == 'chung': warn.append("월지와 일지가 서로 충돌함")
+    elif kmd == 'hap': good.append("월지와 일지가 서로 합하여 화합함")
+    elif kmd == 'bad': warn.append("월지와 일지 사이에 마찰의 기운이 있음")
+    dh, kdh = _delivery_rel_frac(dj, hj)
+    if kdh == 'chung': warn.append("일지와 시지가 서로 충돌함")
+    elif kdh == 'hap': good.append("일지와 시지가 서로 합하여 화합함")
+    p_il = (10 * zwa + 8 * ilji_ss + 4 * sh_d + 5 * gui_d + 3 * flag + 2.5 * md + 2.5 * dh) * _W_ILJU / 35.0
+
+    # ═════════ 월주 (월령) ═════════
+    un_m = get_unsung(dm, mj); deuk = _UNSUNG_POWER.get(un_m, 0.5)
     if deuk >= 0.8: good.append(f"월령(태어난 달)에서 일간이 힘을 얻는 득령({un_m})")
     elif deuk <= 0.1: warn.append(f"월령(태어난 달)에서 일간의 힘이 약한 자리({un_m})")
     ss_m = get_ss(dm, mj)
-    others_ss = [get_ss(dm, c) for c in (gans[0], gans[1], gans[3], jis[0], jis[2], jis[3])]
+    others_ss = [get_ss(dm, c) for c in (yg, mg, hg, yj, dj, hj)]
     if ss_m in _SS_SUNYONG:
         gyeok = 1.0; good.append(f"월지가 {ss_m}이라 격이 순하게 풀리는 순용격")
     elif ss_m == '비견':
@@ -2473,33 +2541,35 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
             gyeok = 0.25; warn.append(f"월지 {ss_m}의 거친 기운을 다스릴 짝(제화)이 사주 안에 없음")
     else:
         gyeok = 0.5
-    if ss_m in [get_ss(dm, g) for g in (gans[0], gans[1], gans[3])]:
+    if ss_m in [get_ss(dm, g) for g in (yg, mg, hg)]:
         gyeok = min(1.0, gyeok + 0.1)       # 월지의 십성이 천간에 드러남(투출)
-    p_wol = _W_WOLRYEONG * (0.5 * deuk + 0.5 * gyeok)
+    q_mg = _SS_QUALITY.get(get_ss(dm, mg), 0.5)
+    sh_m, _n = _delivery_shin12(yj, dj, mj)
+    gui_m, g2, w2 = _delivery_gui(dm, mj, "월지", gm, extra_pos=2.0 if _WOLDEOK_MAP.get(mj) in gans else 0.0)
+    if _WOLDEOK_MAP.get(mj) in gans: good.append("월덕귀인(조상의 덕과 복을 받는 기운)이 천간에 드러남")
+    good += g2; warn += w2
+    root_m = _UNSUNG_POWER.get(get_unsung(mg, mj), 0.5)
+    p_wol = (6 * deuk + 8 * gyeok + 4 * q_mg + 1.5 * sh_m + 1.5 * gui_m + 3 * root_m) * _W_WOLJU / 24.0
 
-    # ───────── 2) 일주 ─────────
-    un_d = get_unsung(dm, dj)
-    zwa = _UNSUNG_POWER.get(un_d, 0.5)
-    if zwa >= 0.8: good.append(f"일주의 일지에서 일간이 든든히 뿌리내림({un_d})")
-    elif zwa <= 0.1: warn.append(f"일주의 일지에서 일간의 뿌리가 약함({un_d})")
-    ss_d = get_ss(dm, dj)
-    ilji_ss = _ILJI_SS_SCORE.get(ss_d, 0.5)
-    if ilji_ss >= 1.0: good.append(f"일지에 {ss_d}이 자리해 배우자궁이 안정적")
-    elif ilji_ss <= 0.4: warn.append(f"일지에 {ss_d}이 자리해 배우자궁에 주의가 필요함")
-    flag = 1.0
-    if d_p in _SIPAK_DAEPAE: flag = 0.0; warn.append("십악대패일에 해당하여 이 날은 피하는 것이 좋음")
-    elif d_p in BAEKHO_GANJI: flag = 0.4; warn.append("백호대살 일주로 기운이 매우 거셈")
-    elif d_p in GOEGANG_ILJU: flag = 0.5; warn.append("괴강 일주로 기운이 지나치게 강함")
-    tags_md = _delivery_rel_tags(mj, dj)
-    if '충' in tags_md: md = 0.0; warn.append("월지와 일지가 서로 충돌함")
-    elif any(t in tags_md for t in ('육합', '반합', '방합')): md = 1.0; good.append("월지와 일지가 서로 합하여 화합함")
-    elif any(t in tags_md for t in ('형', '원진', '해', '파')): md = 0.3; warn.append("월지와 일지 사이에 마찰의 기운이 있음")
-    elif 'same' in tags_md: md = 0.8
-    elif '자형' in tags_md: md = 0.5
-    else: md = 0.7
-    p_il = _W_ILJU * (12 * zwa + 10 * ilji_ss + 6 * flag + 7 * md) / 35.0
+    # ═════════ 시주 ═════════
+    un_h = get_unsung(dm, hj); pw_h = _UNSUNG_POWER.get(un_h, 0.5)
+    if pw_h >= 0.8: good.append(f"시주(자녀궁·말년)에서 일간이 힘을 얻음({un_h})")
+    q_hj = _SS_QUALITY.get(get_ss(dm, hj), 0.5)
+    q_hg = _SS_QUALITY.get(get_ss(dm, hg), 0.5)
+    sh_h, _n = _delivery_shin12(yj, dj, hj)
+    gui_h, g3, w3 = _delivery_gui(dm, hj, "시지", gm); good += g3; warn += w3
+    root_h = _UNSUNG_POWER.get(get_unsung(hg, hj), 0.5)
+    p_si = (4 * pw_h + 3 * q_hj + 2 * q_hg + 1.5 * sh_h + 1.5 * gui_h + 2 * root_h) * _W_SIJU / 14.0
 
-    # ───────── 3) 오행 균형 · 조후 · 시주 ─────────
+    # ═════════ 년주 ═════════
+    pw_y = _UNSUNG_POWER.get(get_unsung(dm, yj), 0.5)
+    q_yj = _SS_QUALITY.get(get_ss(dm, yj), 0.5)
+    q_yg = _SS_QUALITY.get(get_ss(dm, yg), 0.5)
+    gui_y, g4, w4 = _delivery_gui(dm, yj, "년지", gm); good += g4; warn += w4
+    root_y = _UNSUNG_POWER.get(get_unsung(yg, yj), 0.5)
+    p_ny = (2 * pw_y + 2 * q_yj + 2 * q_yg + 2 * gui_y + 1 * root_y) * _W_NYEONJU / 9.0
+
+    # ═════════ 오행 균형 · 조후 ═════════
     missing = sum(1 for v in cnt.values() if v == 0)
     bal = {0: 1.0, 1: 0.7, 2: 0.4}.get(missing, 0.1)
     mx = max(cnt.values())
@@ -2509,48 +2579,15 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
     elif missing >= 3: warn.append("오행이 3가지 이상 비어 있어 한쪽으로 치우침")
     need = '화' if mj in '亥子丑' else ('수' if mj in '巳午未' else None)
     if need:
-        n = sum(1 for c in (gans + [jis[0], jis[2], jis[3]]) if get_color(c) == need)
+        n = sum(1 for c in (gans + [yj, dj, hj]) if get_color(c) == need)
         joh = 1.0 if n >= 2 else (0.7 if n == 1 else 0.0)
         if n == 0: warn.append("계절의 치우침(한랭/조열)을 잡아줄 기운이 없음")
         elif n >= 2: good.append("계절의 차고 더움을 알맞게 잡아주는 기운이 충분함")
     else:
         joh = 0.7
-    tags_dh = _delivery_rel_tags(dj, hj)
-    if '충' in tags_dh: dh = 0.0; warn.append("일지와 시지가 서로 충돌함")
-    elif any(t in tags_dh for t in ('육합', '반합', '방합')): dh = 1.0; good.append("일지와 시지가 서로 합하여 화합함")
-    elif any(t in tags_dh for t in ('형', '원진', '해', '파')): dh = 0.3
-    else: dh = 0.7
-    ss_h = get_ss(dm, hj)
-    sj = 1.0 if ss_h in _SS_SUNYONG else 0.5
-    p_bal = _W_BALANCE * (3 * bal + 3 * joh + 2 * dh + 2 * sj) / 10.0
+    p_bal = (3 * bal + 3 * joh) * _W_BALANCE / 6.0
 
-    # ───────── 4) 신살 · 귀인 ─────────
-    raw = 0.0
-    for nm, j in (('월지', mj), ('일지', dj), ('시지', hj)):
-        if j in _CHEONEUL_MAP.get(dm, ""): raw += 2; good.append(f"{nm}에 천을귀인(귀인의 도움을 받는 기운)이 자리함")
-    for nm, j in (('일지', dj), ('시지', hj)):
-        if j == _MUNCHANG_MAP.get(dm): raw += 2; good.append(f"{nm}에 문창귀인(총명함과 학업 성취를 돕는 기운)이 자리함")
-        if j == _GEONROK_MAP.get(dm): raw += 2; good.append(f"{nm}에 건록(스스로 서는 든든한 힘)이 자리함")
-    for nm, j in (('월지', mj), ('일지', dj), ('시지', hj)):
-        if get_unsung(dm, j) == '장생': raw += 2; good.append(f"{nm}에 학당귀인(배움과 지혜를 돕는 기운)이 자리함"); break
-    if _WOLDEOK_MAP.get(mj) in gans: raw += 2; good.append("월덕귀인(조상의 덕과 복을 받는 기운)이 천간에 드러남")
-    raw = min(raw, 8.0)
-    neg = 0.0
-    yin = _YANGIN_MAP.get(dm)
-    if yin:
-        hit = [nm for nm, j in (('월지', mj), ('일지', dj), ('시지', hj)) if j == yin]
-        if hit: neg += 2 * len(hit); warn.append("양인(기운이 지나치게 강하고 날카로운 기운)이 " + "·".join(hit) + "에 있음")
-    for nm, (a_, b_) in (('월지-일지', (mj, dj)), ('일지-시지', (dj, hj))):
-        t = _delivery_rel_tags(a_, b_)
-        if '원진' in t or '귀문' in t: neg += 1
-    gm = calculate_gongmang(dm, dj)
-    if gm and gm != "-":
-        hit = [nm for nm, j in (('년지', jis[0]), ('월지', mj), ('시지', hj)) if j in gm]
-        if hit: neg += min(3, len(hit)); warn.append("공망(비어 있는 자리)이 " + "·".join(hit) + "에 걸림")
-    neg = min(neg, 8.0)
-    p_sin = _W_SHINSAL * _delivery_clamp01(0.5 + (raw - neg) / 16.0)
-
-    # ───────── 5) 부모와의 조화 (보조) ─────────
+    # ═════════ 부모와의 조화 (보조) ═════════
     parents = [('아버지', _delivery_parent_info(male_pack)), ('어머니', _delivery_parent_info(female_pack))]
     par_sum = 0.0
     for who, p in parents:
@@ -2562,7 +2599,7 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
             par_sum += _delivery_rel_effect(hj, p['day_ji'], _REL_SCORE_SIJI)[0]
             par_sum += _delivery_rel_effect(mj, p['day_ji'], _REL_SCORE_WOLJI)[0]
         if p['year_ji']:
-            eff, tags = _delivery_rel_effect(jis[0], p['year_ji'], _REL_SCORE_TTI, same_bonus=0.5)
+            eff, tags = _delivery_rel_effect(yj, p['year_ji'], _REL_SCORE_TTI, same_bonus=0.5)
             par_sum += eff
             if '충' in tags: warn.append(f"아기 띠가 {who} 띠와 서로 충돌함")
             elif '육합' in tags or '반합' in tags: good.append(f"아기 띠가 {who} 띠와 잘 어울림")
@@ -2588,9 +2625,9 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
     dw_sum = max(-10.0, min(6.0, dw_sum))
     p_par = _W_PARENT * _delivery_clamp01(0.6 + (par_sum + fill + dw_sum) / 40.0)
 
-    parts = {'월령': round(p_wol, 1), '일주': round(p_il, 1), '균형·조후·시주': round(p_bal, 1),
-             '신살·귀인': round(p_sin, 1), '부모조화': round(p_par, 1)}
-    total = round(p_wol + p_il + p_bal + p_sin + p_par, 1)
+    parts = {'일주': round(p_il, 1), '월주': round(p_wol, 1), '시주': round(p_si, 1), '년주': round(p_ny, 1),
+             '오행·조후': round(p_bal, 1), '부모조화': round(p_par, 1)}
+    total = round(p_il + p_wol + p_si + p_ny + p_bal + p_par, 1)
     return {'total': total, 'parts': parts, 'good': list(dict.fromkeys(good)), 'warn': list(dict.fromkeys(warn))}
 
 
@@ -2843,8 +2880,8 @@ def get_delivery_facts_str(best_days):
         )
         if d.get('score_detail'):
             sd = d['score_detail']
-            lines.append(f"   └ 점수 구성(만점): 월령 {sd.get('월령', 0)}/{_W_WOLRYEONG} · 일주 {sd.get('일주', 0)}/{_W_ILJU} · 균형·조후·시주 {sd.get('균형·조후·시주', 0)}/{_W_BALANCE} · "
-                         f"신살·귀인 {sd.get('신살·귀인', 0)}/{_W_SHINSAL} · 부모조화 {sd.get('부모조화', 0)}/{_W_PARENT} · 대운흐름 {sd.get('대운흐름', 0)}/{_W_DAEWUN}")
+            lines.append(f"   └ 점수 구성(만점): 일주 {sd.get('일주', 0)}/{_W_ILJU} · 월주 {sd.get('월주', 0)}/{_W_WOLJU} · 시주 {sd.get('시주', 0)}/{_W_SIJU} · 년주 {sd.get('년주', 0)}/{_W_NYEONJU} · "
+                         f"대운흐름 {sd.get('대운흐름', 0)}/{_W_DAEWUN} · 오행·조후 {sd.get('오행·조후', 0)}/{_W_BALANCE} · 부모조화 {sd.get('부모조화', 0)}/{_W_PARENT}")
         if d.get('flow'):
             for g in ('남아', '여아'):
                 f_ = d['flow'][g]
