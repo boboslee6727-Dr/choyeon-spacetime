@@ -924,10 +924,12 @@ def render_admin_panel():
 
                 pdf_url = None
                 with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
-                    pdf_label = row['name']
+                    _pn = re.sub(r'[^\w가-힣]', '', re.sub(r'\d-\d\.\s*', '', str(row.get('u_product', '')).split('(')[0]))
+                    _pdf_label = row['name']
                     if "3-" in str(row.get('u_product', '')) and row.get('f_name'):
                         _m, _f = (row['name'], row['f_name']) if row.get('gender') == "남성" else (row['f_name'], row['name'])
                         _pdf_label = f"{_m}_{_f}"
+                    _pdf_label = f"{_pdf_label}_{_pn}" if _pn else _pdf_label
                     pdf_url = generate_and_upload_pdf(gid, _pdf_label, st.session_state[f"html_{gid}"])
                 if pdf_url:
                     with st.spinner("⏳ PDF 주소가 열릴 때까지 확인 중입니다 (최대 4분)..."):
