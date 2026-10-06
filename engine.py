@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 87.7 - 상품별 정리판)
+# engine.py (ver 87.8 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -13,6 +13,7 @@
 #   ⑥ [신규] get_baby_daewun_info / get_baby_first_samjae_text (3-3 출산택일: 순위별 아기 대운표·첫 삼재), 추천일 결과에 chart·baby_daewun 추가
 #   ⑦ [수정] 출산택일 합궁 가임기간을 의학 표준(배란 5일 전~배란일)으로, 출산 후보를 임신 39주~41주로 조정, 생리 시작·배란 예정일 정보 추가
 #   ⑧ [수정] 출산택일 채점에 '출산 시점 부모의 대운 지지'를 반영 (get_optimized_delivery_days 의 parent_dw_info)
+#   ⑨ [개편] 출산택일 채점을 100점 체계로 개편: 월령 30·일주 35·균형/조후/시주 10·신살/귀인 10·부모조화 10(보조)·대운흐름 5 (_W_* 상수로 조정)
 # ==============================================================================
 import os
 import streamlit as st
@@ -2419,104 +2420,137 @@ def _delivery_parent_info(pack):
         'cnt': _delivery_count_oh(chars),
     }
 
-def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
-    """
-    완성된 아기 사주(년·월·일·시)를 명리 기준으로 채점합니다. (기본 60점 + 가감, 50~98점)
-    ① 아기 사주 자체: 오행 고름·조후·신강신약 균형·지지 충형·흉일(십악대패/백호/괴강)·길신(귀인/문창/건록)
-    ② 부모와의 조화: 일지·띠·시지·월지 대 부모 일지, 부모에게 부족한 오행을 채워주는지
-    반환: (점수, 장점 목록, 유의점 목록)
-    """
-    score = 60.0
+# ── 출산택일 배점표 (합계 100점) : 박사님이 숫자만 바꾸면 됩니다 (6개를 더해 100이 되게 맞추세요) ──
+_W_WOLRYEONG = 30   # 월령(월지): 득령(일간의 월지 12운성) + 격(월지 십성의 순용/역용·제화) ※ 반반
+_W_ILJU      = 35   # 일주: 일지 12운성 + 일지 십성(배우자궁) + 흉일(십악대패·백호·괴강) + 월지-일지 충합
+_W_BALANCE   = 10   # 오행 균형 + 조후 + 시주(시지 충합·십성)
+_W_SHINSAL   = 10   # 신살·귀인 (천을·문창·학당·월덕·건록 가점 / 양인·원진·귀문·공망 감점)
+_W_PARENT    = 10   # 부모와의 조화 (보조 기준: 일지·띠·시지·월지 합충, 부족 오행 보완, 부모 대운 지지)
+_W_DAEWUN    = 5    # 대운 흐름 (10대 인성 → 20대 비겁 → 30대 식상 → 40대 재성 → 50대 관성)
+
+_UNSUNG_POWER = {'건록': 1.0, '제왕': 1.0, '관대': 0.8, '장생': 0.8, '목욕': 0.5, '쇠': 0.5, '양': 0.5,
+                 '병': 0.3, '태': 0.3, '사': 0.1, '묘': 0.1, '절': 0.1}
+_SS_GROUP = {'비견': '비겁', '겁재': '비겁', '식신': '식상', '상관': '식상', '편재': '재성', '정재': '재성',
+             '편관': '관성', '정관': '관성', '편인': '인성', '정인': '인성'}
+_SS_SUNYONG = ('정인', '식신', '정재', '정관')                  # 월지가 이 십성이면 순용(길)
+_SS_JEHWA = {'편관': ('식신', '편인', '정인'), '상관': ('정인', '편인', '정재', '편재'), '겁재': ('정관', '편관'),
+             '편인': ('편재',), '편재': ('식신', '상관', '정관', '편관')}   # 역용 격이 제화(다스림)되는 조건
+_ILJI_SS_SCORE = {'정인': 1.0, '식신': 1.0, '정재': 1.0, '정관': 1.0, '편재': 0.6, '비견': 0.6,
+                  '편인': 0.4, '편관': 0.4, '상관': 0.35, '겁재': 0.35}
+_YANGIN_MAP = {'甲': '卯', '丙': '午', '戊': '午', '庚': '酉', '壬': '子'}
+_WOLDEOK_MAP = {'寅': '丙', '午': '丙', '戌': '丙', '申': '壬', '子': '壬', '辰': '壬', '亥': '甲', '卯': '甲', '未': '甲', '巳': '庚', '酉': '庚', '丑': '庚'}
+_DAEWUN_IDEAL = ((15, '인성'), (25, '비겁'), (35, '식상'), (45, '재성'), (55, '관성'))
+
+
+def _delivery_clamp01(x):
+    return max(0.0, min(1.0, x))
+
+
+def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
+    """아기 완성 사주(년·월·일·시)를 100점 만점으로 채점합니다. (월령·일주 중심, 부모 조화는 보조)
+    반환: {'total': 합계, 'parts': {항목: 점수}, 'good': [...], 'warn': [...]}"""
     good, warn = [], []
     gans = [y_p[0], m_p[0], d_p[0], h_p[0]]
-    jis = [y_p[1], m_p[1], d_p[1], h_p[1]]       # 년·월·일·시
-    dm, dj = d_p[0], d_p[1]
+    jis = [y_p[1], m_p[1], d_p[1], h_p[1]]          # 년·월·일·시
+    dm, dj, mj, hj = d_p[0], d_p[1], m_p[1], h_p[1]
     cnt = _delivery_count_oh(gans + jis)
- 
-    # ---------- ① 아기 사주 자체 ----------
-    # (1) 오행이 고르게 갖춰졌는가
+
+    # ───────── 1) 월령(월지) ─────────
+    un_m = get_unsung(dm, mj)
+    deuk = _UNSUNG_POWER.get(un_m, 0.5)
+    if deuk >= 0.8: good.append(f"월령(태어난 달)에서 일간이 힘을 얻는 득령({un_m})")
+    elif deuk <= 0.1: warn.append(f"월령(태어난 달)에서 일간의 힘이 약한 자리({un_m})")
+    ss_m = get_ss(dm, mj)
+    others_ss = [get_ss(dm, c) for c in (gans[0], gans[1], gans[3], jis[0], jis[2], jis[3])]
+    if ss_m in _SS_SUNYONG:
+        gyeok = 1.0; good.append(f"월지가 {ss_m}이라 격이 순하게 풀리는 순용격")
+    elif ss_m == '비견':
+        gyeok = 0.6
+    elif ss_m in _SS_JEHWA:
+        if any(x in others_ss for x in _SS_JEHWA[ss_m]):
+            gyeok = 0.75; good.append(f"월지 {ss_m}의 거친 기운을 다스리는 짝(제화)이 사주 안에 있음")
+        else:
+            gyeok = 0.25; warn.append(f"월지 {ss_m}의 거친 기운을 다스릴 짝(제화)이 사주 안에 없음")
+    else:
+        gyeok = 0.5
+    if ss_m in [get_ss(dm, g) for g in (gans[0], gans[1], gans[3])]:
+        gyeok = min(1.0, gyeok + 0.1)       # 월지의 십성이 천간에 드러남(투출)
+    p_wol = _W_WOLRYEONG * (0.5 * deuk + 0.5 * gyeok)
+
+    # ───────── 2) 일주 ─────────
+    un_d = get_unsung(dm, dj)
+    zwa = _UNSUNG_POWER.get(un_d, 0.5)
+    if zwa >= 0.8: good.append(f"일주의 일지에서 일간이 든든히 뿌리내림({un_d})")
+    elif zwa <= 0.1: warn.append(f"일주의 일지에서 일간의 뿌리가 약함({un_d})")
+    ss_d = get_ss(dm, dj)
+    ilji_ss = _ILJI_SS_SCORE.get(ss_d, 0.5)
+    if ilji_ss >= 1.0: good.append(f"일지에 {ss_d}이 자리해 배우자궁이 안정적")
+    elif ilji_ss <= 0.4: warn.append(f"일지에 {ss_d}이 자리해 배우자궁에 주의가 필요함")
+    flag = 1.0
+    if d_p in _SIPAK_DAEPAE: flag = 0.0; warn.append("십악대패일에 해당하여 이 날은 피하는 것이 좋음")
+    elif d_p in BAEKHO_GANJI: flag = 0.4; warn.append("백호대살 일주로 기운이 매우 거셈")
+    elif d_p in GOEGANG_ILJU: flag = 0.5; warn.append("괴강 일주로 기운이 지나치게 강함")
+    tags_md = _delivery_rel_tags(mj, dj)
+    if '충' in tags_md: md = 0.0; warn.append("월지와 일지가 서로 충돌함")
+    elif any(t in tags_md for t in ('육합', '반합', '방합')): md = 1.0; good.append("월지와 일지가 서로 합하여 화합함")
+    elif any(t in tags_md for t in ('형', '원진', '해', '파')): md = 0.3; warn.append("월지와 일지 사이에 마찰의 기운이 있음")
+    elif 'same' in tags_md: md = 0.8
+    elif '자형' in tags_md: md = 0.5
+    else: md = 0.7
+    p_il = _W_ILJU * (12 * zwa + 10 * ilji_ss + 6 * flag + 7 * md) / 35.0
+
+    # ───────── 3) 오행 균형 · 조후 · 시주 ─────────
     missing = sum(1 for v in cnt.values() if v == 0)
-    if missing == 0:
-        score += 5; good.append("오행이 빠짐없이 고르게 갖춰짐")
-    elif missing == 1:
-        score += 2
-    elif missing >= 3:
-        score -= 4; warn.append("오행이 3가지 이상 비어 있어 한쪽으로 치우침")
+    bal = {0: 1.0, 1: 0.7, 2: 0.4}.get(missing, 0.1)
     mx = max(cnt.values())
-    if mx >= 5:
-        score -= 6; warn.append("한 가지 오행이 5개 이상으로 지나치게 쏠림")
-    elif mx == 4:
-        score -= 3
- 
-    # (2) 조후(계절의 한난): 한겨울엔 불, 한여름엔 물이 필요
-    mj = m_p[1]
+    if mx >= 5: bal *= 0.4; warn.append("한 가지 오행이 5개 이상으로 지나치게 쏠림")
+    elif mx == 4: bal *= 0.7
+    if missing == 0: good.append("오행이 빠짐없이 고르게 갖춰짐")
+    elif missing >= 3: warn.append("오행이 3가지 이상 비어 있어 한쪽으로 치우침")
     need = '화' if mj in '亥子丑' else ('수' if mj in '巳午未' else None)
     if need:
-        others = gans + [jis[0], jis[2], jis[3]]
-        n = sum(1 for c in others if get_color(c) == need)
-        if n >= 2:
-            score += 5; good.append("계절의 차고 더움을 알맞게 잡아주는 기운이 충분함")
-        elif n == 1:
-            score += 3; good.append("계절의 차고 더움을 보완하는 기운이 있음")
-        else:
-            score -= 5; warn.append("계절의 치우침(한랭/조열)을 잡아줄 기운이 없음")
- 
-    # (3) 신강신약 균형(일간의 힘이 너무 세지도 약하지도 않은가)
-    dm_oh = get_color(dm)
-    if dm_oh in _OHAENG_CYCLE:
-        ins_oh = _oh_prev(dm_oh)
-        others_chars = [gans[0], gans[1], gans[3]] + jis
-        support = sum(1 for c in others_chars if get_color(c) in (dm_oh, ins_oh))
-        drain = len(others_chars) - support
-        if get_color(mj) in (dm_oh, ins_oh): support += 1
-        else: drain += 1
-        diff = abs(support - drain)
-        if diff <= 1:
-            score += 6; good.append("본인을 돕는 힘과 쓰는 힘이 균형 잡힌 중화 사주")
-        elif diff <= 3:
-            score += 3
-        elif diff >= 6:
-            score -= 4; warn.append("본인의 힘이 지나치게 강하거나 약한 쪽으로 치우침")
- 
-    # (4) 아기 사주 안의 지지 충·형·합 (일-시, 월-일 관계를 가장 중요하게)
-    inner_pairs = [(1, 2, 1.5), (2, 3, 1.5), (0, 1, 1.0), (0, 2, 1.0), (1, 3, 1.0), (0, 3, 0.7)]
-    names = ['년지', '월지', '일지', '시지']
-    inner_sum = 0.0
-    for a, b, w in inner_pairs:
-        eff, tags = _delivery_rel_effect(jis[a], jis[b], _REL_SCORE_INNER, same_bonus=0.0)
-        inner_sum += eff * w
-        if eff <= -6 * w and ('충' in tags):
-            warn.append(f"{names[a]}와 {names[b]}가 서로 충돌함")
-        elif eff >= 4 * w and ('육합' in tags):
-            good.append(f"{names[a]}와 {names[b]}가 서로 합하여 화합함")
-    score += max(-20.0, min(10.0, inner_sum))
- 
-    # (5) 흉일(일주)
-    if d_p in _SIPAK_DAEPAE:
-        score -= 8; warn.append("십악대패일에 해당하여 이 날은 피하는 것이 좋음")
-    if d_p in BAEKHO_GANJI:
-        score -= 4; warn.append("백호대살 일주로 기운이 매우 거셈")
-    if d_p in GOEGANG_ILJU:
-        score -= 4; warn.append("괴강 일주로 기운이 지나치게 강함")
+        n = sum(1 for c in (gans + [jis[0], jis[2], jis[3]]) if get_color(c) == need)
+        joh = 1.0 if n >= 2 else (0.7 if n == 1 else 0.0)
+        if n == 0: warn.append("계절의 치우침(한랭/조열)을 잡아줄 기운이 없음")
+        elif n >= 2: good.append("계절의 차고 더움을 알맞게 잡아주는 기운이 충분함")
+    else:
+        joh = 0.7
+    tags_dh = _delivery_rel_tags(dj, hj)
+    if '충' in tags_dh: dh = 0.0; warn.append("일지와 시지가 서로 충돌함")
+    elif any(t in tags_dh for t in ('육합', '반합', '방합')): dh = 1.0; good.append("일지와 시지가 서로 합하여 화합함")
+    elif any(t in tags_dh for t in ('형', '원진', '해', '파')): dh = 0.3
+    else: dh = 0.7
+    ss_h = get_ss(dm, hj)
+    sj = 1.0 if ss_h in _SS_SUNYONG else 0.5
+    p_bal = _W_BALANCE * (3 * bal + 3 * joh + 2 * dh + 2 * sj) / 10.0
+
+    # ───────── 4) 신살 · 귀인 ─────────
+    raw = 0.0
+    for nm, j in (('월지', mj), ('일지', dj), ('시지', hj)):
+        if j in _CHEONEUL_MAP.get(dm, ""): raw += 2; good.append(f"{nm}에 천을귀인(귀인의 도움을 받는 기운)이 자리함")
+    for nm, j in (('일지', dj), ('시지', hj)):
+        if j == _MUNCHANG_MAP.get(dm): raw += 2; good.append(f"{nm}에 문창귀인(총명함과 학업 성취를 돕는 기운)이 자리함")
+        if j == _GEONROK_MAP.get(dm): raw += 2; good.append(f"{nm}에 건록(스스로 서는 든든한 힘)이 자리함")
+    for nm, j in (('월지', mj), ('일지', dj), ('시지', hj)):
+        if get_unsung(dm, j) == '장생': raw += 2; good.append(f"{nm}에 학당귀인(배움과 지혜를 돕는 기운)이 자리함"); break
+    if _WOLDEOK_MAP.get(mj) in gans: raw += 2; good.append("월덕귀인(조상의 덕과 복을 받는 기운)이 천간에 드러남")
+    raw = min(raw, 8.0)
+    neg = 0.0
+    yin = _YANGIN_MAP.get(dm)
+    if yin:
+        hit = [nm for nm, j in (('월지', mj), ('일지', dj), ('시지', hj)) if j == yin]
+        if hit: neg += 2 * len(hit); warn.append("양인(기운이 지나치게 강하고 날카로운 기운)이 " + "·".join(hit) + "에 있음")
+    for nm, (a_, b_) in (('월지-일지', (mj, dj)), ('일지-시지', (dj, hj))):
+        t = _delivery_rel_tags(a_, b_)
+        if '원진' in t or '귀문' in t: neg += 1
     gm = calculate_gongmang(dm, dj)
     if gm and gm != "-":
-        hit = [nm for nm, j in (('년지', jis[0]), ('월지', jis[1]), ('시지', jis[3])) if j in gm]
-        if hit:
-            score -= min(4, 2 * len(hit)); warn.append("공망(비어 있는 자리)이 " + "·".join(hit) + "에 걸림")
- 
-    # (6) 길신: 천을귀인·문창귀인·건록
-    gb = 0
-    for nm, j in (('월지', jis[1]), ('일지', jis[2]), ('시지', jis[3])):
-        if j in _CHEONEUL_MAP.get(dm, ""):
-            gb += 2; good.append(f"{nm}에 천을귀인(귀인의 도움을 받는 기운)이 자리함")
-    for nm, j in (('일지', jis[2]), ('시지', jis[3])):
-        if j == _MUNCHANG_MAP.get(dm):
-            gb += 2; good.append(f"{nm}에 문창귀인(총명함과 학업 성취를 돕는 기운)이 자리함")
-        if j == _GEONROK_MAP.get(dm):
-            gb += 2; good.append(f"{nm}에 건록(스스로 서는 든든한 힘)이 자리함")
-    score += min(gb, 8)
- 
-    # ---------- ② 부모와의 조화 ----------
+        hit = [nm for nm, j in (('년지', jis[0]), ('월지', mj), ('시지', hj)) if j in gm]
+        if hit: neg += min(3, len(hit)); warn.append("공망(비어 있는 자리)이 " + "·".join(hit) + "에 걸림")
+    neg = min(neg, 8.0)
+    p_sin = _W_SHINSAL * _delivery_clamp01(0.5 + (raw - neg) / 16.0)
+
+    # ───────── 5) 부모와의 조화 (보조) ─────────
     parents = [('아버지', _delivery_parent_info(male_pack)), ('어머니', _delivery_parent_info(female_pack))]
     par_sum = 0.0
     for who, p in parents:
@@ -2525,49 +2559,45 @@ def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=No
             par_sum += eff
             if '충' in tags: warn.append(f"아기 일지가 {who} 일지와 충돌함")
             elif '육합' in tags or '반합' in tags: good.append(f"아기 일지가 {who} 일지와 합하여 정이 깊음")
-            eff2, _t2 = _delivery_rel_effect(jis[3], p['day_ji'], _REL_SCORE_SIJI)
-            par_sum += eff2
-            eff3, _t3 = _delivery_rel_effect(jis[1], p['day_ji'], _REL_SCORE_WOLJI)
-            par_sum += eff3
+            par_sum += _delivery_rel_effect(hj, p['day_ji'], _REL_SCORE_SIJI)[0]
+            par_sum += _delivery_rel_effect(mj, p['day_ji'], _REL_SCORE_WOLJI)[0]
         if p['year_ji']:
             eff, tags = _delivery_rel_effect(jis[0], p['year_ji'], _REL_SCORE_TTI, same_bonus=0.5)
             par_sum += eff
             if '충' in tags: warn.append(f"아기 띠가 {who} 띠와 서로 충돌함")
             elif '육합' in tags or '반합' in tags: good.append(f"아기 띠가 {who} 띠와 잘 어울림")
-    score += max(-25.0, min(16.0, par_sum))
- 
-    # 부모에게 부족한 오행을 아기 사주가 채워주는가 / 같은 오행 과다를 더하지는 않는가
-    lack_w = {k: 0 for k in cnt}
-    excess_w = {k: 0 for k in cnt}
+    par_sum = max(-25.0, min(16.0, par_sum))
+    lack_w = {k: 0 for k in cnt}; excess_w = {k: 0 for k in cnt}
     for _who, p in parents:
         for k, v in p['cnt'].items():
             if v == 0: lack_w[k] += 1
             if v >= 4: excess_w[k] += 1
     fill = 0.0
     for k in cnt:
-        if lack_w[k] and cnt[k] >= 1:
-            fill += 2.0 * lack_w[k]
-            good.append(f"부모에게 부족한 {k}(오행) 기운을 채워줌")
-        if excess_w[k] and cnt[k] >= 3:
-            fill -= 2.0 * excess_w[k]
-            warn.append(f"부모에게 이미 넘치는 {k}(오행) 기운이 더 쌓임")
-    score += max(-4.0, min(6.0, fill))
- 
-    # 출산 시점 부모의 대운(지지)과 아기 사주의 조화 — parent_dw = {'아버지': '午', '어머니': '子'}
-    if parent_dw:
-        dw_sum = 0.0
-        for who, dji in parent_dw.items():
-            if not dji:
-                continue
-            e1, t1 = _delivery_rel_effect(dj, dji, _REL_SCORE_DW, same_bonus=0.5)
-            e2, _t2 = _delivery_rel_effect(jis[1], dji, _REL_SCORE_DW, same_bonus=0.0)
-            dw_sum += e1 + 0.5 * e2
-            if '충' in t1: warn.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 충돌함")
-            elif '육합' in t1 or '반합' in t1: good.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 합하여 힘이 됨")
-        score += max(-10.0, min(6.0, dw_sum))
+        if lack_w[k] and cnt[k] >= 1: fill += 2.0 * lack_w[k]; good.append(f"부모에게 부족한 {k}(오행) 기운을 채워줌")
+        if excess_w[k] and cnt[k] >= 3: fill -= 2.0 * excess_w[k]; warn.append(f"부모에게 이미 넘치는 {k}(오행) 기운이 더 쌓임")
+    fill = max(-4.0, min(6.0, fill))
+    dw_sum = 0.0
+    for who, dji in (parent_dw or {}).items():
+        if not dji: continue
+        e1, t1 = _delivery_rel_effect(dj, dji, _REL_SCORE_DW, same_bonus=0.5)
+        e2, _t2 = _delivery_rel_effect(mj, dji, _REL_SCORE_DW, same_bonus=0.0)
+        dw_sum += e1 + 0.5 * e2
+        if '충' in t1: warn.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 충돌함")
+        elif '육합' in t1 or '반합' in t1: good.append(f"출산 시점 {who}의 대운({dji})이 아기 일지와 합하여 힘이 됨")
+    dw_sum = max(-10.0, min(6.0, dw_sum))
+    p_par = _W_PARENT * _delivery_clamp01(0.6 + (par_sum + fill + dw_sum) / 40.0)
 
-    final = round(max(50.0, min(98.0, score)), 1)
-    return final, list(dict.fromkeys(good)), list(dict.fromkeys(warn))
+    parts = {'월령': round(p_wol, 1), '일주': round(p_il, 1), '균형·조후·시주': round(p_bal, 1),
+             '신살·귀인': round(p_sin, 1), '부모조화': round(p_par, 1)}
+    total = round(p_wol + p_il + p_bal + p_sin + p_par, 1)
+    return {'total': total, 'parts': parts, 'good': list(dict.fromkeys(good)), 'warn': list(dict.fromkeys(warn))}
+
+
+def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
+    """(예전 호출 방식 호환) 합계 점수와 장점·유의점 목록만 돌려줍니다."""
+    r = _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw)
+    return r['total'], r['good'], r['warn']
 
 def _delivery_slot_charts(delivery_date):
     """해당 날짜의 12개 시간대별 아기 사주(년·월·일·시)를 만듭니다. (년·월주는 절기 기준)"""
@@ -2603,9 +2633,10 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_d
     """한 날짜의 12개 시간대를 각각 완성 사주로 채점하여 높은 순으로 반환합니다."""
     evaluated = []
     for slot, y_p, m_p, d_p, h_p in _delivery_slot_charts(delivery_date):
-        sc, good, warn = evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw)
+        _r = _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw)
+        sc, good, warn = _r['total'], _r['good'], _r['warn']
         evaluated.append({
-            'time_str': slot['time_str'], 'ji': slot['ji'], 'score': sc, 'daytime': slot['daytime'],
+            'time_str': slot['time_str'], 'ji': slot['ji'], 'score': sc, 'daytime': slot['daytime'], 'parts': _r['parts'],
             'pillars': f"{y_p}년 {m_p}월 {d_p}일 {h_p}시", 'time_pillar': h_p, 'year_pillar': y_p,
             'chart': (y_p, m_p, d_p, h_p), 'hm': slot['hm'],
             'good': good, 'warn': warn,
@@ -2613,7 +2644,7 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_d
     evaluated.sort(key=lambda x: x['score'], reverse=True)
     return evaluated
 
-def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None):
+def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None, baby_gender='미정'):
     """
     출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
     - male_pack / female_pack : [시주, 일주, 월주, 년주] 순서의 간지 리스트 (예: ["壬子","戊寅","庚申","癸酉"])
@@ -2681,22 +2712,74 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
         })
         cur += dt_mod.timedelta(days=1)
  
+    # ── 2단계: 1차 점수 상위 후보에만 아기 대운 흐름(5점)을 더해 최종 순위를 정함 ──
+    def _apply_flow(item):
+        sb = next((x for x in item['all_time_slots'] if x['time_str'] == item['best_time']['time_str']), None)
+        if not sb:
+            return False
+        flows = {}
+        for g, key in (('남아', '남성'), ('여아', '여성')):
+            bd = get_baby_daewun_info(sb['chart'], item['delivery_dt'], sb['hm'], key)
+            sc_, steps_ = _daewun_flow_score(bd['list'])
+            flows[g] = {'score': sc_, 'steps': steps_, 'info': bd}
+        use = [g for g in ('남아', '여아') if baby_gender in ('미정', g)] or ['남아', '여아']
+        flow_pts = round(sum(flows[g]['score'] for g in use) / len(use), 2)
+        item['score_stage1'] = item['score']
+        item['flow'] = flows
+        item['flow_pts'] = flow_pts
+        item['score'] = round(item['score'] + flow_pts, 1)
+        return True
+
     candidates.sort(key=lambda x: x['score'], reverse=True)
+    head = [c for c in candidates[:30] if _apply_flow(c)]
+    head.sort(key=lambda x: x['score'], reverse=True)
     picked = []
-    for item in candidates:
+    for item in head:
         if not any(abs((item['delivery_dt'] - s['delivery_dt']).days) < min_gap_days for s in picked):
             picked.append(item)
             if len(picked) >= top_n:
                 break
+    if len(picked) < top_n:       # 상위 30개가 한 시기에 몰려 5개를 못 채우면, 다음 후보들에서 이어서 채움
+        for item in candidates[30:150]:
+            if any(abs((item['delivery_dt'] - s['delivery_dt']).days) < min_gap_days for s in picked):
+                continue
+            if _apply_flow(item):
+                picked.append(item)
+                if len(picked) >= top_n:
+                    break
+        picked.sort(key=lambda x: x['score'], reverse=True)
     # 뽑힌 날짜에만 아기 대운표 데이터(남아·여아)를 계산해 붙임
     for item in picked:
         slot_best = next((x for x in item['all_time_slots'] if x['time_str'] == item['best_time']['time_str']), None)
         if slot_best:
             item['chart'] = slot_best['chart']
-            item['baby_daewun'] = {g: get_baby_daewun_info(slot_best['chart'], item['delivery_dt'], slot_best['hm'], key)
-                                   for g, key in (('남아', '남성'), ('여아', '여성'))}
+            item['baby_daewun'] = {g: item['flow'][g]['info'] for g in ('남아', '여아')}
+            item['score_detail'] = dict(slot_best.get('parts', {}), 대운흐름=item.get('flow_pts', 0.0))
             item['first_samjae'] = get_baby_first_samjae_text(item['delivery_dt'].year, slot_best['chart'][0][1])
     return picked
+
+def _daewun_flow_score(dw_list):
+    """아기 대운 10개(dw_list)가 '10대 인성 → 20대 비겁 → 30대 식상 → 40대 재성 → 50대 관성' 순서와 얼마나 맞는지 0~_W_DAEWUN점으로 채점.
+    천간이 맞으면 0.6, 지지가 맞으면 0.4를 줍니다. 반환: (점수, 단계별 설명 목록)"""
+    total, steps = 0.0, []
+    for age, ideal in _DAEWUN_IDEAL:
+        seg = None
+        for dw in dw_list:
+            try:
+                s0 = int(str(dw['age_range']).split('~')[0])
+            except Exception:
+                continue
+            if s0 <= age < s0 + 10:
+                seg = dw; break
+        if not seg:
+            steps.append(f"{age // 10 * 10}대 {ideal} 자리 대운 없음"); continue
+        gg, jg = _SS_GROUP.get(seg['ss_gan']), _SS_GROUP.get(seg['ss_ji'])
+        pts = (0.6 if gg == ideal else 0.0) + (0.4 if jg == ideal else 0.0)
+        total += pts
+        mark = "일치" if pts >= 1.0 else ("부분 일치" if pts > 0 else "불일치")
+        steps.append(f"{age // 10 * 10}대 {ideal}자리 {seg['c_hanja']}{seg['j_hanja']}({gg}/{jg}) {mark}")
+    return round(total / len(_DAEWUN_IDEAL) * _W_DAEWUN, 2), steps
+
 
 def get_baby_daewun_info(chart, delivery_dt, hm, gender):
     """아기 완성 사주 chart=(년주, 월주, 일주, 시주)로 성별(gender='남성'/'여성')별 대운표 데이터를 만듭니다.
@@ -2758,11 +2841,19 @@ def get_delivery_facts_str(best_days):
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
+        if d.get('score_detail'):
+            sd = d['score_detail']
+            lines.append(f"   └ 점수 구성(만점): 월령 {sd.get('월령', 0)}/{_W_WOLRYEONG} · 일주 {sd.get('일주', 0)}/{_W_ILJU} · 균형·조후·시주 {sd.get('균형·조후·시주', 0)}/{_W_BALANCE} · "
+                         f"신살·귀인 {sd.get('신살·귀인', 0)}/{_W_SHINSAL} · 부모조화 {sd.get('부모조화', 0)}/{_W_PARENT} · 대운흐름 {sd.get('대운흐름', 0)}/{_W_DAEWUN}")
+        if d.get('flow'):
+            for g in ('남아', '여아'):
+                f_ = d['flow'][g]
+                lines.append(f"   └ {g} 대운 흐름 점수 {f_['score']}/{_W_DAEWUN}: " + "; ".join(f_['steps']))
         if d.get('parent_dw'):
             lines.append("   └ 출산 시점 부모 대운: " + " / ".join(f"{w} {v['age']}세 (대운 {v['range']} {v['gz']})" for w, v in d['parent_dw'].items()))
         if d.get('baby_daewun'):
             for g in ('남아', '여아'):
                 bd = d['baby_daewun'][g]
                 seq = ", ".join(f"{x['age_range']} {x['c_hanja']}{x['j_hanja']}({x['ss_gan']}/{x['ss_ji']}, {x['un_sung']})" for x in bd['list'][:8])
-                lines.append(f"   └ {g} 대운({bd['dir']}, 대운수 {bd['calc_d']}): {seq}")            
+                lines.append(f"   └ {g} 대운({bd['dir']}, 대운수 {bd['calc_d']}): {seq}")
     return "\n".join(lines)
