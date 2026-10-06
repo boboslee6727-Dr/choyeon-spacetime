@@ -608,40 +608,56 @@ def get_gunghap_three_page_report(male_saju_html, m_ess, female_saju_html, f_ess
     return f"{m_page}{f_page}{g_page}"
  
 def get_delivery_summary_box(best_days):
-    """출산 길일 한눈에 보기 요약 상자 (순위당 한 줄 표: 출산일·점수·자연분만·낮 시간대·합궁 가임기간)"""
-    def _md(s):
-        try:
-            return f"{int(s[5:7])}/{int(s[8:10])}"
-        except Exception:
-            return str(s)
-
+    """출산 길일 한눈에 보기 요약 상자 (순위당 2줄: 1줄=출산일·점수·시간·가임기간, 2줄=사주팔자·상위%·낮 시주·최적일)"""
     def _t(s):
         return str(s).replace(" ~ ", "~")
 
+    def _span(a, b):
+        try:
+            y1, m1, d1 = int(a[:4]), int(a[5:7]), int(a[8:10])
+            y2, m2, d2 = int(b[:4]), int(b[5:7]), int(b[8:10])
+        except Exception:
+            return f"{a}~{b}"
+        return f"{y1}.{m1}/{d1}~{m2}/{d2}" if y1 == y2 else f"{y1}.{m1}/{d1}~{y2}.{m2}/{d2}"
+
+    def _saju(s):
+        """'丁未년 丁未월 乙卯일 庚辰시' → 일주만 진하게"""
+        parts = str(s).split()
+        if len(parts) == 4:
+            parts[2] = f"<b style='color:#1A237E;'>{parts[2]}</b>"
+        return " ".join(parts)
+
+    small = "font-size:10.5px; color:#555;"
     rows = ""
     for idx, d in enumerate(best_days or []):
         dt = d.get('delivery_dt')
         date_txt = f"{dt.year}.{dt.month:02d}.{dt.day:02d}({d.get('weekday_kr', '')})" if dt else str(d.get('date', ''))
         t_any = _t(d['best_time']['time_str'])
-        t_day = _t(d.get('best_day_time', {}).get('time_str', d['best_time']['time_str']))
-        conc = ""
+        day_t = d.get('best_day_time', {})
+        t_day = _t(day_t.get('time_str', d['best_time']['time_str']))
+        day_pillar = day_t.get('time_pillar', '')
+        day_sub = f"<span style='{small}'>시주 {day_pillar}</span>" if day_pillar and day_pillar != d['best_time'].get('time_pillar') else f"<span style='{small}'>(같은 시주)</span>"
+        conc1 = conc2 = ""
         if d.get('conception_start'):
-            conc = f"{_md(d['conception_start'])}~{_md(d['conception_end'])} (최적 {_md(d['conception_date'])})"
+            best = d['conception_date']
+            conc1 = _span(d['conception_start'], d['conception_end'])
+            conc2 = f"<span style='{small}'>(최적 {int(best[5:7])}/{int(best[8:10])})</span>"
+        top = f"<span style='{small}'>상위 {d['top_pct']}%</span>" if d.get('top_pct') is not None else ""
         bg = "#FFFFFF" if idx % 2 == 0 else "#F7F8FC"
         rows += (f"<tr style='background:{bg};'>"
                  f"<td style='text-align:center; font-weight:900;'>🏅 {idx+1}</td>"
-                 f"<td style='text-align:center; font-weight:900;'>{date_txt}</td>"
-                 f"<td style='text-align:center; font-weight:900; color:#C62828;'>{d['score']}</td>"
-                 f"<td style='text-align:center;'>{t_any}</td>"
-                 f"<td style='text-align:center;'>{t_day}</td>"
-                 f"<td style='text-align:center;'>{conc}</td></tr>")
+                 f"<td style='text-align:center;'><span style='font-weight:900;'>{date_txt}</span><br><span style='font-size:11px;'>{_saju(d.get('four_pillars', ''))}</span></td>"
+                 f"<td style='text-align:center;'><span style='font-weight:900; color:#C62828;'>{d['score']}</span><br>{top}</td>"
+                 f"<td style='text-align:center;'>{t_any}<br><span style='{small}'>(자연분만 우선)</span></td>"
+                 f"<td style='text-align:center;'>{t_day}<br>{day_sub}</td>"
+                 f"<td style='text-align:center;'>{conc1}<br>{conc2}</td></tr>")
     th = "style='background:#1A237E; color:#FFFFFF; font-weight:900; padding:6px 4px; text-align:center;'"
     return f"""
     <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:12px 12px 10px 12px; margin-top:12px; margin-bottom:12px; font-family:'Nanum Myeongjo', serif;">
         <div style="color:#1A237E; font-weight:900; font-size:15px; margin-bottom:8px;">📋 출산 길일 한눈에 보기 (최적 길일 로드맵)</div>
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; line-height:1.4; color:#2C3E50;">
-            <colgroup><col style="width:7%"><col style="width:19%"><col style="width:8%"><col style="width:21%"><col style="width:21%"><col style="width:24%"></colgroup>
-            <tr><th {th}>순위</th><th {th}>출산일</th><th {th}>점수</th><th {th}>자연분만</th><th {th}>낮(제왕절개)</th><th {th}>합궁 가임기간</th></tr>
+        <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; line-height:1.45; color:#2C3E50;">
+            <colgroup><col style="width:5%"><col style="width:27%"><col style="width:9%"><col style="width:17%"><col style="width:16%"><col style="width:26%"></colgroup>
+            <tr><th {th}>순위</th><th {th}>출산일 / 사주팔자</th><th {th}>점수</th><th {th}>자연분만</th><th {th}>낮(제왕절개)</th><th {th}>가임기간</th></tr>
             {rows}
         </table>
     </div>
