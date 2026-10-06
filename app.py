@@ -1657,7 +1657,7 @@ if st.session_state.get('app_running', False):
         
         if raw_response and isinstance(raw_response, str):
             clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
-            ai_output_html = html_views.format_ai_text_to_html(clean_raw, applicant_name=name)
+            ai_output_html = html_views.format_ai_text_to_html(clean_raw, applicant_name=name, extra_names=[p_name_val] if 'p_name_val' in locals() and p_name_val else [])
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
 
@@ -1852,14 +1852,11 @@ if st.session_state.get('app_running', False):
             # 3-3. 출산 택일 (엔진이 계산한 TOP5 요약 상자 + 순위별 아기 사주표·마스터바·대운표 삽입)
             delivery_summary_code = html_views.get_delivery_summary_box(delivery_best_days) if hasattr(html_views, 'get_delivery_summary_box') else ""
             if delivery_best_days:
-                delivery_summary_code += ("<div style='font-size:13px; color:#555; margin:-8px 0 18px 0; line-height:1.7;'>"
-                                          "※ 자연분만은 진통이 오는 시각을, 제왕절개는 정해진 수술 시각을 따릅니다. 유도분만은 날짜는 정할 수 있으나 출생 시각은 진행 속도에 따라 달라지므로 시간대는 참고용입니다. "
-                                          "분만 방식과 시기는 임신 경과와 산모·아기 상태에 따른 담당 의료진의 판단이 우선입니다.</div>")
+                delivery_summary_code += ("<div style='font-size:13px; color:#555; margin:0 0 6px 0; line-height:1.6;'>"
+                                          "※ 자연분만은 진통이 오는 시각, 제왕절개는 정한 수술 시각을 따르며, 유도분만은 날짜만 정할 수 있어 시간대는 참고용입니다. "
+                                          "분만 방식과 시기는 담당 의료진의 판단이 우선입니다.</div>")
             delivery_summary_code = f"<div style='break-inside: avoid; page-break-inside: avoid;'>{delivery_summary_code}</div>"
             formatted_ai = sub_marker(current_ai, 'WEEKLY_CALENDAR_HERE', delivery_summary_code)
-            # "2. 추천 길일…" 제목부터 새 페이지에서 시작 (요약 상자가 두 쪽에 걸치지 않도록)
-            formatted_ai = re.sub(r"(<div class='ai-title-l1'[^>]*><b>2\.\s)", r"<div style='break-before: page; page-break-before: always;'></div>\1", formatted_ai)
-
             _baby_gender = st.session_state.get('baby_gender', '미정')
             _OH_KR = ['목', '화', '토', '금', '수']
 
