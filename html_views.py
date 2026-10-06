@@ -86,7 +86,7 @@ def get_global_css():
     </style>
     """
  
-def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=None)
+def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=None):
     """
     프롬프트 규칙 4번 대응 포맷터:
     대제목(1.), 중제목(1)), 소제목((1)), 소소제목(①②③), 강조기호(◆▶▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
