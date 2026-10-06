@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.6 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 87.7 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.6 Master"
+APP_VERSION = "ver 87.7 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -570,7 +570,10 @@ else:
                 with st.spinner("📄 인쇄 준비 중입니다... (잠시만 기다려 주세요)"):
                     _pdf_bytes = generate_pdf_bytes(_saved_html)
                 _pn = re.sub(r'[^\w가-힣]', '', re.sub(r'\d-\d\.\s*', '', str(u_product).split('(')[0]))
-                _fname = "_".join([x for x in (st.session_state.get('u_n', ''), _pn, st.session_state.get('last_order_id', '')) if x]) + ".pdf"
+                _parts = (st.session_state.get('u_n', ''), _pn, st.session_state.get('last_order_id', ''))
+                if str(u_product).startswith("3-") and 'm_name_val' in globals() and 'f_name_val' in globals():
+                    _parts = (re.sub(r'[^\w가-힣]', '', str(m_name_val)), re.sub(r'[^\w가-힣]', '', str(f_name_val)), st.session_state.get('last_order_id', ''))
+                _fname = "_".join([x for x in _parts if x]) + ".pdf"
                 st.download_button("⬇️ PDF 파일로 저장", data=_pdf_bytes, file_name=_fname, mime="application/pdf", key="dl_pdf_named")
                 import base64 as _b64
                 _pdf_b64 = _b64.b64encode(_pdf_bytes).decode('utf-8')
