@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: (ver 86.9) 신청접수 ~ AI 감명 ~ 솔라피 가동
+# 🏮 사주박사: (ver 87.7) 신청접수 ~ AI 감명 ~ 솔라피 가동
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -924,7 +924,11 @@ def render_admin_panel():
 
                 pdf_url = None
                 with st.spinner("📄 PDF 파일을 만들어 저장고에 안전하게 저장하는 중..."):
-                    pdf_url = generate_and_upload_pdf(gid, row['name'], st.session_state[f"html_{gid}"])
+                    pdf_label = row['name']
+                    if "3-" in str(row.get('u_product', '')) and row.get('f_name'):
+                        _m, _f = (row['name'], row['f_name']) if row.get('gender') == "남성" else (row['f_name'], row['name'])
+                        _pdf_label = f"{_m}_{_f}"
+                    pdf_url = generate_and_upload_pdf(gid, _pdf_label, st.session_state[f"html_{gid}"])
                 if pdf_url:
                     with st.spinner("⏳ PDF 주소가 열릴 때까지 확인 중입니다 (최대 4분)..."):
                         pdf_ready = wait_until_pdf_opens(pdf_url)
