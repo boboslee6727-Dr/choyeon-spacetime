@@ -570,10 +570,12 @@ else:
                 with st.spinner("📄 인쇄 준비 중입니다... (잠시만 기다려 주세요)"):
                     _pdf_bytes = generate_pdf_bytes(_saved_html)
                 _pn = re.sub(r'[^\w가-힣]', '', re.sub(r'\d-\d\.\s*', '', str(u_product).split('(')[0]))
-                _parts = (st.session_state.get('u_n', ''), _pn, st.session_state.get('last_order_id', ''))
+                _oid = str(st.session_state.get('last_order_id', '') or '')[:8]
                 if str(u_product).startswith("3-") and 'm_name_val' in globals() and 'f_name_val' in globals():
-                    _parts = (re.sub(r'[^\w가-힣]', '', str(m_name_val)), re.sub(r'[^\w가-힣]', '', str(f_name_val)), st.session_state.get('last_order_id', ''))
-                _fname = "_".join([x for x in _parts if x]) + ".pdf"
+                    _names = [re.sub(r'[^\w가-힣]', '', str(m_name_val)), re.sub(r'[^\w가-힣]', '', str(f_name_val))]
+                else:
+                    _names = [re.sub(r'[^\w가-힣]', '', str(st.session_state.get('u_n', '')))]
+                _fname = "_".join([x for x in _names + [_pn, _oid] if x]) + ".pdf"
                 st.download_button("⬇️ PDF 파일로 저장", data=_pdf_bytes, file_name=_fname, mime="application/pdf", key="dl_pdf_named")
                 import base64 as _b64
                 _pdf_b64 = _b64.b64encode(_pdf_bytes).decode('utf-8')
@@ -1045,7 +1047,8 @@ if st.session_state.get('app_running', False):
                         _d_start, _d_end, male_data_pack, female_data_pack,
                         st.session_state.get('last_period_date', None),
                         st.session_state.get('period_cycle', 30),
-                        parent_dw_info=_parent_dw_info)
+                        parent_dw_info=_parent_dw_info,
+                        baby_gender=st.session_state.get('baby_gender', '미정'))
                     delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days)
                 except Exception as e:
                     st.error(f"⚠️ 출산 택일 계산 오류: {e}")
