@@ -542,13 +542,29 @@ else:
                 run_delivery_calc = st.checkbox("👶 출산택일 정밀 분석 가동", value=True, key="run_delivery_calc_cb", on_change=stop_ai)
                 if run_delivery_calc:
                     today_dt = dt_mod.date.today()
-                    last_period_date = st.date_input("마지막 생리 시작일", value=today_dt - dt_mod.timedelta(days=30), key="last_period_date", on_change=stop_ai)
-                    period_cycle = st.number_input("평균 생리 주기 (일)", 20, 45, value=30, key="period_cycle", on_change=stop_ai)
+
+                    def _sync_delivery_dates():
+                        """마지막 생리 시작일·주기가 바뀌면 출산 희망 기간(탐색 시작·종료일)을 자동으로 맞춥니다. (이후 직접 고치셔도 됩니다)"""
+                        try:
+                            _s = engine.get_earliest_delivery_start(st.session_state['last_period_date'], st.session_state.get('period_cycle', 30))
+                            st.session_state['delivery_start_date'] = _s
+                            st.session_state['delivery_end_date'] = _s + dt_mod.timedelta(days=365)
+                        except Exception:
+                            pass
+                        stop_ai()
+
+                    last_period_date = st.date_input("마지막 생리 시작일", value=today_dt - dt_mod.timedelta(days=30), key="last_period_date", on_change=_sync_delivery_dates)
+                    period_cycle = st.number_input("평균 생리 주기 (일)", 20, 45, value=30, key="period_cycle", on_change=_sync_delivery_dates)
+                    try:
+                        _auto_start = engine.get_earliest_delivery_start(last_period_date, period_cycle)
+                    except Exception:
+                        _auto_start = today_dt
                     col_d1, col_d2 = st.columns(2)
-                    delivery_start_date = col_d1.date_input("탐색 시작일", value=today_dt, key="delivery_start_date", on_change=stop_ai)
-                    delivery_end_date = col_d2.date_input("탐색 종료일", value=today_dt + dt_mod.timedelta(days=365), key="delivery_end_date", on_change=stop_ai)
+                    delivery_start_date = col_d1.date_input("탐색 시작일", value=_auto_start, key="delivery_start_date", on_change=stop_ai)
+                    delivery_end_date = col_d2.date_input("탐색 종료일", value=_auto_start + dt_mod.timedelta(days=365), key="delivery_end_date", on_change=stop_ai)
                     baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], key="baby_gender", on_change=stop_ai)
-                    st.caption("※ 마지막 생리 시작일은 '가장 최근 생리 첫날', 탐색 시작·종료일은 '출산 희망 기간'입니다. 후보 출산일은 임신 39주~41주 사이(계획 분만 기준)에서 고릅니다.")
+                    st.caption("※ 탐색 시작·종료일은 마지막 생리 시작일과 주기에서 자동으로 채워집니다(가장 이른 출산 가능일부터 1년). 필요하면 직접 고치세요. 후보 출산일은 임신 39주~41주 사이(계획 분만 기준)에서 고릅니다.")
+
             elif "4-2." in u_product:
                 st.markdown("---")
                 compare_mode = st.radio("대조 분석 모드", ["전통 명리학과 1:1 자동 대조", "외부 타 감명서 원문 대조"], index=0, key="compare_mode_2")
