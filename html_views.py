@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 87.1 - engine.py와 동일한 기준으로 구조 재정리판)
+# html_views.py (ver 87.7 - engine.py와 동일한 기준으로 구조 재정리판)
 # 재정리 기준: 공용 CSS/포맷터 -> 공통 사주표 컴포넌트 -> 서술형 안내문구 ->
 #              궁합/택일 부가 컴포넌트 -> 초연 시공명리 "타 감명서 비교" 전용 렌더링(맨 마지막)
 # 함수 로직은 전혀 수정하지 않았고, 배치 순서와 섹션 주석만 재정리했습니다.
@@ -86,7 +86,7 @@ def get_global_css():
     </style>
     """
  
-def format_ai_text_to_html(text, qna_text="", applicant_name=""):
+def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=None)
     """
     프롬프트 규칙 4번 대응 포맷터:
     대제목(1.), 중제목(1)), 소제목((1)), 소소제목(①②③), 강조기호(◆▶▷), 일반 본문을 완벽 구분하여 굵은체 및 규격 렌더링
@@ -125,9 +125,10 @@ def format_ai_text_to_html(text, qna_text="", applicant_name=""):
         line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<span style=\'font-weight:600;\'>"\1"</span>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
         # 🚨 이름 강조는 반드시 따옴표 처리가 다 끝난 '뒤'에, 이 줄에만 적용 (순서 중요!)
-        if applicant_name and applicant_name.strip():
-            _name = re.escape(applicant_name.strip())
-            line_formatted = re.sub(rf"(?<!['\">])({_name}님)(?!['\"<])", r"<span style='font-weight:600;'>\1</span>", line_formatted)
+        for _nm in [applicant_name] + list(extra_names or []):
+            if _nm and str(_nm).strip():
+                _name = re.escape(str(_nm).strip())
+                line_formatted = re.sub(rf"(?<!['\">])({_name}님)(?!['\"<])", r"<span style='font-weight:600;'>\1</span>", line_formatted)
         
         if re.match(r'^\d+\.\s*', line_formatted):
             html_lines.append(f"<div class='ai-title-l1' style='font-size: 22px !important; font-weight: 900 !important; color: #000000 !important; text-align: left !important; margin-top: 40px !important; margin-bottom: 22px !important; border-bottom: 3px solid #000000 !important; padding-bottom: 10px !important; letter-spacing: -0.5px !important; line-height: 1.4 !important; display: block !important; width: 100% !important; font-family: \"Noto Serif KR\", serif !important;'><b>{line_formatted}</b></div>")
