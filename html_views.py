@@ -657,7 +657,7 @@ def get_delivery_summary_box(best_days):
     <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:12px 12px 10px 12px; margin-top:12px; margin-bottom:12px; font-family:'Nanum Myeongjo', serif;">
         <div style="color:#1A237E; font-weight:900; font-size:15px; margin-bottom:8px;">📋 출산 길일 한눈에 보기 (최적 길일 로드맵)</div>
         <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; line-height:1.45; color:#2C3E50;">
-            <colgroup><col style="width:6%"><col style="width:25%"><col style="width:9%"><col style="width:19%"><col style="width:18%"><col style="width:23%"></colgroup>
+            <colgroup><col style="width:6%"><col style="width:32%"><col style="width:8%"><col style="width:16%"><col style="width:17%"><col style="width:21%"></colgroup>
             <tr><th {th}>순위</th><th {th}>출산일 / 사주팔자</th><th {th}>점수</th><th {th}>자연분만</th><th {th}>낮(제왕절개)</th><th {th}>가임기간</th></tr>
             {rows}
         </table>
