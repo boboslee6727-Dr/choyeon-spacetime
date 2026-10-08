@@ -47,6 +47,7 @@ def get_global_css():
     div.stButton > button[kind="secondary"], div.stButton > button[data-testid="baseButton-secondary"] { background-color: #00A843 !important; color: #FFFFFF !important; border: none !important; height: 50px !important; font-weight: 900 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important; }
     div.stButton > button[kind="secondary"]:hover, div.stButton > button[data-testid="baseButton-secondary"]:hover { background-color: #008937 !important; color: #FFFFFF !important; }
     /* 통변 제목 및 본문 스타일 */
+    .sub-title, .ai-title-l1 { break-after: avoid; page-break-after: avoid; } p { orphans: 2; widows: 2; }
     .sub-title, .ai-title-l2 { font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
     .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .content-box-loose { margin-bottom: 25px !important; }
@@ -651,12 +652,12 @@ def get_delivery_summary_box(best_days):
                  f"<td style='text-align:center;'>{t_any}<br><span style='{small}'>(자연분만 우선)</span></td>"
                  f"<td style='text-align:center;'>{t_day}<br>{day_sub}</td>"
                  f"<td style='text-align:center;'>{conc1}<br>{conc2}</td></tr>")
-    th = "style='background:#1A237E; color:#FFFFFF; font-weight:900; padding:6px 4px; text-align:center;'"
+    th = "style='background:#1A237E; color:#FFFFFF; font-weight:900; padding:5px 2px; text-align:center; white-space:nowrap;'"
     return f"""
     <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:12px 12px 10px 12px; margin-top:12px; margin-bottom:12px; font-family:'Nanum Myeongjo', serif;">
         <div style="color:#1A237E; font-weight:900; font-size:15px; margin-bottom:8px;">📋 출산 길일 한눈에 보기 (최적 길일 로드맵)</div>
         <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; line-height:1.45; color:#2C3E50;">
-            <colgroup><col style="width:5%"><col style="width:27%"><col style="width:9%"><col style="width:17%"><col style="width:16%"><col style="width:26%"></colgroup>
+            <colgroup><col style="width:6%"><col style="width:25%"><col style="width:9%"><col style="width:19%"><col style="width:18%"><col style="width:23%"></colgroup>
             <tr><th {th}>순위</th><th {th}>출산일 / 사주팔자</th><th {th}>점수</th><th {th}>자연분만</th><th {th}>낮(제왕절개)</th><th {th}>가임기간</th></tr>
             {rows}
         </table>
