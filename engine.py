@@ -2651,15 +2651,35 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
     elif mx == 4: bal *= 0.7
     if missing == 0: good.append("오행이 빠짐없이 고르게 갖춰짐")
     elif missing >= 3: warn.append("오행이 3가지 이상 비어 있어 한쪽으로 치우침")
-    p_oh = _W_OHAENG * bal
+    p_oh = _W_OHAENG * 0.5 * bal
     T = sum(_OH_TEMP.get(get_color(c), 0) for c in gans + jis)
     joh = _delivery_clamp01(1.0 - abs(T) / 8.0)
     if abs(T) <= 2: good.append("사주 전체의 차고 더움이 고르게 균형을 이룸")
     elif T <= -6: warn.append("사주 전체가 지나치게 차가운 쪽으로 치우침")
     elif T >= 6: warn.append("사주 전체가 지나치게 뜨거운 쪽으로 치우침")
-    p_joh = _W_JOHU * joh
+    p_joh = _W_JOHU * 0.5 * joh
     gm_frac, g5, w5 = _delivery_gongmang(dm, dj, yj, mj, hj); good += g5; warn += w5
     p_gm = _W_GONGMANG * gm_frac
+
+    # ═════════ 신강신약(4점): 월지>일지>시지·월간>년지·시간>년간 힘 배점, 신약이면 인성 받침 우대 ═════════
+    _W7 = [(yg, 0.8), (mg, 1.2), (hg, 1.0), (yj, 1.0), (mj, 3.0), (dj, 1.5), (hj, 1.2)]
+    _tot7 = sum(w for _c, w in _W7)
+    _help7 = sum(w for c, w in _W7 if get_ss(dm, c) in ('비견', '겁재', '정인', '편인'))
+    _in7 = sum(w for c, w in _W7 if get_ss(dm, c) in ('정인', '편인'))
+    ratio = _help7 / _tot7
+    in_share = _in7 / _tot7
+    bal_s = max(0.0, 1.0 - abs(ratio - 0.5) / 0.5)
+    if ratio >= 0.55:
+        gangyak = '신강'; g_s = bal_s
+        if ratio >= 0.70: warn.append("일간의 힘이 지나치게 강해 기운이 넘침(극신강)")
+    elif ratio <= 0.45:
+        gangyak = '신약'; g_s = 0.5 * bal_s + 0.5 * _delivery_clamp01(in_share / 0.25)
+        if in_share >= 0.2: good.append("일간이 다소 여리지만 인성(어머니 같은 보살핌의 기운)이 든든히 받쳐 줌")
+        else: warn.append("일간이 여린데 받쳐 줄 인성(보살핌의 기운)이 부족함")
+    else:
+        gangyak = '중화'; g_s = 1.0
+        good.append("일간의 힘이 지나치지도 모자라지도 않은 중화")
+    p_gy = 4.0 * g_s
 
     # ═════════ 부모와의 조화 (보조) ═════════
     parents = [('아버지', _delivery_parent_info(male_pack)), ('어머니', _delivery_parent_info(female_pack))]
@@ -2702,9 +2722,18 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
     parts = {'일지': round(p_ilji, 1), '월지': round(p_wolji, 1), '시지': round(p_siji, 1), '월간': round(p_wolgan, 1),
              '년지': round(p_nyeonji, 1), '시간': round(p_sigan, 1), '년간': round(p_nyeongan, 1),
              '오행': round(p_oh, 1), '조후': round(p_joh, 1), '공망': round(p_gm, 1), '부모조화': round(p_par, 1)}
-    total = round(p_ilji + p_wolji + p_siji + p_wolgan + p_nyeonji + p_sigan + p_nyeongan + p_oh + p_joh + p_gm + p_par, 1)
-    return {'total': total, 'parts': parts, 'good': list(dict.fromkeys(good)), 'warn': list(dict.fromkeys(warn))}
 
+    # ═════════ 복음(같은 간지 기둥이 겹침) 감점: 겹친 쌍마다 -5점, 최대 -10점 ═════════
+    _p4 = [y_p, m_p, d_p, h_p]
+    _pairs = sum(1 for i in range(4) for j in range(i + 1, 4) if _p4[i] == _p4[j])
+    fukeum = -min(_pairs, 2) * 3.0
+    if _pairs:
+        _dup = [p for p in dict.fromkeys(_p4) if _p4.count(p) >= 2]
+        warn.append(f"{', '.join(_dup)} 같은 기둥이 겹쳐(복음) 기운이 한쪽으로 쏠리고 답답해질 수 있음")
+    parts['복음'] = fukeum
+    parts['신강신약'] = round(p_gy, 1)
+    total = round(p_ilji + p_wolji + p_siji + p_wolgan + p_nyeonji + p_sigan + p_nyeongan + p_oh + p_joh + p_gm + p_par + p_gy + fukeum, 1)
+    return {'total': total, 'parts': parts, 'gangyak': gangyak, 'good': list(dict.fromkeys(good)), 'warn': list(dict.fromkeys(warn))}
 
 def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
     """(예전 호출 방식 호환) 합계 점수와 장점·유의점 목록만 돌려줍니다."""
