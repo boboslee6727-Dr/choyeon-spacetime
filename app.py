@@ -88,6 +88,37 @@ def load_choyeon_db():
 
 choyeon_db = load_choyeon_db()
 
+
+def _save_report_to_db(html_text):
+    """감명서를 주문표(result_html)에 보관 — 앱이 다시 시작돼도 AI를 다시 부르지 않고 불러오기 위함"""
+    oid = str(st.session_state.get('last_order_id', '') or '')
+    if not oid or not html_text:
+        return
+    try:
+        from pipeline_manager import get_supabase_client
+        get_supabase_client().table("orders").update({"result_html": html_text}).eq("order_id", oid).execute()
+    except Exception as e:
+        st.toast(f"⚠️ 감명서 보관 실패: {e}")
+
+
+def _load_report_from_db():
+    """임시 기억이 비었을 때 보관해 둔 감명서를 불러옴 (주문번호가 없으면 가장 최근 보관본)"""
+    try:
+        from pipeline_manager import get_supabase_client
+        oid = str(st.session_state.get('last_order_id', '') or '')
+        q = get_supabase_client().table("orders").select("order_id,result_html")
+        if oid:
+            r = q.eq("order_id", oid).limit(1).execute()
+        else:
+            r = q.neq("result_html", "").order("created_at", desc=True).limit(1).execute()
+        if r.data and r.data[0].get('result_html'):
+            if not oid:
+                st.toast(f"가장 최근 보관본(주문 {r.data[0]['order_id']})을 불러왔습니다.")
+            return r.data[0]['result_html']
+    except Exception:
+        pass
+    return ''
+
 # ==============================================================================
 # 1.5. AI 통신 및 간지 역산 콜백 함수
 # ==============================================================================
