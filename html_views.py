@@ -647,7 +647,7 @@ def get_delivery_summary_box(best_days):
         bg = "#FFFFFF" if idx % 2 == 0 else "#F7F8FC"
         rows += (f"<tr style='background:{bg};'>"
                  f"<td style='text-align:center; font-weight:900;'>🏅 {idx+1}</td>"
-                 f"<td style='text-align:center;'><span style='font-weight:900;'>{date_txt}</span><br><span style='font-size:11px;'>{_saju(d.get('four_pillars', ''))}</span></td>"
+                 f"<td style='text-align:center;'><span style='font-weight:900;'>{date_txt}</span><br><span style='font-size:10.5px;'>{_saju(d.get('four_pillars', ''))}</span></td>"
                  f"<td style='text-align:center;'><span style='font-weight:900; color:#C62828;'>{d['score']}</span><br>{top}</td>"
                  f"<td style='text-align:center;'>{t_any}<br><span style='{small}'>(자연분만 우선)</span></td>"
                  f"<td style='text-align:center;'>{t_day}<br>{day_sub}</td>"
