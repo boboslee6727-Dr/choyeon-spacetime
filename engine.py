@@ -230,13 +230,24 @@ def get_seun_half_periods(target_year):
 def get_wolun_half_periods(target_year, target_month):
     y = int(target_year)
     m = int(target_month)
-    terms_map = {1: (5, 20), 2: (4, 19), 3: (6, 21), 4: (5, 20), 5: (5, 21), 6: (6, 21), 7: (7, 23), 8: (7, 23), 9: (8, 23), 10: (8, 23), 11: (7, 22), 12: (7, 22)}
-    jul_day, jung_day = terms_map.get(m, (5, 20))
     next_m = m + 1 if m < 12 else 1
     next_y = y if m < 12 else y + 1
-    next_jul_day = terms_map.get(next_m, (5, 20))[0]
-    return f"{y}년 {m:02d}월 {jul_day:02d}일 ~ {y}년 {m:02d}월 {jung_day-1:02d}일", f"{y}년 {m:02d}월 {jung_day:02d}일 ~ {next_y}년 {next_m:02d}월 {next_jul_day-1:02d}일"
-
+    JUL = {1: "소한", 2: "입춘", 3: "경칩", 4: "청명", 5: "입하", 6: "망종", 7: "소서", 8: "입추", 9: "백로", 10: "한로", 11: "입동", 12: "대설"}
+    JUNG = {1: "대한", 2: "우수", 3: "춘분", 4: "곡우", 5: "소만", 6: "하지", 7: "대서", 8: "처서", 9: "추분", 10: "상강", 11: "소설", 12: "동지"}
+    try:
+        jul_day = _get_term_day(y, m)[0]                 # 이달 절입일(일)
+        next_jul_day = _get_term_day(next_y, next_m)[0]  # 다음 달 절입일(일)
+        jung_day = jul_day + 15                          # 중기 (엔진의 전·후반기 판정과 같은 기준)
+        end2 = dt_mod.date(next_y, next_m, next_jul_day) - dt_mod.timedelta(days=1)
+        return (
+            f"{y}년 {m:02d}월 {jul_day:02d}일({JUL[m]}) ~ {y}년 {m:02d}월 {jung_day-1:02d}일({JUNG[m]} 전날)",
+            f"{y}년 {m:02d}월 {jung_day:02d}일({JUNG[m]}) ~ {end2.year}년 {end2.month:02d}월 {end2.day:02d}일({JUL[next_m]} 전날)",
+        )
+    except Exception:
+        terms_map = {1: (5, 20), 2: (4, 19), 3: (6, 21), 4: (5, 20), 5: (5, 21), 6: (6, 21), 7: (7, 23), 8: (7, 23), 9: (8, 23), 10: (8, 23), 11: (7, 22), 12: (7, 22)}
+        jul_day, jung_day = terms_map.get(m, (5, 20))
+        next_jul_day = terms_map.get(next_m, (5, 20))[0]
+        return f"{y}년 {m:02d}월 {jul_day:02d}일 ~ {y}년 {m:02d}월 {jung_day-1:02d}일", f"{y}년 {m:02d}월 {jung_day:02d}일 ~ {next_y}년 {next_m:02d}월 {next_jul_day-1:02d}일"
 
 # ---- 1-B. 십성 · 12운성 · 12신살 · 삼재 ----
 
