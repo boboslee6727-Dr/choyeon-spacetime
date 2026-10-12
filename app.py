@@ -685,8 +685,11 @@ if st.session_state.get('app_running', False):
         lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
         leap_str = "윤달" if is_leap else "평달"
     else:
-        klc.setSolarDate(int(b_year), int(b_month), int(b_day))
-        sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
+        _ok = klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
+        if not _ok:
+            st.error(f"⚠️ 음력 {int(b_year)}년 {int(b_month)}월 {int(b_day)}일({'윤달' if is_leap else '평달'})은 달력에 없는 날짜입니다. 평달/윤달 선택과 날짜를 확인해 주세요.")
+            st.stop()
+        sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
         lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
         leap_str = "윤달" if klc.isIntercalation else "평달"
         
@@ -855,13 +858,15 @@ if st.session_state.get('app_running', False):
             
             p_klc = KoreanLunarCalendar()
             if p_is_lunar:
-                p_klc.setLunarDate(int(p_y), int(p_m), int(p_d), p_is_leap)
+                if not p_klc.setLunarDate(int(p_y), int(p_m), int(p_d), p_is_leap):
+                    st.error("⚠️ 상대방의 음력 날짜가 달력에 없습니다. 평달/윤달 선택과 날짜를 확인해 주세요.")
+                    st.stop()
                 p_sol_str_val = f"{p_klc.solarYear}년 {p_klc.solarMonth:02d}월 {p_klc.solarDay:02d}일"
                 p_lun_str_val = f"{p_y}년 {int(p_m):02d}월 {int(p_d):02d}일 ({'윤달' if p_is_leap else '평달'})"
             else:
                 p_klc.setSolarDate(int(p_y), int(p_m), int(p_d))
                 p_sol_str_val = f"{p_y}년 {int(p_m):02d}월 {int(p_d):02d}일"
-                p_leap_txt = "윤달" if getattr(p_klc, 'isIntercalary', False) else "평달"
+                p_leap_txt = "윤달" if getattr(p_klc, 'isIntercalation', False) else "평달"
                 p_lun_str_val = f"{p_klc.lunarYear}년 {p_klc.lunarMonth:02d}월 {p_klc.lunarDay:02d}일 ({p_leap_txt})"
             
             m_name_val = name if gender == "남성" else p_name_val
