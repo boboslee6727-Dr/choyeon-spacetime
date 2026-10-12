@@ -207,17 +207,29 @@ def _get_term_day(y, m):
     """해당 월의 절입일(월주가 바뀌는 날)을 찾아 반환"""
     _, p1, _ = get_true_year_month_pillar(y, m, 1, 12, 0)
     for d in range(2, 12):
-        _, pd, _ = get_true_year_month_pillar(y, m, d, 12, 0)
+        _, pd, _ = get_true_year_month_pillar(y, m, d, 23, 59)
         if pd != p1:
             return d, pd
     return 5, p1
 
+def _true_term_day(y, m):
+    """그 달의 절입일(일)을 정밀 월주 계산으로 찾습니다. 실패하면 기존 _get_term_day로 대신합니다."""
+    try:
+        _, p_end, _ = get_true_year_month_pillar(y, m, 28, 12, 0)   # 절입 이후의 월주
+        for d in range(1, 16):
+            _, p, _ = get_true_year_month_pillar(y, m, d, 23, 59)   # 그날 자정 직전의 월주
+            if p == p_end:
+                return d
+    except Exception:
+        pass
+    return _get_term_day(y, m)[0]
+
 def get_seun_half_periods(target_year):
     y = int(target_year)
     try:
-        ipchun = _get_term_day(y, 2)[0]          # 올해 입춘 날짜(일)
-        ipchu = _get_term_day(y, 8)[0]           # 올해 입추 날짜(일)
-        ipchun_next = _get_term_day(y + 1, 2)[0] # 다음 해 입춘 날짜(일)
+        ipchun = _true_term_day(y, 2)          # 올해 입춘 날짜(일)
+        ipchu = _true_term_day(y, 8)           # 올해 입추 날짜(일)
+        ipchun_next = _true_term_day(y + 1, 2) # 다음 해 입춘 날짜(일)
         end1 = dt_mod.date(y, 8, ipchu) - dt_mod.timedelta(days=1)
         end2 = dt_mod.date(y + 1, 2, ipchun_next) - dt_mod.timedelta(days=1)
         return (
@@ -235,8 +247,8 @@ def get_wolun_half_periods(target_year, target_month):
     JUL = {1: "소한", 2: "입춘", 3: "경칩", 4: "청명", 5: "입하", 6: "망종", 7: "소서", 8: "입추", 9: "백로", 10: "한로", 11: "입동", 12: "대설"}
     JUNG = {1: "대한", 2: "우수", 3: "춘분", 4: "곡우", 5: "소만", 6: "하지", 7: "대서", 8: "처서", 9: "추분", 10: "상강", 11: "소설", 12: "동지"}
     try:
-        jul_day = _get_term_day(y, m)[0]                 # 이달 절입일(일)
-        next_jul_day = _get_term_day(next_y, next_m)[0]  # 다음 달 절입일(일)
+        jul_day = _true_term_day(y, m)                 # 이달 절입일(일)
+        next_jul_day = _true_term_day(next_y, next_m)  # 다음 달 절입일(일)
         jung_day = jul_day + 15                          # 중기 (엔진의 전·후반기 판정과 같은 기준)
         end2 = dt_mod.date(next_y, next_m, next_jul_day) - dt_mod.timedelta(days=1)
         return (
@@ -1538,7 +1550,9 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
         sam = check_samhyung_facts(jjis, dw_j, sewun_j=sewun_raw, wolun_j=ji)
         score, notes, severe = 0, [], False
         if "와 충" in rel:
-            score -= 2; notes.append("원국과 충")
+            _ch = re.findall(r"원국 (시지|일지|월지|년지)\(([^)]*)\)와 충", rel)
+            score -= 2
+            notes.append(("원국 " + "·".join(f"{n}({c})" for n, c in _ch) + "와 충") if _ch else "원국과 충")
             if re.search(r"(일지|월지)\([^)]*\)와 충", rel):
                 severe = True
         if "와 파" in rel: score -= 1; notes.append("원국과 파")
@@ -1608,7 +1622,9 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         sam = check_samhyung_facts(jjis, ilun_j=ji)
         score, notes, severe = 0, [], False
         if "와 충" in rel:
-            score -= 2; notes.append("원국과 충")
+            _ch = re.findall(r"원국 (시지|일지|월지|년지)\(([^)]*)\)와 충", rel)
+            score -= 2
+            notes.append(("원국 " + "·".join(f"{n}({c})" for n, c in _ch) + "와 충") if _ch else "원국과 충")
             if re.search(r"(일지|월지)\([^)]*\)와 충", rel):
                 severe = True                      # 일지·월지 충은 무겁게 본다
         if "와 파" in rel: score -= 1; notes.append("원국과 파")
