@@ -699,7 +699,13 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         supply_amount_calc = round(final_price / 1.1)
         vat_amount_calc = final_price - supply_amount_calc
 
-        insert_result = get_supabase_client().table("orders").insert({
+        if "음력" in u_cal:
+            from korean_lunar_calendar import KoreanLunarCalendar as _KLC
+            if not _KLC().setLunarDate(int(b_year), int(b_month), int(b_day), "윤달" in u_cal):
+                st.error(f"⚠️ 음력 {int(b_year)}년 {int(b_month)}월 {int(b_day)}일({'윤달' if '윤달' in u_cal else '평달'})은 달력에 없는 날짜입니다. 평달/윤달 선택과 날짜를 다시 확인해 주세요.")
+                st.stop()
+
+        insert_result = get_supabase_client().table("orders").insert({10
             "order_id": order_id, "created_at": now_str, "phone": phone_full, "email": memo_info,
             "name": name.strip(), "gender": gender, "marital": marital, "u_cal": u_cal,
             "b_year": int(b_year), "b_month": int(b_month), "b_day": int(b_day), "b_time": b_time,
