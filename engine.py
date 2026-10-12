@@ -1543,7 +1543,7 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
         elif e < 0: score += e; notes.append("월운 오행이 해로움")
         if not notes:
             continue
-        tag = f"{tm}월 {gan}{ji}월: " + ", ".join(notes)
+        tag = f"{tm}월 {gan}{ji}월{'(전년도 세운 말기)' if tm == 1 else ''}: " + ", ".join(notes)
         if severe:
             bad.append((score, tm, tag))
         elif score >= 2:
