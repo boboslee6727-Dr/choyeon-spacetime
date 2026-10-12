@@ -1062,8 +1062,9 @@ def get_gender_prompt(gender):
 
 def get_marital_prompt(gender, marital):
     if marital == "기혼": return f"현재 기혼 상태이므로 {'남편' if gender == '여성' else '아내'}과의 실질적인 가내 평안, 정서적 유대, 부부 관계 유지 전략에 집중하여 통변하십시오."
-    elif marital == "돌싱": return "현재 이혼/사별(돌싱) 상태이므로 과거 인연에 대한 성찰과 함께 새로운 재혼 및 운명적 재기 인연에 집중하여 통변하십시오."
-    else: return f"현재 미혼 상태이므로 {'미래의 남편' if gender == '여성' else '미래의 아내'}이 될 인연의 도래 시기와 연애/결혼 준비 전략에 집중하여 통변하십시오."
+    elif marital == "돌싱": return "현재 이혼/사별(돌싱) 상태이므로 과거 인연에 대한 성찰과 함께 새로운 재혼 및 운명적 재기 인연에 집중하여 통변하십시오. 이혼인지 사별인지는 알 수 없으니 '이혼'이나 '사별'로 단정하지 말고 '지난 인연'이라고 표현하십시오."
+    elif marital == "미혼": return f"현재 미혼 상태이므로 {'미래의 남편' if gender == '여성' else '미래의 아내'}이 될 인연의 도래 시기와 연애/결혼 준비 전략에 집중하여 통변하십시오."
+    else: return "혼인 상태가 분명하지 않으므로 결혼 여부를 단정하지 말고, '배우자 인연'이라는 중립적인 표현으로 인연의 흐름과 관계 운을 통변하십시오."
 
 def get_yukchin_rule(gender, marital):
     if gender == '남성':
