@@ -337,12 +337,13 @@ def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color,
     _ys_row = ""
     _mm = _re.search(r'\[용신=(\S)(?:\s*\(겸용:(\S)\))?', str(yongshin_text))
     if _mm:
+        _H = {'목': '木', '화': '火', '토': '土', '금': '金', '수': '水'}
         def _pick(key):
             r = _re.search(key + r'[^=\]/]*=(\S)', str(yongshin_text))
-            return r.group(1) if r else "-"
-        _yong = _mm.group(1) + (f"(겸용 {_mm.group(2)})" if _mm.group(2) else "")
+            return _H.get(r.group(1), r.group(1)) if r else "-"
+        _yong = _H.get(_mm.group(1), _mm.group(1)) + (f"(겸용 {_H.get(_mm.group(2), _mm.group(2))})" if _mm.group(2) else "")
         _ys_row = f"""
-    <div style='border:2px solid #3E2723; border-top:none; padding:6px 8px; font-weight:900; font-size:12px; border-radius:0 0 8px 8px; text-align:center;'>
+    <div style='border:2px solid #3E2723; margin-top:6px; padding:6px 8px; font-weight:900; font-size:12px; border-radius:8px; text-align:center;'>
         ⭐ 용신: {_yong} &nbsp;|&nbsp; 희신: {_pick('희신')} &nbsp;|&nbsp; 기신: {_pick('기신')} &nbsp;|&nbsp; 구신: {_pick('구신')} &nbsp;|&nbsp; 한신: {_pick('한신')}
     </div>"""
     return f"""
