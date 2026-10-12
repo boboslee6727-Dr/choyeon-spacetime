@@ -550,7 +550,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
     c_g, c_m, c_c = st.columns(3)
     with c_g: gender = st.selectbox("성별", ["여성", "남성"], key="order_gender", on_change=sync_partner_gender_order)
-    with c_m: marital = st.selectbox("결혼유무", ["미혼", "기혼", "돌싱", "기타"], key="order_marital")
+    with c_m: marital = st.selectbox("결혼유무", ["미혼", "기혼", "돌싱"], key="order_marital",
+                                     format_func=lambda x: {"미혼": "미혼", "기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
     with c_c: u_cal = st.selectbox("양/음력", ["양력", "음력 평달", "음력 윤달"], key="order_u_cal")
 
     c_y, c_mo, c_d = st.columns(3)
