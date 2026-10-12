@@ -1371,7 +1371,7 @@ def get_ohang_deficiency_supply_str(counts, level_phase_data):
 
 # ---- 2-D. 묘고(墓庫) 입고/개고 · 삼형 동적 발동 ----
 
-def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
+def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None, ilun_j=None):
     jjis_h = [_to_hanja(j) for j in jjis if j not in ["?", "-", " "]]
     results = []
  
@@ -1397,6 +1397,9 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
     if dw_j and dw_j not in ["?", "-", " "]: hangun_list.append(("대운", _to_hanja(dw_j)))
     if sewun_j and sewun_j not in ["?", "-", " "]: hangun_list.append(("세운", _to_hanja(sewun_j)))
     if wolun_j and wolun_j not in ["?", "-", " "]: hangun_list.append(("월운", _to_hanja(wolun_j)))
+    if ilun_j and ilun_j not in ["?", "-", " "]:
+        _il = str(ilun_j).strip()
+        hangun_list.append(("일운", _to_hanja(_il[-1] if len(_il) > 1 else _il)))   # '己未'처럼 두 글자가 와도 지지만 사용
  
     for u_type, u_j in hangun_list:
         combined_set = set(jjis_h + [u_j])
@@ -1407,6 +1410,43 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None):
             results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 축술미 삼형살 발동!")
  
     return " / ".join(results) if results else "삼형살(인사신/축술미) 특이 파동 없음"
+
+_UN_CHUNG = {frozenset(p) for p in ["子午", "丑未", "寅申", "卯酉", "辰戌", "巳亥"]}
+_UN_HAP = {frozenset(p) for p in ["子丑", "寅亥", "卯戌", "辰酉", "巳申", "午未"]}
+_UN_HAE = {frozenset(p) for p in ["子未", "丑午", "寅巳", "卯辰", "申亥", "酉戌"]}
+_UN_PA = {frozenset(p) for p in ["子酉", "丑辰", "寅亥", "卯午", "巳申", "未戌"]}
+_UN_SAMHAP = [("申子辰", "水"), ("亥卯未", "木"), ("寅午戌", "火"), ("巳酉丑", "金")]
+
+
+def get_unun_relation_facts(jjis, u_j, u_type="일운"):
+    """운(대운/세운/월운/일운)의 지지가 원국 지지(시·일·월·년)와 맺는 충·합·해·파·복음을 팩트 문장으로 만듭니다."""
+    names = ["시지", "일지", "월지", "년지"]
+    u = _to_hanja(str(u_j).strip()[-1])
+    nat = [_to_hanja(j) for j in jjis]
+    out = []
+    for nm, j in zip(names, nat):
+        if j in ["?", "-", " "]:
+            continue
+        pair = frozenset((u, j))
+        if u == j:
+            out.append(f"{u_type}({u})이 원국 {nm}({j})와 같은 글자로 겹침(복음)")
+            continue
+        if pair in _UN_CHUNG: out.append(f"{u_type}({u})이 원국 {nm}({j})와 충")
+        if pair in _UN_HAP: out.append(f"{u_type}({u})이 원국 {nm}({j})와 육합")
+        if pair in _UN_HAE: out.append(f"{u_type}({u})이 원국 {nm}({j})와 해")
+        if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파")
+        if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형")
+    nat_set = {j for j in nat if j not in ["?", "-", " "]}
+    for trio, oh in _UN_SAMHAP:
+        if u not in trio:
+            continue
+        others = set(trio) - {u}
+        have = others & nat_set
+        if len(have) == 2:
+            out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 삼합 완성")
+        elif len(have) == 1 and (u == trio[1] or list(have)[0] == trio[1]):
+            out.append(f"{u_type}({u})이 원국 {list(have)[0]}와 {oh}국 반합")
+    return " / ".join(dict.fromkeys(out)) if out else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
     base_gans = [_to_hanja(g) for g in base_gans]
