@@ -214,7 +214,18 @@ def _get_term_day(y, m):
 
 def get_seun_half_periods(target_year):
     y = int(target_year)
-    return f"{y}년 2월 4일(입춘) ~ {y}년 8월 6일", f"{y}년 8월 7일(입추) ~ {y+1}년 2월 3일"
+    try:
+        ipchun = _get_term_day(y, 2)[0]          # 올해 입춘 날짜(일)
+        ipchu = _get_term_day(y, 8)[0]           # 올해 입추 날짜(일)
+        ipchun_next = _get_term_day(y + 1, 2)[0] # 다음 해 입춘 날짜(일)
+        end1 = dt_mod.date(y, 8, ipchu) - dt_mod.timedelta(days=1)
+        end2 = dt_mod.date(y + 1, 2, ipchun_next) - dt_mod.timedelta(days=1)
+        return (
+            f"{y}년 2월 {ipchun}일(입춘) ~ {end1.year}년 {end1.month}월 {end1.day}일(입추 전날)",
+            f"{y}년 8월 {ipchu}일(입추) ~ {end2.year}년 {end2.month}월 {end2.day}일(입춘 전날)",
+        )
+    except Exception:
+        return f"{y}년 2월 4일(입춘) ~ {y}년 8월 6일(입추 전날)", f"{y}년 8월 7일(입추) ~ {y+1}년 2월 3일(입춘 전날)"
 
 def get_wolun_half_periods(target_year, target_month):
     y = int(target_year)
