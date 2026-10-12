@@ -1529,8 +1529,6 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
     good, bad = [], []
     cut = (today.year, today.month) if (today is not None and today.year == year) else None
     for tm in range(1, 13):
-        if cut and (year, tm) < cut:
-            continue
         try:
             _, m_p, _ = get_true_year_month_pillar(year, tm, 15, 12, 0)
         except Exception:
@@ -1568,7 +1566,9 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
         elif e < 0: score += e; notes.append("월운 오행이 해로움")
         if not notes:
             continue
-        tag = f"{tm}월 {gan}{ji}월{'(전년도 세운 말기)' if tm == 1 else ''}: " + ", ".join(notes)
+        tag = f"{tm}월 {gan}{ji}월: " + ", ".join(notes)
+        if cut and (year, tm) < cut:
+            tag += " [이미 지난 달]"
         if severe:
             bad.append((score, tm, tag))
         elif score >= 2:
