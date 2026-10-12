@@ -1599,6 +1599,8 @@ if st.session_state.get('app_running', False):
             "yongshin_fact_str": yongshin_fact_str, 
             "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운"),
             "period_day_facts_str": engine.get_period_day_facts(selected_target_date, 30, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str)),
+            "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str)),
+            "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str)),
             "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운"),
             "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운"),
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
