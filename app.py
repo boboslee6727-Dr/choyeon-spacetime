@@ -364,8 +364,8 @@ else:
                 
         st.markdown("---")
 
-        if "u_g" not in st.session_state: st.session_state["u_g"] = "남성"
-        if "f_g" not in st.session_state: st.session_state["f_g"] = "여성"
+        if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "남성")
+        if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "여성")
 
         def sync_partner_gender():
             u_val = st.session_state.get("u_g", "남성")
@@ -426,6 +426,8 @@ else:
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n", on_change=stop_ai)
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
+        st.session_state["u_g_saved"] = gender
+        st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
                                  format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c", on_change=stop_ai)
