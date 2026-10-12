@@ -142,8 +142,9 @@ def get_true_year_month_pillar(year, month, day, hour, minute):
     dt_utc = dt_kst.astimezone(pytz.utc)
  
     sun = ephem.Sun()
-    sun.compute(dt_utc)
-    lon = math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+    _ed = ephem.Date(dt_utc)
+    sun.compute(dt_utc, epoch=_ed)                          # 그 순간의 기준점으로 계산
+    lon = math.degrees(ephem.Ecliptic(sun, epoch=_ed).lon) % 360.0
  
     actual_year = year
     if month <= 2 and lon < 315.0:
@@ -703,8 +704,9 @@ def get_daeun_su_accurate(utc_dt, order):
     try:
         sun = ephem.Sun()
         def get_lon(dt):
-            sun.compute(dt)
-            return math.degrees(ephem.Ecliptic(sun).lon) % 360.0
+            _ed = ephem.Date(dt)
+            sun.compute(dt, epoch=_ed)
+            return math.degrees(ephem.Ecliptic(sun, epoch=_ed).lon) % 360.0
  
         start_lon = get_lon(utc_dt)
         jeol_lons = [315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]
