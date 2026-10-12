@@ -937,8 +937,7 @@ if st.session_state.get('app_running', False):
 
         info_h = html_views.get_info_header(u_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
-        master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae)
-
+        master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=(yongshin_fact_str if 'yongshin_fact_str' in locals() else engine.get_yongshin_analysis(counts, mb, ds)))
         intro_html = html_views.get_intro_html()
         
         # ----------------------------------------------------------------------
