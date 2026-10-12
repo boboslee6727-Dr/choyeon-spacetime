@@ -1485,6 +1485,74 @@ def get_yongshin_elements(yongshin_text):
             out[key] = m.group(1)
     return out
 
+def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None):
+    """해당 연도 12개월의 월운 간지가 원국·세운과 맺는 충·파·해·삼형·공망·합·천을귀인과
+    용신 오행을 따져 '기운이 도와주는 달'과 '서두르지 말 달'로 나눕니다.
+    jjis는 [시지, 일지, 월지, 년지] 순서, dw_j는 현재 대운 지지입니다."""
+    yong = yong or {}
+    h2k = {"木": "목", "火": "화", "土": "토", "金": "금", "水": "수"}
+
+    def oh_score(oh):
+        if oh and oh in (yong.get("용신"), yong.get("희신"), yong.get("겸용")):
+            return 1
+        if oh and oh in (yong.get("기신"), yong.get("구신")):
+            return -1
+        return 0
+
+    gm_day = calculate_gongmang(ds, db)
+    gm_year = calculate_gongmang(ys, yb)
+    guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
+    sewun_raw = JI[(year - 1984) % 12]
+    sj = _to_hanja(sewun_raw)
+    good, bad = [], []
+    for tm in range(1, 13):
+        try:
+            _, m_p, _ = get_true_year_month_pillar(year, tm, 15, 12, 0)
+        except Exception:
+            continue
+        gan, ji = _to_hanja(m_p[0]), _to_hanja(m_p[1])
+        rel = get_unun_relation_facts(jjis, ji, "월운")
+        sam = check_samhyung_facts(jjis, dw_j, sewun_j=sewun_raw, wolun_j=ji)
+        score, notes, severe = 0, [], False
+        if "와 충" in rel:
+            score -= 2; notes.append("원국과 충")
+            if re.search(r"(일지|월지)\([^)]*\)와 충", rel):
+                severe = True
+        if "와 파" in rel: score -= 1; notes.append("원국과 파")
+        if "와 해" in rel: score -= 1; notes.append("원국과 해")
+        if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
+        if any(("월운(" in seg and "삼형 완성" in seg) for seg in re.split(r"\s*/\s*|\n", str(sam))):
+            score -= 3; notes.append("삼형 완성"); severe = True
+        if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
+        elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
+        if "육합" in rel: score += 2; notes.append("원국과 육합")
+        m = re.search(r"([木火土金水])국 삼합 완성", rel)
+        if m:
+            oh = h2k[m.group(1)]; score += oh_score(oh) * 2; notes.append(f"{oh}국 삼합 완성")
+        else:
+            m = re.search(r"([木火土金水])국 반합", rel)
+            if m:
+                oh = h2k[m.group(1)]; score += oh_score(oh); notes.append(f"{oh}국 반합")
+        pair = frozenset((ji, sj))
+        if ji != sj:
+            if pair in _UN_CHUNG: score -= 1; notes.append("세운과 충")
+            elif pair in _UN_HAP: score += 1; notes.append("세운과 육합")
+        if ji in guiin: score += 2; notes.append("천을귀인")
+        e = oh_score(get_color(gan)) + oh_score(get_color(ji))
+        if e > 0: score += e; notes.append("월운 오행이 이로움")
+        elif e < 0: score += e; notes.append("월운 오행이 해로움")
+        if not notes:
+            continue
+        tag = f"{tm}월 {gan}{ji}월: " + ", ".join(notes)
+        if severe:
+            bad.append((score, tm, tag))
+        elif score >= 2:
+            good.append((score, tm, tag))
+    good = sorted(sorted(good, key=lambda x: (-x[0], x[1]))[:4], key=lambda x: x[1])
+    bad = bad[:5]
+    return (f"[{year}년 월별 팩트]\n[기운이 도와주는 달] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 달 없음")
+            + "\n[서두르지 말 달] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 달 없음"))
+
 _WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 
 def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None):
