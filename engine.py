@@ -1507,7 +1507,7 @@ def get_yongshin_elements(yongshin_text):
             out[key] = m.group(1)
     return out
 
-def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None):
+def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None, today=None):
     """해당 연도 12개월의 월운 간지가 원국·세운과 맺는 충·파·해·삼형·공망·합·천을귀인과
     용신 오행을 따져 '기운이 도와주는 달'과 '서두르지 말 달'로 나눕니다.
     jjis는 [시지, 일지, 월지, 년지] 순서, dw_j는 현재 대운 지지입니다."""
@@ -1527,7 +1527,10 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
     sewun_raw = JI[(year - 1984) % 12]
     sj = _to_hanja(sewun_raw)
     good, bad = [], []
+    cut = (today.year, today.month) if (today is not None and today.year == year) else None
     for tm in range(1, 13):
+        if cut and (year, tm) < cut:
+            continue
         try:
             _, m_p, _ = get_true_year_month_pillar(year, tm, 15, 12, 0)
         except Exception:
@@ -1577,7 +1580,7 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
 
 _WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 
-def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None):
+def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None):
     """날짜별 일진이 원국과 맺는 충·합·삼형·공망·천을귀인과 용신 오행을 따져
     '기운이 도와주는 날'과 '서두르지 말 날'로 나눕니다. jjis는 [시지, 일지, 월지, 년지] 순서."""
     yong = yong or {}
@@ -1594,8 +1597,11 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     gm_year = calculate_gongmang(ys, yb)     # 년 기준 공망
     guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
     good, bad = [], []
+    cut = today if (today is not None and start_date <= today <= start_date + dt_mod.timedelta(days=days - 1)) else None
     for i in range(days):
         d = start_date + dt_mod.timedelta(days=i)
+        if cut and d < cut:
+            continue
         _, _, pil = get_ganji_from_date(d.year, d.month, d.day)
         gan, ji = _to_hanja(pil[0]), _to_hanja(pil[1])
         rel = get_unun_relation_facts(jjis, ji, "일운")
@@ -1635,7 +1641,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     return ("[기운이 도와주는 날] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 날 없음")
             + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 날 없음"))
 
-def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None):
+def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None):
     """'2026년 10월 23일 ~ 2026년 11월 06일' 같은 문장에서 시작일·끝일을 읽어,
     그 기간의 날짜별 충·삼형·공망·합 팩트를 만듭니다. (월운 상반기/후반기용)"""
     found = re.findall(r'(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일', str(period_str))
@@ -1649,7 +1655,7 @@ def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, y
     days = (e - s).days + 1
     if days < 1 or days > 40:
         return "[날짜 범위를 확인할 수 없음]"
-    return get_period_day_facts(s, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=yong)
+    return get_period_day_facts(s, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=yong, today=today)
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
     base_gans = [_to_hanja(g) for g in base_gans]
