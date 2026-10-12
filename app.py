@@ -681,16 +681,16 @@ if st.session_state.get('app_running', False):
 
     if "음력" in u_cal:
         is_leap = True if "윤달" in u_cal else False
-        klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
-        sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
-        lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
-        leap_str = "윤달" if is_leap else "평달"
-    else:
         _ok = klc.setLunarDate(int(b_year), int(b_month), int(b_day), is_leap)
         if not _ok:
             st.error(f"⚠️ 음력 {int(b_year)}년 {int(b_month)}월 {int(b_day)}일({'윤달' if is_leap else '평달'})은 달력에 없는 날짜입니다. 평달/윤달 선택과 날짜를 확인해 주세요.")
             st.stop()
         sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
+        lun_y, lun_m, lun_d = int(b_year), int(b_month), int(b_day)
+        leap_str = "윤달" if is_leap else "평달"
+    else:
+        klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+        sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
         lun_y, lun_m, lun_d = klc.lunarYear, klc.lunarMonth, klc.lunarDay
         leap_str = "윤달" if klc.isIntercalation else "평달"
         
@@ -1394,6 +1394,7 @@ if st.session_state.get('app_running', False):
         _now_kst = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
         _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
+        _, _, _sel_pillar_d = engine.get_ganji_from_date(selected_target_date.year, selected_target_date.month, selected_target_date.day)
 
         dw_gj_cur = dw_g_cur + dw_j_cur  # 제목용 짧은 대운 간지 (예: 戊午)
         dw_gj_han_cur = engine.get_han_reading(dw_gj_cur)  # 한글 발음 (예: 무오)
@@ -1401,7 +1402,7 @@ if st.session_state.get('app_running', False):
         sewun_gj_han_cur = engine.get_han_reading(sewun_gj_cur)  # 한글 발음 (예: 병오)
         wolun_gj_cur = _cur_wol_pillar[0] + _cur_wol_pillar[1]       # 월운 간지 (한자, 예: 庚申)
         wolun_gj_han_cur = engine.get_han_reading(wolun_gj_cur)      # 한글 발음 (예: 경신)
-        ilun_gj_cur = _today_pillar_d[0] + _today_pillar_d[1]        # 일운 간지 (한자, 예: 甲子)
+        ilun_gj_cur = _sel_pillar_d[0] + _sel_pillar_d[1]            # 일운 간지 (한자, 예: 甲子)
         ilun_gj_han_cur = engine.get_han_reading(ilun_gj_cur)        # 한글 발음 (예: 갑자)
 
         try:
@@ -1409,7 +1410,7 @@ if st.session_state.get('app_running', False):
                 ds, db, dw_g_cur, dw_j_cur,
                 engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12],
                 _cur_wol_pillar[0], _cur_wol_pillar[1],
-                _today_pillar_d[0], _today_pillar_d[1],
+                _sel_pillar_d[0], _sel_pillar_d[1],
                 age=age, dw_start_age=current_daewun_age, target_dt=_now_kst,
                 hour=_now_kst.hour, minute=_now_kst.minute
             )
@@ -1595,8 +1596,8 @@ if st.session_state.get('app_running', False):
             "m_ideal_spouse_fact": m_ideal_spouse_fact,
             "f_ideal_spouse_fact": f_ideal_spouse_fact,
             "saju_fact_summary": saju_fact_summary, "dw_g_cur": dw_g_cur, "dw_j_cur": dw_j_cur, 
-            "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, ilun_j=_today_pillar_d[1]),
-            "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _today_pillar_d[1], "일운"),
+            "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1]),
+            "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운"),
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
             "adv_warning_str": adv_warning_str,
             "health_erosion_facts": health_erosion_str,
