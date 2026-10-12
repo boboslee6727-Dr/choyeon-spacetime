@@ -1426,7 +1426,6 @@ _UN_HAE = {frozenset(p) for p in ["子未", "丑午", "寅巳", "卯辰", "申�
 _UN_PA = {frozenset(p) for p in ["子酉", "丑辰", "寅亥", "卯午", "巳申", "未戌"]}
 _UN_SAMHAP = [("申子辰", "水"), ("亥卯未", "木"), ("寅午戌", "火"), ("巳酉丑", "金")]
 
-
 def get_unun_relation_facts(jjis, u_j, u_type="일운"):
     """운(대운/세운/월운/일운)의 지지가 원국 지지(시·일·월·년)와 맺는 충·합·해·파·복음을 팩트 문장으로 만듭니다."""
     names = ["시지", "일지", "월지", "년지"]
@@ -1456,6 +1455,81 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운"):
         elif len(have) == 1 and (u == trio[1] or list(have)[0] == trio[1]):
             out.append(f"{u_type}({u})이 원국 {list(have)[0]}와 {oh}국 반합")
     return " / ".join(dict.fromkeys(out)) if out else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
+
+def get_yongshin_elements(yongshin_text):
+    """get_yongshin_analysis가 만든 문장에서 용신·희신·기신·구신·한신(·겸용) 오행을 뽑아 사전으로 돌려줍니다."""
+    out = {}
+    txt = str(yongshin_text or "")
+    for key, pat in [("용신", r"용신=([목화토금수])"),
+                     ("희신", r"희신\([^)]*\)=([목화토금수])"),
+                     ("기신", r"기신\([^)]*\)=([목화토금수])"),
+                     ("구신", r"구신=([목화토금수])"),
+                     ("한신", r"한신=([목화토금수])"),
+                     ("겸용", r"겸용:([목화토금수])")]:
+        m = re.search(pat, txt)
+        if m:
+            out[key] = m.group(1)
+    return out
+
+_WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
+
+def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None):
+    """날짜별 일진이 원국과 맺는 충·합·삼형·공망·천을귀인과 용신 오행을 따져
+    '기운이 도와주는 날'과 '서두르지 말 날'로 나눕니다. jjis는 [시지, 일지, 월지, 년지] 순서."""
+    yong = yong or {}
+    h2k = {"木": "목", "火": "화", "土": "토", "金": "금", "水": "수"}
+
+    def oh_score(oh):
+        if oh and oh in (yong.get("용신"), yong.get("희신"), yong.get("겸용")):
+            return 1
+        if oh and oh in (yong.get("기신"), yong.get("구신")):
+            return -1
+        return 0
+
+    gm_day = calculate_gongmang(ds, db)      # 일 기준 공망
+    gm_year = calculate_gongmang(ys, yb)     # 년 기준 공망
+    guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
+    good, bad = [], []
+    for i in range(days):
+        d = start_date + dt_mod.timedelta(days=i)
+        _, _, pil = get_ganji_from_date(d.year, d.month, d.day)
+        gan, ji = _to_hanja(pil[0]), _to_hanja(pil[1])
+        rel = get_unun_relation_facts(jjis, ji, "일운")
+        sam = check_samhyung_facts(jjis, ilun_j=ji)
+        score, notes, severe = 0, [], False
+        if "와 충" in rel:
+            score -= 2; notes.append("원국과 충")
+            if re.search(r"(일지|월지)\([^)]*\)와 충", rel):
+                severe = True                      # 일지·월지 충은 무겁게 본다
+        if "와 파" in rel: score -= 1; notes.append("원국과 파")
+        if "와 해" in rel: score -= 1; notes.append("원국과 해")
+        if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
+        if "일운(" in sam and "삼형 완성" in sam: score -= 3; notes.append("삼형 완성"); severe = True
+        if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
+        elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
+        if "육합" in rel: score += 2; notes.append("원국과 육합")
+        m = re.search(r"([木火土金水])국 삼합 완성", rel)
+        if m:
+            oh = h2k[m.group(1)]; score += oh_score(oh) * 2; notes.append(f"{oh}국 삼합 완성")
+        else:
+            m = re.search(r"([木火土金水])국 반합", rel)
+            if m:
+                oh = h2k[m.group(1)]; score += oh_score(oh); notes.append(f"{oh}국 반합")
+        if ji in guiin: score += 2; notes.append("천을귀인")
+        e = oh_score(get_color(gan)) + oh_score(get_color(ji))
+        if e > 0: score += e; notes.append("일진 오행이 이로움")
+        elif e < 0: score += e; notes.append("일진 오행이 해로움")
+        if not notes:
+            continue
+        tag = f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일: " + ", ".join(notes)
+        if severe:
+            bad.append((score, i, tag))
+        elif score >= 2:
+            good.append((score, i, tag))
+    good = sorted(sorted(good, key=lambda x: (-x[0], x[1]))[:5], key=lambda x: x[1])
+    bad = bad[:6]
+    return ("[기운이 도와주는 날] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 날 없음")
+            + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 날 없음"))
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
     base_gans = [_to_hanja(g) for g in base_gans]
