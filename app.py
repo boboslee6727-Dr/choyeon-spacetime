@@ -434,6 +434,7 @@ else:
         gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
+        st.caption(f"🔧진단: 성별={st.session_state.get('u_g')} / 기억={st.session_state.get('u_g_saved')} / 상대={st.session_state.get('f_g')} / 상품={u_product}")
         u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
                                  format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c", on_change=stop_ai)
