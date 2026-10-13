@@ -307,9 +307,15 @@ else:
 
         st.markdown("<div style='font-size: 15px; font-weight: 900; color: #000000; margin-bottom: 5px; font-family: \"Nanum Gothic\", sans-serif;'>📅 분석 기준 시점 선택</div>", unsafe_allow_html=True)
         kst_tz = pytz.timezone('Asia/Seoul')
+        _today_kst = dt_mod.datetime.now(pytz.timezone('Asia/Seoul')).date()
+        if st.session_state.get("_last_today_kst") != _today_kst:
+            st.session_state["_last_today_kst"] = _today_kst
+            st.session_state["target_date"] = _today_kst
+            st.session_state["main_target_date_picker"] = _today_kst
+
         selected_target_date = st.date_input(
             "조회할 연/월/일 선택",
-            value=st.session_state.get('target_date', dt_mod.date.today()),
+            value=st.session_state.get('target_date', _today_kst),
             on_change=stop_ai,
             key="main_target_date_picker"
         )
