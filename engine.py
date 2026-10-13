@@ -1612,7 +1612,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     gm_day = calculate_gongmang(ds, db)      # 일 기준 공망
     gm_year = calculate_gongmang(ys, yb)     # 년 기준 공망
     guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
-    good, bad = [], []
+    good, bad, mild = [], [], []
     cut = today if (today is not None and start_date <= today <= start_date + dt_mod.timedelta(days=days - 1)) else None
     for i in range(days):
         d = start_date + dt_mod.timedelta(days=i)
@@ -1650,13 +1650,17 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         if not notes:
             continue
         tag = f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일: " + ", ".join(notes)
-        if severe:
+        if severe or score <= -3:
             bad.append((score, i, tag))
         elif score >= 2:
             good.append((score, i, tag))
+        elif score >= 1:
+            mild.append((score, i, tag))
     good = sorted(sorted(good, key=lambda x: (-x[0], x[1]))[:5], key=lambda x: x[1])
     bad = bad[:6]
+    mild = mild[:4]
     return ("[기운이 도와주는 날] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 날 없음")
+            + "\n[무난히 움직일 수 있는 날] " + (" / ".join(t for _, _, t in mild) if mild else "없음")
             + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 날 없음"))
 
 def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None):
