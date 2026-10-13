@@ -341,6 +341,20 @@ def get_all_12_shinsal(yb, mb, db, hb):
         return ", ".join(results)
     except: return "년지 기준 12신살 풀이 완료"
 
+def get_12_shinsal_fact_str(yb, db, jjis, dw_j=None, sewun_j=None, wolun_j=None, ilun_j=None):
+    """년지 기준·일지 기준 12신살을 원국 4기둥과 대운·세운·월운·일운 지지에 대해 팩트 문자열로 만든다."""
+    def _ok(j):
+        return j not in (None, "", "?", "-", " ")
+    names = ["시지", "일지", "월지", "년지"]
+    parts = []
+    for n, j in zip(names, jjis):
+        if _ok(j):
+            parts.append(f"원국 {n}({_to_hanja_ji(j)}): 년지기준 {get_12_shinsal(yb, j)} / 일지기준 {get_12_shinsal(db, j)}")
+    for label, j in [("대운", dw_j), ("세운", sewun_j), ("월운", wolun_j), ("일운", ilun_j)]:
+        if _ok(j):
+            parts.append(f"{label} 지지({_to_hanja_ji(j)}): 년지기준 {get_12_shinsal(yb, j)} / 일지기준 {get_12_shinsal(db, j)}")
+    return " / ".join(parts) if parts else "12신살 정보 없음"
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
