@@ -403,6 +403,12 @@ def render_customer_order_form():
     if "submitted_order" in st.session_state:
         ord_info = st.session_state["submitted_order"]
 
+        # 🧹 신청자 개인정보 흔적 지우기 (이름·연락처·생년월일·고민 글 등)
+        for _k in [k for k in list(st.session_state.keys()) if k.startswith("order_")]:
+            try:
+                del st.session_state[_k]
+            except Exception:
+                pass
         if ord_info["discount_amt"] > 0:
             price_display = f"<s style='color:#757575;'>{ord_info['total_raw']:,}원</s> ➡️ <b style='color:#D50000; font-size:18px;'>{ord_info['final_price']:,}원</b> <span style='color:#2E7D32; font-size:13px; font-weight:bold;'>({ord_info['rate_pct']}% 특가)</span>"
         else:
