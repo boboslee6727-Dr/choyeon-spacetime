@@ -1258,8 +1258,7 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
     - 각 레벨(대운/세운/월운/일운)을 천간(전반기)/지지(후반기)로 분리 계산
     - 지금이 어느 반기인지 판정하여, 그 반기의 체(體) 값을 다음 단계 실행분석에 연결
     """
-    ilju_ss = get_ss(ds, db)
-    ilju_lower_group = ilju_ss if isinstance(ilju_ss, str) else (ilju_ss[0] if isinstance(ilju_ss, (list, tuple)) and len(ilju_ss) > 0 else '비겁')
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
  
     # 1. 대운 — 천간(전반)/지지(후반) 체 각각 계산
     dw_che_1 = get_group_ss(get_ss(ds, dw_g_cur))   # 전반기(천간)
