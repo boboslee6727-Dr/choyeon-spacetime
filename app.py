@@ -1135,6 +1135,7 @@ if st.session_state.get('app_running', False):
         cheon_eul_sewun_matches = []
         shinsal_sewun_matches = []
         gosin_gwasook_sewun_matches = []
+
         # 🚨 초연시공명리 폭포수 체용: 일주 자체 그룹과 현재 대운 활성 체(둘 다 이 10년 내내 고정값)
         # w_facts를 기다리지 않고, 필요한 값만 가볍게 직접 계산(순서 의존성 제거)
         ilju_lower_group = engine.get_group_ss(engine.get_ss(ds_hanja, db))
@@ -1163,9 +1164,14 @@ if st.session_state.get('app_running', False):
             _che_2 = engine.get_group_ss(engine.get_ss(ds_hanja, tj))
             _yong_1 = engine.get_execution_yong(_che_1, ilju_lower_group)
             _yong_2 = engine.get_execution_yong(_che_2, ilju_lower_group)
-            _kw_1 = engine.get_matrix_keyword(_dw_che_for_sewun, _yong_1)
-            _kw_2 = engine.get_matrix_keyword(_dw_che_for_sewun, _yong_2)
-            sewun_che_flow_parts.append(f"{ty}년({tc}{tj}): 전반기[체({_che_1})→{_kw_1}] / 후반기[체({_che_2})→{_kw_2}]")
+            # 🚨 이 해가 대운의 앞 5년(천간 체)인지 뒤 5년(지지 체)인지를 해마다 따로 판정
+            _dw_first_this_yr = engine._is_daewun_first_half(tage, current_daewun_age)
+            _dw_che_this_yr = _dw_che_1_tmp if _dw_first_this_yr else _dw_che_2_tmp
+            _dw_half_label = "앞5년" if _dw_first_this_yr else "뒤5년"
+            _kw_1 = engine.get_matrix_keyword(_dw_che_this_yr, _yong_1)
+            _kw_2 = engine.get_matrix_keyword(_dw_che_this_yr, _yong_2)
+            _sw_unsung = engine.get_unsung(ds_hanja, tj)
+            sewun_che_flow_parts.append(f"{ty}년({tc}{tj}): 대운 {_dw_half_label}체({_dw_che_this_yr}) 아래에서 / 전반기[체({_che_1})→{_kw_1}] / 후반기[체({_che_2})→{_kw_2}] / 세운 지지 12운성({_sw_unsung})")
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
             hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
