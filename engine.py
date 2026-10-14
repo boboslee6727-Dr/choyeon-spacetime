@@ -1926,6 +1926,17 @@ def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseon
 
 def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j):
     """창고(辰戌丑未) 입고·개고 시기 사실문. 앞으로 10년 세운 지지와 대조."""
+    # 한글로 넘어와도 한자로 맞춤 (천간과 지지는 한글 '신'이 겹치므로 따로 변환)
+    _G = {'갑': '甲', '을': '乙', '병': '丙', '정': '丁', '무': '戊',
+          '기': '己', '경': '庚', '신': '辛', '임': '壬', '계': '癸'}
+    _J = {'자': '子', '축': '丑', '인': '寅', '묘': '卯', '진': '辰', '사': '巳',
+          '오': '午', '미': '未', '신': '申', '유': '酉', '술': '戌', '해': '亥'}
+    _g = lambda x: _G.get(x, x)
+    _j = lambda x: _J.get(x, x)
+    ds = _g(ds)
+    gans = [_g(x) for x in gans]
+    jjis = [_j(x) for x in jjis]
+    dw_j, sewun_j, wolun_j = _j(dw_j), _j(sewun_j), _j(wolun_j)
     VAULT = {
         '辰': ('水庫', '癸', ['亥', '子'], ['戌']),
         '戌': ('火庫', '丁', ['巳', '午'], ['辰', '丑', '未']),
@@ -1957,7 +1968,7 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j)
         # 앞으로 10년 세운 중 입고/개고 해
         ip, op = [], []
         for y in range(curr_year, curr_year + 10):
-            br = JI[(y - 1984) % 12]
+            br = _j(JI[(y - 1984) % 12])
             if br in ins:
                 ip.append(f"{y}년({br})")
             if br in opens:
