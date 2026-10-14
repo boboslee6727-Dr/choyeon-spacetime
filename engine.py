@@ -1924,8 +1924,9 @@ def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseon
     result += f" / 삼재 여부: {curr_samjae}"
     return result
 
-def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j):
-    """창고(辰戌丑未) 입고·개고 시기 사실문. 앞으로 10년 세운 지지와 대조."""
+def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j, gender="남성"):
+    """창고(辰戌丑未) 개고·입고 사실문 — 안태옥 박사 이론(일지 기준, 삼형은 연지 제외).
+    jjis=[년지,월지,일지,시지], gans=[년간,월간,일간,시간]"""
     # 한글로 넘어와도 한자로 맞춤 (천간과 지지는 한글 '신'이 겹치므로 따로 변환)
     _G = {'갑': '甲', '을': '乙', '병': '丙', '정': '丁', '무': '戊',
           '기': '己', '경': '庚', '신': '辛', '임': '壬', '계': '癸'}
@@ -1937,61 +1938,99 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j)
     gans = [_g(x) for x in gans]
     jjis = [_j(x) for x in jjis]
     dw_j, sewun_j, wolun_j = _j(dw_j), _j(sewun_j), _j(wolun_j)
-    VAULT = {
-        '辰': ('水庫', '癸', ['亥', '子'], ['戌']),
-        '戌': ('火庫', '丁', ['巳', '午'], ['辰', '丑', '未']),
-        '丑': ('金庫', '辛', ['申', '酉'], ['未', '戌']),
-        '未': ('木庫', '乙', ['寅', '卯'], ['丑', '戌']),
-    }
-    pos = ['년지', '월지', '일지', '시지']
+    yj, mj, dj, hj = (list(jjis) + ['-'] * 4)[:4]
+
+    VNAME = {'辰': '水庫', '戌': '火庫', '丑': '金庫', '未': '木庫'}
     JJG = {'辰': ['乙', '癸', '戊'], '戌': ['辛', '丁', '戊'],
            '丑': ['癸', '辛', '己'], '未': ['丁', '乙', '己']}
-    mine = []
-    for i, b in enumerate(jjis):
-        if b in VAULT and b not in [m[1] for m in mine]:
-            mine.append((pos[i % 4], b))
-    if not mine:
-        return "원국에 창고 글자(辰戌丑未)가 없어 입고·개고 해당 없음."
-    lines = []
-    for p, b in mine:
-        vname, rep, ins, opens = VAULT[b]
-        grp = get_group_ss(get_ss(ds, rep)) if ds else "-"
-        # 투간 판정: 창고 주인 기운이 이미 천간에 있으면 '개고해도 새로 나올 것 없음'
-        if rep in gans:
-            tu = (f"창고 주인 기운 {rep}이(가) 이미 천간에 드러나 있어, 열려도 새로 나오는 것은 없고 "
-                  f"이미 쓰는 기운이 더 활발해지는 정도(약한 개고)")
+    EL = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
+          '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'}
+    CHUNG = {'辰': '戌', '戌': '辰', '丑': '未', '未': '丑'}
+    HYUNG = {'丑': ['戌', '未'], '戌': ['丑', '未'], '未': ['丑', '戌']}
+    SAMHYUNG = {'丑', '戌', '未'}
+    MONTH_OF = {'寅': '양력 2월', '卯': '양력 3월', '辰': '양력 4월', '巳': '양력 5월',
+                '午': '양력 6월', '未': '양력 7월', '申': '양력 8월', '酉': '양력 9월',
+                '戌': '양력 10월', '亥': '양력 11월', '子': '양력 12월', '丑': '양력 1월'}
+
+    def _yuk(grp):
+        m = {'비겁': '형제·동료', '식상': '재능·표현', '재성': '재물', '관성': '직장·명예', '인성': '어머니·학업'}
+        if gender == "남성":
+            m['재성'] = '재물·아내'
+            m['관성'] = '직장·명예·자식'
         else:
-            tu = (f"창고 주인 기운 {rep}이(가) 천간에 없이 숨어 있어, 열리면 비로소 밖으로 나오는 "
-                  f"진짜 개고(투간)")
-        jjg_out = [g for g in JJG[b] if g in gans]
-        jjg_in = [g for g in JJG[b] if g not in gans]
-        # 앞으로 10년 세운 중 입고/개고 해
-        ip, op = [], []
+            m['재성'] = '재물·아버지'
+            m['관성'] = '직장·명예·남편'
+            m['식상'] = '재능·자식'
+        return m.get(grp, grp)
+
+    # 대상 선정: 충은 일지만, 형(삼형)은 일지가 축술미면 일지, 아니면 월지·시지(연지 제외)
+    targets = {}
+    if dj in VNAME:
+        targets.setdefault(('일지', dj), set()).add('충')
+    if dj in HYUNG:
+        targets.setdefault(('일지', dj), set()).add('형')
+    else:
+        for p, b in (('월지', mj), ('시지', hj)):
+            if b in HYUNG:
+                targets.setdefault((p, b), set()).add('형')
+
+    head = "[창고 개고·입고 시기 — 일지 기준, 삼형은 연지 제외]"
+    foot = ("※원칙: 충·형이 없으면 입고도 개고도 일어나지 않음. 대운은 방향을 암시하고 세운·월운이 겹칠 때 실행됨. "
+            "천간에 이미 드러난 기운은 열릴 때 창고로 들어가고(입고, 불리), 천간에 없이 숨은 기운은 열릴 때 밖으로 나옴(개고). "
+            "재성 창고의 개고는 대체로 길하고, 그 밖의 육친 창고의 입고·입묘는 흉화를 암시함.")
+    if not targets:
+        why = "일지가 창고(辰戌丑未)가 아니어서 충에 의한 개고·입고는 해당 없고, 월지·시지에도 삼형 대상(丑·戌·未)이 없어 해당 없음."
+        return head + "\n" + why
+
+    lines = []
+    for (pos, b), modes in targets.items():
+        enter, out = [], []
+        for s in JJG[b]:
+            ss = get_ss(ds, s)
+            tag = f"{s}({ss}·{_yuk(get_group_ss(ss))})"
+            if any(EL.get(x) == EL[s] for x in gans):
+                enter.append(tag)
+            else:
+                out.append(tag)
+
+        opens = []
+        if '충' in modes:
+            opens.append(f"{CHUNG[b]}(충)")
+        if '형' in modes:
+            opens += [f"{x}(형, 삼형 성립 시)" for x in HYUNG[b]]
+        tend = "辰戌충은 흉화가 가중되는 경향" if b in ('辰', '戌') else "丑未충은 발복이 상승하는 경향"
+
+        won = ""
+        if '충' in modes and CHUNG[b] in (mj, hj):
+            won = f" 원국에 이미 {CHUNG[b]}가 있어 원국지지충 상태이며 해당 글자가 다시 들어오는 운에 충발함."
+
+        hits = []
         for y in range(curr_year, curr_year + 10):
             br = _j(JI[(y - 1984) % 12])
-            if br in ins:
-                ip.append(f"{y}년({br})")
-            if br in opens:
-                op.append(f"{y}년({br})")
-        now_hit = []
+            why = None
+            if '충' in modes and br == CHUNG[b]:
+                why = f"{b}{br}충"
+            elif '형' in modes and br in HYUNG[b] and SAMHYUNG <= (set(jjis) | {dw_j, br}):
+                why = "축술미 삼형 성립"
+            if why:
+                hits.append(f"{y}년({br}, {why}, 절기상 {br}월 즉 {MONTH_OF[br]} 무렵에 실행)")
+
+        now = []
         for nm, v in (("현재 대운", dw_j), ("올해 세운", sewun_j), ("이번 달 월운", wolun_j)):
-            if v in ins:
-                now_hit.append(f"{nm} {v} → 입고 작용")
-            if v in opens:
-                now_hit.append(f"{nm} {v} → 개고 작용")
+            if '충' in modes and v == CHUNG[b]:
+                now.append(f"{nm} {v}: {b}{v}충")
+            elif '형' in modes and v in HYUNG[b] and SAMHYUNG <= (set(jjis) | {dw_j, sewun_j, v}):
+                now.append(f"{nm} {v}: 축술미 삼형 성립")
+
         lines.append(
-            f"- {p} {b}({vname}, 일간 기준 {grp}의 창고): "
-            f"{tu}. (지장간 중 천간에 드러난 것: {'·'.join(jjg_out) if jjg_out else '없음'} / "
-            f"숨어 있는 것: {'·'.join(jjg_in) if jjg_in else '없음'}) "
-            f"입고 글자={'·'.join(ins)}, 개고 글자={'·'.join(opens)}. "
-            f"앞으로 10년 중 입고 해: {', '.join(ip) if ip else '없음'} / "
-            f"개고 해: {', '.join(op) if op else '없음'}. "
-            f"지금 상태: {', '.join(now_hit) if now_hit else '해당 없음'}"
+            f"- {pos} {b}({VNAME[b]}, 판정방식: {'·'.join(sorted(modes))}): "
+            f"창고 안 지장간 중 천간에 이미 드러난 기운(열리면 입고) = {', '.join(enter) if enter else '없음'} / "
+            f"천간에 없이 숨어 있는 기운(열리면 개고) = {', '.join(out) if out else '없음'}. "
+            f"여는 글자: {', '.join(opens)} ({tend}).{won} "
+            f"앞으로 10년 중 열리는 해: {'; '.join(hits) if hits else '없음'}. "
+            f"지금 상태: {', '.join(now) if now else '해당 없음'}"
         )
-    both = ""
-    if len(mine) >= 2:
-        both = " ※창고가 2개 이상이면 공통으로 여는 글자가 들어오는 해에 동시에 열려 변화 폭이 큼."
-    return "[창고 입고·개고 시기]\n" + "\n".join(lines) + both
+    return head + "\n" + "\n".join(lines) + "\n" + foot
 
 def analyze_super_wealth_patterns(bazi_dict):
     yg, yj = bazi_dict.get('year_g'), bazi_dict.get('year_j')
