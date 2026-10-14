@@ -2034,7 +2034,7 @@ def analyze_super_wealth_patterns(bazi_dict):
         results["wealth_power_score"] += 25
         results["fact_summary_text"].append("[酉·丑·辰 삼자조합 감지]: 한탕/부동산 재개발 뻥튀기 파동.")
  
-   earth_count = sum(1 for b in branches if b in ['辰', '戌', '丑', '未'])
+    earth_count = sum(1 for b in branches if b in ['辰', '戌', '丑', '未'])
     if earth_count >= 2:
         results["myogo_treasure_flag"] = True
         results["wealth_power_score"] += (earth_count * 10)
