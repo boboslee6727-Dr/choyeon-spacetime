@@ -990,10 +990,11 @@ if st.session_state.get('app_running', False):
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
         _daewun_che_parts = []
-        for dw in daewun_data_list[:_current_dw_idx + 1]:
+        for _dw_i, dw in enumerate(daewun_data_list):
             che_1 = engine.get_group_ss(dw['ss_gan'])
             che_2 = engine.get_group_ss(dw['ss_ji'])
-            _daewun_che_parts.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): 전반기체({che_1})/후반기체({che_2})")
+            _future_mark = " [미래대운]" if _dw_i > _current_dw_idx else ""
+            _daewun_che_parts.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): 전반기체({che_1})/후반기체({che_2}){_future_mark}")
         daewun_che_flow_str = " / ".join(_daewun_che_parts) if _daewun_che_parts else "대운 체 흐름 정보 없음"
 
         guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
