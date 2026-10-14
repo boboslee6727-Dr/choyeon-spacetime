@@ -1924,7 +1924,7 @@ def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseon
     result += f" / 삼재 여부: {curr_samjae}"
     return result
 
-get_vault_timing_fact_str(ds, jjis, curr_year, dw_j, sewun_j, wolun_j):
+def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j):
     """창고(辰戌丑未) 입고·개고 시기 사실문. 앞으로 10년 세운 지지와 대조."""
     VAULT = {
         '辰': ('水庫', '癸', ['亥', '子'], ['戌']),
@@ -1933,6 +1933,8 @@ get_vault_timing_fact_str(ds, jjis, curr_year, dw_j, sewun_j, wolun_j):
         '未': ('木庫', '乙', ['寅', '卯'], ['丑', '戌']),
     }
     pos = ['년지', '월지', '일지', '시지']
+    JJG = {'辰': ['乙', '癸', '戊'], '戌': ['辛', '丁', '戊'],
+           '丑': ['癸', '辛', '己'], '未': ['丁', '乙', '己']}
     mine = []
     for i, b in enumerate(jjis):
         if b in VAULT and b not in [m[1] for m in mine]:
@@ -1943,6 +1945,15 @@ get_vault_timing_fact_str(ds, jjis, curr_year, dw_j, sewun_j, wolun_j):
     for p, b in mine:
         vname, rep, ins, opens = VAULT[b]
         grp = get_group_ss(get_ss(ds, rep)) if ds else "-"
+        # 투간 판정: 창고 주인 기운이 이미 천간에 있으면 '개고해도 새로 나올 것 없음'
+        if rep in gans:
+            tu = (f"창고 주인 기운 {rep}이(가) 이미 천간에 드러나 있어, 열려도 새로 나오는 것은 없고 "
+                  f"이미 쓰는 기운이 더 활발해지는 정도(약한 개고)")
+        else:
+            tu = (f"창고 주인 기운 {rep}이(가) 천간에 없이 숨어 있어, 열리면 비로소 밖으로 나오는 "
+                  f"진짜 개고(투간)")
+        jjg_out = [g for g in JJG[b] if g in gans]
+        jjg_in = [g for g in JJG[b] if g not in gans]
         # 앞으로 10년 세운 중 입고/개고 해
         ip, op = [], []
         for y in range(curr_year, curr_year + 10):
@@ -1959,6 +1970,8 @@ get_vault_timing_fact_str(ds, jjis, curr_year, dw_j, sewun_j, wolun_j):
                 now_hit.append(f"{nm} {v} → 개고 작용")
         lines.append(
             f"- {p} {b}({vname}, 일간 기준 {grp}의 창고): "
+            f"{tu}. (지장간 중 천간에 드러난 것: {'·'.join(jjg_out) if jjg_out else '없음'} / "
+            f"숨어 있는 것: {'·'.join(jjg_in) if jjg_in else '없음'}) "
             f"입고 글자={'·'.join(ins)}, 개고 글자={'·'.join(opens)}. "
             f"앞으로 10년 중 입고 해: {', '.join(ip) if ip else '없음'} / "
             f"개고 해: {', '.join(op) if op else '없음'}. "
