@@ -2089,10 +2089,10 @@ def analyze_super_wealth_patterns(bazi_dict):
             if _b in _vault_info:
                 _vname, _rep_gan, _trigger = _vault_info[_b]
                 _grp = get_group_ss(get_ss(dg, _rep_gan)) if dg else "-"
-                _vault_desc.append(f"{_pos_names[_i]} {_b}({_vname}, 일간 기준 {_grp}의 창고, 열리는 때: {_trigger})")
+                _vault_desc.append(f"{_pos_names[_i]} {_b}({_vname}, 일간 기준 {_grp}의 창고)")
         results["fact_summary_text"].append(
             f"[창고 글자 {earth_count}개 보유]: " + " / ".join(_vault_desc) +
-            ". 해당 글자가 대운·세운·월운에서 들어와 충·형이 일어나면 창고가 열림."
+            ". (창고가 열리거나 갇히는 판정과 시기는 별도의 '창고 개고·입고' 사실문에서만 확인할 것)"
         )
  
     results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "일반 재물 흐름."
