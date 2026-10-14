@@ -989,12 +989,22 @@ if st.session_state.get('app_running', False):
 
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
+        _CHE_GEN = {'비겁': '식상', '식상': '재성', '재성': '관성', '관성': '인성', '인성': '비겁'}
+        _CHE_CTRL = {'비겁': '재성', '식상': '관성', '재성': '인성', '관성': '비겁', '인성': '식상'}
+        def _che_relation(a, b):
+            if a == b: return "동기"
+            if _CHE_GEN.get(a) == b: return "순생"
+            if _CHE_GEN.get(b) == a: return "역생"
+            if _CHE_CTRL.get(a) == b: return "순극"
+            if _CHE_CTRL.get(b) == a: return "역극"
+            return "관계없음"
         _daewun_che_parts = []
         for _dw_i, dw in enumerate(daewun_data_list):
             che_1 = engine.get_group_ss(dw['ss_gan'])
             che_2 = engine.get_group_ss(dw['ss_ji'])
+            _rel = _che_relation(che_1, che_2)
             _future_mark = " [미래대운]" if _dw_i > _current_dw_idx else ""
-            _daewun_che_parts.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): 전반기체({che_1})/후반기체({che_2}){_future_mark}")
+            _daewun_che_parts.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): 전반기체({che_1})/후반기체({che_2}) / 전환관계({_rel}) / 대운 지지 12운성({dw['un_sung']}){_future_mark}")
         daewun_che_flow_str = " / ".join(_daewun_che_parts) if _daewun_che_parts else "대운 체 흐름 정보 없음"
 
         guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
