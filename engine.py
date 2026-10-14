@@ -1924,6 +1924,51 @@ def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseon
     result += f" / 삼재 여부: {curr_samjae}"
     return result
 
+get_vault_timing_fact_str(ds, jjis, curr_year, dw_j, sewun_j, wolun_j):
+    """창고(辰戌丑未) 입고·개고 시기 사실문. 앞으로 10년 세운 지지와 대조."""
+    VAULT = {
+        '辰': ('水庫', '癸', ['亥', '子'], ['戌']),
+        '戌': ('火庫', '丁', ['巳', '午'], ['辰', '丑', '未']),
+        '丑': ('金庫', '辛', ['申', '酉'], ['未', '戌']),
+        '未': ('木庫', '乙', ['寅', '卯'], ['丑', '戌']),
+    }
+    pos = ['년지', '월지', '일지', '시지']
+    mine = []
+    for i, b in enumerate(jjis):
+        if b in VAULT and b not in [m[1] for m in mine]:
+            mine.append((pos[i % 4], b))
+    if not mine:
+        return "원국에 창고 글자(辰戌丑未)가 없어 입고·개고 해당 없음."
+    lines = []
+    for p, b in mine:
+        vname, rep, ins, opens = VAULT[b]
+        grp = get_group_ss(get_ss(ds, rep)) if ds else "-"
+        # 앞으로 10년 세운 중 입고/개고 해
+        ip, op = [], []
+        for y in range(curr_year, curr_year + 10):
+            br = JI[(y - 1984) % 12]
+            if br in ins:
+                ip.append(f"{y}년({br})")
+            if br in opens:
+                op.append(f"{y}년({br})")
+        now_hit = []
+        for nm, v in (("현재 대운", dw_j), ("올해 세운", sewun_j), ("이번 달 월운", wolun_j)):
+            if v in ins:
+                now_hit.append(f"{nm} {v} → 입고 작용")
+            if v in opens:
+                now_hit.append(f"{nm} {v} → 개고 작용")
+        lines.append(
+            f"- {p} {b}({vname}, 일간 기준 {grp}의 창고): "
+            f"입고 글자={'·'.join(ins)}, 개고 글자={'·'.join(opens)}. "
+            f"앞으로 10년 중 입고 해: {', '.join(ip) if ip else '없음'} / "
+            f"개고 해: {', '.join(op) if op else '없음'}. "
+            f"지금 상태: {', '.join(now_hit) if now_hit else '해당 없음'}"
+        )
+    both = ""
+    if len(mine) >= 2:
+        both = " ※창고가 2개 이상이면 공통으로 여는 글자가 들어오는 해에 동시에 열려 변화 폭이 큼."
+    return "[창고 입고·개고 시기]\n" + "\n".join(lines) + both
+
 def analyze_super_wealth_patterns(bazi_dict):
     yg, yj = bazi_dict.get('year_g'), bazi_dict.get('year_j')
     mg, mj = bazi_dict.get('month_g'), bazi_dict.get('month_j')
@@ -1965,11 +2010,27 @@ def analyze_super_wealth_patterns(bazi_dict):
         results["wealth_power_score"] += 25
         results["fact_summary_text"].append("[酉·丑·辰 삼자조합 감지]: 한탕/부동산 재개발 뻥튀기 파동.")
  
-    earth_count = sum(1 for b in branches if b in ['辰', '戌', '丑', '未'])
+   earth_count = sum(1 for b in branches if b in ['辰', '戌', '丑', '未'])
     if earth_count >= 2:
         results["myogo_treasure_flag"] = True
         results["wealth_power_score"] += (earth_count * 10)
-        results["fact_summary_text"].append(f"[자산 창고 {earth_count}개 보유]: 묘고 개고 시 대규모 자산 입고.")
+        _vault_info = {
+            '辰': ('水庫', '癸', '戌(辰戌충)'),
+            '戌': ('火庫', '丁', '辰(辰戌충)·丑 또는 未(형)'),
+            '丑': ('金庫', '辛', '未(丑未충)·戌(형)'),
+            '未': ('木庫', '乙', '丑(丑未충)·戌(형)'),
+        }
+        _pos_names = ['년지', '월지', '일지', '시지']
+        _vault_desc = []
+        for _i, _b in enumerate(branches):
+            if _b in _vault_info:
+                _vname, _rep_gan, _trigger = _vault_info[_b]
+                _grp = get_group_ss(get_ss(dg, _rep_gan)) if dg else "-"
+                _vault_desc.append(f"{_pos_names[_i]} {_b}({_vname}, 일간 기준 {_grp}의 창고, 열리는 때: {_trigger})")
+        results["fact_summary_text"].append(
+            f"[창고 글자 {earth_count}개 보유]: " + " / ".join(_vault_desc) +
+            ". 해당 글자가 대운·세운·월운에서 들어와 충·형이 일어나면 창고가 열림."
+        )
  
     results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "일반 재물 흐름."
     return results
