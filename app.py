@@ -1608,7 +1608,7 @@ if st.session_state.get('app_running', False):
             # ── C. 신살 · 귀인 · 공망 · 삼재 ──
             "shinsal_str": shinsal_str, "shinsal_by_palace_str": shinsal_by_palace_str,
             "shinsal12_fact_str": engine.get_12_shinsal_fact_str(yb, db, [hb, db, mb, yb], dw_j_cur, cur_sewun_ji_val, _cur_wol_pillar[1], _sel_pillar_d[1]),
-            "vault_timing_fact_str": engine.get_vault_timing_fact_str(ds_hanja, [yb, mb, db, hb], [ys, ms, ds_hanja, hs], curr_year, dw_j_cur, cur_sewun_ji_val, _cur_wol_pillar[1]),
+            "vault_timing_fact_str": engine.get_vault_timing_fact_str(ds_hanja, [yb, mb, db, hb], [ys, ms, ds_hanja, hs], curr_year, dw_j_cur, cur_sewun_ji_val, _cur_wol_pillar[1], gender),
             "cheon_eul": guiin_str, "samjae_str": cur_samjae,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
             "year_gongmang_sipseong": year_gongmang_sipseong,
