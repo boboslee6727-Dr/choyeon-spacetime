@@ -3376,6 +3376,7 @@ _DAEWUN_AGE_PREF = {
 _DAEWUN_AGE_PREF_REV = {k: dict(v) for k, v in _DAEWUN_AGE_PREF.items()}
 _DAEWUN_AGE_PREF_REV[15]['관성'] = 0.8   # 역행: 10대 관성도 괜찮다 (박사님 기준)
 _REV_FLOW_FACTOR = 1.0   # 역행의 '상생 흐름 구조' 가점 비율 (1.0 = 순행과 같음, 0.5 = 절반)
+_DAEWUN_UNSUNG_W = 0.2   # 대운 지지 12운성이 점수에 미치는 비율 (0 = 반영 안 함, 0.2 = 운성이 약하면 최대 약 20% 감점)
 
 _DAEWUN_AGE_WEIGHT = {15: 0.15, 25: 0.20, 35: 0.25, 45: 0.25, 55: 0.15}       # 나이대별 비중 (합 1.0)
 _DAEWUN_CYCLE = ('인성', '비겁', '식상', '재성', '관성')                          # 일간 기준 상생의 순환
@@ -3424,10 +3425,12 @@ def _daewun_flow_score(dw_list, chart=None, direction='순행'):
             continue
         gg, jg = _SS_GROUP.get(seg['ss_gan']), _SS_GROUP.get(seg['ss_ji'])
         q = 0.6 * pref.get(gg, 0.5) + 0.4 * pref.get(jg, 0.5)
+        _un = seg.get('un_sung', '')
+        q *= (1 - _DAEWUN_UNSUNG_W) + _DAEWUN_UNSUNG_W * _UNSUNG_POWER.get(_un, 0.5)   # 12운성(힘의 크기) 반영
         total += _DAEWUN_AGE_WEIGHT[age] * q
         seq.append((age, gg))
         label = "매우 알맞음" if q >= 0.85 else ("알맞음" if q >= 0.65 else ("보통" if q >= 0.45 else "아쉬운 편"))
-        steps.append(f"{age // 10 * 10}대 {seg['c_hanja']}{seg['j_hanja']}({gg}/{jg}) {label}")
+        steps.append(f"{age // 10 * 10}대 {seg['c_hanja']}{seg['j_hanja']}({gg}/{jg}, 운성 {_un}) {label}")
     # 상생으로 이어지는 구조 찾기 — 같은 십성이 이어지는 것은 한 단계로 보고, 인→비→식→재→관 순서로 한 방향으로 이어지면 구조로 인정
     # 시간 순서가 거꾸로(관→재→식→비→인)여도 같은 구조로 인정합니다 (순행·역행은 방향일 뿐 길흉이 아니므로)
     def _distinct(run):
