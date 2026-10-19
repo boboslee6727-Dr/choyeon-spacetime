@@ -3196,7 +3196,7 @@ def get_all_time_scores_for_date(delivery_date, male_pack, female_pack, parent_d
     evaluated.sort(key=lambda x: x['score'], reverse=True)
     return evaluated
 
-def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None, baby_gender='미정'):
+def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, last_period_date=None, period_cycle=30, top_n=5, min_gap_days=21, parent_dw_info=None, baby_gender='미정', delivery_mode='미정', csection_ji='巳午未申'):
     """
     출산 희망 기간(start_date~end_date) 안에서 명리적으로 가장 좋은 출산일·시간 TOP N을 찾습니다.
     - male_pack / female_pack : [시주, 일주, 월주, 년주] 순서의 간지 리스트 (예: ["壬子","戊寅","庚申","癸酉"])
@@ -3238,19 +3238,30 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
         if not slots:
             cur += dt_mod.timedelta(days=1); continue
         best_any = slots[0]
-        day_slots = [s for s in slots if s['daytime']]
+        day_slots = [s for s in slots if s['ji'] in csection_ji]
         best_day = day_slots[0] if day_slots else best_any
-        rank_score = round((best_any['score'] + best_day['score']) / 2.0, 1)
+        main_slot = best_day if delivery_mode == '제왕절개' else best_any   # 제왕절개면 수술 가능 시간 안의 최고 시각이 대표
+        if delivery_mode == '제왕절개':
+            rank_score = round(best_day['score'], 1)
+        elif delivery_mode == '자연·유도분만':
+            rank_score = round(best_any['score'], 1)
+        else:
+            rank_score = round((best_any['score'] + best_day['score']) / 2.0, 1)
  
-        y_p = best_any['year_pillar']
+        y_p = main_slot['year_pillar']
         candidates.append({
             'date': cur.strftime("%Y-%m-%d"),
             'delivery_dt': cur,
             'weekday_kr': ['월', '화', '수', '목', '금', '토', '일'][cur.weekday()],
             'score': rank_score,
-            'four_pillars': best_any['pillars'],
-            'best_time': {'time_str': best_any['time_str'], 'time_pillar': best_any['time_pillar'], 'ji': best_any['ji'], 'score': best_any['score']},
-            'best_day_time': {'time_str': best_day['time_str'], 'time_pillar': best_day['time_pillar'], 'ji': best_day['ji'], 'score': best_day['score'], 'pillars': best_day['pillars']},
+            'four_pillars': main_slot['pillars'],
+            'best_time': {'time_str': main_slot['time_str'], 'time_pillar': main_slot['time_pillar'], 'ji': main_slot['ji'], 'score': main_slot['score']},
+            'best_any_time': {'time_str': best_any['time_str'], 'time_pillar': best_any['time_pillar'], 'ji': best_any['ji'], 'score': best_any['score'], 'pillars': best_any['pillars'],
+                              'good': best_any['good'], 'warn': best_any['warn']},
+            'delivery_mode': delivery_mode,
+            'best_day_time': {'time_str': best_day['time_str'], 'time_pillar': best_day['time_pillar'], 'ji': best_day['ji'], 'score': best_day['score'], 'pillars': best_day['pillars'],
+                              'good': best_day['good'], 'warn': best_day['warn'], 'parts': best_day.get('parts', {}),
+                              'same_as_best': (best_day is best_any), 'score_gap': round(best_any['score'] - best_day['score'], 1)},
             'good': best_any['good'], 'warn': best_any['warn'],
             'conception_date': (ovul - dt_mod.timedelta(days=1)).strftime("%Y-%m-%d"),   # 합궁 최적일 = 배란 예정 전날
             'conception_start': (ovul - dt_mod.timedelta(days=_FERTILE_DAYS_BEFORE_OVULATION)).strftime("%Y-%m-%d"),
@@ -3482,13 +3493,22 @@ def get_delivery_facts_str(best_days):
         dt = d['delivery_dt']
         lines.append(
             f"[{i}순위] {dt.year}년 {dt.month}월 {dt.day}일({d['weekday_kr']}) / 종합 {d['score']}점{(' (전체 출생 시각 중 상위 ' + str(d['top_pct']) + '%)') if d.get('top_pct') is not None else ''} / "
-            f"자연분만 추천 {d['best_time']['time_str']} (완성 명식 {d['four_pillars']}) / "
+            f"자연분만 추천 {d['best_any_time']['time_str']} (완성 명식 {d['best_any_time']['pillars']}) / "
             f"낮 시간대(제왕절개 가능) 추천 {d['best_day_time']['time_str']} (완성 명식 {d['best_day_time']['pillars']}) / "
             f"{_delivery_conception_text(d)} / "
             f"아기 대운 방향: 남아 {d['daeun_dir']['남아']}, 여아 {d['daeun_dir']['여아']} / "
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
+        _bn, _bd = d.get('best_any_time'), d.get('best_day_time')
+        lines.append(f"   └ 손님이 고른 분만 방식: {d.get('delivery_mode', '미정')} (위 '장점'·'유의점'은 {'제왕절개 추천' if d.get('delivery_mode') == '제왕절개' else '자연분만 추천'} 시각 기준)")
+        if _bn and _bd:
+            if _bd.get('same_as_best'):
+                lines.append(f"   └ 시각 비교: 자연분만 추천 시각과 제왕절개 추천 시각이 같은 {_bn['time_str']}입니다.")
+            else:
+                lines.append(f"   └ 시각 비교: 자연분만 추천 {_bn['time_str']}(시주 {_bn['time_pillar']}, 원점수 {_bn['score']}) / 제왕절개 추천 {_bd['time_str']}(시주 {_bd['time_pillar']}, 원점수 {_bd['score']}) / 원점수 차이 {_bd['score_gap']}점")
+                lines.append(f"   └ 자연분만 추천 시각의 장점: {'; '.join(_bn.get('good', [])[:3]) or '특이 장점 없음'} / 유의점: {'; '.join(_bn.get('warn', [])[:3]) or '특이 유의점 없음'}")
+                lines.append(f"   └ 제왕절개 추천 시각의 장점: {'; '.join(_bd.get('good', [])[:3]) or '특이 장점 없음'} / 유의점: {'; '.join(_bd.get('warn', [])[:3]) or '특이 유의점 없음'}")
         if d.get('score_detail'):
             sd = d['score_detail']
             lines.append(f"   └ 점수 구성(만점): 일지 {sd.get('일지', 0)}/{_W_ILJI} · 월지 {sd.get('월지', 0)}/{_W_WOLJI} · 시지 {sd.get('시지', 0)}/{_W_SIJI} · 월간 {sd.get('월간', 0)}/{_W_WOLGAN} · "
