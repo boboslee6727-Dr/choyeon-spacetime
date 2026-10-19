@@ -1481,6 +1481,30 @@ def get_dynamic_shinsal_fact_str(idx, gans, jjis, gender, is_daewun_first_half):
             lines.append(f"- {clean_name}")
     return "\n".join(lines)
 
+def _shinsal_base_names(idx, gans, jjis, gender):
+    """신살 목록 → {이름: 원문} (괄호·설명 앞의 이름만 뽑아 중복 제거)"""
+    names = {}
+    for item in get_general_shinsal_filtered(idx, gans, jjis, gender) or []:
+        clean = re.sub(r'<[^>]+>', '', str(item)).strip()
+        base = re.split(r'[\(\[:：]', clean)[0].strip()
+        if base and base not in names:
+            names[base] = clean
+    return names
+
+def get_couple_shinsal_compare_str(m_gans, m_jjis, f_gans, f_jjis, idx=1):
+    """남명·여명의 신살 이름을 비교해 '공통 / 남명에만 / 여명에만'을 사실문으로 돌려줍니다."""
+    try:
+        m = _shinsal_base_names(idx, m_gans, m_jjis, "남성")
+        f = _shinsal_base_names(idx, f_gans, f_jjis, "여성")
+    except Exception:
+        return "신살 비교 정보 없음"
+    if not m and not f:
+        return "비교할 신살 없음"
+    common = [k for k in m if k in f]
+    only_m = [k for k in m if k not in f]
+    only_f = [k for k in f if k not in m]
+    return (f"공통 신살: {', '.join(common) or '없음'} / 남명에만 있는 신살: {', '.join(only_m) or '없음'} / "
+            f"여명에만 있는 신살: {', '.join(only_f) or '없음'}")
 def get_ohang_deficiency_supply_str(counts, level_phase_data):
     """
     원국에 결핍된 오행이, 대운/세운/월운/일운 각 단계의 '현재 활성화된 반기'에서 실제로 공급되고 있는지 정밀 판정.
