@@ -594,8 +594,8 @@ else:
                             pass
                         stop_ai()
 
-                    last_period_date = st.date_input("마지막 생리 시작일", value=today_dt - dt_mod.timedelta(days=30), key="last_period_date", on_change=_sync_delivery_dates)
-                    period_cycle = st.number_input("평균 생리 주기 (일)", 20, 45, value=30, key="period_cycle", on_change=_sync_delivery_dates)
+                    last_period_date = st.date_input("마지막 생리 시작일 (산모)", value=today_dt - dt_mod.timedelta(days=30), key="last_period_date", on_change=_sync_delivery_dates)
+                    period_cycle = st.number_input("평균 생리 주기 (일, 산모)", 20, 45, value=30, key="period_cycle", on_change=_sync_delivery_dates)
                     try:
                         _auto_start = engine.get_earliest_delivery_start(last_period_date, period_cycle)
                     except Exception:
@@ -993,24 +993,14 @@ if st.session_state.get('app_running', False):
 
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
-        _CHE_GEN = {'비겁': '식상', '식상': '재성', '재성': '관성', '관성': '인성', '인성': '비겁'}
-        _CHE_CTRL = {'비겁': '재성', '식상': '관성', '재성': '인성', '관성': '비겁', '인성': '식상'}
-        def _che_relation(a, b):
-            if a == b: return "동기"
-            if _CHE_GEN.get(a) == b: return "순생"
-            if _CHE_GEN.get(b) == a: return "역생"
-            if _CHE_CTRL.get(a) == b: return "순극"
-            if _CHE_CTRL.get(b) == a: return "역극"
-            return "관계없음"
-        _daewun_che_parts = []
-        for _dw_i, dw in enumerate(daewun_data_list):
-            che_1 = engine.get_group_ss(dw['ss_gan'])
-            che_2 = engine.get_group_ss(dw['ss_ji'])
-            _rel = _che_relation(che_1, che_2)
-            _future_mark = " [미래대운]" if _dw_i > _current_dw_idx else ""
-            _daewun_che_parts.append(f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): 전반기체({che_1})/후반기체({che_2}) / 전환관계({_rel}) / 대운 지지 12운성({dw['un_sung']}){_future_mark}")
-        daewun_che_flow_str = " / ".join(_daewun_che_parts) if _daewun_che_parts else "대운 체 흐름 정보 없음"
-
+        daewun_che_flow_str = engine.get_daewun_che_flow_str(daewun_data_list)
+        try:
+            _gi = [engine.GAN.index(_d['c_hangul']) for _d in daewun_data_list[:2]]
+            _dw_dir = "순행" if (_gi[1] - _gi[0]) % 10 == 1 else "역행"
+        except Exception:
+            _dw_dir = ""
+        _dir_head = (f"[대운 방향: {_dw_dir} — 대운 천간의 십성이 " + ("인→비→식→재→관" if _dw_dir == "순행" else "관→재→식→비→인") + " 방향으로 이어짐] ") if _dw_dir else ""
+        daewun_che_flow_str = (_dir_head + " / ".join(_daewun_che_parts)) if _daewun_che_parts else "대운 체 흐름 정보 없음"
         guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
         target_shinsal_names = ["년살", "망신살", "역마살"]
         cheon_eul_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if dw['j_hanja'] in guiin_branches]
@@ -1026,6 +1016,7 @@ if st.session_state.get('app_running', False):
         # 상대방 대운표 연산 (2인용 전용)
         # ----------------------------------------------------------------------
         p_un_html = ""
+        p_daewun_che_flow_str = ""
         p_info_h, p_table_html, p_master_bar_html = "", "", ""
         if is_2person:
             try:
@@ -1077,6 +1068,7 @@ if st.session_state.get('app_running', False):
                         "y_shinsal": p_y_shin_val, "d_shinsal": p_d_shin_val, "is_current": p_is_active, "is_first": (i == 0)
                     })
 
+                p_daewun_che_flow_str = engine.get_daewun_che_flow_str(p_daewun_data_list, p_direction_str)
                 p_un_html = html_views.generate_daewun_layout(p_daewun_data_list, p_direction_str, p_calc_d, get_oh_class)
                 
                 p_gans = [partner_bazi[0][0] if len(partner_bazi[0])>0 else "-", partner_bazi[1][0] if len(partner_bazi[1])>0 else "甲", partner_bazi[2][0] if len(partner_bazi[2])>0 else "甲", partner_bazi[3][0] if len(partner_bazi[3])>0 else "甲"]
@@ -1116,7 +1108,7 @@ if st.session_state.get('app_running', False):
                     _d_start = st.session_state.get('delivery_start_date', dt_mod.date.today())
                     _d_end = st.session_state.get('delivery_end_date', _d_start + dt_mod.timedelta(days=365))
                     _pa = {'birth_year': int(sol_y), 'dw': daewun_data_list}
-                    _pp = {'birth_year': int(p_y), 'dw': p_daewun_data_list if 'p_daewun_data_list' in locals() else []}
+                    _pp = {'birth_year': int(p_s_year) if 'p_s_year' in locals() else int(p_y), 'dw': p_daewun_data_list if 'p_daewun_data_list' in locals() else []}
                     _parent_dw_info = {'아버지': _pa if gender == "남성" else _pp, '어머니': _pp if gender == "남성" else _pa}
                     _cs_ji_map = {"낮 시간 (09:30~17:29)": "巳午未申", "아침부터 (07:30~17:29)": "辰巳午未申", "24시간 가능 병원 (전 시간)": "子丑寅卯辰巳午未申酉戌亥"}
                     _d_mode = st.session_state.get('delivery_mode', '미정')
@@ -1651,6 +1643,8 @@ if st.session_state.get('app_running', False):
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
+            "m_daewun_che_flow_str": daewun_che_flow_str if gender == "남성" else p_daewun_che_flow_str,
+            "f_daewun_che_flow_str": p_daewun_che_flow_str if gender == "남성" else daewun_che_flow_str,
             "daewun_full_fact_str": daewun_full_fact_str,
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
 
