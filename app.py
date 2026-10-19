@@ -430,7 +430,7 @@ else:
 
         # 👤 신청인 기본 정보 입력
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
-        name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n", on_change=stop_ai)
+        name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="심청이", key="u_n", on_change=stop_ai)
         gender = st.selectbox("성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
@@ -555,7 +555,7 @@ else:
                     del st.session_state['rev_p_error_msg']
 
             st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>💕 상대방 기본 정보</div>", unsafe_allow_html=True)
-            f_name = st.text_input("상대방 이름", value=st.session_state.get("f_n", ""), placeholder="심청이", key="f_n", on_change=stop_ai)
+            f_name = st.text_input("상대방 이름", value=st.session_state.get("f_n", ""), placeholder="홍길동", key="f_n", on_change=stop_ai)
             f_gender = st.selectbox("상대방 성별", ["남성", "여성"], key="f_g", on_change=sync_user_gender)
             f_marital = st.selectbox("상대방 혼인여부", ["미혼", "기혼", "돌싱"], key="f_m_stat", on_change=stop_ai,
                                      format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
