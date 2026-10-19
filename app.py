@@ -604,6 +604,9 @@ else:
                     delivery_start_date = col_d1.date_input("탐색 시작일", value=_auto_start, key="delivery_start_date", on_change=stop_ai)
                     delivery_end_date = col_d2.date_input("탐색 종료일", value=_auto_start + dt_mod.timedelta(days=365), key="delivery_end_date", on_change=stop_ai)
                     baby_gender = st.radio("태아 성별", ["미정", "남아", "여아"], key="baby_gender", on_change=stop_ai)
+                    delivery_mode = st.radio("분만 방식", ["미정", "제왕절개", "자연·유도분만"], key="delivery_mode", on_change=stop_ai, horizontal=True)
+                    if delivery_mode == "제왕절개":
+                        st.selectbox("수술 가능 시간 (병원 사정)", ["낮 시간 (09:30~17:29)", "아침부터 (07:30~17:29)", "24시간 가능 병원 (전 시간)"], key="csection_hours", on_change=stop_ai)
                     st.caption("※ 탐색 시작·종료일은 마지막 생리 시작일과 주기에서 자동으로 채워집니다(가장 이른 출산 가능일부터 1년). 필요하면 직접 고치세요. 후보 출산일은 임신 39주~41주 사이(계획 분만 기준)에서 고릅니다.")
 
             elif "4-2." in u_product:
@@ -1115,12 +1118,17 @@ if st.session_state.get('app_running', False):
                     _pa = {'birth_year': int(sol_y), 'dw': daewun_data_list}
                     _pp = {'birth_year': int(p_y), 'dw': p_daewun_data_list if 'p_daewun_data_list' in locals() else []}
                     _parent_dw_info = {'아버지': _pa if gender == "남성" else _pp, '어머니': _pp if gender == "남성" else _pa}
+                    _cs_ji_map = {"낮 시간 (09:30~17:29)": "巳午未申", "아침부터 (07:30~17:29)": "辰巳午未申", "24시간 가능 병원 (전 시간)": "子丑寅卯辰巳午未申酉戌亥"}
+                    _d_mode = st.session_state.get('delivery_mode', '미정')
+                    _d_ji = _cs_ji_map.get(st.session_state.get('csection_hours', ''), '巳午未申') if _d_mode == '제왕절개' else '巳午未申'
                     delivery_best_days = engine.get_optimized_delivery_days(
                         _d_start, _d_end, male_data_pack, female_data_pack,
                         st.session_state.get('last_period_date', None),
                         st.session_state.get('period_cycle', 30),
                         parent_dw_info=_parent_dw_info,
-                        baby_gender=st.session_state.get('baby_gender', '미정'))
+                        baby_gender=st.session_state.get('baby_gender', '미정'),
+                        delivery_mode=_d_mode,
+                        csection_ji=_d_ji)
                     delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days)
                 except Exception as e:
                     st.error(f"⚠️ 출산 택일 계산 오류: {e}")
@@ -1997,9 +2005,10 @@ if st.session_state.get('app_running', False):
                 i_gong = engine.calculate_gongmang(d_p[0], d_p[1]) or "-"
                 dw_parts = [f"{g} {di['baby_daewun'][g]['calc_d']}" for g in ('남아', '여아') if bg in ('미정', g)]
                 dt_ = di['delivery_dt']
+                _basis = {'제왕절개': '제왕절개 추천 시각 기준', '자연·유도분만': '자연·유도분만 희망 시각 기준'}.get(di.get('delivery_mode', '미정'), '자연분만 추천 시각 기준')
                 head = (f"<div style='text-align:center; margin:10px 0 12px 0; line-height:1.6;'>"
                         f"<span style='font-size:17px; font-weight:900; color:#1A237E;'>👶 아기 완성 명식 — {dt_.year}년 {dt_.month}월 {dt_.day}일({di['weekday_kr']}) {di['best_time']['time_str']}</span><br>"
-                        f"<span style='font-size:13px; font-weight:bold; color:#555;'>(명리 종합점수 {di['score']}점 · 자연분만 추천 시각 기준)</span></div>")
+                        f"<span style='font-size:13px; font-weight:bold; color:#555;'>(명리 종합점수 {di['score']}점 · {_basis})</span></div>")
                 _dw = '/'.join(f"{g}({di['baby_daewun'][g]['calc_d']},{di['baby_daewun'][g]['dir']})" for g in ('남아', '여아') if bg in ('미정', g))
                 bar = ("<div style='border:2px solid #3E2723; margin-top:12px; padding:8px; display:flex; flex-wrap:nowrap; justify-content:space-between; gap:0 6px; white-space:nowrap; "
                        "font-weight:900; font-size:11.5px; border-radius:8px;'>"
@@ -2009,8 +2018,13 @@ if st.session_state.get('app_running', False):
                        f"<div>🎯 공망: [일] {i_gong}</div></div>")
                 note = ""
                 day_t = di.get('best_day_time', {})
-                if day_t and day_t.get('time_str') != di['best_time']['time_str']:
-                    note = (f"<div style='margin-top:8px; font-size:13px; font-weight:bold; color:#555;'>🏥 낮 시간대(제왕절개 가능) 추천 {day_t['time_str']}에는 시주만 "
+                any_t = di.get('best_any_time', {})
+                if di.get('delivery_mode') == '제왕절개':
+                    if any_t and any_t.get('time_str') != di['best_time']['time_str']:
+                        note = (f"<div style='margin-top:8px; font-size:13px; font-weight:bold; color:#555;'>🌿 자연·유도분만 희망 시간대는 {any_t['time_str']}이며, 시주는 "
+                                f"<span style='color:#1A237E;'>{any_t['time_pillar']}</span>입니다. (태어나는 시각은 미리 정할 수 없어 참고용입니다)</div>")
+                elif day_t and day_t.get('time_str') != di['best_time']['time_str']:
+                    note = (f"<div style='margin-top:8px; font-size:13px; font-weight:bold; color:#555;'>🏥 제왕절개(수술 가능 시간) 추천 {day_t['time_str']}에는 시주만 "
                             f"<span style='color:#1A237E;'>{day_t['time_pillar']}</span>(으)로 바뀝니다.</div>")
                 return f"<div style='break-inside: avoid; page-break-inside: avoid;'>{head}{table}{bar}{note}</div>"
 
