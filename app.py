@@ -246,7 +246,7 @@ def do_auto_fill_partner():
         st.session_state['p_d_in'] = matched_results[0]["d"]
         if matched_results[0]["t"] != "시간 모름":
             st.session_state['p_t_key'] = matched_results[0]["t"]
-            st.session_state['p_t_select_key'] = matched_results[0]["t"]
+            st.session_state['p_t_select'] = matched_results[0]["t"]
         st.session_state.pop('rev_p_error_msg', None)
     else:
         st.session_state.pop('rev_matches_partner', None)
@@ -542,7 +542,7 @@ else:
                                     st.session_state['p_d_in'] = m['d']
                                     if m['t'] != "시간 모름":
                                         st.session_state['p_t_key'] = m['t']
-                                        st.session_state['p_t_select_key'] = m['t']
+                                        st.session_state['p_t_select'] = m['t']
                                     break
                             stop_ai()
 
