@@ -370,8 +370,8 @@ else:
                 
         st.markdown("---")
 
-        if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "남성")
-        if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "여성")
+        if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "여성")
+        if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "남성")
 
         def sync_partner_gender():
             u_val = st.session_state.get("u_g", "남성")
@@ -431,10 +431,10 @@ else:
         # 👤 신청인 기본 정보 입력
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="홍길동", key="u_n", on_change=stop_ai)
-        gender = st.selectbox("성별", ["남성", "여성"], key="u_g", on_change=sync_partner_gender)
+        gender = st.selectbox("성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
-        u_marital = st.selectbox("혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
+        u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
                                  format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c", on_change=stop_ai)
 
@@ -556,8 +556,9 @@ else:
 
             st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 16px; font-weight: 800; color: #111111; margin-top: 14px; margin-bottom: 8px;'>💕 상대방 기본 정보</div>", unsafe_allow_html=True)
             f_name = st.text_input("상대방 이름", value=st.session_state.get("f_n", ""), placeholder="심청이", key="f_n", on_change=stop_ai)
-            f_gender = st.selectbox("상대방 성별", ["여성", "남성"], key="f_g", on_change=sync_user_gender)
-            f_marital = st.selectbox("상대방 혼인여부", ["선택", "미혼", "기혼", "돌싱"], key="f_m_stat", on_change=stop_ai)
+            f_gender = st.selectbox("상대방 성별", ["남성", "여성"], key="f_g", on_change=sync_user_gender)
+            f_marital = st.selectbox("상대방 혼인여부", ["미혼", "기혼", "돌싱"], key="f_m_stat", on_change=stop_ai,
+                                     format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c", on_change=stop_ai)
             
             p_col1, p_col2, p_col3 = st.columns(3)
@@ -1087,7 +1088,7 @@ if st.session_state.get('app_running', False):
                 p_samjae = engine.get_samjae(p_yb, curr_y_ji)
                 p_samjae_color = "#C62828" if p_samjae != "해당 없음" else "#555"
 
-                p_info_h = html_views.get_info_header("♀️" if f_gender_val=="여성" else "♂️", p_name_val, f_gender_val, st.session_state.get("f_m_stat","선택"), p_age_val, p_sol_str_val, p_lun_str_val, p_time_val)
+                p_info_h = html_views.get_info_header("♀️" if f_gender_val=="여성" else "♂️", p_name_val, f_gender_val, st.session_state.get("f_m_stat","미혼"), p_age_val, p_sol_str_val, p_lun_str_val, p_time_val)
                 p_table_html = html_views.generate_saju_table_data(p_gans, p_jjis, p_ds, f_gender_val, engine)
                 p_master_bar_html = html_views.get_master_bar(p_calc_d, p_counts['목'], p_counts['화'], p_counts['토'], p_counts['금'], p_counts['수'], p_guiin_str, p_n_gong, p_i_gong, p_samjae_color, p_samjae)
             except Exception:
@@ -1424,9 +1425,9 @@ if st.session_state.get('app_running', False):
         dw_gj_han_cur = engine.get_han_reading(dw_gj_cur)  # 한글 발음 (예: 무오)
         sewun_gj_cur = engine.GAN[(curr_year-1984)%60%10] + engine.JI[(curr_year-1984)%60%12]  # 제목용 짧은 세운 간지 (예: 丙午)
         sewun_gj_han_cur = engine.get_han_reading(sewun_gj_cur)  # 한글 발음 (예: 병오)
-        wolun_gj_cur = _cur_wol_pillar[0] + _cur_wol_pillar[1]       # 월운 간지 (한자, 예: 庚申)
-        wolun_gj_han_cur = engine.get_han_reading(wolun_gj_cur)      # 한글 발음 (예: 경신)
-        ilun_gj_cur = _sel_pillar_d[0] + _sel_pillar_d[1]            # 일운 간지 (한자, 예: 甲子)
+        wolun_gj_cur = _cur_wol_pillar[0] + _cur_wol_pillar[1]         # 월운 간지 (한자, 예: 庚申)
+        wolun_gj_han_cur = engine.get_han_reading(wolun_gj_cur)  # 한글 발음 (예: 경신)
+        ilun_gj_cur = _sel_pillar_d[0] + _sel_pillar_d[1]                  # 일운 간지 (한자, 예: 甲子)
         ilun_gj_han_cur = engine.get_han_reading(ilun_gj_cur)        # 한글 발음 (예: 갑자)
 
         try:
@@ -1543,8 +1544,8 @@ if st.session_state.get('app_running', False):
         female_ideal_data = (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {}) if gender == "남성" else ideal_spouse_data
         m_ideal_spouse_fact = male_ideal_data.get("남명", "이상적 배우자상 데이터 없음")
         f_ideal_spouse_fact = female_ideal_data.get("여명", "이상적 배우자상 데이터 없음")
-        m_marital_val = u_marital if gender == "남성" else st.session_state.get("f_m_stat", "선택")
-        f_marital_val = st.session_state.get("f_m_stat", "선택") if gender == "남성" else u_marital
+        m_marital_val = u_marital if gender == "남성" else st.session_state.get("f_m_stat", "미혼")
+        f_marital_val = st.session_state.get("f_m_stat", "미혼") if gender == "남성" else u_marital
 
         # 🚨 궁합용: 남명/여명 각각의 배우자궁 안정성(spouse_issue_facts) 준비
         if is_2person and hasattr(engine, 'analyze_saju_facts_advanced'):
