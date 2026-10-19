@@ -2860,9 +2860,9 @@ _SHIN12_SCORE = {'장성살': 1.0, '반안살': 1.0, '화개살': 0.7, '지살':
 _YANGIN_MAP = {'甲': '卯', '丙': '午', '戊': '午', '庚': '酉', '壬': '子'}
 _WOLDEOK_MAP = {'寅': '丙', '午': '丙', '戌': '丙', '申': '壬', '子': '壬', '辰': '壬', '亥': '甲', '卯': '甲', '未': '甲', '巳': '庚', '酉': '庚', '丑': '庚'}
 # 월간(60월령) 적합도 규칙 — 계절별 월간 오행의 한난값
-_WOLGAN_WINTER = {'화': 1.0, '토': 0.8, '목': 0.5, '금': 0.2, '수': 0.2}   # 동절기(해자축인월)
+_WOLGAN_WINTER = {'화': 1.0, '토': 0.8, '목': 0.5, '금': 0.2, '수': 0.2}    # 동절기(해자축인월)
 _WOLGAN_SUMMER = {'수': 1.0, '금': 0.7, '토': 0.4, '목': 0.3, '화': 0.0}   # 하절기(사오미월)
-_OH_TEMP = {'화': 2, '목': 1, '토': 0, '금': -1, '수': -2}                   # 조후: 오행별 온도
+_OH_TEMP = {'화': 2, '목': 1, '토': 0, '금': -1, '수': -2}                         # 조후: 오행별 온도
 _SAMHAP_GROUPS = ('申子辰', '亥卯未', '寅午戌', '巳酉丑')
 _GONGMANG_BASE = {'월지': 1.2, '시지': 0.5, '년지': 0.3}                     # 공망이 걸린 곳별 감점(합 2.0 = 공망 만점)
 _HAEGONG_FACTOR = {'충': 0.0, '삼합': 0.0, '육합': 0.5}                      # 해공 시 남는 감점 비율 (0 = 완전 해공)
@@ -3336,6 +3336,11 @@ _DAEWUN_AGE_PREF = {
     45: {'재성': 1.0, '관성': 1.0, '식상': 0.8, '인성': 0.6, '비겁': 0.5},     # 40대 (활동기)
     55: {'관성': 1.0, '재성': 0.9, '인성': 0.8, '식상': 0.7, '비겁': 0.5},     # 50대
 }
+
+# 역행 대운 아기용 나이대별 표 — 처음엔 순행 표와 같은 숫자입니다. 박사님이 역행 인생 곡선에 맞게 고치시면 됩니다.
+_DAEWUN_AGE_PREF_REV = {k: dict(v) for k, v in _DAEWUN_AGE_PREF.items()}
+_REV_FLOW_FACTOR = 1.0   # 역행의 '상생 흐름 구조' 가점 비율 (1.0 = 순행과 같음, 0.5 = 절반)
+
 _DAEWUN_AGE_WEIGHT = {15: 0.15, 25: 0.20, 35: 0.25, 45: 0.25, 55: 0.15}       # 나이대별 비중 (합 1.0)
 _DAEWUN_CYCLE = ('인성', '비겁', '식상', '재성', '관성')                          # 일간 기준 상생의 순환
 _DAEWUN_SHORT = {'인성': '인', '비겁': '비', '식상': '식', '재성': '재', '관성': '관'}
@@ -3360,7 +3365,7 @@ def _score_display(raw):
     return round(p, 1), round(100.0 - p, 1)
 
 
-def _daewun_flow_score(dw_list, chart=None):
+def _daewun_flow_score(dw_list, chart=None, direction='순행'):
     """아기 대운(10~50대)이 나이대별로 얼마나 알맞은 십성(일간 기준)으로 흐르는지 0~_W_DAEWUN점으로 채점합니다.
     각 대운은 천간 0.6 + 지지 0.4 비율로 보며, 상생으로 이어지는 3단계 이상 구조(식재관·인비식·비식재 등)가 나타나면 가점하고 설명에 알려줍니다. 구조는 순행·역행 어느 방향이든 같게 인정합니다.
     반환: (점수, 시기별 설명 목록)"""
@@ -3375,7 +3380,8 @@ def _daewun_flow_score(dw_list, chart=None):
         return None
 
     total, steps, seq = 0.0, [], []
-    for age, pref in _DAEWUN_AGE_PREF.items():
+    _prefs = _DAEWUN_AGE_PREF_REV if direction == '역행' else _DAEWUN_AGE_PREF
+    for age, pref in _prefs.items():
         seg = seg_at(age)
         if not seg:
             total += _DAEWUN_AGE_WEIGHT[age] * 0.5
@@ -3416,13 +3422,11 @@ def _daewun_flow_score(dw_list, chart=None):
     best, best_n, reverse = (fwd, n_f, False) if n_f >= n_r else (rev, n_r, True)
     bonus = 0.0
     if best:
-        names = [_DAEWUN_SHORT[g] for g in _distinct(best)]
-        if reverse:
-            names = names[::-1]
-        label = "".join(names) + (" (시간상 거꾸로 흐르지만 같은 구조)" if reverse else "")
+        names = [_DAEWUN_SHORT[g] for g in _distinct(best)]      # 시간 순서 그대로 표시
+        label = "".join(names) + (" (역행: 거슬러 올라가는 흐름)" if reverse else " (순행: 순탄하게 이어지는 흐름)")
         steps.insert(0, f"흐름 구조: {label} ({best[0][0] // 10 * 10}대~{best[-1][0] // 10 * 10}대에 상생으로 이어짐)")
         if best_n >= 3:                                   # 인비식·식재관·비식재 등 3단계 이상 상생 구조는 가점 (단계당 5%, 최대 20%)
-            bonus = min(0.2, 0.05 * (best_n - 1))
+            bonus = min(0.2, 0.05 * (best_n - 1)) * (_REV_FLOW_FACTOR if reverse else 1.0)
     return round(min(1.0, total + bonus) * _W_DAEWUN, 2), steps
 
 
