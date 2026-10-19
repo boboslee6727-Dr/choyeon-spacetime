@@ -3494,7 +3494,7 @@ def get_delivery_facts_str(best_days):
         lines.append(
             f"[{i}순위] {dt.year}년 {dt.month}월 {dt.day}일({d['weekday_kr']}) / 종합 {d['score']}점{(' (전체 출생 시각 중 상위 ' + str(d['top_pct']) + '%)') if d.get('top_pct') is not None else ''} / "
             f"자연분만 추천 {d['best_any_time']['time_str']} (완성 명식 {d['best_any_time']['pillars']}) / "
-            f"낮 시간대(제왕절개 가능) 추천 {d['best_day_time']['time_str']} (완성 명식 {d['best_day_time']['pillars']}) / "
+            f"제왕절개 추천 {d['best_day_time']['time_str']} (완성 명식 {d['best_day_time']['pillars']}) / "
             f"{_delivery_conception_text(d)} / "
             f"아기 대운 방향: 남아 {d['daeun_dir']['남아']}, 여아 {d['daeun_dir']['여아']} / "
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
