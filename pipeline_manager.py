@@ -592,7 +592,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         f_c_g, f_c_m, f_c_c = st.columns(3)
         with f_c_g:
             f_gender = st.selectbox("상대방 성별", ["남성", "여성"], key="order_f_gender", on_change=sync_user_gender_order)
-        with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱", "기타"], key="order_f_marital")
+        with f_c_m: f_marital = st.selectbox("상대방 결혼유무", ["미혼", "기혼", "돌싱"], key="order_f_marital",
+                                             format_func=lambda x: {"미혼": "미혼", "기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
         with f_c_c: f_cal = st.selectbox("상대방 양/음력", ["양력", "음력 평달", "음력 윤달"], key="order_f_cal")
         f_c_y, f_c_mo, f_c_d = st.columns(3)
         with f_c_y: f_y = st.text_input("상대방 생년(YYYY) *", max_chars=4, placeholder="1990", key="order_f_y")
@@ -812,13 +813,19 @@ def render_admin_panel():
                         with btn_col1:
                             if st.button("💰 입금 확인 (무소음 감명 시작)", key=f"pay_{r_oid}", use_container_width=True):
                                 st.session_state['u_n'], st.session_state['u_g'], st.session_state['u_m_stat'], st.session_state['u_c'] = r_name, row['gender'], row['marital'], row['u_cal']
+                                # 🆕 성별 기억칸도 같이 갱신 (상품을 바꿔도 성별이 남성으로 돌아가지 않도록)
+                                st.session_state['u_g_saved'] = row['gender']
+                                st.session_state['f_g_saved'] = "남성" if row['gender'] == "여성" else "여성"
                                 st.session_state['s_y'], st.session_state['s_m'], st.session_state['s_d'] = int(row['b_year']), int(row['b_month']), int(row['b_day'])
                                 st.session_state['s_t'], st.session_state['s_t_select'] = row['b_time'], row['b_time']
                                 
                                 # 🆕 [버그 수정] engine_prod(값)가 아니라 r_prod_first(원본 키)로 판별해야 정확함
                                 if "3-" in r_prod_first:
                                     st.session_state['f_n'], st.session_state['f_g'] = row['f_name'], row['f_gender']
-                                    st.session_state['f_m_stat'], st.session_state['f_c'] = row.get('f_marital', '선택'), row.get('f_cal', '양력') 
+                                    # 🆕 궁합 상품: 상대방/신청인 성별 기억칸도 DB 값 그대로 맞춤
+                                    st.session_state['f_g_saved'] = row['f_gender']
+                                    st.session_state['u_g_saved'] = row['gender']
+                                    st.session_state['f_m_stat'], st.session_state['f_c'] = row.get('f_marital', '선택'), row.get('f_cal', '양력')
                                     st.session_state['p_y_in'], st.session_state['p_m_in'], st.session_state['p_d_in'], st.session_state['p_t_key'] = int(row.get('f_y', 1980)), int(row.get('f_m', 1)), int(row.get('f_d', 1)), row.get('f_t', '시간 모름')
                                 
                                 u_concern = str(row.get('user_concern', ''))
