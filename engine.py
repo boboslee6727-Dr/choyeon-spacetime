@@ -1242,6 +1242,38 @@ def get_matrix_keyword(che_group, yong_group):
 def get_dw_fact_str(dw_che, dw_yong, dw_kw):
     return f"체운(무대): {dw_che} / 용운(사건): {dw_yong} ➔ 도출 키워드: {dw_kw}"
 
+# ---- 대운 체(體) 흐름 사실문 (신청자·상대방 공통 — app.py가 불러다 씁니다) ----
+_CHE_GEN = {'비겁': '식상', '식상': '재성', '재성': '관성', '관성': '인성', '인성': '비겁'}
+_CHE_CTRL = {'비겁': '재성', '식상': '관성', '재성': '인성', '관성': '비겁', '인성': '식상'}
+
+def get_che_relation(a, b):
+    """전반기 체(a)에서 후반기 체(b)로 이어지는 관계: 동기·순생·역생·순극·역극"""
+    if a == b: return "동기"
+    if _CHE_GEN.get(a) == b: return "순생"
+    if _CHE_GEN.get(b) == a: return "역생"
+    if _CHE_CTRL.get(a) == b: return "순극"
+    if _CHE_CTRL.get(b) == a: return "역극"
+    return "관계없음"
+
+def get_daewun_che_flow_str(dw_list, dir_name=""):
+    """대운 목록 → AI에게 넘기는 '대운 체 흐름' 사실문. 방향(순행·역행)을 주지 않으면 대운 천간이 +1씩 가는지로 직접 판정합니다."""
+    if not dw_list:
+        return "대운 체 흐름 정보 없음"
+    if not dir_name:
+        try:
+            gi = [GAN.index(d['c_hangul']) for d in dw_list[:2]]
+            dir_name = "순행" if (gi[1] - gi[0]) % 10 == 1 else "역행"
+        except Exception:
+            dir_name = ""
+    cur = next((i for i, d in enumerate(dw_list) if d.get('is_current')), 0)
+    parts = []
+    for i, d in enumerate(dw_list):
+        c1, c2 = get_group_ss(d['ss_gan']), get_group_ss(d['ss_ji'])
+        mark = " [미래대운]" if i > cur else ""
+        parts.append(f"{d['age_range']}({d['c_hanja']}{d['j_hanja']}): 전반기체({c1})/후반기체({c2}) / 전환관계({get_che_relation(c1, c2)}) / 대운 지지 12운성({d['un_sung']}){mark}")
+    head = f"[대운 방향: {dir_name} — 대운 천간의 십성이 {'인→비→식→재→관' if dir_name == '순행' else '관→재→식→비→인'} 방향으로 이어짐] " if dir_name else ""
+    return head + " / ".join(parts)
+
 def _is_daewun_first_half(age, dw_start_age):
     """대운 진입 후 0~4년차(전반기,천간) / 5~9년차(후반기,지지) 판정"""
     year_in_dw = age - dw_start_age
@@ -3424,9 +3456,9 @@ def _daewun_flow_score(dw_list, chart=None, direction='순행'):
             total += _DAEWUN_AGE_WEIGHT[age] * 0.5
             continue
         gg, jg = _SS_GROUP.get(seg['ss_gan']), _SS_GROUP.get(seg['ss_ji'])
-        q = 0.6 * pref.get(gg, 0.5) + 0.4 * pref.get(jg, 0.5)
         _un = seg.get('un_sung', '')
-        q *= (1 - _DAEWUN_UNSUNG_W) + _DAEWUN_UNSUNG_W * _UNSUNG_POWER.get(_un, 0.5)   # 12운성(힘의 크기) 반영
+        _unf = (1 - _DAEWUN_UNSUNG_W) + _DAEWUN_UNSUNG_W * _UNSUNG_POWER.get(_un, 0.5)   # 12운성(힘의 크기)
+        q = 0.5 * pref.get(gg, 0.5) + 0.5 * pref.get(jg, 0.5) * _unf   # 폭포수: 전반기(천간) 5년 + 후반기(지지) 5년, 운성은 후반기에만 반영
         total += _DAEWUN_AGE_WEIGHT[age] * q
         seq.append((age, gg))
         label = "매우 알맞음" if q >= 0.85 else ("알맞음" if q >= 0.65 else ("보통" if q >= 0.45 else "아쉬운 편"))
