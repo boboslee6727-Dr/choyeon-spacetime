@@ -285,12 +285,12 @@ if is_admin_mode:
     elif "4." in main_category: u_product = st.session_state.get('sub_category_4', '4-1. 타 감명서 비교 (사주)')
     
     name, gender, u_marital, u_cal = st.session_state.get('u_n', '고객'), st.session_state.get('u_g', '여성'), st.session_state.get('u_m_stat', '선택'), st.session_state.get('u_c', '양력')
-    b_year, b_month, b_day, b_time = st.session_state.get('s_y', 1980), st.session_state.get('s_m', 1), st.session_state.get('s_d', 1), st.session_state.get('s_t', '시간 모름')
+    b_year, b_month, b_day, b_time = st.session_state.get('s_y', 2000), st.session_state.get('s_m', 6), st.session_state.get('s_d', 15), st.session_state.get('s_t', '시간 모름')
     is_1person = not ("3-" in u_product or "4-2." in u_product)
     is_2person = ("3-" in u_product or "4-2." in u_product)
     
     f_name, f_gender, f_marital, f_cal = st.session_state.get('f_n', '상대방'), st.session_state.get('f_g', '남성'), st.session_state.get('f_m_stat', '선택'), st.session_state.get('f_c', '양력')
-    f_y, f_m, f_d, f_t = st.session_state.get('p_y_in', 1980), st.session_state.get('p_m_in', 1), st.session_state.get('p_d_in', 1), st.session_state.get('p_t_key', '시간 모름')
+    f_y, f_m, f_d, f_t = st.session_state.get('p_y_in', 2000), st.session_state.get('p_m_in', 6), st.session_state.get('p_d_in', 15), st.session_state.get('p_t_key', '시간 모름')
 
 else:
     with st.sidebar:
@@ -439,9 +439,9 @@ else:
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c", on_change=stop_ai)
 
         col_y, col_m, col_d = st.columns(3)
-        with col_y: b_year = st.number_input("년도", 1900, 2050, value=st.session_state.get("s_y", 1980), key="s_y", on_change=stop_ai)
-        with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get("s_m", 1), key="s_m", on_change=stop_ai)
-        with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get("s_d", 1), key="s_d", on_change=stop_ai)
+        with col_y: b_year = st.number_input("년도", 1900, 2050, value=st.session_state.get("s_y", 2000), key="s_y", on_change=stop_ai)
+        with col_m: b_month = st.number_input("월", 1, 12, value=st.session_state.get("s_m", 6), key="s_m", on_change=stop_ai)
+        with col_d: b_day = st.number_input("일", 1, 31, value=st.session_state.get("s_d", 15), key="s_d", on_change=stop_ai)
         
         curr_t_val = st.session_state.get("s_t", idx_list[0])
         t_idx = idx_list.index(curr_t_val) if curr_t_val in idx_list else 0
@@ -684,9 +684,9 @@ if st.session_state.get('app_running', False):
 
     klc = KoreanLunarCalendar()
 
-    b_year = st.session_state.get("s_y", 1980)
-    b_month = st.session_state.get("s_m", 1)
-    b_day = st.session_state.get("s_d", 1)
+    b_year = st.session_state.get("s_y", 2000)
+    b_month = st.session_state.get("s_m", 6)
+    b_day = st.session_state.get("s_d", 15)
 
     if "음력" in u_cal:
         is_leap = True if "윤달" in u_cal else False
@@ -824,9 +824,9 @@ if st.session_state.get('app_running', False):
         # 단일 분기: 2인용 vs 1인용 파트너 연산 및 표지 구성
         # ----------------------------------------------------------------------
         if is_2person:
-            p_y = st.session_state.get('p_y_in', 1980)
-            p_m = st.session_state.get('p_m_in', 1)
-            p_d = st.session_state.get('p_d_in', 1)
+            p_y = st.session_state.get('p_y_in', 2000)
+            p_m = st.session_state.get('p_m_in', 6)
+            p_d = st.session_state.get('p_d_in', 15)
             p_cal_val = st.session_state.get('f_c', "양력")
             p_is_lunar = "음력" in p_cal_val
             p_is_leap = "윤달" in p_cal_val
