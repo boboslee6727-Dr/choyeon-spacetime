@@ -1505,6 +1505,24 @@ def get_couple_shinsal_compare_str(m_gans, m_jjis, f_gans, f_jjis, idx=1):
     only_f = [k for k in f if k not in m]
     return (f"공통 신살: {', '.join(common) or '없음'} / 남명에만 있는 신살: {', '.join(only_m) or '없음'} / "
             f"여명에만 있는 신살: {', '.join(only_f) or '없음'}")
+
+def get_couple_pillars_fact_str(m_gans, m_jjis, f_gans, f_jjis):
+    """남명·여명의 네 기둥(년·월·일·시)을 자리 순서까지 고정한 사실문으로 돌려줍니다.
+    목록 순서: 0=시, 1=일, 2=월, 3=년 (앱 전체 공통). 비어 있는 기둥은 '미상'으로 표시합니다."""
+    def _one(g, j):
+        def _p(i):
+            try:
+                a = str(g[i]).strip() if g[i] else ""
+                b = str(j[i]).strip() if j[i] else ""
+            except Exception:
+                return "미상"
+            return f"{a}{b}" if (a and b) else "미상"
+        return f"년주 {_p(3)} / 월주 {_p(2)} / 일주 {_p(1)} / 시주 {_p(0)}"
+    try:
+        return f"남명 원국({_one(m_gans, m_jjis)}) / 여명 원국({_one(f_gans, f_jjis)})"
+    except Exception:
+        return "원국 정보 없음"
+
 def get_ohang_deficiency_supply_str(counts, level_phase_data):
     """
     원국에 결핍된 오행이, 대운/세운/월운/일운 각 단계의 '현재 활성화된 반기'에서 실제로 공급되고 있는지 정밀 판정.
