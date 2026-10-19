@@ -1271,7 +1271,7 @@ def get_daewun_che_flow_str(dw_list, dir_name=""):
         c1, c2 = get_group_ss(d['ss_gan']), get_group_ss(d['ss_ji'])
         mark = " [미래대운]" if i > cur else ""
         parts.append(f"{d['age_range']}({d['c_hanja']}{d['j_hanja']}): 전반기체({c1})/후반기체({c2}) / 전환관계({get_che_relation(c1, c2)}) / 대운 지지 12운성({d['un_sung']}){mark}")
-    head = f"[대운 방향: {dir_name} — 대운 천간의 십성이 {'인→비→식→재→관' if dir_name == '순행' else '관→재→식→비→인'} 방향으로 이어짐] " if dir_name else ""
+    head = f"[대운 방향: {dir_name} — 대운 천간의 십성이 {'인성에서 비겁, 식상, 재성, 관성' if dir_name == '순행' else '관성에서 재성, 식상, 비겁, 인성'} 순서로 이어짐] " if dir_name else ""
     return head + " / ".join(parts)
 
 def _is_daewun_first_half(age, dw_start_age):
