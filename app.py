@@ -1533,10 +1533,12 @@ if st.session_state.get('app_running', False):
             m_dynamic_shinsal_fact_str = engine.get_dynamic_shinsal_fact_str(1, m_gans_val, m_jjis_val, "남성", engine._is_daewun_first_half(m_age_val, m_current_daewun_age))
             f_dynamic_shinsal_fact_str = engine.get_dynamic_shinsal_fact_str(1, f_gans_val, f_jjis_val, "여성", engine._is_daewun_first_half(f_age_val, f_current_daewun_age))
             couple_shinsal_compare_str = engine.get_couple_shinsal_compare_str(m_gans_val, m_jjis_val, f_gans_val, f_jjis_val)
+            couple_pillars_fact_str = engine.get_couple_pillars_fact_str(m_gans_val, m_jjis_val, f_gans_val, f_jjis_val)
         else:
             m_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
             f_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
             couple_shinsal_compare_str = "해당 없음 (1인 상품)"
+            couple_pillars_fact_str = "해당 없음 (1인 상품)"
 
         # 🚨 궁합용: 남명/여명 이상적 배우자상 + 혼인상태(돌싱 포함) 준비
         male_ideal_data = ideal_spouse_data if gender == "남성" else (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {})
@@ -1646,6 +1648,7 @@ if st.session_state.get('app_running', False):
             "f_daewun_che_flow_str": p_daewun_che_flow_str if gender == "남성" else daewun_che_flow_str,
             "couple_daewun_overlap_str": couple_daewun_overlap_str,
             "couple_shinsal_compare_str": couple_shinsal_compare_str,
+            "couple_pillars_fact_str": couple_pillars_fact_str,
             "daewun_full_fact_str": daewun_full_fact_str,
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
 
