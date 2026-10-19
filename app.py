@@ -1010,6 +1010,7 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         p_un_html = ""
         p_daewun_che_flow_str = ""
+        couple_daewun_overlap_str = ""
         p_info_h, p_table_html, p_master_bar_html = "", "", ""
         if is_2person:
             try:
@@ -1062,6 +1063,9 @@ if st.session_state.get('app_running', False):
                     })
 
                 p_daewun_che_flow_str = engine.get_daewun_che_flow_str(p_daewun_data_list, p_direction_str)
+                _m_info = {'birth_year': int(sol_y), 'dw': daewun_data_list}
+                _f_info = {'birth_year': int(p_s_year), 'dw': p_daewun_data_list}
+                couple_daewun_overlap_str = engine.get_couple_daewun_overlap_str(*((_m_info, _f_info) if gender == "남성" else (_f_info, _m_info)))
                 p_un_html = html_views.generate_daewun_layout(p_daewun_data_list, p_direction_str, p_calc_d, get_oh_class)
                 
                 p_gans = [partner_bazi[0][0] if len(partner_bazi[0])>0 else "-", partner_bazi[1][0] if len(partner_bazi[1])>0 else "甲", partner_bazi[2][0] if len(partner_bazi[2])>0 else "甲", partner_bazi[3][0] if len(partner_bazi[3])>0 else "甲"]
@@ -1638,6 +1642,7 @@ if st.session_state.get('app_running', False):
             "daewun_che_flow_str": daewun_che_flow_str,
             "m_daewun_che_flow_str": daewun_che_flow_str if gender == "남성" else p_daewun_che_flow_str,
             "f_daewun_che_flow_str": p_daewun_che_flow_str if gender == "남성" else daewun_che_flow_str,
+            "couple_daewun_overlap_str": couple_daewun_overlap_str,
             "daewun_full_fact_str": daewun_full_fact_str,
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
 
