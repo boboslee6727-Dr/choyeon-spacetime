@@ -108,7 +108,8 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
     ]
 
     def _split_title_body(s):
-        m = re.match(r'^(.*?[:：])\s*(\S.*)$', s)
+        # 태그(<...>) 안에 든 콜론(예: style='font-weight:600')은 제목/본문 경계로 보지 않는다
+        m = re.match(r'^((?:<[^>]*>|[^<:：])*?[:：])\s*(\S.*)$', s)
         if m and re.search(r'\d$', re.sub(r'[:：]$', '', m.group(1))):
             return None
         return m
