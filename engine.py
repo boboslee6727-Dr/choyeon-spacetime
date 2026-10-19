@@ -1274,6 +1274,47 @@ def get_daewun_che_flow_str(dw_list, dir_name=""):
     head = f"[대운 방향: {dir_name} — 대운 천간의 십성이 {'인성에서 비겁, 식상, 재성, 관성' if dir_name == '순행' else '관성에서 재성, 식상, 비겁, 인성'} 순서로 이어짐] " if dir_name else ""
     return head + " / ".join(parts)
 
+
+def get_couple_daewun_overlap_str(m_info, f_info, base_year=None, max_segments=4):
+    """남명·여명의 대운이 '실제 달력 연도' 기준으로 겹치는 구간(올해부터)을 사실문으로 만듭니다.
+    두 사람의 나이가 다르므로 나이 숫자가 아니라 (양력 출생년 + 나이 - 1) 연도로 비교합니다.
+    m_info / f_info = {'birth_year': 양력 출생년, 'dw': 대운 목록}"""
+    base_year = base_year or dt_mod.date.today().year
+
+    def _spans(info):
+        out = []
+        by = int(info['birth_year'])
+        for d in info.get('dw', []):
+            a, b = str(d['age_range']).split('~')
+            s0, e0 = int(a), int(b.replace('세', ''))
+            out.append((by + s0 - 1, by + e0 - 1, d))
+        return out
+
+    def _tag(d):
+        c1, c2 = get_group_ss(d['ss_gan']), get_group_ss(d['ss_ji'])
+        return (f"{d['c_hanja']}{d['j_hanja']}대운({d['age_range']}, 전반기체 {c1}/후반기체 {c2}, "
+                f"전환관계 {get_che_relation(c1, c2)}, 12운성 {d['un_sung']})")
+
+    try:
+        ms, fs = _spans(m_info), _spans(f_info)
+    except Exception:
+        return "대운 교차 정보 없음"
+    segs = []
+    for a1, a2, md in ms:
+        for b1, b2, fd in fs:
+            s, e = max(a1, b1), min(a2, b2)
+            if s <= e and e >= base_year:
+                segs.append((s, e, md, fd))
+    segs.sort(key=lambda x: x[0])
+    lines = []
+    for s, e, md, fd in segs[:max_segments]:
+        when = "현재 진행" if s <= base_year else "앞으로 올 구간"
+        lines.append(f"[{when}] {s}년~{e}년: 남명 {_tag(md)} / 여명 {_tag(fd)}")
+    if not lines:
+        return "대운 교차 정보 없음"
+    return f"(달력 연도 기준, 올해 {base_year}년) " + " / ".join(lines)
+
+
 def _is_daewun_first_half(age, dw_start_age):
     """대운 진입 후 0~4년차(전반기,천간) / 5~9년차(후반기,지지) 판정"""
     year_in_dw = age - dw_start_age
