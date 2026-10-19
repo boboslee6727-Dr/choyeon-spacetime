@@ -123,7 +123,7 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
             continue
         line_formatted = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
         line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", line_formatted)
-        line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<span style=\'font-weight:600;\'>"\1"</span>', line_formatted)
+        line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<span style="font-weight:600;">"\1"</span>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
         # 🚨 이름 강조는 반드시 따옴표 처리가 다 끝난 '뒤'에, 이 줄에만 적용 (순서 중요!)
         for _nm in [applicant_name] + list(extra_names or []):
@@ -159,10 +159,10 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
             split = _split_title_body(line_formatted)
             if split:
                 title, body = split.group(1), split.group(2)
-                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 16.5px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
 
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
@@ -173,7 +173,7 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
         clean_qna = qna_text.replace('💡', '').strip()
         clean_qna = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_qna)
         clean_qna = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", clean_qna)
-        clean_qna = re.sub(r'"([^"\n]{1,80})"', r'<span style=\'font-weight:600;\'>"\1"</span>', clean_qna)
+        clean_qna = re.sub(r'"([^"\n]{1,80})"', r'<span style="font-weight:600;">"\1"</span>', clean_qna)
         clean_qna = clean_qna.replace('\n\n', '<br><br>').replace('\n', '<br>')
         qna_html = f"<div style='margin-top:25px; padding:15px 20px; background:#F8F9FA; border-left:4px solid #1A237E; border-radius:4px; font-weight:bold;'>💡 고민 상담 Q&A<br>{clean_qna}</div>"
     return f"<div class='choyeon-premium-report' style='font-family: \"Noto Serif KR\", serif; font-size: 16px; line-height: 1.85; color: #222222;'>{parsed_content}{qna_html}</div>"
