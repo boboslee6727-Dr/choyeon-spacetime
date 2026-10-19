@@ -562,9 +562,9 @@ else:
             f_cal = st.selectbox("상대방 달력", ["양력", "음력(평달)", "음력(윤달)"], key="f_c", on_change=stop_ai)
             
             p_col1, p_col2, p_col3 = st.columns(3)
-            with p_col1: f_y = st.number_input("년도(상대)", 1900, 2050, value=st.session_state.get("p_y_in", 1990), key="p_y_in", on_change=stop_ai)
-            with p_col2: f_m = st.number_input("월(상대)", 1, 12, value=st.session_state.get("p_m_in", 1), key="p_m_in", on_change=stop_ai)
-            with p_col3: f_d = st.number_input("일(상대)", 1, 31, value=st.session_state.get("p_d_in", 1), key="p_d_in", on_change=stop_ai)
+            with p_col1: f_y = st.number_input("년도(상대)", 1900, 2050, value=st.session_state.get("p_y_in", 1993), key="p_y_in", on_change=stop_ai)
+            with p_col2: f_m = st.number_input("월(상대)", 1, 12, value=st.session_state.get("p_m_in", 8), key="p_m_in", on_change=stop_ai)
+            with p_col3: f_d = st.number_input("일(상대)", 1, 31, value=st.session_state.get("p_d_in", 25), key="p_d_in", on_change=stop_ai)
             
             curr_p_t = st.session_state.get("p_t_key", idx_list[0])
             p_t_idx = idx_list.index(curr_p_t) if curr_p_t in idx_list else 0
