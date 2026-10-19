@@ -2796,6 +2796,10 @@ _MUNCHANG_MAP = {'甲':'巳','乙':'午','丙':'申','丁':'酉','戊':'申','�
 _GEONROK_MAP  = {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}
 
 _SIPAK_DAEPAE = ["甲辰", "乙巳", "丙申", "丁亥", "戊戌", "己丑", "庚辰", "辛巳", "壬申", "癸亥"]
+_GWIMUN_PAIRS = {frozenset(p) for p in ('子酉', '丑午', '寅未', '卯申', '辰亥', '巳戌')}   # 귀문관살
+_AMHAP_PAIRS = {frozenset(p) for p in ('寅丑', '午亥', '卯申', '子巳')}                       # 암합(대표 4쌍, 더 넣으시려면 여기에)
+_INNER_PAIR_W = {(0, 1): 0.6, (0, 2): 0.8, (0, 3): 0.5, (1, 2): 1.0, (1, 3): 0.7, (2, 3): 0.9}   # 쌍별 비중 (월-일이 가장 큼)
+_INNER_PAIR_NM = {(0, 1): '년지와 월지', (0, 2): '년지와 일지', (0, 3): '년지와 시지', (1, 2): '월지와 일지', (1, 3): '월지와 시지', (2, 3): '일지와 시지'}
 
 def _delivery_hour_pillar(day_gan, hour_ji):
     """일간과 시지로 시주(時柱) 간지를 만듭니다. (갑기일=갑자시 시작 ... 오둔법)"""
@@ -2931,9 +2935,10 @@ def _delivery_rel_frac(a, b):
     """두 지지의 충합 점수(0~1)와 설명 태그"""
     t = _delivery_rel_tags(a, b)
     if '충' in t: return 0.0, 'chung'
-    if any(x in t for x in ('육합', '반합', '방합')): return 1.0, 'hap'
+    if any(x in t for x in ('육합', '반합')): return 1.0, 'hap'
     if any(x in t for x in ('형', '원진', '해', '파')): return 0.3, 'bad'
-    if 'same' in t: return 0.8, ''
+    if '방합' in t: return 0.85, ''
+    if 'same' in t: return 0.6, ''
     if '자형' in t: return 0.5, ''
     return 0.7, ''
 
@@ -2966,6 +2971,25 @@ def _delivery_gongmang(dm, dj, yj, mj, hj):
         else: warn.append(f"{nm}에 공망(비어 있는 자리)이 걸림")
     return _delivery_clamp01(1.0 - pen / sum(_GONGMANG_BASE.values())), good, warn
 
+def _delivery_inner_rel(jis):
+    """아기 사주 지지 4개(년·월·일·시) 6쌍의 관계를 점수로 돌려줍니다. (월-일, 일-시 쌍의 합 가점은 일지 점수에 이미 있어 감점만 반영)"""
+    pts, good, warn = 0.0, [], []
+    for (i, j), w in _INNER_PAIR_W.items():
+        a, b = jis[i], jis[j]
+        tags = [t for t in _delivery_rel_tags(a, b) if t not in ('귀문', '암합')]
+        pr = frozenset((a, b))
+        if pr in _GWIMUN_PAIRS: tags.append('귀문')
+        if pr in _AMHAP_PAIRS: tags.append('암합')
+        e = 0.0
+        for t in tags:
+            e += -1.0 if t == 'same' else _REL_SCORE_INNER.get(t, 0.0)
+        if (i, j) in ((1, 2), (2, 3)):
+            e = min(e, 0.0)
+        pts += e * w
+        bad = [t for t in ('충', '형', '원진', '귀문', '파', '해') if t in tags]
+        if bad: warn.append(f"{_INNER_PAIR_NM[(i, j)]} 사이에 {'·'.join(bad)} 관계가 있어 마찰의 기운이 있음")
+        elif 'same' in tags: warn.append(f"{_INNER_PAIR_NM[(i, j)]}가 같은 글자({a})로 겹쳐 기운이 쏠림")
+    return max(-12.0, min(3.0, pts)), good, warn
 
 def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
     """아기 완성 사주(년·월·일·시)를 100점 만점으로 채점합니다. 일간을 기준으로 7글자를 궁위별로 평가합니다.
@@ -3134,7 +3158,7 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
              '년지': round(p_nyeonji, 1), '시간': round(p_sigan, 1), '년간': round(p_nyeongan, 1),
              '오행': round(p_oh, 1), '조후': round(p_joh, 1), '공망': round(p_gm, 1), '부모조화': round(p_par, 1)}
 
-    # ═════════ 복음(같은 간지 기둥이 겹침) 감점: 겹친 쌍마다 -5점, 최대 -10점 ═════════
+    # ═════════ 복음(같은 간지 기둥이 겹침) 감점: 겹친 쌍마다 -3점, 최대 -6점 ═════════
     _p4 = [y_p, m_p, d_p, h_p]
     _pairs = sum(1 for i in range(4) for j in range(i + 1, 4) if _p4[i] == _p4[j])
     fukeum = -min(_pairs, 2) * 3.0
@@ -3144,6 +3168,17 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
     parts['복음'] = fukeum
     parts['신강신약'] = round(p_gy, 1)
     total = round(p_ilji + p_wolji + p_siji + p_wolgan + p_nyeonji + p_sigan + p_nyeongan + p_oh + p_joh + p_gm + p_par + p_gy + fukeum, 1)
+    # ═════════ 지지 6쌍 관계(원진·귀문·암합 등) + 월주·시주의 백호·괴강 ═════════
+    inner_pts, g_in, w_in = _delivery_inner_rel(jis)
+    sin_pen, w_sin = 0.0, []
+    for _nm, _pp in (('월주', m_p), ('시주', h_p)):
+        if _pp in BAEKHO_GANJI: sin_pen -= 1.0; w_sin.append(f"{_nm}가 백호대살({_pp})로 기운이 매우 거셈")
+        elif _pp in GOEGANG_ILJU: sin_pen -= 1.0; w_sin.append(f"{_nm}가 괴강({_pp})으로 기운이 지나치게 강함")
+    parts['지지관계'] = round(inner_pts, 1)
+    parts['신살'] = round(sin_pen, 1)
+    total = round(total + inner_pts + sin_pen, 1)
+    good += g_in
+    warn[0:0] = w_in + w_sin      # 심각한 유의점이 AI에게 먼저 전달되도록 맨 앞에 넣음
     return {'total': total, 'parts': parts, 'gangyak': gangyak, 'good': list(dict.fromkeys(good)), 'warn': list(dict.fromkeys(warn))}
 
 def evaluate_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None):
@@ -3284,7 +3319,7 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
         flows = {}
         for g, key in (('남아', '남성'), ('여아', '여성')):
             bd = get_baby_daewun_info(sb['chart'], item['delivery_dt'], sb['hm'], key)
-            sc_, steps_ = _daewun_flow_score(bd['list'])
+            sc_, steps_ = _daewun_flow_score(bd['list'], direction=bd['dir'])
             flows[g] = {'score': sc_, 'steps': steps_, 'info': bd}
         use = [g for g in ('남아', '여아') if baby_gender in ('미정', g)] or ['남아', '여아']
         flow_pts = round(sum(flows[g]['score'] for g in use) / len(use), 2)
@@ -3339,6 +3374,7 @@ _DAEWUN_AGE_PREF = {
 
 # 역행 대운 아기용 나이대별 표 — 처음엔 순행 표와 같은 숫자입니다. 박사님이 역행 인생 곡선에 맞게 고치시면 됩니다.
 _DAEWUN_AGE_PREF_REV = {k: dict(v) for k, v in _DAEWUN_AGE_PREF.items()}
+_DAEWUN_AGE_PREF_REV[15]['관성'] = 0.8   # 역행: 10대 관성도 괜찮다 (박사님 기준)
 _REV_FLOW_FACTOR = 1.0   # 역행의 '상생 흐름 구조' 가점 비율 (1.0 = 순행과 같음, 0.5 = 절반)
 
 _DAEWUN_AGE_WEIGHT = {15: 0.15, 25: 0.20, 35: 0.25, 45: 0.25, 55: 0.15}       # 나이대별 비중 (합 1.0)
