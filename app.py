@@ -994,13 +994,6 @@ if st.session_state.get('app_running', False):
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
         daewun_che_flow_str = engine.get_daewun_che_flow_str(daewun_data_list)
-        try:
-            _gi = [engine.GAN.index(_d['c_hangul']) for _d in daewun_data_list[:2]]
-            _dw_dir = "순행" if (_gi[1] - _gi[0]) % 10 == 1 else "역행"
-        except Exception:
-            _dw_dir = ""
-        _dir_head = (f"[대운 방향: {_dw_dir} — 대운 천간의 십성이 " + ("인→비→식→재→관" if _dw_dir == "순행" else "관→재→식→비→인") + " 방향으로 이어짐] ") if _dw_dir else ""
-        daewun_che_flow_str = (_dir_head + " / ".join(_daewun_che_parts)) if _daewun_che_parts else "대운 체 흐름 정보 없음"
         guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
         target_shinsal_names = ["년살", "망신살", "역마살"]
         cheon_eul_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if dw['j_hanja'] in guiin_branches]
