@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 87.7 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 88.4 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 87.7 Master"
+APP_VERSION = "ver 88.4 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -1750,7 +1750,11 @@ if st.session_state.get('app_running', False):
             "gh_score": gh_score, "gh_grade": gh_grade,
             "harmony_index_facts": harmony_index_str,
             "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
-            "other_report": user_entered_text
+            "other_report": user_entered_text,
+            "other_year_relation_facts": (
+                engine.get_text_year_relation_facts(user_entered_text, [hb, db, mb, yb], sol_y, daewun_data_list)
+                if ("4-1." in u_product and compare_mode == "외부 타 감명서 원문 대조") else "(해당 없음)"
+            )
         }
 
         class SafeDict(dict):
