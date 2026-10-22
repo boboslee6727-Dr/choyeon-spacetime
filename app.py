@@ -994,6 +994,13 @@ if st.session_state.get('app_running', False):
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
         daewun_che_flow_str = engine.get_daewun_che_flow_str(daewun_data_list)
+        # 과거~현재 대운 지지가 원국 지지와 맺는 합충·삼합·방합 (미래 대운은 제외)
+        daewun_relation_all_str = " / ".join(
+            f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): "
+            + engine.get_unun_relation_facts([hb, db, mb, yb], dw['j_hanja'], "대운")
+            for _i, dw in enumerate(daewun_data_list)
+            if _i <= _current_dw_idx and dw['j_hanja'] != "-"
+        )
         guiin_branches = [b.strip() for b in guiin_str.split(",")] if guiin_str != '없음' else []
         target_shinsal_names = ["년살", "망신살", "역마살"]
         cheon_eul_daewun_matches = [f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list if dw['j_hanja'] in guiin_branches]
@@ -1287,8 +1294,7 @@ if st.session_state.get('app_running', False):
         won_guk_vaults_list = engine.check_vault_status([ys, ms, ds, hs], [yb, mb, db, hb], mb)
         won_guk_vaults_str = " ".join([re.sub(r'<[^>]+>', '', v) for v in won_guk_vaults_list])
         if not won_guk_vaults_str: won_guk_vaults_str = engine.get_won_guk_vaults_str([hb, db, mb, yb])
-            
-        hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}"
+            hap_chung_hyoung_pa_hae = f"일-월지:{engine.get_ji_rel_set(db, mb)}, 일-년지:{engine.get_ji_rel_set(db, yb)}, 일-시지:{engine.get_ji_rel_set(db, hb)}, 월-년지:{engine.get_ji_rel_set(mb, yb)}, 월-시지:{engine.get_ji_rel_set(mb, hb)}, 년-시지:{engine.get_ji_rel_set(yb, hb)}"
 
         adv_saju_data = {'year_ji': yb, 'month_ji': mb, 'day_ji': db, 'hour_ji': hb}
         if hasattr(engine, 'analyze_saju_facts_advanced'):
@@ -1644,6 +1650,7 @@ if st.session_state.get('app_running', False):
             "dw_gj_han_cur": dw_gj_han_cur,
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운"),
+            "daewun_relation_all_str": daewun_relation_all_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
             "m_daewun_che_flow_str": daewun_che_flow_str if gender == "남성" else p_daewun_che_flow_str,
