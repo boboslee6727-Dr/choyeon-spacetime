@@ -718,7 +718,7 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
 
     elif johu_yongshin and johu_yongshin == eok_bu_yongshin:
         final_yongshin = eok_bu_yongshin
-       confidence_note = f"억부({strength})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
+        confidence_note = f"억부({strength})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
     elif johu_yongshin and counts.get(johu_yongshin, 0) <= 1:
         # 조후 필요 오행이 희박(1개 이하)하고 계절도 극단적인 경우 → 상생/상극으로 처리 분기
         is_friendly = (johu_yongshin == _oh_prev(eok_bu_yongshin)) or (eok_bu_yongshin == _oh_prev(johu_yongshin))
