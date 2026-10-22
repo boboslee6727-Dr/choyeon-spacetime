@@ -1732,6 +1732,56 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운"):
             out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 방합 완성")
     return " / ".join(dict.fromkeys(out)) if out else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
+def get_text_year_relation_facts(text, jjis, birth_year=None, daewun_list=None, max_years=12):
+    """타 감명서 원문에 나온 연도(2019 등)와 간지년(己亥년 등)의 세운 지지가 원국 지지와 맺는
+    충·합·삼합·방합 팩트를 만듭니다. jjis는 [시지, 일지, 월지, 년지] 순서.
+    birth_year와 daewun_list(age_range·c_hanja·j_hanja)가 있으면 그 해의 나이와 대운도 함께 적습니다."""
+    txt = str(text or "")
+    years = []
+    for m in re.finditer(r"(?<![\d,])(19\d{2}|20\d{2}|21\d{2})(?![\d,])(?!\s?(?:만|원|명|개|배|%|살|세|세기))", txt):
+        y = int(m.group(1))
+        if y not in years:
+            years.append(y)
+    lines, seen_gj = [], set()
+    for y in years[:max_years]:
+        base = (y - 1984) % 60
+        gan = _to_hanja(GAN[base % 10]); ji = _to_hanja(JI[base % 12])
+        seen_gj.add(gan + ji)
+        head = f"{y}년({gan}{ji})"
+        dw_rel = []
+        if birth_year:
+            try:
+                age = y - int(birth_year) + 1
+            except Exception:
+                age = None
+            if age and age > 0:
+                head += f" {age}세"
+                for dw in (daewun_list or []):
+                    try:
+                        a, b = [int(x) for x in re.findall(r"\d+", dw["age_range"])[:2]]
+                    except Exception:
+                        continue
+                    if a <= age <= b:
+                        head += f", {dw['c_hanja']}{dw['j_hanja']}대운"
+                        dw_ji = _to_hanja(str(dw['j_hanja']).strip()[-1])
+                        pair = frozenset((dw_ji, ji))
+                        if dw_ji == ji: dw_rel.append("같은 글자로 겹침(복음)")
+                        if pair in _UN_CHUNG: dw_rel.append("충")
+                        if pair in _UN_HAP: dw_rel.append("육합")
+                        if pair in _UN_HAE: dw_rel.append("해")
+                        if pair in _UN_PA: dw_rel.append("파")
+                        if dw_rel:
+                            dw_rel = [f"세운({ji})이 그 해 대운({dw_ji})과 " + " · ".join(dw_rel)]
+                        break
+        lines.append(f"{head}: " + " / ".join(dw_rel + [get_unun_relation_facts(jjis, ji, "세운")]))
+    for m in re.finditer(r"([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])\s?년", txt):
+        gj = m.group(1)
+        if gj in seen_gj or len(seen_gj) >= max_years:
+            continue
+        seen_gj.add(gj)
+        lines.append(f"{gj}년(원문 표기): " + get_unun_relation_facts(jjis, gj[1], "세운"))
+    return " / ".join(lines) if lines else "원문에 연도 표기 없음"
+
 def get_yongshin_elements(yongshin_text):
     """get_yongshin_analysis가 만든 문장에서 용신·희신·기신·구신·한신(·겸용) 오행을 뽑아 사전으로 돌려줍니다."""
     out = {}
