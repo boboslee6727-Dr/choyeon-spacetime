@@ -1732,6 +1732,29 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운"):
             out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 방합 완성")
     return " / ".join(dict.fromkeys(out)) if out else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
+def get_dosik_fact(ds, gans, jjis):
+    """도식(효신탈식): 편인이 식신을 극해 식신의 기운이 눌리는 구조를 팩트로 만듭니다.
+    gans=[시간, 월간, 년간], jjis=[시지, 일지, 월지, 년지] (일간 자신은 제외). 천간과 지지 본기의 십성 기준."""
+    dm = get_color(ds)
+    if not dm or dm not in _OHAENG_CYCLE:
+        return "일간을 알 수 없어 도식 판정을 생략합니다."
+    names = list(zip(["시간", "월간", "년간"], gans)) + list(zip(["시지", "일지", "월지", "년지"], jjis))
+    pyeonin, siksin, jae = [], [], []
+    for nm, c in names:
+        h = _to_hanja(c) if c else ""
+        if not h or h in ("?", "-", " "):
+            continue
+        ss = get_ss(ds, h)
+        if ss == "편인": pyeonin.append(f"{nm}({h})")
+        elif ss == "식신": siksin.append(f"{nm}({h})")
+        elif ss in ("정재", "편재"): jae.append(f"{nm}({h})")
+    if not pyeonin or not siksin:
+        return f"도식(편인이 식신을 극하는 구조) 해당 없음: 원국에 편인 {'있음' if pyeonin else '없음'}, 식신 {'있음' if siksin else '없음'}"
+    base = f"편인 {', '.join(pyeonin)} / 식신 {', '.join(siksin)}: 편인이 식신을 극하는 도식(효신탈식) 구조가 있어 식신의 표현력·활동성·자식 관련 기운이 눌릴 수 있음"
+    if jae:
+        return f"{base}. 다만 편인을 제압하는 재성이 원국에 있어({', '.join(jae)}) 도식이 풀릴 여지가 있음"
+    return f"{base}. 편인을 제압하는 재성이 원국에 없어 도식이 풀리지 않고 그대로 작동함"
+
 def get_text_year_relation_facts(text, jjis, birth_year=None, daewun_list=None, max_years=12):
     """타 감명서 원문에 나온 연도(2019 등)와 간지년(己亥년 등)의 세운 지지가 원국 지지와 맺는
     충·합·삼합·방합 팩트를 만듭니다. jjis는 [시지, 일지, 월지, 년지] 순서.
