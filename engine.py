@@ -620,6 +620,16 @@ def _oh_controlled_by(e):
     """e를 극(剋)하는 오행"""
     return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) - 2) % 5]
 
+_EARTH_JI = "辰戌丑未"
+_DEUK_UNSUNG = ("장생", "관대", "건록", "제왕")
+
+def _earth_rooted(ds, ji):
+    """월지·일지가 土(辰戌丑未)일 때, 일간의 12운성이 장생·관대·건록·제왕이면 뿌리가 있는 것으로 봅니다."""
+    h = _to_hanja(ji)
+    if not h or h not in _EARTH_JI:
+        return False
+    return get_unsung(ds, ji) in _DEUK_UNSUNG
+
 def _judge_strength(counts, mb, ds, db=None):
     """신강/신약/중화 판정을 한 곳에 모은 도우미.
     - 일간 자신은 지원세력에서 뺀다(나머지 글자만 센다).
@@ -639,6 +649,9 @@ def _judge_strength(counts, mb, ds, db=None):
     if mb_elem in (biguk, inseong):
         support += 1
         deukryeong_note = f"월지({mb})가 일간을 돕는 오행({mb_elem})이라 득령"
+    elif _earth_rooted(ds, mb):
+        support += 1
+        deukryeong_note = f"월지({mb})는 土이지만 일간의 12운성이 {get_unsung(ds, mb)}이라 뿌리가 있어 득령"
     elif mb_elem in (siksang, jaeseong, gwanseong):
         drain += 1
         deukryeong_note = f"월지({mb})가 일간의 기운을 빼가는 오행({mb_elem})이라 실령"
@@ -648,6 +661,9 @@ def _judge_strength(counts, mb, ds, db=None):
     if db_elem in (biguk, inseong):
         support += 1
         deukji_note = f"일지({db})가 일간을 돕는 오행({db_elem})이라 득지"
+    elif db and _earth_rooted(ds, db):
+        support += 1
+        deukji_note = f"일지({db})는 土이지만 일간의 12운성이 {get_unsung(ds, db)}이라 뿌리가 있어 득지"
     elif db_elem in (siksang, jaeseong, gwanseong):
         drain += 1
         deukji_note = f"일지({db})가 일간의 기운을 빼가는 오행({db_elem})이라 실지"
@@ -682,12 +698,31 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
 
     secondary_yongshin = None  # 겸용 용신(상생 관계일 때만 채움)
 
-    if johu_yongshin and johu_yongshin == eok_bu_yongshin:
+    # 조후 우선: 겨울(亥·子·丑)이면 火, 여름(巳·午·未)이면 水가 조후 필요 오행입니다.
+    # 단, 壬癸(수) 일간이 겨울에, 丙丁(화) 일간이 여름에 태어나고 그 오행이 1개 이하일 때만 조후용신을 먼저 세웁니다.
+    johu_first = bool(johu_yongshin) and (
+        (dm == '수' and johu_yongshin == '화') or (dm == '화' and johu_yongshin == '수')
+    ) and counts.get(johu_yongshin, 0) <= 1
+
+    if johu_first:
+        final_yongshin = johu_yongshin
+        if eok_bu_yongshin != johu_yongshin:
+            secondary_yongshin = eok_bu_yongshin
+        johu_cnt = counts.get(johu_yongshin, 0) - (1 if dm == johu_yongshin else 0)
+        season_txt = '겨울' if johu_yongshin == '화' else '여름'
+        role_txt = '얼어붙은 기운을 녹이는' if johu_yongshin == '화' else '타오르는 열기를 식히는'
+        confidence_note = f"{season_txt}({mb}월)에 태어났고 조후 필요 오행({johu_yongshin})이 일간 자신을 빼면 {johu_cnt}개뿐이라 {role_txt} 조후용신({johu_yongshin})을 먼저 세움"
+        if secondary_yongshin:
+            confidence_note += f", 억부상 {strength}이므로 보조(겸용) 용신({secondary_yongshin})을 함께 표기"
+        confidence_note += " (조후용신이 지나치게 늘어나면 오히려 균형을 해치므로 적당한 정도가 좋음)"
+
+    elif johu_yongshin and johu_yongshin == eok_bu_yongshin:
         final_yongshin = eok_bu_yongshin
-        confidence_note = f"억부({strength})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
+       confidence_note = f"억부({strength})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
     elif johu_yongshin and counts.get(johu_yongshin, 0) <= 1:
         # 조후 필요 오행이 희박(1개 이하)하고 계절도 극단적인 경우 → 상생/상극으로 처리 분기
         is_friendly = (johu_yongshin == _oh_prev(eok_bu_yongshin)) or (eok_bu_yongshin == _oh_prev(johu_yongshin))
+
         if is_friendly:
             final_yongshin = eok_bu_yongshin
             secondary_yongshin = johu_yongshin
@@ -715,13 +750,37 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
     gishin = _oh_controlled_by(final_yongshin)
     gushin = _oh_prev(gishin)
 
+    if johu_first:
+        # 조후 우선일 때: 조후용신을 기신으로 삼지 않습니다.
+        # 희신 = 조후용신을 생하는 오행 / 기신 = 신약이면 조후용신을 해치거나 빼가는 오행, 신강이면 일간을 더 키우는 오행
+        used = {final_yongshin}
+        if secondary_yongshin:
+            used.add(secondary_yongshin)
+        huishin = _oh_prev(final_yongshin)
+        if huishin in used:
+            huishin = None
+        else:
+            used.add(huishin)
+        if is_strong:
+            g_cands = [_oh_prev(dm), dm]
+        else:
+            g_cands = [e for e in (_oh_controlled_by(final_yongshin), _oh_next(final_yongshin)) if e != dm]
+        g_cands += list(_OHAENG_CYCLE)
+        gishin = next(e for e in g_cands if e not in used)
+        used.add(gishin)
+        gushin = None
+        hanshin = next((e for e in _OHAENG_CYCLE if e not in used), None)
+
     label = (
         f"[용신={final_yongshin}"
-        + (f" (겸용:{secondary_yongshin})" if secondary_yongshin else "")
-        + f" / 희신(용신을 돕는 이로운 기운)={huishin} / "
-        f"기신(용신을 해치는 해로운 기운, 반드시 피해야 함)={gishin} / 구신={gushin} / 한신={hanshin}] "
+        + (f" ({'조후 우선, ' if johu_first else ''}겸용:{secondary_yongshin})" if secondary_yongshin
+           else (" (조후 우선)" if johu_first else ""))
+        + (f" / 희신(용신을 돕는 이로운 기운)={huishin}" if huishin else "")
+        + f" / 기신(용신을 해치는 해로운 기운, 반드시 피해야 함)={gishin}"
+        + (f" / 구신={gushin}" if gushin else "")
+        + (f" / 한신={hanshin}" if hanshin else "")
+        + "] "
     )
-
     position_notes = " / ".join(n for n in (deukryeong_note, deukji_note) if n)
     return (
         label +
