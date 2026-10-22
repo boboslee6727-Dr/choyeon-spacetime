@@ -266,6 +266,7 @@ def get_wolun_half_periods(target_year, target_month):
 
 def get_color(c):
     c = _to_hanja(c)
+    if not c: return "무"   # 빈 글자('?', 공백, '-')는 오행 없음 (빈 글자를 목으로 세던 오류 방지)
     if c in "甲乙寅卯": return "목"
     if c in "丙丁巳午": return "화"
     if c in "戊己辰戌丑未": return "토"
@@ -619,7 +620,47 @@ def _oh_controlled_by(e):
     """e를 극(剋)하는 오행"""
     return _OHAENG_CYCLE[(_OHAENG_CYCLE.index(e) - 2) % 5]
 
-def get_yongshin_analysis(counts, mb, ds):
+def _judge_strength(counts, mb, ds, db=None):
+    """신강/신약/중화 판정을 한 곳에 모은 도우미.
+    - 일간 자신은 지원세력에서 뺀다(나머지 글자만 센다).
+    - 월지가 일간을 돕거나 빼가면 득령/실령 1점, 일지가 돕거나 빼가면 득지/실지 1점을 더한다.
+    - 점수가 같으면 중화.
+    반환: (판정, 가산 전 지원, 가산 전 소모, 최종 지원, 최종 소모, 득령 설명, 득지 설명)"""
+    dm = get_color(ds)
+    biguk, inseong = dm, _oh_prev(dm)
+    siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
+
+    support = max(0, counts.get(biguk, 0) - 1) + counts.get(inseong, 0)   # 일간 자신(1글자)은 제외
+    drain = counts.get(siksang, 0) + counts.get(jaeseong, 0) + counts.get(gwanseong, 0)
+    raw_support, raw_drain = support, drain
+
+    deukryeong_note = ""
+    mb_elem = get_color(mb)
+    if mb_elem in (biguk, inseong):
+        support += 1
+        deukryeong_note = f"월지({mb})가 일간을 돕는 오행({mb_elem})이라 득령"
+    elif mb_elem in (siksang, jaeseong, gwanseong):
+        drain += 1
+        deukryeong_note = f"월지({mb})가 일간의 기운을 빼가는 오행({mb_elem})이라 실령"
+
+    deukji_note = ""
+    db_elem = get_color(db) if db else None
+    if db_elem in (biguk, inseong):
+        support += 1
+        deukji_note = f"일지({db})가 일간을 돕는 오행({db_elem})이라 득지"
+    elif db_elem in (siksang, jaeseong, gwanseong):
+        drain += 1
+        deukji_note = f"일지({db})가 일간의 기운을 빼가는 오행({db_elem})이라 실지"
+
+    if support > drain:
+        strength = '신강'
+    elif support < drain:
+        strength = '신약'
+    else:
+        strength = '중화'
+    return strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note
+
+def get_yongshin_analysis(counts, mb, ds, db=None):
     """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출.
     억부용신과 조후용신이 다르고 조후 필요 오행이 희박(1개 이하)하며 계절도 극단적인 경우,
     두 용신이 상생 관계면 겸용 용신으로, 상극 관계면 조후 불균형을 '증상'으로만 짚고
@@ -631,19 +672,8 @@ def get_yongshin_analysis(counts, mb, ds):
     biguk, inseong = dm, _oh_prev(dm)
     siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
 
-    support = counts.get(biguk, 0) + counts.get(inseong, 0)
-    drain = counts.get(siksang, 0) + counts.get(jaeseong, 0) + counts.get(gwanseong, 0)
-
-    mb_elem = get_color(mb)
-    deukryeong_note = ""
-    if mb_elem in (biguk, inseong):
-        support += 1
-        deukryeong_note = f"월지({mb})가 일간을 돕는 오행({mb_elem})이라 득령"
-    elif mb_elem in (siksang, jaeseong, gwanseong):
-        drain += 1
-        deukryeong_note = f"월지({mb})가 일간의 기운을 빼가는 오행({mb_elem})이라 실령"
-
-    is_strong = support > drain
+    strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note = _judge_strength(counts, mb, ds, db)
+    is_strong = (strength == '신강')
     eok_bu_candidates = [siksang, jaeseong, gwanseong] if is_strong else [inseong, biguk]
     eok_bu_yongshin = min(eok_bu_candidates, key=lambda e: counts.get(e, 0))
 
@@ -654,7 +684,7 @@ def get_yongshin_analysis(counts, mb, ds):
 
     if johu_yongshin and johu_yongshin == eok_bu_yongshin:
         final_yongshin = eok_bu_yongshin
-        confidence_note = f"억부(신{'강' if is_strong else '약'})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
+        confidence_note = f"억부({strength})와 조후(계절) 판단이 일치하여 {final_yongshin} 용신 확정"
     elif johu_yongshin and counts.get(johu_yongshin, 0) <= 1:
         # 조후 필요 오행이 희박(1개 이하)하고 계절도 극단적인 경우 → 상생/상극으로 처리 분기
         is_friendly = (johu_yongshin == _oh_prev(eok_bu_yongshin)) or (eok_bu_yongshin == _oh_prev(johu_yongshin))
@@ -668,15 +698,18 @@ def get_yongshin_analysis(counts, mb, ds):
         else:
             final_yongshin = eok_bu_yongshin
             confidence_note = (
-                f"억부상 신{'강' if is_strong else '약'}이므로 {eok_bu_yongshin}을 용신으로 삼되, "
+                f"억부상 {strength}이므로 {eok_bu_yongshin}을 용신으로 삼되, "
                 f"조후상 필요한 {johu_yongshin}이 {eok_bu_yongshin}과 상극 관계라 억지로 보강할 수 없어, "
                 f"조후 불균형({mb}월 한습/조열)으로 인한 현실적 애로는 별도의 증상으로만 짚고 보강 대상으로는 삼지 않음"
             )
     else:
         final_yongshin = eok_bu_yongshin
-        confidence_note = f"억부상 신{'강' if is_strong else '약'}이므로 {final_yongshin}을 용신으로 삼음"
+        confidence_note = f"억부상 {strength}이므로 {final_yongshin}을 용신으로 삼음"
         if johu_yongshin:
             confidence_note += f" (계절상으로는 {johu_yongshin}도 보조적으로 필요)"
+
+    if strength == '중화':
+        confidence_note += " (신강·신약이 팽팽한 중화에 가까워 억부 용신의 확정도는 낮으므로 참고용으로 볼 것)"
 
     huishin, hanshin = _oh_prev(final_yongshin), _oh_next(final_yongshin)
     gishin = _oh_controlled_by(final_yongshin)
@@ -689,10 +722,12 @@ def get_yongshin_analysis(counts, mb, ds):
         f"기신(용신을 해치는 해로운 기운, 반드시 피해야 함)={gishin} / 구신={gushin} / 한신={hanshin}] "
     )
 
+    position_notes = " / ".join(n for n in (deukryeong_note, deukji_note) if n)
     return (
         label +
-        f"일간({ds}, {dm})은 원국 내 지원세력(비겁+인성)={support} vs 소모세력(식상+재성+관성)={drain}로 "
-        f"신{'강' if is_strong else '약'}합니다. {deukryeong_note}. "
+        f"일간({ds}, {dm}) 자신을 뺀 나머지 글자 기준 지원세력(비겁+인성)={raw_support} vs 소모세력(식상+재성+관성)={raw_drain}이고, "
+        f"여기에 위치 가산(월지·일지가 돕거나 빼가면 각 1점)을 더한 최종 점수는 {support} vs {drain}로 {strength}입니다"
+        f"{' (' + position_notes + ')' if position_notes else ''}. "
         f"{confidence_note}."
     )
 
@@ -2486,7 +2521,7 @@ def analyze_cognitive_decline_facts(won_guk_ji, daewun_list, sewun_10_list, curr
 
     return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
 
-def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr_year, current_dw_j, age):
+def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr_year, current_dw_j, age, db=None):
     """
     일간이 신약(身弱)한 상태에서 식상(食傷) 대운·세운이 겹쳐 들어와 기운이 과도하게 빠지는(설기) 시기를 판정.
     고령자는 원기 회복력이 약해 이 설기 효과가 더 크게 체감되므로 나이에 따라 경고 수위를 달리한다.
@@ -2498,16 +2533,8 @@ def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr
     biguk, inseong = dm, _oh_prev(dm)
     siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
 
-    support = counts.get(biguk, 0) + counts.get(inseong, 0)
-    drain = counts.get(siksang, 0) + counts.get(jaeseong, 0) + counts.get(gwanseong, 0)
-
-    mb_elem = get_color(mb)
-    if mb_elem in (biguk, inseong):
-        support += 1
-    elif mb_elem in (siksang, jaeseong, gwanseong):
-        drain += 1
-
-    is_weak = not (support > drain)
+    strength = _judge_strength(counts, mb, ds, db)[0]
+    is_weak = (strength != '신강')   # 신약·중화는 약한 쪽으로 봄(예전의 동점=약함과 같은 방식)
 
     if not is_weak:
         return ("[1. 선천 원국]: 일간이 신강(身强)하여 식상운이 겹쳐도 오히려 기운을 잘 발산시키는 흐름이니 크게 걱정할 필요 없음.\n"
@@ -2656,6 +2683,7 @@ class UniversalPrintableGunghap:
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
         for char in gans + jjis:
             c = _to_hanja(char)
+            if not c: continue   # 빈 기둥(시주 모름 등)은 세지 않음
             if c in "甲乙寅卯": counts['목'] += 1
             elif c in "丙丁巳午": counts['화'] += 1
             elif c in "戊己辰戌丑未": counts['토'] += 1
@@ -2722,7 +2750,9 @@ class UniversalPrintableGunghap:
         # 음양 극단 치우침 (8글자 중 양/음 어느 한쪽으로 7개 이상 쏠림)
         _yang_chars = set("甲丙戊庚壬子寅辰午申戌")
         def _eum_yang_extreme(g, j):
-            all_chars = [_to_hanja(c) for c in (g + j)]
+            all_chars = [c for c in (_to_hanja(x) for x in (g + j)) if c]
+            if len(all_chars) < 8:
+                return False   # 여덟 글자가 모두 있을 때만 쏠림을 판단
             yang_cnt = sum(1 for c in all_chars if c in _yang_chars)
             return yang_cnt >= 7 or yang_cnt <= 1
         if _eum_yang_extreme(m_g, m_j): s4 -= 1
@@ -3283,6 +3313,7 @@ def _score_baby_chart(y_p, m_p, d_p, h_p, male_pack, female_pack, parent_dw=None
     parts['복음'] = fukeum
     parts['신강신약'] = round(p_gy, 1)
     total = round(p_ilji + p_wolji + p_siji + p_wolgan + p_nyeonji + p_sigan + p_nyeongan + p_oh + p_joh + p_gm + p_par + p_gy + fukeum, 1)
+
     # ═════════ 지지 6쌍 관계(원진·귀문·암합 등) + 월주·시주의 백호·괴강 ═════════
     inner_pts, g_in, w_in = _delivery_inner_rel(jis)
     sin_pen, w_sin = 0.0, []
