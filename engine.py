@@ -1697,6 +1697,7 @@ _UN_HAP = {frozenset(p) for p in ["子丑", "寅亥", "卯戌", "辰酉", "巳�
 _UN_HAE = {frozenset(p) for p in ["子未", "丑午", "寅巳", "卯辰", "申亥", "酉戌"]}
 _UN_PA = {frozenset(p) for p in ["子酉", "丑辰", "寅亥", "卯午", "巳申", "未戌"]}
 _UN_SAMHAP = [("申子辰", "水"), ("亥卯未", "木"), ("寅午戌", "火"), ("巳酉丑", "金")]
+_UN_BANGHAP = [("寅卯辰", "木"), ("巳午未", "火"), ("申酉戌", "金"), ("亥子丑", "水")]
 
 def get_unun_relation_facts(jjis, u_j, u_type="일운"):
     """운(대운/세운/월운/일운)의 지지가 원국 지지(시·일·월·년)와 맺는 충·합·해·파·복음을 팩트 문장으로 만듭니다."""
@@ -1726,6 +1727,9 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운"):
             out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 삼합 완성")
         elif len(have) == 1 and (u == trio[1] or list(have)[0] == trio[1]):
             out.append(f"{u_type}({u})이 원국 {list(have)[0]}와 {oh}국 반합")
+    for trio, oh in _UN_BANGHAP:
+        if u in trio and (set(trio) - {u}) <= nat_set:
+            out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 방합 완성")
     return " / ".join(dict.fromkeys(out)) if out else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
 def get_yongshin_elements(yongshin_text):
