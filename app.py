@@ -1148,6 +1148,7 @@ if st.session_state.get('app_running', False):
         _dw_che_2_tmp = engine.get_group_ss(engine.get_ss(ds_hanja, dw_j_cur))
         _dw_che_for_sewun = _dw_che_1_tmp if engine._is_daewun_first_half(age, current_daewun_age) else _dw_che_2_tmp
         sewun_che_flow_parts = []
+        sewun_relation_10y_parts = []
         for i in range(10):
             ty = start_year + i
             tage = current_daewun_age + i
@@ -1177,6 +1178,7 @@ if st.session_state.get('app_running', False):
             _kw_2 = engine.get_matrix_keyword(_dw_che_this_yr, _yong_2)
             _sw_unsung = engine.get_unsung(ds_hanja, tj)
             sewun_che_flow_parts.append(f"{ty}년({tc}{tj}): 대운 {_dw_half_label}체({_dw_che_this_yr}) 아래에서 / 전반기[체({_che_1})→{_kw_1}] / 후반기[체({_che_2})→{_kw_2}] / 세운 지지 12운성({_sw_unsung})")
+            sewun_relation_10y_parts.append(f"{ty}년({tc}{tj}): " + engine.get_unun_relation_facts([hb, db, mb, yb], tj, "세운"))
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
             hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
@@ -1189,6 +1191,7 @@ if st.session_state.get('app_running', False):
         sewun_html = html_views.get_sewun_layout(f"[ 세운의 흐름 {dw_title_hanja} ]", se_content)
         sewun_full_fact_str = " / ".join(sewun_years_list)
         sewun_che_flow_str = " / ".join(sewun_che_flow_parts)
+        sewun_relation_10y_str = " / ".join(sewun_relation_10y_parts)
 
         cheon_eul_timing_fact_str = " / ".join(cheon_eul_daewun_matches + cheon_eul_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
         dohwa_mangsin_yeokma_fact_str = " / ".join(shinsal_daewun_matches + shinsal_sewun_matches) or "향후 10년 내 해당 대운·세운 없음"
@@ -1670,6 +1673,7 @@ if st.session_state.get('app_running', False):
             "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
             "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운"),
+            "sewun_relation_10y_str": sewun_relation_10y_str,
             "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
 
             # ── F. 월운 ──
