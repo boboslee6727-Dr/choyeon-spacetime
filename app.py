@@ -1346,7 +1346,8 @@ if st.session_state.get('app_running', False):
                 sewun_10_list=temp_sewun_10_list,
                 curr_year=curr_year,
                 current_dw_j=dw_j_cur,
-                age=age
+                age=age,
+                db=db
             )
 
         adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
