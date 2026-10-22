@@ -1643,6 +1643,7 @@ if st.session_state.get('app_running', False):
             "dw_gj_cur": dw_gj_cur,
             "dw_gj_han_cur": dw_gj_han_cur,
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
+            "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운"),
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
             "m_daewun_che_flow_str": daewun_che_flow_str if gender == "남성" else p_daewun_che_flow_str,
