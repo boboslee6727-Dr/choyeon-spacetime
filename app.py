@@ -785,7 +785,7 @@ if st.session_state.get('app_running', False):
             oh = engine.get_color(c)
             if oh in counts: counts[oh] += 1
 
-        yongshin_fact_str = engine.get_yongshin_analysis(counts, mb, ds) if hasattr(engine, 'get_yongshin_analysis') else ""        
+        yongshin_fact_str = engine.get_yongshin_analysis(counts, mb, ds, db) if hasattr(engine, 'get_yongshin_analysis') else ""        
 
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         guiin_str = guiin_map.get(ds_hanja, '없음')
@@ -949,7 +949,7 @@ if st.session_state.get('app_running', False):
 
         info_h = html_views.get_info_header(u_icon, name, gender, u_marital, age, sol_str_fmt, lun_str_fmt, time_str_fmt)
         table_html = html_views.generate_saju_table_data(gans, jjis, ds, gender, engine)
-        master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=(yongshin_fact_str if 'yongshin_fact_str' in locals() else engine.get_yongshin_analysis(counts, mb, ds)))
+        master_bar_html = html_views.get_master_bar(calc_d, counts['목'], counts['화'], counts['토'], counts['금'], counts['수'], guiin_str, n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=(yongshin_fact_str if 'yongshin_fact_str' in locals() else engine.get_yongshin_analysis(counts, mb, ds, db)))
         intro_html = html_views.get_intro_html()
         
         # ----------------------------------------------------------------------
