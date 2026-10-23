@@ -368,7 +368,7 @@ else:
                 
         st.markdown("---")
 
-       st.session_state.setdefault('dbg_log', []).append(f"A:u_g={st.session_state.get('u_g', '없음')}/saved={st.session_state.get('u_g_saved', '없음')}/버튼={st.session_state.get('btn_run')}")
+        st.session_state.setdefault('dbg_log', []).append(f"A:u_g={st.session_state.get('u_g', '없음')}/saved={st.session_state.get('u_g_saved', '없음')}/버튼={st.session_state.get('btn_run')}")
         if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "여성")
         if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "남성")
 
