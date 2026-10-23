@@ -367,9 +367,7 @@ else:
             ], key="sub_category_4", on_change=stop_ai)
                 
         st.markdown("---")
-        if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "여성")
-        if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "남성")
-
+        
         def sync_partner_gender():
             u_val = st.session_state.get("u_g", "남성")
             st.session_state["f_g"] = "남성" if u_val == "여성" else "여성"
@@ -428,9 +426,7 @@ else:
         # 👤 신청인 기본 정보 입력
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="심청이", key="u_n", on_change=stop_ai)
-        _g_opts = ["여성", "남성"]
-        _g_idx = _g_opts.index(st.session_state.get("u_g_saved")) if st.session_state.get("u_g_saved") in _g_opts else 0
-        gender = st.selectbox("성별", _g_opts, index=_g_idx, key="u_g", on_change=sync_partner_gender)
+        gender = st.selectbox("성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
         u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
@@ -1695,7 +1691,7 @@ if st.session_state.get('app_running', False):
             "ilun_gj_cur": ilun_gj_cur,
             "ilun_gj_han_cur": ilun_gj_han_cur,
             "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0]),
-            "time_block_relation_str": engine.get_time_block_relation_facts([hb, db, mb, yb]),
+            "time_block_relation_str": engine.get_time_block_relation_facts([hb, db, mb, yb], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1]),
             "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
 
             # ── H. 폭포수 체용 종합 · 삼형 · 반기 ──
