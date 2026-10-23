@@ -2189,8 +2189,9 @@ if st.session_state.get('app_running', False):
                 st.rerun()
         else:
             if is_vip_package:
-                if 'vip_stack_html' not in st.session_state:
+                if 'vip_stack_html' not in st.session_state or st.session_state.get('vip_stack_who') != st.session_state.get('_who_sig'):
                     st.session_state['vip_stack_html'] = []
+                st.session_state['vip_stack_who'] = st.session_state.get('_who_sig')
                 st.session_state['vip_stack_html'].append(final_clean_html)
                 combined_vip_html = "<div style='page-break-before: always;'></div>".join(st.session_state['vip_stack_html'])
                 st.session_state['saved_report_html'] = combined_vip_html
