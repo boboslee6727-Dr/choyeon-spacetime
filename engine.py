@@ -2019,8 +2019,9 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     """날짜별 일진이 원국과 맺는 충·합·삼형·공망·천을귀인과 용신 오행을 따져
     '기운이 도와주는 날'과 '서두르지 말 날'로 나눕니다. jjis는 [시지, 일지, 월지, 년지] 순서."""
     yong = yong or {}
+    if today is not None and today > start_date + dt_mod.timedelta(days=days - 1):
+        return "[이미 지난 구간이라 날짜별 팩트를 생략함 — 이 구간은 지나온 흐름으로 과거형으로만 짧게 말하고 개별 날짜는 짚지 말 것]"
     h2k = {"木": "목", "火": "화", "土": "토", "金": "금", "水": "수"}
-
     def oh_score(oh):
         if oh and oh in (yong.get("용신"), yong.get("희신"), yong.get("겸용")):
             return 1
@@ -2407,8 +2408,11 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
         if '충' in modes:
             opens.append(f"{CHUNG[b]}(충)")
         if '형' in modes:
-            opens += [f"{x}(형, 삼형 성립 시)" for x in HYUNG[b]]
-        tend = "辰戌충은 흉화가 가중되는 경향" if b in ('辰', '戌') else "丑未충은 발복이 상승하는 경향"
+            opens.append("丑·戌·未 세 글자가 모두 갖춰져 삼형이 완성될 때")
+        if '충' in modes:
+            tend = "辰戌충은 흉화가 가중되는 경향" if b in ('辰', '戌') else "丑未충은 발복이 상승하는 경향"
+        else:
+            tend = "충이 아니라 삼형 조건이며, 세 글자 중 하나만으로는 열리지 않음"
 
         won = ""
         if '충' in modes and CHUNG[b] in (mj, hj):
