@@ -367,8 +367,6 @@ else:
             ], key="sub_category_4", on_change=stop_ai)
                 
         st.markdown("---")
-
-        st.session_state.setdefault('dbg_log', []).append(f"A:u_g={st.session_state.get('u_g', '없음')}/saved={st.session_state.get('u_g_saved', '없음')}/버튼={st.session_state.get('btn_run')}")
         if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "여성")
         if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "남성")
 
@@ -435,9 +433,6 @@ else:
         gender = st.selectbox("성별", _g_opts, index=_g_idx, key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
-        st.session_state['dbg_log'].append(f"B:값={gender}")
-        st.caption("[진단] " + " | ".join(st.session_state['dbg_log'][-10:]))
-
         u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
                                  format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
         u_cal = st.selectbox("달력", ["양력", "음력(평달)", "음력(윤달)"], key="u_c", on_change=stop_ai)
@@ -451,6 +446,10 @@ else:
         t_idx = idx_list.index(curr_t_val) if curr_t_val in idx_list else 0
         b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
         st.session_state["s_t"] = b_time
+        _who_sig = f"{name}|{gender}|{b_year}-{b_month}-{b_day}|{b_time}"
+        if st.session_state.get("_who_sig") not in (None, _who_sig):
+            st.session_state.pop('vip_stack_html', None)
+        st.session_state["_who_sig"] = _who_sig
 
         if not any(f"2-{n}." in u_product for n in range(1, 6)):
             _concern_examples_admin = {
