@@ -1653,6 +1653,7 @@ if st.session_state.get('app_running', False):
             "dw_gj_han_cur": dw_gj_han_cur,
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
             "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운", gans=[hs, ds, ms, ys], u_g=dw_g_cur),
+            "gan_hap_chung_str": engine.get_gan_wonguk_facts([hs, ds, ms, ys]),
             "daewun_relation_all_str": daewun_relation_all_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
