@@ -426,7 +426,7 @@ else:
         # 👤 신청인 기본 정보 입력
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
         name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="심청이", key="u_n", on_change=stop_ai)
-        gender = st.selectbox("성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender
+        gender = st.selectbox("성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
         u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
