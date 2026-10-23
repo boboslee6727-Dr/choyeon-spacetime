@@ -1754,7 +1754,7 @@ if st.session_state.get('app_running', False):
             "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
             "other_report": user_entered_text,
             "dosik_fact_str": engine.get_dosik_fact(ds, [hs, ms, ys], [hb, db, mb, yb]),
-            "jaeseong_fact_str": engine.get_jaeseong_fact(...),
+            "jaeseong_fact_str": engine.get_jaeseong_fact(ds, [hs, ms, ys], [hb, db, mb, yb], st.session_state.get("u_g", "여성")),
             "inseong_fact_str": engine.get_inseong_fact(ds, [hs, ds, ms, ys], [hb, db, mb, yb]),
             "other_year_relation_facts": (
                 engine.get_text_year_relation_facts(user_entered_text, [hb, db, mb, yb], sol_y, daewun_data_list, gans=[hs, ds, ms, ys])
