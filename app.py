@@ -99,7 +99,6 @@ def _save_report_to_db(html_text):
     except Exception as e:
         st.toast(f"⚠️ 감명서 보관 실패: {e}")
 
-
 def _load_report_from_db():
     """임시 기억이 비었을 때 보관해 둔 감명서를 불러옴 (주문번호가 없으면 가장 최근 보관본)"""
     try:
@@ -369,7 +368,7 @@ else:
                 
         st.markdown("---")
 
-        st.caption(f"[진단A] 시작: u_g={st.session_state.get('u_g', '없음')} / saved={st.session_state.get('u_g_saved', '없음')}")
+       st.session_state.setdefault('dbg_log', []).append(f"A:u_g={st.session_state.get('u_g', '없음')}/saved={st.session_state.get('u_g_saved', '없음')}/버튼={st.session_state.get('btn_run')}")
         if "u_g" not in st.session_state: st.session_state["u_g"] = st.session_state.get("u_g_saved", "여성")
         if "f_g" not in st.session_state: st.session_state["f_g"] = st.session_state.get("f_g_saved", "남성")
 
@@ -436,7 +435,8 @@ else:
         gender = st.selectbox("성별", _g_opts, index=_g_idx, key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
-        st.caption(f"[진단B] 선택칸 값={gender} / saved={st.session_state.get('u_g_saved')}")
+        st.session_state['dbg_log'].append(f"B:값={gender}")
+        st.caption("[진단] " + " | ".join(st.session_state['dbg_log'][-10:]))
 
         u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
                                  format_func=lambda x: {"기혼": "기혼 (사실혼·별거 포함)", "돌싱": "돌싱 (이혼·사별)"}.get(x, x))
