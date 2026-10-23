@@ -2033,6 +2033,9 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     gm_year = calculate_gongmang(ys, yb)     # 년 기준 공망
     guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
     good, bad, mild = [], [], []
+    _PROD = {"목": "수", "화": "목", "토": "화", "금": "토", "수": "금"}
+    doc_el = _PROD.get(get_color(ds))
+    doc_days = []
     cut = today if (today is not None and start_date <= today <= start_date + dt_mod.timedelta(days=days - 1)) else None
     for i in range(days):
         d = start_date + dt_mod.timedelta(days=i)
@@ -2071,6 +2074,9 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         e = oh_score(get_color(gan)) + oh_score(get_color(ji))
         if e > 0: score += e; notes.append("일진 오행이 이로움")
         elif e < 0: score += e; notes.append("일진 오행이 해로움")
+        if doc_el and get_color(gan) == doc_el:
+            _kind = "편인" if ((gan in "甲丙戊庚壬") == (ds in "甲丙戊庚壬")) else "정인"
+            doc_days.append(f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일 {gan}({_kind})" + (" — " + ", ".join(notes) if notes else " — 다른 충·합 특이사항 없음"))
         if not notes:
             continue
         tag = f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일: " + ", ".join(notes)
@@ -2085,7 +2091,9 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     mild = mild[:4]
     return ("[기운이 도와주는 날] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 날 없음")
             + "\n[무난히 움직일 수 있는 날] " + (" / ".join(t for _, _, t in mild) if mild else "없음")
-            + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 날 없음"))
+            + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 날 없음")
+            + "\n[문서 기운(인성) 글자가 천간으로 들어오는 날] " + (" / ".join(doc_days) if doc_days else "없음"))
+
 
 def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None):
     """'2026년 10월 23일 ~ 2026년 11월 06일' 같은 문장에서 시작일·끝일을 읽어,
