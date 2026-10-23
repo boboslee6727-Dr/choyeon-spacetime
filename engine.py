@@ -1967,6 +1967,11 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
         if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
         if any(("월운(" in seg and "삼형 완성" in seg) for seg in re.split(r"\s*/\s*|\n", str(sam))):
             score -= 3; notes.append("삼형 완성"); severe = True
+        _wj = _to_hanja(_wol[1]) if len(str(_wol)) > 1 else ""
+        _SUL = {"丑", "戌", "未"}
+        _base = {_to_hanja(x) for x in jjis}
+        if ji in _SUL and _SUL <= (_base | {_wj, ji}) and not (_SUL <= (_base | {_wj})):
+            score -= 3; notes.append(f"원국과 월운({_wj})이 일진({ji})과 모여 축술미 삼형 완성"); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
         elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
         if "육합" in rel: score += 2; notes.append("원국과 육합")
@@ -2041,7 +2046,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         d = start_date + dt_mod.timedelta(days=i)
         if cut and d < cut:
             continue
-        _, _, pil = get_ganji_from_date(d.year, d.month, d.day)
+        _, _wol, pil = get_ganji_from_date(d.year, d.month, d.day)
         gan, ji = _to_hanja(pil[0]), _to_hanja(pil[1])
         rel = get_unun_relation_facts(jjis, ji, "일운")
         sam = check_samhyung_facts(jjis, ilun_j=ji)
