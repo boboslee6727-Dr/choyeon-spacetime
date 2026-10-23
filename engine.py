@@ -1774,6 +1774,25 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
     parts = [t for t in (gan_txt, ji_txt) if t]
     return " / ".join(parts) if parts else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
+def get_jaeseong_fact(ds, gans, jjis, gender="여성"):
+    """재성(정재·편재)이 원국에 있는지와 관련 육친(아버지·아내 등)을 팩트로 만듭니다.
+    gans=[시간, 월간, 년간], jjis=[시지, 일지, 월지, 년지]. 천간과 지지 본기 기준."""
+    dm = get_color(ds)
+    if not dm or dm not in _OHAENG_CYCLE:
+        return "일간을 알 수 없어 재성 판정을 생략합니다."
+    names = list(zip(["시간", "월간", "년간"], gans)) + list(zip(["시지", "일지", "월지", "년지"], jjis))
+    jae = []
+    for nm, c in names:
+        h = _to_hanja(c) if c else ""
+        if not h or h in ("?", "-", " "):
+            continue
+        if get_ss(ds, h) in ("정재", "편재"):
+            jae.append(f"{nm}({h})")
+    rel = "아버지·아내(배우자)" if str(gender).startswith("남") else "아버지(편재)·시어머니(정재)"
+    if jae:
+        return f"재성(정재·편재)이 원국에 있음: {', '.join(jae)} — 관련 육친: {rel}"
+    return f"재성(정재·편재)이 원국에 전혀 없음 — 관련 육친({rel})과의 인연·재물 기반이 원국에서 약하게 시작하며, 운에서 재성이 들어올 때 그 육친 문제가 부각될 수 있음"
+
 def get_dosik_fact(ds, gans, jjis):
     """도식(효신탈식): 편인이 식신을 극해 식신의 기운이 눌리는 구조를 팩트로 만듭니다.
     gans=[시간, 월간, 년간], jjis=[시지, 일지, 월지, 년지] (일간 자신은 제외). 천간과 지지 본기의 십성 기준."""
