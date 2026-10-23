@@ -997,7 +997,7 @@ if st.session_state.get('app_running', False):
         # 과거~현재 대운 지지가 원국 지지와 맺는 합충·삼합·방합 (미래 대운은 제외)
         daewun_relation_all_str = " / ".join(
             f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): "
-            + engine.get_unun_relation_facts([hb, db, mb, yb], dw['j_hanja'], "대운")
+            + engine.get_unun_relation_facts([hb, db, mb, yb], dw['j_hanja'], "대운", gans=[hs, ds, ms, ys], u_g=dw['c_hanja'])
             for _i, dw in enumerate(daewun_data_list)
             if _i <= _current_dw_idx and dw['j_hanja'] != "-"
         )
@@ -1178,7 +1178,7 @@ if st.session_state.get('app_running', False):
             _kw_2 = engine.get_matrix_keyword(_dw_che_this_yr, _yong_2)
             _sw_unsung = engine.get_unsung(ds_hanja, tj)
             sewun_che_flow_parts.append(f"{ty}년({tc}{tj}): 대운 {_dw_half_label}체({_dw_che_this_yr}) 아래에서 / 전반기[체({_che_1})→{_kw_1}] / 후반기[체({_che_2})→{_kw_2}] / 세운 지지 12운성({_sw_unsung})")
-            sewun_relation_10y_parts.append(f"{ty}년({tc}{tj}): " + engine.get_unun_relation_facts([hb, db, mb, yb], tj, "세운"))
+            sewun_relation_10y_parts.append(f"{ty}년({tc}{tj}): " + engine.get_unun_relation_facts([hb, db, mb, yb], tj, "세운", gans=[hs, ds, ms, ys], u_g=tc))
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
             hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
@@ -1652,7 +1652,7 @@ if st.session_state.get('app_running', False):
             "dw_gj_cur": dw_gj_cur,
             "dw_gj_han_cur": dw_gj_han_cur,
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
-            "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운"),
+            "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운", gans=[hs, ds, ms, ys], u_g=dw_g_cur),
             "daewun_relation_all_str": daewun_relation_all_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
             "daewun_che_flow_str": daewun_che_flow_str,
@@ -1672,7 +1672,7 @@ if st.session_state.get('app_running', False):
             "sewun_gj_han_cur": sewun_gj_han_cur,
             "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
-            "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운"),
+            "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운", gans=[hs, ds, ms, ys], u_g=engine.GAN[(curr_year-1984)%60%10]),
             "sewun_relation_10y_str": sewun_relation_10y_str,
             "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
 
@@ -1680,7 +1680,7 @@ if st.session_state.get('app_running', False):
             "curr_m": curr_m,
             "wolun_gj_cur": wolun_gj_cur,
             "wolun_gj_han_cur": wolun_gj_han_cur,
-            "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운"),
+            "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운", gans=[hs, ds, ms, ys], u_g=_cur_wol_pillar[0]),
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
             "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
             "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
@@ -1690,7 +1690,7 @@ if st.session_state.get('app_running', False):
             "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
             "ilun_gj_cur": ilun_gj_cur,
             "ilun_gj_han_cur": ilun_gj_han_cur,
-            "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운"),
+            "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0]),
             "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
 
             # ── H. 폭포수 체용 종합 · 삼형 · 반기 ──
