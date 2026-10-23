@@ -1752,6 +1752,7 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         if pair in _UN_HAE: out.append(f"{u_type}({u})이 원국 {nm}({j})와 해")
         if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파")
         if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형")
+        if pair in {frozenset(p) for p in ("寅巳", "巳申", "丑戌", "戌未", "丑未")}: out.append(f"{u_type}({u})이 원국 {nm}({j})와 형"
     nat_set = {j for j in nat if j not in ["?", "-", " "]}
     ilji = nat[1] if len(nat) > 1 else ""
     for trio, oh in _UN_SAMHAP:
