@@ -1928,6 +1928,10 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
             notes.append(("원국 " + "·".join(f"{n}({c})" for n, c in _ch) + "와 충") if _ch else "원국과 충")
             if re.search(r"(일지|월지)\([^)]*\)와 충", rel):
                 severe = True
+        if "와 형" in rel or "자묘형" in rel:
+            score -= 2; notes.append("원국과 형")
+            if re.search(r"(일지|월지)\([^)]*\)와 (?:자묘)?형", rel):
+                severe = True
         if "와 파" in rel: score -= 1; notes.append("원국과 파")
         if "와 해" in rel: score -= 1; notes.append("원국과 해")
         if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
@@ -2000,6 +2004,10 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             notes.append(("원국 " + "·".join(f"{n}({c})" for n, c in _ch) + "와 충") if _ch else "원국과 충")
             if re.search(r"(일지|월지)\([^)]*\)와 충", rel):
                 severe = True                      # 일지·월지 충은 무겁게 본다
+        if "와 형" in rel or "자묘형" in rel:
+            score -= 2; notes.append("원국과 형")
+            if re.search(r"(일지|월지)\([^)]*\)와 (?:자묘)?형", rel):
+                severe = True                      # 일지·월지 형은 무겁게 본다
         if "와 파" in rel: score -= 1; notes.append("원국과 파")
         if "와 해" in rel: score -= 1; notes.append("원국과 해")
         if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
