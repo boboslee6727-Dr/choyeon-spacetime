@@ -1754,7 +1754,7 @@ if st.session_state.get('app_running', False):
             "other_report": user_entered_text,
             "dosik_fact_str": engine.get_dosik_fact(ds, [hs, ms, ys], [hb, db, mb, yb]),
             "other_year_relation_facts": (
-                engine.get_text_year_relation_facts(user_entered_text, [hb, db, mb, yb], sol_y, daewun_data_list)
+                engine.get_text_year_relation_facts(user_entered_text, [hb, db, mb, yb], sol_y, daewun_data_list, gans=[hs, ds, ms, ys])
                 if ("4-1." in u_product and compare_mode == "외부 타 감명서 원문 대조") else "(해당 없음)"
             )
         }
