@@ -375,10 +375,10 @@ def get_gan_rel_all(idx, gans):
     me = gans[idx]; res = []
     if me in ["-", "?", " "]: return "-"
     for i, other in enumerate(gans):
-        if i == idx or other in ["-", "?", " "]: continue
+        if i == idx or abs(i - idx) != 1 or other in ["-", "?", " "]: continue
         s = {me, other}
         if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: res.append("합")
-        if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}, {'戊','甲'}, {'己','乙'}]: res.append("충")
+        if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]: res.append("충")
     return "".join(list(set(res))) if res else "-"
 
 def get_ji_rel_set(me, target):
@@ -1698,8 +1698,43 @@ _UN_HAE = {frozenset(p) for p in ["子未", "丑午", "寅巳", "卯辰", "申�
 _UN_PA = {frozenset(p) for p in ["子酉", "丑辰", "寅亥", "卯午", "巳申", "未戌"]}
 _UN_SAMHAP = [("申子辰", "水"), ("亥卯未", "木"), ("寅午戌", "火"), ("巳酉丑", "金")]
 _UN_BANGHAP = [("寅卯辰", "木"), ("巳午未", "火"), ("申酉戌", "金"), ("亥子丑", "水")]
+_GAN_HAP = {frozenset(x) for x in ["甲己", "乙庚", "丙辛", "丁壬", "戊癸"]}
+_GAN_CHUNG = {frozenset(x) for x in ["甲庚", "乙辛", "丙壬", "丁癸"]}
 
-def get_unun_relation_facts(jjis, u_j, u_type="일운"):
+def get_unun_gan_relation_facts(gans, u_g, u_type="세운"):
+    """운의 천간이 원국 천간(시간·일간·월간·년간)과 맺는 합, 일간과의 충. gans=[시간, 일간, 월간, 년간]."""
+    u = _to_hanja(str(u_g).strip()[-1]) if u_g else ""
+    if not u or u in ("?", "-", " "):
+        return ""
+    out = []
+    for nm, g in zip(["시간", "일간", "월간", "년간"], gans):
+        h = _to_hanja(g) if g else ""
+        if not h or h in ("?", "-", " "):
+            continue
+        if h == u:
+            out.append(f"{u_type} 천간({u})이 원국 {nm}({h})와 같은 글자로 겹침(복음)")
+            continue
+        pair = frozenset((u, h))
+        if pair in _GAN_HAP: out.append(f"{u_type} 천간({u})이 원국 {nm}({h})와 합")
+        if nm == "일간" and pair in _GAN_CHUNG: out.append(f"{u_type} 천간({u})이 일간({h})을 충")
+    return " / ".join(out)
+
+def get_gan_wonguk_facts(gans):
+    """원국 천간의 합·충. 붙어 있는 짝(시-일, 일-월, 월-년)만 인정(격합·격충 제외). gans=[시간, 일간, 월간, 년간]."""
+    names = ["시간", "일간", "월간", "년간"]
+    out = []
+    for i in range(3):
+        j = i + 1
+        a = _to_hanja(gans[i]) if gans[i] else ""
+        b = _to_hanja(gans[j]) if gans[j] else ""
+        if not a or not b or a in ("?", "-", " ") or b in ("?", "-", " "):
+            continue
+        pair = frozenset((a, b))
+        if pair in _GAN_HAP: out.append(f"{names[i]}({a})와 {names[j]}({b})가 붙어서 합")
+        if pair in _GAN_CHUNG: out.append(f"{names[i]}({a})와 {names[j]}({b})가 붙어서 충")
+    return " / ".join(out) if out else "원국 천간에 붙어 있는 합·충 없음(떨어진 격합·격충은 제외)"
+
+def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
     """운(대운/세운/월운/일운)의 지지가 원국 지지(시·일·월·년)와 맺는 충·합·해·파·복음을 팩트 문장으로 만듭니다."""
     names = ["시지", "일지", "월지", "년지"]
     u = _to_hanja(str(u_j).strip()[-1])
@@ -1718,19 +1753,26 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운"):
         if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파")
         if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형")
     nat_set = {j for j in nat if j not in ["?", "-", " "]}
+    ilji = nat[1] if len(nat) > 1 else ""
     for trio, oh in _UN_SAMHAP:
         if u not in trio:
             continue
         others = set(trio) - {u}
         have = others & nat_set
+        # 책 기준: 운에서 삼합·반합이 성립하려면 일지가 그 안에 들어가야 함
+        if ilji not in trio or ilji == "?":
+            continue
         if len(have) == 2:
-            out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 삼합 완성")
-        elif len(have) == 1 and (u == trio[1] or list(have)[0] == trio[1]):
-            out.append(f"{u_type}({u})이 원국 {list(have)[0]}와 {oh}국 반합")
+            out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 삼합 완성(일지 포함)")
+        elif len(have) == 1 and list(have)[0] == ilji and (u == trio[1] or ilji == trio[1]):
+            out.append(f"{u_type}({u})이 원국 일지({ilji})와 {oh}국 반합")
     for trio, oh in _UN_BANGHAP:
         if u in trio and (set(trio) - {u}) <= nat_set:
             out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 방합 완성")
-    return " / ".join(dict.fromkeys(out)) if out else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
+    ji_txt = " / ".join(dict.fromkeys(out)) if out else ""
+    gan_txt = get_unun_gan_relation_facts(gans, u_g, u_type) if (gans and u_g) else ""
+    parts = [t for t in (gan_txt, ji_txt) if t]
+    return " / ".join(parts) if parts else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
 def get_dosik_fact(ds, gans, jjis):
     """도식(효신탈식): 편인이 식신을 극해 식신의 기운이 눌리는 구조를 팩트로 만듭니다.
@@ -2807,7 +2849,7 @@ class UniversalPrintableGunghap:
         s = {j1, j2}
         if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
         if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return "방합"
-        if s in [{'申','子'}, {'子','辰'}, {'申','辰'}, {'寅','午'}, {'午','戌'}, {'寅','戌'}, {'亥','卯'}, {'卯','未'}, {'亥','未'}, {'巳','酉'}, {'酉','丑'}, {'巳','丑'}]: return "반합"
+        if s in [{'申','子'}, {'子','辰'}, {'寅','午'}, {'午','戌'}, {'亥','卯'}, {'卯','未'}, {'巳','酉'}, {'酉','丑'}]: r.append("반합")
         if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
         if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
         if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
