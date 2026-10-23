@@ -1797,7 +1797,7 @@ def get_dosik_fact(ds, gans, jjis):
         return f"{base}. 다만 편인을 제압하는 재성이 원국에 있어({', '.join(jae)}) 도식이 풀릴 여지가 있음"
     return f"{base}. 편인을 제압하는 재성이 원국에 없어 도식이 풀리지 않고 그대로 작동함"
 
-def get_text_year_relation_facts(text, jjis, birth_year=None, daewun_list=None, max_years=12):
+def get_text_year_relation_facts(text, jjis, birth_year=None, daewun_list=None, max_years=12, gans=None):
     """타 감명서 원문에 나온 연도(2019 등)와 간지년(己亥년 등)의 세운 지지가 원국 지지와 맺는
     충·합·삼합·방합 팩트를 만듭니다. jjis는 [시지, 일지, 월지, 년지] 순서.
     birth_year와 daewun_list(age_range·c_hanja·j_hanja)가 있으면 그 해의 나이와 대운도 함께 적습니다."""
@@ -1830,21 +1830,30 @@ def get_text_year_relation_facts(text, jjis, birth_year=None, daewun_list=None, 
                         head += f", {dw['c_hanja']}{dw['j_hanja']}대운"
                         dw_ji = _to_hanja(str(dw['j_hanja']).strip()[-1])
                         pair = frozenset((dw_ji, ji))
-                        if dw_ji == ji: dw_rel.append("같은 글자로 겹침(복음)")
-                        if pair in _UN_CHUNG: dw_rel.append("충")
-                        if pair in _UN_HAP: dw_rel.append("육합")
-                        if pair in _UN_HAE: dw_rel.append("해")
-                        if pair in _UN_PA: dw_rel.append("파")
-                        if dw_rel:
-                            dw_rel = [f"세운({ji})이 그 해 대운({dw_ji})과 " + " · ".join(dw_rel)]
+                        dw_gan = _to_hanja(str(dw['c_hanja']).strip()[-1])
+                        found = []
+                        if dw_ji == ji: found.append("같은 글자로 겹침(복음)")
+                        if pair in _UN_CHUNG: found.append("충")
+                        if pair in _UN_HAP: found.append("육합")
+                        if pair in _UN_HAE: found.append("해")
+                        if pair in _UN_PA: found.append("파")
+                        if found:
+                            dw_rel.append(f"세운 지지({ji})가 그 해 대운 지지({dw_ji})와 " + " · ".join(found))
+                        gfound = []
+                        gpair = frozenset((dw_gan, gan))
+                        if dw_gan == gan: gfound.append("같은 글자로 겹침(복음)")
+                        if gpair in _GAN_HAP: gfound.append("합")
+                        if gpair in _GAN_CHUNG: gfound.append("충")
+                        if gfound:
+                            dw_rel.append(f"세운 천간({gan})이 그 해 대운 천간({dw_gan})과 " + " · ".join(gfound))
                         break
-        lines.append(f"{head}: " + " / ".join(dw_rel + [get_unun_relation_facts(jjis, ji, "세운")]))
+        lines.append(f"{head}: " + " / ".join(dw_rel + [get_unun_relation_facts(jjis, ji, "세운", gans, gan)]))
     for m in re.finditer(r"([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])\s?년", txt):
         gj = m.group(1)
         if gj in seen_gj or len(seen_gj) >= max_years:
             continue
         seen_gj.add(gj)
-        lines.append(f"{gj}년(원문 표기): " + get_unun_relation_facts(jjis, gj[1], "세운"))
+        lines.append(f"{gj}년(원문 표기): " + get_unun_relation_facts(jjis, gj[1], "세운", gans, gj[0]))
     return " / ".join(lines) if lines else "원문에 연도 표기 없음"
 
 def get_yongshin_elements(yongshin_text):
