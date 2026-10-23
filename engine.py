@@ -1795,6 +1795,36 @@ def get_jaeseong_fact(ds, gans, jjis, gender="여성"):
     return (f"재성(정재·편재)이 원국에 전혀 없음 — 재물(수입·재산을 쌓는 기반)과 관련 육친({rel})의 인연이 모두 원국에서는 약하게 시작함. "
             f"운에서 재성이 들어올 때 재물 문제와 그 육친 문제가 함께 부각될 수 있음")
 
+def get_inseong_fact(ds, gans, jjis):
+    GAN_EL = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
+    YANG = set('甲丙戊庚壬')
+    PRODUCER = {'木':'水','火':'木','土':'火','金':'土','水':'金'}
+    HIDDEN = {'子':'壬癸','丑':'癸辛己','寅':'戊丙甲','卯':'甲乙','辰':'乙癸戊','巳':'戊庚丙',
+              '午':'丙己丁','未':'丁乙己','申':'己壬庚','酉':'庚辛','戌':'辛丁戊','亥':'戊甲壬'}
+    GAN_NM = ["시간", "일간", "월간", "년간"]
+    JI_NM = ["시지", "일지", "월지", "년지"]
+    if ds not in GAN_EL:
+        return ""
+    ins_el = PRODUCER[GAN_EL[ds]]
+    def kind(g):
+        return "편인" if ((g in YANG) == (ds in YANG)) else "정인"
+    shown, hidden = [], []
+    for i, g in enumerate(gans):
+        if i != 1 and g in GAN_EL and GAN_EL[g] == ins_el:
+            shown.append(f"{GAN_NM[i]} {g}({kind(g)})")
+    for i, j in enumerate(jjis):
+        for g in HIDDEN.get(j, ""):
+            if GAN_EL[g] == ins_el:
+                hidden.append(f"{JI_NM[i]} {j} 속 {g}({kind(g)})")
+    if shown:
+        return (f"문서·계약의 기운(인성, {ins_el})이 원국 천간에 드러나 있음: {', '.join(shown)}"
+                + (f" / 지지 속에도 있음: {', '.join(hidden)}" if hidden else ""))
+    if hidden:
+        return (f"문서·계약의 기운(인성, {ins_el})이 천간에는 없고 지지 속에 숨어 있음: {', '.join(hidden)} "
+                f"— 운에서 {ins_el} 글자가 들어오거나 그 지지를 충·형·합으로 건드릴 때 문서·계약 기운이 열림")
+    return (f"문서·계약의 기운(인성, {ins_el})이 원국에 전혀 없음 — 문서·자격·계약의 기반이 약하게 시작하며, "
+            f"운에서 {ins_el} 글자가 들어올 때만 문서 기운이 생김")
+
 def get_dosik_fact(ds, gans, jjis):
     """도식(효신탈식): 편인이 식신을 극해 식신의 기운이 눌리는 구조를 팩트로 만듭니다.
     gans=[시간, 월간, 년간], jjis=[시지, 일지, 월지, 년지] (일간 자신은 제외). 천간과 지지 본기의 십성 기준."""
