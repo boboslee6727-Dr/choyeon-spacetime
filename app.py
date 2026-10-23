@@ -1692,6 +1692,7 @@ if st.session_state.get('app_running', False):
             "ilun_gj_cur": ilun_gj_cur,
             "ilun_gj_han_cur": ilun_gj_han_cur,
             "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0]),
+            "time_block_relation_str": engine.get_time_block_relation_facts([hb, db, mb, yb]),
             "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
 
             # ── H. 폭포수 체용 종합 · 삼형 · 반기 ──
