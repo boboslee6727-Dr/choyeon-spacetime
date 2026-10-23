@@ -2004,10 +2004,12 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
     return (f"[{year}년 월별 팩트]\n[기운이 도와주는 달] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 달 없음")
             + "\n[서두르지 말 달] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 달 없음"))
 
-def get_time_block_relation_facts(jjis):
+def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None):
     """오늘의 시간대(오전 卯辰巳시, 오후 午未申시, 저녁 酉戌亥시)의 시지가 원국과 맺는 충·합·형·해·파·복음 팩트.
     jjis는 [시지, 일지, 월지, 년지] 순서."""
     blocks = [("오전(卯辰巳시)", "卯辰巳"), ("오후(午未申시)", "午未申"), ("저녁(酉戌亥시)", "酉戌亥")]
+    _SUL = {"丑", "戌", "未"}
+    _base = {_to_hanja(x) for x in jjis} | {_to_hanja(x) for x in (wolun_j, ilun_j) if x}
     lines = []
     for title, brs in blocks:
         parts = []
@@ -2015,6 +2017,8 @@ def get_time_block_relation_facts(jjis):
             rel = get_unun_relation_facts(jjis, b, f"{b}시")
             if "특이한 충·합 없음" not in rel:
                 parts.append(rel)
+            if b in _SUL and _SUL <= (_base | {b}) and not (_SUL <= _base):
+                parts.append(f"{b}시: 원국·월운·일운과 모여 축술미 삼형 완성")
         lines.append(f"[{title}] " + (" / ".join(parts) if parts else "원국과 특이한 충·합·형 없음"))
     return "\n".join(lines)
 
