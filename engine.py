@@ -1969,7 +1969,10 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
             score -= 3; notes.append("삼형 완성"); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
         elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
-        if "육합" in rel: score += 2; notes.append("원국과 육합")
+        if "육합" in rel:
+            score += 2
+            _m = re.findall(r"원국 (시지|일지|월지|년지)\(([^)]*)\)와 육합", rel)
+            notes.append(("원국 " + "·".join(f"{n}({c})" for n, c in _m) + "와 육합") if _m else "원국과 육합")
         m = re.search(r"([木火土金水])국 삼합 완성", rel)
         if m:
             oh = h2k[m.group(1)]; score += oh_score(oh) * 2; notes.append(f"{oh}국 삼합 완성")
@@ -2065,8 +2068,10 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             score -= 2; notes.append("원국과 형")
             if re.search(r"(일지|월지)\([^)]*\)와 (?:자묘)?형", rel):
                 severe = True                      # 일지·월지 형은 무겁게 본다
-        if "와 파" in rel: score -= 1; notes.append("원국과 파")
-        if "와 해" in rel: score -= 1; notes.append("원국과 해")
+        for _kw, _sc in (("파", -1), ("해", -1)):
+            _m = re.findall(r"원국 (시지|일지|월지|년지)\(([^)]*)\)와 " + _kw, rel)
+            if _m: score += _sc; notes.append("원국 " + "·".join(f"{n}({c})" for n, c in _m) + "와 " + _kw)
+            elif ("와 " + _kw) in rel: score += _sc; notes.append("원국과 " + _kw)
         if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
         if "일운(" in sam and "삼형 완성" in sam: score -= 3; notes.append("삼형 완성"); severe = True
         _wj = _to_hanja(_wol[1]) if len(str(_wol)) > 1 else ""
