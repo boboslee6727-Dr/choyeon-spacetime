@@ -1704,8 +1704,8 @@ if st.session_state.get('app_running', False):
             "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운", gans=[hs, ds, ms, ys], u_g=_cur_wol_pillar[0]),
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
             "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
-            "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
-            "period_day_facts_str": engine.get_period_day_facts(selected_target_date, 30, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
+            "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
+            "period_day_facts_str": engine.get_period_day_facts(selected_target_date, 30, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
 
             # ── G. 일운 · 주간 ──
             "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
