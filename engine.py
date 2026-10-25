@@ -2868,7 +2868,7 @@ def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr
 
 # ---- 3-E. [2-6 이사 택일] [2-7 개업 택일] ----
 
-def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, purpose):
+def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, purpose, avoid_jis=None):
     import datetime as dt_mod
  
     day_gan = user_gans[1]
@@ -2885,6 +2885,10 @@ def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, pur
             curr_date += dt_mod.timedelta(days=1)
             continue
  
+        if avoid_jis and any("충" in get_ji_rel_set(pj, d_ji) for pj in avoid_jis):
+            curr_date += dt_mod.timedelta(days=1)
+            continue
+
         score = 70.0
  
         rel = get_ji_rel_set(day_ji, d_ji)
@@ -2928,6 +2932,41 @@ def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, pur
  
     best_days.sort(key=lambda x: x['score'], reverse=True)
     return best_days[:3]
+
+
+def get_sonupnun_days(start_date, end_date):
+    import datetime as dt_mod
+    out = []
+    klc = KoreanLunarCalendar()
+    cur = start_date
+    while cur <= end_date:
+        try:
+            if klc.setSolarDate(cur.year, cur.month, cur.day) and klc.lunarDay % 10 in (9, 0):
+                out.append(f"{cur.month}월 {cur.day}일(음력 {klc.lunarMonth}월 {klc.lunarDay}일)")
+        except Exception:
+            pass
+        cur += dt_mod.timedelta(days=1)
+    return out
+
+
+def get_partner_clash_days(start_date, end_date, avoid_jis):
+    import datetime as dt_mod
+    out = []
+    if not avoid_jis:
+        return out
+    curr = start_date
+    while curr <= end_date:
+        try:
+            _, _, d_p = get_ganji_from_date(curr.year, curr.month, curr.day)
+            d_gan, d_ji = d_p[0], d_p[1]
+        except Exception:
+            curr += dt_mod.timedelta(days=1)
+            continue
+        hit = [pj for pj in avoid_jis if "충" in get_ji_rel_set(pj, d_ji)]
+        if hit:
+            out.append(f"{curr.month}월 {curr.day}일 {d_gan}{d_ji}일")
+        curr += dt_mod.timedelta(days=1)
+    return out
 
 
 # ==============================================================================
