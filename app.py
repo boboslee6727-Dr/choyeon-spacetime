@@ -1515,18 +1515,32 @@ if st.session_state.get('app_running', False):
             start_d_val = st.session_state.get('moving_start', selected_target_date)
             end_d_val = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
             
+            avoid_jis_val = []
+            _pb = st.session_state.get('move_partner_birth')
+            if _pb:
+                try:
+                    _py, _pm, _pd = engine.get_ganji_from_date(_pb.year, _pb.month, _pb.day)
+                    avoid_jis_val = [_pd[1], _py[1]]
+                except Exception:
+                    avoid_jis_val = []
+
             try:
                 top3_days = engine.get_best_moving_opening_days(
                     start_date=start_d_val, 
                     end_date=end_d_val, 
                     user_gans=gans, 
                     user_jjis=jjis, 
-                    purpose=tackil_purpose_val
+                    purpose=tackil_purpose_val,
+                    avoid_jis=avoid_jis_val
                 )
                 if top3_days:
                     best_moving_days_str = "\n".join([f"[{i+1}순위 추천일]: {d['date']} ({d['ganji'][0]}{d['ganji'][1]}일) / 명리적합도: {d['score']}점" for i, d in enumerate(top3_days)])
                 else:
                     best_moving_days_str = "해당 기간 내 적합한 명리적 길일이 없습니다. 기간을 넓혀주세요."
+                if avoid_jis_val:
+                    _clash_days = engine.get_partner_clash_days(start_d_val, end_d_val, avoid_jis_val)
+                    if _clash_days:
+                        best_moving_days_str += "\n[함께 입주하는 분의 일지·띠와 충이 되어 제외한 날] " + ", ".join(_clash_days)
             except Exception as e:
                 best_moving_days_str = "(길일 선별 정보를 불러오지 못함)"
 
