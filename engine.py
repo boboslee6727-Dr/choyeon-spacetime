@@ -2017,7 +2017,8 @@ def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
             if "특이한 충·합 없음" not in rel:
                 parts.append(" / ".join(tag + s for s in rel.split(" / ")))
             if b in _SUL and _SUL <= (_base | {b}) and not (_SUL <= _base):
-                parts.append(tag + f"{b}시: 원국·월운·일운과 모여 축술미 삼형 완성")
+                _tg = ["일지"] if _to_hanja(jjis[1]) in _SUL else [n for n, x in (("월지", jjis[2]), ("시지", jjis[0])) if _to_hanja(x) in _SUL]
+                parts.append(tag + f"{b}시: 이 시(時)의 {b}이 더해져 원국·월운과 함께 축술미 삼형 완성 — " + ("·".join(_tg) if _tg else "원국") + " 창고가 열리는 시간")
         lines.append(f"[{title}] " + (" / ".join(parts) if parts else "원국과 특이한 충·합·형 없음"))
     return "\n".join(lines)
 
