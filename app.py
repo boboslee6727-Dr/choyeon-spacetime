@@ -495,11 +495,13 @@ else:
                 col_start, col_end = st.columns(2)
                 start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
                 end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
+                st.date_input("함께 입주하는 배우자 생년월일 (선택)", value=None, min_value=dt_mod.date(1920, 1, 1), max_value=dt_mod.date.today(), key="move_partner_birth", on_change=stop_ai)
             elif "2-7." in u_product:
                 st.session_state['tackil_purpose'] = "개업"
                 col_start, col_end = st.columns(2)
                 start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
                 end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
+                st.date_input("함께 개업하는 배우자·동업자 생년월일 (선택)", value=None, min_value=dt_mod.date(1920, 1, 1), max_value=dt_mod.date.today(), key="move_partner_birth", on_change=stop_ai)
             elif "4-1." in u_product:
                 st.markdown("---")
                 compare_mode = st.radio("대조 분석 모드", ["전통 명리학과 1:1 자동 대조", "외부 타 감명서 원문 대조"], index=0, key="compare_mode_1")
