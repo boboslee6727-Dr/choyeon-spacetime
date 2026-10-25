@@ -1523,6 +1523,7 @@ if st.session_state.get('app_running', False):
                     avoid_jis_val = [_pd[1], _py[1]]
                 except Exception:
                     avoid_jis_val = []
+            st.sidebar.info(f"[진단] 시작={start_d_val} 끝={end_d_val} 배우자={_pb} 제외지지={avoid_jis_val}")
 
             try:
                 top3_days = engine.get_best_moving_opening_days(
