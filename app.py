@@ -1516,7 +1516,7 @@ if st.session_state.get('app_running', False):
             end_d_val = st.session_state.get('moving_end', selected_target_date + dt_mod.timedelta(days=30))
             
             avoid_jis_val = []
-            _pb = st.session_state.get('move_partner_birth')
+            _pb = st.session_state.get('move_partner_birth') or st.session_state.get('order_partner_val')
             if _pb:
                 try:
                     _py, _pm, _pd = engine.get_ganji_from_date(_pb.year, _pb.month, _pb.day)
