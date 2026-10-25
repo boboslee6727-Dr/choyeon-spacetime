@@ -1542,7 +1542,7 @@ if st.session_state.get('app_running', False):
                     if _clash_days:
                         best_moving_days_str += "\n[함께 입주하는 분의 일지·띠와 충이 되어 제외한 날] " + ", ".join(_clash_days)
             except Exception as e:
-                best_moving_days_str = "(길일 선별 정보를 불러오지 못함)"
+                best_moving_days_str = f"(길일 선별 정보를 불러오지 못함: {type(e).__name__} {e} / 시작={start_d_val!r} 끝={end_d_val!r})"
 
         # 🚨 궁합용: 남명/여명 각각의 신살 반기별 재해석 재료 준비
         m_gans_val = gans if gender == "남성" else (p_gans if 'p_gans' in locals() else gans)
