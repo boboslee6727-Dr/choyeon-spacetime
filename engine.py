@@ -2102,7 +2102,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         elif score >= 1:
             mild.append((score, i, tag))
     good = sorted(sorted(good, key=lambda x: (-x[0], x[1]))[:5], key=lambda x: x[1])
-    bad = bad[:6]
+    bad = bad[:12]
     mild = mild[:4]
     _today_line = (f"[오늘 기준일: {today.month}/{today.day}({_WEEKDAY_KR[today.weekday()]}) — 이 날짜보다 앞선 날만 이미 지난 날이고, 오늘과 그 이후의 날은 지금이거나 앞으로 올 날]\n" if today is not None else "")
     return (_today_line + "[기운이 도와주는 날] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 날 없음")
