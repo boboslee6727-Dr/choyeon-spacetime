@@ -2027,7 +2027,7 @@ def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
 
 _WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 
-def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None):
+def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
     """날짜별 일진이 원국과 맺는 충·합·삼형·공망·천을귀인과 용신 오행을 따져
     '기운이 도와주는 날'과 '서두르지 말 날'로 나눕니다. jjis는 [시지, 일지, 월지, 년지] 순서."""
     yong = yong or {}
@@ -2079,7 +2079,20 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         _base = {_to_hanja(x) for x in jjis}
         if ji in _SUL and _SUL <= (_base | {_wj, ji}) and not (_SUL <= (_base | {_wj})):
             _tg = ["일지"] if _to_hanja(jjis[1]) in _SUL else [n for n, x in (("월지", jjis[2]), ("시지", jjis[0])) if _to_hanja(x) in _SUL]
-            score -= 3; notes.append(f"월운({_wj})·일진({ji})이 모여 축술미 삼형 완성 — " + ("·".join(_tg) if _tg else "원국") + " 창고가 열리는 날"); severe = True
+            _gset = {_to_hanja(g) for g in (gans or [])}
+            _pos = {"시지": 0, "일지": 1, "월지": 2, "년지": 3}
+            _det = []
+            for _n in (_tg if gans else []):
+                _bj = _to_hanja(jjis[_pos[_n]])
+                _jg = [g for g in JIJANGGAN.get(_bj, []) if g != "-"]
+                _ent = [f"{g}({get_ss(ds, g)})" for g in _jg if g in _gset]
+                _opn = [f"{g}({get_ss(ds, g)})" for g in _jg if g not in _gset]
+                _part = []
+                if _ent: _part.append("천간에 이미 드러난 " + "·".join(_ent) + "은 창고로 끌려 들어가는 입고")
+                if _opn: _part.append("천간에 없던 " + "·".join(_opn) + "은 숨은 기운이 드러나는 개고")
+                _det.append(f"{_n} {_bj} 창고: " + ", ".join(_part))
+            score -= 3
+            notes.append(f"월운({_wj})·일진({ji})이 모여 축술미 삼형 완성 — " + (" / ".join(_det) if _det else "원국 창고가 움직이는 날")); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
         elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
         if "육합" in rel: score += 2; notes.append("원국과 육합")
