@@ -1999,21 +1999,25 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
     return (f"[{year}년 월별 팩트]\n[기운이 도와주는 달] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 달 없음")
             + "\n[서두르지 말 달] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 달 없음"))
 
-def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None):
-    """오늘의 시간대(오전 卯辰巳시, 오후 午未申시, 저녁 酉戌亥시)의 시지가 원국과 맺는 충·합·형·해·파·복음 팩트.
-    jjis는 [시지, 일지, 월지, 년지] 순서."""
+def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
     blocks = [("오전(卯辰巳시)", "卯辰巳"), ("오후(午未申시)", "午未申"), ("저녁(酉戌亥시)", "酉戌亥")]
+    _END = {"卯": 7*60+29, "辰": 9*60+29, "巳": 11*60+29, "午": 13*60+29, "未": 15*60+29,
+            "申": 17*60+29, "酉": 19*60+29, "戌": 21*60+29, "亥": 23*60+29}
+    _now_min = (now.hour * 60 + now.minute) if now is not None else None
     _SUL = {"丑", "戌", "未"}
     _base = {_to_hanja(x) for x in jjis} | {_to_hanja(x) for x in (wolun_j, ilun_j) if x}
     lines = []
+    if _now_min is not None:
+        lines.append(f"[지금 시각: {now.hour:02d}:{now.minute:02d} — '(이미 지난 시간)'이 붙은 시간대는 과거형으로만 짧게 말하고, 행동 권유는 지금 이후의 시간대에만 할 것]")
     for title, brs in blocks:
         parts = []
         for b in brs:
+            tag = "(이미 지난 시간) " if (_now_min is not None and _now_min > _END[b]) else ""
             rel = get_unun_relation_facts(jjis, b, f"{b}시")
             if "특이한 충·합 없음" not in rel:
-                parts.append(rel)
+                parts.append(" / ".join(tag + s for s in rel.split(" / ")))
             if b in _SUL and _SUL <= (_base | {b}) and not (_SUL <= _base):
-                parts.append(f"{b}시: 원국·월운·일운과 모여 축술미 삼형 완성")
+                parts.append(tag + f"{b}시: 원국·월운·일운과 모여 축술미 삼형 완성")
         lines.append(f"[{title}] " + (" / ".join(parts) if parts else "원국과 특이한 충·합·형 없음"))
     return "\n".join(lines)
 
