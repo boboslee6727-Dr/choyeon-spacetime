@@ -575,9 +575,10 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     p_tackil_purpose = "이사"
     p_moving_start = date.today()
     p_moving_end = date.today() + timedelta(days=30)
+    p_partner_birth = None
 
-    is_tackil_moving = any("2-6." in item for item in selected_products)
-    is_tackil_opening = any("2-7." in item for item in selected_products)
+    is_tackil_moving = "2-6." in selected_single
+    is_tackil_opening = "2-7." in selected_single
 
     if is_tackil_moving or is_tackil_opening:
         p_tackil_purpose = "이사" if is_tackil_moving else "개업"
@@ -585,6 +586,9 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         col_start, col_end = st.columns(2)
         p_moving_start = col_start.date_input("희망 시작일", key="order_moving_start")
         p_moving_end = col_end.date_input("희망 종료일", key="order_moving_end")
+        p_partner_birth = st.date_input(
+            "함께 입주하는 배우자 생년월일 (선택)" if is_tackil_moving else "함께 개업하는 배우자·동업자 생년월일 (선택)",
+            value=None, min_value=date(1920, 1, 1), max_value=date.today(), key="order_partner_birth")
 
     if is_couple_product:
         st.error("👩‍❤️‍👨 **3. 상대방 정보 (궁합 및 택일용 필수)**")
@@ -663,6 +667,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             meta_data['tackil_purpose'] = p_tackil_purpose
             meta_data['moving_start'] = p_moving_start.isoformat()
             meta_data['moving_end'] = p_moving_end.isoformat()
+            if p_partner_birth:
+                meta_data['partner_birth'] = p_partner_birth.isoformat()
         if coupon_code and coupon_code.strip():
             meta_data['coupon_code'] = coupon_code.strip()
 
