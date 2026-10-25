@@ -1541,6 +1541,10 @@ if st.session_state.get('app_running', False):
                     _clash_days = engine.get_partner_clash_days(start_d_val, end_d_val, avoid_jis_val)
                     if _clash_days:
                         best_moving_days_str += "\n[함께 입주하는 분의 일지·띠와 충이 되어 제외한 날] " + ", ".join(_clash_days)
+                if tackil_purpose_val == "이사" and hasattr(engine, 'get_sonupnun_days'):
+                    _son_days = engine.get_sonupnun_days(start_d_val, end_d_val)
+                    if _son_days:
+                        best_moving_days_str += "\n[기간 중 손 없는 날(음력 끝자리 9·0일)] " + ", ".join(_son_days)
             except Exception as e:
                 best_moving_days_str = f"(길일 선별 정보를 불러오지 못함: {type(e).__name__} {e} / 시작={start_d_val!r} 끝={end_d_val!r})"
                 st.sidebar.error(f"길일 오류: {type(e).__name__} {e} / 시작={start_d_val!r} 끝={end_d_val!r}")
