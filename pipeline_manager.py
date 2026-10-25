@@ -577,8 +577,8 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     p_moving_end = date.today() + timedelta(days=30)
     p_partner_birth = None
 
-    is_tackil_moving = "2-6." in selected_single
-    is_tackil_opening = "2-7." in selected_single
+    is_tackil_moving = any(item.startswith("2-6.") for item in selected_products)
+    is_tackil_opening = any(item.startswith("2-7.") for item in selected_products)
 
     if is_tackil_moving or is_tackil_opening:
         p_tackil_purpose = "이사" if is_tackil_moving else "개업"
