@@ -2129,7 +2129,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             + "\n[문서 기운(인성) 글자가 천간으로 들어오는 날] " + (" / ".join(doc_days) if doc_days else "없음"))
 
 
-def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None):
+def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
     """'2026년 10월 23일 ~ 2026년 11월 06일' 같은 문장에서 시작일·끝일을 읽어,
     그 기간의 날짜별 충·삼형·공망·합 팩트를 만듭니다. (월운 상반기/후반기용)"""
     found = re.findall(r'(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일', str(period_str))
@@ -2143,7 +2143,8 @@ def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, y
     days = (e - s).days + 1
     if days < 1 or days > 40:
         return "[날짜 범위를 확인할 수 없음]"
-    return get_period_day_facts(s, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=yong, today=today)
+    return get_period_day_facts(s, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=yong, today=today, gans=gans)
+
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
     base_gans = [_to_hanja(g) for g in base_gans]
