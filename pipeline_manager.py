@@ -847,9 +847,14 @@ def render_admin_panel():
                                             st.session_state['tackil_purpose'] = meta['tackil_purpose']
                                             st.session_state['moving_start'] = date.fromisoformat(meta['moving_start'])
                                             st.session_state['moving_end'] = date.fromisoformat(meta['moving_end'])
+                                            if meta.get('partner_birth'):
+                                                st.session_state['move_partner_birth'] = date.fromisoformat(meta['partner_birth'])
+                                                st.session_state['order_partner_val'] = date.fromisoformat(meta['partner_birth'])
+                                            else:
+                                                st.session_state['move_partner_birth'] = None
+                                                st.session_state['order_partner_val'] = None
                                     except Exception:
-                                        pass
-                                
+                                        pass                                
                                 st.session_state['user_concern'] = clean_concern
                                 
                                 if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", r_prod_first
