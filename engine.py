@@ -2397,8 +2397,47 @@ def analyze_cosmic_gravity_and_samhyeong_patterns(bazi_dict):
 # PART 3. [2-x 테마별 상담] 2-1 재물 · 2-2 연애 · 2-3 진학 · 2-4 직업 · 2-5 건강 · 2-6 이사 · 2-7 개업
 # ==============================================================================
 
-
 # ---- 3-A. [2-1 재물운] ----
+
+def get_jaeda_sinyak_fact(counts, mb, ds, db=None):
+    """재물 감당력 사실문: 신강·신약 + 재성 개수 → 재다신약/신약재약/신강재약/신강재왕 등 유형과 비겁탈재 여부."""
+    dm = get_color(ds)
+    if not dm or dm not in _OHAENG_CYCLE:
+        return "일간 오행을 알 수 없어 재물 감당력 판정을 생략합니다."
+    strength, raw_support, raw_drain, support, drain, _n1, _n2 = _judge_strength(counts, mb, ds, db)
+    jae = _oh_controls(dm)
+    jae_cnt = counts.get(jae, 0)
+    bigeop = max(0, counts.get(dm, 0) - 1)
+    inseong = counts.get(_oh_prev(dm), 0)
+    siksang = counts.get(_oh_next(dm), 0)
+    if jae_cnt >= 3:
+        jae_lv = "많음"
+    elif jae_cnt == 2:
+        jae_lv = "보통"
+    else:
+        jae_lv = "약함"
+    if jae_cnt == 0:
+        kind = f"재성 없음({strength}) - 재물을 직접 쥐는 기운이 원국에 없어 활동·관계로 재물을 만드는 구조"
+    elif jae_lv == "많음" and strength == "신약":
+        kind = "재다신약 - 재물 기운은 많으나 일간의 힘이 모자라 감당하기 벅찬 구조(무리한 확장 주의, 인성·비겁 보강이 도움)"
+    elif jae_lv == "많음" and strength == "신강":
+        kind = "신강재왕 - 재물 기운도 많고 일간도 힘이 있어 재물을 감당할 수 있는 구조"
+    elif jae_lv == "많음":
+        kind = "재성 많음, 중화 - 재물 기운과 일간의 힘이 팽팽한 구조"
+    elif strength == "신강":
+        kind = "신강재약 - 일간의 힘은 충분하나 재물 기운이 약해, 식상(재능·활동)으로 재물을 만들어야 하는 구조"
+    elif strength == "신약":
+        kind = "신약재약 - 재물 기운도 약하고 일간의 힘도 모자라, 무리한 확장보다 힘을 채우며 지키는 쪽이 맞는 구조"
+    else:
+        kind = "재성 약함, 중화 - 재물 기운은 약하나 일간의 힘은 균형을 이룬 구조"
+    notes = []
+    if bigeop > jae_cnt:
+        notes.append(f"비겁({bigeop}개)이 재성({jae_cnt}개)보다 많아 재물을 나누거나 새기 쉬운 구조(비겁탈재 경향)")
+    if siksang >= 1 and jae_cnt >= 1:
+        notes.append("식상이 있어 버는 재능이 재물로 이어지는 길이 있음")
+    return (f"[재물 감당력] 일간({ds}, {dm}) {strength}(지원 {support} vs 소모 {drain}), "
+            f"재성({jae}) {jae_cnt}개({jae_lv}), 비겁 {bigeop}개, 인성 {inseong}개, 식상 {siksang}개 → 유형: {kind}"
+            + (" / " + " / ".join(notes) if notes else ""))
 
 def get_jaeseong_status_fact_str(ds_hanja, gans, jjis, yb, year_gongmang_sipseong, day_gongmang_sipseong, curr_samjae):
     """재물운 종합 팩트: 재성(정재·편재)의 궁위, 십이운성, 십이신살, 공망, 삼재 여부를 한 번에 산출."""
