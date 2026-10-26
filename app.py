@@ -477,10 +477,10 @@ else:
         is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
         
         if is_1person:
-            if u_product.startswith("1-"):
+            if any(u_product.startswith(_p) for _p in ("1-", "2-1", "2-2", "2-3", "2-4", "2-5")):
                 is_vip_package = st.checkbox("👑 VIP 패키지 모드", value=st.session_state.get("is_vip_package_val", False), key="is_vip_package_val", on_change=stop_ai)
                 if is_vip_package:
-                    st.caption("💡 VIP 모드: 1-1→1-2→1-3→1-4 순서대로 감명하면 이전 내용 위에 계속 쌓여서 저장됩니다.")
+                    st.caption("💡 VIP 모드: 상품을 하나씩 순서대로 감명하면 이전 내용 위에 계속 쌓여서 저장됩니다. (예: 1-1→1-2→2-1→2-2)"
                     if st.button("🗑️ VIP 누적 내용 초기화", key="btn_vip_reset", use_container_width=True):
                         st.session_state['vip_stack_html'] = []
                         st.session_state.pop('saved_report_html', None)
