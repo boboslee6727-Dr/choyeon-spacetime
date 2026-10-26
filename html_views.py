@@ -336,13 +336,22 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
 def get_master_bar(calc_d, m, f, e, mtl, w, guiin, n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=""):
     import re as _re
     _ys_row = ""
-    _mm = _re.search(r'\[용신=(\S)(?:\s*\(겸용:(\S)\))?', str(yongshin_text))
+    _mm = _re.search(r'\[용신=(\S)(?:\s*\(([^)]*)\))?', str(yongshin_text))
     if _mm:
         _H = {'목': '木', '화': '火', '토': '土', '금': '金', '수': '水'}
         def _pick(key):
             r = _re.search(key + r'[^=\]/]*=(\S)', str(yongshin_text))
             return _H.get(r.group(1), r.group(1)) if r else "-"
-        _yong = _H.get(_mm.group(1), _mm.group(1)) + (f"(겸용 {_H.get(_mm.group(2), _mm.group(2))})" if _mm.group(2) else "")
+        _inside = _mm.group(2) or ""
+        _y1 = _H.get(_mm.group(1), _mm.group(1))
+        _sec = _re.search(r'겸용:(\S)', _inside)
+        _y2 = (_H.get(_sec.group(1), _sec.group(1)) if _sec else "")
+        if "조후 우선" in _inside:
+            _yong = f"{_y1}(조후)" + (f" · {_y2}(억부)" if _y2 else "")
+        elif _y2:
+            _yong = f"{_y1}(억부) · {_y2}(조후)"
+        else:
+            _yong = _y1
         _ys_row = f"""
     <div style='border:2px solid #3E2723; margin-top:6px; padding:6px 8px; font-weight:900; font-size:12px; border-radius:8px; text-align:center;'>
         ⭐ 용신: {_yong} &nbsp;|&nbsp; 희신: {_pick('희신')} &nbsp;|&nbsp; 기신: {_pick('기신')} &nbsp;|&nbsp; 구신: {_pick('구신')} &nbsp;|&nbsp; 한신: {_pick('한신')}
