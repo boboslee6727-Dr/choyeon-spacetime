@@ -252,7 +252,7 @@ def get_couple_cover(version="", report_title="", u_icon="♂️", u_name="무�
                 </div>
             </div>
             <p style='font-family: "Nanum Myeongjo", serif; font-size: 18px; margin-top: 32px; margin-bottom: 0; font-weight: 800; color: #000000; letter-spacing: 0.5px;'>{today_str}</p>
-            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 24px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소</p>
+            <p style='font-family: "Nanum Myeongjo", serif; font-size: 24px; font-weight: 900; color: #1A237E; margin-top: 24px; margin-bottom: 0; letter-spacing: 1px;'>초연 시공명리 연구소 [사주박사]</p>
         </div>
     </div>
     <div class='page-break'></div>
