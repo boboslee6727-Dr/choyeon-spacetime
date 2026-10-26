@@ -346,11 +346,11 @@ else:
             ], key="sub_category_1", on_change=stop_ai)
         elif main_category == "2. 테마별 특성화 상담":
             u_product = st.radio("특성화 상품 선택:", [
-                "2-1. 재물운 특화 분석", 
-                "2-2. 연애운 특화 분석", 
-                "2-3. 진학운 특화 분석", 
-                "2-4. 직업운 특화 분석", 
-                "2-5. 건강운 특화 분석", 
+                "2-1. 재물운 특성화 분석", 
+                "2-2. 연애운 특성화 분석", 
+                "2-3. 진학운 특성화 분석", 
+                "2-4. 직업운 특성화 분석", 
+                "2-5. 건강운 특성화 분석", 
                 "2-6. 이사 택일", 
                 "2-7. 개업 택일"
         ], key="sub_category_2", on_change=stop_ai)
@@ -1653,6 +1653,7 @@ if st.session_state.get('app_running', False):
             "wolryeong_fact": w_val,
             "wolryeong_detail_fact": wolryeong_detail_fact,
             "yongshin_fact_str": yongshin_fact_str,
+            "jaeda_sinyak_fact_str": engine.get_jaeda_sinyak_fact(counts, mb, ds, db),
 
             # ── C. 신살 · 귀인 · 공망 · 삼재 ──
             "shinsal_str": shinsal_str, "shinsal_by_palace_str": shinsal_by_palace_str,
