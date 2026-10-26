@@ -260,7 +260,7 @@ def send_solapi_kakao_first(to_phone, name, link_url, sms_text):
                 "kakaoOptions": {
                     "pfId": pf_id,
                     "templateId": template_id,
-                    "variables": {"#{이름}": name, "#{링크}": link_url}
+                    "variables": {"#{이름}": name, "#{링크}": link_url.replace("https://", "", 1).replace("http://", "", 1)}
                 }
             }}
         )
@@ -553,6 +553,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             st.caption("⚠️ 010으로 시작하는 숫자 11자리를 입력해 주세요. (예: 010-1234-5678)")
 
     memo_info = st.text_input("이메일 (선택사항)", placeholder="예: cy1234@example.com", key="order_email")
+    st.caption("📧 감명서를 PDF 파일로도 받아보고 싶으신 분만 적어 주세요. 선택 사항이며, 감명서 발송 외에는 사용하지 않습니다.")
 
     c_g, c_m, c_c = st.columns(3)
     with c_g: gender = st.selectbox("성별", ["여성", "남성"], key="order_gender", on_change=sync_partner_gender_order)
@@ -561,7 +562,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
     with c_c: u_cal = st.selectbox("양/음력", ["양력", "음력 평달", "음력 윤달"], key="order_u_cal")
 
     c_y, c_mo, c_d = st.columns(3)
-    with c_y: b_year = st.text_input("생년(YYYY) *", max_chars=4, placeholder="1990", key="order_b_year")
+    with c_y: b_year = st.text_input("생년(YYYY) *", max_chars=4, placeholder="2000", key="order_b_year")
     with c_mo: b_month = st.text_input("월(MM) *", max_chars=2, placeholder="06", key="order_b_month")
     with c_d: b_day = st.text_input("일(DD) *", max_chars=2, placeholder="15", key="order_b_day")
     b_time = st.selectbox("태어난 시간", TIME_OPTIONS, key="order_b_time")
@@ -971,7 +972,7 @@ def render_admin_panel():
                 if row['phone']:
                     st.toast("⏳ 발송 중입니다...")
                     if pdf_url:
-                        final_msg = f"[초연 시공명리] {row['name']}님, 감명서가 완성되었습니다.\n아래 파일을 눌러 바로 확인하세요.\n{pdf_url}"
+                        final_msg = f"[사주박사] {row['name']}님, 감명서가 완성되었습니다.\n아래 파일을 눌러 바로 확인하세요.\n{pdf_url}"
                     else:
                         final_msg = st.session_state[f"sms_{gid}"]
                     _kakao_link = pdf_url if pdf_url else f"{BASE_URL}/?mode=view&code={gid}"
