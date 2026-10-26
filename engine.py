@@ -1733,8 +1733,42 @@ def get_unun_gan_relation_facts(gans, u_g, u_type="세운"):
         if nm == "일간" and pair in _GAN_CHUNG: out.append(f"{u_type} 천간({u})이 일간({h})을 충")
     return " / ".join(out)
 
+def get_gan_rel_facts(gans):
+    """천간 합·충·극 팩트(격합·제어 설명 포함). gans=[시간, 일간, 월간, 년간]."""
+    _OH = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
+    _GK = {('木','土'), ('土','水'), ('水','火'), ('火','金'), ('金','木')}
+    _HP = [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]
+    _CH = [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]
+    def _geuk(a, b):
+        return (_OH[a], _OH[b]) in _GK
+    gans = [_to_hanja(g) if g else "" for g in gans]
+    names = ["시간", "일간", "월간", "년간"]
+    out = []
+    for i in range(4):
+        for j in range(i + 1, 4):
+            a, b = gans[i], gans[j]
+            if a not in _OH or b not in _OH:
+                continue
+            s = {a, b}
+            nm = f"{names[i]}({a})-{names[j]}({b})"
+            if j - i == 1:
+                if s in _HP:
+                    out.append(f"{nm} 붙어 있는 합")
+                elif s in _CH:
+                    out.append(f"{nm} 붙어 있는 충(천간끼리 정면으로 맞부딪침)")
+                elif _geuk(a, b) or _geuk(b, a):
+                    out.append(f"{nm} 붙어 있는 극(한쪽이 다른 쪽을 누름)")
+            elif s in _HP:
+                blk = [gans[k] for k in range(i + 1, j)
+                       if gans[k] in _OH and any(_geuk(gans[k], m) for m in (a, b))]
+                if blk:
+                    out.append(f"{nm} 떨어진 격합이나, 사이의 {'·'.join(blk)}이 합하는 글자를 극하여 제어되어 합하지 못함")
+                else:
+                    out.append(f"{nm} 떨어진 격합(영향력이 약한 합. 합화·성합은 불가)")
+    return " / ".join(out) if out else "원국 천간 사이에 특이한 합·충·극 없음"
+
 def get_gan_wonguk_facts(gans):
-    """원국 천간의 합·충. 붙어 있는 짝(시-일, 일-월, 월-년)만 인정(격합·격충 제외). gans=[시간, 일간, 월간, 년간]."""
+    """원국 천간끼리의 합·충 팩트. gans=[시간, 일간, 월간, 년간]."""
     names = ["시간", "일간", "월간", "년간"]
     out = []
     for i in range(3):
