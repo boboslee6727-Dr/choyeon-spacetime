@@ -1812,6 +1812,11 @@ if st.session_state.get('app_running', False):
         else:
             target_prompt = getattr(prompts, prompt_var_name, "")
 
+        if is_admin_mode:
+            with st.sidebar.expander("🔍 사실문 점검(임시, 관리자용)"):
+                for _k in ["vault_timing_fact_str", "sewun_che_flow_str", "inseong_fact_str", "jaeda_sinyak_fact_str"]:
+                    st.markdown(f"**{_k}**")
+                    st.code(str(prompt_data.get(_k, "(없음)")), language=None)
         formatted_prompt = target_prompt.format_map(SafeDict(prompt_data))
         # 🆕 관리자가 입력한 'AI 수정 지시사항'을 실제로 프롬프트에 반영
         feedback_note = st.session_state.get('ai_feedback_prompt', '').strip()
