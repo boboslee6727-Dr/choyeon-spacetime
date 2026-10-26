@@ -372,22 +372,28 @@ def get_samjae(year_ji, target_ji):
 
 def get_gan_rel_all(idx, gans):
     gans = [_to_hanja(g) for g in gans]
-    me = gans[idx]; res = []
+    me = gans[idx]; res = []; far = False
     if me in ["-", "?", " "]: return "-"
     _OH = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
     _GEUK = {('木','土'), ('土','水'), ('水','火'), ('火','金'), ('金','木')}
     _HAP = [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]
     _CHUNG = [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]
     for i, other in enumerate(gans):
-        if i == idx or abs(i - idx) != 1 or other in ["-", "?", " "]: continue
+        if i == idx or other in ["-", "?", " "]: continue
         s = {me, other}
+        if abs(i - idx) != 1:
+            if s in _HAP: far = True
+            continue
         if s in _HAP:
             res.append("합")
         elif s in _CHUNG:
             res.append("충")
         elif (_OH.get(me), _OH.get(other)) in _GEUK or (_OH.get(other), _OH.get(me)) in _GEUK:
             res.append("극")
-    return "".join(list(set(res))) if res else "-"
+    txt = "".join(x for x in ["합", "충", "극"] if x in res)
+    far_html = "<span style='color:#9E9E9E; font-weight:700;'>격합</span>" if far else ""
+    out = txt + (" " if txt and far_html else "") + far_html
+    return out if out else "-"
 
 def get_ji_rel_set(me, target):
     me, target = _to_hanja(me), _to_hanja(target)
