@@ -374,11 +374,19 @@ def get_gan_rel_all(idx, gans):
     gans = [_to_hanja(g) for g in gans]
     me = gans[idx]; res = []
     if me in ["-", "?", " "]: return "-"
+    _OH = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
+    _GEUK = {('木','土'), ('土','水'), ('水','火'), ('火','金'), ('金','木')}
+    _HAP = [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]
+    _CHUNG = [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]
     for i, other in enumerate(gans):
         if i == idx or abs(i - idx) != 1 or other in ["-", "?", " "]: continue
         s = {me, other}
-        if s in [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]: res.append("합")
-        if s in [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]: res.append("충")
+        if s in _HAP:
+            res.append("합")
+        elif s in _CHUNG:
+            res.append("충")
+        elif (_OH.get(me), _OH.get(other)) in _GEUK or (_OH.get(other), _OH.get(me)) in _GEUK:
+            res.append("극")
     return "".join(list(set(res))) if res else "-"
 
 def get_ji_rel_set(me, target):
