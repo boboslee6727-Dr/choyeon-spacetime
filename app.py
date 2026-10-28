@@ -1688,6 +1688,7 @@ if st.session_state.get('app_running', False):
 
             # ── E. 세운 ──
             "curr_year": target_year_val, "target_year": target_year_val,
+            "next_year": target_year_val + 1,
             "cur_sewun_gan": cur_sewun_gan_val, "cur_sewun_ji": cur_sewun_ji_val,
             "curr_sewun_gan": cur_sewun_gan_val, "curr_sewun_ji": cur_sewun_ji_val,
             "sewun_gj_cur": sewun_gj_cur,
