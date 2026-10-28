@@ -934,10 +934,12 @@ def render_admin_panel():
                         st.error(f"🚨 PDF 미리보기 생성 오류: {e}")
 
             if f"pdf_preview_{gid}" in st.session_state:
+                _pcode = str(row['u_product']).split('+')[0].strip()[:3]
+                _pshort = {"1-1": "종합", "1-2": "올해운세", "1-3": "이번달운세", "1-4": "주간일운", "2-1": "재물운", "2-2": "연애운", "2-3": "진학운", "2-4": "직업운", "2-5": "건강운", "2-6": "이사택일", "2-7": "개업택일", "3-1": "궁합", "3-2": "결혼택일", "3-3": "출산택일"}.get(_pcode, _pcode)
                 st.download_button(
                     label="⬇️ 미리보기 PDF 다운로드",
                     data=st.session_state[f"pdf_preview_{gid}"],
-                    file_name=f"{row['name']}_미리보기.pdf",
+                    file_name=f"{row['name']}_{_pshort}_미리보기.pdf",
                     mime="application/pdf",
                     key=f"pdf_download_{gid}"
                 )
