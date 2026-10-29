@@ -408,7 +408,9 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
             data["j_hanja"], get_oh_class_func(data["j_hangul"]), data["ss_ji"],
             data["un_sung"], data.get("y_shinsal", "-"), data.get("d_shinsal", "-"), "-", b_left, data.get("is_current", False)
         )
-    return get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
+    return ("<div style='page-break-inside: avoid; break-inside: avoid;'>"
+            + get_un_layout(f"[ 대운의 흐름 (대운수: {calc_d}, {direction_str}) ]", un_content)
+            + "</div>")
  
 def get_sewun_layout(title, content):
     return f"""
