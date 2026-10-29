@@ -74,6 +74,7 @@ def get_global_css():
     @media print {
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
         @page { size: A4 portrait; margin: 15mm 12mm; }
+        @page :first { size: A4 portrait; margin: 0; }
         .stSidebar, button, iframe, .print-hide, header, [data-testid="stHeader"] { display: none !important; }
         body, .stApp { background-color: white !important; }
         .block-container, div[data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
@@ -81,8 +82,8 @@ def get_global_css():
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .page-break-before { page-break-before: always; }
-        .cover-page { height: 267mm !important; min-height: 267mm !important; max-height: 267mm !important; overflow: hidden !important; }
-        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; margin-top: -18mm !important; }
+        .cover-page { height: 297mm !important; min-height: 297mm !important; max-height: 297mm !important; width: 210mm !important; margin: 0 !important; overflow: hidden !important; }
+        .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; margin-top: 0 !important; }
         .report-page h1, .report-page h2, .ai-title-l1 { margin-top: 0 !important; }
         div[style*="display:flex"][style*="row-reverse"] { page-break-inside: avoid !important; break-inside: avoid !important; }
     </style>
