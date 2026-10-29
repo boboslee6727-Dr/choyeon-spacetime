@@ -2116,6 +2116,61 @@ def get_year_wolun_che_flow_str(year, ds, db, today=None):
             continue
     return f"[{year}년 월운 체용 흐름] " + " // ".join(lines) if lines else "월운 체용 정보 없음"
 
+
+def get_yeonin_wolun_flow_str(year0, ds, db, gender, today=None, span=10, max_years=3):
+    """이성 인연의 별(여성: 정관·편관 / 남성: 정재·편재)이 들어오거나 일지와 합이 되는 해를 고르고,
+    그 해의 해당 달(월운)까지 사실문으로 만든다"""
+    try:
+        g = str(gender).strip().lower()
+        is_f = g.startswith("여") or g in ("f", "female")
+        star = ("정관", "편관") if is_f else ("정재", "편재")
+        hap_map = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅', '卯': '戌', '戌': '卯',
+                   '辰': '酉', '酉': '辰', '巳': '申', '申': '巳', '午': '未', '未': '午'}
+        ilji = _to_hanja(db)
+        hap = hap_map.get(ilji)
+        picks = []
+        for y in range(year0, year0 + span):
+            sbase = (y - 1984) % 60
+            sg, sj = _to_hanja(GAN[sbase % 10]), _to_hanja(JI[sbase % 12])
+            why = []
+            if get_ss(ds, sg) in star:
+                why.append(f"세운 앞부분(2월 초~8월 초)에 이성 인연의 별({get_ss(ds, sg)}) 기운이 들어옴")
+            if get_ss(ds, sj) in star:
+                why.append(f"세운 뒷부분(8월 초~다음 해 2월 초)에 이성 인연의 별({get_ss(ds, sj)}) 기운이 들어옴")
+            if hap and sj == hap:
+                why.append(f"세운 뒷부분(8월 초~다음 해 2월 초)에 배우자 자리({ilji})와 합이 되는 글자({sj})가 들어옴")
+            if why:
+                picks.append((y, sg, sj, why))
+        picks = picks[:max_years]
+        if not picks:
+            return "앞으로 10년 안에 이성 인연의 별이 들어오거나 배우자 자리와 합이 되는 해는 사실문에 없음"
+        out = []
+        for y, sg, sj, why in picks:
+            months = []
+            for tm in range(1, 13):
+                if today is not None and today.year == y and tm < today.month:
+                    continue
+                try:
+                    term_day, _ = _get_term_day(y, tm)
+                    _, m_p, _ = get_true_year_month_pillar(y, tm, term_day + 3, 12, 0)
+                    w_gan, w_ji = _to_hanja(m_p[0]), _to_hanja(m_p[1])
+                    mw = []
+                    if get_ss(ds, w_gan) in star:
+                        mw.append(f"월 앞부분에 이성 인연의 별({get_ss(ds, w_gan)})")
+                    if get_ss(ds, w_ji) in star:
+                        mw.append(f"월 뒷부분에 이성 인연의 별({get_ss(ds, w_ji)})")
+                    if hap and w_ji == hap:
+                        mw.append(f"월 뒷부분에 배우자 자리({ilji})와 합")
+                    if mw:
+                        months.append(f"{tm}월 {w_gan}{w_ji}월({', '.join(mw)})")
+                except Exception:
+                    continue
+            mtxt = " / ".join(months) if months else "이 해에는 따로 짚을 달 없음"
+            out.append(f"{y}년 {sg}{sj}년: {' + '.join(why)} | 인연의 기운이 움직이는 달: {mtxt}")
+        return "[인연 후보 해와 월운] " + " // ".join(out)
+    except Exception:
+        return "인연 후보 해 정보 없음"
+
 _WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 
 def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
