@@ -594,7 +594,7 @@ def get_gunghap_closing(name1, name2):
     <div style='margin-top: 40px; padding-top: 30px; page-break-inside: avoid;'>
         <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #333;'>&nbsp;&nbsp;&nbsp;&nbsp;두 분의 <b style='color:#1A237E;'>'만남'</b>은 결코 우연이 아닌, <b style='color:#1A237E;'>'수많은 인연의 이치 속에서 기적처럼 찾아온 귀한 인연'</b>입니다. 사주팔자는 각자의 명식이지만, <b style='color:#1A237E;'>'궁합(宮合)'</b>은 두 명식이 만나 그려내는 새로운 <b style='color:#1A237E;'>'조화와 상생'</b>입니다.</p>
         <p style='font-family: "Nanum Myeongjo", serif; font-size: 15px; line-height: 1.8; color: #333; margin-top: 10px;'>&nbsp;&nbsp;&nbsp;&nbsp;서로의 기운을 보완하고 다독여주는 든든한 <b style='color:#1A237E;'>'반려자'</b>가 되시기를 진심으로 기원하며, 두 분의 앞날에 늘 전통 명리의 축복이 가득하시길 소망합니다.</p>
-        <div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: "Nanum Myeongjo", serif;'>- 초연 전통명리 연구소 드림 -</span></div>
+        <div style='text-align: right; margin-top: 25px;'><span style='font-weight: 900; font-size: 16px; color: #1A237E; font-family: "Nanum Myeongjo", serif;'>- 초연 시공명리 연구소 [사주박사] 드림 -</span></div>
     </div>
     """
  
