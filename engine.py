@@ -1840,6 +1840,17 @@ def get_jaeseong_fact(ds, gans, jjis, gender="여성"):
     rel = "아버지·아내(배우자)" if str(gender).startswith("남") else "아버지(편재)·시어머니(정재)"
     if jae:
         return f"재성(정재·편재)이 원국에 있음: {', '.join(jae)} — 재물(수입·재산을 만드는 힘)과 관련 육친({rel}) 모두 이 재성으로 봄"
+    # 겉(천간·지지 본기)에는 없지만 지장간 속에 숨어 있는지 확인
+    hidden = []
+    for nm, c in zip(["시지", "일지", "월지", "년지"], jjis):
+        h = _to_hanja(c) if c else ""
+        for g in JIJANGGAN.get(h, []):
+            if g != '-' and get_ss(ds, g) in ("정재", "편재"):
+                hidden.append(f"{nm}({h}) 속 {g}({get_ss(ds, g)})")
+    if hidden:
+        return (f"재성(정재·편재)이 겉으로는 드러나 있지 않고 지장간 속에 숨어 있음: {', '.join(hidden)} — "
+                f"재물(수입·재산을 쌓는 기반)과 관련 육친({rel})의 인연은 겉으로는 약하게 보이나 속에는 잠재해 있어, "
+                f"스스로 활동으로 끌어내야 하고 운에서 재성이 들어올 때 비로소 또렷해질 수 있음")
     return (f"재성(정재·편재)이 원국에 전혀 없음 — 재물(수입·재산을 쌓는 기반)과 관련 육친({rel})의 인연이 모두 원국에서는 약하게 시작함. "
             f"운에서 재성이 들어올 때 재물 문제와 그 육친 문제가 함께 부각될 수 있음")
 
