@@ -1698,6 +1698,7 @@ if st.session_state.get('app_running', False):
             "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운", gans=[hs, ds, ms, ys], u_g=engine.GAN[(curr_year-1984)%60%10]),
             "sewun_relation_10y_str": sewun_relation_10y_str,
             "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
+            "year_wolun_che_flow_str": engine.get_year_wolun_che_flow_str(target_year_val, ds, db, today=_now_kst.date()) if hasattr(engine, "get_year_wolun_che_flow_str") else "",
 
             # ── F. 월운 ──
             "curr_m": curr_m,
