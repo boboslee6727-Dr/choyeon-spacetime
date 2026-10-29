@@ -2073,6 +2073,37 @@ def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
         lines.append(f"[{title}] " + (" / ".join(parts) if parts else "원국과 특이한 충·합·형 없음"))
     return "\n".join(lines)
 
+def get_year_wolun_che_flow_str(year, ds, db, today=None):
+    """올해 1~12월 월운의 체용(폭포수) 키워드를 월별로 계산"""
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    lines = []
+    for tm in range(1, 13):
+        try:
+            term_day, _ = _get_term_day(year, tm)
+            _, m_p, _ = get_true_year_month_pillar(year, tm, term_day + 3, 12, 0)
+            w_gan, w_ji = _to_hanja(m_p[0]), _to_hanja(m_p[1])
+            che_1 = get_group_ss(get_ss(ds, w_gan))
+            che_2 = get_group_ss(get_ss(ds, w_ji))
+            parts = []
+            for label, che, offs in (("전반기", che_1, 3), ("후반기", che_2, 17)):
+                dt0 = dt_mod.datetime(year, tm, min(term_day + offs, 28))
+                sy = year if dt0 >= dt_mod.datetime(year, 2, 4) else year - 1
+                sbase = (sy - 1984) % 60
+                sg, sj = _to_hanja(GAN[sbase % 10]), _to_hanja(JI[sbase % 12])
+                s_first = (sy == year) and (dt_mod.datetime(sy, 2, 4) <= dt0 < dt_mod.datetime(sy, 8, 7))
+                s_che = get_group_ss(get_ss(ds, sg if s_first else sj))
+                yong = get_execution_yong(che, ilju_lower_group)
+                parts.append(f"{label}[체({che})→{get_matrix_keyword(s_che, yong)}]")
+            tag = f"{tm}월 {w_gan}{w_ji}월: " + " / ".join(parts)
+            if tm == 1:
+                tag += " (전년도 세운 말기)"
+            if today is not None and today.year == year and tm < today.month:
+                tag += " [이미 지난 달]"
+            lines.append(tag)
+        except Exception:
+            continue
+    return f"[{year}년 월운 체용 흐름] " + " // ".join(lines) if lines else "월운 체용 정보 없음"
+
 _WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 
 def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
