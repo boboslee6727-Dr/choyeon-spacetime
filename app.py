@@ -135,15 +135,25 @@ def _call_claude(prompt_text, max_tokens=64000):
     try:
         result_text = ""
         stop_reason = None
-        with client.messages.stream(
-            model=CLAUDE_MODEL_NAME,
-            max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt_text}],
-        ) as stream:
-            for text in stream.text_stream:
-                result_text += text
-            final_message = stream.get_final_message()
-            stop_reason = getattr(final_message, "stop_reason", None)
+        import time as _time
+        stop_reason = None
+        for _attempt in range(3):
+            try:
+                result_text = ""
+                with client.messages.stream(
+                    model=CLAUDE_MODEL_NAME,
+                    max_tokens=max_tokens,
+                    messages=[{"role": "user", "content": prompt_text}],
+                ) as stream:
+                    for text in stream.text_stream:
+                        result_text += text
+                    final_message = stream.get_final_message()
+                    stop_reason = getattr(final_message, "stop_reason", None)
+                break
+            except Exception as _e:
+                if _attempt == 2:
+                    raise
+                _time.sleep(3 * (_attempt + 1))
         result_text = result_text.strip()
         if stop_reason == "max_tokens":
             result_text += "\n\n<div style='color:red; font-weight:bold;'>⚠️ [시스템 경고] 응답이 토큰 한도에 도달하여 중간에 끊겼습니다. max_tokens를 늘려 주세요.</div>"
