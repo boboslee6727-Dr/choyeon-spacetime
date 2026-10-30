@@ -403,11 +403,11 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
         names = ["년간", "월간", "일간", "시간"]
         gans = [_to_hanja(g) if g is not None else "-" for g in (ys, ms, ds, hs)]
         _HAP_NAME = {
-            frozenset(('甲','己')): "중정지합(중후하고 믿음으로 맺어지는 합)",
-            frozenset(('乙','庚')): "인의지합(의리와 정으로 맺어지는 합)",
-            frozenset(('丙','辛')): "위엄지합(체면과 위엄으로 맺어지는 합)",
-            frozenset(('丁','壬')): "음닉지합(겉으로 드러나지 않게 속으로 이끌리는 합)",
-            frozenset(('戊','癸')): "무정지합(겉보기에 정이 깊지 않고 담담하게 맺어지는 합)",
+            frozenset(('甲','己')): "중정지합(중후하고 믿음으로 맺어지는 합. 위로 오르는 기운과 아래로 내리는 기운이 번갈아 방향을 바꾸는 움직임)",
+            frozenset(('乙','庚')): "인의지합(의리와 정으로 맺어지는 합. 퍼지려는 기운과 거두어들이는 기운이 맞물려 열매를 만들어 가는 움직임)",
+            frozenset(('丙','辛')): "위엄지합(체면과 위엄으로 맺어지는 합. 빛을 퍼뜨렸다 거두었다 하는 움직임)",
+            frozenset(('丁','壬')): "음닉지합(겉으로 드러나지 않게 속으로 이끌리는 합. 열기를 모았다 풀었다 하는 움직임)",
+            frozenset(('戊','癸')): "무정지합(겉보기에 정이 깊지 않고 담담하게 맺어지는 합. 퍼지는 기운을 넓혔다 줄였다 하는 움직임)",
         }
         def _lab(k):
             if k == 2 or gans[k] in ("-", "?", ""):
@@ -441,6 +441,7 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
                 except Exception:
                     ss = ""
                 lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({gans[o]})과 합: 일간이 합에 묶임" + (f" (상대는 일간 기준 {ss})" if ss else ""))
+        lines.append("합에 든 글자는 서로 당기는 힘 때문에 제 성질을 온전히 내기 어렵고 힘이 줄어드는 경향이 있음(결과를 단정하지 말 것)")
         lines.append("합화(다른 오행으로 변함)는 월령과 세력 조건이 모두 맞아야 하므로 기본은 변하지 않는 합으로 보고, 합화는 단정하지 말 것")
         return "[천간 합 사실] " + " / ".join(lines)
     except Exception:
@@ -510,6 +511,71 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None):
         return "[지지 삼합·방합 사실] " + " / ".join(lines)
     except Exception:
         return "지지 삼합·방합 정보 없음"
+
+
+def get_cheongan_chung_fact(ys, ms, ds, hs=None):
+    """천간 충 사실문: 이웃한 충, 한 글자가 양쪽에서 충을 받는 쟁충, 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
+    try:
+        names = ["년간", "월간", "일간", "시간"]
+        gans = [_to_hanja(g) if g is not None else "-" for g in (ys, ms, ds, hs)]
+        _CH = [{'甲','庚'}, {'乙','辛'}, {'丙','壬'}, {'丁','癸'}]
+        _HP = [{'甲','己'}, {'乙','庚'}, {'丙','辛'}, {'丁','壬'}, {'戊','癸'}]
+        _OH = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
+        _GEUK = {('木','土'), ('土','水'), ('水','火'), ('火','金'), ('金','木')}
+
+        def _lab(k):
+            if k == 2 or gans[k] in ("-", "?", ""):
+                return gans[k]
+            try:
+                return f"{gans[k]}, {get_ss(ds, gans[k])}"
+            except Exception:
+                return gans[k]
+
+        chung, far_chung, hap = [], [], []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                s = {gans[i], gans[j]}
+                if s in _CH:
+                    (chung if j - i == 1 else far_chung).append((i, j))
+                elif s in _HP and j - i == 1:
+                    hap.append((i, j))
+
+        lines = []
+        for i, j in chung:
+            lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 바로 이웃해 충을 이룸: 서로 밀어내며 변화를 만드는 움직임")
+        for k in range(4):
+            mates = [(a, b) for a, b in chung if k in (a, b)]
+            if len(mates) >= 2:
+                others = [f"{names[b if a == k else a]}({_lab(b if a == k else a)})" for a, b in mates]
+                lines.append(f"[쟁충] {names[k]}({_lab(k)})이 {', '.join(others)} 양쪽에서 동시에 충을 받음: 한 글자가 여러 방향에서 밀리는 구조")
+        for i, j in chung:
+            if 2 in (i, j):
+                o = j if i == 2 else i
+                lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({_lab(o)})과 충: 일간 자신이 충에 걸림")
+        for i, j in hap:
+            for m in (i, j):
+                for a, b in chung:
+                    if m in (a, b) and (a, b) != (i, j):
+                        o = b if a == m else a
+                        if o not in (i, j):
+                            lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})의 합이 {names[o]}({gans[o]})의 충을 받아 합의 힘이 흔들림")
+        for i, j in far_chung:
+            lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})은 충의 글자 쌍이나 떨어져 있어 충으로 보지 않고 참고만")
+        for o in (1, 3):
+            s = {gans[2], gans[o]}
+            if s in _CH or s in _HP or gans[o] in ("-", "?", ""):
+                continue
+            a, b = _OH.get(gans[2]), _OH.get(gans[o])
+            if (a, b) in _GEUK:
+                lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({_lab(o)})을 극함")
+            elif (b, a) in _GEUK:
+                lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({_lab(o)})에게 극을 받음")
+        if not lines:
+            return "천간에 이웃한 충이나 일간과 관련된 극은 사실문에 없음"
+        lines.append("충은 서로 밀어내며 변화를 만드는 움직임이라 흔들림이면서 동시에 변화의 계기가 되기도 하므로, 나쁜 일로만 단정하지 말 것")
+        return "[천간 충 사실] " + " / ".join(lines)
+    except Exception:
+        return "천간 충 정보 없음"
 
 def get_ji_rel_set(me, target):
     me, target = _to_hanja(me), _to_hanja(target)
@@ -2907,9 +2973,9 @@ def analyze_love_and_marriage_patterns(bazi_dict):
     if ('子' in branches) and ('卯' in branches) and ('辰' in branches):
         results["fact_summary_text"].append("[子·卯·辰 삼자조합 감지]: 불임, 자궁 질환, 자식 인연 박약 파동.")
     if ('卯' in branches) and ('戌' in branches):
-        results["fact_summary_text"].append("[卯·戌 합(合) 파동 감지]: 연상남/유부남/후처 인연.")
+        results["fact_summary_text"].append("[卯·戌 합(合) 파동 감지]: 서로 끌리는 합이 있어 인연이 가까워지기 쉬운 구조. 상대의 나이나 혼인 상태 등은 사주만으로 단정하지 말 것.")
     if dj == '戌':
-        results["fact_summary_text"].append("[일지 戌土 남편궁 감지]: 배우자의 성 무력증/불감증 및 성적 불만족 리스크.")
+        results["fact_summary_text"].append("[일지 戌土 배우자 자리 감지]: 배우자 자리가 불의 기운을 갈무리하는 마감의 땅이라, 부부 사이에 열정이 겉으로 드러나기보다 안으로 갈무리되어 표현이 조심스럽거나 서로 온도 차가 생기기 쉬운 자리. 배우자의 건강·성 기능 등은 사주만으로 단정하지 말 것.")
  
     results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "특이 애정 리스크 없음."
     return results
