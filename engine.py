@@ -402,6 +402,20 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
         _HAP = {'甲':'己','己':'甲','乙':'庚','庚':'乙','丙':'辛','辛':'丙','丁':'壬','壬':'丁','戊':'癸','癸':'戊'}
         names = ["년간", "월간", "일간", "시간"]
         gans = [_to_hanja(g) if g is not None else "-" for g in (ys, ms, ds, hs)]
+        _HAP_NAME = {
+            frozenset(('甲','己')): "중정지합(중후하고 믿음으로 맺어지는 합)",
+            frozenset(('乙','庚')): "인의지합(의리와 정으로 맺어지는 합)",
+            frozenset(('丙','辛')): "위엄지합(체면과 위엄으로 맺어지는 합)",
+            frozenset(('丁','壬')): "음닉지합(겉으로 드러나지 않게 속으로 이끌리는 합)",
+            frozenset(('戊','癸')): "무정지합(겉보기에 정이 깊지 않고 담담하게 맺어지는 합)",
+        }
+        def _lab(k):
+            if k == 2 or gans[k] in ("-", "?", ""):
+                return gans[k]
+            try:
+                return f"{gans[k]}, {get_ss(ds, gans[k])}"
+            except Exception:
+                return gans[k]
         links = []
         for i in range(4):
             for j in range(i + 1, 4):
@@ -412,12 +426,13 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
         lines = []
         for i, j, adj in links:
             how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "서로 떨어져 있어 합의 힘이 약함(격합)"
-            lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})이 합을 이룸: {how}")
+            hn = _HAP_NAME.get(frozenset((gans[i], gans[j])), "")
+            lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 합을 이룸: {how}" + (f" / 합의 성격: {hn}" if hn else ""))
         for k in range(4):
             mates = [(a, b) for a, b, _ in links if k in (a, b)]
             if len(mates) >= 2:
-                others = [f"{names[b if a == k else a]}({gans[b if a == k else a]})" for a, b in mates]
-                lines.append(f"[쟁합] {names[k]}({gans[k]})을 {', '.join(others)} 두 자리가 함께 합하려 함: 합하려는 힘이 나뉘어 한쪽으로 온전히 묶이지 못하고 서로 당기는 상태로 봄")
+                others = [f"{names[b if a == k else a]}({_lab(b if a == k else a)})" for a, b in mates]
+                lines.append(f"[쟁합] {names[k]}({_lab(k)})을 {', '.join(others)} 두 자리가 함께 합하려 함: 합하려는 힘이 나뉘어 한쪽으로 온전히 묶이지 못하고 서로 당기는 상태로 봄")
         for i, j, adj in links:
             if adj and 2 in (i, j):
                 o = j if i == 2 else i
