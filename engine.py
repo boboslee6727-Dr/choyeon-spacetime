@@ -446,6 +446,71 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
     except Exception:
         return "천간 합 정보 없음"
 
+
+def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None):
+    """지지 삼합·방합 사실문: 세 글자가 모두 모인 완성 여부, 반합(가운데 글자 포함), 합을 흔드는 충·형·해"""
+    try:
+        names = ["년지", "월지", "일지", "시지"]
+        brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
+        SAMHAP = [("목국", ('亥', '卯', '未'), '甲'), ("화국", ('寅', '午', '戌'), '丙'),
+                  ("금국", ('巳', '酉', '丑'), '庚'), ("수국", ('申', '子', '辰'), '壬')]
+        BANGHAP = [("목", ('寅', '卯', '辰')), ("화", ('巳', '午', '未')),
+                   ("금", ('申', '酉', '戌')), ("수", ('亥', '子', '丑'))]
+        CH = {'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'}
+        HYUNG = [{'子','卯'}, {'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}]
+        HAE = [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]
+
+        def _pos(letters):
+            return "·".join(f"{names[i]} {brs[i]}" for i in range(4) if brs[i] in letters)
+
+        def _damage(members):
+            out = []
+            for m in members:
+                for i in range(4):
+                    o = brs[i]
+                    if o in members or o in ("-", "?", ""):
+                        continue
+                    if CH.get(m) == o:
+                        out.append(f"{names[i]} {o}이(가) {m}과 충")
+                    elif {m, o} in HYUNG:
+                        out.append(f"{names[i]} {o}이(가) {m}과 형")
+                    elif {m, o} in HAE:
+                        out.append(f"{names[i]} {o}이(가) {m}과 해")
+            return out
+
+        lines = []
+        for nm, mem, rep in SAMHAP:
+            have = [x for x in mem if x in brs]
+            if len(have) == 3:
+                s = f"[삼합 완성] {_pos(mem)}이(가) 모여 {nm} 삼합이 완성됨"
+                try:
+                    if ds:
+                        s += f" (일간 기준 {get_group_ss(get_ss(ds, rep))}의 기운이 크게 모임)"
+                except Exception:
+                    pass
+                if brs[1] in mem:
+                    s += ". 월지가 포함되어 계절의 힘을 얻음"
+                dmg = _damage(mem)
+                if dmg:
+                    s += ". 다만 " + ", ".join(dmg) + "을 이루어 결속이 일부 흔들릴 수 있음"
+                lines.append(s)
+            elif len(have) == 2:
+                if mem[1] in have:
+                    lines.append(f"[반합] {_pos(have)}이(가) {nm} 반합(가운데 글자 포함)을 이룸. 나머지 한 글자({[x for x in mem if x not in have][0]})가 오면 삼합이 완성됨")
+                else:
+                    lines.append(f"[공합] {_pos(have)}은(는) {nm} 삼합의 양 끝 글자만 있어 합의 힘이 약함(참고)")
+        for nm, mem in BANGHAP:
+            have = [x for x in mem if x in brs]
+            if len(have) == 3:
+                lines.append(f"[방합 완성] {_pos(mem)}이(가) 모여 {nm} 기운의 방합이 완성됨")
+            elif len(have) == 2:
+                lines.append(f"[방합 일부] {_pos(have)}만 있어 방합은 성립하지 않음(참고만)")
+        if not lines:
+            return "지지에 삼합·방합과 관련된 모임은 사실문에 없음"
+        return "[지지 삼합·방합 사실] " + " / ".join(lines)
+    except Exception:
+        return "지지 삼합·방합 정보 없음"
+
 def get_ji_rel_set(me, target):
     me, target = _to_hanja(me), _to_hanja(target)
     if not me or not target or me == "?" or target == "?" or me == target: return "자형" if me == target and me in "辰午酉亥" else "-"
