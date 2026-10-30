@@ -1603,6 +1603,13 @@ if st.session_state.get('app_running', False):
             m_spouse_issue_str = spouse_issue_str
             f_spouse_issue_str = spouse_issue_str
 
+        # 🚨 궁합용: 남명/여명 각각의 천간 합 사실문 (쟁합 등)
+        m_cheongan_hap_str = ""
+        f_cheongan_hap_str = ""
+        if is_2person and hasattr(engine, "get_cheongan_hap_fact"):
+            m_cheongan_hap_str = engine.get_cheongan_hap_fact(m_gans_val[3], m_gans_val[2], m_gans_val[1], m_gans_val[0])
+            f_cheongan_hap_str = engine.get_cheongan_hap_fact(f_gans_val[3], f_gans_val[2], f_gans_val[1], f_gans_val[0])
+
         # 🚨 궁합용: marriage_bogeum_facts(복음/卯戌합)를 남녀 각각 계산해서 합치기 (신청자 1인 기준 값을 덮어씀)
         if is_2person and hasattr(engine, 'analyze_love_and_marriage_patterns'):
             m_bazi_dict = {'year_g': m_gans_val[3], 'year_j': m_jjis_val[3], 'month_g': m_gans_val[2], 'month_j': m_jjis_val[2],
@@ -1768,6 +1775,8 @@ if st.session_state.get('app_running', False):
             "f_ideal_spouse_fact": f_ideal_spouse_fact,
             "m_spouse_issue_facts": m_spouse_issue_str,
             "f_spouse_issue_facts": f_spouse_issue_str,
+            "m_cheongan_hap_fact_str": m_cheongan_hap_str,
+            "f_cheongan_hap_fact_str": f_cheongan_hap_str,
             "spouse_issue_facts": spouse_issue_all_str,
 
             # ── K. 상담 목표 · 택일 · 출산 ──
