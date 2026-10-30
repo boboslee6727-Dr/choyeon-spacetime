@@ -395,6 +395,42 @@ def get_gan_rel_all(idx, gans):
     out = txt + (" " if txt and far_html else "") + far_html
     return out if out else "-"
 
+
+def get_cheongan_hap_fact(ys, ms, ds, hs=None):
+    """천간 합의 사실문: 이웃한 합/떨어진 합(격합), 쟁합(한 글자를 두 글자가 다툼), 일간이 묶이는지"""
+    try:
+        _HAP = {'甲':'己','己':'甲','乙':'庚','庚':'乙','丙':'辛','辛':'丙','丁':'壬','壬':'丁','戊':'癸','癸':'戊'}
+        names = ["년간", "월간", "일간", "시간"]
+        gans = [_to_hanja(g) if g is not None else "-" for g in (ys, ms, ds, hs)]
+        links = []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                if gans[i] in _HAP and _HAP[gans[i]] == gans[j]:
+                    links.append((i, j, j - i == 1))
+        if not links:
+            return "천간에 서로 합이 되는 글자 쌍은 사실문에 없음"
+        lines = []
+        for i, j, adj in links:
+            how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "서로 떨어져 있어 합의 힘이 약함(격합)"
+            lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})이 합을 이룸: {how}")
+        for k in range(4):
+            mates = [(a, b) for a, b, _ in links if k in (a, b)]
+            if len(mates) >= 2:
+                others = [f"{names[b if a == k else a]}({gans[b if a == k else a]})" for a, b in mates]
+                lines.append(f"[쟁합] {names[k]}({gans[k]})을 {', '.join(others)} 두 자리가 함께 합하려 함: 합하려는 힘이 나뉘어 한쪽으로 온전히 묶이지 못하고 서로 당기는 상태로 봄")
+        for i, j, adj in links:
+            if adj and 2 in (i, j):
+                o = j if i == 2 else i
+                try:
+                    ss = get_ss(ds, gans[o])
+                except Exception:
+                    ss = ""
+                lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({gans[o]})과 합: 일간이 합에 묶임" + (f" (상대는 일간 기준 {ss})" if ss else ""))
+        lines.append("합화(다른 오행으로 변함)는 월령과 세력 조건이 모두 맞아야 하므로 기본은 변하지 않는 합으로 보고, 합화는 단정하지 말 것")
+        return "[천간 합 사실] " + " / ".join(lines)
+    except Exception:
+        return "천간 합 정보 없음"
+
 def get_ji_rel_set(me, target):
     me, target = _to_hanja(me), _to_hanja(target)
     if not me or not target or me == "?" or target == "?" or me == target: return "자형" if me == target and me in "辰午酉亥" else "-"
