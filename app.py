@@ -1614,6 +1614,11 @@ if st.session_state.get('app_running', False):
         if is_2person and hasattr(engine, "get_jiji_samhap_bangap_fact"):
             m_jiji_hap_str = engine.get_jiji_samhap_bangap_fact(m_jjis_val[3], m_jjis_val[2], m_jjis_val[1], m_jjis_val[0], m_gans_val[1])
             f_jiji_hap_str = engine.get_jiji_samhap_bangap_fact(f_jjis_val[3], f_jjis_val[2], f_jjis_val[1], f_jjis_val[0], f_gans_val[1])
+        m_cheongan_chung_str = ""
+        f_cheongan_chung_str = ""
+        if is_2person and hasattr(engine, "get_cheongan_chung_fact"):
+            m_cheongan_chung_str = engine.get_cheongan_chung_fact(m_gans_val[3], m_gans_val[2], m_gans_val[1], m_gans_val[0])
+            f_cheongan_chung_str = engine.get_cheongan_chung_fact(f_gans_val[3], f_gans_val[2], f_gans_val[1], f_gans_val[0])
 
         # 🚨 궁합용: marriage_bogeum_facts(복음/卯戌합)를 남녀 각각 계산해서 합치기 (신청자 1인 기준 값을 덮어씀)
         if is_2person and hasattr(engine, 'analyze_love_and_marriage_patterns'):
@@ -1724,6 +1729,7 @@ if st.session_state.get('app_running', False):
             "yeonin_wolun_str": engine.get_yeonin_wolun_flow_str(_now_kst.year, ds, db, st.session_state.get("u_g", "여성"), today=_now_kst.date()) if hasattr(engine, "get_yeonin_wolun_flow_str") else "",
             "cheongan_hap_fact_str": engine.get_cheongan_hap_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_hap_fact") else "",
             "jiji_hap_group_fact_str": engine.get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds) if hasattr(engine, "get_jiji_samhap_bangap_fact") else "",
+            "cheongan_chung_fact_str": engine.get_cheongan_chung_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_chung_fact") else "",
 
             # ── F. 월운 ──
             "curr_m": curr_m,
@@ -1785,6 +1791,8 @@ if st.session_state.get('app_running', False):
             "f_cheongan_hap_fact_str": f_cheongan_hap_str,
             "m_jiji_hap_group_fact_str": m_jiji_hap_str,
             "f_jiji_hap_group_fact_str": f_jiji_hap_str,
+            "m_cheongan_chung_fact_str": m_cheongan_chung_str,
+            "f_cheongan_chung_fact_str": f_cheongan_chung_str,
             "spouse_issue_facts": spouse_issue_all_str,
 
             # ── K. 상담 목표 · 택일 · 출산 ──
