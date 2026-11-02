@@ -1619,6 +1619,11 @@ if st.session_state.get('app_running', False):
         if is_2person and hasattr(engine, "get_cheongan_chung_fact"):
             m_cheongan_chung_str = engine.get_cheongan_chung_fact(m_gans_val[3], m_gans_val[2], m_gans_val[1], m_gans_val[0])
             f_cheongan_chung_str = engine.get_cheongan_chung_fact(f_gans_val[3], f_gans_val[2], f_gans_val[1], f_gans_val[0])
+        m_jiji_yukhap_str = ""
+        f_jiji_yukhap_str = ""
+        if is_2person and hasattr(engine, "get_jiji_yukhap_fact"):
+            m_jiji_yukhap_str = engine.get_jiji_yukhap_fact(m_jjis_val[3], m_jjis_val[2], m_jjis_val[1], m_jjis_val[0])
+            f_jiji_yukhap_str = engine.get_jiji_yukhap_fact(f_jjis_val[3], f_jjis_val[2], f_jjis_val[1], f_jjis_val[0])
 
         # 🚨 궁합용: marriage_bogeum_facts(복음/卯戌합)를 남녀 각각 계산해서 합치기 (신청자 1인 기준 값을 덮어씀)
         if is_2person and hasattr(engine, 'analyze_love_and_marriage_patterns'):
@@ -1730,6 +1735,7 @@ if st.session_state.get('app_running', False):
             "cheongan_hap_fact_str": engine.get_cheongan_hap_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_hap_fact") else "",
             "jiji_hap_group_fact_str": engine.get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds) if hasattr(engine, "get_jiji_samhap_bangap_fact") else "",
             "cheongan_chung_fact_str": engine.get_cheongan_chung_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_chung_fact") else "",
+            "jiji_yukhap_fact_str": engine.get_jiji_yukhap_fact(yb, mb, db, hb) if hasattr(engine, "get_jiji_yukhap_fact") else "",
 
             # ── F. 월운 ──
             "curr_m": curr_m,
@@ -1793,6 +1799,8 @@ if st.session_state.get('app_running', False):
             "f_jiji_hap_group_fact_str": f_jiji_hap_str,
             "m_cheongan_chung_fact_str": m_cheongan_chung_str,
             "f_cheongan_chung_fact_str": f_cheongan_chung_str,
+            "m_jiji_yukhap_fact_str": m_jiji_yukhap_str,
+            "f_jiji_yukhap_fact_str": f_jiji_yukhap_str,
             "spouse_issue_facts": spouse_issue_all_str,
 
             # ── K. 상담 목표 · 택일 · 출산 ──
