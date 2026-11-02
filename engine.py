@@ -513,6 +513,88 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None):
         return "지지 삼합·방합 정보 없음"
 
 
+def get_jiji_yukhap_fact(yb, mb, db, hb):
+    """지지 육합 사실문: 네 지지 전체에서 육합 찾기, 강도, 쟁합, 흔들림, 삼합 쪽 합과 겹침"""
+    try:
+        names = ["년지", "월지", "일지", "시지"]
+        brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
+        YUK = {frozenset(('子', '丑')): "강", frozenset(('午', '未')): "강",
+               frozenset(('寅', '亥')): "중", frozenset(('巳', '申')): "중",
+               frozenset(('卯', '戌')): "약", frozenset(('辰', '酉')): "약"}
+        STR_TXT = {"강": "서로 당기는 힘이 가장 센 쌍(책의 거리 모델 기준, 참고)",
+                   "중": "서로 당기는 힘이 중간쯤인 쌍(책의 거리 모델 기준, 참고)",
+                   "약": "서로 당기는 힘이 비교적 약한 쌍(책의 거리 모델 기준, 참고)"}
+        CH = {'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'}
+        HYUNG = [{'子','卯'}, {'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}]
+        HAE = [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]
+        PA = [{'子','酉'}, {'丑','辰'}, {'寅','亥'}, {'卯','午'}, {'巳','申'}, {'戌','未'}]
+        SAMHAP = [("목국", ('亥', '卯', '未')), ("화국", ('寅', '午', '戌')),
+                  ("금국", ('巳', '酉', '丑')), ("수국", ('申', '子', '辰'))]
+
+        pairs = []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                k = frozenset((brs[i], brs[j]))
+                if brs[i] != brs[j] and k in YUK:
+                    pairs.append((i, j, YUK[k]))
+        if not pairs:
+            return "지지에 육합을 이루는 글자 쌍은 사실문에 없음"
+
+        def _hit(letter, own):
+            out = []
+            for i in range(4):
+                if i in own or brs[i] in ("-", "?", ""):
+                    continue
+                o = brs[i]
+                if CH.get(letter) == o:
+                    out.append(f"{names[i]} {o}이(가) {letter}과 충")
+                elif {letter, o} in HYUNG:
+                    out.append(f"{names[i]} {o}이(가) {letter}과 형")
+                elif {letter, o} in HAE:
+                    out.append(f"{names[i]} {o}이(가) {letter}과 해")
+                elif {letter, o} in PA:
+                    out.append(f"{names[i]} {o}이(가) {letter}과 파")
+            return out
+
+        cnt = {}
+        for i, j, _ in pairs:
+            cnt[i] = cnt.get(i, 0) + 1
+            cnt[j] = cnt.get(j, 0) + 1
+
+        lines = []
+        for i, j, s in pairs:
+            adj = (j - i == 1)
+            txt = f"[육합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 육합을 이룸"
+            txt += "(바로 이웃함)" if adj else "(떨어져 있으나 육합은 지지 전체를 봄)"
+            txt += f". {STR_TXT[s]}"
+            dmg = _hit(brs[i], (i, j)) + _hit(brs[j], (i, j))
+            if frozenset((brs[i], brs[j])) in (frozenset(('寅', '亥')), frozenset(('巳', '申'))):
+                dmg.append("이 쌍 자체가 합이면서 서로 파·형의 성질도 겸하는")
+            if dmg:
+                txt += ". 다만 " + ", ".join(dmg) + " 관계가 걸려 있어 합의 당김이 일부 흔들릴 수 있음"
+            over = []
+            for p in (i, j):
+                partner = j if p == i else i
+                for nm, mem in SAMHAP:
+                    if brs[p] not in mem:
+                        continue
+                    for q in range(4):
+                        if q in (p, partner) or brs[q] not in mem or brs[q] == brs[p]:
+                            continue
+                        if mem[1] in (brs[p], brs[q]):
+                            over.append(f"{names[p]} {brs[p]}은(는) {names[q]} {brs[q]}과(와) {nm} 반합 쪽으로도 당겨짐")
+            if over:
+                txt += ". 또한 " + ", ".join(over) + "(한 글자가 두 방향으로 당겨지는 구조)"
+            lines.append(txt)
+        for p, c in cnt.items():
+            if c >= 2:
+                lines.append(f"[쟁합] {names[p]} {brs[p]}이(가) 둘 이상의 글자와 동시에 육합을 이룸: 한쪽으로 마음이 모이기 어렵고 여러 곳에 당겨지는 구조")
+        lines.append("육합은 상대 힘을 줄이는 합이 아니라 서로 당겨 묶이는 합이며, 삼합처럼 오행이 바뀌는 것이 아니므로 합화로 단정하지 말 것")
+        return "[지지 육합 사실] " + " / ".join(lines)
+    except Exception:
+        return "지지 육합 정보 없음"
+
+
 def get_cheongan_chung_fact(ys, ms, ds, hs=None):
     """천간 충 사실문: 이웃한 충, 한 글자가 양쪽에서 충을 받는 쟁충, 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
     try:
