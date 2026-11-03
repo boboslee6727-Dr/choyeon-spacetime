@@ -2587,7 +2587,8 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             _m = re.findall(r"원국 (시지|일지|월지|년지)\(([^)]*)\)와 " + _kw, rel)
             if _m: score += _sc; notes.append("원국 " + "·".join(f"{n}({c})" for n, c in _m) + "와 " + _kw)
             elif ("와 " + _kw) in rel: score += _sc; notes.append("원국과 " + _kw)
-        if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
+        _bs, _bn, _bsev = _bokeum_score(jjis, gans, gan, ji)
+        score += _bs; notes.extend(_bn); severe = severe or _bsev
         if "일운(" in sam and "삼형 완성" in sam: score -= 3; notes.append("삼형 완성"); severe = True
         _wj = _to_hanja(_wol[1]) if len(str(_wol)) > 1 else ""
         _SUL = {"丑", "戌", "未"}
