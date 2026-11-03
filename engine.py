@@ -1698,12 +1698,17 @@ def _is_sewun_first_half(target_dt):
     return dt_mod.datetime(y, 2, 4) <= naive_dt < dt_mod.datetime(y, 8, 7)
 
 def _is_wolun_first_half(target_dt):
-    """절입일~중기(약 절입일+15일) 전이면 전반기(천간), 아니면 후반기(지지)"""
+    """그 날짜가 속한 월주의 절입일부터 15일 안이면 전반기(천간), 아니면 후반기(지지)"""
     naive_dt = target_dt.replace(tzinfo=None) if target_dt.tzinfo else target_dt
-    y, m, d = naive_dt.year, naive_dt.month, naive_dt.day
-    term_day, _ = _get_term_day(y, m)
-    mid_day = term_day + 15
-    return d < mid_day
+    _, p_now, _ = get_true_year_month_pillar(naive_dt.year, naive_dt.month, naive_dt.day, 12, 0)
+    start = naive_dt.date()
+    for _ in range(40):
+        prev = start - dt_mod.timedelta(days=1)
+        _, p_prev, _ = get_true_year_month_pillar(prev.year, prev.month, prev.day, 12, 0)
+        if p_prev != p_now:
+            break
+        start = prev
+    return (naive_dt.date() - start).days < 15
 
 def _is_ilun_first_half(hour, minute):
     """조자시(00:30)~오시 끝(13:29)이면 전반기(천간), 미시(13:30)~야자시면 후반기(지지)"""
@@ -1762,7 +1767,6 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
         "ilun_che": ilun_che_active, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
         "woonse_fact_str": woonse_fact_str.strip()
     }
-
 
 # ---- 2-B. [1-4] 이번 주 일운 · 주간 달력 ----
 
