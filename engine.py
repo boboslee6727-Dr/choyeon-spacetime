@@ -2586,6 +2586,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         if ji in guiin: score += 2; notes.append("천을귀인")
         if gans:
             _gs, _gn, _gsev = _gan_rel_score(gans, gan, "일진 천간")
+            if _gs > 0 and score < 0: _gs = 0   # 천간 합이 충·형·파의 감점을 덮어 주의일이 사라지지 않도록, 합 가산은 건너뜀
             score += _gs; notes.extend(_gn); severe = severe or _gsev
         e = oh_score(get_color(gan)) + oh_score(get_color(ji))
         if e > 0: score += e; notes.append("일진 오행이 이로움")
