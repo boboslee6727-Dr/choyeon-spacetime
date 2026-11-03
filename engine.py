@@ -2389,7 +2389,8 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
                 severe = True
         if "와 파" in rel: score -= 1; notes.append("원국과 파")
         if "와 해" in rel: score -= 1; notes.append("원국과 해")
-        if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음" + (", 자형" if "자형" in rel else "") + ")")
+        _bs, _bn, _bsev = _bokeum_score(jjis, gans, gan, ji)
+        score += _bs; notes.extend(_bn); severe = severe or _bsev
         if any(("월운(" in seg and "삼형 완성" in seg) for seg in re.split(r"\s*/\s*|\n", str(sam))):
             score -= 3; notes.append("삼형 완성"); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
