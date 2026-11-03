@@ -2313,6 +2313,40 @@ def _gan_rel_score(gans, u_gan, u_label):
             notes.append(f"{u_label}({u})이 원국 {nm}({h})와 충")
     return sc, notes, severe
 
+def _bokeum_score(jjis, gans, u_gan, u_ji):
+    """운(월운·일진)의 글자가 원국과 겹치는 정도를 점수로 만듭니다.
+    복음: 일지 -2(무겁게), 시·월·년지 -1 / 천지동복음(간지 전체가 한 기둥과 같음): 일주 -3(무겁게), 그 밖 -2 (복음 점수를 대신함)
+    쌍복음(원국 두 곳 이상과 같은 글자): -1 추가, 일지가 포함되면 무겁게 / 자형(辰午酉亥): -1 추가
+    jjis=[시지, 일지, 월지, 년지], gans=[시간, 일간, 월간, 년간]."""
+    ji = _to_hanja(str(u_ji).strip()[-1]) if u_ji else ""
+    gan = _to_hanja(str(u_gan).strip()[-1]) if u_gan else ""
+    if not ji or ji in ("?", "-", " "):
+        return 0, [], False
+    names = ["시", "일", "월", "년"]
+    hits = []        # 같은 지지가 있는 기둥 번호
+    best = None      # (점수, 메모, 무겁게 여부)
+    for i, nm in enumerate(names):
+        j = _to_hanja(jjis[i]) if jjis[i] else ""
+        if j != ji:
+            continue
+        hits.append(i)
+        g = _to_hanja(gans[i]) if (gans and gans[i]) else ""
+        if gan and g == gan:      # 천지동복음
+            cand = (3 if nm == "일" else 2, f"원국 {nm}주와 간지가 똑같이 겹침(천지동복음)", nm == "일")
+        else:                     # 복음
+            cand = (2 if nm == "일" else 1, f"원국 {nm}지({j})와 같은 글자(복음)", nm == "일")
+        if best is None or cand[0] > best[0]:
+            best = cand
+    if best is None:
+        return 0, [], False
+    sc, notes, severe = -best[0], [best[1]], best[2]
+    if len(hits) >= 2:            # 쌍복음
+        sc -= 1; notes.append("원국 두 곳 이상과 같은 글자(쌍복음)")
+        if 1 in hits: severe = True
+    if ji in "辰午酉亥":          # 자형
+        sc -= 1; notes.append("같은 글자가 겹치는 자형")
+    return sc, notes, severe
+
 def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None, today=None, gans=None):
     """해당 연도 12개월의 월운 간지가 원국·세운과 맺는 충·파·해·삼형·공망·합·천을귀인과
     용신 오행을 따져 '기운이 도와주는 달'과 '서두르지 말 달'로 나눕니다.
