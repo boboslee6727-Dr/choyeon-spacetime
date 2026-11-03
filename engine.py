@@ -2003,7 +2003,9 @@ def get_unun_gan_relation_facts(gans, u_g, u_type="세운"):
             continue
         pair = frozenset((u, h))
         if pair in _GAN_HAP: out.append(f"{u_type} 천간({u})이 원국 {nm}({h})와 합")
-        if nm == "일간" and pair in _GAN_CHUNG: out.append(f"{u_type} 천간({u})이 일간({h})을 충")
+        if pair in _GAN_CHUNG:
+            if nm == "일간": out.append(f"{u_type} 천간({u})이 일간({h})을 충")
+            else: out.append(f"{u_type} 천간({u})이 원국 {nm}({h})를 충")
     return " / ".join(out)
 
 def get_gan_rel_facts(gans):
@@ -2289,7 +2291,29 @@ def get_unun_yongshin_status(yongshin_text, wolun_g, wolun_j, ilun_g, ilun_j):
             f"오늘 일운 {ilun_g}{ilun_j}: 천간 {tag(ilun_g)}, 지지 {tag(ilun_j)} → 전체 {verdict(i_sc)}. "
             "도움 기운이 겹치면 좋은 키워드를 그대로 살려 쓰고, 부담 기운이 겹치면 좋은 키워드도 '기회는 오지만 무리하면 부담이 따를 수 있다'는 조건부로 서술할 것.")
 
-def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None, today=None):
+def _gan_rel_score(gans, u_gan, u_label):
+    """운(월운·일진)의 천간이 원국 천간(시간·일간·월간·년간) 어느 자리와든 맺는 합·충을 점수와 짧은 메모로 돌려줍니다.
+    합 +1 / 충: 일간 -2(무겁게), 그 밖의 자리 -1. 합화·합거로 단정하지 않고 사실만 적습니다."""
+    u = _to_hanja(str(u_gan).strip()[-1]) if u_gan else ""
+    if not gans or not u or u in ("?", "-", " "):
+        return 0, [], False
+    sc, notes, severe = 0, [], False
+    for nm, g in zip(["시간", "일간", "월간", "년간"], gans):
+        h = _to_hanja(g) if g else ""
+        if not h or h in ("?", "-", " ") or h == u:
+            continue
+        pair = frozenset((u, h))
+        if pair in _GAN_HAP:
+            sc += 1; notes.append(f"{u_label}({u})이 원국 {nm}({h})와 합")
+        if pair in _GAN_CHUNG:
+            if nm == "일간":
+                sc -= 2; severe = True
+            else:
+                sc -= 1
+            notes.append(f"{u_label}({u})이 원국 {nm}({h})와 충")
+    return sc, notes, severe
+
+def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None, today=None, gans=None):
     """해당 연도 12개월의 월운 간지가 원국·세운과 맺는 충·파·해·삼형·공망·합·천을귀인과
     용신 오행을 따져 '기운이 도와주는 달'과 '서두르지 말 달'로 나눕니다.
     jjis는 [시지, 일지, 월지, 년지] 순서, dw_j는 현재 대운 지지입니다."""
@@ -2352,6 +2376,9 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
             if pair in _UN_CHUNG: score -= 1; notes.append("세운과 충")
             elif pair in _UN_HAP: score += 1; notes.append("세운과 육합")
         if ji in guiin: score += 2; notes.append("천을귀인")
+        if gans:
+            _gs, _gn, _gsev = _gan_rel_score(gans, gan, "월운 천간")
+            score += _gs; notes.extend(_gn); severe = severe or _gsev
         e = oh_score(get_color(gan)) + oh_score(get_color(ji))
         if e > 0: score += e; notes.append("월운 오행이 이로움")
         elif e < 0: score += e; notes.append("월운 오행이 해로움")
@@ -2557,6 +2584,9 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             if m:
                 oh = h2k[m.group(1)]; score += oh_score(oh); notes.append(f"{oh}국 반합")
         if ji in guiin: score += 2; notes.append("천을귀인")
+        if gans:
+            _gs, _gn, _gsev = _gan_rel_score(gans, gan, "일진 천간")
+            score += _gs; notes.extend(_gn); severe = severe or _gsev
         e = oh_score(get_color(gan)) + oh_score(get_color(ji))
         if e > 0: score += e; notes.append("일진 오행이 이로움")
         elif e < 0: score += e; notes.append("일진 오행이 해로움")
