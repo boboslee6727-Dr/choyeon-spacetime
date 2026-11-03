@@ -1729,7 +1729,7 @@ if st.session_state.get('app_running', False):
             "sewun_full_fact_str": sewun_full_fact_str,
             "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운", gans=[hs, ds, ms, ys], u_g=engine.GAN[(curr_year-1984)%60%10]),
             "sewun_relation_10y_str": sewun_relation_10y_str,
-            "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
+            "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "year_wolun_che_flow_str": engine.get_year_wolun_che_flow_str(target_year_val, ds, db, today=_now_kst.date()) if hasattr(engine, "get_year_wolun_che_flow_str") else "",
             "yeonin_wolun_str": engine.get_yeonin_wolun_flow_str(_now_kst.year, ds, db, st.session_state.get("u_g", "여성"), today=_now_kst.date()) if hasattr(engine, "get_yeonin_wolun_flow_str") else "",
             "cheongan_hap_fact_str": engine.get_cheongan_hap_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_hap_fact") else "",
@@ -1743,7 +1743,7 @@ if st.session_state.get('app_running', False):
             "wolun_gj_han_cur": wolun_gj_han_cur,
             "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운", gans=[hs, ds, ms, ys], u_g=_cur_wol_pillar[0]),
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
-            "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
+            "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "period_day_facts_str": engine.get_period_day_facts(selected_target_date, 30, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
 
@@ -1753,7 +1753,7 @@ if st.session_state.get('app_running', False):
             "ilun_gj_han_cur": ilun_gj_han_cur,
             "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0]),
             "time_block_relation_str": engine.get_time_block_relation_facts([hb, db, mb, yb], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1], now=(_now_kst if selected_target_date == _now_kst.date() else None)),
-            "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date()),
+            "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
 
             # ── H. 폭포수 체용 종합 · 삼형 · 반기 ──
             "woonse_fact_str": w_facts.get("woonse_fact_str", "[⚠️ 이 항목은 근거 자료가 부족함 — 이 항목에 근거해 재물·구체적 사건을 절대 단정하지 말고, 세운 십성의 일반적 의미만 원론적으로 서술할 것]"),
