@@ -1749,7 +1749,7 @@ if st.session_state.get('app_running', False):
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
             "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
-            "period_day_facts_str": engine.get_period_day_facts(selected_target_date, 30, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
+            "period_day_facts_str": (engine.get_wolun_month_day_facts(wolun_first_half, wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans) if ("1-3" in u_product and hasattr(engine, "get_wolun_month_day_facts")) else engine.get_period_day_facts(selected_target_date, 30, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans)),
 
             # ── G. 일운 · 주간 ──
             "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
