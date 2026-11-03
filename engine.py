@@ -1950,10 +1950,10 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None, ilun_j=Non
     won_sul_present = sul_set.intersection(set(jjis_h))
  
     if len(won_in_present) == 3:
-        results.append("🔥 [원국 인사신(寅巳申) 삼형살 완성] 권력, 조정, 수리, 의료, 법형, 물리적 충돌 및 강력한 개혁 에너지가 내재됨.")
+        results.append("🔥 [원국 인사신(寅巳申) 삼형살 완성] 세 글자가 서로 얽혀 긴장과 압박이 높고, 일·관계에서 갑작스러운 변동이나 부딪힘이 생기기 쉬운 구조(무은지형: 도와준 일이 서운함으로 돌아오기 쉬운 형). 사건·질병을 단정하지 말 것.")
     elif len(won_in_present) == 2:
         missing = list(in_set - won_in_present)[0]
-        results.append(f"⚠️ [원국 인사신(寅巳申) 가형(假刑) 상태] 원국에 {','.join(won_in_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 신상·사고·조정 주의 요망.")
+        results.append(f"⚠️ [원국 인사신(寅巳申) 가형(假刑) 상태] 원국에 {','.join(won_in_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 갑작스러운 변동과 부딪힘에 유의.")
  
     if len(won_sul_present) == 3:
         results.append("🔥 [원국 축술미(丑戌未) 삼형살 완성] 묘고의 충돌, 재물·건강·인간관계의 대대적 재편 및 정교한 조정 에너지가 내재됨.")
@@ -2066,7 +2066,10 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
             continue
         pair = frozenset((u, j))
         if u == j:
-            out.append(f"{u_type}({u})이 원국 {nm}({j})와 같은 글자로 겹침(복음)")
+            if u in "辰午酉亥":
+                out.append(f"{u_type}({u})이 원국 {nm}({j})와 같은 글자로 겹침(복음, 자형에도 해당)")
+            else:
+                out.append(f"{u_type}({u})이 원국 {nm}({j})와 같은 글자로 겹침(복음)")
             continue
         if pair in _UN_CHUNG: out.append(f"{u_type}({u})이 원국 {nm}({j})와 충")
         if pair in _UN_HAP: out.append(f"{u_type}({u})이 원국 {nm}({j})와 육합")
@@ -2328,7 +2331,7 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
                 severe = True
         if "와 파" in rel: score -= 1; notes.append("원국과 파")
         if "와 해" in rel: score -= 1; notes.append("원국과 해")
-        if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음)")
+        if "복음" in rel: score -= 1; notes.append("원국과 같은 글자(복음" + (", 자형" if "자형" in rel else "") + ")")
         if any(("월운(" in seg and "삼형 완성" in seg) for seg in re.split(r"\s*/\s*|\n", str(sam))):
             score -= 3; notes.append("삼형 완성"); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
