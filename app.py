@@ -1435,7 +1435,11 @@ if st.session_state.get('app_running', False):
         )
 
         _now_kst = dt_mod.datetime.now(pytz.timezone('Asia/Seoul'))
-        _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
+        if str(u_product).startswith("1-4"):
+            # 1-4(일운)는 '풀이하는 날'이 속한 실제 월주(절입일 기준)를 쓴다 (예: 11월 3일은 입동 전이라 무술월)
+            _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(selected_target_date.year, selected_target_date.month, selected_target_date.day, 12, 0)
+        else:
+            _, _cur_wol_pillar, _ = engine.get_true_year_month_pillar(curr_year, curr_m, 15, 12, 0)
         _, _, _today_pillar_d = engine.get_ganji_from_date(_now_kst.year, _now_kst.month, _now_kst.day)
         _, _, _sel_pillar_d = engine.get_ganji_from_date(selected_target_date.year, selected_target_date.month, selected_target_date.day)
 
