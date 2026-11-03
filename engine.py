@@ -2665,6 +2665,22 @@ def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, y
         return "[날짜 범위를 확인할 수 없음]"
     return get_period_day_facts(s, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=yong, today=today, gans=gans)
 
+def get_wolun_month_day_facts(first_half, second_half, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
+    """월운 상반기·후반기 문장에서 절입일(시작)과 다음 절입 전날(끝)을 읽어,
+    절기 기준 한 달 전체의 날짜별 팩트를 만듭니다. (달력 날짜가 아니라 절기월 기준)"""
+    f1 = re.findall(r'(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일', str(first_half))
+    f2 = re.findall(r'(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일', str(second_half))
+    if not f1 or not f2:
+        return "[날짜 범위를 확인할 수 없음]"
+    try:
+        s = dt_mod.date(*map(int, f1[0]))
+        e = dt_mod.date(*map(int, f2[-1]))
+    except ValueError:
+        return "[날짜 범위를 확인할 수 없음]"
+    days = (e - s).days + 1
+    if days < 1 or days > 40:
+        return "[날짜 범위를 확인할 수 없음]"
+    return get_period_day_facts(s, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=yong, today=today, gans=gans)
 
 def check_vault_status(base_gans, base_jjis, attacker_ji):
     base_gans = [_to_hanja(g) for g in base_gans]
