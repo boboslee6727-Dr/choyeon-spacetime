@@ -1753,18 +1753,23 @@ def get_woonse_analysis_facts(ds, db, dw_g_cur, dw_j_cur, sewun_g, sewun_j, wolu
     ilun_che_active = ilun_che_1 if ilun_is_first else ilun_che_2
     i_yong = get_execution_yong(ilun_che_active, ilju_lower_group)
     ilun_kw = get_matrix_keyword(wolun_che_active, i_yong)
+    # (추가) 하루의 전반기(천간)·후반기(지지) 키워드를 둘 다 계산
+    ilun_kw_1 = get_matrix_keyword(wolun_che_active, get_execution_yong(ilun_che_1, ilju_lower_group))
+    ilun_kw_2 = get_matrix_keyword(wolun_che_active, get_execution_yong(ilun_che_2, ilju_lower_group))
  
     woonse_fact_str = f"""
 - [대운 체(전반기/천간): {dw_che_1}] / [대운 체(후반기/지지): {dw_che_2}] / 현재 활성: {dw_che_active} ({'전반기' if dw_is_first else '후반기'})
 - [세운 체(전반기/천간): {sewun_che_1}] / [세운 체(후반기/지지): {sewun_che_2}] / 현재 활성: {sewun_che_active} + 실행({s_yong}) ➔ 키워드: [{sewun_kw}]
 - [월운 체(전반기/천간): {wolun_che_1}] / [월운 체(후반기/지지): {wolun_che_2}] / 현재 활성: {wolun_che_active} + 실행({w_yong}) ➔ 키워드: [{wolun_kw}]
 - [일운 체(전반기/천간): {ilun_che_1}] / [일운 체(후반기/지지): {ilun_che_2}] / 현재 활성: {ilun_che_active} + 실행({i_yong}) ➔ 키워드: [{ilun_kw}]
+- [일운 하루 흐름] 전반기(00:30~13:29, 천간) 키워드: [{ilun_kw_1}] / 후반기(13:30~다음날 00:29, 지지) 키워드: [{ilun_kw_2}]
 """
     return {
         "dw_che": dw_che_active, "dw_che_1": dw_che_1, "dw_che_2": dw_che_2,
         "sewun_che": sewun_che_active, "sewun_yong": s_yong, "sewun_kw": sewun_kw,
         "wolun_che": wolun_che_active, "wolun_yong": w_yong, "wolun_kw": wolun_kw,
         "ilun_che": ilun_che_active, "ilun_yong": i_yong, "ilun_kw": ilun_kw,
+        "ilun_kw_first": ilun_kw_1, "ilun_kw_second": ilun_kw_2,
         "woonse_fact_str": woonse_fact_str.strip()
     }
 
@@ -2249,6 +2254,37 @@ def get_yongshin_elements(yongshin_text):
         if m:
             out[key] = m.group(1)
     return out
+
+def get_unun_yongshin_status(yongshin_text, wolun_g, wolun_j, ilun_g, ilun_j):
+    """이번 달(월운)·오늘(일운)의 천간·지지 오행이 용신·희신·겸용(도움) / 기신·구신(부담) / 그 외(중립) 중 무엇인지 사실문으로 돌려줍니다."""
+    yong = get_yongshin_elements(yongshin_text)
+    if not yong:
+        return "월운·일운의 용신 관계 정보 없음"
+    good = [yong.get(k) for k in ("용신", "희신", "겸용") if yong.get(k)]
+    bad = [yong.get(k) for k in ("기신", "구신") if yong.get(k)]
+
+    def tag(ch):
+        oh = get_color(ch)
+        if oh in good:
+            return f"{ch}({oh}) 도움이 되는 기운"
+        if oh in bad:
+            return f"{ch}({oh}) 부담이 되는 기운"
+        return f"{ch}({oh}) 중립"
+
+    def cnt(a, b):
+        sc = 0
+        for ch in (a, b):
+            oh = get_color(ch)
+            sc += 1 if oh in good else (-1 if oh in bad else 0)
+        return sc
+
+    def verdict(sc):
+        return "도움 쪽" if sc > 0 else ("부담 쪽" if sc < 0 else "도움과 부담이 엇비슷하거나 중립")
+
+    w_sc, i_sc = cnt(wolun_g, wolun_j), cnt(ilun_g, ilun_j)
+    return (f"[월운·일운 용신 관계 사실] 이번 달 월운 {wolun_g}{wolun_j}: 천간 {tag(wolun_g)}, 지지 {tag(wolun_j)} → 전체 {verdict(w_sc)}. "
+            f"오늘 일운 {ilun_g}{ilun_j}: 천간 {tag(ilun_g)}, 지지 {tag(ilun_j)} → 전체 {verdict(i_sc)}. "
+            "도움 기운이 겹치면 좋은 키워드를 그대로 살려 쓰고, 부담 기운이 겹치면 좋은 키워드도 '기회는 오지만 무리하면 부담이 따를 수 있다'는 조건부로 서술할 것.")
 
 def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=None, today=None):
     """해당 연도 12개월의 월운 간지가 원국·세운과 맺는 충·파·해·삼형·공망·합·천을귀인과
