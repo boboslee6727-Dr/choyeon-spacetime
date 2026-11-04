@@ -1525,6 +1525,8 @@ if st.session_state.get('app_running', False):
                 _tail_g, _tail_j = _tail_p[0], _tail_p[1]
             except Exception:
                 _tail_g, _tail_j = "", ""
+
+        user_entered_text = ""
         if u_product.startswith("4-1"):
             user_entered_text = (st.session_state.get("text_4_1", "") or st.session_state.get(f"text_{u_product}", "")).strip()
         elif u_product.startswith("4-2"):
