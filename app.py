@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 88.4 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 88.5 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 88.4 Master"
+APP_VERSION = "ver 88.5 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -804,8 +804,21 @@ if st.session_state.get('app_running', False):
         
         n_gong = engine.calculate_gongmang(ys, yb) or "-"
         i_gong = engine.calculate_gongmang(ds, db) or "-"
-        year_gongmang_sipseong = ", ".join([f"{c}({engine.get_ss(ds, c)})" for c in n_gong if c not in ["-", " "]]) if n_gong and n_gong != "-" else "공망 해당 없음"
-        day_gongmang_sipseong = ", ".join([f"{c}({engine.get_ss(ds, c)})" for c in i_gong if c not in ["-", " "]]) if i_gong and i_gong != "-" else "공망 해당 없음"
+        # 공망 글자가 원국의 어느 자리(시지·일지·월지·년지)에 걸렸는지까지 함께 만든다
+        _gm_pos_names = ["시지", "일지", "월지", "년지"]   # jjis 순서와 같음
+        def _gm_text(gong):
+            if not gong or gong == "-":
+                return "공망 해당 없음"
+            parts = []
+            for c in gong:
+                if c in ["-", " "]:
+                    continue
+                where = [_gm_pos_names[i] for i, j in enumerate(jjis) if j == c]
+                tail = f" → 원국 {'·'.join(where)}에 걸림" if where else " → 원국에 같은 글자 없음(자리 풀이에 쓰지 말 것)"
+                parts.append(f"{c}({engine.get_ss(ds, c)}){tail}")
+            return ", ".join(parts) if parts else "공망 해당 없음"
+        year_gongmang_sipseong = _gm_text(n_gong)
+        day_gongmang_sipseong = _gm_text(i_gong)
         cur_samjae = engine.get_samjae(yb, curr_y_ji)
         samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
         
@@ -814,9 +827,9 @@ if st.session_state.get('app_running', False):
         time_str_fmt = f"{b_time}" if b_time != "시간 모름" else "시간 미상"
         
         if u_product.startswith("1-1"): report_title = "사주팔자 및 총 운세 풀이"
-        elif u_product.startswith("1-2"): report_title = "올 해의 운세 상세풀이"
-        elif u_product.startswith("1-3"): report_title = "이 달의 운세 상세풀이"
-        elif u_product.startswith("1-4"): report_title = "이 번주 및 일운의 운세 풀이"
+        elif u_product.startswith("1-2"): report_title = "올 해의 운세 풀이"
+        elif u_product.startswith("1-3"): report_title = "이 달의 운세 풀이"
+        elif u_product.startswith("1-4"): report_title = "이번 주 및 일운의 운세 풀이"
         elif u_product.startswith("2-1"): report_title = "재물운 특성화 분석"
         elif u_product.startswith("2-2"): report_title = "연애운 특성화 분석"
         elif u_product.startswith("2-3"): report_title = "진학운 특성화 분석"
