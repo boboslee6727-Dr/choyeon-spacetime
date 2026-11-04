@@ -252,6 +252,15 @@ def get_jeolgi_month_no(d):
         pass
     return d.month
 
+def get_wolun_tail_fact(ds, db, tail_g, tail_j, sewun_che):
+    """양력 달의 첫머리(전달 절기월의 끝자락) 구간의 월운 체용 키워드를 만듭니다.
+    끝자락은 전달 절기월의 후반기(지지 기준)이므로 전달 월지의 체를 씁니다. sewun_che는 현재 세운의 활성 체."""
+    ilju_lower_group = get_group_ss(get_ss(ds, db))
+    che = get_group_ss(get_ss(ds, tail_j))
+    yong = get_execution_yong(che, ilju_lower_group)
+    kw = get_matrix_keyword(sewun_che, yong)
+    return f"- [전달 끝자락 월운 {tail_g}{tail_j}: 체(후반기/지지) {che} + 실행({yong}) ➔ 키워드: [{kw}]]"
+
 def get_wolun_calendar_periods(target_year, target_month):
     """양력 한 달을 절기에 맞춰 세 구간으로 나눕니다.
     ① 전달 절기월의 끝자락(1일 ~ 이번 달 절입 전날) ② 상반기(절입 ~ 중기 전날) ③ 후반기(중기 ~ 말일)
