@@ -572,9 +572,11 @@ def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html)
 # ==============================================================================
  
 def get_daewun_compare_box(m_name, m_daewun_html, f_name, f_daewun_html):
-    m_label = f"<div style='font-size:16px; font-weight:900; color:#1565C0; margin-bottom:4px;'>♂️ {m_name}님의 대운</div>"
-    f_label = f"<div style='font-size:16px; font-weight:900; color:#4A148C; margin-bottom:4px;'>♀️ {f_name}님의 대운</div>"
-    return f"<div style='margin-bottom: 25px;'>{m_label}{m_daewun_html}<div style='height:20px;'></div>{f_label}{f_daewun_html}</div>"
+    m_label = f"<div style='font-size:16px; font-weight:900; color:#1565C0; margin-bottom:4px; break-after: avoid; page-break-after: avoid;'>♂️ {m_name}님의 대운</div>"
+    f_label = f"<div style='font-size:16px; font-weight:900; color:#4A148C; margin-bottom:4px; break-after: avoid; page-break-after: avoid;'>♀️ {f_name}님의 대운</div>"
+    m_block = f"<div style='page-break-inside: avoid; break-inside: avoid;'>{m_label}{m_daewun_html}</div>"
+    f_block = f"<div style='page-break-inside: avoid; break-inside: avoid;'>{f_label}{f_daewun_html}</div>"
+    return f"<div style='margin-bottom: 12px;'>{m_block}<div style='height:10px;'></div>{f_block}</div>"
  
 def get_gunghap_score_visual_html(gh_engine):
     t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
