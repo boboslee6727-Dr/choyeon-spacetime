@@ -240,6 +240,36 @@ def get_seun_half_periods(target_year):
     except Exception:
         return f"{y}년 2월 4일(입춘) ~ {y}년 8월 6일(입추 전날)", f"{y}년 8월 7일(입추) ~ {y+1}년 2월 3일(입춘 전날)"
 
+def get_jeolgi_month_no(d):
+    """날짜(d)가 속한 절기월의 월 번호를 돌려줍니다. 예) 11월 4일 → 10 (입동 11월 7일 전이라 아직 한로월·무술월)
+    절입일 당일부터 새 달로 칩니다. 1월 1~4일처럼 전년도 12월 절기월에 걸리는 날은 그대로 둡니다."""
+    try:
+        if d.month == 1:
+            return 1
+        if d.day < _true_term_day(d.year, d.month):
+            return d.month - 1
+    except Exception:
+        pass
+    return d.month
+
+def get_wolun_calendar_periods(target_year, target_month):
+    """양력 한 달을 절기에 맞춰 세 구간으로 나눕니다.
+    ① 전달 절기월의 끝자락(1일 ~ 이번 달 절입 전날) ② 상반기(절입 ~ 중기 전날) ③ 후반기(중기 ~ 말일)
+    돌려주는 값: (끝자락, 상반기, 후반기). 끝자락이 없는 달(절입이 1일)은 끝자락이 빈 글자("")입니다."""
+    y = int(target_year)
+    m = int(target_month)
+    JUL = {1: "소한", 2: "입춘", 3: "경칩", 4: "청명", 5: "입하", 6: "망종", 7: "소서", 8: "입추", 9: "백로", 10: "한로", 11: "입동", 12: "대설"}
+    JUNG = {1: "대한", 2: "우수", 3: "춘분", 4: "곡우", 5: "소만", 6: "하지", 7: "대서", 8: "처서", 9: "추분", 10: "상강", 11: "소설", 12: "동지"}
+    last_day = (dt_mod.date(y + (m == 12), m % 12 + 1, 1) - dt_mod.timedelta(days=1)).day
+    jul_day = _true_term_day(y, m)
+    jung_day = jul_day + 15
+    tail = ""
+    if jul_day > 1:
+        tail = f"{y}년 {m:02d}월 01일 ~ {y}년 {m:02d}월 {jul_day-1:02d}일({JUL[m]} 전날)"
+    first = f"{y}년 {m:02d}월 {jul_day:02d}일({JUL[m]}) ~ {y}년 {m:02d}월 {jung_day-1:02d}일({JUNG[m]} 전날)"
+    second = f"{y}년 {m:02d}월 {jung_day:02d}일({JUNG[m]}) ~ {y}년 {m:02d}월 {last_day:02d}일(월말)"
+    return tail, first, second
+
 def get_wolun_half_periods(target_year, target_month):
     y = int(target_year)
     m = int(target_month)
