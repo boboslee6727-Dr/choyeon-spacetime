@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 88.4 - engine.py와 동일한 기준으로 구조 재정리판)
+# html_views.py (ver 88.5 - engine.py와 동일한 기준으로 구조 재정리판)
 # 재정리 기준: 공용 CSS/포맷터 -> 공통 사주표 컴포넌트 -> 서술형 안내문구 ->
 #              궁합/택일 부가 컴포넌트 -> 초연 시공명리 "타 감명서 비교" 전용 렌더링(맨 마지막)
 # 함수 로직은 전혀 수정하지 않았고, 배치 순서와 섹션 주석만 재정리했습니다.
@@ -82,7 +82,7 @@ def get_global_css():
         .element-container, .stMarkdown { margin-bottom: 0 !important; }
         .report-page { box-shadow: none; margin: 0 auto; padding: 0; page-break-after: always; border-radius: 0; width: 100%; max-width: 100%; }
         .page-break-before { page-break-before: always; }
-        .cover-page { height: 297mm !important; min-height: 297mm !important; max-height: 297mm !important; width: 210mm !important; margin: 0 !important; overflow: hidden !important; }
+        .cover-page { height: 267mm !important; min-height: 267mm !important; max-height: 267mm !important; width: 210mm !important; margin: 0 !important; overflow: hidden !important; }
         .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; margin-top: 0 !important; }
         .report-page h1, .report-page h2, .ai-title-l1 { margin-top: 0 !important; }
         div[style*="display:flex"][style*="row-reverse"] { page-break-inside: avoid !important; break-inside: avoid !important; }
