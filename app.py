@@ -718,7 +718,7 @@ if st.session_state.get('app_running', False):
         leap_str = "윤달" if klc.isIntercalation else "평달"
         
     curr_year = selected_target_date.year
-    curr_m = engine.get_jeolgi_month_no(selected_target_date) if hasattr(engine, "get_jeolgi_month_no") else selected_target_date.month
+    curr_m = selected_target_date.month if "1-3" in u_product else (engine.get_jeolgi_month_no(selected_target_date) if hasattr(engine, "get_jeolgi_month_no") else selected_target_date.month)
     curr_d = selected_target_date.day
     next_year = curr_year + 1
     
@@ -1761,7 +1761,7 @@ if st.session_state.get('app_running', False):
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
             "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
-            "wolun_tail_period": wolun_tail_period,
+            "wolun_tail_period": re.sub(r'\d{4}년 ', '', wolun_tail_period),
             "wolun_tail_pillar": f"{_tail_g}{_tail_j}",
             "wolun_tail_facts_str": (engine.get_half_period_day_facts(wolun_tail_period, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans) if wolun_tail_period else ""),
             "wolun_tail_fact_str": (engine.get_wolun_tail_fact(ds, db, _tail_g, _tail_j, w_facts.get("sewun_che", "")) if (wolun_tail_period and _tail_j and hasattr(engine, "get_wolun_tail_fact")) else ""),
@@ -1783,8 +1783,8 @@ if st.session_state.get('app_running', False):
             "ilun_kw_first": w_facts.get("ilun_kw_first", "변화 감지"),
             "ilun_kw_second": w_facts.get("ilun_kw_second", "변화 감지"),
             "unun_yongshin_status_str": engine.get_unun_yongshin_status(yongshin_fact_str, _cur_wol_pillar[0], _cur_wol_pillar[1], _sel_pillar_d[0], _sel_pillar_d[1]) if hasattr(engine, "get_unun_yongshin_status") else "",
-            "first_half_period": seun_first_half if "1-2" in u_product else wolun_first_half,
-            "second_half_period": seun_second_half if "1-2" in u_product else wolun_second_half,
+            "first_half_period": seun_first_half if "1-2" in u_product else re.sub(r'\d{4}년 ', '', wolun_first_half),
+            "second_half_period": seun_second_half if "1-2" in u_product else re.sub(r'\d{4}년 ', '', wolun_second_half),
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1]),
             "samhyung_potential_facts": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "ohang_supply_str": engine.get_ohang_deficiency_supply_str(counts, [
