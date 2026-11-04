@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 87.7 - engine.py와 동일한 기준으로 구조 재정리판)
+# html_views.py (ver 88.4 - engine.py와 동일한 기준으로 구조 재정리판)
 # 재정리 기준: 공용 CSS/포맷터 -> 공통 사주표 컴포넌트 -> 서술형 안내문구 ->
 #              궁합/택일 부가 컴포넌트 -> 초연 시공명리 "타 감명서 비교" 전용 렌더링(맨 마지막)
 # 함수 로직은 전혀 수정하지 않았고, 배치 순서와 섹션 주석만 재정리했습니다.
@@ -414,9 +414,11 @@ def generate_daewun_layout(daewun_list, direction_str, calc_d, get_oh_class_func
  
 def get_sewun_layout(title, content):
     return f"""
-    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
+    <div style='page-break-inside: avoid; break-inside: avoid;'>
+    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E; break-after: avoid; page-break-after: avoid;'>{title}</div>
     <div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>
         {content}
+    </div>
     </div>
     """
  
@@ -445,9 +447,11 @@ def get_sewun_cell(title_str, tage, ss_gan, gan, gan_cls, ji, ji_cls, ss_ji, uns
  
 def get_wolun_layout(title, content):
     return f"""
-    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>
+    <div style='page-break-inside: avoid; break-inside: avoid;'>
+    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E; break-after: avoid; page-break-after: avoid;'>{title}</div>
     <div style='display:flex; flex-direction:row-reverse; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>
         {content}
+    </div>
     </div>
     """
  
@@ -543,17 +547,19 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
 
 def get_closing_html(name, sign_html=""):
     return f"""
-    <div style='margin-top: 30px;'>
-        <hr style='border: 0; border-top: 2px dashed #1A237E; margin: 35px 0 20px 0;'>
+    <div style='margin-top: 12px;'>
+        <hr style='border: 0; border-top: 2px dashed #1A237E; margin: 18px 0 12px 0;'>
         <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'><span style="font-weight:600;">'사주팔자(四柱八字)'</span>는 태어날 때 부여받은 <span style="font-weight:600;">바코드(bar-code)</span>와 같지만, 우리가 살아가며 마주하는 <span style="font-weight:600;">'운(運)'</span>은 늘 변화하며 흐릅니다.</p>
         <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'>따라서 오늘의 '초연 시공명리와의 인연'이 <span style="font-weight:600;">{name}님</span>의 삶이라는 긴 여정에서 올바른 방향을 잡는 든든한 <span style="font-weight:600;">'나침반'</span>이 되기를 진심으로 기원합니다.</p>
-        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 15px;'>앞으로 <span style="font-weight:600;">'인생의 길흉화복'</span>과 <span style="font-weight:600;">'명리에 대한 더 깊은 지혜'</span>가 필요하실 때 언제든 <span style="font-weight:600;">'초연 시공명리 연구소 사주박사'</span>를 찾아 주십시오.</p>
-        <div style='display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 30px;'>
+        <div style='page-break-inside: avoid; break-inside: avoid;'>
+        <p style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px; page-break-after: avoid; break-after: avoid;'>앞으로 <span style="font-weight:600;">'인생의 길흉화복'</span>과 <span style="font-weight:600;">'명리에 대한 더 깊은 지혜'</span>가 필요하실 때 언제든 <span style="font-weight:600;">'초연 시공명리 연구소 사주박사'</span>를 찾아 주십시오.</p>
+        <div style='display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 14px;'>
             <div style='text-align: right;'>
                 <div style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 -</div>
                 <div style='font-weight: 900; font-size: 18px; color: #1A237E; margin-top: 4px;'>사주박사 드림</div>
             </div>
             {sign_html}
+        </div>
         </div>
     </div>
     """
