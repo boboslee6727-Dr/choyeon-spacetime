@@ -718,7 +718,7 @@ if st.session_state.get('app_running', False):
         leap_str = "윤달" if klc.isIntercalation else "평달"
         
     curr_year = selected_target_date.year
-    curr_m = selected_target_date.month
+    curr_m = engine.get_jeolgi_month_no(selected_target_date) if hasattr(engine, "get_jeolgi_month_no") else selected_target_date.month
     curr_d = selected_target_date.day
     next_year = curr_year + 1
     
@@ -1513,7 +1513,10 @@ if st.session_state.get('app_running', False):
         ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db, gender)
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
         wolun_first_half, wolun_second_half = engine.get_wolun_half_periods(target_year_val, curr_m) if hasattr(engine, 'get_wolun_half_periods') else ("전반기(절입일~중기 전)", "후반기(중기~다음 절입일 전)")
+        wolun_tail_period = ""
 
+        if "1-3" in u_product and hasattr(engine, 'get_wolun_calendar_periods'):
+            wolun_tail_period, wolun_first_half, wolun_second_half = engine.get_wolun_calendar_periods(target_year_val, curr_m)
         user_entered_text = ""
         if u_product.startswith("4-1"):
             user_entered_text = (st.session_state.get("text_4_1", "") or st.session_state.get(f"text_{u_product}", "")).strip()
