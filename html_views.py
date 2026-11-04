@@ -84,6 +84,7 @@ def get_global_css():
         .page-break-before { page-break-before: always; }
         .cover-page { height: 267mm !important; min-height: 267mm !important; max-height: 267mm !important; width: 210mm !important; margin: 0 !important; overflow: hidden !important; }
         .vip-inset-frame { border: 2px solid #000 !important; border-radius: 20px !important; padding: 20px 25px !important; box-decoration-break: clone !important; -webkit-box-decoration-break: clone !important; margin-top: 0 !important; }
+        .vip-inset-frame { width: 100% !important; max-width: 100% !important; margin-left: auto !important; margin-right: auto !important; box-sizing: border-box !important; }
         .report-page h1, .report-page h2, .ai-title-l1 { margin-top: 0 !important; }
         div[style*="display:flex"][style*="row-reverse"] { page-break-inside: avoid !important; break-inside: avoid !important; }
     </style>
