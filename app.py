@@ -1042,6 +1042,7 @@ if st.session_state.get('app_running', False):
         p_un_html = ""
         p_daewun_che_flow_str = ""
         couple_daewun_overlap_str = ""
+        couple_sewun_m_str, couple_sewun_f_str, couple_year_ganji_str = "", "", ""
         p_info_h, p_table_html, p_master_bar_html = "", "", ""
         if is_2person:
             try:
@@ -1101,6 +1102,22 @@ if st.session_state.get('app_running', False):
                 
                 p_gans = [partner_bazi[0][0] if len(partner_bazi[0])>0 else "-", partner_bazi[1][0] if len(partner_bazi[1])>0 else "甲", partner_bazi[2][0] if len(partner_bazi[2])>0 else "甲", partner_bazi[3][0] if len(partner_bazi[3])>0 else "甲"]
                 p_jjis = [partner_bazi[0][1] if len(partner_bazi[0])>1 else "-", partner_bazi[1][1] if len(partner_bazi[1])>1 else "子", partner_bazi[2][1] if len(partner_bazi[2])>1 else "子", partner_bazi[3][1] if len(partner_bazi[3])>1 else "子"]
+
+                # 🚨 [3-1 궁합] 두 사람의 올해·내년 세운 사실과 연도별 간지표 (AI가 일반론으로 쓰지 않도록)
+                def _gz_of_year(_ty):
+                    _b = (_ty - 1984) % 60
+                    _c = engine.K2H_GAN.get(engine.GAN[_b % 10], engine.GAN[_b % 10])
+                    _j = engine.K2H_JI.get(engine.JI[_b % 12], engine.JI[_b % 12])
+                    return _c, _j
+                def _sewun_fact_for(_ty, _ds_h, _gans, _jis):
+                    _c, _j = _gz_of_year(_ty)
+                    _rel = engine.get_unun_relation_facts(_jis, _j, "세운", gans=_gans, u_g=_c)
+                    return f"{_ty}년({_c}{_j}): 천간 {engine.get_ss(_ds_h, _c)}, 지지 {engine.get_ss(_ds_h, _j)} / {_rel}"
+
+                _my_sw = " / ".join(_sewun_fact_for(_y, ds_hanja, [hs, ds, ms, ys], [hb, db, mb, yb]) for _y in (curr_year, curr_year + 1))
+                _pt_sw = " / ".join(_sewun_fact_for(_y, p_ds_hanja, p_gans, p_jjis) for _y in (curr_year, curr_year + 1))
+                couple_sewun_m_str, couple_sewun_f_str = (_my_sw, _pt_sw) if gender == "남성" else (_pt_sw, _my_sw)
+                couple_year_ganji_str = " / ".join(f"{_y}년({''.join(_gz_of_year(_y))})" for _y in range(curr_year, curr_year + 21))
                 p_counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
                 for c in p_gans + p_jjis:
                     p_oh = engine.get_color(c)
@@ -1742,6 +1759,9 @@ if st.session_state.get('app_running', False):
             "m_daewun_che_flow_str": daewun_che_flow_str if gender == "남성" else p_daewun_che_flow_str,
             "f_daewun_che_flow_str": p_daewun_che_flow_str if gender == "남성" else daewun_che_flow_str,
             "couple_daewun_overlap_str": couple_daewun_overlap_str,
+            "couple_sewun_m_str": couple_sewun_m_str,
+            "couple_sewun_f_str": couple_sewun_f_str,
+            "couple_year_ganji_str": couple_year_ganji_str,
             "couple_shinsal_compare_str": couple_shinsal_compare_str,
             "couple_pillars_fact_str": couple_pillars_fact_str,
             "daewun_full_fact_str": daewun_full_fact_str,
