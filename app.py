@@ -1042,8 +1042,10 @@ if st.session_state.get('app_running', False):
         p_un_html = ""
         p_daewun_che_flow_str = ""
         couple_daewun_overlap_str = ""
+        couple_dw_wave_score, couple_dw_wave_str = None, ""
         couple_sewun_m_str, couple_sewun_f_str, couple_year_ganji_str = "", "", ""
         p_info_h, p_table_html, p_master_bar_html = "", "", ""
+
         if is_2person:
             try:
                 p_ys = partner_bazi[3][0] if len(partner_bazi[3]) > 0 else "甲"
@@ -1122,6 +1124,16 @@ if st.session_state.get('app_running', False):
                 for c in p_gans + p_jjis:
                     p_oh = engine.get_color(c)
                     if p_oh in p_counts: p_counts[p_oh] += 1
+                try:
+                    _p_yong_str = engine.get_yongshin_analysis(p_counts, p_mb, p_ds, p_db)
+                    _my_y, _pt_y = yongshin_fact_str, _p_yong_str
+                    if gender == "남성":
+                        couple_dw_wave_score, couple_dw_wave_str = engine.get_daewun_wave_compare(_m_info, _f_info, _my_y, _pt_y)
+                    else:
+                        couple_dw_wave_score, couple_dw_wave_str = engine.get_daewun_wave_compare(_f_info, _m_info, _pt_y, _my_y)
+                except Exception:
+                    couple_dw_wave_score, couple_dw_wave_str = None, "대운 물결 비교 정보 없음"
+
                 p_guiin_str = guiin_map.get(p_ds_hanja, '없음')
                 p_n_gong = engine.calculate_gongmang(p_ys, p_yb) or "-"
                 p_i_gong = engine.calculate_gongmang(p_ds, p_db) or "-"
@@ -1140,7 +1152,7 @@ if st.session_state.get('app_running', False):
                 _p_dw_ji = _p_cur[0]['j_hanja'] if _p_cur else None
                 _m_dw_ji, _f_dw_ji = (dw_j_cur, _p_dw_ji) if gender == "남성" else (_p_dw_ji, dw_j_cur)
                 if hasattr(engine, 'UniversalPrintableGunghap') and 'male_data_pack' in locals():
-                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, _m_dw_ji, _f_dw_ji)
+                    gh_engine = engine.UniversalPrintableGunghap(m_name_val, f_name_val, male_data_pack, female_data_pack, _m_dw_ji, _f_dw_ji, dw_wave=couple_dw_wave_score)
                     gh_engine.run_universal_logic()
                     gh_score = gh_engine.final_score
                     gh_grade = gh_engine.grade
@@ -1759,6 +1771,7 @@ if st.session_state.get('app_running', False):
             "m_daewun_che_flow_str": daewun_che_flow_str if gender == "남성" else p_daewun_che_flow_str,
             "f_daewun_che_flow_str": p_daewun_che_flow_str if gender == "남성" else daewun_che_flow_str,
             "couple_daewun_overlap_str": couple_daewun_overlap_str,
+            "couple_daewun_wave_str": couple_dw_wave_str,
             "couple_sewun_m_str": couple_sewun_m_str,
             "couple_sewun_f_str": couple_sewun_f_str,
             "couple_year_ganji_str": couple_year_ganji_str,
