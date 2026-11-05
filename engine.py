@@ -3878,7 +3878,7 @@ def get_gunghap_harmony_facts(gh_engine):
     """궁합 점수 엔진의 6대 조화도(%)와 종합점수를 AI 용 팩트 문자열로 만듭니다. (harmony_index_facts)"""
     try:
         det = " / ".join(f"{d['label']} {d['pct']}%" for d in gh_engine.details)
-        return f"궁합 종합 {gh_engine.final_score}점({gh_engine.grade}) — 6대 조화도: {det}"
+        return f"궁합 종합 {gh_engine.final_score}점({gh_engine.grade}) — 조화도: {det}"
     except Exception:
         return "궁합 조화도 산출 정보 없음"
 
