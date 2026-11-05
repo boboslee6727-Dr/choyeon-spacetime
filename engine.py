@@ -3255,8 +3255,10 @@ def get_spouse_palace_facts(ds, gans, jjis, gender):
         tags = [x.strip() for x in rel.split(",")]
         neg = [t for t in tags if t in ("충", "형", "원진", "파", "해", "귀문")]
         pos = [t for t in tags if t in ("육합", "반합", "방합")]
-        if neg: bad.append(f"일지({dj})–{nm}({j}): {'·'.join(neg)}")
-        if pos: good.append(f"일지({dj})–{nm}({j}): {'·'.join(pos)}")
+        _MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "서로 신경이 곤두서는 어긋남", "귀문": "서로 예민하게 엇갈림",
+                 "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음", "방합": "같은 기운으로 이어짐"}
+        if neg: bad.append(f"일지({dj})–{nm}({j}): {'·'.join(neg)}[{' / '.join(_MEAN[t] for t in neg)}]")
+        if pos: good.append(f"일지({dj})–{nm}({j}): {'·'.join(pos)}[{' / '.join(_MEAN[t] for t in pos)}]")
 
     is_male = (gender == "남성")
     ss = get_ss(ds, dj)
@@ -3706,10 +3708,13 @@ class UniversalPrintableGunghap:
 
         m_evil = _day_pillar_evil(m_g, m_j, "남성")
         f_evil = _day_pillar_evil(f_g, f_j, "여성")
-        for _flag in RISK_SHINSAL + ["여연살"]:
-            if any(_flag in x for x in m_evil): s4 -= 1
-        for _flag in RISK_SHINSAL + ["남연살"]:
-            if any(_flag in x for x in f_evil): s4 -= 1
+        def _risk_hit_count(evil, extra):
+            hit = [f for f in RISK_SHINSAL + [extra] if any(f in x for x in evil)]
+            if "음양차착" in hit and "음양" in hit:
+                hit.remove("음양")   # 음양차착 안에 '음양'이 들어 있어 두 번 세어지는 것을 막음
+            return len(hit)
+        s4 -= _risk_hit_count(m_evil, "여연살")
+        s4 -= _risk_hit_count(f_evil, "남연살")
 
         # 음양 극단 치우침 (8글자 중 양/음 어느 한쪽으로 7개 이상 쏠림)
         _yang_chars = set("甲丙戊庚壬子寅辰午申戌")
