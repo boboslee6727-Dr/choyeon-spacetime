@@ -693,7 +693,11 @@ def get_cheongan_chung_fact(ys, ms, ds, hs=None):
                 lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({_lab(o)})에게 극을 받음")
         if not lines:
             return "천간에 이웃한 충이나 일간과 관련된 극은 사실문에 없음"
-        lines.append("충은 서로 밀어내며 변화를 만드는 움직임이라 흔들림이면서 동시에 변화의 계기가 되기도 하므로, 나쁜 일로만 단정하지 말 것")
+        _has_chung = any(("충" in x) and ("극함" not in x) and ("극을 받음" not in x) and ("충으로 보지 않고" not in x) for x in lines)
+        if _has_chung:
+            lines.append("충은 서로 밀어내며 변화를 만드는 움직임이라 흔들림이면서 동시에 변화의 계기가 되기도 하므로, 나쁜 일로만 단정하지 말 것")
+        else:
+            lines.append("위 내용은 충이 아니라 극(눌러서 다루는 관계)이므로, 마음이 여러 방향으로 흔들린다거나 변화의 계기가 된다는 식으로 풀지 말고, 일간이 그 기운을 직접 다루고 눌러 쓰는 모습으로만 풀 것")
         return "[천간 충 사실] " + " / ".join(lines)
     except Exception:
         return "천간 충 정보 없음"
