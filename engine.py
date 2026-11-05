@@ -3645,6 +3645,55 @@ class UniversalPrintableGunghap:
         if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: return "해"
         return "무"
  
+    def get_spouse_palace_score(self, g, j, gender):
+        """각자의 배우자궁(일지) 안정도를 0~10점으로 계산합니다. g, j 는 [년, 월, 일, 시] 순서"""
+        jj = [_to_hanja_ji(x) for x in j]
+        dj = jj[2]
+        if not dj or dj not in JI:
+            return 7   # 일지를 모를 때는 보통 점수
+        score, plus = 10, 0
+        for k in (1, 0, 3):   # 월지, 년지, 시지와의 관계
+            oj = jj[k]
+            if not oj or oj not in JI:
+                continue
+            rel = get_ji_rel_set(dj, oj)
+            if rel == "-":
+                continue
+            for t in [x.strip() for x in rel.split(",")]:
+                if t == "충": score -= 3
+                elif t == "형": score -= 2
+                elif t in ("원진", "귀문", "파", "해"): score -= 1
+                elif t in ("육합", "반합", "방합"): plus += 1
+        # 일지의 십성 (남: 재성 좋음/비겁 나쁨, 여: 관성 좋음/식상 나쁨)
+        try:
+            ss = get_ss(_to_hanja(g[2]), dj)
+            if gender == "남성":
+                if ss in ("정재", "편재"): plus += 1
+                elif ss in ("비견", "겁재"): score -= 1
+            else:
+                if ss in ("정관", "편관"): plus += 1
+                elif ss in ("상관", "식신"): score -= 1
+        except Exception:
+            pass
+        # 일지가 년주 기준 공망이면 -2
+        try:
+            gy, jy = _to_hanja(g[0]), jj[0]
+            if gy and jy:
+                gm = calculate_gongmang(gy, jy)
+                if gm and gm != "-" and dj in gm:
+                    score -= 2
+        except Exception:
+            pass
+        # 고신·과숙이 원국에 있으면 -1
+        try:
+            gg_ji, _gg_label = get_goshin_gwasook_ji(dj, gender)
+            if gg_ji and gg_ji in jj and gg_ji != dj:
+                score -= 1
+        except Exception:
+            pass
+        score += min(2, plus)   # 합·좋은 십성의 가점은 최대 +2
+        return max(0, min(10, score))
+
     def count_elements(self, gans, jjis):
         counts = {'목':0, '화':0, '토':0, '금':0, '수':0}
         for char in gans + jjis:
@@ -3797,8 +3846,14 @@ class UniversalPrintableGunghap:
         risk = min(0.22, risk)
         p6_safety = int((1.0 - risk) * 100)
 
-        base_bonus = 40
-        sub_total = base_bonus + s1 + s2 + s3 + s4 + s5
+        # 🌟 각자의 배우자궁 점수 (남·여 평균, 25점 만점)
+        m_sp = self.get_spouse_palace_score(m_g, m_j, "남성")
+        f_sp = self.get_spouse_palace_score(f_g, f_j, "여성")
+        s0 = (m_sp + f_sp) / 2.0
+        p0 = int(round(s0 * 10))
+
+        # 기본 20 + 배우자궁 25 + 일지 궁합 20 + 환경 10 + 보완 10 + 특수 기운 5 + 대운 10 = 100
+        sub_total = 20 + (s0 * 2.5) + (s1 * 0.8) + s2 + s3 + (s4 * 0.5) + s5
         self.final_score = max(40, min(100, int(sub_total * (1.0 - risk))))
 
         if self.final_score >= 90: self.grade = "천생연분 (최고의 인연)"
@@ -3809,12 +3864,13 @@ class UniversalPrintableGunghap:
         else: self.grade = "조율연분 (인내와 배려가 필요한 인연)"
 
         self.details = [
+            {"label": "사주팔자 분석", "pct": p0, "color": "#e67e22"},
             {"label": "내면의 유대감", "pct": p1, "color": "#9b59b6"},
             {"label": "환경 조화", "pct": p2, "color": "#2ecc71"},
             {"label": "기운 상호보완", "pct": p3, "color": "#3498db"},
             {"label": "특수 기운", "pct": p4, "color": "#f1c40f"},
             {"label": "인생 흐름의 조화", "pct": p5, "color": "#8e44ad"},
-            {"label": "위기를 이겨내는 힘", "pct": p6_safety, "color": "#e74c3c"}
+            {"label": "관계 안전도", "pct": p6_safety, "color": "#e74c3c"}
         ]
 
 
