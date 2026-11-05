@@ -1730,6 +1730,70 @@ def get_couple_daewun_overlap_str(m_info, f_info, base_year=None, max_segments=4
     return f"(달력 연도 기준, 올해 {base_year}년) " + " / ".join(lines)
 
 
+def get_daewun_wave_compare(m_info, f_info, m_yong_text, f_yong_text, start_age=20, end_age=89):
+    """두 사람의 대운을 달력 연도로 겹쳐 20~80대 인생 전체의 물결을 비교합니다.
+    대운 앞 5년은 천간, 뒤 5년은 지지 오행을 보고, 각자의 용신·희신이면 +1, 기신·구신이면 -1, 그 밖은 0으로 합니다.
+    반환: (0~10점, AI 용 사실문). 용신 정보가 없으면 (None, 안내문)."""
+    EL = {}
+    for chars, el in (("甲乙寅卯", "목"), ("丙丁巳午", "화"), ("戊己辰戌丑未", "토"), ("庚辛申酉", "금"), ("壬癸亥子", "수")):
+        for ch in chars:
+            EL[ch] = el
+
+    def _levels(info, yong_text):
+        ye = get_yongshin_elements(yong_text)
+        good = {ye[k] for k in ("용신", "희신", "겸용") if k in ye}
+        bad = {ye[k] for k in ("기신", "구신") if k in ye}
+        by = int(info['birth_year'])
+        lv = {}
+        for d in info.get('dw', []):
+            s0 = int(str(d['age_range']).split('~')[0])
+            for k in range(10):
+                age = s0 + k
+                if age < start_age or age > end_age:
+                    continue
+                el = EL.get(d['c_hanja'] if k < 5 else d['j_hanja'])
+                lv[by + age - 1] = 1 if el in good else (-1 if el in bad else 0)
+        return lv, bool(good or bad)
+
+    try:
+        ml, ok1 = _levels(m_info, m_yong_text)
+        fl, ok2 = _levels(f_info, f_yong_text)
+    except Exception:
+        return None, "대운 물결 비교 정보 없음"
+    years = sorted(set(ml) & set(fl))
+    if not (ok1 and ok2) or len(years) < 10:
+        return None, "대운 물결 비교 정보 없음"
+
+    def _pair(a, b):
+        if a == 1 and b == 1: return 2
+        if a == -1 and b == -1: return -2
+        if {a, b} == {1, -1}: return 1      # 한쪽이 받쳐 주는 번갈아 보완
+        return a + b
+
+    avg = sum(_pair(ml[y], fl[y]) for y in years) / len(years)
+    score = max(0.0, min(10.0, 5 + 2.5 * avg))
+    both_good = sum(1 for y in years if ml[y] == 1 and fl[y] == 1)
+    comp = sum(1 for y in years if {ml[y], fl[y]} == {1, -1})
+    both_bad = sum(1 for y in years if ml[y] == -1 and fl[y] == -1)
+
+    def _lab(v):
+        return "도움" if v > 0.34 else ("부담" if v < -0.34 else "보통")
+
+    blocks = []
+    for i in range(0, len(years), 5):
+        ys = years[i:i + 5]
+        ml_lab = _lab(sum(ml[y] for y in ys) / len(ys))
+        fl_lab = _lab(sum(fl[y] for y in ys) / len(ys))
+        if ml_lab == "도움" and fl_lab == "도움": rel = "함께 순조로운 시기"
+        elif {ml_lab, fl_lab} == {"도움", "부담"}: rel = "한쪽이 받쳐 주는 번갈아 보완 시기"
+        elif ml_lab == "부담" and fl_lab == "부담": rel = "함께 힘든 시기"
+        else: rel = "무난한 시기"
+        blocks.append(f"{ys[0]}~{ys[-1]}년: 남명 {ml_lab}/여명 {fl_lab} → {rel}")
+    head = (f"(만 {start_age}~{end_age}세, 달력 연도 {years[0]}~{years[-1]}년 {len(years)}년 비교) "
+            f"함께 순조로운 해 {both_good}년 / 번갈아 보완하는 해 {comp}년 / 함께 힘든 해 {both_bad}년 // ")
+    return round(score, 1), head + " / ".join(blocks)
+
+
 def _is_daewun_first_half(age, dw_start_age):
     """대운 진입 후 0~4년차(전반기,천간) / 5~9년차(후반기,지지) 판정"""
     year_in_dw = age - dw_start_age
@@ -3616,11 +3680,12 @@ def get_partner_clash_days(start_date, end_date, avoid_jis):
 # ---- 4-A. [3-1 궁합] 점수 산출 엔진 ----
 
 class UniversalPrintableGunghap:
-    def __init__(self, applicant, partner_name, male, female, m_dw_ji=None, f_dw_ji=None):
+    def __init__(self, applicant, partner_name, male, female, m_dw_ji=None, f_dw_ji=None, dw_wave=None):
         self.app = applicant
         self.p_name = partner_name
         self.m_dw_ji = m_dw_ji
         self.f_dw_ji = f_dw_ji
+        self.dw_wave = dw_wave   # 20~80대 대운 물결 비교 점수(0~10). 없으면 현재 대운 지지 비교로 대신함
 
         male = [m if m and len(m) >= 2 else "  " for m in (list(male) + ["  ", "  ", "  ", "  "])][:4]
         female = [f if f and len(f) >= 2 else "  " for f in (list(female) + ["  ", "  ", "  ", "  "])][:4]
@@ -3806,7 +3871,9 @@ class UniversalPrintableGunghap:
             else: s5 = 6
         else:
             s5 = 6
-        p5 = int((s5 / 10) * 100)
+        if self.dw_wave is not None:
+            s5 = float(self.dw_wave)   # 20~80대 인생 물결 비교 점수로 대체
+        p5 = int(round((s5 / 10) * 100))
 
         risk = 0.0
         if il_rel == "충": risk += 0.10
