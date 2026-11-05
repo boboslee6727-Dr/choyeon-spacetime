@@ -2042,6 +2042,30 @@ def get_couple_pillars_fact_str(m_gans, m_jjis, f_gans, f_jjis):
     except Exception:
         return "원국 정보 없음"
 
+def get_couple_ji_rel_facts(m_jjis, f_jjis):
+    """남명·여명 지지끼리의 관계(일지·년지·월지·시지) 사실문. 목록 순서: 0=시, 1=일, 2=월, 3=년 (앱 전체 공통)."""
+    MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "서로 신경이 곤두서는 어긋남", "귀문": "서로 예민하게 엇갈림",
+            "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음",
+            "방합": "같은 기운으로 이어짐", "방합(미완)": "같은 기운으로 이어짐", "암합": "속으로 은근히 끌림",
+            "자형": "같은 글자라 스스로 부딪힘", "천라": "답답하게 얽힘", "지망": "답답하게 얽힘"}
+
+    def _rel(a, b):
+        a, b = _to_hanja_ji(a), _to_hanja_ji(b)
+        if not a or not b or a not in JI or b not in JI:
+            return "미상"
+        rel = get_ji_rel_set(a, b)
+        if rel == "-":
+            return f"{a}–{b}: 특별한 합충 없이 무난함"
+        tags = [t.strip() for t in rel.split(",")]
+        return f"{a}–{b}: " + "·".join(tags) + "[" + " / ".join(MEAN.get(t, t) for t in tags) + "]"
+
+    try:
+        return (f"일지끼리(내면의 유대감) {_rel(m_jjis[1], f_jjis[1])} / 년지끼리(띠 겉궁합) {_rel(m_jjis[3], f_jjis[3])} / "
+                f"월지끼리 {_rel(m_jjis[2], f_jjis[2])} / 시지끼리 {_rel(m_jjis[0], f_jjis[0])}")
+    except Exception:
+        return "지지 관계 정보 없음"
+
+
 def get_ohang_deficiency_supply_str(counts, level_phase_data):
     """
     원국에 결핍된 오행이, 대운/세운/월운/일운 각 단계의 '현재 활성화된 반기'에서 실제로 공급되고 있는지 정밀 판정.
@@ -3327,6 +3351,37 @@ def analyze_love_and_marriage_patterns(bazi_dict):
     return results
 
 
+def get_spouse_extra_flags(g, j, gender):
+    """각자 사주의 배우자궁 그릇에 영향을 주는 추가 요소(복음·卯戌합·재성/관성 부재와 쏠림).
+    g, j 는 [년, 월, 일, 시] 순서. 반환: [(감점, 사실문), ...] — 점수와 풀이 글이 같은 기준을 씁니다."""
+    out = []
+    try:
+        jj = [_to_hanja_ji(x) for x in j]
+        dj = jj[2] if len(jj) > 2 else ""
+        if dj and dj in JI and jj.count(dj) >= 2:
+            out.append((1, f"배우자궁({dj})과 같은 글자가 사주 안에서 반복되어(복음) 인연이 겹치고 불안정해지기 쉬움"))
+        if '卯' in jj and '戌' in jj:
+            out.append((0.5, "사주 안에 卯와 戌이 함께 있어 서로 끌리는 합 파동이 있음(상대의 나이나 혼인 상태 등은 사주만으로 단정하지 말 것)"))
+        chars = [c for c in (list(g) + list(j)) if c and str(c).strip() not in ("", "?", "-")]
+        if len(chars) >= 8:   # 여덟 글자가 모두 있을 때만 판단
+            dg = _to_hanja(g[2])
+            cnt = {'비겁': 0, '식상': 0, '재성': 0, '관성': 0, '인성': 0}
+            for c in chars:
+                grp = get_group_ss(get_ss(dg, _to_hanja(c)))
+                if grp in cnt:
+                    cnt[grp] += 1
+            if gender == "남성":
+                if cnt['재성'] == 0: out.append((1, "사주에 재성(아내별)이 보이지 않아 배우자 인연을 붙잡기 어려운 구조"))
+                if cnt['비겁'] >= 4: out.append((1, "비겁이 4개 이상 몰려 경쟁·분산의 기운이 강해 배우자와 재물을 두고 다툼 소지"))
+            else:
+                if cnt['관성'] == 0: out.append((1, "사주에 관성(남편별)이 보이지 않아 배우자 인연을 붙잡기 어려운 구조"))
+                if cnt['관성'] >= 4: out.append((1, "관성이 4개 이상 몰려 부담과 압박을 크게 느끼기 쉬운 구조"))
+                if cnt['식상'] >= 4: out.append((1, "식상이 4개 이상 몰려 주관이 강해 남편별을 누르기 쉬운 구조"))
+    except Exception:
+        pass
+    return out
+
+
 def get_spouse_palace_facts(ds, gans, jjis, gender):
     """
     배우자궁(일지)의 안정성 팩트 문자열을 만듭니다. (gans, jjis 는 [시, 일, 월, 년] 순서)
@@ -3381,8 +3436,15 @@ def get_spouse_palace_facts(ds, gans, jjis, gender):
     except Exception:
         pass
 
+    # 복음·卯戌합·십성 쏠림/부재 (점수와 같은 기준)
+    try:
+        for _pen, _txt in get_spouse_extra_flags([gans[3], gans[2], gans[1], gans[0]], [jjis[3], jjis[2], jjis[1], jjis[0]], gender):
+            bad.append(_txt)
+    except Exception:
+        pass
     if not bad and not good:
         return "배우자궁(일지)이 다른 지지와 특별한 합충 없이 비교적 안정적인 흐름"
+
     parts = []
     if bad: parts.append("흔들릴 수 있는 요소: " + "; ".join(bad))
     if good: parts.append("받쳐주는 요소: " + "; ".join(good))
@@ -3787,6 +3849,8 @@ class UniversalPrintableGunghap:
                 score -= 1
         except Exception:
             pass
+        for _pen, _txt in get_spouse_extra_flags(g, j, gender):
+            score -= _pen       # 복음 -1, 卯戌합 -0.5, 재성/관성 부재·쏠림 각 -1
         score += min(2, plus)   # 합·좋은 십성의 가점은 최대 +2
         return max(0, min(10, score))
 
@@ -3823,15 +3887,11 @@ class UniversalPrintableGunghap:
         else: s1 = 17
         p1 = int((s1 / 25) * 100)
  
-        s2 = 5
+        # 🌟 환경 조화 15점 = 년지(띠 겉궁합) 5 + 월지 5 + 시지 5 — 남명과 여명의 같은 자리끼리 비교
+        _pos5 = {"육합": 5, "방합": 4, "반합": 4, "무": 3, "파": 2, "해": 2, "형": 1, "원진": 1, "충": 0}
         n_rel, w_rel, si_rel = self.get_ji_rel(m_j[0], f_j[0]), self.get_ji_rel(m_j[1], f_j[1]), self.get_ji_rel(m_j[3], f_j[3])
-        if n_rel in ["육합", "방합", "반합"]: s2 += 2
-        elif n_rel == "충": s2 -= 1
-        if w_rel in ["육합", "방합", "반합"]: s2 += 2
-        elif w_rel == "충": s2 -= 1
-        if si_rel in ["육합", "방합", "반합"]: s2 += 1
-        s2 = max(0, min(10, s2))
-        p2 = int((s2 / 10) * 100)
+        s2 = _pos5.get(n_rel, 3) + _pos5.get(w_rel, 3) + _pos5.get(si_rel, 3)
+        p2 = int(round((s2 / 15) * 100))
  
         m_ec, f_ec = self.count_elements(m_g, m_j), self.count_elements(f_g, f_j)
         s3 = 5
@@ -3906,53 +3966,16 @@ class UniversalPrintableGunghap:
             s5 = float(self.dw_wave)   # 20~80대 인생 물결 비교 점수로 대체
         p5 = int(round((s5 / 10) * 100))
 
-        risk = 0.0
-        if il_rel == "충": risk += 0.10
-        elif il_rel in ["형", "원진"]: risk += 0.05
-
-        def count_ss_groups_local(dc, chars):
-            res = {'비겁':0, '식상':0, '재성':0, '관성':0, '인성':0}
-            for c in chars:
-                if c and c not in ["?", " ", "-"]:
-                    try:
-                        ss = get_ss(dc, c)
-                        group_ss = get_group_ss(ss)
-                        if group_ss in res: res[group_ss] += 1
-                    except Exception: pass
-            return res
-
-        m_ss, f_ss = count_ss_groups_local(m_g[2], m_g + m_j), count_ss_groups_local(f_g[2], f_g + f_j)
-        if m_ss['비겁'] >= 4: risk += 0.05
-        if m_ss['재성'] == 0: risk += 0.05
-        if f_ss['식상'] >= 4: risk += 0.05
-        if f_ss['관성'] >= 4 or f_ss['관성'] == 0: risk += 0.05
-
-        # 개인별 복음/卯戌합 리스크 반영 (marriage_bogeum_facts와 같은 계산 재사용)
-        m_bazi = {'year_g': m_g[0], 'year_j': m_j[0], 'month_g': m_g[1], 'month_j': m_j[1],
-                  'day_g': m_g[2], 'day_j': m_j[2], 'time_g': m_g[3], 'time_j': m_j[3]}
-        f_bazi = {'year_g': f_g[0], 'year_j': f_j[0], 'month_g': f_g[1], 'month_j': f_j[1],
-                  'day_g': f_g[2], 'day_j': f_j[2], 'time_g': f_g[3], 'time_j': f_j[3]}
-        for _bazi in (m_bazi, f_bazi):
-            _person_risk = 0.0
-            for _line in analyze_love_and_marriage_patterns(_bazi).get('fact_summary_text', []):
-                if '복음' in _line:
-                    _person_risk = max(_person_risk, 0.04)
-                elif '卯·戌' in _line:
-                    _person_risk = max(_person_risk, 0.03)
-            risk += _person_risk
-
-        risk = min(0.22, risk)
-        p6_safety = int((1.0 - risk) * 100)
-
-        # 🌟 각자의 배우자궁 점수 (남·여 평균, 25점 만점)
+        # 🌟 각자의 배우자궁 점수 (두 분 점수의 합, 20점 만점)
         m_sp = self.get_spouse_palace_score(m_g, m_j, "남성")
         f_sp = self.get_spouse_palace_score(f_g, f_j, "여성")
-        s0 = (m_sp + f_sp) / 2.0
-        p0 = int(round(s0 * 10))
+        s0 = m_sp + f_sp
+        p0 = int(round(s0 / 20 * 100))
 
-        # 기본 20 + 배우자궁 25 + 일지 궁합 20 + 환경 10 + 보완 10 + 특수 기운 5 + 대운 10 = 100
-        sub_total = 20 + (s0 * 2.5) + (s1 * 0.8) + s2 + s3 + (s4 * 0.5) + s5
-        self.final_score = max(40, min(100, int(sub_total * (1.0 - risk))))
+        # 기본 15 + 배우자궁 20 + 일지 25 + 환경 15 + 보완 10 + 특수 기운 5 + 대운 10 = 100
+        BASE = 15
+        sub_total = BASE + s0 + s1 + s2 + s3 + (s4 * 0.5) + s5
+        self.final_score = max(40, min(100, int(sub_total)))
 
         if self.final_score >= 90: self.grade = "천생연분 (최고의 인연)"
         elif self.final_score >= 85: self.grade = "상생연분 (함께하면 좋은 인연)"
@@ -3966,9 +3989,8 @@ class UniversalPrintableGunghap:
             {"label": "내면의 유대감", "pct": p1, "color": "#9b59b6"},
             {"label": "환경 조화", "pct": p2, "color": "#2ecc71"},
             {"label": "기운 상호보완", "pct": p3, "color": "#3498db"},
-            {"label": "특수 기운", "pct": p4, "color": "#f1c40f"},
             {"label": "인생 흐름의 조화", "pct": p5, "color": "#8e44ad"},
-            {"label": "관계 안전도", "pct": p6_safety, "color": "#e74c3c"}
+            {"label": "특수 기운", "pct": p4, "color": "#f1c40f"}
         ]
 
 
