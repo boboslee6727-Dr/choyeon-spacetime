@@ -2721,10 +2721,11 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     gm_day = calculate_gongmang(ds, db)      # 일 기준 공망
     gm_year = calculate_gongmang(ys, yb)     # 년 기준 공망
     guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
-    good, bad, mild = [], [], []
+    good, bad, mild, calm = [], [], [], []
     _PROD = {"목": "수", "화": "목", "토": "화", "금": "토", "수": "금"}
     doc_el = _PROD.get(get_color(ds))
     doc_days = []
+    grp_days = {"재성": [], "관성": [], "식상": [], "비겁": []}   # 인성은 doc_days 가 맡음
     cut = today if (today is not None and start_date <= today <= start_date + dt_mod.timedelta(days=days - 1)) else None
     for i in range(days):
         d = start_date + dt_mod.timedelta(days=i)
@@ -2792,7 +2793,11 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         if doc_el and get_color(gan) == doc_el:
             _kind = "편인" if ((gan in "甲丙戊庚壬") == (ds in "甲丙戊庚壬")) else "정인"
             doc_days.append(f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일 {gan}({_kind})" + (" — " + ", ".join(notes) if notes else " — 다른 충·합 특이사항 없음"))
+        _grp = get_group_ss(get_ss(ds, gan))
+        if _grp in grp_days:
+            grp_days[_grp].append(f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일 {gan}({get_ss(ds, gan)})" + (" — " + ", ".join(notes) if notes else " — 다른 충·합 특이사항 없음"))
         if not notes:
+            calm.append(f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일")
             continue
         tag = f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일: " + ", ".join(notes)
         if severe or score <= -3:
@@ -2802,14 +2807,22 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
         elif score >= 1:
             mild.append((score, i, tag))
     good = sorted(sorted(good, key=lambda x: (-x[0], x[1]))[:5], key=lambda x: x[1])
-    bad = bad[:12]
+    _bad_rank = sorted(bad, key=lambda x: (x[0], x[1]))      # 점수가 낮은(무거운) 날부터
+    heavy = sorted(_bad_rank[:5], key=lambda x: x[1])         # 특히 조심할 날 최대 5일
+    light = sorted(_bad_rank[5:], key=lambda x: x[1])         # 가볍게 살필 날(나머지)
     mild = mild[:4]
+    calm = calm[:5]
+    _grp_lines = "".join(
+        f"\n[{k}({v}) 기운이 천간으로 들어오는 날] " + (" / ".join(grp_days[k]) if grp_days[k] else "없음")
+        for k, v in (("재성", "재물·결실"), ("관성", "직장·책임"), ("식상", "표현·활동"), ("비겁", "동료·경쟁")))
     _today_line = (f"[오늘 기준일: {today.month}/{today.day}({_WEEKDAY_KR[today.weekday()]}) — 이 날짜보다 앞선 날만 이미 지난 날이고, 오늘과 그 이후의 날은 지금이거나 앞으로 올 날]\n" if today is not None else "")
     return (_today_line + "[기운이 도와주는 날] " + (" / ".join(t for _, _, t in good) if good else "뚜렷한 날 없음")
             + "\n[무난히 움직일 수 있는 날] " + (" / ".join(t for _, _, t in mild) if mild else "없음")
-            + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 날 없음")
+            + "\n[특별한 충돌 없이 무난한 날] " + (" / ".join(calm) if calm else "없음")
+            + "\n[서두르지 말 날] " + (" / ".join(t for _, _, t in heavy) if heavy else "뚜렷한 날 없음")
+            + "\n[그 밖에 가볍게 살필 날] " + (" / ".join(t for _, _, t in light) if light else "없음")
+            + _grp_lines
             + "\n[문서 기운(인성) 글자가 천간으로 들어오는 날] " + (" / ".join(doc_days) if doc_days else "없음"))
-
 
 def get_half_period_day_facts(period_str, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
     """'2026년 10월 23일 ~ 2026년 11월 06일' 같은 문장에서 시작일·끝일을 읽어,
