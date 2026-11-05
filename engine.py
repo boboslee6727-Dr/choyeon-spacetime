@@ -1731,68 +1731,99 @@ def get_couple_daewun_overlap_str(m_info, f_info, base_year=None, max_segments=4
 
 
 def get_daewun_wave_compare(m_info, f_info, m_yong_text, f_yong_text, start_age=20, end_age=89):
-    """두 사람의 대운을 달력 연도로 겹쳐 20~80대 인생 전체의 물결을 비교합니다.
-    대운 앞 5년은 천간, 뒤 5년은 지지 오행을 보고, 각자의 용신·희신이면 +1, 기신·구신이면 -1, 그 밖은 0으로 합니다.
-    반환: (0~10점, AI 용 사실문). 용신 정보가 없으면 (None, 안내문)."""
+    """두 사람의 대운을 달력 연도로 겹쳐 20~80대 인생 전체의 '파도 높이'를 비교합니다.
+    파도 높이 = 십성·용신(45%) + 대운 지지 12운성(30%) + 대운 지지 12신살(25%).
+    반환: (0~10점, AI 용 사실문). 비교할 연도가 모자라면 (None, 안내문)."""
     EL = {}
     for chars, el in (("甲乙寅卯", "목"), ("丙丁巳午", "화"), ("戊己辰戌丑未", "토"), ("庚辛申酉", "금"), ("壬癸亥子", "수")):
         for ch in chars:
             EL[ch] = el
+    SS_Q = {'정인': 1.0, '식신': 1.0, '정재': 1.0, '편재': 1.0, '정관': 1.0, '비견': 0.6,
+            '편인': 0.4, '편관': 0.4, '상관': 0.35, '겁재': 0.35}
+    UN_P = {'건록': 1.0, '제왕': 1.0, '관대': 0.8, '장생': 0.8, '목욕': 0.5, '쇠': 0.5, '양': 0.5,
+            '병': 0.3, '태': 0.3, '사': 0.1, '묘': 0.1, '절': 0.1}
+    SHIN_P = {'장성살': 1.0, '반안살': 0.9, '지살': 0.6, '역마살': 0.6, '화개살': 0.6, '년살': 0.55,
+              '망신살': 0.35, '육해살': 0.3, '월살': 0.3, '천살': 0.25, '재살': 0.2, '겁살': 0.2}
 
-    def _levels(info, yong_text):
+    def _shin(d):
+        vals = []
+        for key in ('y_shinsal', 'd_shinsal'):
+            txt = str(d.get(key, ''))
+            for name, p in SHIN_P.items():
+                if name in txt:
+                    vals.append(p)
+                    break
+        return sum(vals) / len(vals) if vals else 0.5
+
+    def _waves(info, yong_text):
         ye = get_yongshin_elements(yong_text)
         good = {ye[k] for k in ("용신", "희신", "겸용") if k in ye}
         bad = {ye[k] for k in ("기신", "구신") if k in ye}
+        has_y = bool(good or bad)
         by = int(info['birth_year'])
-        lv = {}
+        wv = {}
         for d in info.get('dw', []):
             s0 = int(str(d['age_range']).split('~')[0])
+            un = UN_P.get(d.get('un_sung'), 0.5)
+            sh = _shin(d)
             for k in range(10):
                 age = s0 + k
                 if age < start_age or age > end_age:
                     continue
-                el = EL.get(d['c_hanja'] if k < 5 else d['j_hanja'])
-                lv[by + age - 1] = 1 if el in good else (-1 if el in bad else 0)
-        return lv, bool(good or bad)
+                first = k < 5      # 대운 앞 5년 = 천간, 뒤 5년 = 지지
+                ss = SS_Q.get(d['ss_gan'] if first else d['ss_ji'], 0.6)
+                if has_y:
+                    el = EL.get(d['c_hanja'] if first else d['j_hanja'])
+                    yo = 1.0 if el in good else (0.0 if el in bad else 0.5)
+                    a = 0.5 * ss + 0.5 * yo
+                else:
+                    a = ss
+                h = 0.45 * a + 0.30 * un + 0.25 * sh
+                wv[by + age - 1] = max(-1.0, min(1.0, (h - 0.6) / 0.3))   # -1(바닥) ~ +1(꼭대기)
+        return wv
 
     try:
-        ml, ok1 = _levels(m_info, m_yong_text)
-        fl, ok2 = _levels(f_info, f_yong_text)
+        mw, fw = _waves(m_info, m_yong_text), _waves(f_info, f_yong_text)
     except Exception:
         return None, "대운 물결 비교 정보 없음"
-    years = sorted(set(ml) & set(fl))
-    if not (ok1 and ok2) or len(years) < 10:
+    years = sorted(set(mw) & set(fw))
+    if len(years) < 10:
         return None, "대운 물결 비교 정보 없음"
 
     def _pair(a, b):
-        if a == 1 and b == 1: return 2
-        if a == -1 and b == -1: return -2
-        if {a, b} == {1, -1}: return 1      # 한쪽이 받쳐 주는 번갈아 보완
-        return a + b
+        bonus = 0.5 * min(abs(a), abs(b)) if a * b < 0 else 0.0   # 한쪽이 높을 때 다른 쪽이 낮으면 받쳐 주는 가점
+        return a + b + bonus
 
-    avg = sum(_pair(ml[y], fl[y]) for y in years) / len(years)
+    avg = sum(_pair(mw[y], fw[y]) for y in years) / len(years)
     score = max(0.0, min(10.0, 5 + 2.5 * avg))
-    both_good = sum(1 for y in years if ml[y] == 1 and fl[y] == 1)
-    comp = sum(1 for y in years if {ml[y], fl[y]} == {1, -1})
-    both_bad = sum(1 for y in years if ml[y] == -1 and fl[y] == -1)
 
     def _lab(v):
-        return "도움" if v > 0.34 else ("부담" if v < -0.34 else "보통")
+        return "높음" if v > 0.25 else ("낮음" if v < -0.25 else "보통")
 
-    blocks = []
+    both_high = sum(1 for y in years if _lab(mw[y]) == "높음" and _lab(fw[y]) == "높음")
+    comp = sum(1 for y in years if {_lab(mw[y]), _lab(fw[y])} == {"높음", "낮음"})
+    both_low = sum(1 for y in years if _lab(mw[y]) == "낮음" and _lab(fw[y]) == "낮음")
+
+    blocks, prev_m, prev_f = [], None, None
     for i in range(0, len(years), 5):
         ys = years[i:i + 5]
-        ml_lab = _lab(sum(ml[y] for y in ys) / len(ys))
-        fl_lab = _lab(sum(fl[y] for y in ys) / len(ys))
-        if ml_lab == "도움" and fl_lab == "도움": rel = "함께 순조로운 시기"
-        elif {ml_lab, fl_lab} == {"도움", "부담"}: rel = "한쪽이 받쳐 주는 번갈아 보완 시기"
-        elif ml_lab == "부담" and fl_lab == "부담": rel = "함께 힘든 시기"
-        else: rel = "무난한 시기"
-        blocks.append(f"{ys[0]}~{ys[-1]}년: 남명 {ml_lab}/여명 {fl_lab} → {rel}")
-    head = (f"(만 {start_age}~{end_age}세, 달력 연도 {years[0]}~{years[-1]}년 {len(years)}년 비교) "
-            f"함께 순조로운 해 {both_good}년 / 번갈아 보완하는 해 {comp}년 / 함께 힘든 해 {both_bad}년 // ")
-    return round(score, 1), head + " / ".join(blocks)
+        ma = sum(mw[y] for y in ys) / len(ys)
+        fa = sum(fw[y] for y in ys) / len(ys)
+        ml_lab, fl_lab = _lab(ma), _lab(fa)
 
+        def _trend(cur, prev):
+            if prev is None: return "시작"
+            return "오름세" if cur - prev > 0.15 else ("내림세" if cur - prev < -0.15 else "비슷")
+        mt, ft = _trend(ma, prev_m), _trend(fa, prev_f)
+        prev_m, prev_f = ma, fa
+        if ml_lab == "높음" and fl_lab == "높음": rel = "함께 높은 파도(동행)"
+        elif ml_lab == "낮음" and fl_lab == "낮음": rel = "함께 낮은 파도(서로 의지가 필요)"
+        elif {ml_lab, fl_lab} == {"높음", "낮음"}: rel = "높은 쪽이 낮은 쪽을 받쳐 주는 번갈아 보완"
+        else: rel = "무난한 시기"
+        blocks.append(f"{ys[0]}~{ys[-1]}년: 남명 {ml_lab}({mt}) / 여명 {fl_lab}({ft}) → {rel}")
+    head = (f"(만 {start_age}~{end_age}세, 달력 연도 {years[0]}~{years[-1]}년 {len(years)}년 비교, "
+            f"파도 높이=십성·용신+12운성+12신살) 함께 높은 해 {both_high}년 / 번갈아 보완하는 해 {comp}년 / 함께 낮은 해 {both_low}년 // ")
+    return round(score, 1), head + " / ".join(blocks)
 
 def _is_daewun_first_half(age, dw_start_age):
     """대운 진입 후 0~4년차(전반기,천간) / 5~9년차(후반기,지지) 판정"""
