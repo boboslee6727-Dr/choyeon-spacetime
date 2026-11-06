@@ -3742,6 +3742,12 @@ def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, pur
             continue
 
         score = 70.0
+
+        if d_p in _SIPAK_DAEPAE:   # 십악대패일은 이사·개업 후보에서 제외
+            curr_date += dt_mod.timedelta(days=1)
+            continue
+
+        score = 70.0
  
         rel = get_ji_rel_set(day_ji, d_ji)
         if "충" in rel: score -= 20
@@ -4092,7 +4098,7 @@ def get_gunghap_harmony_facts(gh_engine):
 
 def get_gunghap_risk_facts(gh_engine):
     """두 사람 각자의 일주 흉살, 음양 치우침, 재성·관살 혼잡, 비겁·식상 폭주를 AI 용 팩트 문자열로 만듭니다. (shinsal_risk_facts)"""
-    ttry:
+    try:
         RISK = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕살", "의처의부", "홍염살", "괴강살", "양인살"]
         def _tags(g, j, gender):
             g = [_to_hanja(x) for x in g]
