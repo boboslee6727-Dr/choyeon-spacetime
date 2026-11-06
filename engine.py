@@ -3851,7 +3851,7 @@ class UniversalPrintableGunghap:
         if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: return "해"
         return "무"
  
-def get_spouse_palace_score(self, g, j, gender):
+    def get_spouse_palace_score(self, g, j, gender):
         """각자의 배우자궁(일지) 안정도를 0~10점으로 계산합니다. g, j 는 [년, 월, 일, 시] 순서"""
         jj = [_to_hanja_ji(x) for x in j]
         dj = jj[2]
