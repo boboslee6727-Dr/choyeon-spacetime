@@ -1465,7 +1465,7 @@ if st.session_state.get('app_running', False):
             palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
             shinsal_by_palace_parts = []
             for p_idx, p_name in palace_names.items():
-                p_raw = engine.get_general_shinsal_for_ai(p_idx, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_for_ai') else [][]
+                p_raw = engine.get_general_shinsal_for_ai(p_idx, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_for_ai') else []
                 p_clean = [re.sub(r'<[^>]+>', '', str(s)) for s in p_raw]
                 shinsal_by_palace_parts.append(f"{p_name}: {', '.join(p_clean) if p_clean else '없음'}")
             shinsal_by_palace_str = " / ".join(shinsal_by_palace_parts)
