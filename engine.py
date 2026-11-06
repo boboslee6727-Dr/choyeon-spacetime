@@ -544,7 +544,10 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None):
             if len(have) == 3:
                 lines.append(f"[방합 완성] {_pos(mem)}이(가) 모여 {nm} 기운의 방합이 완성됨")
             elif len(have) == 2:
-                lines.append(f"[방합 일부] {_pos(have)}만 있어 방합은 성립하지 않음(참고만)")
+                if mem[1] in have:
+                    lines.append(f"[방합 미완] {_pos(have)}이(가) {nm} 기운의 방합(가운데 글자 포함)을 이룸. 나머지 한 글자({[x for x in mem if x not in have][0]})가 오면 방합이 완성됨")
+                else:
+                    lines.append(f"[공협] {_pos(have)}은(는) {nm} 기운의 방합 양 끝 글자만 있어 합의 힘이 약함(참고)")
         if not lines:
             return "지지에 삼합·방합과 관련된 모임은 사실문에 없음"
         return "[지지 삼합·방합 사실] " + " / ".join(lines)
