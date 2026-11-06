@@ -782,7 +782,6 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
  
     if gj in ["甲寅", "乙卯", "丙午", "丁巳", "戊辰", "戊戌", "己未", "己丑", "庚申", "辛酉", "壬子", "癸亥"]: evil.append("간여지동")
     if gj in ["甲寅","乙巳","丁巳","戊申","辛亥"]: evil.append("고란살")
-    if gj in ["丙子","丁丑","戊寅","辛卯","壬辰","癸巳","丙午","丁未","戊申","辛酉","壬戌","癸亥"]: evil.append("음양차착")
     if gj in ["甲午", "丙戌", "戊辰", "庚辰", "壬戌", "乙巳", "丁亥", "己亥", "辛巳", "癸亥"]: evil.append("의처의부")
     if cur_j in ['寅','申','巳','亥']: evil.append("효신살")
  
@@ -797,7 +796,6 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금")
     if cur_j in ['子','午','卯','酉']: evil.append("교신성")
     if idx == 1 and gj in ["丙午", "丁未", "戊午", "戊子", "己未", "己丑"]: evil.append("육수살")
-    if gj in ["甲辰","乙巳","丙申","丁亥","戊戌","己丑","庚辰","辛巳","壬申","癸亥"]: evil.append("십악대패살")
     if cur_g in ['甲', '丙', '壬'] and cur_j in ['子', '辰']: evil.append("평두살")
     cheolsa_map = {'甲':'辰', '乙':'寅', '丙':'戌', '丁':'申', '戊':'午', '己':'辰', '庚':'寅', '辛':'戌', '壬':'申', '癸':'午'}
     if cur_j == cheolsa_map.get(dc, ""): evil.append("철사관")
@@ -812,7 +810,7 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     EVIL_PRIORITY = [
         "간여지동", "고란살", "탕화살", "비인살",
         "홍염살", "나체도화", "도화살",
-        "음양차착", "의처의부", "남연살", "여연살", "음욕살",
+        "의처의부", "남연살", "여연살", "음욕살",
         "십악대패살", "철쇄개금", "철사관", "곡각살", "육수살", "평두살",
         "현침살", "교신성", "교신", "퇴신", "복신",
     ]
@@ -842,6 +840,11 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     for e in shown_evil:
         result.append(f"<span style='color:#C62828;'>{e}</span>")
     return result
+
+def get_general_shinsal_for_ai(idx, gans, jjis, gender="남성"):
+    """AI 풀이용 신살 목록: 택일 전용 신살(십악대패살)은 뺀다. (사주표 화면용은 get_general_shinsal_filtered 그대로)"""
+    return [s for s in (get_general_shinsal_filtered(idx, gans, jjis, gender) or [])
+            if "십악대패" not in re.sub(r"<[^>]+>", "", str(s))]
 
 def get_jijanggan_full(dg, ji):
     dg, ji = _to_hanja(dg), _to_hanja(ji)
@@ -1992,7 +1995,7 @@ def get_shinsal_phase_note(shinsal_name, is_first_half):
 
 def get_dynamic_shinsal_fact_str(idx, gans, jjis, gender, is_daewun_first_half):
     """신살 목록을 계산하고, 반기별 재해석 문구가 있으면 함께 붙여서 텍스트로 반환 (연구용 4-1/4-2 전용)"""
-    raw_list = get_general_shinsal_filtered(idx, gans, jjis, gender)
+    raw_list = get_general_shinsal_for_ai(idx, gans, jjis, gender)
     if not raw_list:
         return "특이 신살 없음"
     lines = []
@@ -2008,7 +2011,7 @@ def get_dynamic_shinsal_fact_str(idx, gans, jjis, gender, is_daewun_first_half):
 def _shinsal_base_names(idx, gans, jjis, gender):
     """신살 목록 → {이름: 원문} (괄호·설명 앞의 이름만 뽑아 중복 제거)"""
     names = {}
-    for item in get_general_shinsal_filtered(idx, gans, jjis, gender) or []:
+    for item in get_general_shinsal_for_ai(idx, gans, jjis, gender) or []:
         clean = re.sub(r'<[^>]+>', '', str(item)).strip()
         base = re.split(r'[\(\[:：]', clean)[0].strip()
         if base and base not in names:
@@ -3502,7 +3505,7 @@ def get_spouse_palace_facts(ds, gans, jjis, gender):
 def get_love_shinsal_risk_facts(gans, jjis, gender):
     """연애·이성 문제와 관련된 신살(홍염·음욕·도화·간여지동·고란 등)이 어느 기둥에 있는지 AI 용 팩트 문자열로 만듭니다.
     gans, jjis : [시, 일, 월, 년] 순서"""
-    LOVE = ["홍염살", "음욕살", "도화살", "나체도화", "간여지동", "고란살", "음양차착", "의처의부", "남연살", "여연살", "비인살", "원진", "귀문"]
+    LOVE = ["홍염살", "음욕살", "도화살", "나체도화", "간여지동", "고란살", "의처의부", "남연살", "여연살", "비인살", "원진", "귀문"]
     pillar_names = ["시주", "일주", "월주", "년주"]
     found = []
     gans = [_to_hanja(g) for g in gans]
@@ -3731,6 +3734,10 @@ def get_best_moving_opening_days(start_date, end_date, user_gans, user_jjis, pur
             continue
  
         if avoid_jis and any("충" in get_ji_rel_set(pj, d_ji) for pj in avoid_jis):
+            curr_date += dt_mod.timedelta(days=1)
+            continue
+
+        if d_p in _SIPAK_DAEPAE:   # 십악대패일은 이사·개업 후보에서 제외
             curr_date += dt_mod.timedelta(days=1)
             continue
 
@@ -3983,7 +3990,7 @@ class UniversalPrintableGunghap:
         p3 = int((s3 / 10) * 100)
  
         s4 = 10
-        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음양차착", "음욕", "의처의부", "일인", "홍염"]
+        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕", "의처의부", "일인", "홍염"]
 
         def _day_pillar_evil(g, j, gender):
             # get_general_shinsal_filtered는 [시,일,월,년] 순서를 요구하므로 변환
@@ -4085,8 +4092,8 @@ def get_gunghap_harmony_facts(gh_engine):
 
 def get_gunghap_risk_facts(gh_engine):
     """두 사람 각자의 일주 흉살, 음양 치우침, 재성·관살 혼잡, 비겁·식상 폭주를 AI 용 팩트 문자열로 만듭니다. (shinsal_risk_facts)"""
-    try:
-        RISK = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음양차착", "음욕살", "의처의부", "홍염살", "괴강살", "양인살"]
+    ttry:
+        RISK = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕살", "의처의부", "홍염살", "괴강살", "양인살"]
         def _tags(g, j, gender):
             g = [_to_hanja(x) for x in g]
             j = [_to_hanja_ji(x) for x in j]
