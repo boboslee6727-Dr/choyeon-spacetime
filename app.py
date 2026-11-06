@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 88.5 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 88.6 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 88.5 Master"
+APP_VERSION = "ver 88.6 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -1456,7 +1456,7 @@ if st.session_state.get('app_running', False):
             marriage_bogeum_facts = "\n".join(_marriage_lines) if _marriage_lines else ""
         
         try:
-            shinsal_raw = engine.get_general_shinsal_filtered(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
+            shinsal_raw = engine.get_general_shinsal_for_ai(1, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_for_ai') else []
         except Exception:
             shinsal_raw = []
         shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', str(s)) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
@@ -1465,7 +1465,7 @@ if st.session_state.get('app_running', False):
             palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
             shinsal_by_palace_parts = []
             for p_idx, p_name in palace_names.items():
-                p_raw = engine.get_general_shinsal_filtered(p_idx, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_filtered') else []
+                p_raw = engine.get_general_shinsal_for_ai(p_idx, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_for_ai') else [][]
                 p_clean = [re.sub(r'<[^>]+>', '', str(s)) for s in p_raw]
                 shinsal_by_palace_parts.append(f"{p_name}: {', '.join(p_clean) if p_clean else '없음'}")
             shinsal_by_palace_str = " / ".join(shinsal_by_palace_parts)
