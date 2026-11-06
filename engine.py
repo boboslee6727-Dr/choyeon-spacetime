@@ -706,8 +706,10 @@ def get_ji_rel_set(me, target):
     me, target = _to_hanja(me), _to_hanja(target)
     if not me or not target or me == "?" or target == "?" or me == target: return "자형" if me == target and me in "辰午酉亥" else "-"
     s, r = {me, target}, []
-    if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return "방합(미완)"
-    if s in [{'申','子'}, {'子','辰'}, {'寅','午'}, {'午','戌'}, {'亥','卯'}, {'卯','未'}, {'巳','酉'}, {'酉','丑'}]: return "반합"
+    if s in [{'申','子'}, {'子','辰'}, {'寅','午'}, {'午','戌'}, {'亥','卯'}, {'卯','未'}, {'巳','酉'}, {'酉','丑'}]: r.append("반합")
+    if s in [{'亥','未'}, {'寅','戌'}, {'申','辰'}, {'巳','丑'}]: r.append("공합")
+    if s in [{'寅','卯'}, {'卯','辰'}, {'巳','午'}, {'午','未'}, {'申','酉'}, {'酉','戌'}, {'亥','子'}, {'子','丑'}]: r.append("방합(미완)")
+    if s in [{'寅','辰'}, {'巳','未'}, {'申','戌'}, {'亥','丑'}]: r.append("공협")
     if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: r.append("육합")
     if s in [{'午','亥'}, {'子','戌'}, {'丑','寅'}, {'寅','未'}, {'卯','申'}]: r.append("암합")
     if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: r.append("충")
@@ -2047,6 +2049,7 @@ def get_couple_ji_rel_facts(m_jjis, f_jjis):
     MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "서로 신경이 곤두서는 어긋남", "귀문": "서로 예민하게 엇갈림",
             "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음",
             "방합": "같은 기운으로 이어짐", "방합(미완)": "같은 기운으로 이어짐", "암합": "속으로 은근히 끌림",
+            "공합": "가운데 글자가 빠져 있어 힘이 약하게 이어짐", "공협": "가운데 글자가 빠져 있어 힘이 약하게 이어짐",
             "자형": "같은 글자라 스스로 부딪힘", "천라": "답답하게 얽힘", "지망": "답답하게 얽힘"}
 
     def _rel(a, b):
@@ -2060,8 +2063,16 @@ def get_couple_ji_rel_facts(m_jjis, f_jjis):
         return f"{a}–{b}: " + "·".join(tags) + "[" + " / ".join(MEAN.get(t, t) for t in tags) + "]"
 
     try:
+        _ms = {_to_hanja_ji(x) for x in m_jjis if _to_hanja_ji(x) in JI}
+        _fs = {_to_hanja_ji(x) for x in f_jjis if _to_hanja_ji(x) in JI}
+        _done = []
+        for _kind, _trios in (("삼합", _SAMHAP_TRIOS), ("방합", _BANGHAP_TRIOS)):
+            for _t in _trios:
+                if _t <= (_ms | _fs) and not _t <= _ms and not _t <= _fs:
+                    _done.append(f"{''.join(sorted(_t, key=JI.index))} {_kind} 완성")
+        _extra = (" / 두 분 지지를 합쳐 세 글자가 모두 모인 합: " + ", ".join(_done)) if _done else ""
         return (f"일지끼리(내면의 유대감) {_rel(m_jjis[1], f_jjis[1])} / 년지끼리(띠 겉궁합) {_rel(m_jjis[3], f_jjis[3])} / "
-                f"월지끼리 {_rel(m_jjis[2], f_jjis[2])} / 시지끼리 {_rel(m_jjis[0], f_jjis[0])}")
+                f"월지끼리 {_rel(m_jjis[2], f_jjis[2])} / 시지끼리 {_rel(m_jjis[0], f_jjis[0])}" + _extra)
     except Exception:
         return "지지 관계 정보 없음"
 
@@ -3364,6 +3375,28 @@ def analyze_love_and_marriage_patterns(bazi_dict):
     return results
 
 
+_SAMHAP_TRIOS = [{'亥','卯','未'}, {'寅','午','戌'}, {'申','子','辰'}, {'巳','酉','丑'}]
+_BANGHAP_TRIOS = [{'寅','卯','辰'}, {'巳','午','未'}, {'申','酉','戌'}, {'亥','子','丑'}]
+
+def _has_complete_hap(jj, dj):
+    """한 사람의 지지 네 글자 안에서 삼합·방합이 세 글자 모두 모였고, 그 안에 일지(dj)가 들어 있으면 True"""
+    s = set(jj)
+    for trio in _SAMHAP_TRIOS + _BANGHAP_TRIOS:
+        if trio <= s and dj in trio:
+            return True
+    return False
+
+_SAMHAP_TRIOS = [{'亥','卯','未'}, {'寅','午','戌'}, {'申','子','辰'}, {'巳','酉','丑'}]
+_BANGHAP_TRIOS = [{'寅','卯','辰'}, {'巳','午','未'}, {'申','酉','戌'}, {'亥','子','丑'}]
+
+def _has_complete_hap(jj, dj):
+    """한 사람의 지지 네 글자 안에서 삼합·방합이 세 글자 모두 모였고, 그 안에 일지(dj)가 들어 있으면 True"""
+    s = set(jj)
+    for trio in _SAMHAP_TRIOS + _BANGHAP_TRIOS:
+        if trio <= s and dj in trio:
+            return True
+    return False
+
 def get_spouse_extra_flags(g, j, gender):
     """각자 사주의 배우자궁 그릇에 영향을 주는 추가 요소(복음·卯戌합·재성/관성 부재와 쏠림).
     g, j 는 [년, 월, 일, 시] 순서. 반환: [(감점, 사실문), ...] — 점수와 풀이 글이 같은 기준을 씁니다."""
@@ -3417,9 +3450,9 @@ def get_spouse_palace_facts(ds, gans, jjis, gender):
             continue
         tags = [x.strip() for x in rel.split(",")]
         neg = [t for t in tags if t in ("충", "형", "원진", "파", "해", "귀문")]
-        pos = [t for t in tags if t in ("육합", "반합", "방합")]
+        pos = [t for t in tags if t in ("육합", "반합", "방합", "방합(미완)")]
         _MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "서로 신경이 곤두서는 어긋남", "귀문": "서로 예민하게 엇갈림",
-                 "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음", "방합": "같은 기운으로 이어짐"}
+                 "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음", "방합": "같은 기운으로 이어짐", "방합(미완)": "같은 기운으로 이어짐"}
         if neg: bad.append(f"일지({dj})–{nm}({j}): {'·'.join(neg)}[{' / '.join(_MEAN[t] for t in neg)}]")
         if pos: good.append(f"일지({dj})–{nm}({j}): {'·'.join(pos)}[{' / '.join(_MEAN[t] for t in pos)}]")
 
@@ -3807,8 +3840,10 @@ class UniversalPrintableGunghap:
         if not j1 or not j2 or j1=="?" or j2=="?": return "무"
         s = {j1, j2}
         if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: return "육합"
-        if s in [{'寅','卯'}, {'卯','辰'}, {'寅','辰'}, {'巳','午'}, {'午','未'}, {'巳','未'}, {'申','酉'}, {'酉','戌'}, {'申','戌'}, {'亥','子'}, {'子','丑'}, {'亥','丑'}]: return "방합"
+        if s in [{'寅','卯'}, {'卯','辰'}, {'巳','午'}, {'午','未'}, {'申','酉'}, {'酉','戌'}, {'亥','子'}, {'子','丑'}]: return "방합"
         if s in [{'申','子'}, {'子','辰'}, {'寅','午'}, {'午','戌'}, {'亥','卯'}, {'卯','未'}, {'巳','酉'}, {'酉','丑'}]: return "반합"
+        if s in [{'亥','未'}, {'寅','戌'}, {'申','辰'}, {'巳','丑'}]: return "공합"
+        if s in [{'寅','辰'}, {'巳','未'}, {'申','戌'}, {'亥','丑'}]: return "공협"
         if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: return "충"
         if s in [{'子','未'}, {'丑','午'}, {'寅','酉'}, {'卯','申'}, {'辰','亥'}, {'巳','戌'}]: return "원진"
         if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: return "형"
@@ -3816,7 +3851,7 @@ class UniversalPrintableGunghap:
         if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: return "해"
         return "무"
  
-    def get_spouse_palace_score(self, g, j, gender):
+def get_spouse_palace_score(self, g, j, gender):
         """각자의 배우자궁(일지) 안정도를 0~10점으로 계산합니다. g, j 는 [년, 월, 일, 시] 순서"""
         jj = [_to_hanja_ji(x) for x in j]
         dj = jj[2]
@@ -3834,7 +3869,12 @@ class UniversalPrintableGunghap:
                 if t == "충": score -= 3
                 elif t == "형": score -= 2
                 elif t in ("원진", "귀문", "파", "해"): score -= 1
-                elif t in ("육합", "반합", "방합"): plus += 1
+            # 합 가점: 육합 +1, 반합·방합(왕지 포함 두 글자) +0.5 (공합·공협은 가점 없음)
+            _lab = self.get_ji_rel(dj, oj)
+            if _lab == "육합": plus += 1
+            elif _lab in ("반합", "방합"): plus += 0.5
+        # 일지가 삼합·방합 완성(세 글자 모두)에 들어 있으면 +1
+        if _has_complete_hap(jj, dj): plus += 1
         # 일지의 십성 (남: 재성 좋음/비겁 나쁨, 여: 관성 좋음/식상 나쁨)
         try:
             ss = get_ss(_to_hanja(g[2]), dj)
@@ -3890,20 +3930,44 @@ class UniversalPrintableGunghap:
     def run_universal_logic(self):
         m_g, m_j, f_g, f_j = self.m_g, self.m_j, self.f_g, self.f_j
  
+        # 🌟 삼합·방합 완성: 남명·여명 지지 8글자를 합쳐 세 글자가 모두 모였는지 확인 (한 분 혼자 완성된 합은 제외)
+        _mset = {x for x in (_to_hanja(c) for c in m_j) if x and x != "?"}
+        _fset = {x for x in (_to_hanja(c) for c in f_j) if x and x != "?"}
+        _ilji2 = {_to_hanja(m_j[2]), _to_hanja(f_j[2])}
+        _cplt_any, _cplt_ilji = False, False
+        for _trio in _SAMHAP_TRIOS + _BANGHAP_TRIOS:
+            if _trio <= (_mset | _fset) and not _trio <= _mset and not _trio <= _fset:
+                _cplt_any = True
+                if _ilji2 <= _trio: _cplt_ilji = True   # 두 분의 일지가 모두 그 합에 들어 있음
+
+        # 🌟 삼합·방합 완성: 남명·여명 지지 8글자를 합쳐 세 글자가 모두 모였는지 확인 (한 분 혼자 완성된 합은 제외)
+        _mset = {x for x in (_to_hanja(c) for c in m_j) if x and x != "?"}
+        _fset = {x for x in (_to_hanja(c) for c in f_j) if x and x != "?"}
+        _ilji2 = {_to_hanja(m_j[2]), _to_hanja(f_j[2])}
+        _cplt_any, _cplt_ilji = False, False
+        for _trio in _SAMHAP_TRIOS + _BANGHAP_TRIOS:
+            if _trio <= (_mset | _fset) and not _trio <= _mset and not _trio <= _fset:
+                _cplt_any = True
+                if _ilji2 <= _trio: _cplt_ilji = True   # 두 분의 일지가 모두 그 합에 들어 있음
+
         il_rel = self.get_ji_rel(m_j[2], f_j[2])
         if il_rel == "육합": s1 = 25
         elif il_rel in ["방합", "반합"]: s1 = 21
+        elif il_rel in ["공합", "공협"]: s1 = 18
         elif il_rel == "무": s1 = 17
         elif il_rel in ["파", "해"]: s1 = 12
         elif il_rel in ["형", "원진"]: s1 = 8
         elif il_rel == "충": s1 = 5
         else: s1 = 17
+        if _cplt_ilji: s1 = 25   # 두 분의 일지가 삼합·방합 완성에 함께 들어 있으면 육합급
         p1 = int((s1 / 25) * 100)
  
         # 🌟 환경 조화 15점 = 년지(띠 겉궁합) 5 + 월지 5 + 시지 5 — 남명과 여명의 같은 자리끼리 비교
-        _pos5 = {"육합": 5, "방합": 4, "반합": 4, "무": 3, "파": 2, "해": 2, "형": 1, "원진": 1, "충": 0}
+        _pos5 = {"육합": 5, "방합": 4, "반합": 4, "공합": 3.2, "공협": 3.2, "무": 3, "파": 2, "해": 2, "형": 1, "원진": 1, "충": 0}
         n_rel, w_rel, si_rel = self.get_ji_rel(m_j[0], f_j[0]), self.get_ji_rel(m_j[1], f_j[1]), self.get_ji_rel(m_j[3], f_j[3])
         s2 = _pos5.get(n_rel, 3) + _pos5.get(w_rel, 3) + _pos5.get(si_rel, 3)
+        if _cplt_any and not _cplt_ilji: s2 += 2   # 일지가 아닌 자리로 삼합·방합이 완성되면 +2 (15점 만점 안에서)
+        s2 = min(15, s2)
         p2 = int(round((s2 / 15) * 100))
  
         m_ec, f_ec = self.count_elements(m_g, m_j), self.count_elements(f_g, f_j)
@@ -3916,7 +3980,7 @@ class UniversalPrintableGunghap:
         p3 = int((s3 / 10) * 100)
  
         s4 = 10
-        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음양", "음양차착", "음욕", "의처의부", "일인", "홍염"]
+        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음양차착", "음욕", "의처의부", "일인", "홍염"]
 
         def _day_pillar_evil(g, j, gender):
             # get_general_shinsal_filtered는 [시,일,월,년] 순서를 요구하므로 변환
@@ -4116,7 +4180,7 @@ def _delivery_rel_tags(a, b):
     if a == b:
         return ['자형'] if a in "辰午酉亥" else ['same']
     r = get_ji_rel_set(a, b)
-    return [] if r == "-" else [x.strip() for x in r.split(",")]
+    return [] if r == "-" else [x.strip().replace("방합(미완)", "방합") for x in r.split(",")]
 
 def _delivery_rel_effect(a, b, table, same_bonus=1.0):
     tags = _delivery_rel_tags(a, b)
