@@ -3483,6 +3483,7 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
         return head + "\n" + why
 
     lines = []
+    year_map = {}
     for (pos, b), modes in targets.items():
         enter, out = [], []
         for s in JJG[b]:
@@ -3519,6 +3520,7 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
                 why = "축술미 삼형 성립"
             if why:
                 hits.append(f"{y}년({br}, {why}, 절기상 {br}월 즉 {MONTH_OF[br]} 무렵에 실행)")
+                year_map.setdefault((y, br), []).append(f"{pos} {b}")
 
         now = []
         for nm, v in (("현재 대운", dw_j), ("올해 세운", sewun_j), ("이번 달 월운", wolun_j)):
@@ -3535,7 +3537,11 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
             f"앞으로 10년 중 열리는 해: {'; '.join(hits) if hits else '없음'}. "
             f"지금 상태: {', '.join(now) if now else '해당 없음'}"
         )
-    return head + "\n" + "\n".join(lines) + "\n" + foot
+    summ = []
+    for (y, br), ps in sorted(year_map.items()):
+        summ.append(f"{y}년({br}): " + (f"{ps[0]} 창고 하나만 열림" if len(ps) == 1 else " 와 ".join(ps) + " 두 창고가 함께 열림"))
+    ysum = ("\n[연도별 정리 — 이 정리에 적히지 않은 창고는 그 해에 열리지 않음] " + " / ".join(summ)) if summ else ""
+    return head + "\n" + "\n".join(lines) + ysum + "\n" + foot
 
 def analyze_super_wealth_patterns(bazi_dict):
     yg, yj = bazi_dict.get('year_g'), bazi_dict.get('year_j')
