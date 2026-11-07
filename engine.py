@@ -3092,6 +3092,79 @@ def get_hapban_warning_facts(gans, jjis, ds, gender, haeng_list=None):
     except Exception:
         return "합반 경고 해당 없음"
 
+# ==============================================================================
+# 🆕 [책 4-3) 상관의 작용] 상관상진 · 파료상관 팩트 (ver 88.8)
+#   - 위치: get_hapban_warning_facts 함수 바로 아래
+#   - 신강·신약은 엔진의 _judge_strength 를 그대로 사용 (중화는 판단하지 않음)
+#   - 십성은 원국 천간 3개(시·월·년, 일간 제외) + 지지 본기 4개(책 도표 기준)로 센다
+#   - gans, jjis 순서: [시, 일, 월, 년] / haeng_list: [(이름, 천간, 지지), ...]
+# ==============================================================================
+def _ten_god_slots(ds, gs, js):
+    slots = []
+    for i in (0, 2, 3):
+        if gs[i] not in ("?", "-", " ", ""):
+            slots.append(get_ss(ds, gs[i]))
+    for j in js:
+        if j in _BONGI_BOOK:
+            slots.append(get_ss(ds, _BONGI_BOOK[j]))
+    return slots
+ 
+def _haeng_ten_gods(ds, hg, hj):
+    out = []
+    hg, hj = _to_hanja(hg), _to_hanja_ji(hj)
+    if hg and hg not in ("?", "-", " "):
+        out.append(get_ss(ds, hg))
+    if hj in _BONGI_BOOK:
+        out.append(get_ss(ds, _BONGI_BOOK[hj]))
+    return out
+ 
+def get_sangjin_paryo_facts(gans, jjis, ds, gender, haeng_list=None):
+    """상관상진(신약 + 상관 많음 + 관성 없음) / 파료상관(신강 + 상관 있음 + 인성이 눌러 막음) 팩트"""
+    try:
+        gs = [_to_hanja(g) for g in gans]
+        js = [_to_hanja_ji(j) for j in jjis]
+        ds = _to_hanja(ds)
+        counts = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
+        for c in gs + js:
+            oh = get_color(c)
+            if oh in counts: counts[oh] += 1
+        mb, db = js[2], js[1]
+        strength = _judge_strength(counts, mb, ds, db)[0]
+        if strength == "중화":
+            return "상관상진·파료상관 해당 없음(일간의 강약이 팽팽해 판단하지 않음)"
+        slots = _ten_god_slots(ds, gs, js)
+        sang = slots.count("상관")
+        siksang = sang + slots.count("식신")
+        gwan = slots.count("정관") + slots.count("편관")
+        inseong = slots.count("정인") + slots.count("편인")
+        haeng = list(haeng_list or [])
+        lines = []
+ 
+        # ① 상관상진: 신약 + 상관 많음 + 관성 없음
+        if strength == "신약" and sang >= 1 and siksang >= 2 and gwan == 0:
+            lines.append(f"[상관상진 구조] 일간이 약한데 상관·식상이 많고(상관 {sang}개·식상 합 {siksang}개) 관성이 하나도 없음 — 상관의 기운을 눌러 주는 인성·비겁 운에 크게 풀리는 구조")
+            for (hn, hg, hj) in haeng:
+                tg = _haeng_ten_gods(ds, hg, hj)
+                if any(t in ("정관", "편관") for t in tg):
+                    lines.append(f"[상관상진 {hn}] {hn}에 관성이 들어와 정돈된 구조가 흔들리기 쉬운 시기(관성 운을 만나면 길한 구조가 흉으로 바뀌기 쉬움)")
+                elif any(t in ("정인", "편인", "비견", "겁재") for t in tg):
+                    lines.append(f"[상관상진 {hn}] {hn}이 인성·비겁 운이라 상관의 기운이 정리되고 힘이 붙는 시기")
+                elif any(t in ("식신", "상관") for t in tg):
+                    lines.append(f"[상관상진 {hn}] {hn}이 식상 운이라 약한 일간의 기운이 더 빠지기 쉬운 시기")
+ 
+        # ② 파료상관: 신강 + 상관 있음 + 인성이 상관을 눌러 막음
+        if strength == "신강" and sang >= 1:
+            if inseong >= 3:
+                lines.append(f"[파료상관 구조] 일간이 강해 상관(재능·표현)을 써야 하는데 인성이 {inseong}개로 많아 상관의 길이 눌려 막히기 쉬운 구조")
+            for (hn, hg, hj) in haeng:
+                tg = _haeng_ten_gods(ds, hg, hj)
+                if any(t in ("정인", "편인") for t in tg):
+                    lines.append(f"[파료상관 {hn}] {hn}이 인성 운이라 상관의 길이 눌려 재능과 표현이 막히기 쉬운 시기")
+ 
+        return "\n".join(lines) if lines else "상관상진·파료상관 해당 없음"
+    except Exception:
+        return "상관상진·파료상관 해당 없음"
+
 def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     dw_j = _to_hanja(dw_j)
     if dw_j not in ['辰', '戌', '丑', '未']:
