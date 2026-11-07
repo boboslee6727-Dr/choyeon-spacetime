@@ -1552,6 +1552,15 @@ if st.session_state.get('app_running', False):
         cur_sewun_gan_val = engine.GAN[cur_sewun_base % 10]
         cur_sewun_ji_val = engine.JI[cur_sewun_base % 12]
 
+        # 🆕 병약신 · 상관견관 팩트 (원국 + 현재 대운 + 올해 세운)
+        try:
+            _haeng = [("현재 대운", dw_g_cur, dw_j_cur), (f"{target_year_val}년 세운", cur_sewun_gan_val, cur_sewun_ji_val)]
+            byeongyak_facts = engine.get_byeongyaksin_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds, _haeng)
+            sanggwan_gwan_facts = engine.get_sanggwan_gyeongwan_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds, gender, _haeng)
+        except Exception:
+            byeongyak_facts = "병약신 해당 없음"
+            sanggwan_gwan_facts = "상관견관 해당 없음"
+
         ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db, gender)
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
         wolun_first_half, wolun_second_half = engine.get_wolun_half_periods(target_year_val, curr_m) if hasattr(engine, 'get_wolun_half_periods') else ("전반기(절입일~중기 전)", "후반기(중기~다음 절입일 전)")
@@ -1853,6 +1862,8 @@ if st.session_state.get('app_running', False):
             "health_cognitive_facts": health_cognitive_str,
             "health_siksang_facts": health_siksang_str,
             "health_samhyeong_facts": health_samhyeong_facts,
+            "byeongyak_facts": byeongyak_facts,
+            "sanggwan_gwan_facts": sanggwan_gwan_facts,
             "jaeseong_status_fact_str": jaeseong_status_fact_str,
             "samja_comb_facts": samja_comb_facts,
             "wealth_earth_facts": wealth_earth_facts,
