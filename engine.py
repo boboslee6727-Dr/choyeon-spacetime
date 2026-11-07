@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 88.5 - 상품별 정리판)
+# engine.py (ver 88.7 - 상품별 정리판)
 # 구성 : PART 0 공통 상수/유틸 → PART 1 공통 명리 코어 → PART 2 [1-x 개인 사주]
 #        → PART 3 [2-x 테마별 상담] → PART 4 [3-x 궁합·택일]
 #        ※ 새 기능은 해당 상품 섹션 맨 뒤에 이어서 추가하면 됩니다.
@@ -1789,7 +1789,7 @@ def get_daewun_wave_compare(m_info, f_info, m_yong_text, f_yong_text, start_age=
                 else:
                     a = ss
                 h = 0.45 * a + 0.30 * un + 0.25 * sh
-                wv[by + age - 1] = max(-1.0, min(1.0, (h - 0.6) / 0.3))   # -1(바닥) ~ +1(꼭대기)
+                wv[by + age - 1] = max(-1.0, min(1.0, (h - 0.55) / 0.3))   # -1(바닥) ~ +1(꼭대기)
         return wv
 
     try:
@@ -1805,7 +1805,7 @@ def get_daewun_wave_compare(m_info, f_info, m_yong_text, f_yong_text, start_age=
         return a + b + bonus
 
     avg = sum(_pair(mw[y], fw[y]) for y in years) / len(years)
-    score = max(0.0, min(10.0, 5 + 2.5 * avg))
+    score = max(0.0, min(10.0, 6.8 + 3.0 * avg))
 
     def _lab(v):
         return "높음" if v > 0.25 else ("낮음" if v < -0.25 else "보통")
@@ -4190,7 +4190,7 @@ class UniversalPrintableGunghap:
         p0 = int(round(s0 / 20 * 100))
 
         # 기본 15 + 배우자궁 20 + 일지 25 + 환경 15 + 보완 10 + 특수 기운 5 + 대운 10 = 100
-        BASE = 15
+        BASE = 20
         sub_total = BASE + s0 + s1 + s2 + s3 + (s4 * 0.5) + s5
         self.final_score = max(40, min(100, int(sub_total)))
 
