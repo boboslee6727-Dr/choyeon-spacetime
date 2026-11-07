@@ -3021,6 +3021,77 @@ def get_sanggwan_gyeongwan_facts(gans, jjis, ds, gender, haeng_list=None):
     except Exception:
         return "상관견관 해당 없음"
 
+# ==============================================================================
+# 🆕 [책 4-1) 개고설] 합반(合絆) 경고 (ver 88.8)
+#   - 위치: get_sanggwan_gyeongwan_facts 함수 바로 아래 (또는 get_hang_un_vaults_str 위)
+#   - 창고(辰戌丑未)가 충·형으로 열릴 때, 창고 속 글자가 천간(일간 포함)과 천간합으로 묶여 있으면 경고
+#   - gans, jjis 순서: [시, 일, 월, 년]  /  haeng_list: [(이름, 천간, 지지), ...]
+# ==============================================================================
+_CHEONGAN_HAP = {'甲': '己', '己': '甲', '乙': '庚', '庚': '乙', '丙': '辛', '辛': '丙', '丁': '壬', '壬': '丁', '戊': '癸', '癸': '戊'}
+_VAULT_CLASH = {'辰': '戌', '戌': '辰', '丑': '未', '未': '丑'}
+_VAULT_HYUNG = {'丑', '戌', '未'}
+_GAN_PALACE = ["시간", "일간", "월간", "년간"]
+ 
+def _vault_opens(vj, oj):
+    """창고 글자 vj 가 지지 oj 와 충 또는 형으로 부딪치는가 → '충' / '형' / ''"""
+    if _VAULT_CLASH.get(vj) == oj: return "충"
+    if vj in _VAULT_HYUNG and oj in _VAULT_HYUNG and oj != vj: return "형"
+    return ""
+ 
+def _yukchin_of(gender, ss):
+    if ss in ("비견", "겁재"): return "형제·동료"
+    if ss in ("정인", "편인"): return "어머니·학업"
+    if ss in ("식신", "상관"): return "자녀·표현" if gender == "여성" else "표현·장모"
+    if ss in ("정재", "편재"): return "아버지·재물" if gender == "여성" else "아내·재물"
+    if ss in ("정관", "편관"): return "남편·직장" if gender == "여성" else "자녀·직장"
+    return "해당 육친"
+ 
+def get_hapban_warning_facts(gans, jjis, ds, gender, haeng_list=None):
+    """창고가 열릴 때(충·형) 창고 속 글자가 천간과 합으로 묶여 있으면(합반) 육친·처신 경고 팩트를 만듭니다."""
+    try:
+        gs = [_to_hanja(g) for g in gans]
+        js = [_to_hanja_ji(j) for j in jjis]
+        ds = _to_hanja(ds)
+        PAL = ["시주", "일주", "월주", "년주"]
+        lines = []
+ 
+        def _pair_lines(tag, vault_label, vj, how_text):
+            for x in [c for c in JIJANGGAN.get(vj, []) if c != "-"]:
+                partner = _CHEONGAN_HAP.get(x)
+                for p in range(4):
+                    if gs[p] not in ("?", "-", " ") and gs[p] == partner:
+                        ss = get_ss(ds, x)
+                        who = "일간" if p == 1 else _GAN_PALACE[p]
+                        lines.append(f"[합반 경고·{tag}] {vault_label} {vj} 창고가 {how_text} 열리는데, 창고 속 {x}({ss})이 {who} {partner}과 합으로 묶여 있음 — {_yukchin_of(gender, ss)} 쪽 인연이 흔들리거나 처신에 어려움이 생기기 쉬움")
+ 
+        # ① 원국 안에서 이미 열려 있는 창고
+        for i, vj in enumerate(js):
+            if vj not in _VAULT_CLASH: continue
+            for k, oj in enumerate(js):
+                if k == i or oj in ("?", "-", " ", ""): continue
+                how = _vault_opens(vj, oj)
+                if how:
+                    _pair_lines("원국", f"{PAL[i]}", vj, f"{PAL[k]} {oj}({how})에 부딪혀")
+                    break
+        # ② 행운(대운·세운)이 원국 창고를 열 때 / 행운 자신이 창고일 때 원국 지지가 열 때
+        for (hn, hg, hj) in (haeng_list or []):
+            hj = _to_hanja_ji(hj)
+            for i, vj in enumerate(js):
+                if vj in _VAULT_CLASH:
+                    how = _vault_opens(vj, hj)
+                    if how:
+                        _pair_lines(hn, f"원국 {PAL[i]}", vj, f"{hn} {hj}({how})에 부딪혀")
+            if hj in _VAULT_CLASH:
+                for k, oj in enumerate(js):
+                    how = _vault_opens(hj, oj) if oj not in ("?", "-", " ", "") else ""
+                    if how:
+                        _pair_lines(hn, f"{hn}", hj, f"원국 {PAL[k]} {oj}({how})에 부딪혀")
+                        break
+        lines = list(dict.fromkeys(lines))
+        return "\n".join(lines) if lines else "합반 경고 해당 없음"
+    except Exception:
+        return "합반 경고 해당 없음"
+
 def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     dw_j = _to_hanja(dw_j)
     if dw_j not in ['辰', '戌', '丑', '未']:
