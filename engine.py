@@ -3503,6 +3503,8 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
         won = ""
         if '충' in modes and CHUNG[b] in (mj, hj):
             won = f" 원국에 이미 {CHUNG[b]}가 있어 원국지지충 상태이며 해당 글자가 다시 들어오는 운에 충발함."
+        if '형' in modes and SAMHYUNG <= set(jjis):
+            won += " 원국에 이미 丑·戌·未 세 글자가 모두 있어 삼형이 갖춰진 상태이며, 이 창고와 다른 글자(丑·戌·未)가 행운에서 들어올 때마다 창고가 다시 흔들려 열림."
 
         hits = []
         for y in range(curr_year, curr_year + 10):
