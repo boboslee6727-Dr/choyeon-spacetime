@@ -2137,7 +2137,7 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None, ilun_j=Non
         results.append(f"⚠️ [원국 인사신(寅巳申) 가형(假刑) 상태] 원국에 {','.join(won_in_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 갑작스러운 변동과 부딪힘에 유의.")
  
     if len(won_sul_present) == 3:
-        results.append("🔥 [원국 축술미(丑戌未) 삼형살 완성] 묘고의 충돌, 재물·건강·인간관계의 대대적 재편 및 정교한 조정 에너지가 내재됨.")
+        results.append("🔥 [원국 축술미(丑戌未) 삼형살 완성] 원국에 이미 갖춰진 바탕으로, 그해 운의 글자와는 별개로 평소 깔려 있음(재물·건강·인간관계의 재편 및 정교한 조정 에너지가 내재됨). 운의 글자가 丑·戌·未일 때만 다시 흔들림.")
     elif len(won_sul_present) == 2:
         missing = list(sul_set - won_sul_present)[0]
         results.append(f"⚠️ [원국 축술미(丑戌未) 가형(假刑) 상태] 원국에 {','.join(won_sul_present)} 보유 중. 운에서 '{missing}'이 들어올 때 삼형살이 완성되니 재물·건강 조정 주의 요망.")
@@ -2157,7 +2157,10 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None, ilun_j=Non
  
         if len(won_sul_present) == 2 and sul_set.issubset(combined_set) and u_j in sul_set:
             results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 완성] {u_type} 지지({u_j})가 기폭제가 되어 축술미 삼형살 발동!")
- 
+
+        if len(won_sul_present) == 3 and u_j in sul_set:
+            results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 재발동] 원국에 삼형이 이미 갖춰진 상태에서 {u_type} 지지({u_j})가 같은 계열이라 삼형이 다시 크게 흔들림!")
+
     return " / ".join(results) if results else "삼형살(인사신/축술미) 특이 파동 없음"
 
 _UN_CHUNG = {frozenset(p) for p in ["子午", "丑未", "寅申", "卯酉", "辰戌", "巳亥"]}
