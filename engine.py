@@ -2899,6 +2899,128 @@ def check_vault_status(base_gans, base_jjis, attacker_ji):
                     results.append(f"💎 [개고(開庫) 발현] {ji} 금고가 열려 지장간의 숨은 보물이 세상에 드러납니다.")
     return results
 
+# ==============================================================================
+# 🆕 [책 4. 기타 간명법] 병약신(病藥神) · 상관견관(傷官見官) 팩트 (ver 88.7)
+#   - 위치: check_vault_status 함수 바로 아래
+#   - gans, jjis 순서는 엔진 공통: [시, 일, 월, 년]
+#   - haeng_list: 행운(대운·세운 등) [(이름, 천간, 지지), ...]  없으면 원국만 봄
+# ==============================================================================
+_BYEONGYAK_TABLE = [
+    # (오행, 국세 묶음들, 병 오행, 극을 받는 천간, 약신 천간, 약신 오행)
+    ("목", [{'亥', '卯', '未'}, {'寅', '卯', '辰'}], "토", ['戊', '己'], '庚', "금"),
+    ("화", [{'寅', '午', '戌'}, {'巳', '午', '未'}], "금", ['庚', '辛'], '壬', "수"),
+    ("토", [{'辰', '戌', '丑', '未'}],               "수", ['壬', '癸'], '甲', "목"),
+    ("금", [{'巳', '酉', '丑'}, {'申', '酉', '戌'}], "목", ['甲', '乙'], '丁', "화"),
+    ("수", [{'申', '子', '辰'}, {'亥', '子', '丑'}], "화", ['丙', '丁'], '戊', "토"),
+]
+_PALACE4 = ["시주", "일주", "월주", "년주"]
+_PALACE_MEAN = {"시주": "말년·자녀", "일주": "본인·배우자", "월주": "부모·직장·사회", "년주": "조상·어린 시절"}
+ 
+def get_byeongyaksin_facts(gans, jjis, ds, haeng_list=None):
+    """책 '병약신': 지지에 국세(합국)가 이루어지면 그 오행이 천간의 극제천간을 친다(병).
+    병을 풀어 주는 약신이 천간·지장간·행운에 있으면 흉이 줄고, 없으면 병중무구."""
+    try:
+        gs = [_to_hanja(g) for g in gans]
+        js = [_to_hanja(j) for j in jjis]
+        ds = _to_hanja(ds)
+        base_js = {j for j in js if j not in ("?", "-", " ")}
+        base_gs = [g for g in gs if g not in ("?", "-", " ")]
+        haeng_list = haeng_list or []
+        lines = []
+        for (oh, sets, byung_oh, gje, yak, yak_oh) in _BYEONGYAK_TABLE:
+            for st in sets:
+                nm = "·".join(sorted(st, key=lambda x: JI.index(x)))
+                if st <= base_js:
+                    when = "원국"
+                    add_g, add_j = [], []
+                else:
+                    when = None
+                    for (hn, hg, hj) in haeng_list:
+                        hj = _to_hanja(hj); hg = _to_hanja(hg)
+                        if st <= (base_js | {hj}) and hj in st:
+                            when = hn; add_g, add_j = [hg], [hj]; break
+                    if when is None:
+                        continue
+                # 극을 받는 천간 (일간은 체신이라 대상에서 제외: 시·월·년 천간만)
+                hit = []
+                for i in (0, 2, 3):
+                    g = gs[i]
+                    if g in gje:
+                        hit.append(f"{_PALACE4[i]} {g}({get_ss(ds, g)}, {_PALACE_MEAN[_PALACE4[i]]})")
+                head = f"[{when} {oh}({nm}) 국세]"
+                if not hit:
+                    lines.append(f"{head} 국세는 이루어졌으나 극을 받는 천간({'·'.join(gje)})이 없어 병으로 보지 않음")
+                    continue
+                # 약신 찾기: 원국 천간(일간 포함) + 원국 지장간 + 행운 간지
+                where = []
+                for i, g in enumerate(gs):
+                    if g == yak: where.append(f"{_PALACE4[i]} 천간")
+                for i, j in enumerate(js):
+                    if j in JIJANGGAN and yak in JIJANGGAN[j]: where.append(f"{_PALACE4[i]} 지장간")
+                for hg in add_g:
+                    if hg == yak: where.append(f"{when} 천간")
+                for hj in add_j:
+                    if hj in JIJANGGAN and yak in JIJANGGAN[hj]: where.append(f"{when} 지장간")
+                for (hn, hg, hj) in haeng_list:
+                    if hn != when and (_to_hanja(hg) == yak or yak in JIJANGGAN.get(_to_hanja(hj), [])):
+                        where.append(f"{hn}")
+                where = list(dict.fromkeys(where))
+                if where:
+                    lines.append(f"{head} {oh} 기운이 {byung_oh} 기운을 치는 병: " + ", ".join(hit)
+                                 + f" / 약신 {yak}({yak_oh})이 {', '.join(where)}에 있어 흉화를 면하거나 크게 줄어듦")
+                else:
+                    lines.append(f"{head} {oh} 기운이 {byung_oh} 기운을 치는 병: " + ", ".join(hit)
+                                 + f" / 약신 {yak}({yak_oh})이 원국·행운 어디에도 없어 병중무구(병은 있는데 풀어 줄 약이 없음) — 해당 십성과 육친, 그리고 {byung_oh}에 해당하는 몸의 기운을 조심할 것")
+        return "\n".join(lines) if lines else "병약신 해당 없음(지지에 완성된 국세가 없음)"
+    except Exception as e:
+        return "병약신 해당 없음"
+ 
+# 상관견관: 지지 본기는 책 도표 기준(부음포양: 子壬 亥癸 午丙 巳丁)
+_BONGI_BOOK = {'子':'壬','丑':'己','寅':'甲','卯':'乙','辰':'戊','巳':'丁','午':'丙','未':'己','申':'庚','酉':'辛','戌':'戊','亥':'癸'}
+ 
+def is_sanggwan_gyeongwan_pillar(ds, g, j):
+    """간지 한 기둥이 상관견관인가: 천간과 지지 본기가 (상관, 정관) 한 쌍을 이룸 (책 도표 24개)"""
+    ds, g, j = _to_hanja(ds), _to_hanja(g), _to_hanja(j)
+    if g in ("?", "-", " ") or j not in _BONGI_BOOK: return False
+    return {get_ss(ds, g), get_ss(ds, _BONGI_BOOK[j])} == {"상관", "정관"}
+ 
+def get_sanggwan_gyeongwan_facts(gans, jjis, ds, gender, haeng_list=None):
+    """책 '상관견관': 상관이 정관을 극하는 구조. 천간·지지 한 기둥이 도표에 해당하면 구조 성립,
+    지지 지장간 속에 상관과 정관이 함께 있으면 '형태'. 행운 간지도 같은 방식으로 봄."""
+    try:
+        gs = [_to_hanja(g) for g in gans]
+        js = [_to_hanja(j) for j in jjis]
+        ds = _to_hanja(ds)
+        lines = []
+        for i in range(4):
+            g, j = gs[i], js[i]
+            if g in ("?", "-", " ") or j in ("?", "-", " "): continue
+            if is_sanggwan_gyeongwan_pillar(ds, g, j):
+                lines.append(f"[원국 상관견관 성립] {_PALACE4[i]} {g}{j}: 천간 {g}({get_ss(ds, g)})과 지지 {j}의 기운 {_BONGI_BOOK[j]}({get_ss(ds, _BONGI_BOOK[j])})이 한 기둥에서 만남 — {_PALACE_MEAN[_PALACE4[i]]} 자리")
+            else:
+                jg = [x for x in JIJANGGAN.get(j, []) if x != "-"]
+                sg = [x for x in jg if get_ss(ds, x) == "상관"]
+                gw = [x for x in jg if get_ss(ds, x) == "정관"]
+                if sg and gw:
+                    lines.append(f"[원국 상관견관 형태] {_PALACE4[i]} {j}의 지장간 속에 상관({sg[0]})과 정관({gw[0]})이 함께 들어 있음 — {_PALACE_MEAN[_PALACE4[i]]} 자리(속으로 품은 형태라 구조 성립보다 약함)")
+        for (hn, hg, hj) in (haeng_list or []):
+            if is_sanggwan_gyeongwan_pillar(ds, hg, hj):
+                lines.append(f"[{hn} 상관견관] {hn} 간지 {_to_hanja(hg)}{_to_hanja(hj)}가 상관견관 기둥 — 그 시기에 구조가 건드려짐")
+        if not lines:
+            return "상관견관 해당 없음"
+        # 관살태과면 상관이 오히려 병을 제거 (책: 관살태과에는 상관이 제거기병)
+        gw_cnt = sum(1 for k in range(4) if k != 1 and gs[k] not in ("?", "-", " ") and get_ss(ds, gs[k]) in ("정관", "편관"))
+        gw_cnt += sum(1 for j in js if j in _BONGI_BOOK and get_ss(ds, _BONGI_BOOK[j]) in ("정관", "편관"))
+        if gw_cnt >= 4:
+            lines.append("※ 관성(정관·편관)이 매우 많은 사주라 상관이 오히려 관성의 지나친 압박을 덜어 주는 역할도 함 — 흉하다고만 단정하지 말 것")
+        if gender == "여성":
+            lines.append("※ 여명의 상관견관 풀이 방향: 배우자 인연이 흔들리거나 혼인·자녀 인연의 시기가 어긋나기 쉬우므로 서로 존중하는 대화로 보완")
+        else:
+            lines.append("※ 남명의 상관견관 풀이 방향: 직장·직업을 옮기거나 일의 자리가 자주 바뀌기 쉬우므로 한 분야를 오래 다지는 것이 보완")
+        return "\n".join(lines)
+    except Exception:
+        return "상관견관 해당 없음"
+
 def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     dw_j = _to_hanja(dw_j)
     if dw_j not in ['辰', '戌', '丑', '未']:
