@@ -1849,6 +1849,7 @@ if st.session_state.get('app_running', False):
             "second_half_period": seun_second_half if "1-2" in u_product else re.sub(r'\d{4}년 ', '', wolun_second_half),
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1]),
             "samhyung_potential_facts": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
+            "samhyung_sewun_facts": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12]),
             "ohang_supply_str": engine.get_ohang_deficiency_supply_str(counts, [
                 ("대운", dw_g_cur, dw_j_cur, engine._is_daewun_first_half(age, current_daewun_age)),
                 ("세운", engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], engine._is_sewun_first_half(_now_kst)),
