@@ -2949,8 +2949,7 @@ def get_byeongyaksin_facts(gans, jjis, ds, haeng_list=None):
                         hit.append(f"{_PALACE4[i]} {g}({get_ss(ds, g)}, {_PALACE_MEAN[_PALACE4[i]]})")
                 head = f"[{when} {oh}({nm}) 국세]"
                 if not hit:
-                    lines.append(f"{head} 국세는 이루어졌으나 극을 받는 천간({'·'.join(gje)})이 없어 병으로 보지 않음")
-                    continue
+                    continue   # 극을 받는 천간이 없으면 병이 아니므로 글감에 넣지 않음
                 # 약신 찾기: 원국 천간(일간 포함) + 원국 지장간 + 행운 간지
                 where = []
                 for i, g in enumerate(gs):
@@ -3055,14 +3054,14 @@ def get_hapban_warning_facts(gans, jjis, ds, gender, haeng_list=None):
         PAL = ["시주", "일주", "월주", "년주"]
         lines = []
  
+        found = []   # (tag, 부딪힌 설명, 창고 글자, 십성, 천간 글자, 천간 자리, 창고 이름)
+ 
         def _pair_lines(tag, vault_label, vj, how_text):
             for x in [c for c in JIJANGGAN.get(vj, []) if c != "-"]:
                 partner = _CHEONGAN_HAP.get(x)
                 for p in range(4):
                     if gs[p] not in ("?", "-", " ") and gs[p] == partner:
-                        ss = get_ss(ds, x)
-                        who = "일간" if p == 1 else _GAN_PALACE[p]
-                        lines.append(f"[합반 경고·{tag}] {vault_label} {vj} 창고가 {how_text} 열리는데, 창고 속 {x}({ss})이 {who} {partner}과 합으로 묶여 있음 — {_yukchin_of(gender, ss)} 쪽 인연이 흔들리거나 처신에 어려움이 생기기 쉬움")
+                        found.append((tag, how_text, x, get_ss(ds, x), partner, "일간" if p == 1 else _GAN_PALACE[p], vault_label))
  
         # ① 원국 안에서 이미 열려 있는 창고
         for i, vj in enumerate(js):
@@ -3087,6 +3086,15 @@ def get_hapban_warning_facts(gans, jjis, ds, gender, haeng_list=None):
                     if how:
                         _pair_lines(hn, f"{hn}", hj, f"원국 {PAL[k]} {oj}({how})에 부딪혀")
                         break
+        # 같은 내용은 한 줄로 합치기 (같은 부딪힘·같은 창고 속 글자·같은 천간 글자)
+        merged = {}
+        for (tag, how_text, x, ss, partner, who, vlabel) in found:
+            key = (tag, how_text, x, ss, partner)
+            d = merged.setdefault(key, {"vl": [], "who": []})
+            if vlabel not in d["vl"]: d["vl"].append(vlabel)
+            if who not in d["who"]: d["who"].append(who)
+        for (tag, how_text, x, ss, partner), d in merged.items():
+            lines.append(f"[합반 경고·{tag}] {'·'.join(d['vl'])} 창고가 {how_text} 열리는데, 창고 속 {x}({ss})이 {'·'.join(d['who'])} {partner}과 합으로 묶여 있음 — {_yukchin_of(gender, ss)} 쪽 인연이 흔들리거나 처신에 어려움이 생기기 쉬움")
         lines = list(dict.fromkeys(lines))
         return "\n".join(lines) if lines else "합반 경고 해당 없음"
     except Exception:
@@ -3142,7 +3150,7 @@ def get_sangjin_paryo_facts(gans, jjis, ds, gender, haeng_list=None):
  
         # ① 상관상진: 신약 + 상관 많음 + 관성 없음
         if strength == "신약" and sang >= 1 and siksang >= 2 and gwan == 0:
-            lines.append(f"[상관상진 구조] 일간이 약한데 상관·식상이 많고(상관 {sang}개·식상 합 {siksang}개) 관성이 하나도 없음 — 상관의 기운을 눌러 주는 인성·비겁 운에 크게 풀리는 구조")
+            lines.append(f"[상관상진 구조] 일간이 약한데 상관·식상이 많고(상관 {sang}개·식상 합 {siksang}개) 겉으로 드러난 관성(천간·지지 본기)이 하나도 없음 — 상관의 기운을 눌러 주는 인성·비겁 운에 크게 풀리는 구조")
             for (hn, hg, hj) in haeng:
                 tg = _haeng_ten_gods(ds, hg, hj)
                 if any(t in ("정관", "편관") for t in tg):
@@ -3164,7 +3172,7 @@ def get_sangjin_paryo_facts(gans, jjis, ds, gender, haeng_list=None):
         return "\n".join(lines) if lines else "상관상진·파료상관 해당 없음"
     except Exception:
         return "상관상진·파료상관 해당 없음"
-
+ 
 def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     dw_j = _to_hanja(dw_j)
     if dw_j not in ['辰', '戌', '丑', '未']:
