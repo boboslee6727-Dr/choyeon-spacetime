@@ -752,8 +752,9 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     noble, ausp, evil = [], [], []
  
     if cur_j in {'甲':'未丑','乙':'申子','丙':'酉亥','丁':'酉亥','戊':'未丑','己':'申子','庚':'未丑','辛':'午寅','壬':'卯巳','癸':'卯巳'}.get(dc,""): noble.append("천을귀인")
-    if cur_j == mj: noble.append("월덕귀인")
-    if cur_j in {'甲':'子午','乙':'子午','丙':'卯酉','丁':'卯酉','戊':'辰戌丑未','己':'辰戌丑未','庚':'寅亥','辛':'寅亥','壬':'巳申','癸':'巳申'}.get(dc,""): noble.append("태극귀인")
+    _WD = {'寅':'丙','午':'丙','戌':'丙','巳':'庚','酉':'庚','丑':'庚','申':'壬','子':'壬','辰':'壬','亥':'甲','卯':'甲','未':'甲'}
+    if cur_g == _WD.get(mj, ""): noble.append("월덕귀인")
+    if cur_j in {'甲':'子午','乙':'子午','丙':'卯酉','丁':'卯酉','戊':'辰戌','己':'丑未','庚':'寅亥','辛':'寅亥','壬':'巳申','癸':'巳申'}.get(dc,"") and idx in (1, 3): noble.append("태극귀인")
     if cur_j in {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}.get(dc,""): noble.append("천록귀인")
     if cur_j in {'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'}.get(dc,""): noble.append("문창귀인")
     if cur_j in {'甲':'亥','乙':'子','丙':'寅','戊':'寅','丁':'卯','己':'卯','庚':'巳','辛':'午','壬':'申','癸':'酉'}.get(dc,""): noble.append("문곡귀인")
@@ -766,39 +767,35 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     if cur_j in {'甲':'辰','乙':'巳','丙':'未','戊':'未','丁':'申','己':'申','庚':'戌','辛':'亥','壬':'丑','癸':'寅'}.get(dc,""): ausp.append("금여록")
     if gj in ["甲寅", "丙辰", "戊辰", "庚辰", "壬戌"]: ausp.append("일덕")
     if gj in ["乙丑", "己巳", "癸酉"] and idx in [0, 1]: ausp.append("금신")
-    hyeop_map = {'甲':['丑','卯'], '乙':['寅','辰'], '丙':['辰','午'], '戊':['辰','午'], '丁':['巳','未'], '己':['巳','未'], '庚':['未','酉'], '辛':['申','戌'], '壬':['戌','子'], '癸':['亥','丑']}
-    if cur_j in hyeop_map.get(dc, []): ausp.append("협록")
 
- 
     if gj in ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"]: evil.append("백호대살")
-    if gj in ["庚辰","庚戌","壬辰","壬戌","戊戌"]: evil.append("괴강살")
+    if gj in ["庚辰","庚戌","壬辰","壬戌","戊辰","戊戌"]: evil.append("괴강살")
     if cur_j in {'甲':'卯','丙':'午','戊':'午','庚':'酉','壬':'子'}.get(dc,""): evil.append("양인살")
     if cur_j in {'甲':'酉','乙':'戌','丙':'子','丁':'丑','戊':'子','己':'丑','庚':'卯','辛':'辰','壬':'午','癸':'未'}.get(dc,""): evil.append("비인살")
     if dj == '寅' and cur_j in ['寅', '巳', '申']: evil.append("탕화살")
     if dj == '午' and cur_j in ['辰', '午', '丑']: evil.append("탕화살")
     if dj == '丑' and cur_j in ['午', '未', '戌']: evil.append("탕화살")
-    if cur_g in ['乙', '己'] or cur_j in ['巳', '丑']: evil.append("곡각살")
-    if cur_g in ['甲', '辛'] or cur_j in ['卯', '午', '申', '未']: evil.append("현침살")
+    if gj in ["乙卯","乙巳","乙未","乙丑","乙酉","乙亥","丁巳","己卯","己巳","己未","己酉","己亥","己丑","辛巳","癸巳"]: evil.append("곡각살")
+    if cur_g in ['甲', '辛'] and cur_j in ['卯', '午', '申', '未']: evil.append("현침살")
  
     if gj in ["甲寅", "乙卯", "丙午", "丁巳", "戊辰", "戊戌", "己未", "己丑", "庚申", "辛酉", "壬子", "癸亥"]: evil.append("간여지동")
-    if gj in ["甲寅","乙巳","丁巳","戊申","辛亥"]: evil.append("고란살")
+    if gender == "여성" and gj in ["甲寅","乙巳","丁巳","戊申","辛亥"]: evil.append("고란살")
     if gj in ["甲午", "丙戌", "戊辰", "庚辰", "壬戌", "乙巳", "丁亥", "己亥", "辛巳", "癸亥"]: evil.append("의처의부")
-    if cur_j in ['寅','申','巳','亥']: evil.append("효신살")
+    if idx == 1 and gj in ["甲子", "乙亥", "丙寅", "丁卯", "戊午", "己巳", "庚辰", "庚戌", "辛丑", "辛未", "壬申", "癸酉"]: evil.append("효신살")
  
     dohwa_map = {'寅':'卯', '午':'卯', '戌':'卯', '申':'酉', '子':'酉', '辰':'酉', '巳':'午', '酉':'午', '丑':'午', '亥':'子', '卯':'子', '未':'子'}
     if cur_j == dohwa_map.get(yj, "") or cur_j == dohwa_map.get(dj, ""): evil.append("도화살")
     if gj in ["甲子", "乙巳", "丁卯", "庚午", "辛亥", "癸酉"]: evil.append("나체도화")
-    if gj in ["甲午","丙寅","丁未","戊辰","庚戌","辛酉","壬子"]: evil.append("홍염살")
+    if cur_j == {'甲':'午','丙':'寅','丁':'未','戊':'辰','庚':'戌','辛':'酉','壬':'子'}.get(dc, ""): evil.append("홍염살")
     if gj in ["甲寅", "乙卯", "丁未", "戊戌", "己未", "庚申", "辛酉", "癸丑"]: evil.append("음욕살")
-    if gender == "여성" and gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
-    if gender == "남성" and gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
+    if gender == "남성" and gj in ["甲寅", "甲申", "丁丑", "戊申", "己丑", "辛未", "壬寅", "癸未"]: evil.append("남연살")
+    if gender == "여성" and gj in ["乙丑", "丙申", "丁丑", "己未", "庚寅", "辛未", "壬寅", "壬申"]: evil.append("여연살")
  
-    if cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금")
-    if cur_j in ['子','午','卯','酉']: evil.append("교신성")
+    if dj in ['卯','酉','戌'] and cur_j in ['卯','酉','戌'] and (jjis.count('卯') + jjis.count('酉') + jjis.count('戌')) >= 2: evil.append("철쇄개금")
     if idx == 1 and gj in ["丙午", "丁未", "戊午", "戊子", "己未", "己丑"]: evil.append("육수살")
-    if cur_g in ['甲', '丙', '壬'] and cur_j in ['子', '辰']: evil.append("평두살")
-    cheolsa_map = {'甲':'辰', '乙':'寅', '丙':'戌', '丁':'申', '戊':'午', '己':'辰', '庚':'寅', '辛':'戌', '壬':'申', '癸':'午'}
-    if cur_j == cheolsa_map.get(dc, ""): evil.append("철사관")
+    if gj in ["甲子", "甲辰", "丙寅", "丙辰", "丙戌"]: evil.append("평두살")
+    cheolsa_map = {'甲':'辰', '乙':'辰', '丙':'未申', '丁':'未申', '戊':'寅', '己':'寅', '庚':'戌', '辛':'戌', '壬':'丑', '癸':'丑'}
+    if cur_j in cheolsa_map.get(dc, ""): evil.append("철사관")
  
     if gj in ["甲子", "甲午", "己卯", "己酉"]: ausp.append("진신")
     if gj in ["丙子", "丙午", "辛卯", "辛酉"]: evil.append("교신")
@@ -4011,8 +4008,8 @@ class UniversalPrintableGunghap:
             if "음양차착" in hit and "음양" in hit:
                 hit.remove("음양")   # 음양차착 안에 '음양'이 들어 있어 두 번 세어지는 것을 막음
             return len(hit)
-        s4 -= _risk_hit_count(m_evil, "여연살")
-        s4 -= _risk_hit_count(f_evil, "남연살")
+        s4 -= _risk_hit_count(m_evil, "남연살")
+        s4 -= _risk_hit_count(f_evil, "여연살")
 
         # 음양 극단 치우침 (8글자 중 양/음 어느 한쪽으로 7개 이상 쏠림)
         _yang_chars = set("甲丙戊庚壬子寅辰午申戌")
@@ -4099,7 +4096,7 @@ def get_gunghap_harmony_facts(gh_engine):
 def get_gunghap_risk_facts(gh_engine):
     """두 사람 각자의 일주 흉살, 음양 치우침, 재성·관살 혼잡, 비겁·식상 폭주를 AI 용 팩트 문자열로 만듭니다. (shinsal_risk_facts)"""
     try:
-        RISK = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕살", "의처의부", "홍염살", "괴강살", "양인살"]
+        RISK = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕살", "의처의부", "홍염살", "괴강살", "양인살", "남연살", "여연살"]
         def _tags(g, j, gender):
             g = [_to_hanja(x) for x in g]
             j = [_to_hanja_ji(x) for x in j]
