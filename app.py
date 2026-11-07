@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 88.6 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 88.7 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 88.6 Master"
+APP_VERSION = "ver 88.7 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -1557,9 +1557,13 @@ if st.session_state.get('app_running', False):
             _haeng = [("현재 대운", dw_g_cur, dw_j_cur), (f"{target_year_val}년 세운", cur_sewun_gan_val, cur_sewun_ji_val)]
             byeongyak_facts = engine.get_byeongyaksin_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds, _haeng)
             sanggwan_gwan_facts = engine.get_sanggwan_gyeongwan_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds, gender, _haeng)
+            hapban_facts = engine.get_hapban_warning_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds, gender, _haeng)
+            sangjin_paryo_facts = engine.get_sangjin_paryo_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds, gender, _haeng)
         except Exception:
             byeongyak_facts = "병약신 해당 없음"
             sanggwan_gwan_facts = "상관견관 해당 없음"
+            hapban_facts = "합반 경고 해당 없음"
+            sangjin_paryo_facts = "상관상진·파료상관 해당 없음"
 
         ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db, gender)
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
@@ -1864,6 +1868,8 @@ if st.session_state.get('app_running', False):
             "health_samhyeong_facts": health_samhyeong_facts,
             "byeongyak_facts": byeongyak_facts,
             "sanggwan_gwan_facts": sanggwan_gwan_facts,
+            "hapban_facts": hapban_facts,
+            "sangjin_paryo_facts": sangjin_paryo_facts,
             "jaeseong_status_fact_str": jaeseong_status_fact_str,
             "samja_comb_facts": samja_comb_facts,
             "wealth_earth_facts": wealth_earth_facts,
