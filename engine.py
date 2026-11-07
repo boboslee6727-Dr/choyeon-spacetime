@@ -734,7 +734,7 @@ def get_ji_rel_rows_html(jjis):
         ji_rel_rows += f"<tr>{lbl}{cells}</tr>"
     return ji_rel_rows
 
-GOEGANG_ILJU = {'庚辰', '庚戌', '壬辰', '壬戌'}
+GOEGANG_ILJU = {'戊辰', '戊戌', '庚辰', '庚戌', '壬辰', '壬戌'}
 
 BAEKHO_GANJI = {'甲辰', '乙未', '丙戌', '丁丑', '戊辰', '壬戌', '癸丑'}
 
@@ -801,11 +801,18 @@ def get_general_shinsal_filtered(idx, gans, jjis, gender="남성"):
     if gj in ["丙子", "丙午", "辛卯", "辛酉"]: evil.append("교신")
     if gj in ["丁丑", "丁未", "壬辰", "壬戌"]: evil.append("퇴신")
     if gj in ["戊寅", "戊申", "癸巳", "癸亥"]: evil.append("복신")
+
+    # 책 13번 구추방해: 일주 10개 (시주에 있으면 말년·자식에게 비슷하게 작용)
+    if idx == 1 and gj in ["乙卯", "乙酉", "戊午", "戊子", "己卯", "己酉", "辛卯", "辛酉", "壬午", "壬子"]: evil.append("구추방해")
+    # 책 38번 신병: 일주 3개, 일·시에 같이 있으면 흉이 배로 커짐
+    if idx in (0, 1) and gj in ["乙巳", "乙未", "己巳"]: evil.append("신병")
+    # 책 56번 일인: 양인 중에서도 일주가 양인인 경우 (양인살과 함께 나옴)
+    if idx == 1 and gj in ["壬子", "丙午", "戊午"]: evil.append("일인")
  
     # 🚨 흉살 우선순위: 백호/괴강/양인은 무조건 표시, 현침살은 중요도 낮춰 맨 뒤로
     MUST_SHOW_EVIL = ["백호대살", "괴강살", "양인살"]
     EVIL_PRIORITY = [
-        "간여지동", "고란살", "탕화살", "비인살",
+        "간여지동", "고란살", "구추방해", "신병", "일인", "탕화살", "비인살",
         "홍염살", "나체도화", "도화살",
         "의처의부", "남연살", "여연살", "음욕살",
         "십악대패살", "철쇄개금", "철사관", "곡각살", "육수살", "평두살",
@@ -3993,7 +4000,7 @@ class UniversalPrintableGunghap:
         p3 = int((s3 / 10) * 100)
  
         s4 = 10
-        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕", "의처의부", "일인", "홍염"]
+        RISK_SHINSAL = ["간여지동", "고란살", "구추방해", "백호대살", "신병", "음욕", "의처의부", "홍염", "괴강살", "양인살"]
 
         def _day_pillar_evil(g, j, gender):
             # get_general_shinsal_filtered는 [시,일,월,년] 순서를 요구하므로 변환
