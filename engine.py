@@ -607,9 +607,12 @@ def get_dongju_pothae_facts(ds, db, jjis, gender="남", dw_j=None, sewun_j=None,
     won_ch = any(frozenset((db_h, o)) in _CH for o in others)
     won_hp = any(frozenset((db_h, o)) in _HP for o in others)
     hg_ch = any(frozenset((db_h, o)) in _CH for o in haeng)
+    hg_hp = any(frozenset((db_h, o)) in _HP for o in haeng)
     if kind == '동주욕':
         if won_ch: out.append(d['extra']['충'])
         if won_hp: out.append(d['extra']['합'])
+        if hg_ch: out.append("지금 대운·세운 지지가 일지와 충을 이루는 시기이니, 부부 사이에 변화가 생기기 쉬워 서로 배려와 대화가 필요함")
+        if hg_hp: out.append("지금 대운·세운 지지가 일지와 합을 이루는 시기이니, 이성 인연과 표현 욕구가 커져 유혹에 흔들리지 않도록 절제가 필요함")
         if gender == "여" and ilju in ('乙巳', '辛亥'):
             out.append("여명의 을사·신해일주는 고란살이 겹쳐 있어 배우자 인연의 굴곡을 살피면 좋음")
     elif kind == '동주입묘':
