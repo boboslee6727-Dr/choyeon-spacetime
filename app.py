@@ -324,6 +324,8 @@ else:
         selected_target_date = st.date_input(
             "조회할 연/월/일 선택",
             value=st.session_state.get('target_date', _today_kst),
+            min_value=dt_mod.date(1930, 1, 1),
+            max_value=dt_mod.date(2100, 12, 31),
             on_change=stop_ai,
             key="main_target_date_picker"
         )
