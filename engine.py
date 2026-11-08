@@ -722,6 +722,7 @@ def get_remarriage_facts(ds, gans, jjis, gender, marital, dw_g=None, dw_j=None):
         if o and "충" in o:
             t.append(f"현재 대운 지지({_to_hanja_ji(dw_j)})가 일지와 충이라 관계에 변화가 큰 시기이니 서두르지 말 것")
         if t: out.append(" / ".join(t))
+        else: out.append("현재 대운에는 배우자별이 직접 들어오지 않아, 대운 자체는 인연을 서두르기보다 일과 생활의 기반을 다지는 무대이고 새 인연은 해마다 들어오는 운(세운)에서 열리기 쉬움")
     return " || ".join(out) if out else "재혼 풀이에 특별히 짚을 구조가 없음"
 
 def get_samjae(year_ji, target_ji):
