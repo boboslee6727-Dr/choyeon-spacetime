@@ -736,6 +736,14 @@ def get_couple_link_facts(m_gans, m_jjis, f_gans, f_jjis, m_marital="", f_marita
             pos = [names[i] for i in range(4) if fj[i] == hm]
             if pos:
                 out.append(f"남명의 배우자 자리({mj[1]})와 합이 되는 글자({hm})가 여명 사주의 {', '.join(pos)}에 있어, 남명 쪽에서 여명에게 마음이 끌리고 묶이기 쉬운 근거")
+        # 2-2) 일지 삼합(반합): 한 사람의 배우자 자리와 상대 지지가 같은 삼합의 두 글자를 이루는가
+        _SAMHAP = (("申子辰", "물"), ("亥卯未", "나무"), ("寅午戌", "불"), ("巳酉丑", "금속"))
+        for who, me_ji, other_ji, other_nm in (("여명", fj[1], mj, "남명"), ("남명", mj[1], fj, "여명")):
+            for grp, elem in _SAMHAP:
+                if me_ji in grp:
+                    pos = [names[i] for i in range(4) if other_ji[i] in grp and other_ji[i] != me_ji]
+                    if pos:
+                        out.append(f"{who}의 배우자 자리({me_ji})와 {other_nm} 사주의 {', '.join(pos)}({'·'.join(other_ji[names.index(p)] for p in pos)})가 서로 끌어당겨 {elem}의 기운을 이루어, {who} 쪽에서 {other_nm}에게 끌리고 하나로 묶이기 쉬운 근거")
         # 3) 상대 일간이 나의 배우자별인가
         if get_ss(fg[1], mg[1]) in ("정관", "편관"):
             out.append(f"남명의 일간({mg[1]})이 여명에게는 남편별({get_ss(fg[1], mg[1])})에 해당해, 여명이 남명을 의지할 만한 사람으로 느끼기 쉬움")
