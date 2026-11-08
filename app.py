@@ -1844,7 +1844,7 @@ if st.session_state.get('app_running', False):
             "ilun_gj_cur": ilun_gj_cur,
             "ilun_gj_han_cur": ilun_gj_han_cur,
             "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0]),
-            "ilun_gongmang_fact": "; ".join([x for x in [("일 기준 공망" if _sel_pillar_d[1] in str(i_gong) else ""), ("년 기준 공망" if _sel_pillar_d[1] in str(n_gong) else "")] if x]),
+            "ilun_gongmang_fact": "; ".join([x for x in [("일 기준 공망" if _sel_pillar_d[1] in str(i_gong) else ""), ("년 기준 공망" if _sel_pillar_d[1] in str(n_gong) else "")] if x]) or "(해당 없음 — 공망은 글에 한 글자도 쓰지 말 것)",
             "time_block_relation_str": engine.get_time_block_relation_facts([hb, db, mb, yb], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1], now=(_now_kst if selected_target_date == _now_kst.date() else None)),
             "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
 
