@@ -484,7 +484,7 @@ def _s12_ss_group(ss):
     return ""
  
  
-def get_12shinsal_book_facts(ds, db, jjis, dw_j=None, sewun_j=None, gender="남"):
+def get_12shinsal_book_facts(ds, yb, db, jjis, dw_j=None, sewun_j=None, gender="남")
     """일지 기준 12신살 사전(원국 기둥별·십성별·행운). 일지 기준이 주."""
     def _ok(j):
         return j not in (None, "", "?", "-", " ")
@@ -516,6 +516,17 @@ def get_12shinsal_book_facts(ds, db, jjis, dw_j=None, sewun_j=None, gender="남"
                 sip += " (편인이라 아이디어와 창의성이 뛰어남)"
             line += f" / 십성으로 보면 → {_fx(sip)}"
         out.append(line)
+        ny = get_12_shinsal(yb, jh)
+        dy = _S12_BOOK.get(ny)
+        if ny == nm:
+            out[-1] += " (년지 기준으로도 같은 신살)"
+        elif dy:
+            ly = f"원국 {n}({jh})는 년지 기준(보조, 사회·집안에서의 모습) '{ny}': {dy['뜻']}"
+            py = dy['기둥'].get(key)
+            if py: ly += f" / 이 자리에서는 → {_fx(py)}"
+            sy = dy['십성'].get(grp)
+            if sy: ly += f" / 십성으로 보면 → {_fx(sy)}"
+            out.append(ly)
     for label, j in [("대운", dw_j), ("세운", sewun_j)]:
         if not _ok(j): continue
         jh = _to_hanja_ji(j)
@@ -528,8 +539,14 @@ def get_12shinsal_book_facts(ds, db, jjis, dw_j=None, sewun_j=None, gender="남"
         sip = d['십성'].get(grp)
         if sip: line += f" / 십성으로 보면 → {_fx(sip)}"
         out.append(line)
+        ny = get_12_shinsal(yb, jh)
+        dy = _S12_BOOK.get(ny)
+        if dy and ny != nm:
+            ly = f"{label} 지지({jh})는 년지 기준(보조) '{ny}' 운: {_fx(dy['행운'])}"
+            sy = dy['십성'].get(grp)
+            if sy: ly += f" / 십성으로 보면 → {_fx(sy)}"
+            out.append(ly)
     return " || ".join(out) if out else "12신살 사전 정보 없음"
- 
  
 _DONGJU = {
     '동주욕': {
