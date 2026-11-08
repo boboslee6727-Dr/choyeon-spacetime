@@ -761,6 +761,67 @@ def get_couple_link_facts(m_gans, m_jjis, f_gans, f_jjis, m_marital="", f_marita
         return "두 분 연결 정보를 계산하지 못함"
     return " || ".join(out) if out else "두 분 사이에 특별히 짚을 직접 연결 고리는 크지 않음"
 
+# ─────────────────────────────────────────────────────────────
+# 배우자별(남=재성, 여=관성)의 위치·정편혼잡·천간/지지 판단 글감.  gans·jjis 는 [시, 일, 월, 년] 순서
+# ─────────────────────────────────────────────────────────────
+def get_spouse_star_facts(ds, gans, jjis, gender="남"):
+    """배우자별이 어느 기둥(앞쪽=년·월 / 일지 / 뒤쪽=시)에 있는지, 정·편이 섞였는지, 천간·지지 어디에 있는지를
+    AI 용 팩트 문자열로 만든다. 나이 숫자는 쓰지 않는다(수명이 길어져 구간이 달라지므로)."""
+    try:
+        g = "남" if str(gender).startswith("남") else "여"
+        ds = _to_hanja(ds)
+        gs = [_to_hanja(x) for x in gans]
+        js = [_to_hanja_ji(x) for x in jjis]
+        if len(gs) < 4 or len(js) < 4 or not ds:
+            return "배우자별 판정 정보가 부족함"
+        pair = ("정재", "편재") if g == "남" else ("정관", "편관")
+        star = "아내별(재성)" if g == "남" else "남편별(관성)"
+        _ro = lambda w: w + ("로" if w.endswith("재") else "으로")   # 편재→편재로, 편관→편관으로
+        gan_hit, ji_hit = [], []          # (기둥인덱스, 십성)
+        for i in (0, 2, 3):               # 천간: 일간 제외
+            if gs[i] and get_ss(ds, gs[i]) in pair:
+                gan_hit.append((i, get_ss(ds, gs[i])))
+        for i in range(4):                # 지지(정기 기준)
+            if js[i] and get_ss(ds, js[i]) in pair:
+                ji_hit.append((i, get_ss(ds, js[i])))
+        all_ss = [s for _, s in gan_hit + ji_hit]
+        out = []
+        if not all_ss:
+            return f"{star}이 원국의 천간·지지에 보이지 않음(인연의 때는 운에서 {star}이 들어오는 시기)"
+        # 1) 위치: 앞쪽(년·월) / 일지 / 뒤쪽(시)
+        pos = {i for i, _ in gan_hit + ji_hit}
+        front = bool(pos & {2, 3})
+        back = 0 in pos
+        day = any(i == 1 for i, _ in ji_hit)
+        if day:
+            out.append(f"{star}이 배우자 자리(일지)에 직접 앉아 있어 인연이 가장 직접적")
+        if front and not back:
+            out.append(f"{star}이 앞쪽 자리(년·월)에 있어 이른 시기에 이성 인연이 오기 쉬운 구조(나이를 단정하지 말 것)")
+        elif back and not front:
+            out.append(f"{star}이 뒤쪽 자리(시)에 있어 늦게 올수록 안정적인 구조(나이를 단정하지 말 것)")
+        elif front and back:
+            out.append(f"{star}이 앞쪽(년·월)과 뒤쪽(시)에 모두 있어 이른 인연과 늦은 인연이 모두 열려 있는 구조")
+        # 2) 정·편 혼잡
+        has_j = any(s == pair[0] for s in all_ss)
+        has_p = any(s == pair[1] for s in all_ss)
+        if has_j and has_p:
+            out.append(f"{pair[0]}{'와' if pair[0].endswith('재') else '과'} {pair[1]}{'가' if pair[1].endswith('재') else '이'} 함께 있어(혼잡) 강하게 끌리는 쪽({pair[1]})과 안정을 주는 쪽({pair[0]}) 사이에서 마음이 갈리기 쉬움. 끌림은 {pair[1]} 쪽으로 가더라도 오래 가는 인연은 {pair[0]} 쪽 사람이 기준이라는 점을 짚을 것")
+        elif has_j:
+            out.append(f"{star}이 {_ro(pair[0])}만 있어 안정과 신뢰를 주는 인연을 만나기 쉬움")
+        else:
+            out.append(f"{star}이 {_ro(pair[1])}만 있어 강렬하고 자극적인 끌림을 따라 인연이 시작되기 쉬움")
+        # 3) 천간·지지 구분
+        if gan_hit and ji_hit:
+            out.append(f"{star}이 겉(천간)과 속(지지) 모두에 있어 겉으로 만나는 인연과 속으로 맞는 실속이 함께 이어지는 구조")
+        elif gan_hit and not ji_hit:
+            out.append(f"{star}이 겉(천간)에만 있고 속(지지)에는 없어 이성 인연은 눈에 띄게 오지만 실속으로 붙잡는 데는 노력이 필요한 구조")
+        else:
+            out.append(f"{star}이 속(지지)에만 있고 겉(천간)에는 드러나지 않아 겉으로는 눈에 띄지 않아도 조용히 실속 있는 인연이 이어지기 쉬운 구조")
+        out.append(f"{star} 개수: 천간 {len(gan_hit)}개, 지지 {len(ji_hit)}개")
+        return " || ".join(out)
+    except Exception:
+        return "배우자별 판정 정보를 계산하지 못함"
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
