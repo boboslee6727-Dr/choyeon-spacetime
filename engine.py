@@ -664,9 +664,9 @@ def get_remarriage_facts(ds, gans, jjis, gender, marital, dw_g=None, dw_j=None):
             if jh[i] and jh[i] in gm_set and get_ss(ds_h, jh[i]) in star:
                 hit.append(f"{names[i]}지({jh[i]})")
         if hit:
-            out.append(f"{star_nm}이 공망에 걸린 자리: {', '.join(hit)}. 마음의 기대에 비해 인연이 허전하게 느껴지기 쉬우니, 공망이 풀리는 운(해당 글자가 들어오는 때)에 새 인연이 실속 있게 맺히기 쉬움")
+            out.append(f"{star_nm}이 인연의 빈자리에 놓인 곳: {', '.join(hit)}. 마음의 기대에 비해 인연이 허전하게 느껴지기 쉬우니, 그 빈자리가 채워지는 운(해당 글자가 들어오는 때)에 새 인연이 실속 있게 맺히기 쉬움(이미 채워졌다고 단정하지 말 것. 아래 띠 항목과 이어서 쓰지 말 것)")
         if dj in gm_set:
-            out.append(f"배우자궁(일지 {dj}) 자체가 공망에 걸려 인연이 늦거나 허전함을 느끼기 쉬운 구조")
+            out.append(f"배우자궁(일지 {dj}) 자체가 인연의 빈자리에 놓여 인연이 늦거나 허전함을 느끼기 쉬운 구조")
     except Exception:
         pass
     # 3) 일지의 특수 기운 (간여지동·백호·합충)
