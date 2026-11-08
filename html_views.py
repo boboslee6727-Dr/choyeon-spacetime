@@ -513,11 +513,11 @@ def get_intro_html():
     return """
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
     <div style="margin: 0; padding: 0;">
-        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 6px; font-weight: 600; text-align: justify; text-indent: 0; color: #000000;">
-            <b>"초연 시공 명리학"</b>은 5년에 한 번 돌아오는 '60월령과 60일주'의 조합으로 <b>3,600개 유형</b>으로 분류하지만, <b>"기존의 전통 명리학"</b>은 1년에 한 번 돌아오는 '12월지와 60일주'의 조합으로 <b>720개 유형</b>으로 분류하여 풀이합니다.
+        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 6px; font-weight: 400; text-align: justify; text-indent: 0; color: #000000;">
+            <span style="font-weight:600;">"초연 시공 명리학"</span>은 5년에 한 번 돌아오는 <span style="font-weight:600;">'60월령과 60일주'</span>의 조합으로 <span style="font-weight:600;">3,600개 유형</span>으로 분류하지만, <span style="font-weight:600;">"기존의 전통 명리학"</span>은 1년에 한 번 돌아오는 <span style="font-weight:600;">'12월지와 60일주'</span>의 조합으로 <span style="font-weight:600;">720개 유형</span>으로 분류하여 풀이합니다.
         </p>
-        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 0; font-weight: 600; text-align: justify; text-indent: 0; color: #000000;">
-            따라서, <b>"본 초연 시공 명리학적 풀이"</b>는 기존 명리학적 풀이에 비하여 <b>5배</b>, 요즘 유행하는 16개 유형의 MBTI와 비교하면 무려 <b>225배</b> 더 정밀한 사주풀이 입니다.
+        <p class="ai-body-p" style="margin-top: 0; margin-bottom: 0; font-weight: 400; text-align: justify; text-indent: 0; color: #000000;">
+            따라서, <span style="font-weight:600;">"본 초연 시공 명리학적 풀이"</span>는 기존 명리학적 풀이에 비하여 <span style="font-weight:600;">5배</span>, 요즘 유행하는 16개 유형의 MBTI와 비교하면 무려 <span style="font-weight:600;">225배</span> 더 정밀한 사주풀이 입니다.
         </p>
     </div>
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
@@ -536,10 +536,10 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
     return f"""
     <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
-            기존 명리학적으로 풀이하면 <b>{name}님</b>은 <b>{wol_korean_str}</b>에 <b>'{gyuk_name}'</b>의 그릇을 갖추고 태어나셨으며, 성격은 <b>'{s_name}'</b>인 <b>'{s_type}'</b>으로 <b>'{s_desc}'</b>하는 기본 성향이 있습니다.
+            기존 명리학적으로 풀이하면 <span style="font-weight:600;">{name}님</span>은 <span style="font-weight:600;">{wol_korean_str}</span>에 <span style="font-weight:600;">'{gyuk_name}'</span>의 그릇을 갖추고 태어나셨으며, 성격은 <span style="font-weight:600;">'{s_name}'</span>인 <span style="font-weight:600;">'{s_type}'</span>으로 <span style="font-weight:600;">'{s_desc}'</span>하는 기본 성향이 있습니다.
         </p>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 0;'>
-            또한, 시공명리학적으로 풀이하면 <b>'{w_val}'</b>의 시공간에서 태어났으며, <b>'{i_val}'</b>과 같은 내면적 성품을 갖고 살아가고 있습니다.
+            또한, 시공명리학적으로 풀이하면 <span style="font-weight:600;">'{w_val}'</span>의 시공간에서 태어났으며, <span style="font-weight:600;">'{i_val}'</span>과 같은 내면적 성품을 갖고 살아가고 있습니다.
         </p>
     </div>
     <hr style="border: 0; border-top: 2px solid #000000; margin: 25px 0;">
