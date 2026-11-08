@@ -484,7 +484,7 @@ def _s12_ss_group(ss):
     return ""
  
  
-def get_12shinsal_book_facts(ds, yb, db, jjis, dw_j=None, sewun_j=None, gender="남")
+def get_12shinsal_book_facts(ds, yb, db, jjis, dw_j=None, sewun_j=None, gender="남"):
     """일지 기준 12신살 사전(원국 기둥별·십성별·행운). 일지 기준이 주."""
     def _ok(j):
         return j not in (None, "", "?", "-", " ")
