@@ -893,9 +893,9 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
         for i, j, adj in links:
             how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "서로 떨어져 있어 합의 힘이 약함(격합)"
             hn = _HAP_NAME.get(frozenset((gans[i], gans[j])), "")
-            lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 합을 이룸: {how}" + (f" / 합의 성격: {hn}" if hn else ""))
+            lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 합을 이룸: {how}" + (f" / 합의 성격: {hn}" if hn and adj else ""))
         for k in range(4):
-            mates = [(a, b) for a, b, _ in links if k in (a, b)]
+            mates = [(a, b) for a, b, ad in links if ad and k in (a, b)]
             if len(mates) >= 2:
                 others = [f"{names[b if a == k else a]}({_lab(b if a == k else a)})" for a, b in mates]
                 lines.append(f"[쟁합] {names[k]}({_lab(k)})을 {', '.join(others)} 두 자리가 함께 합하려 함: 합하려는 힘이 나뉘어 한쪽으로 온전히 묶이지 못하고 서로 당기는 상태로 봄")
