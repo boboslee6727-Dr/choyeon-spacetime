@@ -499,9 +499,11 @@ def generate_weekly_calendar_html(weekly_days_data, today_day, yb=None, db=None,
         </div>
         """
     return f"""
-    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>[ 이번 주 일운 흐름 ]</div>
+    <div style='page-break-inside: avoid; break-inside: avoid;'>
+    <div style='margin-top:5px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E; break-after: avoid; page-break-after: avoid;'>[ 이번 주 일운 흐름 ]</div>
     <div style='display:flex; flex-direction:row; width:100%; border:2px solid #3E2723; background:white; margin-bottom:5px;'>
         {cells}
+    </div>
     </div>
     """
  
