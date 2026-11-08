@@ -289,7 +289,7 @@ if is_admin_mode:
     main_category = st.session_state.get('main_category', '1. 개인 사주팔자 풀이 (종합)')
     u_product = st.session_state.get('sub_category_1', '1-1. 사주팔자와 운세풀이')
     if "2." in main_category: u_product = st.session_state.get('sub_category_2', '2-1. 재물운 특화 분석')
-    elif "3." in main_category: u_product = st.session_state.get('sub_category_3', '3-1. 커플 연애/결혼운 (궁합) 풀이')
+    elif "3." in main_category: u_product = st.session_state.get('sub_category_3', '3-1. 커플 결혼/재혼운 (궁합) 풀이')
     elif "4." in main_category: u_product = st.session_state.get('sub_category_4', '4-1. 타 감명서 비교 (사주)')
     
     name, gender, u_marital, u_cal = st.session_state.get('u_n', '고객'), st.session_state.get('u_g', '여성'), st.session_state.get('u_m_stat', '선택'), st.session_state.get('u_c', '양력')
@@ -342,7 +342,7 @@ else:
 
         main_category = st.selectbox(
             "어떤 상담을 원하십니까?", 
-            ["1. 개인 사주팔자 풀이 (종합)", "2. 테마별 특성화 상담", "3. 커플 연애/결혼운 (궁합) 풀이", "4. 타 감명서 비교"], 
+            ["1. 개인 사주팔자 풀이 (종합)", "2. 테마별 특성화 상담", "3. 커플 결혼/재혼운 (궁합) 풀이", "4. 타 감명서 비교"], 
             key="main_category", 
             on_change=stop_ai
         )
@@ -364,7 +364,7 @@ else:
                 "2-6. 이사 택일", 
                 "2-7. 개업 택일"
         ], key="sub_category_2", on_change=stop_ai)
-        elif main_category == "3. 커플 연애/결혼운 (궁합) 풀이":
+        elif main_category == "3. 커플 결혼/재혼운 (궁합) 풀이":
             u_product = st.radio("상세 분석 항목:", [
                 "3-1. 결혼운 (궁합) 풀이", 
                 "3-2. 결혼 택일", 
@@ -483,8 +483,8 @@ else:
             st.text_area("💬 고민 상담 Q&A (선택사항)", value=st.session_state.get("user_concern", ""), placeholder=_admin_placeholder, key="user_concern", on_change=stop_ai)
 
         # 🌟 상품별 특수 입력 분기
-        is_1person = not (main_category == "3. 커플 연애/결혼운 (궁합) 풀이" or "4-2." in u_product)
-        is_2person = (main_category == "3. 커플 연애/결혼운 (궁합) 풀이") or ("4-2." in u_product)
+        is_1person = not (main_category == "3. 커플 결혼/재혼운 (궁합) 풀이" or "4-2." in u_product)
+        is_2person = (main_category == "3. 커플 결혼/재혼운 (궁합) 풀이") or ("4-2." in u_product)
         
         if is_1person:
             if any(u_product.startswith(_p) for _p in ("1-", "2-1", "2-2", "2-3", "2-4", "2-5")):
@@ -837,7 +837,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("2-5"): report_title = "건강운 특성화 분석"
         elif u_product.startswith("2-6"): report_title = "이사 택일 추천"
         elif u_product.startswith("2-7"): report_title = "개업 택일 추천"
-        elif u_product.startswith("3-1"): report_title = "연애/결혼운 (궁합) 풀이"
+        elif u_product.startswith("3-1"): report_title = "결혼/재혼운 (궁합) 풀이"
         elif u_product.startswith("3-2"): report_title = "결혼 택일 추천"
         elif u_product.startswith("3-3"): report_title = "출산 택일 추천"
         elif u_product.startswith("4-1"): report_title = "타 감명서 비교 (사주)"
@@ -2112,7 +2112,7 @@ if st.session_state.get('app_running', False):
         # [3계열] 2인용 궁합 및 택일 분석 (3-1 ~ 3-3)
         # ----------------------------------------------------------------------
         elif u_product.startswith("3-1"):
-            # 3-1. 연애/결혼운 (궁합) 풀이 (3단 멀티 페이지 분할)
+            # 3-1. 결혼/재혼운 (궁합) 풀이 (3단 멀티 페이지 분할)
             m_ess, f_ess, g_ess = "", "", current_ai
             m_match = re.search(r'\[MALE_START\](.*?)\[MALE_END\]', current_ai, re.DOTALL)
             if m_match: m_ess = m_match.group(1).strip()
@@ -2329,7 +2329,7 @@ if st.session_state.get('app_running', False):
                 st.session_state['admin_pkg_queue'] = _pkg_queue[1:]
                 if "1-" in next_product: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", next_product
                 elif "2-" in next_product: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", next_product
-                elif "3-" in next_product: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 연애/결혼운 (궁합) 풀이", next_product
+                elif "3-" in next_product: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 결혼/재혼운 (궁합) 풀이", next_product
 
                 st.session_state['app_running'] = True
                 st.rerun()
