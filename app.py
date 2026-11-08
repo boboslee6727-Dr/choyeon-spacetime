@@ -1747,6 +1747,7 @@ if st.session_state.get('app_running', False):
             "remarriage_facts": engine.get_remarriage_facts(ds_hanja, [hs, ds_hanja, ms, ys], [hb, db, mb, yb], gender, u_marital, dw_g_cur, dw_j_cur),
             "m_remarriage_facts": engine.get_remarriage_facts(m_gans_val[1], m_gans_val, m_jjis_val, "남성", m_marital_val) if 'm_gans_val' in locals() else "",
             "f_remarriage_facts": engine.get_remarriage_facts(f_gans_val[1], f_gans_val, f_jjis_val, "여성", f_marital_val) if 'f_gans_val' in locals() else "",
+            "couple_link_facts": engine.get_couple_link_facts(m_gans_val, m_jjis_val, f_gans_val, f_jjis_val, m_marital_val, f_marital_val) if ('m_gans_val' in locals() and 'f_gans_val' in locals()) else "",
             "m_name": name if gender == "남성" else p_name_val if 'p_name_val' in locals() else "신랑",
             "f_name": p_name_val if 'p_name_val' in locals() and gender == "남성" else name,
             "f_gender": f_gender_str,
