@@ -486,6 +486,7 @@ def _s12_ss_group(ss):
  
 def get_12shinsal_book_facts(ds, yb, db, jjis, dw_j=None, sewun_j=None, gender="남"):
     """일지 기준 12신살 사전(원국 기둥별·십성별·행운). 일지 기준이 주."""
+    gender = "남" if str(gender).startswith("남") else "여"
     def _ok(j):
         return j not in (None, "", "?", "-", " ")
     jae = "아내" if gender == "남" else "아버지·시어머니"
@@ -579,6 +580,7 @@ _DONGJU = {
  
 def get_dongju_pothae_facts(ds, db, jjis, gender="남", dw_j=None, sewun_j=None, gans=None):
     """동주욕·동주입묘·동주절·동주사 전용 규칙. 해당 일주일 때만 풀이 글감을 돌려준다."""
+    gender = "남" if str(gender).startswith("남") else "여"
     ilju = f"{_to_hanja(ds)}{_to_hanja_ji(db)}"
     kind = None
     for k, v in _DONGJU.items():
@@ -628,6 +630,99 @@ def get_dongju_pothae_facts(ds, db, jjis, gender="남", dw_j=None, sewun_j=None,
     elif kind == '동주절':
         out.append(d['extra']['일지'])
     return " || ".join(out)
+
+# ─────────────────────────────────────────────────────────────
+# 돌싱(이혼·사별) 재혼·새 인연 글감 (신살명리학 + 배우자궁 기준, 단정 없이 흐름만)
+# ─────────────────────────────────────────────────────────────
+_GAN_YEOJU = {'甲寅', '乙卯', '丙午', '丁巳', '戊辰', '戊戌', '己丑', '己未', '庚申', '辛酉', '壬子', '癸亥'}
+_JI_TTI = {'子': '쥐', '丑': '소', '寅': '호랑이', '卯': '토끼', '辰': '용', '巳': '뱀', '午': '말', '未': '양', '申': '원숭이', '酉': '닭', '戌': '개', '亥': '돼지'}
+_JI_HAP = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅', '卯': '戌', '戌': '卯',
+           '辰': '酉', '酉': '辰', '巳': '申', '申': '巳', '午': '未', '未': '午'}
+ 
+ 
+def get_remarriage_facts(ds, gans, jjis, gender, marital, dw_g=None, dw_j=None):
+    """돌싱(이혼·사별)일 때만 쓰는 재혼·새 인연 글감. gans·jjis 는 [시, 일, 월, 년] 순서.
+    과거 인연의 모양(원국의 배우자성·배우자궁)과 새 인연의 모양·때를 사실문으로 만든다. 사건은 단정하지 않는다."""
+    if str(marital).strip() != "돌싱":
+        return "혼인 상태가 돌싱이 아니므로 재혼 풀이는 쓰지 않음"
+    is_f = str(gender).startswith("여")
+    star = ("정관", "편관") if is_f else ("정재", "편재")
+    star_nm = "남편별(관성)" if is_f else "아내별(재성)"
+    ds_h = _to_hanja(ds)
+    gh = [_to_hanja(g) for g in gans]
+    jh = [_to_hanja_ji(j) for j in jjis]
+    if len(jh) < 4 or not jh[1] or jh[1] not in JI:
+        return "재혼 풀이에 필요한 일지 정보가 부족함"
+    dj = jh[1]
+    out = []
+    # 1) 배우자성의 구조 (정·편 혼잡 / 없음 / 개수)
+    names = ["시", "일", "월", "년"]
+    cnt = {"정": 0, "편": 0}
+    for i in range(4):
+        if i != 1 and gh[i] and gh[i] not in ("?", "-", ""):
+            s = get_ss(ds_h, gh[i])
+            if s in star: cnt[s[0]] += 1
+        if jh[i] and jh[i] in JI:
+            s = get_ss(ds_h, jh[i])
+            if s in star: cnt[s[0]] += 1
+    tot = cnt["정"] + cnt["편"]
+    if cnt["정"] and cnt["편"]:
+        out.append(f"{star_nm}이 정(正)과 편(偏) 두 가지로 섞여 있어(혼잡) 인연의 모양이 하나로 모이지 않고 마음이 여러 갈래로 갈리기 쉬운 구조. 지난 인연도 이 구조의 영향으로 읽을 수 있고, 새 인연은 한 사람에게 마음을 모으는 쪽이 길함")
+    elif tot == 0:
+        out.append(f"사주에 {star_nm}이 드러나 있지 않아 인연을 붙잡기 어렵고 인연이 늦게 닿는 구조. 운에서 {star_nm}이 들어오는 때가 새 인연의 문이 열리는 때")
+    elif tot >= 3:
+        out.append(f"{star_nm}이 {tot}개로 많아 인연의 무게와 부담이 큰 구조. 상대에게 기대는 마음이 커지지 않도록 균형을 잡는 것이 중요")
+    else:
+        out.append(f"{star_nm}이 {tot}개로 적당히 자리해 인연의 줄기는 갖춘 구조")
+    # 2) 배우자성 공망
+    try:
+        gm_set = set()
+        if gh[3] and jh[3]: gm_set |= set(calculate_gongmang(gh[3], jh[3]))
+        if ds_h and dj: gm_set |= set(calculate_gongmang(ds_h, dj))
+        gm_set.discard("-")
+        hit = []
+        for i in range(4):
+            if jh[i] and jh[i] in gm_set and get_ss(ds_h, jh[i]) in star:
+                hit.append(f"{names[i]}지({jh[i]})")
+        if hit:
+            out.append(f"{star_nm}이 공망에 걸린 자리: {', '.join(hit)}. 마음의 기대에 비해 인연이 허전하게 느껴지기 쉬우니, 공망이 풀리는 운(해당 글자가 들어오는 때)에 새 인연이 실속 있게 맺히기 쉬움")
+        if dj in gm_set:
+            out.append(f"배우자궁(일지 {dj}) 자체가 공망에 걸려 인연이 늦거나 허전함을 느끼기 쉬운 구조")
+    except Exception:
+        pass
+    # 3) 일지의 특수 기운 (간여지동·백호·합충)
+    ilju = f"{ds_h}{dj}"
+    if ilju in _GAN_YEOJU:
+        out.append("일주가 간여지동(일간과 일지가 같은 기운)이라 자기 뜻이 또렷해 배우자와 각자의 영역을 지킬 때 오히려 오래감. 새 인연은 서로의 영역을 존중하는 사람이 좋음")
+    if ilju in BAEKHO_GANJI:
+        out.append("일주에 백호대살이 있어 인연에 큰 굴곡이 한 번 지나가기 쉬운 기운. 새 인연에서는 평상심과 건강 관리가 힘이 됨")
+    for i in (0, 2, 3):
+        o = jh[i]
+        if not o or o not in JI: continue
+        rel = get_ji_rel_set(dj, o)
+        if rel and rel != "-":
+            tags = [t.strip() for t in rel.split(",")]
+            neg = [t for t in tags if t in ("충", "형", "원진", "파", "해")]
+            if neg:
+                out.append(f"일지({dj})와 {names[i]}지({o})가 {'·'.join(neg)} 관계라 배우자궁이 흔들린 흔적. 새 인연에서는 같은 부딪힘이 반복되지 않도록 속도를 천천히 맞추는 것이 길함")
+    # 4) 새 인연이 닿기 쉬운 띠(합) — 단정하지 말고 끌림의 방향으로만
+    hap_ji = _JI_HAP.get(dj)
+    if hap_ji:
+        out.append(f"배우자궁과 합이 되는 글자는 {hap_ji}({_JI_TTI.get(hap_ji, '')}띠)로, 이 띠의 기운을 가진 사람에게 끌리기 쉬움(만남을 단정하지 말 것)")
+    # 5) 현재 대운이 새 인연에 어떤 무대인가
+    if dw_g and dw_j:
+        dws = get_ss(ds_h, _to_hanja(dw_g))
+        dwj = get_ss(ds_h, _to_hanja_ji(dw_j))
+        t = []
+        if dws in star or dwj in star:
+            t.append(f"현재 대운에 {star_nm.split('(')[0]}({dws if dws in star else dwj})이 들어와 새 인연이 열리기 쉬운 무대")
+        if _JI_HAP.get(dj) == _to_hanja_ji(dw_j):
+            t.append(f"현재 대운 지지({_to_hanja_ji(dw_j)})가 일지와 합이라 인연이 묶이기 쉬운 시기")
+        o = get_ji_rel_set(dj, _to_hanja_ji(dw_j))
+        if o and "충" in o:
+            t.append(f"현재 대운 지지({_to_hanja_ji(dw_j)})가 일지와 충이라 관계에 변화가 큰 시기이니 서두르지 말 것")
+        if t: out.append(" / ".join(t))
+    return " || ".join(out) if out else "재혼 풀이에 특별히 짚을 구조가 없음"
 
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
