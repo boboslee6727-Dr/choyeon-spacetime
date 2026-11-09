@@ -851,6 +851,8 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         # 0) 혼인 상태에 따른 분량·어조
         if marital == "미혼":
             out.append("아직 결혼 전이므로 자녀 풀이는 '앞으로 가정을 이룬 뒤의 모습'을 2~3문장으로 짧게만 쓸 것(자녀가 있다고 가정하지 말 것)")
+        elif marital == "돌싱":
+            out.append("지난 인연을 겪은 분이므로 부부 이야기는 지난 시절의 일로 과거형으로만 쓰고, 앞날 조언은 자녀·가까운 사람과의 균형과 새 인연을 대하는 마음가짐으로 쓸 것(지금 부부 사이가 있다고 가정하지 말고, 자녀가 있는지도 가정하지 말 것)")
         else:
             out.append("자녀가 있는지는 알 수 없으므로 있다·없다를 가정하지 말고, 자녀·돌보는 사람·이끌어 주는 후배와의 인연까지 폭넓게 풀 것")
         allpos = {i for i, _ in gan_hit + ji_hit + hid_hit}
@@ -858,12 +860,17 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
             out.append(f"{star}이 원국의 천간·지지·속에 보이지 않음(자녀 인연의 때는 운에서 {star}이 들어오는 시기이며, 약하다·없다고 쓰지 말 것)")
         else:
             # 1) 위치
-            if 0 in allpos:
-                out.append(f"자녀 자리(시주)에 {star}이 닿아 있어 자녀와의 인연이 직접적")
+            main_pos = {i for i, _ in gan_hit + ji_hit}
+            if 0 in main_pos:
+                out.append(f"자녀 자리(시주)에 {star}이 또렷이 있어 자녀와의 인연이 직접적")
+            elif 0 in allpos:
+                out.append(f"자녀 자리(시주) 속에 {star}이 은은하게 있어 자녀 인연이 조용히 이어지는 구조(또렷하다고 쓰지 말 것)")
             if 1 in allpos:
                 out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조")
-            if allpos & {2, 3}:
+            if main_pos & {2, 3}:
                 out.append(f"앞쪽 자리(년·월)에도 {star}이 있어 자녀 일이 일찍부터 마음에 자리하기 쉬움(나이를 단정하지 말 것)")
+            elif allpos & {2, 3}:
+                out.append(f"앞쪽 자리(년·월) 속에 {star}이 은은하게 있어 자녀 일이 마음 한편에 조용히 자리하는 구조(또렷하다고 쓰지 말 것)")
             # 2) 겉·속
             if gan_hit:
                 out.append(f"{star}이 겉(천간)에 드러나 있어 자녀 일이 겉으로 자주 드러나고 직접 챙기게 되는 구조")
