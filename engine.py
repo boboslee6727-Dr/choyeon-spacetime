@@ -788,6 +788,7 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
         out = []
         if not all_ss:
             return f"{star}이 원국의 천간·지지에 보이지 않음(인연의 때는 운에서 {star}이 들어오는 시기)"
+
         # 1) 위치: 앞쪽(년·월) / 일지 / 뒤쪽(시)
         pos = {i for i, _ in gan_hit + ji_hit}
         front = bool(pos & {2, 3})
@@ -801,6 +802,7 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
             out.append(f"{star}이 뒤쪽 자리(시)에 있어 늦게 올수록 안정적인 구조(나이를 단정하지 말 것)")
         elif front and back:
             out.append(f"{star}이 앞쪽(년·월)과 뒤쪽(시)에 모두 있어 이른 인연과 늦은 인연이 모두 열려 있는 구조")
+
         # 2) 정·편 혼잡
         has_j = any(s == pair[0] for s in all_ss)
         has_p = any(s == pair[1] for s in all_ss)
@@ -810,6 +812,7 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
             out.append(f"{star}이 {_ro(pair[0])}만 있어 안정과 신뢰를 주는 인연을 만나기 쉬움")
         else:
             out.append(f"{star}이 {_ro(pair[1])}만 있어 강렬하고 자극적인 끌림을 따라 인연이 시작되기 쉬움")
+
         # 3) 천간·지지 구분
         if gan_hit and ji_hit:
             out.append(f"{star}이 겉(천간)과 속(지지) 모두에 있어 겉으로 만나는 인연과 속으로 맞는 실속이 함께 이어지는 구조")
@@ -847,10 +850,12 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
             for c in raw[:-1]:
                 if get_ss(ds, c) in pair:
                     hid_hit.append((i, get_ss(ds, c)))
+        if gan_hit or ji_hit:
+            hid_hit = []      # 천간·지지에 자녀별이 있으면 지장간은 살피지 않음(없을 때만 속을 본다)
         out = []
         # 0) 혼인 상태에 따른 분량·어조
         if marital == "미혼":
-            out.append("아직 결혼 전이므로 자녀 풀이는 2~3문장으로 짧게만 쓰되, 자녀 인연을 '결혼한 뒤'로만 한정하지 말 것(혼인과 별개로 자녀 인연이 있었거나 있을 수 있음). 자녀가 있다·없다·있었다를 가정하지 말 것")
+            out.append("아직 결혼 전이므로 자녀 풀이는 2~3문장으로 짧게만 쓰되, 자녀 인연을 '결혼한 뒤'로만 한정하지 말 것(혼인과 별개로 자녀 인연이 있었거나 있을 수 있음). 자녀가 있다·없다·있었다를 가정하지 말 것. 배우자·부부·'가정을 꾸리실 때'처럼 앞으로의 가정 이야기와, 팩트에 없는 균형·합 문장은 쓰지 말 것")
         elif marital == "돌싱":
             out.append("지난 인연을 겪은 분이므로 부부 이야기는 지난 시절의 일로 과거형으로만 쓰고, 앞날 조언은 자녀·가까운 사람과의 균형과 새 인연을 대하는 마음가짐으로 쓸 것(지금 부부 사이가 있다고 가정하지 말고, 자녀가 있는지도 가정하지 말 것)")
         else:
@@ -864,17 +869,20 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
             main_pos = {i for i, _ in gan_hit + ji_hit}
             if 0 in main_pos:
                 out.append(f"자녀 자리(시주)에 {star}이 또렷이 있어 자녀와의 인연이 직접적")
-            if 0 in allpos:
-                out.append(f"자녀 자리(시주)에 {star}이 닿아 있어 자녀와의 인연이 직접적" if 0 in main_pos else f"자녀 자리(시주) 속에 {star}이 은은하게 숨어 있어 자녀와의 인연이 조용히 이어지는 구조")
-            if 1 in allpos:
-                out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조" if 1 in main_pos else f"내 곁의 자리(일지) 속에 {star}이 은은하게 숨어 있어 마음은 자녀에게 가깝지만 겉으로 크게 드러내지는 않는 구조")
+            if 0 in main_pos:
+                out.append(f"자녀 자리(시주)에 {star}이 닿아 있어 자녀와의 인연이 직접적")
+            if 1 in main_pos:
+                out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조")
             if main_pos & {2, 3}:
-                out.append(f"앞쪽 자리(년·월)에도 {star}이 있어 자녀 일이 일찍부터 마음에 자리하기 쉬움(나이를 단정하지 말 것)")
+                out.append(f"앞쪽 자리(년·월)에 {star}이 있어 자녀 일이 일찍부터 마음에 자리하기 쉬움(나이를 단정하지 말 것)")
             elif allpos & {2, 3}:
                 out.append(f"앞쪽 자리(년·월) 속에 {star}이 은은하게 있어 자녀 일이 마음 한편에 조용히 자리하는 구조(또렷하다고 쓰지 말 것)")
+
             # 2) 겉·속
-            if gan_hit:
-                out.append(f"{star}이 겉(천간)에 드러나 있어 자녀 일이 겉으로 자주 드러나고 직접 챙기게 되는 구조")
+            if gan_hit and ji_hit:
+                out.append(f"{star}이 겉(천간)에도 지지에도 있어 자녀를 향한 마음과 현실의 일이 함께 이어지기 쉬운 구조")
+            elif gan_hit:
+                out.append(f"{star}이 겉(천간)에는 드러나 있으나 지지에는 없어, 자녀를 향한 마음과 기대는 분명하지만 그것이 현실의 일로 어떻게 나타나는지는 단정하지 말 것(없다·약하다고 쓰지 말고, 마음이 앞서는 구조로만 쓸 것)")
             elif ji_hit:
                 out.append(f"{star}이 겉에는 없고 속(지지의 중심 기운)에만 있어, 자녀를 향한 마음은 깊지만 겉으로 표현하는 데는 서툴기 쉬운 구조")
             else:
@@ -886,14 +894,16 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
                     out.append("식신과 상관이 함께 있어 자녀를 향한 마음이 포근함과 날카로움 사이를 오가기 쉬움")
                 else:
                     out.append("정관과 편관이 함께 있어 자녀에게 거는 기대와 책임감이 엇갈리기 쉬움")
+
         # 4) 자녀궁(시지) 에너지 — 12운성 이름은 글에 쓰지 않는다
         u = get_unsung(ds, js[0])
         if u in ("장생", "건록", "제왕", "관대"):
-            out.append("자녀 자리(시지)의 에너지가 강한 편이라 자녀 인연의 바탕이 건강하고 덕이 있는 구조(운성 이름은 글에 쓰지 말 것)")
+            out.append("자녀 자리(시지)의 에너지가 강한 편이라 자녀 인연의 바탕이 든든하고 덕이 있는 구조('건강'이라는 낱말과 운성 이름은 글에 쓰지 말 것)")
         elif u in ("쇠", "병", "사", "묘", "절"):
             out.append("자녀 자리(시지)의 에너지가 잔잔한 편이라 정성에 비해 보람이 늦게 느껴질 수 있으나 마음을 나눌수록 깊어지는 구조(약하다·늦다·없다고 쓰지 말 것)")
         else:
             out.append("자녀 자리(시지)의 에너지가 보통이라 자녀 인연의 바탕은 무난한 구조")
+
         # 5) 자녀별을 누르는 기운
         if g == "여":
             ins_cnt = sum(1 for i in (0, 2, 3) if get_ss(ds, gs[i]) in ("편인", "정인")) + \
@@ -903,6 +913,7 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         else:
             if (gan_hit or ji_hit) and (any(get_ss(ds, gs[i]) == "상관" for i in (0, 2, 3)) or any(get_ss(ds, js[i]) == "상관" for i in range(4))):
                 out.append("자녀별을 누르는 기운(상관)이 함께 있어 자녀에게 엄격하거나 말이 부딪히기 쉬움(말투를 부드럽게 권할 것)")
+
         # 6) 자녀별과 배우자별의 균형
         mate_gan = [i for i in (0, 2, 3) if get_ss(ds, gs[i]) in mate]
         mate_ji = [i for i in range(4) if get_ss(ds, js[i]) in mate]
@@ -917,6 +928,7 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
             out.append(f"{star}이 강하고 {mate_nm}이 약해, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
         elif (child_vis + len(hid_hit)) >= 3 and mate_vis == 0:
             out.append(f"{star}은 풍성한데 {mate_nm}은 겉에 없고 속에만 약하게 있어, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
+
         # 7) 자녀별과 배우자별의 합
         _HAP = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
         child_hid_all = [c for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-" and get_ss(ds, c) in pair]
