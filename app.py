@@ -1948,7 +1948,7 @@ if st.session_state.get('app_running', False):
             # ── L. 궁합 · 타 감명서 비교 ──
             "gh_score": gh_score, "gh_grade": gh_grade,
             "harmony_index_facts": harmony_index_str,
-            "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
+            "other_reading_text": (원문_번호붙이기(user_entered_text)[0] if u_product.startswith("4-1") else user_entered_text) if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
             "other_report": user_entered_text,
             "dosik_fact_str": engine.get_dosik_fact(ds, [hs, ms, ys], [hb, db, mb, yb]),
             "jaeseong_fact_str": engine.get_jaeseong_fact(ds, [hs, ms, ys], [hb, db, mb, yb], st.session_state.get("u_g", "여성")),
@@ -2071,8 +2071,14 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
             # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변 — golden_text는 위에서 이미 보여줬으므로 본문 안 마커는 빈 값으로 제거)
-            formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
-            formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+            _번호글, _총수 = 원문_번호붙이기(user_entered_text)
+                _정리글, _빠짐 = 원문_번호_정리(current_ai, _총수)
+                formatted_ai = sub_marker(_정리글, 'DAEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                if _총수 and _빠짐:
+                    import html as _html
+                    _빠진줄 = [ln for ln in _번호글.splitlines() if int(ln[2:ln.index("]")]) in _빠짐]
+                    formatted_ai = formatted_ai + "<div style='margin:14px 0; padding:10px 14px; border:1px solid #bbb; border-radius:8px; font-size:13px; color:#555;'><b>미대조 원문 문장 (" + str(len(_빠짐)) + "개)</b><br>" + "<br>".join(_html.escape(x) for x in _빠진줄) + "</div>"
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', '')
             
