@@ -1665,7 +1665,7 @@ def _earth_rooted(ds, ji):
 def _judge_strength(counts, mb, ds, db=None):
     """신강/신약/중화 판정을 한 곳에 모은 도우미.
     - 일간 자신은 지원세력에서 뺀다(나머지 글자만 센다).
-    - 월지가 일간을 돕거나 빼가면 득령/실령 1점, 일지가 돕거나 빼가면 득지/실지 1점을 더한다.
+    - 월지가 일간을 도우면 득령 1점, 일지가 돕거나 빼가면 득지/실지 1점을 더한다(실령은 감점하지 않는다).
     - 점수가 같으면 중화.
     반환: (판정, 가산 전 지원, 가산 전 소모, 최종 지원, 최종 소모, 득령 설명, 득지 설명)"""
     dm = get_color(ds)
@@ -1685,7 +1685,6 @@ def _judge_strength(counts, mb, ds, db=None):
         support += 1
         deukryeong_note = f"월지({mb})는 土이지만 일간의 12운성이 {get_unsung(ds, mb)}이라 뿌리가 있어 득령"
     elif mb_elem in (siksang, jaeseong, gwanseong):
-        drain += 1
         deukryeong_note = f"월지({mb})가 일간의 기운을 빼가는 오행({mb_elem})이라 실령"
 
     deukji_note = ""
@@ -1765,13 +1764,13 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
         else:
             final_yongshin = eok_bu_yongshin
             confidence_note = (
-                f"억부상 {strength}이므로 {eok_bu_yongshin}을 용신으로 삼되, "
+                f"억부상 {strength}이므로 {eok_bu_yongshin}{'을' if eok_bu_yongshin in ('목', '금') else '를'} 용신으로 삼되, "
                 f"조후상 필요한 {johu_yongshin}이 {eok_bu_yongshin}과 상극 관계라 억지로 보강할 수 없어, "
                 f"조후 불균형({mb}월 한습/조열)으로 인한 현실적 애로는 별도의 증상으로만 짚고 보강 대상으로는 삼지 않음"
             )
     else:
         final_yongshin = eok_bu_yongshin
-        confidence_note = f"억부상 {strength}이므로 {final_yongshin}을 용신으로 삼음"
+        confidence_note = f"억부상 {strength}이므로 {final_yongshin}{'을' if final_yongshin in ('목', '금') else '를'} 용신으로 삼음"
         if johu_yongshin:
             confidence_note += f" (계절상으로는 {johu_yongshin}도 보조적으로 필요)"
 
@@ -1817,7 +1816,7 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
     return (
         label +
         f"일간({ds}, {dm}) 자신을 뺀 나머지 글자 기준 지원세력(비겁+인성)={raw_support} vs 소모세력(식상+재성+관성)={raw_drain}이고, "
-        f"여기에 위치 가산(월지·일지가 돕거나 빼가면 각 1점)을 더한 최종 점수는 {support} vs {drain}로 {strength}입니다"
+        f"여기에 위치 가산(월지가 돕거나 일지가 돕거나 빼가면 각 1점)을 더한 최종 점수는 {support} vs {drain}로 {strength}입니다"
         f"{' (' + position_notes + ')' if position_notes else ''}. "
         f"{confidence_note}."
     )
