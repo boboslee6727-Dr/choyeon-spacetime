@@ -856,6 +856,7 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         else:
             out.append("자녀가 있는지는 알 수 없으므로 있다·없다를 가정하지 말고, 자녀·돌보는 사람·이끌어 주는 후배와의 인연까지 폭넓게 풀 것")
         allpos = {i for i, _ in gan_hit + ji_hit + hid_hit}
+        main_pos = {i for i, _ in gan_hit + ji_hit}
         if not allpos:
             out.append(f"{star}이 원국의 천간·지지·속에 보이지 않음(자녀 인연의 때는 운에서 {star}이 들어오는 시기이며, 약하다·없다고 쓰지 말 것)")
         else:
@@ -863,10 +864,10 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
             main_pos = {i for i, _ in gan_hit + ji_hit}
             if 0 in main_pos:
                 out.append(f"자녀 자리(시주)에 {star}이 또렷이 있어 자녀와의 인연이 직접적")
-            elif 0 in allpos:
-                out.append(f"자녀 자리(시주) 속에 {star}이 은은하게 있어 자녀 인연이 조용히 이어지는 구조(또렷하다고 쓰지 말 것)")
+            if 0 in allpos:
+                out.append(f"자녀 자리(시주)에 {star}이 닿아 있어 자녀와의 인연이 직접적" if 0 in main_pos else f"자녀 자리(시주) 속에 {star}이 은은하게 숨어 있어 자녀와의 인연이 조용히 이어지는 구조")
             if 1 in allpos:
-                out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조")
+                out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조" if 1 in main_pos else f"내 곁의 자리(일지) 속에 {star}이 은은하게 숨어 있어 마음은 자녀에게 가깝지만 겉으로 크게 드러내지는 않는 구조")
             if main_pos & {2, 3}:
                 out.append(f"앞쪽 자리(년·월)에도 {star}이 있어 자녀 일이 일찍부터 마음에 자리하기 쉬움(나이를 단정하지 말 것)")
             elif allpos & {2, 3}:
