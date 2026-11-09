@@ -822,6 +822,102 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
     except Exception:
         return "배우자별 판정 정보를 계산하지 못함"
 
+# ─────────────────────────────────────────────────────────────
+# 자녀별(남=관성, 여=식상)의 위치·겉속·자녀궁 에너지·눌림·부부 균형 글감. gans·jjis 는 [시, 일, 월, 년] 순서
+# ─────────────────────────────────────────────────────────────
+def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
+    """자녀별이 어디에 있는지, 겉에 드러났는지 속에 숨었는지, 자녀궁(시지) 에너지, 자녀별을 누르는 기운,
+    배우자별과의 균형·합을 AI 용 팩트 문자열로 만든다. 자녀의 성별·유무·사건은 단정하지 않는다."""
+    try:
+        g = "남" if str(gender).startswith("남") else "여"
+        ds = _to_hanja(ds)
+        gs = [_to_hanja(x) for x in gans]
+        js = [_to_hanja_ji(x) for x in jjis]
+        if len(gs) < 4 or len(js) < 4 or not ds:
+            return "자녀별 판정 정보가 부족함"
+        pair = ("정관", "편관") if g == "남" else ("식신", "상관")      # 자녀별
+        mate = ("정재", "편재") if g == "남" else ("정관", "편관")      # 배우자별
+        star = "자녀별(관성)" if g == "남" else "자녀별(식상)"
+        mate_nm = "아내별" if g == "남" else "남편별"
+        gan_hit = [(i, get_ss(ds, gs[i])) for i in (0, 2, 3) if gs[i] and get_ss(ds, gs[i]) in pair]
+        ji_hit = [(i, get_ss(ds, js[i])) for i in range(4) if js[i] and get_ss(ds, js[i]) in pair]
+        hid_hit = []          # 지지 속 숨은 자녀별(정기 제외)
+        for i in range(4):
+            raw = [c for c in JIJANGGAN.get(js[i], []) if c != "-"]
+            for c in raw[:-1]:
+                if get_ss(ds, c) in pair:
+                    hid_hit.append((i, get_ss(ds, c)))
+        out = []
+        # 0) 혼인 상태에 따른 분량·어조
+        if marital == "미혼":
+            out.append("아직 결혼 전이므로 자녀 풀이는 '앞으로 가정을 이룬 뒤의 모습'을 2~3문장으로 짧게만 쓸 것(자녀가 있다고 가정하지 말 것)")
+        else:
+            out.append("자녀가 있는지는 알 수 없으므로 있다·없다를 가정하지 말고, 자녀·돌보는 사람·이끌어 주는 후배와의 인연까지 폭넓게 풀 것")
+        allpos = {i for i, _ in gan_hit + ji_hit + hid_hit}
+        if not allpos:
+            out.append(f"{star}이 원국의 천간·지지·속에 보이지 않음(자녀 인연의 때는 운에서 {star}이 들어오는 시기이며, 약하다·없다고 쓰지 말 것)")
+        else:
+            # 1) 위치
+            if 0 in allpos:
+                out.append(f"자녀 자리(시주)에 {star}이 닿아 있어 자녀와의 인연이 직접적")
+            if 1 in allpos:
+                out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조")
+            if allpos & {2, 3}:
+                out.append(f"앞쪽 자리(년·월)에도 {star}이 있어 자녀 일이 일찍부터 마음에 자리하기 쉬움(나이를 단정하지 말 것)")
+            # 2) 겉·속
+            if gan_hit:
+                out.append(f"{star}이 겉(천간)에 드러나 있어 자녀 일이 겉으로 자주 드러나고 직접 챙기게 되는 구조")
+            elif ji_hit:
+                out.append(f"{star}이 겉에는 없고 속(지지의 중심 기운)에만 있어, 자녀를 향한 마음은 깊지만 겉으로 표현하는 데는 서툴기 쉬운 구조")
+            else:
+                out.append(f"{star}이 겉에는 없고 속 깊이 약하게만 있어, 자녀를 향한 마음은 조용히 이어지며 표현은 늦거나 서툴기 쉬운 구조")
+            # 3) 혼잡
+            ss_all = {s for _, s in gan_hit + ji_hit + hid_hit}
+            if len(ss_all) == 2:
+                if g == "여":
+                    out.append("식신과 상관이 함께 있어 자녀를 향한 마음이 포근함과 날카로움 사이를 오가기 쉬움")
+                else:
+                    out.append("정관과 편관이 함께 있어 자녀에게 거는 기대와 책임감이 엇갈리기 쉬움")
+        # 4) 자녀궁(시지) 에너지 — 12운성 이름은 글에 쓰지 않는다
+        u = get_unsung(ds, js[0])
+        if u in ("장생", "건록", "제왕", "관대"):
+            out.append("자녀 자리(시지)의 에너지가 강한 편이라 자녀 인연의 바탕이 건강하고 덕이 있는 구조(운성 이름은 글에 쓰지 말 것)")
+        elif u in ("쇠", "병", "사", "묘", "절"):
+            out.append("자녀 자리(시지)의 에너지가 잔잔한 편이라 정성에 비해 보람이 늦게 느껴질 수 있으나 마음을 나눌수록 깊어지는 구조(약하다·늦다·없다고 쓰지 말 것)")
+        else:
+            out.append("자녀 자리(시지)의 에너지가 보통이라 자녀 인연의 바탕은 무난한 구조")
+        # 5) 자녀별을 누르는 기운
+        if g == "여":
+            ins_cnt = sum(1 for i in (0, 2, 3) if get_ss(ds, gs[i]) in ("편인", "정인")) + \
+                      sum(1 for i in range(4) if get_ss(ds, js[i]) in ("편인", "정인"))
+            if allpos and ins_cnt >= 3:
+                out.append("자녀를 향한 마음을 생각과 걱정이 누르는 기운이 강해, 마음은 깊은데 표현이 서툴거나 걱정이 앞서기 쉬움(단정하지 말고 마음 표현을 권할 것)")
+        else:
+            if (gan_hit or ji_hit) and (any(get_ss(ds, gs[i]) == "상관" for i in (0, 2, 3)) or any(get_ss(ds, js[i]) == "상관" for i in range(4))):
+                out.append("자녀별을 누르는 기운(상관)이 함께 있어 자녀에게 엄격하거나 말이 부딪히기 쉬움(말투를 부드럽게 권할 것)")
+        # 6) 자녀별과 배우자별의 균형
+        mate_gan = [i for i in (0, 2, 3) if get_ss(ds, gs[i]) in mate]
+        mate_ji = [i for i in range(4) if get_ss(ds, js[i]) in mate]
+        mate_hid = any(get_ss(ds, c) in mate for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-")
+        child_vis = len(gan_hit) + len(ji_hit)
+        mate_vis = len(mate_gan) + len(mate_ji)
+        if allpos and not mate_gan and not mate_ji and not mate_hid:
+            out.append(f"{mate_nm}이 원국에 보이지 않고 {star}만 있어, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 일부러 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
+        elif child_vis >= 2 and mate_vis <= 1:
+            out.append(f"{star}이 강하고 {mate_nm}이 약해, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
+        # 7) 자녀별과 배우자별의 합
+        _HAP = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
+        child_hid_all = [c for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-" and get_ss(ds, c) in pair]
+        mate_hid_all = [c for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-" and get_ss(ds, c) in mate]
+        ch_gan = [gs[i] for i, _ in gan_hit]
+        mt_gan = [gs[i] for i in mate_gan]
+        if any(frozenset((a, b)) in _HAP for a in mt_gan for b in child_hid_all) or \
+           any(frozenset((a, b)) in _HAP for a in ch_gan for b in mate_hid_all):
+            out.append(f"{star}과 {mate_nm}이 서로 합하는 모습이라, 자녀 일이 부부 사이를 이어 주기도 하고 부부의 이야기가 자녀 일로 번지기도 하는 구조(좋고 나쁨을 단정하지 말 것)")
+        return " || ".join(out)
+    except Exception:
+        return "자녀별 판정 정보를 계산하지 못함"
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
