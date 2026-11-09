@@ -1014,6 +1014,64 @@ def get_child_timing_facts(ds, gender="남", daewun_list=None):
     except Exception:
         return ""
 
+def get_gungeop_jaeseong_risk_facts(ds, gans, jjis, dw_g="", dw_j="", sewun_g="", sewun_j=""):
+    """군겁쟁재 + 편재 운 + 재성 입묘 사실문 (한 번에 크게 벌려는 승부 주의). gans/jjis = [시,일,월,년]"""
+    try:
+        ds = _to_hanja(ds)
+        _g = [_to_hanja(x) for x in gans]
+        _j = [_to_hanja(x) for x in jjis]
+        _pos = ("시지", "일지", "월지", "년지")
+
+        def _bongi(j):
+            try:
+                lst = [x for x in JIJANGGAN[j] if x not in ("-", "", " ")]
+                return lst[-1] if lst else ""
+            except Exception:
+                return ""
+
+        bigeop = 0
+        jae_vis = 0
+        for k in range(4):
+            if k != 1 and _g[k] not in ("?", "-", " ", ""):
+                _s = get_ss(ds, _g[k])
+                if _s in ("비견", "겁재"):
+                    bigeop += 1
+                if _s in ("정재", "편재"):
+                    jae_vis += 1
+            _b = _bongi(_j[k])
+            if _b:
+                _s2 = get_ss(ds, _b)
+                if _s2 in ("비견", "겁재"):
+                    bigeop += 1
+                if _s2 in ("정재", "편재"):
+                    jae_vis += 1
+        gunggeop = (bigeop >= 3 and jae_vis <= 1)
+
+        _MYO = {"壬": "辰", "癸": "辰", "丙": "戌", "丁": "戌", "庚": "丑", "辛": "丑", "甲": "未", "乙": "未"}
+        out = []
+        if gunggeop:
+            out.append("형제·동료 기운이 많고 눈에 드러난 재물 기운은 약해, 재물을 나누어 갖거나 새기 쉬운 구조")
+        for nm, g, j in (("현재 대운", dw_g, dw_j), ("올해 세운", sewun_g, sewun_j)):
+            g = _to_hanja(g) if g else ""
+            j = _to_hanja(j) if j else ""
+            if gunggeop:
+                _hit = []
+                if g and get_ss(ds, g) == "편재":
+                    _hit.append("겉(천간)")
+                if j and _bongi(j) and get_ss(ds, _bongi(j)) == "편재":
+                    _hit.append("속(지지)")
+                if _hit:
+                    out.append(nm + ": 편재 기운이 " + "·".join(_hit) + "으로 들어와 '한 번에 크게 벌려는 마음'이 커지기 쉬운 때 → 한 번에 크게 얻으려는 승부, 내기성 돈거래, 보증·동업을 특히 조심하라고 쉬운 말로 경고할 것")
+            if g and g in _MYO and get_ss(ds, g) in ("정재", "편재") and _MYO[g] in _j:
+                _where = "·".join([_pos[k] for k in range(4) if _j[k] == _MYO[g]])
+                out.append(nm + ": 천간의 재물 기운이 원국 " + _where + "의 창고에 들어가 묶임(입묘) → 재물 기회가 보여도 손에 쥐기 어렵고 묶이기 쉬우니 '재물을 끌어내기 유리한 때'라고 쓰지 말고 '지키고 다지는 때'로 쓸 것. 창고가 열리는 해는 별도의 창고 사실문만 따를 것")
+        if not out:
+            return "(해당 없음 — 이 항목은 글에 쓰지 말 것)"
+        out.append("(도박·투기라는 낱말은 직접 쓰지 말고, 한 번에 크게 벌려는 승부·내기성 돈거래로 표현할 것. 이 내용은 재물 풀이와 현재 대운 풀이에만 반영할 것)")
+        return " || ".join(out)
+    except Exception:
+        return "(해당 없음 — 이 항목은 글에 쓰지 말 것)"
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
