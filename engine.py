@@ -850,7 +850,7 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         out = []
         # 0) 혼인 상태에 따른 분량·어조
         if marital == "미혼":
-            out.append("아직 결혼 전이므로 자녀 풀이는 '앞으로 가정을 이룬 뒤의 모습'을 2~3문장으로 짧게만 쓸 것(자녀가 있다고 가정하지 말 것)")
+            out.append("아직 결혼 전이므로 자녀 풀이는 2~3문장으로 짧게만 쓰되, 자녀 인연을 '결혼한 뒤'로만 한정하지 말 것(혼인과 별개로 자녀 인연이 있었거나 있을 수 있음). 자녀가 있다·없다·있었다를 가정하지 말 것")
         elif marital == "돌싱":
             out.append("지난 인연을 겪은 분이므로 부부 이야기는 지난 시절의 일로 과거형으로만 쓰고, 앞날 조언은 자녀·가까운 사람과의 균형과 새 인연을 대하는 마음가짐으로 쓸 것(지금 부부 사이가 있다고 가정하지 말고, 자녀가 있는지도 가정하지 말 것)")
         else:
@@ -908,7 +908,9 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         mate_hid = any(get_ss(ds, c) in mate for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-")
         child_vis = len(gan_hit) + len(ji_hit)
         mate_vis = len(mate_gan) + len(mate_ji)
-        if allpos and not mate_gan and not mate_ji and not mate_hid:
+        if marital == "미혼":
+            pass      # 아직 결혼 전이므로 부부 균형 문장은 만들지 않음
+        elif allpos and not mate_gan and not mate_ji and not mate_hid:
             out.append(f"{mate_nm}이 원국에 보이지 않고 {star}만 있어, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 일부러 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
         elif child_vis >= 2 and mate_vis <= 1:
             out.append(f"{star}이 강하고 {mate_nm}이 약해, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
@@ -920,8 +922,8 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         mate_hid_all = [c for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-" and get_ss(ds, c) in mate]
         ch_gan = [gs[i] for i, _ in gan_hit]
         mt_gan = [gs[i] for i in mate_gan]
-        if any(frozenset((a, b)) in _HAP for a in mt_gan for b in child_hid_all) or \
-           any(frozenset((a, b)) in _HAP for a in ch_gan for b in mate_hid_all):
+        if marital != "미혼" and (any(frozenset((a, b)) in _HAP for a in mt_gan for b in child_hid_all) or
+                                  any(frozenset((a, b)) in _HAP for a in ch_gan for b in mate_hid_all)):
             out.append(f"{star}과 {mate_nm}이 서로 합하는 모습이라, 자녀 일이 부부 사이를 이어 주기도 하고 부부의 이야기가 자녀 일로 번지기도 하는 구조(좋고 나쁨을 단정하지 말 것)")
 
         # 8) 지지에서 삼합 세 글자가 모두 모여 자녀별의 기운으로 한 덩어리가 된 경우
