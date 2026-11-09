@@ -865,28 +865,37 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         if not allpos:
             out.append(f"{star}이 원국의 천간·지지·속에 보이지 않음(자녀 인연의 때는 운에서 {star}이 들어오는 시기이며, 약하다·없다고 쓰지 말 것)")
         else:
+
             # 1) 위치
             main_pos = {i for i, _ in gan_hit + ji_hit}
             if 0 in main_pos:
                 out.append(f"자녀 자리(시주)에 {star}이 또렷이 있어 자녀와의 인연이 직접적")
-            if 0 in main_pos:
-                out.append(f"자녀 자리(시주)에 {star}이 닿아 있어 자녀와의 인연이 직접적")
             if 1 in main_pos:
                 out.append(f"내 곁의 자리(일지)에 {star}이 있어 마음이 자녀에게 가까이 놓이는 구조")
             if main_pos & {2, 3}:
                 out.append(f"앞쪽 자리(년·월)에 {star}이 있어 자녀 일이 일찍부터 마음에 자리하기 쉬움(나이를 단정하지 말 것)")
-            elif allpos & {2, 3}:
-                out.append(f"앞쪽 자리(년·월) 속에 {star}이 은은하게 있어 자녀 일이 마음 한편에 조용히 자리하는 구조(또렷하다고 쓰지 말 것)")
 
             # 2) 겉·속
             if gan_hit and ji_hit:
                 out.append(f"{star}이 겉(천간)에도 지지에도 있어 자녀를 향한 마음과 현실의 일이 함께 이어지기 쉬운 구조")
             elif gan_hit:
-                out.append(f"{star}이 겉(천간)에는 드러나 있으나 지지에는 없어, 자녀를 향한 마음과 기대는 분명하지만 그것이 현실의 일로 어떻게 나타나는지는 단정하지 말 것(없다·약하다고 쓰지 말고, 마음이 앞서는 구조로만 쓸 것)")
+                _lv = 0      # 겉에 드러난 자녀별 글자가 지지 속에 뿌리(통근)를 둔 정도: 2=중기 이상, 1=여기
+                for _i, _ in gan_hit:
+                    for _jj in js:
+                        _raw = [c for c in JIJANGGAN.get(_jj, []) if c != "-"]
+                        if gs[_i] in _raw:
+                            _lv = max(_lv, 2 if _raw.index(gs[_i]) >= 1 else 1)
+                if _lv == 2:
+                    out.append(f"{star}이 겉(천간)에 드러나 있고 지지 속에도 뿌리를 두고 있어, 자녀를 향한 마음과 기대가 현실의 일로도 이어지기 쉬운 구조")
+                elif _lv == 1:
+                    out.append(f"{star}이 겉(천간)에 드러나 있고 지지 속에 가늘게 뿌리를 두고 있어, 마음과 기대는 분명하지만 현실에서 이어 가는 힘은 약한 편(약하다고 쓰되 '잃는다·일찍 떠난다' 같은 결과는 단정하지 말고, 섬세하게 살필수록 단단해지는 인연이라는 조언으로 마무리할 것)")
+                else:
+                    out.append(f"{star}이 겉(천간)에는 드러나 있으나 지지에는 뿌리가 없어, 자녀를 향한 마음과 기대는 분명하지만 현실에서 이어 가는 힘은 약한 편(약하다고 쓰되 결과는 단정하지 말고, 마음이 앞서는 구조로 쓸 것)")
             elif ji_hit:
                 out.append(f"{star}이 겉에는 없고 속(지지의 중심 기운)에만 있어, 자녀를 향한 마음은 깊지만 겉으로 표현하는 데는 서툴기 쉬운 구조")
             else:
                 out.append(f"{star}이 겉에는 없고 속 깊이 약하게만 있어, 자녀를 향한 마음은 조용히 이어지며 표현은 늦거나 서툴기 쉬운 구조")
+
             # 3) 혼잡
             ss_all = {s for _, s in gan_hit + ji_hit + hid_hit}
             if len(ss_all) == 2:
@@ -897,7 +906,9 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
 
         # 4) 자녀궁(시지) 에너지 — 12운성 이름은 글에 쓰지 않는다
         u = get_unsung(ds, js[0])
-        if u in ("장생", "건록", "제왕", "관대"):
+        if get_ss(ds, js[0]) not in pair:
+            out.append(f"자녀 자리(시지)에는 자녀별이 아니라 {get_ss(ds, js[0])}{'가' if get_ss(ds, js[0]).endswith('재') else '이'} 앉아 있으므로, 자녀 자리의 힘이나 덕을 좋게 말하는 문장은 쓰지 말 것")
+        elif u in ("장생", "건록", "제왕", "관대"):
             out.append("자녀 자리(시지)의 에너지가 강한 편이라 자녀 인연의 바탕이 든든하고 덕이 있는 구조('건강'이라는 낱말과 운성 이름은 글에 쓰지 말 것)")
         elif u in ("쇠", "병", "사", "묘", "절"):
             out.append("자녀 자리(시지)의 에너지가 잔잔한 편이라 정성에 비해 보람이 늦게 느껴질 수 있으나 마음을 나눌수록 깊어지는 구조(약하다·늦다·없다고 쓰지 말 것)")
