@@ -912,6 +912,8 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
             out.append(f"{mate_nm}이 원국에 보이지 않고 {star}만 있어, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 일부러 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
         elif child_vis >= 2 and mate_vis <= 1:
             out.append(f"{star}이 강하고 {mate_nm}이 약해, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
+        elif (child_vis + len(hid_hit)) >= 3 and mate_vis == 0:
+            out.append(f"{star}은 풍성한데 {mate_nm}은 겉에 없고 속에만 약하게 있어, 마음이 자녀 쪽으로 쏠리기 쉬우니 배우자에게도 시간과 관심을 나누어 두는 것이 가정의 균형을 지키는 열쇠(이혼·별거는 언급하지 말 것)")
         # 7) 자녀별과 배우자별의 합
         _HAP = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
         child_hid_all = [c for i in range(4) for c in JIJANGGAN.get(js[i], []) if c != "-" and get_ss(ds, c) in pair]
@@ -921,6 +923,16 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         if any(frozenset((a, b)) in _HAP for a in mt_gan for b in child_hid_all) or \
            any(frozenset((a, b)) in _HAP for a in ch_gan for b in mate_hid_all):
             out.append(f"{star}과 {mate_nm}이 서로 합하는 모습이라, 자녀 일이 부부 사이를 이어 주기도 하고 부부의 이야기가 자녀 일로 번지기도 하는 구조(좋고 나쁨을 단정하지 말 것)")
+
+        # 8) 지지에서 삼합 세 글자가 모두 모여 자녀별의 기운으로 한 덩어리가 된 경우
+        _SAM = (("申子辰", "壬癸"), ("亥卯未", "甲乙"), ("寅午戌", "丙丁"), ("巳酉丑", "庚辛"))
+        for trio, reps in _SAM:
+            if all(c in js for c in trio) and any(get_ss(ds, r) in pair for r in reps):
+                out.append(f"지지에서 세 글자가 모여 {star}의 기운이 한 덩어리로 크게 뭉쳐 있어, 자녀·표현·활동 쪽으로 마음과 힘이 크게 쏠리는 구조(속에 숨어 있다가 운을 만나면 크게 드러날 수 있음)")
+        # 9) 일간(나)과 자녀별 천간이 바로 옆(시간·월간)에서 합하는 경우
+        for i in (0, 2):
+            if gs[i] and get_ss(ds, gs[i]) in pair and frozenset((ds, gs[i])) in _HAP:
+                out.append(f"내(일간)가 바로 옆 {'시' if i == 0 else '월'}의 {star}과 합하는 모습이라 자녀와 정이 깊게 묶이고 마음이 자녀에게 쏠리기 쉬운 구조")
         return " || ".join(out)
     except Exception:
         return "자녀별 판정 정보를 계산하지 못함"
