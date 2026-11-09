@@ -1975,6 +1975,8 @@ if st.session_state.get('app_running', False):
         
         if raw_response and isinstance(raw_response, str):
             clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            if "1-4" in u_product:
+                clean_raw = re.sub(r"[^.\n]*(?:삼형|천을귀인|공망)[^.\n]*?(?:해당하지 (?:도 )?않|해당되지 않|해당 사항이 없|아니며|아닙니다|보이지 않)[^.\n]*\.[ ]*", "", clean_raw)
             ai_output_html = html_views.format_ai_text_to_html(clean_raw, applicant_name=name, extra_names=[p_name_val] if 'p_name_val' in locals() and p_name_val else [])
         else:
             ai_output_html = "<p style='padding:20px;'>분석 결과를 불러오지 못했습니다.</p>"
