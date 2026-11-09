@@ -918,6 +918,47 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
     except Exception:
         return "자녀별 판정 정보를 계산하지 못함"
 
+# ─────────────────────────────────────────────────────────────
+# 자녀별(식상)이 대운으로 들어와 남편별(관성)과 합·극을 일으키는 시기 글감 (여명 전용).  gans·jjis 는 [시, 일, 월, 년] 순서
+# ─────────────────────────────────────────────────────────────
+def get_child_daewun_balance_facts(ds, gans, jjis, gender="남", daewun_list=None):
+    """여명에서 대운 천간이 식신·상관이고, 원국 천간의 남편별(정관·편관)과 합하거나(식신) 극할 때(상관) 해당 대운을 짚는다.
+    부부 사이에 마음 쏠림·거리감·말 부딪힘이 생기기 쉬운 시기로만 쓰며, 이혼·별거는 단정하지 않는다."""
+    try:
+        if not str(gender).startswith("여") or not daewun_list:
+            return ""
+        ds = _to_hanja(ds)
+        gs = [_to_hanja(x) for x in gans]
+        js = [_to_hanja_ji(x) for x in jjis]
+        if len(gs) < 4 or len(js) < 4 or not ds:
+            return ""
+        _HAP = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
+        mate_gans = [gs[i] for i in (0, 2, 3) if gs[i] and get_ss(ds, gs[i]) in ("정관", "편관")]
+        if not mate_gans:
+            return ""
+        out = []
+        for dw in daewun_list:
+            cg = _to_hanja(dw.get("c_hanja", ""))
+            cj = _to_hanja_ji(dw.get("j_hanja", ""))
+            ss = get_ss(ds, cg) if cg else "-"
+            if ss not in ("식신", "상관"):
+                continue
+            tag = ""
+            if ss == "식신" and any(frozenset((cg, m)) in _HAP for m in mate_gans):
+                tag = "자녀별이 남편별을 합으로 끌어가 마음이 자녀 쪽으로 쏠리고 부부 사이에 거리감이 생기기 쉬운 시기"
+            elif ss == "상관":
+                tag = "자녀별이 남편별을 눌러 부부 사이에 말이 부딪히기 쉬운 시기"
+            if not tag:
+                continue
+            if cj and js[1] == cj:
+                tag += "(배우자 자리와 같은 글자가 대운에 겹쳐 부부 관계의 변화가 더 크게 느껴지기 쉬움)"
+            tag += "(이혼·별거는 언급하지 말고 '부부 관계의 변화·거리감'으로만 쓸 것)"
+            mark = "현재 대운" if dw.get("is_current") else "대운"
+            out.append(f"{dw.get('age_range', '')} {mark}: {tag}")
+        return " || ".join(out) if out else ""
+    except Exception:
+        return ""
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
