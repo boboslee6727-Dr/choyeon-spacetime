@@ -980,6 +980,40 @@ def get_child_daewun_balance_facts(ds, gans, jjis, gender="남", daewun_list=Non
     except Exception:
         return ""
 
+# ─────────────────────────────────────────────────────────────
+# 자녀별(남=관성, 여=식상)이 대운으로 들어오는 시기 글감 (미혼·기혼·돌싱 공통). 자녀의 유무·성별은 단정하지 않는다.
+# ─────────────────────────────────────────────────────────────
+def get_child_timing_facts(ds, gender="남", daewun_list=None):
+    """대운 천간·지지(정기)에 자녀별이 들어오는 대운을 나이대와 함께 짚는다."""
+    try:
+        if not daewun_list:
+            return ""
+        g = "남" if str(gender).startswith("남") else "여"
+        ds = _to_hanja(ds)
+        if not ds:
+            return ""
+        pair = ("정관", "편관") if g == "남" else ("식신", "상관")
+        star = "자녀별(관성)" if g == "남" else "자녀별(식상)"
+        out = []
+        for dw in daewun_list:
+            cg = _to_hanja(dw.get("c_hanja", ""))
+            cj = _to_hanja_ji(dw.get("j_hanja", ""))
+            gan_in = bool(cg) and cg != "-" and get_ss(ds, cg) in pair
+            ji_in = bool(cj) and cj != "-" and get_ss(ds, cj) in pair
+            if not (gan_in or ji_in):
+                continue
+            if gan_in and ji_in:
+                how = f"{star}이 대운의 겉(천간)과 속(지지)으로 함께 들어와 자녀 인연의 기운이 가장 강하게 열리는 시기"
+            elif gan_in:
+                how = f"{star}이 대운의 겉(천간)으로 들어와 자녀 인연이 눈에 띄게 다가오기 쉬운 시기"
+            else:
+                how = f"{star}이 대운의 속(지지)으로 들어와 자녀 인연이 조용히 다가오기 쉬운 시기"
+            mark = "현재 대운" if dw.get("is_current") else "대운"
+            out.append(f"{dw.get('age_range', '')} {mark}: {how}(자녀가 생긴다·없다고 단정하지 말고 '인연의 기운이 열리는 때'로만 쓸 것)")
+        return " || ".join(out)
+    except Exception:
+        return ""
+
 def get_samjae(year_ji, target_ji):
     year_ji, target_ji = _to_hanja(year_ji), _to_hanja(target_ji)
     if year_ji in ["?", " ", "-"] or target_ji in ["?", " ", "-"]: return "해당 없음"
