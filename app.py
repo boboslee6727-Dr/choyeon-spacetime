@@ -849,30 +849,6 @@ if st.session_state.get('app_running', False):
         # 🌟 대제목 렌더링
         main_title_html = html_views.get_main_title_html(report_title) if hasattr(html_views, 'get_main_title_html') else f"<h2 style='text-align:center;'>{report_title}</h2>"
 
-    def 원문_번호붙이기(text):
-        """타 감명서 원문을 문장 단위로 잘라 [원1], [원2]… 번호를 붙인다. (번호 붙인 글, 문장 개수)를 돌려준다."""
-        t = (text or "").strip()
-        if not t or t.startswith("(실제 제출된 외부 원문 없음"):
-            return text, 0
-        조각 = []
-        for line in t.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            for s in re.split(r"(?<=[.!?。])\s+", line):
-                s = s.strip(" -•·")
-                if len(s) >= 3:
-                    조각.append(s)
-        return "\n".join(f"[원{i}] {s}" for i, s in enumerate(조각, 1)), len(조각)
-
-
-    def 원문_번호_정리(ai_text, total):
-        """보고서에서 (원3, 원4) 표시를 지우고, 한 번도 인용되지 않은 원문 번호 목록을 돌려준다."""
-        pat = re.compile(r"\s*\(원\d+(?:\s*,\s*원\d+)*\)")
-        cited = {int(n) for m in pat.finditer(ai_text) for n in re.findall(r"\d+", m.group())}
-        missing = [i for i in range(1, total + 1) if i not in cited]
-        return pat.sub("", ai_text), missing
-
         # ----------------------------------------------------------------------
         # 단일 분기: 2인용 vs 1인용 파트너 연산 및 표지 구성
         # ----------------------------------------------------------------------
