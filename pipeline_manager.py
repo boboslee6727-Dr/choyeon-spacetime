@@ -1025,13 +1025,27 @@ def render_admin_panel():
                     _ok, _msg = send_solapi_kakao_first(row['phone'], row['name'], _kakao_link, final_msg)
                     st.toast(f"📨 {_msg}")
 
+                _fm_ok, _fm_msg = True, ""
+                _fm_raw = row.get('email', '')
+                _fm_to = "" if pd.isna(_fm_raw) else str(_fm_raw).strip()
+                if _fm_to:
+                    with st.spinner("📧 이메일로 PDF를 보내는 중..."):
+                        try:
+                            _fm_pdf = st.session_state.get(f"pdf_preview_{gid}") or generate_pdf_bytes(st.session_state[f"html_{gid}"])
+                            _fm_ok, _fm_msg = send_email_with_pdf(_fm_to, row['name'], str(row['u_product']).split('(')[0].strip(), _fm_pdf)
+                        except Exception as e:
+                            _fm_ok, _fm_msg = False, f"이메일 발송 실패: {e}"
+                    if _fm_ok: st.success(f"📧 {_fm_msg}")
+                    else: st.error(f"🚨 {_fm_msg} (카톡은 이미 발송되었습니다)")
+                else:
+                    st.info("📧 이메일 주소가 없어 카톡(문자)으로만 발송했습니다.")
                 st.session_state.pop(f"html_{gid}", None)
                 st.session_state.pop(f"sms_{gid}", None)
                 st.session_state.pop(f"pdf_preview_{gid}", None)
                 st.session_state.pop('ai_feedback_prompt', None)
                 st.session_state.pop('admin_proc_id', None)
                 st.success(f"✅ [{row['name']}]님 발송 완료!")
-                time.sleep(2 if pdf_url else 20)
+                time.sleep(4 if (pdf_url and _fm_ok) else 25)
                 st.rerun()
 
 # ------------------------------------------------------------------------------
