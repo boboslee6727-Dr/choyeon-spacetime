@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: (ver 87.7) 신청접수 ~ AI 감명 ~ 솔라피 가동
+# 🏮 사주박사: (ver 88.8) 신청접수 ~ AI 감명 ~ 솔라피 가동
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -35,12 +35,10 @@ PRODUCT_MAP = {
     "2-5. 건강운 (정가 11,000원➡️특가 5,500원)": "건강운 특성화 풀이",
     "2-6. 이사 택일 (정가 11,000원➡️특가 5,500원)": "이사 택일 추천",
     "2-7. 개업 택일 (정가 11,000원➡️특가 5,500원)": "개업 택일 추천",
-    "3-1. 결혼/재혼운 (정가 44,000원➡️특가 22,000원)": "부부 및 재혼 궁합 풀이",
+    "3-1. 결혼·재혼운 (정가 44,000원➡️특가 22,000원)": "결혼 및 재혼운 (궁합) 풀이",
     "3-2. 결혼 택일 (정가 22,000원➡️특가 11,000원)": "결혼 택일 추천",
     "3-3. 출산 택일 (정가 66,000원➡️특가 33,000원)": "출산 택일 추천"
 }
-
-U_PRODUCT_LIST = list(PRODUCT_MAP.keys())
 
 U_PRODUCT_LIST = list(PRODUCT_MAP.keys())
 
@@ -379,9 +377,9 @@ def render_customer_order_form():
             st.session_state[f"order_chk_{_matched_products[0]}"] = True
         st.session_state[f"order_chk_url_applied_{_product_from_url}"] = True
 
-    EVENT_PERIOD = "[ 10/1 ~ 10/31 ]"
-    EVENT_TITLE = "🍁 가을맞이 깊어가는 인연 특가! 🍁"
-    EVENT_DESC_1 = "선선해진 가을, 한 해를 차분히 돌아보시라는 마음으로,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
+    EVENT_PERIOD = "[ 11/1 ~ 12/31 ]"
+    EVENT_TITLE = "🎊 2027년 새해맞이 인연 특가! 🎊"
+    EVENT_DESC_1 = "한 해를 따뜻하게 마무리하고 새해를 맞이하시라는 마음으로,<br>기간 한정 <b style='letter-spacing:-0.3px;'>전 상품 50% 특별 할인</b>을 진행합니다."
     EVENT_DESC_2 = "(※ 2개 이상 선택 시 추가 최대 20% 패키지 할인!)"
 
     st.markdown("""
@@ -501,9 +499,9 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
     st.success("🛍️ **1. 상품 선택** (여러 개를 함께 고르시면 할인이 적용됩니다 🎁)")
     MAIN_CATEGORIES = {
-        "1. 개인 사주팔자 풀이 (종합)": "1-",
-        "2. 테마별 특성화 상담": "2-",
-        "3. 커플 결혼/재혼운 (궁합) 풀이": "3-",
+        "1. 사주팔자와 운세 풀이 (개인)": "1-",
+        "2. 테마별 특성화 풀이": "2-",
+        "3. 결혼·재혼운 (궁합) 풀이": "3-",
     }
 
     def format_product_name(item):
@@ -858,9 +856,9 @@ def render_admin_panel():
                                         pass                                
                                 st.session_state['user_concern'] = clean_concern
                                 
-                                if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 개인 사주팔자 풀이 (종합)", r_prod_first
-                                elif "2-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 상담", r_prod_first
-                                elif "3-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 커플 결혼/재혼운 (궁합) 풀이", r_prod_first
+                                if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자와 운세 풀이 (개인)", r_prod_first
+                                elif "2-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 풀이", r_prod_first
+                                elif "3-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 결혼·재혼운 (궁합) 풀이", r_prod_first
 
                                 # 🆕 패키지 자동화: 남은 상품들을 대기열에 저장
                                 st.session_state['admin_pkg_queue'] = r_prod_list[1:]  # 첫 상품 뺀 나머지
