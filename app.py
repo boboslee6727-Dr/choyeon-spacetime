@@ -1862,6 +1862,7 @@ if st.session_state.get('app_running', False):
             "unun_yongshin_status_str": engine.get_unun_yongshin_status(yongshin_fact_str, _cur_wol_pillar[0], _cur_wol_pillar[1], _sel_pillar_d[0], _sel_pillar_d[1]) if hasattr(engine, "get_unun_yongshin_status") else "",
             "first_half_period": seun_first_half if "1-2" in u_product else re.sub(r'\d{4}년 ', '', wolun_first_half),
             "second_half_period": seun_second_half if "1-2" in u_product else re.sub(r'\d{4}년 ', '', wolun_second_half),
+            "today_str": today_str
             "samhyung_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1]),
             "samhyung_potential_facts": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur),
             "samhyung_sewun_facts": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12]),
@@ -1924,7 +1925,7 @@ if st.session_state.get('app_running', False):
             # ── L. 궁합 · 타 감명서 비교 ──
             "gh_score": gh_score, "gh_grade": gh_grade,
             "harmony_index_facts": harmony_index_str,
-            "other_reading_text": user_entered_text if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
+            "other_reading_text": (engine.원문_번호붙이기(user_entered_text)[0] if u_product.startswith("4-1") else user_entered_text) if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
             "other_report": user_entered_text,
             "dosik_fact_str": engine.get_dosik_fact(ds, [hs, ms, ys], [hb, db, mb, yb]),
             "jaeseong_fact_str": engine.get_jaeseong_fact(ds, [hs, ms, ys], [hb, db, mb, yb], st.session_state.get("u_g", "여성")),
@@ -1976,9 +1977,11 @@ if st.session_state.get('app_running', False):
         """
 
         raw_response = call_claude_api(formatted_prompt)
+        if isinstance(raw_response, str) and "\ufffd" in raw_response:
+            raw_response = call_claude_api(formatted_prompt) or raw_response
         
         if raw_response and isinstance(raw_response, str):
-            clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
+            clean_raw = raw_response.replace("```html", "").replace("```markdown", "").replace("```", "").replace("\ufffd", "").strip()
             if "1-4" in u_product:
                 clean_raw = re.sub(r"[^.\n]*(?:삼형|천을귀인|공망)[^.\n]*?(?:해당하지 (?:도 )?않|해당되지 않|해당 사항이 없|아니며|아닙니다|보이지 않)[^.\n]*\.[ ]*", "", clean_raw)
             ai_output_html = html_views.format_ai_text_to_html(clean_raw, applicant_name=name, extra_names=[p_name_val] if 'p_name_val' in locals() and p_name_val else [])
@@ -2047,8 +2050,14 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
             # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변 — golden_text는 위에서 이미 보여줬으므로 본문 안 마커는 빈 값으로 제거)
-            formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
+            _번호글, _총수 = engine.원문_번호붙이기(user_entered_text)
+            _정리글, _빠짐 = engine.원문_번호_정리(current_ai, _총수)
+            formatted_ai = sub_marker(_정리글, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                if _총수 and _빠짐:
+                    import html as _html
+                    _빠진줄 = [ln for ln in _번호글.splitlines() if int(ln[2:ln.index("]")]) in _빠짐]
+                    formatted_ai = formatted_ai + "<div style='margin:14px 0; padding:10px 14px; border:1px solid #bbb; border-radius:8px; font-size:13px; color:#555;'><b>미대조 원문 문장 (" + str(len(_빠짐)) + "개)</b><br>" + "<br>".join(_html.escape(x) for x in _빠진줄) + "</div>"
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', '')
             
