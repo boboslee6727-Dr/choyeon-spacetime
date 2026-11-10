@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 88.7 - 상품별 정리판)
+# engine.py (ver 88.8 - 상품별 정리판)
 # ==============================================================================
 import os
 import streamlit as st
@@ -4369,17 +4369,6 @@ def analyze_love_and_marriage_patterns(bazi_dict):
     results["summary_output"] = "\n".join(results["fact_summary_text"]) if results["fact_summary_text"] else "특이 애정 리스크 없음."
     return results
 
-
-_SAMHAP_TRIOS = [{'亥','卯','未'}, {'寅','午','戌'}, {'申','子','辰'}, {'巳','酉','丑'}]
-_BANGHAP_TRIOS = [{'寅','卯','辰'}, {'巳','午','未'}, {'申','酉','戌'}, {'亥','子','丑'}]
-
-def _has_complete_hap(jj, dj):
-    """한 사람의 지지 네 글자 안에서 삼합·방합이 세 글자 모두 모였고, 그 안에 일지(dj)가 들어 있으면 True"""
-    s = set(jj)
-    for trio in _SAMHAP_TRIOS + _BANGHAP_TRIOS:
-        if trio <= s and dj in trio:
-            return True
-    return False
 
 _SAMHAP_TRIOS = [{'亥','卯','未'}, {'寅','午','戌'}, {'申','子','辰'}, {'巳','酉','丑'}]
 _BANGHAP_TRIOS = [{'寅','卯','辰'}, {'巳','午','未'}, {'申','酉','戌'}, {'亥','子','丑'}]
