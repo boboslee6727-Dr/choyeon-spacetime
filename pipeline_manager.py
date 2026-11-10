@@ -302,6 +302,36 @@ def send_solapi_kakao_receipt(to_phone, name, product_name, price_text):
 # ------------------------------------------------------------------------------
 # 0. 🧮 [패키지 연산 엔진]
 # ------------------------------------------------------------------------------
+
+def send_email_with_pdf(to_email, name, product_name, pdf_bytes):
+    """고객 이메일로 감명서 PDF를 첨부해 보냅니다. 반환: (성공여부, 안내글)"""
+    try:
+        import smtplib
+        from email.message import EmailMessage
+        to_email = str(to_email or "").strip()
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", to_email):
+            return False, "이메일 주소가 비어 있거나 형식이 올바르지 않습니다."
+        sender = st.secrets["GMAIL_ADDRESS"]
+        app_pw = str(st.secrets["GMAIL_APP_PASSWORD"]).replace(" ", "")
+        msg = EmailMessage()
+        msg["Subject"] = f"[사주박사] {name}님의 감명서가 완성되었습니다"
+        msg["From"] = f"사주박사 <{sender}>"
+        msg["To"] = to_email
+        msg.set_content(
+            f"{name}님, 안녕하십니까. 사주박사입니다.\n\n"
+            f"요청하신 [{product_name}] 감명서가 완성되어 PDF 파일로 첨부해 드립니다.\n\n"
+            "※ 이 메일이 보이지 않으면 '스팸함(정크메일함)'도 꼭 확인해 주세요.\n"
+            "※ 스팸함에 있다면 '스팸 아님'으로 표시해 주시면 다음부터 편하게 받으실 수 있습니다.\n\n"
+            "궁금하신 점은 카카오톡 채널로 문의해 주세요.\n감사합니다.\n사주박사 드림"
+        )
+        msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=f"{name}_감명서.pdf")
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=60) as smtp:
+            smtp.login(sender, app_pw)
+            smtp.send_message(msg)
+        return True, f"이메일 발송 완료 ({to_email})"
+    except Exception as e:
+        return False, f"이메일 발송 실패: {e}"
+
 def calculate_package_price(selected_products):
     if not selected_products: return 0, 0, 0, 0, 0
     total_original = 0
@@ -950,6 +980,22 @@ def render_admin_panel():
             st.markdown("#### 💡 영업부가 작성해 온 [맞춤형 1:1 타겟팅 영업 문자] 입니다.")
             st.info(st.session_state[f"sms_{gid}"])
             
+            _raw_mail = row.get('email', '')
+            _to_mail = "" if pd.isna(_raw_mail) else str(_raw_mail).strip()
+            if _to_mail:
+                st.caption(f"📧 고객 이메일: {_to_mail}")
+                if st.button("📧 이메일로 PDF 발송", key=f"mail_btn_{gid}"):
+                    with st.spinner("📄 PDF를 만들어 이메일로 보내는 중..."):
+                        try:
+                            _mail_pdf = st.session_state.get(f"pdf_preview_{gid}") or generate_pdf_bytes(st.session_state[f"html_{gid}"])
+                            _mok, _mmsg = send_email_with_pdf(_to_mail, row['name'], str(row['u_product']).split('(')[0].strip(), _mail_pdf)
+                        except Exception as e:
+                            _mok, _mmsg = False, f"이메일 발송 실패: {e}"
+                    if _mok: st.success(f"📧 {_mmsg}")
+                    else: st.error(f"🚨 {_mmsg}")
+            else:
+                st.caption("📧 고객이 이메일을 적지 않아 문자로만 안내합니다.")
+
             if st.button("🟢 최종 발송 및 완료 처리!", type="primary"):
                 save_report_to_db(gid, st.session_state[f"html_{gid}"])
                 update_order_status(gid, "분석완료")
