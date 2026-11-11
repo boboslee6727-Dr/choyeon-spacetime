@@ -4437,7 +4437,7 @@ def get_spouse_palace_facts(ds, gans, jjis, gender):
         tags = [x.strip() for x in rel.split(",")]
         neg = [t for t in tags if t in ("충", "형", "원진", "파", "해", "귀문")]
         pos = [t for t in tags if t in ("육합", "반합", "방합", "방합(미완)")]
-        _MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "서로 신경이 곤두서는 어긋남", "귀문": "서로 예민하게 엇갈림",
+        _MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "끌리면서도 서운함이 쌓이는 어긋남(애증)", "귀문": "마음이 예민해져 생각이 꼬이기 쉬움"
                  "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음", "방합": "같은 기운으로 이어짐", "방합(미완)": "같은 기운으로 이어짐"}
         if neg: bad.append(f"일지({dj})–{nm}({j}): {'·'.join(neg)}[{' / '.join(_MEAN[t] for t in neg)}]")
         if pos: good.append(f"일지({dj})–{nm}({j}): {'·'.join(pos)}[{' / '.join(_MEAN[t] for t in pos)}]")
