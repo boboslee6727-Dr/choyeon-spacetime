@@ -41,6 +41,14 @@ JIJANGGAN = {
     '酉': ['庚', '-', '辛'], '戌': ['辛', '丁', '戊'], '亥': ['戊', '甲', '壬']
 }
 
+_AM_GAN_HAP = {frozenset(x) for x in ["甲己", "乙庚", "丙辛", "丁壬", "戊癸"]}
+
+def _has_amhap(a, b):
+    """두 지지의 지장간(여기·중기·정기 전부) 속 천간끼리 합이 하나라도 있으면 True (암합)."""
+    ga = [g for g in JIJANGGAN.get(a, []) if g != '-']
+    gb = [g for g in JIJANGGAN.get(b, []) if g != '-']
+    return any(frozenset((x, y)) in _AM_GAN_HAP for x in ga for y in gb)
+
 # 🚨 한자 간지 → 한글 발음 변환 (기존 K2H_GAN / K2H_JI 표를 거꾸로 재사용, 별도 표 관리 안 함)
 _H2K_MAP = {}
 
@@ -2756,7 +2764,7 @@ def get_couple_pillars_fact_str(m_gans, m_jjis, f_gans, f_jjis):
 
 def get_couple_ji_rel_facts(m_jjis, f_jjis):
     """남명·여명 지지끼리의 관계(일지·년지·월지·시지) 사실문. 목록 순서: 0=시, 1=일, 2=월, 3=년 (앱 전체 공통)."""
-    MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "서로 신경이 곤두서는 어긋남", "귀문": "서로 예민하게 엇갈림",
+    MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "끌리면서도 서운함이 쌓이는 어긋남(애증)", "귀문": "마음이 예민해져 생각이 꼬이기 쉬움",
             "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음",
             "방합": "같은 기운으로 이어짐", "방합(미완)": "같은 기운으로 이어짐", "암합": "속으로 은근히 끌림",
             "공합": "가운데 글자가 빠져 있어 힘이 약하게 이어짐", "공협": "가운데 글자가 빠져 있어 힘이 약하게 이어짐",
@@ -2785,7 +2793,6 @@ def get_couple_ji_rel_facts(m_jjis, f_jjis):
                 f"월지끼리 {_rel(m_jjis[2], f_jjis[2])} / 시지끼리 {_rel(m_jjis[0], f_jjis[0])}" + _extra)
     except Exception:
         return "지지 관계 정보 없음"
-
 
 def get_ohang_deficiency_supply_str(counts, level_phase_data):
     """
@@ -4437,7 +4444,7 @@ def get_spouse_palace_facts(ds, gans, jjis, gender):
         tags = [x.strip() for x in rel.split(",")]
         neg = [t for t in tags if t in ("충", "형", "원진", "파", "해", "귀문")]
         pos = [t for t in tags if t in ("육합", "반합", "방합", "방합(미완)")]
-        _MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "끌리면서도 서운함이 쌓이는 어긋남(애증)", "귀문": "마음이 예민해져 생각이 꼬이기 쉬움"
+        _MEAN = {"충": "서로 부딪힘", "형": "서로 어긋나 틀어짐", "원진": "끌리면서도 서운함이 쌓이는 어긋남(애증)", "귀문": "마음이 예민해져 생각이 꼬이기 쉬움",
                  "파": "서로 깨지듯 흔들림", "해": "서로 엇나감", "육합": "서로 당겨 묶임", "반합": "서로 당겨 힘을 모음", "방합": "같은 기운으로 이어짐", "방합(미완)": "같은 기운으로 이어짐"}
         if neg: bad.append(f"일지({dj})–{nm}({j}): {'·'.join(neg)}[{' / '.join(_MEAN[t] for t in neg)}]")
         if pos: good.append(f"일지({dj})–{nm}({j}): {'·'.join(pos)}[{' / '.join(_MEAN[t] for t in pos)}]")
@@ -5160,7 +5167,7 @@ _GEONROK_MAP  = {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','�
 
 _SIPAK_DAEPAE = ["甲辰", "乙巳", "丙申", "丁亥", "戊戌", "己丑", "庚辰", "辛巳", "壬申", "癸亥"]
 _GWIMUN_PAIRS = {frozenset(p) for p in ('子酉', '丑午', '寅未', '卯申', '辰亥', '巳戌')}   # 귀문관살
-_AMHAP_PAIRS = {frozenset(p) for p in ('寅丑', '午亥', '卯申', '子巳')}                       # 암합(대표 4쌍, 더 넣으시려면 여기에)
+_AMHAP_PAIRS = {frozenset(p) for p in ('寅丑', '午亥', '卯申', '子戌', '寅未')}
 _INNER_PAIR_W = {(0, 1): 0.6, (0, 2): 0.8, (0, 3): 0.5, (1, 2): 1.0, (1, 3): 0.7, (2, 3): 0.9}   # 쌍별 비중 (월-일이 가장 큼)
 _INNER_PAIR_NM = {(0, 1): '년지와 월지', (0, 2): '년지와 일지', (0, 3): '년지와 시지', (1, 2): '월지와 일지', (1, 3): '월지와 시지', (2, 3): '일지와 시지'}
 
