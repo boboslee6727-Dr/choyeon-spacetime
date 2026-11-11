@@ -2310,6 +2310,8 @@ if st.session_state.get('app_running', False):
         clean_report_html = combined_report_html.replace('```html', '').replace('```markdown', '').replace('```', '')
         clean_report_html = re.sub(r'<h1([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h1>', r'<h1\1>\2</h1>', clean_report_html)
         clean_report_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', clean_report_html)
+        # AI가 날짜를 쓰다 스스로 고친 흔적("(원문 ○○ 아닌 △△, 수정)…")이 손님 글에 나가지 않게 제거
+        clean_report_html = re.sub(r'\(\s*원문[^)]{0,60}수정\s*\)\s*(?:\.{2,3}|…)?\s*', '', clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
