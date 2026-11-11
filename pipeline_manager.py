@@ -991,8 +991,12 @@ def render_admin_panel():
                             _mok, _mmsg = send_email_with_pdf(_to_mail, row['name'], str(row['u_product']).split('(')[0].strip(), _mail_pdf)
                         except Exception as e:
                             _mok, _mmsg = False, f"이메일 발송 실패: {e}"
-                    if _mok: st.success(f"📧 {_mmsg}")
+                    iif _mok: st.success(f"📧 {_mmsg}")
                     else: st.error(f"🚨 {_mmsg}")
+                if st.button("🧪 이메일 시험 (빈 PDF, 빠름)", key=f"mail_test_{gid}"):
+                    _tok, _tmsg = send_email_with_pdf(_to_mail, row['name'], "시험 발송", b"%PDF-1.4 test")
+                    if _tok: st.success(f"📧 {_tmsg}")
+                    else: st.error(f"🚨 {_tmsg}")
             else:
                 st.caption("📧 고객이 이메일을 적지 않아 문자로만 안내합니다.")
 
