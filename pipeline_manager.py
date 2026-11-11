@@ -1100,11 +1100,18 @@ def render_admin_panel():
                             _re_ok, _re_msg = False, f"이메일 발송 실패: {e}"
                     if _re_ok: st.success(f"📧 {_re_msg}")
                     else: st.error(f"🚨 {_re_msg}")
-            if st.button("🧪 작은 시험 메일 (첨부 없음, 빠름)", key=f"resend_tiny_{_pick}"):
-                _t_ok, _t_msg = send_email_with_pdf(_to, _rr['name'], "시험 발송", None)
-                if _t_ok: st.success(f"📧 {_t_msg}")
-                else: st.error(f"🚨 {_t_msg}")
-
+            if st.button("📱 카톡(문자)으로 감명서 확인 링크 다시 보내기", key=f"resend_kakao_{_pick}"):
+                _ph = _rr.get('phone', '')
+                _pu = _rr.get('pdf_url', '')
+                _pu = "" if pd.isna(_pu) else str(_pu).strip()
+                if pd.isna(_ph) or not str(_ph).strip():
+                    st.error("🚨 전화번호가 없어 카톡(문자)을 보낼 수 없습니다.")
+                else:
+                    _klink = _pu if _pu else f"{BASE_URL}/?mode=view&code={_pick}"
+                    _kmsg = f"[사주박사] {_rr['name']}님, 감명서가 완성되었습니다.\n아래 파일을 눌러 바로 확인하세요.\n{_klink}"
+                    _k_ok, _k_msg = send_solapi_kakao_first(str(_ph).strip(), _rr['name'], _klink, _kmsg)
+                    if _k_ok: st.success(f"📨 {_k_msg}")
+                    else: st.error(f"🚨 {_k_msg}")
 # ------------------------------------------------------------------------------
 # 3. 📜 [고객 전용 결과 열람창]
 # ------------------------------------------------------------------------------
