@@ -71,7 +71,7 @@ def get_amyeonghap_cells(gans, jjis):
     lst = get_amyeonghap_list(gans, jjis)
     return ["<br>".join(f"{g}({lab})↔{x}" for ci2, g, lab, x in lst if ci2 == ci) or "-" for ci in range(4)]
 
-def get_amyeonghap_facts(gans, jjis):
+def get_amyeonghap_facts(gans, jjis, ds=None):
     """풀이용 사실문. 일간·일지가 낀 것을 앞에 둔다."""
     _lab = ["시", "일", "월", "년"]
     lst = get_amyeonghap_list(gans, jjis)
@@ -83,7 +83,8 @@ def get_amyeonghap_facts(gans, jjis):
     lines = []
     for ci, g, lab, x in sorted(lst, key=_pri):
         same = " (같은 기둥 안)" if _lab[ci] == lab else ""
-        lines.append(f"{lab}간 {g}과 {_lab[ci]}지 {jjis[ci]} 속 {x}가 합{same}")
+        _ss = f"[{get_ss(ds, x)}]" if ds else ""
+        lines.append(f"{lab}간 {g}과 {_lab[ci]}지 {jjis[ci]} 속 {x}{_ss}가 합{same}")
     return " / ".join(lines)
 
 # 🚨 한자 간지 → 한글 발음 변환 (기존 K2H_GAN / K2H_JI 표를 거꾸로 재사용, 별도 표 관리 안 함)
@@ -1460,7 +1461,7 @@ def get_ji_rel_set(me, target):
     if s in [{'寅','卯'}, {'卯','辰'}, {'巳','午'}, {'午','未'}, {'申','酉'}, {'酉','戌'}, {'亥','子'}, {'子','丑'}]: r.append("방합(미완)")
     if s in [{'寅','辰'}, {'巳','未'}, {'申','戌'}, {'亥','丑'}]: r.append("공협")
     if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: r.append("육합")
-    if s in [{'午','亥'}, {'子','戌'}, {'丑','寅'}, {'寅','未'}, {'卯','申'}]: r.append("암합")
+    if _has_amhap(me, target): r.append("암합")
     if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: r.append("충")
     if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: r.append("형")
     if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: r.append("해")
