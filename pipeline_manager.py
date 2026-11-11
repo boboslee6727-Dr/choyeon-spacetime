@@ -325,10 +325,23 @@ def send_email_with_pdf(to_email, name, product_name, pdf_bytes):
             "궁금하신 점은 카카오톡 채널로 문의해 주세요.\n감사합니다.\n사주박사 드림"
         )
         msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=f"{name}_감명서.pdf")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=60) as smtp:
-            smtp.login(sender, app_pw)
-            smtp.send_message(msg)
-        return True, f"이메일 발송 완료 ({to_email})"
+        _errs = []
+        for _port, _use_ssl in ((587, False), (465, True)):
+            try:
+                if _use_ssl:
+                    smtp = smtplib.SMTP_SSL("smtp.gmail.com", _port, timeout=90)
+                else:
+                    smtp = smtplib.SMTP("smtp.gmail.com", _port, timeout=90)
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
+                with smtp:
+                    smtp.login(sender, app_pw)
+                    smtp.send_message(msg)
+                return True, f"이메일 발송 완료 ({to_email})"
+            except Exception as _e:
+                _errs.append(f"{_port}번 길: {_e}")
+        raise Exception(" / ".join(_errs))
     except Exception as e:
         return False, f"이메일 발송 실패: {e}"
 
@@ -803,6 +816,8 @@ def render_admin_panel():
         return
 
     st.subheader("👑 초연명리 통합 상황실 (URL 이동 없음)")
+    if st.session_state.get('last_mail_result'):
+        st.info(f"📧 최근 이메일 발송 결과: {st.session_state['last_mail_result']}")
     
     resp = get_supabase_client().table("orders").select("*").order("created_at", desc=True).execute()
     df = pd.DataFrame(resp.data) if resp.data else pd.DataFrame(columns=["order_id","created_at","phone","email","name","gender","marital","u_cal","b_year","b_month","b_day","b_time","u_product","f_name","f_gender","f_marital","f_cal","f_y","f_m","f_d","f_t","user_concern","status","result_html","pdf_url","final_price","supply_amount","vat_amount"])
@@ -1041,8 +1056,10 @@ def render_admin_panel():
                             _fm_ok, _fm_msg = False, f"이메일 발송 실패: {e}"
                     if _fm_ok: st.success(f"📧 {_fm_msg}")
                     else: st.error(f"🚨 {_fm_msg} (카톡은 이미 발송되었습니다)")
+                    st.session_state['last_mail_result'] = (f"{row['name']}님 · " + ("✅ " if _fm_ok else "🚨 ") + str(_fm_msg))
                 else:
                     st.info("📧 이메일 주소가 없어 카톡(문자)으로만 발송했습니다.")
+                    st.session_state['last_mail_result'] = f"{row['name']}님 · 이메일 주소가 없어 카톡(문자)으로만 발송"
                 st.session_state.pop(f"html_{gid}", None)
                 st.session_state.pop(f"sms_{gid}", None)
                 st.session_state.pop(f"pdf_preview_{gid}", None)
@@ -1052,8 +1069,36 @@ def render_admin_panel():
                 time.sleep(4 if (pdf_url and _fm_ok) else 25)
                 st.rerun()
 
+    # ----- [서랍장 4] 완료된 주문 이메일 재발송 -----
+    done_orders = df[df["status"] == "분석완료"].head(30)
+    with st.expander("📧 [서랍장 4] 완료된 주문 이메일 재발송 (고객이 못 받았다고 할 때)", expanded=False):
+        if done_orders.empty:
+            st.caption("완료된 주문이 아직 없습니다.")
+        else:
+            _labels = {}
+            for _, _r in done_orders.iterrows():
+                _labels[_r['order_id']] = f"{_r['name']} | {str(_r['u_product']).split('(')[0].strip()} | {_r['created_at']}"
+            _pick = st.selectbox("주문 선택 (최근 30건)", list(_labels.keys()), format_func=lambda k: _labels[k], key="resend_pick")
+            _rr = done_orders[done_orders["order_id"] == _pick].iloc[0]
+            _raw_em = _rr.get('email', '')
+            _def_mail = "" if pd.isna(_raw_em) else str(_raw_em).strip()
+            _to = st.text_input("받을 이메일 (바꿔서 보내도 됩니다)", value=_def_mail, key=f"resend_to_{_pick}")
+            _saved_html = _rr.get('result_html', '')
+            if st.button("📧 이 주문 감명서를 이메일로 다시 보내기", key=f"resend_btn_{_pick}"):
+                if pd.isna(_saved_html) or not str(_saved_html).strip():
+                    st.error("🚨 저장된 풀이서가 없어 보낼 수 없습니다.")
+                else:
+                    with st.spinner("📄 PDF를 만들어 이메일로 보내는 중... (30초쯤 걸립니다)"):
+                        try:
+                            _re_pdf = generate_pdf_bytes(str(_saved_html))
+                            _re_ok, _re_msg = send_email_with_pdf(_to, _rr['name'], str(_rr['u_product']).split('(')[0].strip(), _re_pdf)
+                        except Exception as e:
+                            _re_ok, _re_msg = False, f"이메일 발송 실패: {e}"
+                    if _re_ok: st.success(f"📧 {_re_msg}")
+                    else: st.error(f"🚨 {_re_msg}")
+
 # ------------------------------------------------------------------------------
-# 3. 📜 [고객 전용 결과 열람창] 
+# 3. 📜 [고객 전용 결과 열람창]
 # ------------------------------------------------------------------------------
 def render_view_page(order_id):
     resp = get_supabase_client().table("orders").select("*").eq("order_id", order_id).execute()
