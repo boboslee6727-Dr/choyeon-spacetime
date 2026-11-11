@@ -1100,18 +1100,22 @@ def render_admin_panel():
                             _re_ok, _re_msg = False, f"이메일 발송 실패: {e}"
                     if _re_ok: st.success(f"📧 {_re_msg}")
                     else: st.error(f"🚨 {_re_msg}")
+            _def_ph = _rr.get('phone', '')
+            _def_ph = "" if pd.isna(_def_ph) else str(_def_ph).strip()
+            _to_ph = st.text_input("받을 전화번호 (바꿔서 보내도 됩니다)", value=_def_ph, key=f"resend_ph_{_pick}")
             if st.button("📱 카톡(문자)으로 감명서 확인 링크 다시 보내기", key=f"resend_kakao_{_pick}"):
-                _ph = _rr.get('phone', '')
+                _ph_digits = re.sub(r"\D", "", _to_ph)
                 _pu = _rr.get('pdf_url', '')
                 _pu = "" if pd.isna(_pu) else str(_pu).strip()
-                if pd.isna(_ph) or not str(_ph).strip():
-                    st.error("🚨 전화번호가 없어 카톡(문자)을 보낼 수 없습니다.")
+                if not re.match(r"^01[0-9]{8,9}$", _ph_digits):
+                    st.error("🚨 전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)")
                 else:
                     _klink = _pu if _pu else f"{BASE_URL}/?mode=view&code={_pick}"
                     _kmsg = f"[사주박사] {_rr['name']}님, 감명서가 완성되었습니다.\n아래 파일을 눌러 바로 확인하세요.\n{_klink}"
-                    _k_ok, _k_msg = send_solapi_kakao_first(str(_ph).strip(), _rr['name'], _klink, _kmsg)
+                    _k_ok, _k_msg = send_solapi_kakao_first(_ph_digits, _rr['name'], _klink, _kmsg)
                     if _k_ok: st.success(f"📨 {_k_msg}")
                     else: st.error(f"🚨 {_k_msg}")
+
 # ------------------------------------------------------------------------------
 # 3. 📜 [고객 전용 결과 열람창]
 # ------------------------------------------------------------------------------
