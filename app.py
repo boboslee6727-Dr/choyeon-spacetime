@@ -2312,6 +2312,8 @@ if st.session_state.get('app_running', False):
         clean_report_html = re.sub(r'<h2([^>]*)>\s*\[\s*(.*?)\s*\]\s*</h2>', r'<h2\1>\2</h2>', clean_report_html)
         # AI가 날짜를 쓰다 스스로 고친 흔적("(원문 ○○ 아닌 △△, 수정)…")이 손님 글에 나가지 않게 제거
         clean_report_html = re.sub(r'\(\s*원문[^)]{0,60}수정\s*\)\s*(?:\.{2,3}|…)?\s*', '', clean_report_html)
+        # 번호 제목("1. ○○") 앞에 AI가 임의로 붙인 🎯 이모지 제거 (공망 상자의 "🎯 공망"은 그대로 둠)
+        clean_report_html = re.sub(r'🎯\s*(?=\d+\.\s)', '', clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
