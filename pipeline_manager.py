@@ -324,9 +324,11 @@ def send_email_with_pdf(to_email, name, product_name, pdf_bytes):
             "※ 스팸함에 있다면 '스팸 아님'으로 표시해 주시면 다음부터 편하게 받으실 수 있습니다.\n\n"
             "궁금하신 점은 카카오톡 채널로 문의해 주세요.\n감사합니다.\n사주박사 드림"
         )
-        msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=f"{name}_감명서.pdf")
+        if pdf_bytes:
+            msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=f"{name}_감명서.pdf")
         _errs = []
         for _port, _use_ssl in ((587, False), (465, True)):
+            _stage = "접속"
             try:
                 if _use_ssl:
                     smtp = smtplib.SMTP_SSL("smtp.gmail.com", _port, timeout=90)
@@ -336,11 +338,13 @@ def send_email_with_pdf(to_email, name, product_name, pdf_bytes):
                     smtp.starttls()
                     smtp.ehlo()
                 with smtp:
+                    _stage = "로그인"
                     smtp.login(sender, app_pw)
+                    _stage = "발송"
                     smtp.send_message(msg)
                 return True, f"이메일 발송 완료 ({to_email})"
             except Exception as _e:
-                _errs.append(f"{_port}번 길: {_e}")
+                _errs.append(f"{_port}번 길({_stage} 단계): {_e}")
         raise Exception(" / ".join(_errs))
     except Exception as e:
         return False, f"이메일 발송 실패: {e}"
@@ -1096,6 +1100,10 @@ def render_admin_panel():
                             _re_ok, _re_msg = False, f"이메일 발송 실패: {e}"
                     if _re_ok: st.success(f"📧 {_re_msg}")
                     else: st.error(f"🚨 {_re_msg}")
+            if st.button("🧪 작은 시험 메일 (첨부 없음, 빠름)", key=f"resend_tiny_{_pick}"):
+                _t_ok, _t_msg = send_email_with_pdf(_to, _rr['name'], "시험 발송", None)
+                if _t_ok: st.success(f"📧 {_t_msg}")
+                else: st.error(f"🚨 {_t_msg}")
 
 # ------------------------------------------------------------------------------
 # 3. 📜 [고객 전용 결과 열람창]
