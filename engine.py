@@ -3318,7 +3318,9 @@ def get_year_month_facts(year, ds, db, ys, yb, jjis, cheon_eul_str, dw_j, yong=N
             + "\n[서두르지 말 달] " + (" / ".join(t for _, _, t in bad) if bad else "뚜렷한 달 없음"))
 
 def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
-    blocks = [("오전(卯辰巳시)", "卯辰巳"), ("오후(午未申시)", "午未申"), ("저녁(酉戌亥시)", "酉戌亥")]
+    blocks = [("오전(05:30~11:29)", "卯辰巳"), ("오후(11:30~17:29)", "午未申"), ("저녁(17:30~23:29)", "酉戌亥")]
+    _CLK = {"卯": "오전 5시 30분~7시 30분", "辰": "오전 7시 30분~9시 30분", "巳": "오전 9시 30분~11시 30분", "午": "11시 30분~오후 1시 30분", "未": "오후 1시 30분~3시 30분",
+            "申": "오후 3시 30분~5시 30분", "酉": "오후 5시 30분~7시 30분", "戌": "오후 7시 30분~9시 30분", "亥": "오후 9시 30분~11시 30분"}
     _END = {"卯": 7*60+29, "辰": 9*60+29, "巳": 11*60+29, "午": 13*60+29, "未": 15*60+29,
             "申": 17*60+29, "酉": 19*60+29, "戌": 21*60+29, "亥": 23*60+29}
     _now_min = (now.hour * 60 + now.minute) if now is not None else None
@@ -3331,12 +3333,12 @@ def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
         parts = []
         for b in brs:
             tag = "(이미 지난 시간) " if (_now_min is not None and _now_min > _END[b]) else ""
-            rel = get_unun_relation_facts(jjis, b, f"{b}시")
+            rel = get_unun_relation_facts(jjis, b, _CLK[b])
             if "특이한 충·합 없음" not in rel:
                 parts.append(" / ".join(tag + s for s in rel.split(" / ")))
             if b in _SUL and _SUL <= (_base | {b}) and not (_SUL <= _base):
                 _tg = ["일지"] if _to_hanja(jjis[1]) in _SUL else [n for n, x in (("월지", jjis[2]), ("시지", jjis[0])) if _to_hanja(x) in _SUL]
-                parts.append(tag + f"{b}시: 이 시(時)의 {b}이 더해져 원국·월운과 함께 축술미 삼형 완성 — " + ("·".join(_tg) if _tg else "원국") + " 창고가 움직이는 시간(입고·개고는 그날의 날짜별 설명을 따름)")
+                parts.append(tag + f"{_CLK[b]}: 이 시간대의 글자({b})가 더해져 원국·월운과 함께 축술미 삼형 완성 — " + ("·".join(_tg) if _tg else "원국") + " 창고가 움직이는 시간(입고·개고는 그날의 날짜별 설명을 따름)")
         lines.append(f"[{title}] " + (" / ".join(parts) if parts else "원국과 특이한 충·합·형 없음"))
     return "\n".join(lines)
 
