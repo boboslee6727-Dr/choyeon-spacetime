@@ -49,6 +49,43 @@ def _has_amhap(a, b):
     gb = [g for g in JIJANGGAN.get(b, []) if g != '-']
     return any(frozenset((x, y)) in _AM_GAN_HAP for x in ga for y in gb)
 
+def get_amyeonghap_list(gans, jjis):
+    """천간(시·일·월·년)과 지지(시·일·월·년) 지장간 속 천간의 합(암명합) 목록. 같은 기둥 안도 포함.
+    반환: [(지지칸 번호, 천간 글자, 천간 자리 이름, 지장간 글자), ...]"""
+    _lab = ["시", "일", "월", "년"]
+    out = []
+    for ci in range(4):
+        jj = _to_hanja(jjis[ci]) if ci < len(jjis) else ""
+        hidden = [g for g in JIJANGGAN.get(jj, []) if g != '-']
+        for gi in range(4):
+            g = _to_hanja(gans[gi]) if gi < len(gans) else ""
+            if not g or g in ("-", "?"):
+                continue
+            for x in hidden:
+                if frozenset((g, x)) in _AM_GAN_HAP:
+                    out.append((ci, g, _lab[gi], x))
+    return out
+
+def get_amyeonghap_cells(gans, jjis):
+    """원국표용: 시·일·월·년 지지 칸마다 '丙(시)↔辛' 모양의 줄바꿈 문자열 4개."""
+    lst = get_amyeonghap_list(gans, jjis)
+    return ["<br>".join(f"{g}({lab})↔{x}" for ci2, g, lab, x in lst if ci2 == ci) or "-" for ci in range(4)]
+
+def get_amyeonghap_facts(gans, jjis):
+    """풀이용 사실문. 일간·일지가 낀 것을 앞에 둔다."""
+    _lab = ["시", "일", "월", "년"]
+    lst = get_amyeonghap_list(gans, jjis)
+    if not lst:
+        return "(없음 — 글에 쓰지 말 것)"
+    def _pri(t):
+        ci, g, lab, x = t
+        return (0 if lab == "일" else 1, 0 if ci == 1 else 1, ci)
+    lines = []
+    for ci, g, lab, x in sorted(lst, key=_pri):
+        same = " (같은 기둥 안)" if _lab[ci] == lab else ""
+        lines.append(f"{lab}간 {g}과 {_lab[ci]}지 {jjis[ci]} 속 {x}가 합{same}")
+    return " / ".join(lines)
+
 # 🚨 한자 간지 → 한글 발음 변환 (기존 K2H_GAN / K2H_JI 표를 거꾸로 재사용, 별도 표 관리 안 함)
 _H2K_MAP = {}
 
