@@ -2349,7 +2349,7 @@ if st.session_state.get('app_running', False):
                     st.session_state.pop('vip_stack_html', None)
                 else:
                     combined = final_clean_html
-                combined += html_views.get_promo_block_html(5500)
+                combined = html_views.insert_promo_into_last_frame(combined, 5500)
 
                 st.session_state[f'html_{gid}'] = combined
                 st.session_state['saved_report_html'] = combined
