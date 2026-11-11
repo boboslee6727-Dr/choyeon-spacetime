@@ -1757,6 +1757,7 @@ if st.session_state.get('app_running', False):
             "saju_fact_summary": saju_fact_summary,
             "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
             "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
+            "amyeonghap_fact_str": engine.get_amyeonghap_facts([hs, ds, ms, ys], [hb, db, mb, yb], ds),
             "wolryeong_fact": w_val,
             "wolryeong_detail_fact": wolryeong_detail_fact,
             "yongshin_fact_str": yongshin_fact_str,
