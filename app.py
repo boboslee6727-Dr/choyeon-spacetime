@@ -2318,7 +2318,7 @@ if st.session_state.get('app_running', False):
         # 손님 글에 '원국'이 노출되지 않게 '타고난 사주'로 바꿈 (4-x 타 감명서 비교 상품은 제외)
         if not str(u_product).startswith("4-"):
                clean_report_html = re.sub(r'(?<!사주)원국', '타고난 사주', clean_report_html)
-               clean_report_html = re.sub(r'일간(?=(과|과도|을|이|의|에|도|은|는)\b)', '나 자신', clean_report_html)
+               clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
