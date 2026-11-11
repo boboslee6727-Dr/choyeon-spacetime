@@ -2863,7 +2863,7 @@ def check_samhyung_facts(jjis, dw_j=None, sewun_j=None, wolun_j=None, ilun_j=Non
         if len(won_sul_present) == 3 and u_j in sul_set:
             results.append(f"🚨 [{u_type}({u_j}) 축술미 삼형 재발동] 원국에 삼형이 이미 갖춰진 상태에서 {u_type} 지지({u_j})가 같은 계열이라 삼형이 다시 크게 흔들림!")
 
-    return " / ".join(results) if results else "(원국 기준 해당 없음 — 이 항목은 글에 쓰지 말 것. 시간대별 삼형은 아래 시간대 팩트를 따름)"
+    return " / ".join(results) if results else "(없음 — 글에 쓰지 말 것. 시간대 팩트에 적힌 것만 따름)"
 
 _UN_CHUNG = {frozenset(p) for p in ["子午", "丑未", "寅申", "卯酉", "辰戌", "巳亥"]}
 _UN_HAP = {frozenset(p) for p in ["子丑", "寅亥", "卯戌", "辰酉", "巳申", "午未"]}
