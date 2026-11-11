@@ -1,5 +1,5 @@
 # ==============================================================================
-# html_views.py (ver 88.5 - engine.py와 동일한 기준으로 구조 재정리판)
+# html_views.py (ver 88.8 - engine.py와 동일한 기준으로 구조 재정리판)
 # 재정리 기준: 공용 CSS/포맷터 -> 공통 사주표 컴포넌트 -> 서술형 안내문구 ->
 #              궁합/택일 부가 컴포넌트 -> 초연 시공명리 "타 감명서 비교" 전용 렌더링(맨 마지막)
 # 함수 로직은 전혀 수정하지 않았고, 배치 순서와 섹션 주석만 재정리했습니다.
@@ -807,3 +807,12 @@ def get_promo_block_html(coupon_amount=5500):
         <p style='margin-bottom:0;'>감명서가 마음에 쏙 드셨다면 따뜻한 후기 한 줄 부탁드려요! 후기를 남겨주시면, 다음 신청 시 사용하실 수 있는 할인쿠폰 <span style="font-weight:600;">{coupon_amount:,}원</span>을 드립니다. 🥰</p>
     </div>
     """
+
+def insert_promo_into_last_frame(report_html, coupon_amount=5500):
+    promo = get_promo_block_html(coupon_amount)
+    h = str(report_html).rstrip()
+    if not re.search(r"</div>\s*</div>\s*$", h):
+        return h + promo
+    end1 = h.rfind("</div>")
+    end2 = h.rfind("</div>", 0, end1)
+    return h[:end2] + promo + h[end2:]
