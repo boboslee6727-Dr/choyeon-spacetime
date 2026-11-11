@@ -307,6 +307,8 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
  
     unsung = "".join([f"<td style='color:#0D47A1; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_unsung(ds, jjis[i])}</span></td>" for i in range(4)])
+    am_cells = engine.get_amyeonghap_cells(gans, jjis)
+    am_row_html = "".join([f"<td style='border:1px solid #444 !important; font-size:12px; line-height:1.3;'><span style='color:#6A1B9A; font-weight:700;'>{am_cells[i]}</span></td>" for i in range(4)])
     y_shinsal_tds = "".join([f"<td style='color:#C62828; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_12_shinsal(yb, jjis[i])}</span></td>" for i in range(4)])
     d_shinsal_tds = "".join([f"<td style='color:#1565C0; border:1px solid #444 !important;'><span style='color:inherit !important;'>{engine.get_12_shinsal(db, jjis[i])}</span></td>" for i in range(4)])
     gen_shinsal = "".join([f"<td style='vertical-align:top; padding:2px; border:1px solid #444 !important;'><span style='color:inherit !important;'>{'<br>'.join(engine.get_general_shinsal_filtered(i, gans, jjis, gender)) if engine.get_general_shinsal_filtered(i, gans, jjis, gender) else '-'}</span></td>" for i in range(4)])
@@ -327,6 +329,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
         <tr><td class='header-cell-main' style='border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>지지십성</span></td>{ji_ss_html}</tr>
         <tr><td class='header-cell-main' style='padding:0; border:1px solid #444; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>지장간</span></td>{jijanggan_html}</tr>
         {ji_rel_rows}
+        <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>암명합</span></td>{am_row_html}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>십이운성</span></td>{unsung}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>년지 12신살</span></td>{y_shinsal_tds}</tr>
         <tr><td class='header-cell-main' style='border:1px solid #444 !important; background:#f5f5f5; font-weight:900; font-size:14px !important;'><span style='color:inherit !important;'>일지 12신살</span></td>{d_shinsal_tds}</tr>
