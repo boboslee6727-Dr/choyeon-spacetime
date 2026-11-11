@@ -3430,7 +3430,7 @@ def get_yeonin_wolun_flow_str(year0, ds, db, gender, today=None, span=10, max_ye
 
 _WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 
-def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None):
+def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, yong=None, today=None, gans=None, keep_past=False):
     """날짜별 일진이 원국과 맺는 충·합·삼형·공망·천을귀인과 용신 오행을 따져
     '기운이 도와주는 날'과 '서두르지 말 날'로 나눕니다. jjis는 [시지, 일지, 월지, 년지] 순서."""
     yong = yong or {}
@@ -3455,7 +3455,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     cut = today if (today is not None and start_date <= today <= start_date + dt_mod.timedelta(days=days - 1)) else None
     for i in range(days):
         d = start_date + dt_mod.timedelta(days=i)
-        if cut and d < cut:
+        if cut and d < cut and not keep_past:
             continue
         _, _wol, pil = get_ganji_from_date(d.year, d.month, d.day)
         gan, ji = _to_hanja(pil[0]), _to_hanja(pil[1])
