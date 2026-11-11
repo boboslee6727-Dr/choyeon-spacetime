@@ -566,9 +566,6 @@ def get_closing_html(name, sign_html=""):
     </div>
     """
  
-def get_couple_golden_text(m_name, male_golden_html, f_name, female_golden_html):
-    return ""
- 
 # ==============================================================================
 # PART 3. 궁합 · 택일 부가 컴포넌트 및 종합 렌더링 컨테이너
 # ==============================================================================
