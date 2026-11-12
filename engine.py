@@ -1452,6 +1452,22 @@ def get_cheongan_chung_fact(ys, ms, ds, hs=None):
     except Exception:
         return "천간 충 정보 없음"
 
+def get_ji_rel_show(me, target):
+    """표시용: get_ji_rel_set 결과의 '암합'에 합을 이룬 천간을 붙인다. 예) 암합(丁壬)"""
+    base = get_ji_rel_set(me, target)
+    if "암합" not in base:
+        return base
+    _hp = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
+    _order = "甲乙丙丁戊己庚辛壬癸"
+    pairs = []
+    for a in JIJANGGAN.get(_to_hanja(me), []):
+        for b in JIJANGGAN.get(_to_hanja(target), []):
+            if a in _order and b in _order and frozenset((a, b)) in _hp:
+                p = "".join(sorted((a, b), key=_order.index))
+                if p not in pairs:
+                    pairs.append(p)
+    return base.replace("암합", "암합(" + "·".join(pairs) + ")") if pairs else base
+
 def get_ji_rel_set(me, target):
     me, target = _to_hanja(me), _to_hanja(target)
     if not me or not target or me == "?" or target == "?" or me == target: return "자형" if me == target and me in "辰午酉亥" else "-"
