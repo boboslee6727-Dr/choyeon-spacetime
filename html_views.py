@@ -302,7 +302,7 @@ def generate_saju_table_data(gans, jjis, ds, gender, engine):
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
         b_bot = "1px solid #444 !important" if l_idx == 3 else "0px solid transparent !important"
         b_top = "0px solid transparent !important"
-        cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if engine.get_ji_rel_show(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'><span style='color:inherit !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else engine.get_ji_rel_show(jjis[r_idx], jjis[ci])}</span></td>" for ci in range(4)])
+        cells = "".join([f"<td style='color:{('#D50000' if ci==r_idx else ('#000' if engine.get_ji_rel_show(jjis[r_idx], jjis[ci])!='-' else '#BBB'))}; font-weight:900; border-top:{b_top}; border-bottom:{b_bot}; border-left:1px solid #444 !important; border-right:1px solid #444 !important;'><span style='color:inherit !important;'>{('←('+jjis[r_idx]+')→' if ci==r_idx else engine.get_ji_rel_show(jjis[r_idx], jjis[ci]))}</span></td>" for ci in range(4)])
         lbl = f"<td rowspan='4' class='header-cell-main' style='border-right: 1px solid #444 !important; border-left: 1px solid #444 !important; border-bottom: 1px solid #444 !important; border-top: 0px solid transparent !important; font-size:14px !important;'><span style='color:inherit !important;'>합충형파해</span></td>" if l_idx==0 else ""
         ji_rel_rows += f"<tr style='border:none;'>{lbl}{cells}</tr>"
  
