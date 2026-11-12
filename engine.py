@@ -3928,7 +3928,7 @@ def get_sangjin_paryo_facts(gans, jjis, ds, gender, haeng_list=None):
 def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     dw_j = _to_hanja(dw_j)
     if dw_j not in ['辰', '戌', '丑', '未']:
-        return "진술축미(辰戌丑未) 대운이 아니므로 대운 자체의 강력한 묘고 입고/개고 작용은 없음"
+        return "창고 역할을 하는 대운이 아니므로 대운 자체의 입고/개고(창고에 갇히거나 열리는) 작용은 없음"
  
     base_gans = [_to_hanja(g) for g in base_gans if g not in ["?", "-", " "]]
     base_jjis = [_to_hanja(j) for j in base_jjis if j not in ["?", "-", " "]]
@@ -3966,7 +3966,6 @@ def get_won_guk_vaults_str(jjis):
     if not vaults:
         return "원국 내 진술축미(묘고) 글자 없음 (특수 입고 작용 미미함)"
     return f"원국 내 묘고 글자 보유: {', '.join(vaults)} (강력한 입고 및 개고 잠재력 내재)"
-
 
 # ---- 2-E. [1-1] 종합 · 좌법/인종법 · 일주 마스터 DB 연동 ----
 
