@@ -2322,6 +2322,8 @@ if st.session_state.get('app_running', False):
                clean_report_html = re.sub(r'타고난 사주(과|은|을|으로)', lambda m: '타고난 사주' + {'과': '와', '은': '는', '을': '를', '으로': '로'}[m.group(1)], clean_report_html)
                clean_report_html = re.sub(r'타고난 사주이(?![가-힣])', '타고난 사주가', clean_report_html)
                clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
+               clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
+               clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
