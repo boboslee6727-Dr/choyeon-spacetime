@@ -20,12 +20,9 @@ import prompts
 import html_views
 
 # 서브 모듈 변경 사항 즉시 반영 (강제 리로드)
-try:
-    importlib.reload(engine)
-    importlib.reload(prompts)
-    importlib.reload(html_views)
-except KeyError:
-    pass
+importlib.reload(engine)
+importlib.reload(prompts)
+importlib.reload(html_views)
 
 extract_ganji = engine.extract_ganji
 get_oh_class = engine.get_oh_class
