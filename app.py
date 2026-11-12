@@ -2315,9 +2315,12 @@ if st.session_state.get('app_running', False):
         clean_report_html = re.sub(r'\(\s*원문[^)]{0,60}수정\s*\)\s*(?:\.{2,3}|…)?\s*', '', clean_report_html)
         # 번호 제목("1. ○○") 앞에 AI가 임의로 붙인 🎯 이모지 제거 (공망 상자의 "🎯 공망"은 그대로 둠)
         clean_report_html = re.sub(r'🎯\s*(?=\d+\.\s)', '', clean_report_html)
+
         # 손님 글에 '원국'이 노출되지 않게 '타고난 사주'로 바꿈 (4-x 타 감명서 비교 상품은 제외)
         if not str(u_product).startswith("4-"):
                clean_report_html = re.sub(r'(?<!사주)원국', '타고난 사주', clean_report_html)
+               clean_report_html = re.sub(r'타고난 사주(과|은|을|으로)', lambda m: '타고난 사주' + {'과': '와', '은': '는', '을': '를', '으로': '로'}[m.group(1)], clean_report_html)
+               clean_report_html = re.sub(r'타고난 사주이(?![가-힣])', '타고난 사주가', clean_report_html)
                clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
