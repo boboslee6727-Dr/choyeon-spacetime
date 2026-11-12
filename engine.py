@@ -3399,7 +3399,7 @@ def get_time_block_relation_facts(jjis, wolun_j=None, ilun_j=None, now=None):
                 parts.append(" / ".join(tag + s for s in rel.split(" / ")))
             if b in _SUL and _SUL <= (_base | {b}) and not (_SUL <= _base):
                 _tg = ["일지"] if _to_hanja(jjis[1]) in _SUL else [n for n, x in (("월지", jjis[2]), ("시지", jjis[0])) if _to_hanja(x) in _SUL]
-                parts.append(tag + f"{_CLK[b]}: 이 시간대의 글자({b})가 더해져 원국·월운과 함께 축술미 삼형 완성 — " + ("·".join(_tg) if _tg else "원국") + " 창고가 움직이는 시간(입고·개고는 그날의 날짜별 설명을 따름)")
+                parts.append(tag + f"{_CLK[b]}: 이 시간대의 글자({b})가 더해져 원국·월운과 함께 축술미 삼형 완성 — " + ("·".join(_tg) if _tg else "원국") + " 쌓아 둔 기운이 움직이는 시간(입고·개고는 그날의 날짜별 설명을 따름)")
         lines.append(f"[{title}] " + (" / ".join(parts) if parts else "원국과 특이한 충·합·형 없음"))
     return "\n".join(lines)
 
@@ -3554,11 +3554,11 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
                 _ent = [f"{g}({get_ss(ds, g)})" for g in _jg if g in _gset]
                 _opn = [f"{g}({get_ss(ds, g)})" for g in _jg if g not in _gset]
                 _part = []
-                if _ent: _part.append("천간에 이미 드러난 " + "·".join(_ent) + "은 창고로 끌려 들어가는 입고")
+                if _ent: _part.append("천간에 이미 드러난 " + "·".join(_ent) + "은 한동안 가려지고 묶이는 입고")
                 if _opn: _part.append("천간에 없던 " + "·".join(_opn) + "은 숨은 기운이 드러나는 개고")
-                _det.append(f"{_n} {_bj} 창고: " + ", ".join(_part))
+                _det.append(f"{_n} {_bj}에 쌓인 기운: " + ", ".join(_part))
             score -= 3
-            notes.append(f"월운({_wj})·일진({ji})이 모여 축술미 삼형 완성 — " + (" / ".join(_det) if _det else "원국 창고가 움직이는 날")); severe = True
+            notes.append(f"월운({_wj})·일진({ji})이 모여 축술미 삼형 완성 — " + (" / ".join(_det) if _det else "원국에 쌓아 둔 기운이 움직이는 날")); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
         elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
         if "육합" in rel: score += 2; notes.append("원국과 육합")
