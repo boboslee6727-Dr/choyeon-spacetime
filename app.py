@@ -164,6 +164,35 @@ def _call_claude(prompt_text, max_tokens=64000):
 def call_claude_api(prompt_text, max_tokens=64000):
     return _call_claude(prompt_text, max_tokens=max_tokens)
 
+# 🔎 [자동 점검] 손님이 이 화면을 직접 쓰면 False로 바꾸세요. (True=점검 결과를 화면에 보임)
+QC_SHOW = True
+
+def _qc_scan(html_text, product=""):
+    try:
+        if str(product).startswith("4-"):
+            return []
+        txt = re.sub(r'<[^>]+>', ' ', str(html_text))
+        txt = re.sub(r'\s+', ' ', txt)
+        out = []
+        for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼"):
+            hits = [m for m in re.finditer(w, txt)]
+            if hits:
+                a = max(0, hits[0].start() - 12)
+                out.append(f"'{w}' {len(hits)}번: …{txt[a:hits[0].end() + 12]}…")
+        for pat, label in ((r'(?<![가-힣])([가-힣]{2,6}) \1', '같은 말이 연달아 반복됨'),
+                           (r'이 구간 밖', '어색한 말'),
+                           (r'\{[A-Za-z_][A-Za-z0-9_]*\}', '채워지지 않은 중괄호'),
+                           (r'※ ?AI', '내부 지시문이 보임'),
+                           (r'○○', '자리표시 ○○ 남음'),
+                           (r'\bNone\b|\bnan\b', 'None/nan 보임')):
+            m = re.search(pat, txt)
+            if m:
+                a = max(0, m.start() - 12)
+                out.append(f"{label}: …{txt[a:m.end() + 12]}…")
+        return out[:30]
+    except Exception:
+        return []
+
 # 🎯 [신청인] 사주간지 역산 전용 콜백
 def do_auto_fill_user():
     st.session_state['app_running'] = False
@@ -2317,14 +2346,19 @@ if st.session_state.get('app_running', False):
 
         # 손님 글에 '원국'이 노출되지 않게 '타고난 사주'로 바꿈 (4-x 타 감명서 비교 상품은 제외)
         if not str(u_product).startswith("4-"):
-               clean_report_html = re.sub(r'(?<!사주)원국', '타고난 사주', clean_report_html)
-               clean_report_html = re.sub(r'타고난 사주(과|은|을|으로)', lambda m: '타고난 사주' + {'과': '와', '은': '는', '을': '를', '으로': '로'}[m.group(1)], clean_report_html)
-               clean_report_html = re.sub(r'타고난 사주이(?![가-힣])', '타고난 사주가', clean_report_html)
-               clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
-               clean_report_html = re.sub(r'나 자신\s*본인', '나 자신', clean_report_html)
-               clean_report_html = re.sub(r'동료과', '동료와', clean_report_html)
-               clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
-               clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
+            clean_report_html = re.sub(r'(?<!사주)원국', '타고난 사주', clean_report_html)
+            clean_report_html = re.sub(r'타고난 사주(과|은|을|으로)', lambda m: '타고난 사주' + {'과': '와', '은': '는', '을': '를', '으로': '로'}[m.group(1)], clean_report_html)
+            clean_report_html = re.sub(r'타고난 사주이(?![가-힣])', '타고난 사주가', clean_report_html)
+            clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
+            clean_report_html = re.sub(r'나 자신\s*본인', '나 자신', clean_report_html)
+            clean_report_html = re.sub(r'동료과', '동료와', clean_report_html)
+            clean_report_html = re.sub(r'재물 창고', '재물을 쌓아 둔 자리', clean_report_html)
+            clean_report_html = re.sub(r'(?:창고|금고)', '쌓아 둔 자리', clean_report_html)
+            clean_report_html = re.sub(r"'?나 자신'?\s*자신", '나 자신', clean_report_html)
+            clean_report_html = re.sub(r"'시간'의 기운", '말년 자리의 기운', clean_report_html)
+            clean_report_html = re.sub(r"'재물 감당력'", '재물을 지키는 힘', clean_report_html)
+            clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
+            clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
@@ -2335,6 +2369,16 @@ if st.session_state.get('app_running', False):
         #           (표지 하단 발행일자/연구소명이 16px 일반 문단체로 나오던 근본 원인)
         clean_lines = [re.sub(r'^[ \t]+(?=<)', '', line) for line in clean_report_html.split('\n') if line.strip() != '']
         final_clean_html = "\n".join(clean_lines)
+        _qc_list = _qc_scan(content_body, u_product)
+        if is_admin_mode:
+            _qc_gid = st.session_state.get('admin_proc_id', '')
+            st.session_state.setdefault(f"qc_{_qc_gid}", {})[str(u_product)[:40]] = _qc_list
+        elif _qc_list and QC_SHOW:
+            with st.expander(f"🔎 자동 점검: 확인할 곳 {len(_qc_list)}건", expanded=True):
+                for _w in _qc_list:
+                    st.write("• " + _w)
+        if _qc_list:
+            print(f"[자동점검] {u_product}: {len(_qc_list)}건 / " + " | ".join(_qc_list[:5]))
 
         # ----------------------------------------------------------------------
         # 🤖 [스텔스 생산 파이프라인 연계 및 정식 렌더링]
