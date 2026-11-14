@@ -171,7 +171,8 @@ def _qc_scan(html_text, product=""):
     try:
         if str(product).startswith("4-"):
             return []
-        txt = re.sub(r'<[^>]+>', ' ', str(html_text))
+        txt = re.sub(r'<table.*?</table>', ' ', str(html_text), flags=re.S)
+        txt = re.sub(r'<[^>]+>', ' ', txt)
         txt = re.sub(r'\s+', ' ', txt)
         out = []
         for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼"):
