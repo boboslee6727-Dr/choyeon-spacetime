@@ -3558,7 +3558,8 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
                 if _opn: _part.append("천간에 없던 " + "·".join(_opn) + "은 숨은 기운이 드러나는 개고")
                 _det.append(f"{_n} {_bj}에 쌓인 기운: " + ", ".join(_part))
             score -= 3
-            notes.append(f"월운({_wj})·일진({ji})이 모여 축술미 삼형 완성 — " + (" / ".join(_det) if _det else "원국에 쌓아 둔 기운이 움직이는 날")); severe = True
+            _who = f"월운({_wj})·일진({ji})" if _wj in _SUL else f"일진({ji})"
+            notes.append(f"{_who}이 원국과 모여 축술미 삼형 완성 — " + (" / ".join(_det) if _det else "원국 창고가 움직이는 날")); severe = True
         if ji in gm_day: score -= 2; notes.append("일 기준 공망"); severe = True
         elif ji in gm_year: score -= 1; notes.append("년 기준 공망")
         if "육합" in rel: score += 2; notes.append("원국과 육합")
