@@ -175,7 +175,7 @@ def _qc_scan(html_text, product=""):
         txt = re.sub(r'<[^>]+>', ' ', txt)
         txt = re.sub(r'\s+', ' ', txt)
         out = []
-        for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼"):
+        for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼", "일진", "대해수", "사실관계"):
             hits = [m for m in re.finditer(w, txt)]
             if hits:
                 a = max(0, hits[0].start() - 12)
@@ -2359,6 +2359,8 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r"'시간'의 기운", '말년 자리의 기운', clean_report_html)
             clean_report_html = re.sub(r'(월운|일운|세운)의 천간 기운', r'\1의 기운', clean_report_html)
             clean_report_html = re.sub(r'천간(?:으로|에서|에)\s*', '겉으로 ', clean_report_html)
+            clean_report_html = re.sub(r'오늘\s*일진', '오늘의 기운', clean_report_html)
+            clean_report_html = re.sub(r'(?<![가-힣])일진', '그날의 기운', clean_report_html)
             clean_report_html = re.sub(r"'재물 감당력'", '재물을 지키는 힘', clean_report_html)
             clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
             clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
@@ -2372,7 +2374,7 @@ if st.session_state.get('app_running', False):
         #           (표지 하단 발행일자/연구소명이 16px 일반 문단체로 나오던 근본 원인)
         clean_lines = [re.sub(r'^[ \t]+(?=<)', '', line) for line in clean_report_html.split('\n') if line.strip() != '']
         final_clean_html = "\n".join(clean_lines)
-        _qc_list = _qc_scan(content_body, u_product)
+        _qc_list = _qc_scan(final_clean_html, u_product)
         if is_admin_mode:
             _qc_gid = st.session_state.get('admin_proc_id', '')
             st.session_state.setdefault(f"qc_{_qc_gid}", {})[str(u_product)[:40]] = _qc_list
