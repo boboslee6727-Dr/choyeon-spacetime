@@ -3508,7 +3508,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
     gm_day = calculate_gongmang(ds, db)      # 일 기준 공망
     gm_year = calculate_gongmang(ys, yb)     # 년 기준 공망
     guiin = [c for c in str(cheon_eul_str) if c in "子丑寅卯辰巳午未申酉戌亥"]
-    good, bad, mild, calm = [], [], [], []
+    good, bad, mild, calm, weak = [], [], [], [], []
     _PROD = {"목": "수", "화": "목", "토": "화", "금": "토", "수": "금"}
     doc_el = _PROD.get(get_color(ds))
     doc_days = []
@@ -3594,10 +3594,12 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             good.append((score, i, tag))
         elif score >= 1:
             mild.append((score, i, tag))
+        else:
+            weak.append((score, i, tag))
     good = sorted(sorted(good, key=lambda x: (-x[0], x[1]))[:5], key=lambda x: x[1])
     _bad_rank = sorted(bad, key=lambda x: (x[0], x[1]))      # 점수가 낮은(무거운) 날부터
     heavy = sorted(_bad_rank[:5], key=lambda x: x[1])         # 특히 조심할 날 최대 5일
-    light = sorted(_bad_rank[5:], key=lambda x: x[1])         # 가볍게 살필 날(나머지)
+    light = sorted(_bad_rank[5:] + weak, key=lambda x: x[1])  # 가볍게 살필 날(나머지 + 점수가 애매한 날)
     mild = mild[:4]
     calm = calm[:5]
     _grp_lines = "".join(
