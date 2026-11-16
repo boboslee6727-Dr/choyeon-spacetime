@@ -2362,7 +2362,7 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'오늘\s*일진', '오늘의 기운', clean_report_html)
             clean_report_html = re.sub(r'(?<![가-힣])일진', '그날의 기운', clean_report_html)
             clean_report_html = re.sub(r'천간의\s*', '겉으로 드러난 ', clean_report_html)
-            clean_report_html = re.sub(r'천간(은|는|이|가)(?![가-힣])', r'겉으로 드러난 기운\1', clean_report_html)
+            clean_report_html = re.sub(r'천간(은|는|이|가)(?![가-힣])', r'하늘 기운\1', clean_report_html)
             clean_report_html = re.sub(r"'재물 감당력'", '재물을 지키는 힘', clean_report_html)
             clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
             clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
