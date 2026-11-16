@@ -2363,6 +2363,7 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(월운|일운|세운)의 천간 기운', r'\1의 기운', clean_report_html)
             clean_report_html = re.sub(r'천간(?:으로|에서|에)\s*', '겉으로 ', clean_report_html)
             clean_report_html = re.sub(r'오늘\s*일진', '오늘의 기운', clean_report_html)
+            clean_report_html = re.sub(r'(?<![가-힣])일진의\s*', '그날의 ', clean_report_html)
             clean_report_html = re.sub(r'(?<![가-힣])일진', '그날의 기운', clean_report_html)
             clean_report_html = re.sub(r'천간의\s*', '겉으로 드러난 ', clean_report_html)
             clean_report_html = re.sub(r'천간(은|는|이|가)(?![가-힣])', r'하늘 기운\1', clean_report_html)
