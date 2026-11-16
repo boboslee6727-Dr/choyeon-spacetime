@@ -2358,6 +2358,7 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'동료과', '동료와', clean_report_html)
             clean_report_html = re.sub(r'재물 창고', '재물을 쌓아 둔 자리', clean_report_html)
             clean_report_html = re.sub(r'(?:창고|금고)', '쌓아 둔 자리', clean_report_html)
+            clean_report_html = re.sub(r'쌓아 둔 기운의 쌓아 둔 자리', '쌓아 둔 자리', clean_report_html)
             clean_report_html = re.sub(r"'?나 자신'?\s*자신", '나 자신', clean_report_html)
             clean_report_html = re.sub(r"'시간'의 기운", '말년 자리의 기운', clean_report_html)
             clean_report_html = re.sub(r'(월운|일운|세운)의 천간 기운', r'\1의 기운', clean_report_html)
@@ -2367,6 +2368,10 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(?<![가-힣])일진', '그날의 기운', clean_report_html)
             clean_report_html = re.sub(r'천간의\s*', '겉으로 드러난 ', clean_report_html)
             clean_report_html = re.sub(r'천간(은|는|이|가)(?![가-힣])', r'하늘 기운\1', clean_report_html)
+            clean_report_html = re.sub(r'지지 기운', '땅의 기운', clean_report_html)
+            _SI_MAP = {'子': '밤 11시 30분~새벽 1시 30분', '丑': '새벽 1시 30분~3시 30분', '寅': '새벽 3시 30분~5시 30분', '卯': '오전 5시 30분~7시 30분', '辰': '오전 7시 30분~9시 30분', '巳': '오전 9시 30분~11시 30분', '午': '오전 11시 30분~오후 1시 30분', '未': '오후 1시 30분~3시 30분', '申': '오후 3시 30분~5시 30분', '酉': '오후 5시 30분~7시 30분', '戌': '오후 7시 30분~9시 30분', '亥': '오후 9시 30분~11시 30분'}
+            clean_report_html = re.sub(r'([子丑寅卯辰巳午未申酉戌亥])시\([^)]*시[^)]*\)', lambda m: _SI_MAP[m.group(1)], clean_report_html)
+            clean_report_html = re.sub(r'(?<![가-힣])([子丑寅卯辰巳午未申酉戌亥])시(?![가-힣]*지)', lambda m: _SI_MAP[m.group(1)], clean_report_html)
             clean_report_html = re.sub(r"'재물 감당력'", '재물을 지키는 힘', clean_report_html)
             clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
             clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
