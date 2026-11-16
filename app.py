@@ -2344,6 +2344,9 @@ if st.session_state.get('app_running', False):
         clean_report_html = re.sub(r'\(\s*원문[^)]{0,60}수정\s*\)\s*(?:\.{2,3}|…)?\s*', '', clean_report_html)
         # 번호 제목("1. ○○") 앞에 AI가 임의로 붙인 🎯 이모지 제거 (공망 상자의 "🎯 공망"은 그대로 둠)
         clean_report_html = re.sub(r'🎯\s*(?=\d+\.\s)', '', clean_report_html)
+        # AI가 풀이 맨 앞에 마음대로 적은 "○○일주, …" 제목줄과 "고민 사연: …" 줄 제거
+        clean_report_html = re.sub(r'[^\n<>]{0,8}일주,[^\n<>]{0,60}(?=\s*(?:<[^>]+>\s*)*고민 사연:)', '', clean_report_html)
+        clean_report_html = re.sub(r'고민 사연:[^\n<]*', '', clean_report_html)
 
         # 손님 글에 '원국'이 노출되지 않게 '타고난 사주'로 바꿈 (4-x 타 감명서 비교 상품은 제외)
         if not str(u_product).startswith("4-"):
