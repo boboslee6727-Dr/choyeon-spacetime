@@ -180,7 +180,7 @@ def _qc_scan(html_text, product=""):
             if hits:
                 a = max(0, hits[0].start() - 12)
                 out.append(f"'{w}' {len(hits)}번: …{txt[a:hits[0].end() + 12]}…")
-        for pat, label in ((r'(?<![가-힣])([가-힣]{2,6}) \1', '같은 말이 연달아 반복됨'),
+        for pat, label in ((r'(?<![가-힣])(?![가-힣]*살 )([가-힣]{2,6}) \1', '같은 말이 연달아 반복됨'),
                            (r'이 구간 밖', '어색한 말'),
                            (r'\{[A-Za-z_][A-Za-z0-9_]*\}', '채워지지 않은 중괄호'),
                            (r'※ ?AI', '내부 지시문이 보임'),
@@ -2357,6 +2357,7 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(?:창고|금고)', '쌓아 둔 자리', clean_report_html)
             clean_report_html = re.sub(r"'?나 자신'?\s*자신", '나 자신', clean_report_html)
             clean_report_html = re.sub(r"'시간'의 기운", '말년 자리의 기운', clean_report_html)
+            clean_report_html = re.sub(r'(월운|일운|세운)의 천간 기운', r'\1의 기운', clean_report_html)
             clean_report_html = re.sub(r"'재물 감당력'", '재물을 지키는 힘', clean_report_html)
             clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
             clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
