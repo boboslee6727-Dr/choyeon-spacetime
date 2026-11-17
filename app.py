@@ -190,6 +190,28 @@ def _qc_scan(html_text, product=""):
             if m:
                 a = max(0, m.start() - 12)
                 out.append(f"{label}: …{txt[a:m.end() + 12]}…")
+        # ── 날짜와 일진 대조: '11월 21일 己亥일' 표기를 엔진 계산값과 비교 ──
+        import datetime as _dtq
+        _yr = _dtq.datetime.now().year
+        _seen = set()
+        for _m in re.finditer(r'(\d{1,2})월\s*(\d{1,2})일\s*(?:\([월화수목금토일]\)\s*)?([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])일', txt):
+            _mo, _da, _gj = int(_m.group(1)), int(_m.group(2)), _m.group(3)
+            if (_mo, _da, _gj) in _seen:
+                continue
+            _seen.add((_mo, _da, _gj))
+            _ok, _real = False, ""
+            for _y in (_yr, _yr + 1, _yr - 1):
+                try:
+                    _g = str(engine.get_ganji_from_date(_y, _mo, _da)[2])
+                except Exception:
+                    continue
+                if _y == _yr:
+                    _real = _g
+                if _g == _gj:
+                    _ok = True
+                    break
+            if not _ok and _real and _real != "?":
+                out.append(f"날짜와 일진 불일치: {_mo}월 {_da}일은 {_real}일인데 {_gj}일로 적힘")
         return out[:30]
     except Exception:
         return []
@@ -2384,6 +2406,7 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(관성|재성|식상|비겁|인성)\(([^)]{1,12})\)', r'\2', clean_report_html)
             clean_report_html = re.sub(r"'?(관성|재성|식상|비겁|인성)'?", lambda m: {'관성': '책임', '재성': '재물', '식상': '표현', '비겁': '동료', '인성': '배움'}[m.group(1)], clean_report_html)
             clean_report_html = re.sub(r'((?:오늘|이번 주|이번 달|이 달)의 기운)의 천간(?: 글자)?(가|이|은|는)', r'\1\2', clean_report_html)
+            clean_report_html = re.sub(r'(자신|본인|나)의 천간', r'\1의 하늘 기운', clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
