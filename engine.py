@@ -3657,7 +3657,7 @@ def get_period_day_facts(start_date, days, ds, db, ys, yb, jjis, cheon_eul_str, 
             continue
         tag = f"{d.month}/{d.day}({_WEEKDAY_KR[d.weekday()]}) {gan}{ji}일: " + ", ".join(notes)
         if severe or score <= -3:
-            bad.append((score, i, tag))
+            bad.append((score - (10 if re.search(r"원국 일지\([^)]*\)와 충", rel) else 0), i, tag))   # 일지 충은 점수와 상관없이 맨 앞(특히 조심할 날)
         elif score >= 2:
             good.append((score, i, tag))
         elif score >= 1:
