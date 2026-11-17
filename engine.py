@@ -3084,7 +3084,7 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         if pair in _UN_CHUNG: out.append(f"{u_type}({u})이 원국 {nm}({j})와 충{_ref}")
         if pair in _UN_HAP: out.append(f"{u_type}({u})이 원국 {nm}({j})와 육합{_ref}")
         if pair in _UN_HAE: out.append(f"{u_type}({u})이 원국 {nm}({j})와 해{_ref}")
-        if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파{_ref}")
+        if pair in _UN_PA and not (nm == "일지" and pair in _UN_HAP): out.append(f"{u_type}({u})이 원국 {nm}({j})와 파{_ref}")
         if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형{_ref}")
         if pair in {frozenset(p) for p in ("寅巳", "巳申", "丑戌", "戌未")}: out.append(f"{u_type}({u})이 원국 {nm}({j})와 형{_ref}")
     _ws = get_wangsoe_note(jjis, u, u_type)
