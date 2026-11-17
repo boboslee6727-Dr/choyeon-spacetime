@@ -3002,6 +3002,68 @@ def get_gan_wonguk_facts(gans):
         if pair in _GAN_CHUNG: out.append(f"{names[i]}({a})와 {names[j]}({b})가 붙어서 충")
     return " / ".join(out) if out else "원국 천간에 붙어 있는 합·충 없음(떨어진 격합·격충은 제외)"
 
+# ── 왕신발·쇠자발 (책 74~75쪽): 일지충에서 세력이 센 쪽/약한 쪽에 따라 길흉이 달라지는 구조 ──
+_WS_GAP = 2   # 세력 점수 차이가 이 값 이상일 때만 '왕쇠가 확연하다'고 보고 판정 (애매하면 풀이에 쓰지 않음)
+_WS_JI_OH = {'子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', '巳': '火',
+             '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水'}
+_WS_CHUNG = {frozenset(p) for p in ("子午", "丑未", "寅申", "卯酉", "辰戌", "巳亥")}
+
+def _wangsoe_score(L, nat, u, with_un):
+    """지지 L의 세력 점수: 같은 오행 지지 수 + 월령(월지가 같은 오행) + 국세(삼합·방합) + 운의 글자(같은 오행일 때)"""
+    oh = _WS_JI_OH.get(L)
+    if not oh:
+        return 0
+    valid = [j for j in nat if j in _WS_JI_OH]
+    s = sum(1 for j in valid if _WS_JI_OH[j] == oh)
+    if with_un:
+        s += 1
+    if len(nat) > 2 and nat[2] in _WS_JI_OH and _WS_JI_OH[nat[2]] == oh:
+        s += 1
+    pool = set(valid) | {u}
+    best = 0
+    for trio, _ in list(_UN_SAMHAP) + list(_UN_BANGHAP):
+        if L not in trio:
+            continue
+        have = pool & set(trio)
+        if len(have) == 3:
+            best = max(best, 2)
+        elif trio[1] in have and len(have) == 2:   # 왕지가 들어 있는 두 글자(반합·방합 미완)만 인정
+            best = max(best, 1)
+    return s + best
+
+def get_wangsoe_note(jjis, u_j, u_type="운"):
+    """운의 글자가 일지충에 겹칠 때 일지 쪽이 쇠자발(약해서 흔들림)인지 왕신발(강해서 힘을 얻음)인지 사실문 한 줄로 돌려준다.
+    jjis=[시지, 일지, 월지, 년지]. 왕쇠 차이가 작으면 빈 문자열."""
+    try:
+        nat = [_to_hanja(j) for j in jjis]
+        if len(nat) < 4:
+            return ""
+        u = _to_hanja(str(u_j).strip()[-1])
+        d = nat[1]
+        if d not in _WS_JI_OH or u not in _WS_JI_OH:
+            return ""
+        outs = []
+        matched = False
+        for nm, x in (("월지", nat[2]), ("시지", nat[0])):
+            if x in _WS_JI_OH and frozenset((d, x)) in _WS_CHUNG and u in (d, x):
+                matched = True
+                sd = _wangsoe_score(d, nat, u, u == d)
+                sx = _wangsoe_score(x, nat, u, u == x)
+                outs.append((nm, x, sd, sx, "원국 일지충에 같은 글자가 다시 들어옴"))
+        if not matched and frozenset((d, u)) in _WS_CHUNG:
+            sd = _wangsoe_score(d, nat, u, False)
+            sx = _wangsoe_score(u, nat, u, True)
+            outs.append((u_type, u, sd, sx, "운이 일지를 새로 충함"))
+        notes = []
+        for nm, x, sd, sx, why in outs:
+            if sd - sx >= _WS_GAP:
+                notes.append(f"{u_type}({u})이 일지({d})와 충을 이루는 때 — 일지 쪽 세력이 상대({nm} {x})보다 확연히 강해 충을 받아도 오히려 힘이 드러나는 구조(왕신발, {why}). 좋다고 단정하지 말 것")
+            elif sx - sd >= _WS_GAP:
+                notes.append(f"{u_type}({u})이 일지({d})와 충을 이루는 때 — 일지 쪽 세력이 상대({nm} {x})보다 확연히 약해 뽑혀 나가듯 흔들리기 쉬운 구조(쇠자발, {why}). 나쁘다고 단정하지 말 것")
+        return " / ".join(notes)
+    except Exception:
+        return ""
+
 def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
     """운(대운/세운/월운/일운)의 지지가 원국 지지(시·일·월·년)와 맺는 충·합·해·파·복음을 팩트 문장으로 만듭니다."""
     names = ["시지", "일지", "월지", "년지"]
@@ -3025,6 +3087,9 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파{_ref}")
         if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형{_ref}")
         if pair in {frozenset(p) for p in ("寅巳", "巳申", "丑戌", "戌未")}: out.append(f"{u_type}({u})이 원국 {nm}({j})와 형{_ref}")
+    _ws = get_wangsoe_note(jjis, u, u_type)
+    if _ws:
+        out.append(_ws)
     nat_set = {j for j in nat if j not in ["?", "-", " "]}
     ilji = nat[1] if len(nat) > 1 else ""
     for trio, oh in _UN_SAMHAP:
