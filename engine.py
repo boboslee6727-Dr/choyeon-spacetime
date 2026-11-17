@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 88.8 - 상품별 정리판)
+# engine.py (ver 88.9 - 상품별 정리판)
 # ==============================================================================
 import os
 import streamlit as st
@@ -50,20 +50,18 @@ def _has_amhap(a, b):
     return any(frozenset((x, y)) in _AM_GAN_HAP for x in ga for y in gb)
 
 def get_amyeonghap_list(gans, jjis):
-    """천간(시·일·월·년)과 지지(시·일·월·년) 지장간 속 천간의 합(암명합) 목록. 같은 기둥 안도 포함.
+    """암명합은 일주(일간+일지)만 본다. 임오·무자·정해·신사(본기합), 갑오·기해·계사(중기·여기합) 7개 일주.
     반환: [(지지칸 번호, 천간 글자, 천간 자리 이름, 지장간 글자), ...]"""
-    _lab = ["시", "일", "월", "년"]
     out = []
-    for ci in range(4):
-        jj = _to_hanja(jjis[ci]) if ci < len(jjis) else ""
-        hidden = [g for g in JIJANGGAN.get(jj, []) if g != '-']
-        for gi in range(4):
-            g = _to_hanja(gans[gi]) if gi < len(gans) else ""
-            if not g or g in ("-", "?"):
-                continue
-            for x in hidden:
-                if frozenset((g, x)) in _AM_GAN_HAP:
-                    out.append((ci, g, _lab[gi], x))
+    if len(gans) < 2 or len(jjis) < 2:
+        return out
+    g = _to_hanja(gans[1])
+    jj = _to_hanja(jjis[1])
+    if (g + jj) not in ("壬午", "戊子", "丁亥", "辛巳", "甲午", "己亥", "癸巳"):
+        return out
+    for x in [h for h in JIJANGGAN.get(jj, []) if h != '-']:
+        if frozenset((g, x)) in _AM_GAN_HAP:
+            out.append((1, g, "일", x))
     return out
 
 def get_amyeonghap_cells(gans, jjis):
@@ -1303,7 +1301,7 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None):
 
 
 def get_jiji_yukhap_fact(yb, mb, db, hb):
-    """지지 육합 사실문: 네 지지 전체에서 육합 찾기, 강도, 쟁합, 흔들림, 삼합 쪽 합과 겹침"""
+    """지지 육합 사실문: 붙어 있는 두 지지(년-월, 월-일, 일-시)의 육합만 찾기, 강도, 쟁합, 흔들림, 삼합 쪽 합과 겹침"""
     try:
         names = ["년지", "월지", "일지", "시지"]
         brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
@@ -1324,10 +1322,10 @@ def get_jiji_yukhap_fact(yb, mb, db, hb):
         for i in range(4):
             for j in range(i + 1, 4):
                 k = frozenset((brs[i], brs[j]))
-                if brs[i] != brs[j] and k in YUK:
+                if brs[i] != brs[j] and k in YUK and j - i == 1:
                     pairs.append((i, j, YUK[k]))
         if not pairs:
-            return "지지에 육합을 이루는 글자 쌍은 사실문에 없음"
+            return "지지에 붙어 있는 육합 쌍은 사실문에 없음(떨어진 글자끼리는 합으로 보지 않음)"
 
         def _hit(letter, own):
             out = []
@@ -1354,7 +1352,7 @@ def get_jiji_yukhap_fact(yb, mb, db, hb):
         for i, j, s in pairs:
             adj = (j - i == 1)
             txt = f"[육합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 육합을 이룸"
-            txt += "(바로 이웃함)" if adj else "(떨어져 있으나 육합은 지지 전체를 봄)"
+            txt += "(바로 이웃함)"
             txt += f". {STR_TXT[s]}"
             dmg = _hit(brs[i], (i, j)) + _hit(brs[j], (i, j))
             if frozenset((brs[i], brs[j])) in (frozenset(('寅', '亥')), frozenset(('巳', '申'))):
@@ -3014,18 +3012,19 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         if j in ["?", "-", " "]:
             continue
         pair = frozenset((u, j))
+        _ref = "" if nm == "일지" else "[참고: 일지와 맺은 관계 아님]"
         if u == j:
             if u in "辰午酉亥":
                 out.append(f"{u_type}({u})이 원국 {nm}({j})와 같은 글자로 겹침(복음, 자형에도 해당)")
             else:
                 out.append(f"{u_type}({u})이 원국 {nm}({j})와 같은 글자로 겹침(복음)")
             continue
-        if pair in _UN_CHUNG: out.append(f"{u_type}({u})이 원국 {nm}({j})와 충")
-        if pair in _UN_HAP: out.append(f"{u_type}({u})이 원국 {nm}({j})와 육합")
-        if pair in _UN_HAE: out.append(f"{u_type}({u})이 원국 {nm}({j})와 해")
-        if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파")
-        if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형")
-        if pair in {frozenset(p) for p in ("寅巳", "巳申", "丑戌", "戌未")}: out.append(f"{u_type}({u})이 원국 {nm}({j})와 형")
+        if pair in _UN_CHUNG: out.append(f"{u_type}({u})이 원국 {nm}({j})와 충{_ref}")
+        if pair in _UN_HAP: out.append(f"{u_type}({u})이 원국 {nm}({j})와 육합{_ref}")
+        if pair in _UN_HAE: out.append(f"{u_type}({u})이 원국 {nm}({j})와 해{_ref}")
+        if pair in _UN_PA: out.append(f"{u_type}({u})이 원국 {nm}({j})와 파{_ref}")
+        if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형{_ref}")
+        if pair in {frozenset(p) for p in ("寅巳", "巳申", "丑戌", "戌未")}: out.append(f"{u_type}({u})이 원국 {nm}({j})와 형{_ref}")
     nat_set = {j for j in nat if j not in ["?", "-", " "]}
     ilji = nat[1] if len(nat) > 1 else ""
     for trio, oh in _UN_SAMHAP:
