@@ -2353,6 +2353,7 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(?<!사주)원국', '타고난 사주', clean_report_html)
             clean_report_html = re.sub(r'타고난 사주(과|은|을|으로)', lambda m: '타고난 사주' + {'과': '와', '은': '는', '을': '를', '으로': '로'}[m.group(1)], clean_report_html)
             clean_report_html = re.sub(r'타고난 사주이(?![가-힣])', '타고난 사주가', clean_report_html)
+            clean_report_html = re.sub(r'(타고난 )\1+', r'\1', clean_report_html)
             clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
             clean_report_html = re.sub(r'나 자신\s*본인', '나 자신', clean_report_html)
             clean_report_html = re.sub(r'동료과', '동료와', clean_report_html)
