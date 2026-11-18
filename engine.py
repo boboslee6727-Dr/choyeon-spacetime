@@ -5180,6 +5180,25 @@ def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr
 
     return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
 
+def get_gwandasinyak_fact(counts, mb, ds, gender="여성", db=None, mg=None):
+    """관다신약 사실문(자평명리학 14부 육친궁합 4). 배우자 사실문 뒤에 이어 붙이는 용도.
+    여명이면서 관성이 3개 이상이고 일간이 신약일 때만 ' || ...' 한 구절을 돌려주고, 그 외에는 빈 문자열."""
+    if not (gender and str(gender).startswith("여")):
+        return ""
+    dm = get_color(ds)
+    if not dm or dm not in _OHAENG_CYCLE:
+        return ""
+    if _judge_strength(counts, mb, ds, db, mg)[0] != "신약":
+        return ""
+    gw = _oh_controlled_by(dm)
+    gw_cnt = counts.get(gw, 0)
+    if gw_cnt < 3:
+        return ""
+    return (f" || 남편별(관성, {gw}) {gw_cnt}개에 일간이 신약(관다신약): 연애 인연은 빠르게 오는 편이나 배우자 인연이 "
+            f"매끄럽지 않기 쉽고, 남성이 많은 곳에서 일하거나 기상이 남자 못지않게 높은 경우가 많음. "
+            f"일찍부터 {gw} 기운의 일이나 바깥 활동으로 자기 자리를 세우는 것이 도움이 되고, 관성이 뒤섞여 있으면 "
+            f"몸이 상하기 쉽고 마음이 소극적·수동적으로 기울 수 있으니 건강과 마음 관리를 함께 짚을 것(단정하지 말고 조심스럽게)")
+
 def get_weak_health_fact(counts, mb, ds, gender="남성", db=None, mg=None):
     """건강운용: 일간이 약하면서 재성·관성·식상 중 한 기운이 많아 힘이 밖으로 새는 구조일 때만 한 줄을 돌려준다.
     (자평명리학 13부 재다신약 병증 사례, 14부 관다신약 근거. 질병명·요양·사망은 쓰지 않는다.)"""
