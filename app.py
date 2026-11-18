@@ -1431,6 +1431,9 @@ if st.session_state.get('app_running', False):
                 sewun_10_list=temp_sewun_10_list,
                 curr_year=curr_year
             )
+            _weak_h = engine.get_weak_health_fact(counts, mb, ds, db=db, mg=ms)
+            if _weak_h:
+                health_erosion_str = health_erosion_str + "\n" + _weak_h
             health_cognitive_str = engine.analyze_cognitive_decline_facts(
                 won_guk_ji=[hb, db, mb, yb],
                 daewun_list=daewun_data_list,
@@ -1821,7 +1824,7 @@ if st.session_state.get('app_running', False):
             "shinsal_str": shinsal_str, "shinsal_by_palace_str": shinsal_by_palace_str,
             "shinsal12_fact_str": engine.get_12_shinsal_fact_str(yb, db, [hb, db, mb, yb], dw_j_cur, cur_sewun_ji_val, _cur_wol_pillar[1], _sel_pillar_d[1]),
             "shinsal12_book_facts": engine.get_12shinsal_book_facts(ds_hanja, yb, db, [hb, db, mb, yb], dw_j_cur, cur_sewun_ji_val, gender),
-            "spouse_star_facts": engine.get_spouse_star_facts(ds_hanja, [hs, ds_hanja, ms, ys], [hb, db, mb, yb], gender),
+            "spouse_star_facts": engine.get_spouse_star_facts(ds_hanja, [hs, ds_hanja, ms, ys], [hb, db, mb, yb], gender) + engine.get_gwandasinyak_fact(counts, mb, ds, gender, db, ms),
             "dongju_pothae_facts": engine.get_dongju_pothae_facts(ds_hanja, db, [hb, db, mb, yb], gender, dw_j_cur, cur_sewun_ji_val, [hs, ds_hanja, ms, ys]),
             "vault_timing_fact_str": engine.get_vault_timing_fact_str(ds_hanja, [yb, mb, db, hb], [ys, ms, ds_hanja, hs], curr_year, dw_j_cur, cur_sewun_ji_val, _cur_wol_pillar[1], gender),
             "cheon_eul": guiin_str, "samjae_str": cur_samjae,
