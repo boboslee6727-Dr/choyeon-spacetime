@@ -773,6 +773,7 @@ def get_couple_link_facts(m_gans, m_jjis, f_gans, f_jjis, m_marital="", f_marita
         elif m_marital == "돌싱" or f_marital == "돌싱":
             who = "남명" if m_marital == "돌싱" else "여명"
             out.append(f"{who}께서 지난 인연을 겪은 분이라, 지난 일을 비교하거나 캐묻지 말고 천천히 속도를 맞추며 새 약속을 쌓아 가는 것이 중요")
+
         # 2) 일지 합: 한 사람의 배우자 자리와 합이 되는 글자가 상대 사주에 있는가
         hf = _JI_HAP.get(fj[1])
         hm = _JI_HAP.get(mj[1])
@@ -784,6 +785,7 @@ def get_couple_link_facts(m_gans, m_jjis, f_gans, f_jjis, m_marital="", f_marita
             pos = [names[i] for i in range(4) if fj[i] == hm]
             if pos:
                 out.append(f"남명의 배우자 자리({mj[1]})와 합이 되는 글자({hm})가 여명 사주의 {', '.join(pos)}에 있어, 남명 쪽에서 여명에게 마음이 끌리고 묶이기 쉬운 근거 [{_pwtxt(pos)}]")
+
         # 2-2) 일지 삼합(반합): 한 사람의 배우자 자리와 상대 지지가 같은 삼합의 두 글자를 이루는가
         _SAMHAP = (("申子辰", "물"), ("亥卯未", "나무"), ("寅午戌", "불"), ("巳酉丑", "금속"))
         for who, me_ji, other_ji, other_nm in (("여명", fj[1], mj, "남명"), ("남명", mj[1], fj, "여명")):
@@ -792,15 +794,31 @@ def get_couple_link_facts(m_gans, m_jjis, f_gans, f_jjis, m_marital="", f_marita
                     pos = [names[i] for i in range(4) if other_ji[i] in grp and other_ji[i] != me_ji]
                     if pos:
                         out.append(f"{who}의 배우자 자리({me_ji})와 {other_nm} 사주의 {', '.join(pos)}({'·'.join(other_ji[names.index(p)] for p in pos)})가 서로 끌어당겨 {elem}의 기운을 이루어, {who} 쪽에서 {other_nm}에게 끌리고 하나로 묶이기 쉬운 근거 [{_pwtxt(pos)}]")
+
         # 3) 상대 일간이 나의 배우자별인가
         if get_ss(fg[1], mg[1]) in ("정관", "편관"):
             out.append(f"남명의 일간({mg[1]})이 여명에게는 남편별({get_ss(fg[1], mg[1])})에 해당해, 여명이 남명을 의지할 만한 사람으로 느끼기 쉬움")
         if get_ss(mg[1], fg[1]) in ("정재", "편재"):
             out.append(f"여명의 일간({fg[1]})이 남명에게는 아내별({get_ss(mg[1], fg[1])})에 해당해, 남명이 여명을 가정을 맡길 사람으로 느끼기 쉬움")
+
         # 4) 일간 합 (남명 양간·여명 음간)
         _HG = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
         if frozenset((mg[1], fg[1])) in _HG and mg[1] in "甲丙戊庚壬" and fg[1] in "乙丁己辛癸":
             out.append(f"두 분의 일간({mg[1]}·{fg[1]})이 서로 합을 이루어, 고전에서 인연이 닿는 표지로 보는 끌림이 있음")
+
+    # 5) 음간 남명·양간 여명(합이 아닌 짝): 책 — 남명이 신강하면 식상, 신약하면 인성의 오행을 가진 여명이 어울림
+        if mg[1] in "乙丁己辛癸" and fg[1] in "甲丙戊庚壬":
+            _cm = {}
+            for _ch in list(mg) + list(mj):
+                _o = get_color(_ch)
+                if _o:
+                    _cm[_o] = _cm.get(_o, 0) + 1
+            _st = _judge_strength(_cm, mj[2], mg[1], mj[1])[0]
+            _dm = get_color(mg[1]); _fo = get_color(fg[1])
+            if _st == "신강" and _fo == _oh_next(_dm):
+                out.append(f"남명이 힘이 센 편이고 여명의 일간({fg[1]})이 남명의 기운을 덜어 주는 쪽({_fo})이라, 고전에서 균형이 맞는다고 보는 짝(음양 합은 아니지만 힘의 균형으로 어울리는 근거)")
+            elif _st == "신약" and _fo == _oh_prev(_dm):
+                out.append(f"남명이 힘이 약한 편이고 여명의 일간({fg[1]})이 남명을 북돋아 주는 쪽({_fo})이라, 고전에서 균형이 맞는다고 보는 짝(음양 합은 아니지만 힘의 균형으로 어울리는 근거)")
     except Exception:
         return "두 분 연결 정보를 계산하지 못함"
     return " || ".join(out) if out else "두 분 사이에 특별히 짚을 직접 연결 고리는 크지 않음"
@@ -831,7 +849,11 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
         all_ss = [s for _, s in gan_hit + ji_hit]
         out = []
         if not all_ss:
-            return f"{star}이 원국의 천간·지지에 보이지 않음(인연의 때는 운에서 {star}이 들어오는 시기)"
+            _nm0 = "재" if g == "남" else "관"
+            _hid = [c for j in js for c in JIJANGGAN.get(j, []) if c != "-" and get_ss(ds, c) in pair]
+            if _hid:
+                return f"{star}이 원국의 천간·지지 겉에는 안 보이고 지지 속(지장간)에만 숨어 있음(원국무{_nm0}: 완전히 없는 것은 아니라 인연이 조용히 늦게 드러나거나, 운에서 {star}이 들어올 때 뚜렷해지는 구조)"
+            return f"{star}이 천간·지지·지장간 어디에도 없음(천지무{_nm0}: 인연의 때는 운에서 {star}이 들어오는 시기. 없으니 오히려 이성을 간절히 찾는 마음이 생기기 쉬우나 만족하기 어려울 수 있다는 점을 단정하지 말고 조심스럽게 짚을 것)"
 
         # 1) 위치: 앞쪽(년·월) / 일지 / 뒤쪽(시)
         pos = {i for i, _ in gan_hit + ji_hit}
@@ -1475,7 +1497,7 @@ def get_ji_rel_set(me, target):
     if s in [{'寅','卯'}, {'卯','辰'}, {'巳','午'}, {'午','未'}, {'申','酉'}, {'酉','戌'}, {'亥','子'}, {'子','丑'}]: r.append("방합(미완)")
     if s in [{'寅','辰'}, {'巳','未'}, {'申','戌'}, {'亥','丑'}]: r.append("공협")
     if s in [{'子','丑'}, {'寅','亥'}, {'卯','戌'}, {'辰','酉'}, {'巳','申'}, {'午','未'}]: r.append("육합")
-    if _has_amhap(me, target): r.append("암합")
+    if frozenset((me, target)) in _AMHAP_PAIRS: r.append("암합")
     if s in [{'子','午'}, {'丑','未'}, {'寅','申'}, {'卯','酉'}, {'辰','戌'}, {'巳','亥'}]: r.append("충")
     if s in [{'寅','巳'}, {'巳','申'}, {'寅','申'}, {'丑','戌'}, {'戌','未'}, {'丑','未'}, {'子','卯'}]: r.append("형")
     if s in [{'子','未'}, {'丑','午'}, {'寅','巳'}, {'卯','辰'}, {'申','亥'}, {'酉','戌'}]: r.append("해")
@@ -1945,11 +1967,41 @@ def get_jonggyeok_note(counts, mb, ds):
     except Exception:
         return ""
 
-def get_yongshin_analysis(counts, mb, ds, db=None):
-    """억부·조후 용신 판정(_yongshin_analysis_core) 뒤에 종격 가능성 참고 문장(해당할 때만)을 덧붙입니다."""
+def get_yongshin_realness_note(base, gans, jjis):
+    """책(자평명리학) 진용/가용: 용신 오행이 원국에 실제로 있는지(진용) 없는지(가용)를 참고 문장으로 돌려줍니다.
+    용신 오행 자체는 바꾸지 않습니다. gans/jjis = [시,일,월,년]. 정보가 없으면 빈 문자열."""
+    try:
+        if not gans or not jjis or len(gans) < 4 or len(jjis) < 4:
+            return ""
+        yong = get_yongshin_elements(base).get("용신")
+        if not yong:
+            return ""
+        gs = [_to_hanja(g) for g in gans]
+        js = [_to_hanja_ji(j) for j in jjis]
+        in_gan = [g for g in gs if g and g not in ("?", "-", " ") and get_color(g) == yong]
+        in_ji = [j for j in js if j and j not in ("?", "-", " ") and get_color(j) == yong]
+        in_hid = [c for j in js for c in JIJANGGAN.get(j, []) if c != "-" and get_color(c) == yong]
+        if in_gan:
+            kind, txt = "진용(천간에 드러남)", f"필요한 기운({yong})이 사주 천간에 드러나 있어 타고난 힘으로 스스로 꺼내 쓸 수 있는 기운으로 서술"
+        elif in_ji:
+            kind, txt = "진용(지지에 자리함)", f"필요한 기운({yong})이 사주 지지에 자리하고 있어 타고난 바탕은 있으나 겉으로 드러나려면 계기나 운의 도움이 필요한 기운으로 서술"
+        elif in_hid:
+            kind, txt = "진용(지지 속에 숨음, 약한 진용)", f"필요한 기운({yong})이 지지 속에 숨어 있어 씨앗은 있으나 아직 힘이 약한 기운으로, 운에서 같은 기운이 들어올 때 살아난다고 서술"
+        else:
+            kind, txt = "가용(원국에 없는 기운을 빌려 씀)", f"필요한 기운({yong})이 사주 안에 전혀 없어 타고난 힘으로는 갖추지 못한 기운이므로, '이미 갖고 있다'고 쓰지 말고 환경·사람·시기(운)에서 채워 가야 하는 기운으로 서술"
+        return f" [용신 실재 여부(참고): {kind}. {txt}. 용신 오행 판정은 바꾸지 말고 서술 방식만 이에 맞출 것.]"
+    except Exception:
+        return ""
+
+def get_yongshin_analysis(counts, mb, ds, db=None, gans=None, jjis=None):
+    """억부·조후 용신 판정(_yongshin_analysis_core) 뒤에 종격 가능성·진용/가용 참고 문장(해당할 때만)을 덧붙입니다.
+    gans=[시간,일간,월간,년간], jjis=[시지,일지,월지,년지]를 주면 진용/가용도 점검하고, 주지 않으면 예전과 똑같이 동작합니다."""
     base = _yongshin_analysis_core(counts, mb, ds, db)
     note = get_jonggyeok_note(counts, mb, ds)
-    return base + note if note else base
+    if note:
+        base = base + note
+    real = get_yongshin_realness_note(base, gans, jjis)
+    return base + real if real else base
 
 def get_goshin_gwasook_ji(day_ji, gender):
     """일지 기준 방합 그룹으로 고신살(남명)/과숙살(여명) 지지를 산출.
@@ -5359,7 +5411,7 @@ _GEONROK_MAP  = {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','�
 
 _SIPAK_DAEPAE = ["甲辰", "乙巳", "丙申", "丁亥", "戊戌", "己丑", "庚辰", "辛巳", "壬申", "癸亥"]
 _GWIMUN_PAIRS = {frozenset(p) for p in ('子酉', '丑午', '寅未', '卯申', '辰亥', '巳戌')}   # 귀문관살
-_AMHAP_PAIRS = {frozenset(p) for p in ('寅丑', '午亥', '卯申', '子戌', '寅未')}
+_AMHAP_PAIRS = {frozenset(p) for p in ('戌子', '午亥', '丑寅', '未寅', '申卯', '子巳', '巳酉')}   # 책(자평명리학) 지지 암합 7쌍
 _INNER_PAIR_W = {(0, 1): 0.6, (0, 2): 0.8, (0, 3): 0.5, (1, 2): 1.0, (1, 3): 0.7, (2, 3): 0.9}   # 쌍별 비중 (월-일이 가장 큼)
 _INNER_PAIR_NM = {(0, 1): '년지와 월지', (0, 2): '년지와 일지', (0, 3): '년지와 시지', (1, 2): '월지와 일지', (1, 3): '월지와 시지', (2, 3): '일지와 시지'}
 
