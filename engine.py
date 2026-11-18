@@ -1632,7 +1632,7 @@ def get_jijanggan_pure(ji):
     clean_list = [j for j in raw if j != '-']
     return "·".join(clean_list) if clean_list else "-"
 
-def get_gyukgook_detailed(ds, ys, ms, hs, mb):
+def _gyukgook_core(ds, ys, ms, hs, mb):
     ds, ys, ms, hs, mb = _to_hanja(ds), _to_hanja(ys), _to_hanja(ms), _to_hanja(hs), _to_hanja(mb)
     jg = JIJANGGAN.get(mb, [])
     if not jg: return "알수없음격", "지장간 정보가 없습니다."
@@ -1667,7 +1667,7 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
         return safe_get_ss(ds, main_qi) + "격", f"월지 {mb}의 정기(본기)인 {main_qi}이 천간에 투출하여 {safe_get_ss(ds, main_qi)}격이 되었습니다."
     if len(jg) >= 2 and jg[1] in target_gans and is_valid_gyuk(jg[1]):
         return safe_get_ss(ds, jg[1]) + "격", f"월지 {mb}의 중기인 {jg[1]}이 천간에 투출하여 {safe_get_ss(ds, jg[1])}격이 되었습니다."
-    if len(jg) >= 1 and jg[0] in target_gans and is_valid_gyuk(jg[0]):
+    if len(jg) >= 1 and jg[0] in target_gans and is_valid_gyuk(jg[0]) and not (mb in ("寅", "申") and jg[0] == "戊"):   # 책: 寅·申의 초기 戊土는 격으로 쓰지 않음
         return safe_get_ss(ds, jg[0]) + "격", f"월지 {mb}의 여기인 {jg[0]}이 천간에 투출하여 {safe_get_ss(ds, jg[0])}격이 되었습니다."
  
     fallback_ss = safe_get_ss(ds, main_qi)
@@ -1675,6 +1675,34 @@ def get_gyukgook_detailed(ds, ys, ms, hs, mb):
         return "월겁격", f"월지 {mb}의 본기가 {fallback_ss}이므로 월겁격으로 정합니다."
  
     return fallback_ss + "격", f"월지 {mb}의 지장간(비겁 제외)이 투출하지 않아 정기(본기)인 {main_qi}를 기준으로 {fallback_ss}격으로 정합니다."
+
+def get_gyukgook_detailed(ds, ys, ms, hs, mb, jjis=None, gans=None):
+    """내격 격 판정(_gyukgook_core) + 책 규칙: 월주(월지·월간)가 충·합되면 격이 원칙적으로 성립하기 어렵다는 참고 문구를 덧붙임.
+    jjis=[시지,일지,월지,년지], gans=[시간,일간,월간,년간]을 주면 점검하고, 주지 않으면 예전과 똑같이 동작합니다."""
+    name, desc = _gyukgook_core(ds, ys, ms, hs, mb)
+    notes = []
+    try:
+        if jjis and len(jjis) >= 4:
+            _m = _to_hanja(jjis[2])
+            for _nm, _x in (("시지", jjis[0]), ("일지", jjis[1]), ("년지", jjis[3])):
+                _xh = _to_hanja(_x)
+                if _xh and _xh != _m:
+                    _p = frozenset((_m, _xh))
+                    if _p in _UN_CHUNG: notes.append(f"월지({_m})가 {_nm}({_xh})와 충")
+                    elif _p in _UN_HAP: notes.append(f"월지({_m})가 {_nm}({_xh})와 육합")
+        if gans and len(gans) >= 4:
+            _mg = _to_hanja(gans[2])
+            for _nm, _x in (("시간", gans[0]), ("일간", gans[1]), ("년간", gans[3])):
+                _xh = _to_hanja(_x)
+                if _xh and _xh != _mg:
+                    _p = frozenset((_mg, _xh))
+                    if _p in _GAN_CHUNG: notes.append(f"월간({_mg})이 {_nm}({_xh})와 충")
+                    elif _p in _GAN_HAP: notes.append(f"월간({_mg})이 {_nm}({_xh})와 합")
+    except Exception:
+        notes = []
+    if notes:
+        desc = desc + " 다만 " + ", ".join(notes) + "이라 월주가 충·합을 받아 원칙적으로는 격이 성립하기 어렵습니다(격 성립 곤란: 격에 따른 성격 판단은 비중을 낮춰 참고용으로만 볼 것)."
+    return name, desc
 
 def calculate_gongmang(ilgan, ilji):
     g = _to_hanja(ilgan)
@@ -1769,7 +1797,7 @@ def _judge_strength(counts, mb, ds, db=None):
         strength = '중화'
     return strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note
 
-def get_yongshin_analysis(counts, mb, ds, db=None):
+def _yongshin_analysis_core(counts, mb, ds, db=None)
     """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출.
     억부용신과 조후용신이 다르고 조후 필요 오행이 희박(1개 이하)하며 계절도 극단적인 경우,
     두 용신이 상생 관계면 겸용 용신으로, 상극 관계면 조후 불균형을 '증상'으로만 짚고
@@ -1840,6 +1868,9 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
         confidence_note += " (신강·신약이 팽팽한 중화에 가까워 억부 용신의 확정도는 낮으므로 참고용으로 볼 것)"
 
     huishin, hanshin = _oh_prev(final_yongshin), _oh_next(final_yongshin)
+    if is_strong and final_yongshin in (siksang, gwanseong):
+        # 책(자평명리학): 신강 사주에서 식상 용신이면 재성이, 관성 용신이면 인성(관인상생)이 희신
+        huishin, hanshin = _oh_next(final_yongshin), _oh_prev(final_yongshin)
     gishin = _oh_controlled_by(final_yongshin)
     gushin = _oh_prev(gishin)
 
@@ -1882,6 +1913,43 @@ def get_yongshin_analysis(counts, mb, ds, db=None):
         f"{' (' + position_notes + ')' if position_notes else ''}. "
         f"{confidence_note}."
     )
+
+def get_jonggyeok_note(counts, mb, ds):
+    """책(자평명리학) 종격 조건에 해당할 '가능성'만 참고 문장으로 돌려줍니다(용신은 바꾸지 않음). 해당 없으면 빈 문자열."""
+    try:
+        dm = get_color(ds)
+        if not dm or dm not in _OHAENG_CYCLE:
+            return ""
+        biguk, inseong = dm, _oh_prev(dm)
+        siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
+        n_b = max(0, counts.get(biguk, 0) - 1)
+        n_i, n_s, n_j, n_g = counts.get(inseong, 0), counts.get(siksang, 0), counts.get(jaeseong, 0), counts.get(gwanseong, 0)
+        mo = get_color(mb)
+        name = grp = cond = yong = hui = None
+        if mo == biguk and n_s == 0 and n_j == 0 and n_g == 0:
+            name, grp, cond, yong, hui = "종왕격", "비겁", "식상·재성·관성이 원국에 없어", biguk, inseong
+        elif mo == inseong and n_s == 0 and n_j == 0:
+            name, grp, cond, yong, hui = "종강격", "인성", "식상·재성이 원국에 없어", inseong, gwanseong
+        elif mo == siksang and n_b == 0 and n_i == 0 and n_s >= 3:
+            name, grp, cond, yong, hui = "종아격", "식상", "비겁·인성이 원국에 없고 식상이 많아", siksang, biguk
+        elif mo == jaeseong and n_b == 0 and n_i == 0 and n_j >= 3:
+            name, grp, cond, yong, hui = "종재격", "재성", "비겁·인성이 원국에 없고 재성이 많아", jaeseong, siksang
+        elif mo == gwanseong and n_b == 0 and n_i == 0 and n_s == 0 and n_g >= 3:
+            name, grp, cond, yong, hui = "종살격", "관성", "비겁·인성·식상이 원국에 없고 관성이 많아", gwanseong, jaeseong
+        if not name:
+            return ""
+        return (f" [종격 가능성(참고): 월지({mb})가 {grp}이고 {cond} {name}에 해당할 가능성이 있음. "
+                f"책에서는 이런 사주를 억부가 아니라 가장 센 {grp} 기운을 따르는 사주로 보아 중심 오행 {yong}, 보조 오행 {hui}(으)로 삼으므로 "
+                f"위 억부 판정과 방향이 다를 수 있음. 위 판정을 뒤집지 말고, 고객 글에는 '종격'이라는 말을 쓰지 말며 "
+                f"'운이 들어오는 방향에 따라 흐름이 크게 달라지기 쉬운 사주' 정도로 한 구절만 조심스럽게 쓸 것(단정 금지).]")
+    except Exception:
+        return ""
+
+def get_yongshin_analysis(counts, mb, ds, db=None):
+    """억부·조후 용신 판정(_yongshin_analysis_core) 뒤에 종격 가능성 참고 문장(해당할 때만)을 덧붙입니다."""
+    base = _yongshin_analysis_core(counts, mb, ds, db)
+    note = get_jonggyeok_note(counts, mb, ds)
+    return base + note if note else base
 
 def get_goshin_gwasook_ji(day_ji, gender):
     """일지 기준 방합 그룹으로 고신살(남명)/과숙살(여명) 지지를 산출.
