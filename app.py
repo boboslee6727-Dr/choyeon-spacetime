@@ -841,7 +841,7 @@ if st.session_state.get('app_running', False):
             oh = engine.get_color(c)
             if oh in counts: counts[oh] += 1
 
-        yongshin_fact_str = engine.get_yongshin_analysis(counts, mb, ds, db) if hasattr(engine, 'get_yongshin_analysis') else ""        
+        yongshin_fact_str = engine.get_yongshin_analysis(counts, mb, ds, db, gans=[hs, ds, ms, ys], jjis=[hb, db, mb, yb]) if hasattr(engine, 'get_yongshin_analysis') else ""
 
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         guiin_str = guiin_map.get(ds_hanja, '없음')
