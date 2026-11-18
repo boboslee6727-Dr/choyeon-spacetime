@@ -813,7 +813,7 @@ def get_couple_link_facts(m_gans, m_jjis, f_gans, f_jjis, m_marital="", f_marita
                 _o = get_color(_ch)
                 if _o:
                     _cm[_o] = _cm.get(_o, 0) + 1
-            _st = _judge_strength(_cm, mj[2], mg[1], mj[1])[0]
+            _st = _judge_strength(_cm, mj[2], mg[1], mj[1], mg[2])[0]
             _dm = get_color(mg[1]); _fo = get_color(fg[1])
             if _st == "신강" and _fo == _oh_next(_dm):
                 out.append(f"남명이 힘이 센 편이고 여명의 일간({fg[1]})이 남명의 기운을 덜어 주는 쪽({_fo})이라, 고전에서 균형이 맞는다고 보는 짝(음양 합은 아니지만 힘의 균형으로 어울리는 근거)")
@@ -1774,10 +1774,11 @@ def _earth_rooted(ds, ji):
         return False
     return get_unsung(ds, ji) in _DEUK_UNSUNG
 
-def _judge_strength(counts, mb, ds, db=None):
+def _judge_strength(counts, mb, ds, db=None, mg=None):
     """신강/신약/중화 판정을 한 곳에 모은 도우미.
     - 일간 자신은 지원세력에서 뺀다(나머지 글자만 센다).
     - 월지가 일간을 도우면 득령 1점, 일지가 돕거나 빼가면 득지/실지 1점을 더한다(실령은 감점하지 않는다).
+    - 월간(mg)을 주면, 월간이 월지 지장간의 뿌리와 이어질 때(투간) 투간 점수×0.5를 일간을 돕는 쪽/빼가는 쪽에 더한다.
     - 점수가 같으면 중화.
     반환: (판정, 가산 전 지원, 가산 전 소모, 최종 지원, 최종 소모, 득령 설명, 득지 설명)"""
     dm = get_color(ds)
@@ -1811,6 +1812,26 @@ def _judge_strength(counts, mb, ds, db=None):
         drain += 1
         deukji_note = f"일지({db})가 일간의 기운을 빼가는 오행({db_elem})이라 실지"
 
+    # 월간 가산: 월지와 함께 월간도 고려(월간이 월지의 지장간과 같으면 뿌리가 이어진 것으로 보고 투간 점수×0.5)
+    if mg:
+        try:
+            _mgh, _mbh = _to_hanja(mg), _to_hanja_ji(mb)
+            _t = _wolgan_tugan(_mgh, _mbh)
+            _mo = get_color(_mgh)
+            if _t > 0 and _mo:
+                _add = round(0.5 * _t, 2)
+                if _mo in (biguk, inseong):
+                    support += _add
+                    deukji_note += (" / " if deukji_note else "") + f"월간({_mgh})이 월지({_mbh})의 뿌리와 이어져 일간을 돕는 힘 +{_add}"
+                elif _mo in (siksang, jaeseong, gwanseong):
+                    drain += _add
+                    deukji_note += (" / " if deukji_note else "") + f"월간({_mgh})이 월지({_mbh})의 뿌리와 이어져 일간의 기운을 빼가는 힘 +{_add}"
+        except Exception:
+            pass
+    support, drain = round(support, 2), round(drain, 2)
+    support = int(support) if support == int(support) else support
+    drain = int(drain) if drain == int(drain) else drain
+
     if support > drain:
         strength = '신강'
     elif support < drain:
@@ -1819,7 +1840,7 @@ def _judge_strength(counts, mb, ds, db=None):
         strength = '중화'
     return strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note
 
-def _yongshin_analysis_core(counts, mb, ds, db=None):
+def _yongshin_analysis_core(counts, mb, ds, db=None, mg=None):
     """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출.
     억부용신과 조후용신이 다르고 조후 필요 오행이 희박(1개 이하)하며 계절도 극단적인 경우,
     두 용신이 상생 관계면 겸용 용신으로, 상극 관계면 조후 불균형을 '증상'으로만 짚고
@@ -1831,7 +1852,7 @@ def _yongshin_analysis_core(counts, mb, ds, db=None):
     biguk, inseong = dm, _oh_prev(dm)
     siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
 
-    strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note = _judge_strength(counts, mb, ds, db)
+    strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note = _judge_strength(counts, mb, ds, db, mg)
     is_strong = (strength == '신강')
     eok_bu_candidates = [siksang, jaeseong, gwanseong] if is_strong else [inseong, biguk]
     eok_bu_yongshin = min(eok_bu_candidates, key=lambda e: counts.get(e, 0))
@@ -1931,7 +1952,7 @@ def _yongshin_analysis_core(counts, mb, ds, db=None):
     return (
         label +
         f"일간({ds}, {dm}) 자신을 뺀 나머지 글자 기준 지원세력(비겁+인성)={raw_support} vs 소모세력(식상+재성+관성)={raw_drain}이고, "
-        f"여기에 위치 가산(월지가 돕거나 일지가 돕거나 빼가면 각 1점)을 더한 최종 점수는 {support} vs {drain}로 {strength}입니다"
+        f"여기에 위치 가산(월지가 돕거나 일지가 돕거나 빼가면 각 1점, 월간이 월지의 뿌리와 이어지면 그 정도에 따라 최대 0.5점)을 더한 최종 점수는 {support} vs {drain}로 {strength}입니다"
         f"{' (' + position_notes + ')' if position_notes else ''}. "
         f"{confidence_note}."
     )
@@ -1968,7 +1989,7 @@ def get_jonggyeok_note(counts, mb, ds):
         return ""
 
 def get_yongshin_realness_note(base, gans, jjis):
-    """책(자평명리학) 진용/가용: 용신 오행이 원국에 실제로 있는지(진용) 없는지(가용)를 참고 문장으로 돌려줍니다.
+    """용신 오행이 원국에 실제로 있는지(천간·지지·지지 속) 없는지(빌려 쓰는 기운)를 참고 문장으로 돌려줍니다.
     용신 오행 자체는 바꾸지 않습니다. gans/jjis = [시,일,월,년]. 정보가 없으면 빈 문자열."""
     try:
         if not gans or not jjis or len(gans) < 4 or len(jjis) < 4:
@@ -1982,26 +2003,129 @@ def get_yongshin_realness_note(base, gans, jjis):
         in_ji = [j for j in js if j and j not in ("?", "-", " ") and get_color(j) == yong]
         in_hid = [c for j in js for c in JIJANGGAN.get(j, []) if c != "-" and get_color(c) == yong]
         if in_gan:
-            kind, txt = "진용(천간에 드러남)", f"필요한 기운({yong})이 사주 천간에 드러나 있어 타고난 힘으로 스스로 꺼내 쓸 수 있는 기운으로 서술"
+            kind, txt = "원국에 있음(천간에 드러남)", f"필요한 기운({yong})이 사주 천간에 드러나 있어 타고난 힘으로 스스로 꺼내 쓸 수 있는 기운으로 서술"
         elif in_ji:
-            kind, txt = "진용(지지에 자리함)", f"필요한 기운({yong})이 사주 지지에 자리하고 있어 타고난 바탕은 있으나 겉으로 드러나려면 계기나 운의 도움이 필요한 기운으로 서술"
+            kind, txt = "원국에 있음(지지에 자리함)", f"필요한 기운({yong})이 사주 지지에 자리하고 있어 타고난 바탕은 있으나 겉으로 드러나려면 계기나 운의 도움이 필요한 기운으로 서술"
         elif in_hid:
-            kind, txt = "진용(지지 속에 숨음, 약한 진용)", f"필요한 기운({yong})이 지지 속에 숨어 있어 씨앗은 있으나 아직 힘이 약한 기운으로, 운에서 같은 기운이 들어올 때 살아난다고 서술"
+            kind, txt = "원국에 있음(지지 속에 숨음, 약함)", f"필요한 기운({yong})이 지지 속에 숨어 있어 씨앗은 있으나 아직 힘이 약한 기운으로, 운에서 같은 기운이 들어올 때 살아난다고 서술"
         else:
-            kind, txt = "가용(원국에 없는 기운을 빌려 씀)", f"필요한 기운({yong})이 사주 안에 전혀 없어 타고난 힘으로는 갖추지 못한 기운이므로, '이미 갖고 있다'고 쓰지 말고 환경·사람·시기(운)에서 채워 가야 하는 기운으로 서술"
-        return f" [용신 실재 여부(참고): {kind}. {txt}. 용신 오행 판정은 바꾸지 말고 서술 방식만 이에 맞출 것.]"
+            kind, txt = "원국에 없음(빌려 쓰는 기운)", f"필요한 기운({yong})이 사주 안에 전혀 없어 타고난 힘으로는 갖추지 못한 기운이므로, '이미 갖고 있다'고 쓰지 말고 환경·사람·시기(운)에서 채워 가야 하는 기운으로 서술"
+        return f" [용신 실재 여부(참고): {kind}. {txt}. 용신 오행 판정은 바꾸지 말고 서술 방식만 이에 맞출 것. 풀이 본문에는 '진용', '가용', '원국에 있음/없음' 같은 분류 이름을 쓰지 말고 일상어로만 풀어 쓸 것.]"
+    except Exception:
+        return ""
+
+def get_yongshin_hapchung_note(base, gans, jjis):
+    """책(자평명리학): 용신이 합·충되거나 합화하면 용신을 취하기 어렵다. 원국에서 용신 오행 글자(일간 제외 천간, 지지)가
+    다른 글자와 합·충하는 경우를 참고 문장으로 돌려줍니다(용신 오행은 바꾸지 않음, 합화 여부는 따지지 않음).
+    gans=[시간,일간,월간,년간], jjis=[시지,일지,월지,년지]. 해당 없으면 빈 문자열."""
+    try:
+        if not gans or not jjis or len(gans) < 4 or len(jjis) < 4:
+            return ""
+        yong = get_yongshin_elements(base).get("용신")
+        if not yong:
+            return ""
+        gs = [_to_hanja(g) for g in gans]
+        js = [_to_hanja_ji(j) for j in jjis]
+        gn = ["시간", "일간", "월간", "년간"]
+        jn = ["시지", "일지", "월지", "년지"]
+        bad = ("?", "-", " ", "")
+        hits = []
+        for i in (0, 2, 3):                       # 천간의 용신 글자(일간은 제외)
+            x = gs[i]
+            if x in bad or get_color(x) != yong:
+                continue
+            for k in range(4):
+                y = gs[k]
+                if k == i or y in bad:
+                    continue
+                p = frozenset((x, y))
+                if p in _GAN_CHUNG:
+                    hits.append(f"{gn[i]} {x}↔{gn[k]} {y} 충")
+                elif p in _GAN_HAP:
+                    hits.append(f"{gn[i]} {x}↔{gn[k]} {y} 합")
+        for i in range(4):                        # 지지의 용신 글자
+            x = js[i]
+            if x in bad or get_color(x) != yong:
+                continue
+            for k in range(4):
+                y = js[k]
+                if k == i or y in bad or y == x:
+                    continue
+                p = frozenset((x, y))
+                if p in _UN_CHUNG:
+                    hits.append(f"{jn[i]} {x}↔{jn[k]} {y} 충")
+                elif p in _UN_HAP:
+                    hits.append(f"{jn[i]} {x}↔{jn[k]} {y} 육합")
+        hits = list(dict.fromkeys(hits))
+        if not hits:
+            return ""
+        return (" [용신 합충 점검(참고): 필요한 기운(" + yong + ")의 글자에 " + ", ".join(hits[:4]) +
+                ". 책에서는 이렇게 합·충을 받으면 그 기운을 온전히 쓰기 어렵다고 보므로, 타고난 상태에서는 이 기운이 흔들리거나 묶이기 쉽고 "
+                "합·충이 풀리는 시기에 힘을 얻는다는 정도로만 조심스럽게 서술(단정 금지, 합화 여부는 따지지 않았음). 용신 오행 판정은 바꾸지 말 것.]")
+    except Exception:
+        return ""
+
+def get_yongshin_fit_note(base, counts, mb, ds, db=None, mg=None):
+    """책(자평명리학) 진용/가용: 용신이 일간의 힘의 구조에서 정석(진용)에 맞는 십성인지, 정석이 없거나 약해 어쩔 수 없이 쓰는
+    차선(가용)인지를 참고 문장으로 돌려줍니다. 용신 오행은 바꾸지 않습니다. 중화이거나 판단이 어려우면 빈 문자열.
+    정석: 신강 인성多→식상·재성 / 신강 비겁多→식상·재성·관성 / 신강 혼재→재성(식상) / 신약→인성·비겁"""
+    try:
+        yong = get_yongshin_elements(base).get("용신")
+        dm = get_color(ds)
+        if not yong or not dm or dm not in _OHAENG_CYCLE:
+            return ""
+        strength = _judge_strength(counts, mb, ds, db, mg)[0]
+        if strength == "중화":
+            return ""
+        bi, ins = dm, _oh_prev(dm)
+        sik, jae, gwan = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
+        nm = {bi: "비겁", ins: "인성", sik: "식상", jae: "재성", gwan: "관성"}
+        n = {"비겁": max(0, counts.get(bi, 0) - 1), "인성": counts.get(ins, 0), "식상": counts.get(sik, 0),
+             "재성": counts.get(jae, 0), "관성": counts.get(gwan, 0)}
+        yg = nm.get(yong)
+        if not yg:
+            return ""
+        kind, want = None, ""
+        if strength == "신강":
+            if n["인성"] > n["비겁"]:
+                want = "식상이나 재성"
+                kind = "정석" if yg in ("식상", "재성") else "차선"
+            elif n["비겁"] > n["인성"]:
+                want = "식상·재성·관성 중 필요한 기운"
+                kind = "정석" if yg in ("식상", "재성", "관성") else "차선"
+            else:
+                want = "재성(또는 식상)"
+                kind = "정석" if yg in ("재성", "식상") else "차선"
+        else:
+            # 신약: 식상·재성·관성이 많으면 인성·비겁이 정석(식재·재관이 함께 많으면 인성과 비겁이 우선순위)
+            want = "인성이나 비겁"
+            kind = "정석" if yg in ("인성", "비겁") else "차선"
+        if kind == "정석":
+            return (f" [용신 적합도(참고): 이 사주의 힘의 구조에서 고전이 권하는 정석에 맞는 기운({yong}, {yg})을 필요한 기운으로 삼았음. "
+                    f"일간이 진정 필요로 하는 기운이라 운의 흐름이 원만하게 이어지기 쉽다고 서술. 풀이 본문에는 '진용', '가용', '정석' 같은 분류 이름을 쓰지 말고 일상어로만 풀 것.]")
+        return (f" [용신 적합도(참고): 이 사주의 힘의 구조에서 고전이 권하는 정석은 {want}인데, 지금 쓰는 필요한 기운({yong}, {yg})은 "
+                f"정석 기운이 사주에 없거나 약해서 차선으로 삼은 것임. 이 기운도 도움은 되지만 '꼭 맞는 정답'처럼 강조하지 말고, "
+                f"정석 기운이 들어오는 시기에 더 편안해진다는 정도로 조심스럽게 서술하되, 차선이라고 나쁘다는 식(이분법)으로 쓰지 말 것. "
+                f"풀이 본문에는 '진용', '가용', '정석', '차선' 같은 분류 이름을 쓰지 말고 일상어로만 풀 것.]")
     except Exception:
         return ""
 
 def get_yongshin_analysis(counts, mb, ds, db=None, gans=None, jjis=None):
     """억부·조후 용신 판정(_yongshin_analysis_core) 뒤에 종격 가능성·진용/가용 참고 문장(해당할 때만)을 덧붙입니다.
     gans=[시간,일간,월간,년간], jjis=[시지,일지,월지,년지]를 주면 진용/가용도 점검하고, 주지 않으면 예전과 똑같이 동작합니다."""
-    base = _yongshin_analysis_core(counts, mb, ds, db)
+    mg = gans[2] if gans and len(gans) >= 3 else None
+    base = _yongshin_analysis_core(counts, mb, ds, db, mg)
     note = get_jonggyeok_note(counts, mb, ds)
     if note:
         base = base + note
     real = get_yongshin_realness_note(base, gans, jjis)
-    return base + real if real else base
+    if real:
+        base = base + real
+    hc = get_yongshin_hapchung_note(base, gans, jjis)
+    if hc:
+        base = base + hc
+    fit = get_yongshin_fit_note(base, counts, mb, ds, db, mg)
+    return base + fit if fit else base
 
 def get_goshin_gwasook_ji(day_ji, gender):
     """일지 기준 방합 그룹으로 고신살(남명)/과숙살(여명) 지지를 산출.
@@ -4096,7 +4220,7 @@ def get_sangjin_paryo_facts(gans, jjis, ds, gender, haeng_list=None):
             oh = get_color(c)
             if oh in counts: counts[oh] += 1
         mb, db = js[2], js[1]
-        strength = _judge_strength(counts, mb, ds, db)[0]
+        strength = _judge_strength(counts, mb, ds, db, gs[2])[0]
         if strength == "중화":
             return "상관상진·파료상관 해당 없음(일간의 강약이 팽팽해 판단하지 않음)"
         slots = _ten_god_slots(ds, gs, js)
@@ -4313,12 +4437,12 @@ def analyze_cosmic_gravity_and_samhyeong_patterns(bazi_dict):
 
 # ---- 3-A. [2-1 재물운] ----
 
-def get_jaeda_sinyak_fact(counts, mb, ds, db=None):
+def get_jaeda_sinyak_fact(counts, mb, ds, db=None, mg=None):
     """재물 감당력 사실문: 신강·신약 + 재성 개수 → 재다신약/신약재약/신강재약/신강재왕 등 유형과 비겁탈재 여부."""
     dm = get_color(ds)
     if not dm or dm not in _OHAENG_CYCLE:
         return "일간 오행을 알 수 없어 재물 감당력 판정을 생략합니다."
-    strength, raw_support, raw_drain, support, drain, _n1, _n2 = _judge_strength(counts, mb, ds, db)
+    strength, raw_support, raw_drain, support, drain, _n1, _n2 = _judge_strength(counts, mb, ds, db, mg)
     jae = _oh_controls(dm)
     jae_cnt = counts.get(jae, 0)
     bigeop = max(0, counts.get(dm, 0) - 1)
@@ -4888,7 +5012,7 @@ def analyze_cognitive_decline_facts(won_guk_ji, daewun_list, sewun_10_list, curr
 
     return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
 
-def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr_year, current_dw_j, age, db=None):
+def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr_year, current_dw_j, age, db=None, mg=None):
     """
     일간이 신약(身弱)한 상태에서 식상(食傷) 대운·세운이 겹쳐 들어와 기운이 과도하게 빠지는(설기) 시기를 판정.
     고령자는 원기 회복력이 약해 이 설기 효과가 더 크게 체감되므로 나이에 따라 경고 수위를 달리한다.
@@ -4900,7 +5024,7 @@ def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr
     biguk, inseong = dm, _oh_prev(dm)
     siksang, jaeseong, gwanseong = _oh_next(dm), _oh_controls(dm), _oh_controlled_by(dm)
 
-    strength = _judge_strength(counts, mb, ds, db)[0]
+    strength = _judge_strength(counts, mb, ds, db, mg)[0]
     is_weak = (strength != '신강')   # 신약·중화는 약한 쪽으로 봄(예전의 동점=약함과 같은 방식)
 
     if not is_weak:
