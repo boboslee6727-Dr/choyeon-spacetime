@@ -880,18 +880,6 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
         if (_ji_pos & {0, 3}) and not (_ji_pos & {1, 2}):
             out.append(f"{star}이 일지·월지에는 없고 가장자리 자리(년지·시지)에만 있어, 서둘러 정하기보다 충분히 알아보고 마음이 굳은 뒤에 인연을 정할수록 더 단단해지는 구조(나이는 말하지 말고, '늦게 결혼한다'고 단정하지 말 것)")
 
-        # 1-2) 지지(년·월 / 일·시)에 앉은 자리에 따른 배우자 취향(자평명리학 14부)
-        _fr = any(i in (2, 3) for i, _ in ji_hit)
-        _bk = any(i in (0, 1) for i, _ in ji_hit)
-        _t1 = "인정 많고 푸근한 사람" if g == "남" else "점잖고 이해심 많은 사람"
-        _t2 = "동생처럼 편하고 친근한 사람" if g == "남" else "편안하고 친근한 사람"
-        if _fr and not _bk:
-            out.append(f"{star}이 지지 앞쪽(년지·월지)에 있어 배우자 취향은 {_t1} 쪽으로 기우는 경향(단정하지 말 것)")
-        elif _bk and not _fr:
-            out.append(f"{star}이 지지 뒤쪽(일지·시지)에 있어 배우자 취향은 {_t2} 쪽으로 기우는 경향(단정하지 말 것)")
-        elif _fr and _bk:
-            out.append(f"{star}이 지지 앞쪽과 뒤쪽에 모두 있어 배우자 취향이 {_t1}과 {_t2} 사이에 걸쳐 있는 경향(단정하지 말 것)")
-
         # 2) 정·편 혼잡
         has_j = any(s == pair[0] for s in all_ss)
         has_p = any(s == pair[1] for s in all_ss)
