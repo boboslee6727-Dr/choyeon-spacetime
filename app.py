@@ -175,12 +175,13 @@ def _qc_scan(html_text, product=""):
         txt = re.sub(r'<[^>]+>', ' ', txt)
         txt = re.sub(r'\s+', ' ', txt)
         out = []
-        for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼", "일진", "대해수", "사실관계", "번지지는", "지나간 날입니다"):
+        for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼", "일진", "대해수", "사실관계", "번지지는", "지나간 날입니다", "팩트폭격", "마스터 비기"):
             hits = [m for m in re.finditer(w, txt)]
             if hits:
                 a = max(0, hits[0].start() - 12)
                 out.append(f"'{w}' {len(hits)}번: …{txt[a:hits[0].end() + 12]}…")
-        for pat, label in ((r'(?<![가-힣])(?![가-힣]*살 )([가-힣]{2,6}) \1', '같은 말이 연달아 반복됨'),
+        for pat, label in ((r'(?<![가-힣])([가-힣]{2,6}) \1(?![가-힣])', '같은 말이 연달아 반복됨'),
+                           (r'(?<![A-Za-z])[A-Za-z]{5,}(?![A-Za-z])', '영어 단어가 섞임'),
                            (r'이 구간 밖', '어색한 말'),
                            (r'\{[A-Za-z_][A-Za-z0-9_]*\}', '채워지지 않은 중괄호'),
                            (r'※ ?AI', '내부 지시문이 보임'),
@@ -190,6 +191,7 @@ def _qc_scan(html_text, product=""):
             if m:
                 a = max(0, m.start() - 12)
                 out.append(f"{label}: …{txt[a:m.end() + 12]}…")
+
         # ── 날짜와 일진 대조: '11월 21일 己亥일' 표기를 엔진 계산값과 비교 ──
         import datetime as _dtq
         _yr = _dtq.datetime.now().year
