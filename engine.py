@@ -880,6 +880,19 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
         if (_ji_pos & {0, 3}) and not (_ji_pos & {1, 2}):
             out.append(f"{star}이 일지·월지에는 없고 가장자리 자리(년지·시지)에만 있어, 서둘러 정하기보다 충분히 알아보고 마음이 굳은 뒤에 인연을 정할수록 더 단단해지는 구조(나이는 말하지 말고, '늦게 결혼한다'고 단정하지 말 것)")
 
+        # 1-2) 조혼 쪽 부드러운 표현(자평명리학 14부 조혼사주)
+        _HG2 = {frozenset(p) for p in ("甲己", "乙庚", "丙辛", "丁壬", "戊癸")}
+        _jo = False
+        if gs[2] and frozenset((ds, gs[2])) in _HG2 and get_ss(ds, gs[2]) in pair:      # 일간이 월간의 배우자별과 합
+            _jo = True
+        else:
+            _fm = [get_ss(ds, gs[i]) for i in (2, 3) if gs[i]]                              # 연간·월간에 드러난 것만
+            _oth = ("정관", "편관") if g == "남" else ("식신", "상관")                        # 남: 재성+관성 / 여: 관성+식상
+            if any(x in pair for x in _fm) and any(x in _oth for x in _fm):
+                _jo = True
+        if _jo:
+            out.append(f"{star}이 년·월 쪽에서 일찍 움직이는 구조라 이성 인연이 일찍 닿기 쉬움. 마음이 앞서 서두르기보다 속도를 맞추며 서로를 충분히 알아 가는 것이 중요(나이를 말하지 말고, '일찍 결혼한다'고 단정하지 말 것)")
+
         # 2) 정·편 혼잡
         has_j = any(s == pair[0] for s in all_ss)
         has_p = any(s == pair[1] for s in all_ss)
