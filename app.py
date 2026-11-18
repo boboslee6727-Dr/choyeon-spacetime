@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 88.8 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 88.9 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 88.8 Master"
+APP_VERSION = "ver 88.9 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -1327,7 +1327,7 @@ if st.session_state.get('app_running', False):
             f"사회적 공간: {w_detail.get('사회적_공간','정보없음')}"
         ) if w_detail else "60월령 상세 데이터 없음"
         
-        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb)
+        gyukgook, gyukgook_detail = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb, jjis=[hb, db, mb, yb], gans=[hs, ds, ms, ys])
         golden_text_html = html_views.get_golden_text(name, w_val, i_val, struct_data[0], struct_data[1], struct_data[2], mb=mb, gyuk_name=gyukgook)
         golden_box_gunghap_html = golden_text_html
 
