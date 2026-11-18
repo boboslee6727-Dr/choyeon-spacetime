@@ -1976,8 +1976,18 @@ def get_jonggyeok_note(counts, mb, ds):
                     f"책에서는 이런 사주를 억부·조후가 아니라 가장 센 {dm} 기운(비겁)을 중심으로, {inseong} 기운을 보조로 삼으므로 위 억부 판정과 방향이 크게 다를 수 있음"
                     f"(충·형·해·파가 없으면 격이 또렷해짐). 위 판정을 뒤집지 말고, 고객 글에는 '일행격'이나 '{_il}' 같은 이름을 쓰지 말며 "
                     f"'한 가지 기운이 사주 전체를 이끄는 사주로, 그 기운이 막히지 않고 이어질 때 힘을 얻는다' 정도로 한 구절만 조심스럽게 쓸 것(단정 금지).]")
+        # 이행격: 사주가 상생 또는 상극 관계의 두 오행으로만 이루어지고 두 오행의 힘이 비슷함 → 책: 월지를 장악한 오행이 용신, 그 인성이 희신
+        _present = [o for o in ("목", "화", "토", "금", "수") if counts.get(o, 0) > 0]
+        if len(_present) == 2 and mo in _present and dm in _present:
+            _a, _b = counts.get(_present[0], 0), counts.get(_present[1], 0)
+            if min(_a, _b) >= 3 and abs(_a - _b) <= 2:
+                _hui2 = _oh_prev(mo)
+                return (f" [이행격 가능성(참고): 사주가 {_present[0]}·{_present[1]} 두 기운으로만 이루어지고 두 기운의 힘이 비슷하여 이행격에 해당할 가능성이 있음. "
+                        f"책에서는 이런 사주를 억부·조후가 아니라 태어난 달을 장악한 {mo} 기운을 중심으로, {_hui2} 기운을 보조로 삼으므로 위 억부 판정과 방향이 다를 수 있음"
+                        f"(두 기운 중 한쪽으로 힘이 쏠리면 종격처럼 달라질 수 있음). 위 판정을 뒤집지 말고, 고객 글에는 '이행격'이라는 말을 쓰지 말며 "
+                        f"'두 가지 기운이 서로 팽팽하게 균형을 이루는 사주로, 한쪽으로 쏠리지 않게 균형을 잡는 것이 중요하다' 정도로 한 구절만 조심스럽게 쓸 것(단정 금지).]")
         if mo == biguk and n_s == 0 and n_j == 0 and n_g == 0:
-            name, grp, cond, yong, hui = "종왕격", "비겁", "식상·재성·관성이 원국에 없어", biguk, inseong
+            name, grp, cond, yong, hui = "종왕격"
         elif mo == inseong and n_s == 0 and n_j == 0:
             name, grp, cond, yong, hui = "종강격", "인성", "식상·재성이 원국에 없어", inseong, gwanseong
         elif mo == siksang and n_b == 0 and n_i == 0 and n_s >= 3:
@@ -2117,12 +2127,43 @@ def get_yongshin_fit_note(base, counts, mb, ds, db=None, mg=None):
     except Exception:
         return ""
 
+def get_hapwha_note(counts, mb, ds, gans):
+    """책(자평명리학) 합화격: 일간이 바로 이웃한 월간 또는 시간과 합하고, 합화한 오행이 월지를 잡고, 합화 오행을 극하는 오행이 없을 때의 '가능성'.
+    갑기→토, 을경→금, 병신→수, 정임→목, 무계→화. 쟁합(양쪽에서 합)이면 제외. 용신 오행은 바꾸지 않음. gans=[시간,일간,월간,년간]."""
+    try:
+        if not gans or len(gans) < 4:
+            return ""
+        _hw = {frozenset("甲己"): "토", frozenset("乙庚"): "금", frozenset("丙辛"): "수", frozenset("丁壬"): "목", frozenset("戊癸"): "화"}
+        gs = [_to_hanja(g) for g in gans]
+        dm = gs[1]
+        cands = []
+        for k in (0, 2):                          # 시간·월간(일간 바로 옆)
+            p = frozenset((dm, gs[k]))
+            if gs[k] and p in _hw:
+                cands.append((k, _hw[p]))
+        if len(cands) != 1:                       # 합이 없거나 양쪽에서 합(쟁합)이면 제외
+            return ""
+        k, oh = cands[0]
+        if get_color(mb) != oh:                   # 합화한 오행이 월지를 잡아야 함
+            return ""
+        killer = _oh_controlled_by(oh)            # 합화 오행을 극하는 오행
+        dmo = get_color(dm)
+        if counts.get(killer, 0) - (1 if dmo == killer else 0) > 0:
+            return ""
+        hui = _oh_prev(oh)
+        return (f" [합화격 가능성(참고): 일간({dm})이 바로 옆 {'월간' if k == 2 else '시간'}({gs[k]})과 합하고, 합해서 생기는 {oh} 기운이 태어난 달을 잡고 있으며 그 기운을 극하는 기운이 없어 합화격에 해당할 가능성이 있음. "
+                f"책에서는 이런 사주를 합해서 생긴 {oh} 기운을 중심으로, {hui} 기운을 보조로 삼으므로 위 억부 판정과 방향이 다를 수 있음"
+                f"(합이 풀리거나 합화 기운을 치는 운이 오면 흔들릴 수 있음). 위 판정을 뒤집지 말고, 고객 글에는 '합화격'이나 '합화'라는 말을 쓰지 말며 "
+                f"'타고난 성향이 어떤 인연이나 환경을 만나 다른 모습으로 바뀌기 쉬운 사주' 정도로 한 구절만 조심스럽게 쓸 것(단정 금지).]")
+    except Exception:
+        return ""
+
 def get_yongshin_analysis(counts, mb, ds, db=None, gans=None, jjis=None):
     """억부·조후 용신 판정(_yongshin_analysis_core) 뒤에 종격 가능성·진용/가용 참고 문장(해당할 때만)을 덧붙입니다.
     gans=[시간,일간,월간,년간], jjis=[시지,일지,월지,년지]를 주면 진용/가용도 점검하고, 주지 않으면 예전과 똑같이 동작합니다."""
     mg = gans[2] if gans and len(gans) >= 3 else None
     base = _yongshin_analysis_core(counts, mb, ds, db, mg)
-    note = get_jonggyeok_note(counts, mb, ds)
+    note = get_hapwha_note(counts, mb, ds, gans) or get_jonggyeok_note(counts, mb, ds)
     if note:
         # 종격·일행격 가능성이 붙은 사주는 내격(억부) 기준의 보조 문장(실재 여부·합충·적합도)이 서로 어긋나므로 붙이지 않음
         return base + note
