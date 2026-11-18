@@ -1453,7 +1453,8 @@ if st.session_state.get('app_running', False):
                 curr_year=curr_year,
                 current_dw_j=dw_j_cur,
                 age=age,
-                db=db
+                db=db,
+                mg=ms
             )
 
         adv_gan_data = {'year_gan': ys, 'month_gan': ms, 'day_gan': ds, 'hour_gan': hs}
@@ -1812,7 +1813,7 @@ if st.session_state.get('app_running', False):
             "wolryeong_fact": w_val,
             "wolryeong_detail_fact": wolryeong_detail_fact,
             "yongshin_fact_str": yongshin_fact_str,
-            "jaeda_sinyak_fact_str": engine.get_jaeda_sinyak_fact(counts, mb, ds, db),
+            "jaeda_sinyak_fact_str": engine.get_jaeda_sinyak_fact(counts, mb, ds, db, mg=ms),
 
             # ── C. 신살 · 귀인 · 공망 · 삼재 ──
             "shinsal_str": shinsal_str, "shinsal_by_palace_str": shinsal_by_palace_str,
