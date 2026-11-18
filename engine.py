@@ -5180,6 +5180,28 @@ def analyze_siksang_drain_facts(counts, mb, ds, daewun_list, sewun_10_list, curr
 
     return f"[1. 선천 원국]: {fact_1}\n[2. 평생 궤적]: {fact_2}\n[3. 향후 10년]: {fact_3}\n[4. 당장 올해]: {fact_4}"
 
+def get_weak_health_fact(counts, mb, ds, gender="남성", db=None, mg=None):
+    """건강운용: 일간이 약하면서 재성·관성·식상 중 한 기운이 많아 힘이 밖으로 새는 구조일 때만 한 줄을 돌려준다.
+    (자평명리학 13부 재다신약 병증 사례, 14부 관다신약 근거. 질병명·요양·사망은 쓰지 않는다.)"""
+    dm = get_color(ds)
+    if not dm or dm not in _OHAENG_CYCLE:
+        return ""
+    strength = _judge_strength(counts, mb, ds, db, mg)[0]
+    if strength != "신약":
+        return ""
+    cand = (("재성", _oh_controls(dm)), ("관성", _oh_controlled_by(dm)), ("식상", _oh_next(dm)))
+    best = max(cand, key=lambda x: counts.get(x[1], 0))
+    kind, oh = best
+    n = counts.get(oh, 0)
+    if n < 4:      # 힘이 새는 기운이 4개 이상일 때만(전체 사주의 약 11%)
+        return ""
+    help_ = f"{dm}(비겁)·{_oh_prev(dm)}(인성)"
+    clash = _oh_controlled_by(dm)
+    return (f"[약한 구조 건강 사실] 일간 신약인데 {kind}({oh}) {n}개로 힘이 밖으로 새기 쉬운 구조 → "
+            f"몸의 기운이 쉽게 소모되는 체질로 보고 평소 체력·컨디션 관리가 중요함. "
+            f"일간을 충극하는 {clash} 기운의 운이 올 때는 특히 무리하지 말고 쉬어 갈 것, "
+            f"{help_} 기운의 운에서는 기운이 회복됨. 질병명·치료·요양 같은 단정은 쓰지 말 것")
+
 
 # ---- 3-E. [2-6 이사 택일] [2-7 개업 택일] ----
 
