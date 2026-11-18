@@ -2127,7 +2127,7 @@ def get_yongshin_fit_note(base, counts, mb, ds, db=None, mg=None):
     except Exception:
         return ""
 
-def get_hapwha_note(counts, mb, ds, gans):
+def get_hapwha_note(counts, mb, ds, gans, db=None):
     """책(자평명리학) 합화격: 일간이 바로 이웃한 월간 또는 시간과 합하고, 합화한 오행이 월지를 잡고, 합화 오행을 극하는 오행이 없을 때의 '가능성'.
     갑기→토, 을경→금, 병신→수, 정임→목, 무계→화. 쟁합(양쪽에서 합)이면 제외. 용신 오행은 바꾸지 않음. gans=[시간,일간,월간,년간]."""
     try:
@@ -2141,14 +2141,22 @@ def get_hapwha_note(counts, mb, ds, gans):
             p = frozenset((dm, gs[k]))
             if gs[k] and p in _hw:
                 cands.append((k, _hw[p]))
-        if len(cands) != 1:                       # 합이 없거나 양쪽에서 합(쟁합)이면 제외
+        if not cands:                             # 곁에 합하는 천간이 없으면 제외 (양쪽 모두 같은 합 상대인 경우는 책 예시(庚乙庚)처럼 인정)
             return ""
         k, oh = cands[0]
+        _npt = len(cands)                         # 합 상대 천간의 개수(1 또는 2)
         if get_color(mb) != oh:                   # 합화한 오행이 월지를 잡아야 함
             return ""
-        killer = _oh_controlled_by(oh)            # 합화 오행을 극하는 오행
+        # 득세: 합화 오행이 사주(간지 8글자)에서 3개 이상이면서 가장 많거나 공동 최다
+        if counts.get(oh, 0) < 3 or counts.get(oh, 0) < max(counts.get(o, 0) for o in ("목", "화", "토", "금", "수")):
+            return ""
+        killer = _oh_controlled_by(oh)            # 합화 오행을 극하는 오행 (합하는 두 천간은 제외하고 셈)
         dmo = get_color(dm)
-        if counts.get(killer, 0) - (1 if dmo == killer else 0) > 0:
+        pto = get_color(gs[k])
+        n_kill = counts.get(killer, 0) - (1 if dmo == killer else 0) - (_npt if pto == killer else 0)
+        if n_kill > 0:
+            return ""
+        if db and get_color(db) in (dmo, _oh_prev(dmo)):   # 합이불화(가화): 일지가 일간을 돕는 뿌리면 제외
             return ""
         hui = _oh_prev(oh)
         return (f" [합화격 가능성(참고): 일간({dm})이 바로 옆 {'월간' if k == 2 else '시간'}({gs[k]})과 합하고, 합해서 생기는 {oh} 기운이 태어난 달을 잡고 있으며 그 기운을 극하는 기운이 없어 합화격에 해당할 가능성이 있음. "
@@ -2158,15 +2166,70 @@ def get_hapwha_note(counts, mb, ds, gans):
     except Exception:
         return ""
 
+_SPECIAL_WORDING = {
+    "합화격": ("'합화격', '합화'", "타고난 성향이 어떤 인연이나 환경을 만나 다른 모습으로 바뀌기 쉬운 사주"),
+    "일행격": ("'일행격', '곡직', '염상', '가색', '종혁', '윤하'", "한 가지 기운이 사주 전체를 이끄는 사주로, 그 기운이 막히지 않고 이어질 때 힘을 얻는다"),
+    "이행격": ("'이행격'", "두 가지 기운이 서로 팽팽하게 균형을 이루는 사주로, 한쪽으로 쏠리지 않게 균형을 잡는 것이 중요하다"),
+    "종격": ("'종격', '종왕', '종강', '종아', '종재', '종살'", "운이 들어오는 방향에 따라 흐름이 크게 달라지기 쉬운 사주"),
+}
+
+def _special_pick(note, ds, mb):
+    """특수 구조 참고 문장(note)에서 책 기준 (종류, 용신, 희신)을 뽑음. 책: 합화격=합화 오행, 일행격=일간 오행(비겁), 이행격=월지를 장악한 오행, 종격=따르는 기운. 희신은 모두 용신의 인성."""
+    try:
+        dm = get_color(ds)
+        if note.startswith(" [합화격"):
+            m = re.search(r"합해서 생기는 ([목화토금수]) 기운", note)
+            if not m:
+                return None
+            y = m.group(1)
+            h = _oh_prev(y)
+            d = _to_hanja(ds)
+            if (d == "辛" and y == "수") or (d == "壬" and y == "목"):   # 책: 합화 오행이 식상인 신금·임수 일간은 재성을 희신으로 취용
+                h = _oh_next(y)
+            return "합화격", y, h
+        if note.startswith(" [일행격"):
+            return "일행격", dm, _oh_prev(dm)
+        if note.startswith(" [이행격"):
+            y = get_color(mb)
+            return "이행격", y, _oh_prev(y)
+        if note.startswith(" [종격"):
+            m = re.search(r"중심 오행 ([목화토금수]), 보조 오행 ([목화토금수])", note)
+            if not m:
+                return None
+            return "종격", m.group(1), m.group(2)
+    except Exception:
+        return None
+    return None
+
+def _special_apply(base, note, ds, mb):
+    """억부 판정(base)의 용신 표기를 책 기준 용신·희신으로 바꾸고, 특수 구조 안내 문장을 붙임. 실패하면 예전처럼 base+note."""
+    pick = _special_pick(note, ds, mb)
+    if not pick or "] " not in base:
+        return base + note
+    kind, y, h = pick
+    g = _oh_controlled_by(y)
+    gu = _oh_prev(g)
+    han = next((e for e in _OHAENG_CYCLE if e not in {y, h, g, gu}), None)
+    label = (f"[용신={y} (책 기준 특수 구조)"
+             f" / 희신(용신을 돕는 이로운 기운)={h}"
+             f" / 기신(용신을 해치는 해로운 기운, 반드시 피해야 함)={g}"
+             f" / 구신={gu}" + (f" / 한신={han}" if han else "") + "] ")
+    body = base.split("] ", 1)[1].split(". ")[0] + ". "      # 억부 점수 설명 첫 문장만 남김(억부 용신 결론 문장은 뺌)
+    names, phrase = _SPECIAL_WORDING[kind]
+    msg = (f"[특수 구조 반영(참고): 이 사주는 책에서 억부·조후가 아니라 따로 용신을 잡는 특수 구조에 해당할 가능성이 있어 용신·희신을 위 표기대로 정했음. "
+           f"위 억부 점수와 방향이 달라도 위 표기를 따르고, 억부 기준 용신은 다시 꺼내지 말 것. "
+           f"고객 글에는 {names} 같은 이름을 쓰지 말며 '{phrase}' 정도로 한 구절만 조심스럽게 쓸 것(단정 금지).]")
+    return label + body + msg
+
 def get_yongshin_analysis(counts, mb, ds, db=None, gans=None, jjis=None):
     """억부·조후 용신 판정(_yongshin_analysis_core) 뒤에 종격 가능성·진용/가용 참고 문장(해당할 때만)을 덧붙입니다.
     gans=[시간,일간,월간,년간], jjis=[시지,일지,월지,년지]를 주면 진용/가용도 점검하고, 주지 않으면 예전과 똑같이 동작합니다."""
     mg = gans[2] if gans and len(gans) >= 3 else None
     base = _yongshin_analysis_core(counts, mb, ds, db, mg)
-    note = get_hapwha_note(counts, mb, ds, gans) or get_jonggyeok_note(counts, mb, ds)
+    note = get_hapwha_note(counts, mb, ds, gans, db) or get_jonggyeok_note(counts, mb, ds)
     if note:
         # 종격·일행격 가능성이 붙은 사주는 내격(억부) 기준의 보조 문장(실재 여부·합충·적합도)이 서로 어긋나므로 붙이지 않음
-        return base + note
+        return _special_apply(base, note, ds, mb)
     real = get_yongshin_realness_note(base, gans, jjis)
     if real:
         base = base + real
