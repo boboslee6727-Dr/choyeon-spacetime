@@ -1969,6 +1969,13 @@ def get_jonggyeok_note(counts, mb, ds):
         n_i, n_s, n_j, n_g = counts.get(inseong, 0), counts.get(siksang, 0), counts.get(jaeseong, 0), counts.get(gwanseong, 0)
         mo = get_color(mb)
         name = grp = cond = yong = hui = None
+        # 일행격(곡직·염상·가색·종혁·윤하): 일간과 같은 기운이 사주를 채우고 식상·재성·관성이 없음 → 책: 비겁이 용신, 인성이 희신
+        if n_s == 0 and n_j == 0 and n_g == 0 and n_b >= 4:
+            _il = {"목": "곡직", "화": "염상", "토": "가색", "금": "종혁", "수": "윤하"}.get(dm, "")
+            return (f" [일행격 가능성(참고): 사주가 일간과 같은 기운({dm}) 한 가지로 거의 채워져 있고 식상·재성·관성이 원국에 없어 {_il}일행격에 해당할 가능성이 있음. "
+                    f"책에서는 이런 사주를 억부·조후가 아니라 가장 센 {dm} 기운(비겁)을 중심으로, {inseong} 기운을 보조로 삼으므로 위 억부 판정과 방향이 크게 다를 수 있음"
+                    f"(충·형·해·파가 없으면 격이 또렷해짐). 위 판정을 뒤집지 말고, 고객 글에는 '일행격'이나 '{_il}' 같은 이름을 쓰지 말며 "
+                    f"'한 가지 기운이 사주 전체를 이끄는 사주로, 그 기운이 막히지 않고 이어질 때 힘을 얻는다' 정도로 한 구절만 조심스럽게 쓸 것(단정 금지).]")
         if mo == biguk and n_s == 0 and n_j == 0 and n_g == 0:
             name, grp, cond, yong, hui = "종왕격", "비겁", "식상·재성·관성이 원국에 없어", biguk, inseong
         elif mo == inseong and n_s == 0 and n_j == 0:
@@ -2117,7 +2124,8 @@ def get_yongshin_analysis(counts, mb, ds, db=None, gans=None, jjis=None):
     base = _yongshin_analysis_core(counts, mb, ds, db, mg)
     note = get_jonggyeok_note(counts, mb, ds)
     if note:
-        base = base + note
+        # 종격·일행격 가능성이 붙은 사주는 내격(억부) 기준의 보조 문장(실재 여부·합충·적합도)이 서로 어긋나므로 붙이지 않음
+        return base + note
     real = get_yongshin_realness_note(base, gans, jjis)
     if real:
         base = base + real
