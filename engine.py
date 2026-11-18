@@ -2036,7 +2036,7 @@ def get_yongshin_hapchung_note(base, gans, jjis):
                 continue
             for k in range(4):
                 y = gs[k]
-                if k == i or y in bad:
+                if abs(k - i) != 1 or y in bad:      # 천간 합·충은 바로 이웃한 글자끼리만 인정(앱 규칙)
                     continue
                 p = frozenset((x, y))
                 if p in _GAN_CHUNG:
