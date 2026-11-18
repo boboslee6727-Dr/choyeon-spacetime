@@ -1797,7 +1797,7 @@ def _judge_strength(counts, mb, ds, db=None):
         strength = '중화'
     return strength, raw_support, raw_drain, support, drain, deukryeong_note, deukji_note
 
-def _yongshin_analysis_core(counts, mb, ds, db=None)
+def _yongshin_analysis_core(counts, mb, ds, db=None):
     """억부(신강/신약)+조후(계절 한난)를 종합한 용신 판정, 희신/기신/구신/한신까지 자동 산출.
     억부용신과 조후용신이 다르고 조후 필요 오행이 희박(1개 이하)하며 계절도 극단적인 경우,
     두 용신이 상생 관계면 겸용 용신으로, 상극 관계면 조후 불균형을 '증상'으로만 짚고
