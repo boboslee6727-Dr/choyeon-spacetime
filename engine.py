@@ -875,6 +875,11 @@ def get_spouse_star_facts(ds, gans, jjis, gender="남"):
         elif front and back:
             out.append(f"{star}이 앞쪽(년·월)과 뒤쪽(시)에 모두 있어 이른 인연과 늦은 인연이 모두 열려 있는 구조")
 
+        # 1-1) 만혼 쪽 부드러운 표현(자평명리학 14부: 시지·연지에만 있고 일지·월지에는 없는 경우)
+        _ji_pos = {i for i, _ in ji_hit}
+        if (_ji_pos & {0, 3}) and not (_ji_pos & {1, 2}):
+            out.append(f"{star}이 일지·월지에는 없고 가장자리 자리(년지·시지)에만 있어, 서둘러 정하기보다 충분히 알아보고 마음이 굳은 뒤에 인연을 정할수록 더 단단해지는 구조(나이는 말하지 말고, '늦게 결혼한다'고 단정하지 말 것)")
+
         # 1-2) 지지(년·월 / 일·시)에 앉은 자리에 따른 배우자 취향(자평명리학 14부)
         _fr = any(i in (2, 3) for i, _ in ji_hit)
         _bk = any(i in (0, 1) for i, _ in ji_hit)
