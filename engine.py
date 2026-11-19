@@ -1226,7 +1226,153 @@ def get_gan_rel_all(idx, gans):
     return out if out else "-"
 
 
-def get_cheongan_hap_fact(ys, ms, ds, hs=None):
+# ── 일간합 성합·불합·합화 판정 (합충형해파 책 16~39쪽) ──
+_IH_HAP = {'甲': '己', '己': '甲', '乙': '庚', '庚': '乙', '丙': '辛', '辛': '丙', '丁': '壬', '壬': '丁', '戊': '癸', '癸': '戊'}
+_IH_HWA_OH = {frozenset("甲己"): "土", frozenset("乙庚"): "金", frozenset("丙辛"): "水", frozenset("丁壬"): "木", frozenset("戊癸"): "火"}
+_IH_OH = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'}
+_IH_KEUK = {('木', '土'), ('土', '水'), ('水', '火'), ('火', '金'), ('金', '木')}
+_IH_CHUNG = {frozenset(x) for x in ("甲庚", "乙辛", "丙壬", "丁癸")}
+_IH_ORGAN = {
+    frozenset("甲己"): "소화가 잘 안 되는 위장 불편, 기운이 빠지고 무력해지는 증상",
+    frozenset("乙庚"): "편두통·어지럼증, 치아와 허리가 약해지는 증상",
+    frozenset("丙辛"): "피부 트러블, 기관지·천식과 마른기침, 대장 불편",
+    frozenset("丁壬"): "심장·혈관(가슴 두근거림, 혈압), 기분 기복과 외로움",
+    frozenset("戊癸"): "신장·방광, 혈액순환 장애, 임신·출산 때 몸조심, 술·약 같은 지나친 습관",
+}
+
+
+def _ih_attacks(x, y):
+    """천간 x가 천간 y를 극하거나 충하면 True"""
+    return (_IH_OH.get(x), _IH_OH.get(y)) in _IH_KEUK or frozenset((x, y)) in _IH_CHUNG
+
+
+def _ih_ji_bongi(ch):
+    jj = JIJANGGAN.get(_to_hanja(ch)) if ch not in (None, "-", "?", " ") else None
+    return jj[2] if jj else None
+
+
+def _ih_judge(g, j, ds, partner, others):
+    """성합(통근 없음 + 방해 없음)과 합화(월지 본기가 합화 오행 + 합화 오행을 치는 기운 없음) 판정.
+    g=[년,월,일,시] 천간, j=[년,월,일,시] 지지, others=합 자리를 뺀 나머지 천간 자리 번호"""
+    pr = frozenset((ds, partner))
+    why = []
+    bon = _ih_ji_bongi(j[2])
+    root = bool(bon) and _SS_GROUP.get(get_ss(ds, bon)) in ("비겁", "인성")
+    if root:
+        why.append(f"일지({j[2]}) 속 주된 기운({bon})이 일간의 뿌리라 합에 완전히 묶이지 않음")
+    names = ["년간", "월간", "일간", "시간"]
+    hind = []
+    for k in others:
+        x = g[k]
+        if x in _IH_OH and x not in pr:
+            for y in pr:
+                if _ih_attacks(x, y):
+                    hind.append(f"{names[k]} {x}이(가) {y}을(를) 쳐서 합이 묶이기 어려움")
+                    break
+    why.extend(hind)
+    seong = (not root) and (not hind)
+    hoh = _IH_HWA_OH[pr]
+    mbon = _ih_ji_bongi(j[1])
+    month_ok = bool(mbon) and _IH_OH.get(mbon) == hoh
+    killers = []
+    for k in others:
+        x = g[k]
+        if x in _IH_OH and x not in pr and (_IH_OH[x], hoh) in _IH_KEUK:
+            killers.append(f"{names[k]} {x}")
+    for k, nm in ((0, "년지"), (1, "월지"), (2, "일지"), (3, "시지")):
+        b = _ih_ji_bongi(j[k])
+        if b and (_IH_OH[b], hoh) in _IH_KEUK:
+            killers.append(f"{nm} {j[k]}")
+    hwa = month_ok and not killers
+    hwhy = []
+    if not month_ok:
+        hwhy.append(f"월지가 합의 기운({hoh})이 아님")
+    if killers:
+        hwhy.append(f"합의 기운({hoh})을 치는 기운({'·'.join(killers)})이 있음")
+    return {"seong": seong, "hwa": hwa, "why": why, "hwhy": hwhy, "hoh": hoh, "root": root, "hind": hind, "killers": killers}
+
+
+def _ih_state(gans, jjis):
+    """gans=[년,월,일,시], jjis=[년,월,일,시]. 일간과 이웃한 합(월간 우선, 없으면 시간)이 있으면 판정 결과, 없으면 None"""
+    g = [_to_hanja(x) if x not in (None, "") else "-" for x in gans]
+    j = [_to_hanja(x) if x not in (None, "") else "-" for x in jjis]
+    ds = g[2]
+    if ds not in _IH_HAP:
+        return None
+    cand = [k for k in (1, 3) if g[k] == _IH_HAP[ds]]
+    if not cand:
+        return None
+    k = cand[0]
+    r = _ih_judge(g, j, ds, g[k], [x for x in (0, 1, 3) if x != k])
+    r.update({"k": k, "me": ds, "ob": g[k], "g": g, "j": j, "name": ["년간", "월간", "일간", "시간"][k]})
+    return r
+
+
+def _ih_origin_line(gans, jjis):
+    st = _ih_state(gans, jjis)
+    if not st:
+        return ""
+    me, ob, nm = st["me"], st["ob"], st["name"]
+    if st["seong"] and st["hwa"]:
+        tag, body = "[일간합 판정·성합 합화가능]", "합이 단단히 묶이고 월령도 합의 기운을 받쳐 새 기운으로 바뀔 가능성이 있는 짜임: 마음이 상대 쪽으로 깊이 끌리고 합의 기운이 강하게 작용"
+    elif st["seong"]:
+        tag, body = "[일간합 판정·성합 불화]", "합으로 묶이지만 새 기운으로 바뀌지는 못해 상대 쪽에 묶인 채 본인 중심이 흔들리기 쉬운 짜임(" + " / ".join(st["hwhy"]) + ")"
+    else:
+        tag, body = "[일간합 판정·불합]", "끌리는 모양은 있지만 합에 완전히 묶이지는 않는 짜임: 인연에 끌려도 본인 중심을 지키는 힘이 남아 있음(" + " / ".join(st["why"]) + ")"
+    return f"{tag} 일간({me})과 {nm}({ob})의 합 — {body}. 운에서 합과 같은 글자가 올 때 길흉이 달라지니 운 문장과 함께 볼 것(고객 글에는 '합'·'통근'·'성합'·'불합'·'합화' 같은 말과 한자 없이 성향만 한 문장, 단정 금지)"
+
+
+def _ih_un_facts(gans, jjis, u_g, u_type):
+    """원국 일간합과 운 천간의 관계(용봉·합봉·불합길·합파)와 행운 일간합. gans=[시,일,월,년], jjis=[시,일,월,년]"""
+    try:
+        if not gans or not u_g or len(gans) < 4 or len(jjis) < 4:
+            return ""
+        g = [gans[3], gans[2], gans[1], gans[0]]
+        j = [jjis[3], jjis[2], jjis[1], jjis[0]]
+        u = _to_hanja(str(u_g).strip()[-1])
+        gh = [_to_hanja(x) if x else "-" for x in g]
+        ds = gh[2]
+        if ds not in _IH_HAP or u not in _IH_OH:
+            return ""
+        tail = "(고객 글에는 '합'·'충'·'극'·'통근'·'용봉'·'합봉'·'십성' 같은 말과 한자 없이 흐름만 한두 문장, 단정 금지)"
+        st = _ih_state(g, j)
+        if st:
+            me, ob = st["me"], st["ob"]
+            org = _IH_ORGAN[frozenset((me, ob))]
+            if u in (me, ob):
+                kind = "일간과 같은 글자(내가 주도하는 쪽)" if u == me else "합 상대와 같은 글자(남이 끼어드는 쪽)"
+                if st["seong"] and st["hwa"]:
+                    return (f"[일간합 용봉] {u_type} 천간({u})이 {kind}로 와 새 기운으로 바뀐 합을 한 번 더 묶음: 타고난 균형이 막혀 재물·명예·건강이 불안해지기 쉬운 때. 가까운 사람이나 동료의 말에 속아 구설·손재가 생기지 않게 주의. 건강 점검: {org}(병명을 단정하지 말 것)" + tail)
+                if st["seong"]:
+                    return (f"[일간합 합봉] {u_type} 천간({u})이 {kind}로 와 이미 묶인 합이 더 단단히 묶임: 가까운 사람과의 마찰, 손재, 일이 중간에 멈추기 쉬운 때. 건강 점검: {org}(병명을 단정하지 말 것)" + tail)
+                return (f"[일간합 불합·합운 길] {u_type} 천간({u})이 {kind}로 와 묶이지 않던 합의 좋은 면이 살아남: 일과 인연이 순조롭게 풀리기 쉬운 때(운이 지나면 다시 원래대로 돌아옴). 건강 점검: {org}(병명을 단정하지 말 것)" + tail)
+            hit = [y for y in (me, ob) if _ih_attacks(u, y)]
+            if hit:
+                a1 = _ss_plain(ds, u)
+                a2 = _ss_plain(ds, ob)
+                return (f"[일간합 합파] {u_type} 천간({u})이 {'·'.join(hit)}을(를) 쳐 묶여 있던 합이 깨짐(성합·불합과 상관없이 적용): " + (f"{a1}" if a1 else "") + (f"과 {a2}" if a2 else "") + " 쪽이 흔들리기 쉬운 때" + tail)
+            return ""
+        if _IH_HAP[ds] == u:
+            others = [0, 1, 3]
+            r = _ih_judge(gh, [_to_hanja(x) if x else "-" for x in j], ds, u, [])
+            hind = []
+            nms = {0: "년간", 1: "월간", 3: "시간"}
+            for k in others:
+                x = gh[k]
+                if x in _IH_OH and x not in (ds, u) and (_ih_attacks(x, ds) or _ih_attacks(x, u)):
+                    hind.append(f"{nms[k]} {x}")
+            seong = (not r["root"]) and (not hind)
+            org = _IH_ORGAN[frozenset((ds, u))]
+            if seong:
+                extra = "" if r["hwa"] else " 다만 합의 기운을 받쳐 주는 조건은 부족해 좋은 일이 크게 부풀지는 않음"
+                return (f"[행운 일간합·길] {u_type} 천간({u})이 일간({ds})과 새로 합을 이룸(원국에는 이웃한 일간합 없음): 새 인연과 기회가 달라붙는 길한 때.{extra} 운 글자가 사주에 불리하거나 합의 기운({r['hoh']})을 치는 기운이 원국에 있으면 길함이 줄어듦. 건강 점검: {org}(병명을 단정하지 말 것)" + tail)
+            why = "일지에 일간의 뿌리가 있어" if r["root"] else "합을 방해하는 천간(" + "·".join(hind) + ")이 있어"
+            return (f"[행운 일간합·주의] {u_type} 천간({u})이 일간({ds})과 새로 합을 이룸(원국에는 이웃한 일간합 없음): {why} 합이 제대로 묶이지 못하고 끌려다니다 흔들리기 쉬운 때. 건강 점검: {org}(병명을 단정하지 말 것)" + tail)
+        return ""
+    except Exception:
+        return ""
+
+def get_cheongan_hap_fact(ys, ms, ds, hs=None, jjis=None):
     """천간 합의 사실문: 이웃한 합/떨어진 합(격합), 쟁합·투합(일간합일 때만), 합화생·합화극, 일간이 묶이는지"""
     try:
         _HAP = {'甲':'己','己':'甲','乙':'庚','庚':'乙','丙':'辛','辛':'丙','丁':'壬','壬':'丁','戊':'癸','癸':'戊'}
@@ -1288,6 +1434,10 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None):
                     lines.append("[합화생] 합이 되어 변한다고 가정하면 그 오행이 일간을 도우는 쪽: 총명하고 학술·기예에 관심이 많으며 양순하고 다정다감해 대인관계가 원만한 편. 다만 이성의 관심을 받거나 분위기에 휩쓸려 구설에 오르기 쉬움(단정하지 말 것)")
                 else:
                     lines.append("[합화극] 합이 되어 변한다고 가정하면 그 오행이 일간의 힘을 덜어내는 쪽: 신강하면 큰 문제가 없으나 신약하면 소심하고 한쪽으로 치우치기 쉬움(신강·신약은 별도 사실문으로 판단, 단정하지 말 것)")
+        if jjis is not None and len(jjis) >= 4:
+            _jl = _ih_origin_line([ys, ms, ds, hs], jjis)
+            if _jl:
+                lines.append(_jl)
         lines.append("합에 든 글자는 서로 당기는 힘 때문에 제 성질을 온전히 내기 어렵고 힘이 줄어드는 경향이 있음(결과를 단정하지 말 것)")
         lines.append("합화(다른 오행으로 변함)는 월령과 세력 조건이 모두 맞아야 하므로 기본은 변하지 않는 합으로 보고, 합화는 단정하지 말 것. 일간이 아닌 글자끼리의 합은 합화를 따지지 않고 일간에 미치는 심리 영향으로만 볼 것")
         return "[천간 합 사실] " + " / ".join(lines)
@@ -3956,7 +4106,8 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
             out.append(f"{u_type}({u})이 원국과 {trio} {oh}국 방합 완성")
     ji_txt = " / ".join(dict.fromkeys(out)) if out else ""
     gan_txt = get_unun_gan_relation_facts(gans, u_g, u_type) if (gans and u_g) else ""
-    parts = [t for t in (gan_txt, ji_txt) if t]
+    ih_txt = _ih_un_facts(gans, jjis, u_g, u_type) if (gans and u_g) else ""
+    parts = [t for t in (gan_txt, ih_txt, ji_txt) if t]
     return " / ".join(parts) if parts else f"{u_type}({u})과 원국 사이에 특이한 충·합 없음"
 
 def get_jaeseong_fact(ds, gans, jjis, gender="여성"):
