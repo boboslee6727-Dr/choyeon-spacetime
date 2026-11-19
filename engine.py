@@ -1512,6 +1512,92 @@ _EL_SAENG = {'목': '화', '화': '토', '토': '금', '금': '수', '수': '목
 _EL_GEUK = {'목': '토', '토': '수', '수': '화', '화': '금', '금': '목'}
 
 
+_EL_K = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
+_EL_GEUKED_BY = {v: k for k, v in _EL_GEUK.items()}                 # 오행 -> 그 오행을 극하는 오행
+_SEASON_NEXT = {'목': '화', '화': '금', '금': '수', '수': '목'}
+_PREV_SAGO = {'목': '丑', '화': '辰', '금': '未', '수': '戌'}
+
+
+def _gukse_hee(el, yong):
+    """국 오행이 용신 쪽(도움)인지 기신 쪽(부담)인지. yong = get_yongshin_elements() 결과"""
+    try:
+        if not yong:
+            return ""
+        good = [yong.get(k) for k in ("용신", "희신", "겸용") if yong.get(k)]
+        bad = [yong.get(k) for k in ("기신", "구신") if yong.get(k)]
+        if el in good:
+            return "[희기·도움] 모인 기운이 용신 기준으로 도움이 되는 기운이라 좋은 쪽으로 작용함"
+        if el in bad:
+            return "[희기·부담] 모인 기운이 용신 기준으로 부담이 되는 기운이라 한쪽으로 쏠릴수록 해로운 쪽으로 작용하기 쉬움"
+        return ""
+    except Exception:
+        return ""
+
+
+def _gukse_ilwon(el, ds, gans, kind):
+    """일간 오행이 국 오행과 같을 때(성방간투일원신·성국간투일관성). gans=[년간,월간,일간,시간]"""
+    try:
+        if not gans or len(gans) < 4 or not ds:
+            return ""
+        if _G_EL.get(_to_hanja(ds)) != el:
+            return ""
+        sik, gwan = _EL_SAENG[el], _EL_GEUKED_BY[el]
+        sk, gw = [], []
+        for n, i in (("년간", 0), ("월간", 1), ("시간", 3)):
+            g = _to_hanja(gans[i]) if gans[i] else None
+            x = _G_EL.get(g)
+            if x == sik:
+                sk.append(f"{n} {g}")
+            elif x == gwan:
+                gw.append(f"{n} {g}")
+        parts = []
+        if sk:
+            parts.append(f"모인 기운을 풀어 주는 천간({'·'.join(sk)})이 있어 쏠린 힘이 풀리는 길한 편")
+        if gw:
+            parts.append(f"천간({'·'.join(gw)})에 직장·명예·배우자 쪽을 뜻하는 기운이 있어도 힘을 제대로 못 쓰기 쉬움")
+        if not sk and not gw and kind == "방합":
+            parts.append("기운을 풀어 줄 곳이 없어 한쪽으로 몰려 답답해지기 쉬움")
+        return "[일원신국] 일간 자신이 모인 기운과 같은 오행이라 힘이 한쪽으로 크게 쏠림: " + ", ".join(parts) if parts else \
+               "[일원신국] 일간 자신이 모인 기운과 같은 오행이라 힘이 한쪽으로 크게 쏠림"
+    except Exception:
+        return ""
+
+
+def _bang_flow(brs, mem, ds):
+    """방합 글자의 계절 흐름(순방/역방)과 연지의 진기·퇴기"""
+    out = []
+    try:
+        idxs = [mem.index(brs[i]) for i in range(4) if brs[i] in mem]
+        if len(idxs) >= 2:
+            if all(a <= b for a, b in zip(idxs, idxs[1:])) and idxs[0] < idxs[-1]:
+                out.append("[방합 순방] 방합 글자가 연→시 순서로 계절 순서대로 놓여 흐름이 원만한 편")
+            elif all(a >= b for a, b in zip(idxs, idxs[1:])) and idxs[0] > idxs[-1]:
+                _rv = False
+                try:                                           # 순환: 오행이 한 방향으로 상생으로 막힘없이 이어지는가
+                    _els = [_G_EL.get(JIJANGGAN[b][2]) for b in brs if b in JIJANGGAN]
+                    if len(_els) == 4 and None not in _els:
+                        for _seq in (_els, _els[::-1]):       # 연→시(순행) 또는 시→연(역행) 어느 쪽이든
+                            _st = [(_EL_SAENG[a] == b) for a, b in zip(_seq, _seq[1:]) if a != b]
+                            _bad = [a for a, b in zip(_seq, _seq[1:]) if a != b and _EL_SAENG[a] != b]
+                            if (not _bad) and sum(_st) >= 2:
+                                _rv = True
+                except Exception:
+                    _rv = False
+                if _rv:
+                    out.append("[방합 역방·순환] 방합 글자가 계절을 거슬러 놓였지만 지지의 오행이 한 방향으로 상생으로 막힘없이 이어지는 순환 구조라 흐름이 순탄한 편(단정 금지)")
+                else:
+                    out.append("[방합 역방] 방합 글자가 계절을 거슬러 놓여 연월의 순환이 매끄럽지 않은 편(단정 금지)")
+        if ds and brs[0] in mem:
+            grp = _SS_GROUP.get(get_ss(ds, brs[0]))
+            if grp in ("비겁", "인성"):
+                out.append("[진기] 연지가 방합에 들고 일간과 비겁·인성 관계라 앞길이 비교적 순조로워 조직 안에서 자리 잡기 쉬운 편(단정 금지)")
+            elif grp:
+                out.append("[퇴기] 연지가 방합에 들지만 일간과 비겁·인성 관계가 아니라 스스로 길을 열어야 하는 자립형이라 자격·전문 분야에 유리한 편(단정 금지)")
+    except Exception:
+        pass
+    return out
+
+
 def _gukse_gandu(el, gans):
     """국(오행 el)이 완성됐을 때 천간이 국세를 건드리는지(간두반복/설기/무반복). gans=[년간,월간,일간,시간]"""
     try:
@@ -1537,7 +1623,7 @@ def _gukse_gandu(el, gans):
         return ""
 
 
-def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None):
+def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None, yong=None):
     """지지 삼합·방합 사실문: 세 글자가 모두 모인 완성 여부, 반합(가운데 글자 포함), 합을 흔드는 충·형·해"""
     try:
         names = ["년지", "월지", "일지", "시지"]
@@ -1591,6 +1677,12 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None):
                     _gd = _gukse_gandu(_el, gans)
                     if _gd:
                         s += ". " + _gd
+                    _iw = _gukse_ilwon(_el, ds, gans, "삼합")
+                    if _iw:
+                        s += ". " + _iw
+                _hh = _gukse_hee(_el, yong)
+                if _hh:
+                    s += ". " + _hh
                 dmg = _damage(mem)
                 if dmg:
                     s += ". 다만 " + ", ".join(dmg) + "을 이루어 결속이 일부 흔들릴 수 있음"
@@ -1621,13 +1713,39 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None):
                     _gd = _gukse_gandu(_el, gans)
                     if _gd:
                         s += ". " + _gd
+                    _iw = _gukse_ilwon(_el, ds, gans, "방합")
+                    if _iw:
+                        s += ". " + _iw
+                _hh = _gukse_hee(_el, yong)
+                if _hh:
+                    s += ". " + _hh
+                for _bf in _bang_flow(brs, mem, ds):
+                    s += ". " + _bf
                 lines.append(s)
             elif len(have) == 2:
                 _miss = [x for x in mem if x not in have][0]
                 if mem[1] in have:
-                    lines.append(f"[방합 기세] {_pos(have)}이(가) {nm} 기운으로 뚜렷하게 쏠리는 기세를 보임(방합이 완성된 것은 아니며, 나머지 한 글자({_miss})가 운에서 오면 방합이 완성됨. 일지가 들어 있지 않아도 운의 영향을 받음)")
+                    _s2 = f"[방합 기세] {_pos(have)}이(가) {nm} 기운으로 뚜렷하게 쏠리는 기세를 보임(방합이 완성된 것은 아니며, 나머지 한 글자({_miss})가 운에서 오면 방합이 완성됨. 일지가 들어 있지 않아도 운의 영향을 받음)"
+                    for _bf in _bang_flow(brs, mem, ds):
+                        _s2 += ". " + _bf
+                    lines.append(_s2)
                 else:
                     lines.append(f"[방합 기세] {_pos(have)}은(는) {nm} 기운 쪽으로 약하게 기우는 정도의 기세로 참고만 할 것(방합이 아님)")
+        try:
+            _sp = [(nm2[0], mem2[1] in brs) for nm2, mem2, rep2 in SAMHAP if len([x for x in mem2 if x in brs]) == 2]
+            _bp = [(nm2, mem2[1] in brs) for nm2, mem2 in BANGHAP if len([x for x in mem2 if x in brs]) == 2]
+            _n = 0
+            for a, wa in _sp:
+                for b, wb in _bp:
+                    if a == b or _n >= 2 or not (wa or wb):
+                        continue
+                    if _EL_SAENG[a] == b or _EL_SAENG[b] == a:
+                        lines.append(f"[국 혼재] 원국에 {a} 기운의 삼합 쪽 합과 {b} 기운의 방합 기세가 함께 있음: 두 기운이 서로 돕는 구조라 운에서 어느 쪽이 이루어져도 힘을 얻는 편(단정 금지)")
+                    else:
+                        lines.append(f"[국 혼재] 원국에 {a} 기운의 삼합 쪽 합과 {b} 기운의 방합 기세가 함께 있음: 두 기운이 서로 부딪쳐 운에 따라 어수선해지기 쉬운 편(흉하다고 단정하지 말 것)")
+                    _n += 1
+        except Exception:
+            pass
         if not lines:
             return "지지에 삼합·방합과 관련된 모임은 사실문에 없음"
         return "[지지 삼합·방합 사실] " + " / ".join(lines)
@@ -4023,7 +4141,7 @@ def get_wangsoe_note(jjis, u_j, u_type="운"):
     except Exception:
         return ""
 
-def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
+def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None, yong=None):
     """운(대운/세운/월운/일운)의 지지가 원국 지지(시·일·월·년)와 맺는 충·합·해·파·복음을 팩트 문장으로 만듭니다."""
     names = ["시지", "일지", "월지", "년지"]
     u = _to_hanja(str(u_j).strip()[-1])
@@ -4230,6 +4348,13 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
     try:
         if gans and len(gans) > 1 and ilji not in ("?", "-", " ", ""):
             _dsg2 = gans[1]
+
+            def _hg(el_k):
+                _h = _gukse_hee(el_k, yong)
+                if not _h:
+                    return ""
+                return (" [희기·도움] 이 기운은 나에게 도움이 되는 기운이라 좋은 흐름이 더 힘을 얻음(고객 글에는 '용신'이라는 말 없이 '나에게 도움이 되는 기운'으로 풀 것)." if "도움" in _h
+                        else " [희기·부담] 이 기운은 나에게 부담이 되는 기운이라 좋은 흐름이어도 부담이 따르고 흉한 흐름이면 더 조심(고객 글에는 '용신'이라는 말 없이 '부담이 되는 기운'으로 풀 것).")
             for trio, oh in _UN_SAMHAP:
                 if u not in trio or ilji not in trio:
                     continue
@@ -4262,7 +4387,7 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
                 elif _pset == {trio[0], trio[2]} and _role == 1:
                     _w = f"[국운·성립] {u_type}({u})이 가운데 글자로 와서 원국의 양 끝 글자와 {oh}국으로 모임: {_ar} 기운이 크게 모여 길한 때"
                 if _w:
-                    out.append(_w + _end)
+                    out.append(_w + _hg(_EL_K[oh]) + _end)
             _wang_done = set()
             for lst in (_UN_SAMHAP, _UN_BANGHAP):
                 for trio, oh in lst:
@@ -4276,6 +4401,56 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
                     elif u not in trio and frozenset((u, _wj)) in _UN_HAP:
                         out.append(f"[국 전도·합] 원국에 {_kk} {oh}국이 완성되어 있는데 {u_type}({u})이 그 중심 글자({_wj})와 합함: 뭉쳐 있던 힘이 다른 쪽으로 묶여 방향이 바뀌는 때. 새로 묶이는 기운이 도와주는 쪽이면 발복의 조짐(고객 글에는 '합'·'삼합'·'방합' 없이 '한쪽으로 모였던 힘이 다른 쪽으로 묶이며 방향이 바뀌는 때' 정도로 한 문장, 단정 금지)")
                         _wang_done.add(_wj)
+            # --- 진기·퇴기 사고 운, 방합 성립(희기), 일원신국 운, 혼재 운 ---
+            _uel = _G_EL.get(_to_hanja(u_g)) if u_g else None
+            _ubon = _G_EL.get((JIJANGGAN.get(u) or ['', '', ''])[2])
+            _dme = _G_EL.get(_to_hanja(_dsg2))
+            for trio, oh in _UN_BANGHAP:
+                ok = _EL_K[oh]
+                pres = [x for x in trio if x in nat_set]
+                _good = len(set(pres)) == 3 or (len(set(pres)) >= 2 and trio[1] in pres)
+                if _good and u == trio[2]:
+                    out.append(f"[퇴기사고 운] {u_type}({u})이 원국 {ok} 기운(방합)의 끝 글자로 와 지금의 {ok} 기운이 마무리되고 {_SEASON_NEXT[ok]} 기운이 열리는 전환기: 스스로 길을 열어야 하는 때이며 자격·전문 분야로 방향을 잡으면 풀리기 쉬움(고객 글에는 '퇴기'·'사고'·'방합' 없이 '한 시절이 마무리되고 새 흐름이 열리는 전환기' 정도로 한두 문장, 단정 금지)")
+                elif _good and u == _PREV_SAGO[ok]:
+                    out.append(f"[진기사고 운] {u_type}({u})이 원국 {ok} 기운(방합) 바로 앞 계절의 끝 글자로 와 앞의 기운을 털고 {ok} 기운이 새로 일어나는 변화의 때: 새 분야로 방향을 바꾸면 발복하기 쉬움(고객 글에는 '진기'·'사고'·'방합' 없이 '묵은 흐름을 털고 새 길이 열리는 때' 정도로 한두 문장, 단정 금지)")
+                if u in trio and (set(trio) - {u}) <= nat_set and yong:
+                    _h = _hg(ok)
+                    if _h:
+                        out.append(f"[국운·방합성립] {u_type}({u})이 와서 {ok} 기운의 방합이 완성됨:{_h}(고객 글에는 '방합'·'용신'이라는 말 없이 흐름만 한 문장, 단정 금지)")
+            for kind, lst in (("삼합", _UN_SAMHAP), ("방합", _UN_BANGHAP)):
+                for trio, oh in lst:
+                    el = _EL_K[oh]
+                    if not all(x in nat_set for x in trio) or _dme != el:
+                        continue
+                    sik, gwan = _EL_SAENG[el], _EL_GEUKED_BY[el]
+                    _hs, _hgw, _hm = sik in (_uel, _ubon), gwan in (_uel, _ubon), el in (_uel, _ubon)
+                    _m = ""
+                    if _hs:
+                        _m = "[일원신국·발복] 모인 기운을 풀어 주는 기운이 운에서 와 막혔던 힘이 풀리는 때: 발복하기 쉬움"
+                    elif kind == "방합" and (_hgw or u == trio[0]):
+                        _m = "[일원신국·흉화] 일간이 더 한쪽으로 쏠리거나 모인 기운을 거스르는 기운이 운에서 와 힘이 지나치게 몰리거나 부딪치기 쉬운 때"
+                    elif kind == "방합" and u == trio[2]:
+                        _m = "[일원신국·무익] 모인 기운이 쇠하는 자리의 운이라 도움이 되지 않는 때"
+                    elif kind == "삼합" and _hgw:
+                        _m = "[일원신국·온전] 일간을 눌러 주는 기운이 운에서 와 직장·명예·배우자 쪽 역할이 온전해지는 때"
+                    elif _hm:
+                        _m = "[일원신국·공허] 일간과 같은 기운이 운에서 거듭 와 모든 것이 허무하게 느껴지기 쉬운 때"
+                    if _m:
+                        out.append(_m + "(고객 글에는 '삼합'·'방합'·'식상'·'관성' 같은 말과 한자 없이 흐름만 한 문장, 단정 금지)")
+            for lst_c, lst_o in ((_UN_SAMHAP, _UN_BANGHAP), (_UN_BANGHAP, _UN_SAMHAP)):
+                for trio, oh in lst_c:
+                    if u not in trio or u in nat_set or not ((set(trio) - {u}) <= nat_set):
+                        continue
+                    el = _EL_K[oh]
+                    for t2, oh2 in lst_o:
+                        el2 = _EL_K[oh2]
+                        _p2 = [x for x in t2 if x in nat_set]
+                        if el2 == el or len(set(_p2)) != 2 or t2[1] not in _p2:
+                            continue
+                        if _EL_SAENG[el] == el2 or _EL_SAENG[el2] == el:
+                            out.append(f"[국 혼재·운] {u_type}({u})이 와서 {el} 기운의 합이 이루어지는데 원국에 {el2} 기운의 합 기세도 섞여 있음: 두 기운이 서로 돕는 구조라 힘을 얻는 편(고객 글에는 합 용어 없이 한 문장, 단정 금지)")
+                        else:
+                            out.append(f"[국 혼재·운] {u_type}({u})이 와서 {el} 기운의 합이 이루어지는데 원국에 {el2} 기운의 합 기세도 섞여 있음: 두 기운이 서로 부딪쳐 어수선해지기 쉬운 때(흉하다고 단정하지 말 것. 고객 글에는 합 용어 없이 한 문장)")
     except Exception:
         pass
     ji_txt = " / ".join(dict.fromkeys(out)) if out else ""
