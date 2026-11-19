@@ -1640,10 +1640,66 @@ def get_jiji_hae_fact(yb, mb, db, hb, ds=None):
     except Exception:
         return "지지 해 정보 없음"
 
+# ── 지지파 (합충형해파 책 119~126쪽): 육파 6쌍, 이웃한 파만 인정, 왕지 십성·협파 지지 ──
+_PA_PAIRS = {frozenset(p) for p in ("丑辰", "寅亥", "申巳", "午卯", "酉子", "戌未")}
+_PA_WANG = {frozenset("丑辰"): "酉子", frozenset("寅亥"): "午卯", frozenset("申巳"): "子酉",
+            frozenset("午卯"): "午卯", frozenset("酉子"): "酉子", frozenset("戌未"): "午卯"}
+_PA_HYEP = {frozenset("丑辰"): "寅卯", frozenset("寅亥"): "子丑", frozenset("申巳"): "午未",
+            frozenset("午卯"): "辰巳", frozenset("酉子"): "戌亥", frozenset("戌未"): "申酉"}
+_PA_COMMON = "하던 일이나 관계가 중간에 끊겼다가 새 국면으로 바뀌기 쉬운 흐름. 좋고 나쁨은 사주 전체 흐름에 따라 달라 한쪽으로 단정하지 말 것"
+_PA_POS = {(0, 1): "연지·월지 사이의 파: 어린 시절과 청년기에 윗사람·집안 쪽 일이 중간에 바뀌기 쉬움. 운과 무관하게 그 시기의 일로만 봄",
+           (1, 2): "월지·일지 사이의 파: 부모형제나 직장, 배우자 쪽에서 하던 일이 한 번 끊겼다 이어지기 쉬움. 운에 따라 달라짐",
+           (2, 3): "일지·시지 사이의 파: 배우자·자녀와 말년의 일이 중간에 바뀌기 쉬워 미리 살펴 두면 좋음. 운에 따라 달라짐"}
+_PA_EXTRA = {frozenset("寅亥"): "합도 함께 이루어 평소에는 서로 끌리는 사이인데 파 글자가 운으로 올 때 인연이 갑자기 끊기기 쉬움",
+             frozenset("申巳"): "합과 형도 함께 이루어 평소에는 서로 끌리지만 파 글자가 운으로 올 때 끊기기 쉽고 압박과 마찰이 따를 수 있음",
+             frozenset("酉子"): "신경이 예민해지고 생각이 꼬리를 물기 쉬움",
+             frozenset("戌未"): "압박과 마찰이 함께 따라올 수 있음"}
+
+
+def _ss_list_plain(ds, letters):
+    out = []
+    for ch in letters:
+        sp = _ss_plain(ds, ch)
+        if sp and sp not in out:
+            out.append(sp)
+    return ", ".join(out)
+
+
+def get_jiji_pa_fact(yb, mb, db, hb, ds=None):
+    """지지 파 사실문: 이웃한 파만 인정, 자리별 의미, 왕지 십성·협파 지지(십성은 일간이 있을 때)"""
+    try:
+        names = ["년지", "월지", "일지", "시지"]
+        brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
+        valid = lambda x: x not in ("-", "?", "")
+        lines = []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                a, b = brs[i], brs[j]
+                if not (valid(a) and valid(b)) or frozenset((a, b)) not in _PA_PAIRS:
+                    continue
+                if j - i != 1:
+                    lines.append(f"{names[i]} {a}과 {names[j]} {b}은 파의 글자 쌍이나 떨어져 있어 파로 보지 않고 참고만")
+                    continue
+                pr = frozenset((a, b))
+                wj = _ss_list_plain(ds, _PA_WANG[pr])
+                ex = _PA_EXTRA.get(pr)
+                lines.append(f"[파] {names[i]} {a}과 {names[j]} {b}이 바로 이웃해 파를 이룸 — {_PA_POS[(i, j)]}. "
+                             + (f"어긋나는 영역: {wj}. " if wj else "")
+                             + (f"[특성] {ex}. " if ex else "")
+                             + "(고객 글에는 '파'라는 말과 글자 이름을 쓰지 말고 흐름만 한두 문장, 단정 금지)")
+        if not lines:
+            return "지지에 파로 볼 글자 쌍은 사실문에 없음"
+        lines.append(_PA_COMMON)
+        return "[지지 파 사실] " + " / ".join(lines)
+    except Exception:
+        return "지지 파 정보 없음"
+
+
 def get_jiji_yukhap_fact(yb, mb, db, hb, ds=None):
-    """지지 육합 + 충 + 형 + 해 사실을 함께 돌려줍니다(ds=일간은 선택: 있으면 해의 십성까지 풀이)."""
+    """지지 육합 + 충 + 형 + 해 + 파 사실을 함께 돌려줍니다(ds=일간은 선택: 있으면 십성까지 풀이)."""
     return (_get_jiji_yukhap_core(yb, mb, db, hb) + " // " + get_jiji_chung_fact(yb, mb, db, hb) + " // "
-            + get_jiji_hyung_fact(yb, mb, db, hb, ds) + " // " + get_jiji_hae_fact(yb, mb, db, hb, ds))
+            + get_jiji_hyung_fact(yb, mb, db, hb, ds) + " // " + get_jiji_hae_fact(yb, mb, db, hb, ds)
+            + " // " + get_jiji_pa_fact(yb, mb, db, hb, ds))
 
 def get_cheongan_chung_fact(ys, ms, ds, hs=None):
     """천간 충 사실문: 이웃한 충(일간충의 순충·역충, 연월충), 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
@@ -3811,6 +3867,40 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
                 elif frozenset((u, _d)) in _UN_CHUNG or frozenset((u, _d)) in _HYK or frozenset((u, _d)) in _UN_PA:
                     _kind = "충" if frozenset((u, _d)) in _UN_CHUNG else ("형" if frozenset((u, _d)) in _HYK else "파")
                     out.append(f"[해거·{_kind}운] {u_type}({u})이 일지({_d})와 {_kind}의 관계라 일지 해의 기능은 잠시 멈추지만 그 운 본래의 변동과 흉화를 받음: 해의 어긋남보다 갑작스런 변화에 대비하는 때(고객 글에는 '해'·'{_kind}'(이)라는 말 없이 흐름만 한 문장)")
+    except Exception:
+        pass
+    # 책 기준 파 행운(합충형해파 책 123~126쪽): 일지 기준만, 이웃한 일지 파만 원국파로 인정
+    try:
+        _NO = ("?", "-", " ")
+        _d = nat[1]
+        _ds_g = gans[1] if (gans and len(gans) > 1) else None
+        if _d not in _NO:
+            _PHYK = {frozenset(p) for p in ("子卯", "寅巳", "巳申", "寅申", "丑戌", "戌未", "丑未")}
+            _padj = [x for x in (nat[0], nat[2]) if x not in _NO and frozenset((_d, x)) in _PA_PAIRS]
+            _pp = [x for x in _PA_PAIRS if _d in x]
+            _px = list(_pp[0] - {_d})[0] if _pp else None      # 일지와 파를 이루는 글자
+            _hap = u != _d and frozenset((u, _d)) in _UN_HAP
+            if _padj:
+                _pr = frozenset((_d, _padj[0]))
+                _wj = _ss_list_plain(_ds_g, _PA_WANG[_pr])
+                _hy = _ss_list_plain(_ds_g, _PA_HYEP[_pr])
+                if _hap:
+                    out.append(f"[파거·합운] {u_type}({u})이 일지({_d})와 육합이 되어 일지 파의 기능이 잠시 멈춤: 끊기던 흐름이 잠시 이어지는 때(합운이 지나면 다시 살아나니 단정하지 말 것. 고객 글에는 '파'·'합'이라는 말 없이 흐름만 한 문장)")
+                elif u in (_d, _padj[0]) and u != _d:
+                    out.append(f"[파발] {u_type}({u})이 원국 일지 파({_d}·{_padj[0]})와 같은 글자로 와 파가 강하게 드러남: 하던 일이나 관계가 끊기고 바뀌기 쉬운 때" + (f". 어긋나는 영역: {_wj}" if _wj else "") + (f". 사이에 끼인 글자 쪽도 흔들림: {_hy}" if _hy else "") + f"(고객 글에는 '파'라는 말과 글자 이름 없이 흐름만 한두 문장. {_PA_COMMON})")
+                elif frozenset((u, _d)) in _UN_CHUNG or frozenset((u, _d)) in _PHYK:
+                    _kd = "충" if frozenset((u, _d)) in _UN_CHUNG else "형"
+                    out.append(f"[파·{_kd}운] {u_type}({u})이 일지({_d})와 {_kd}의 관계라 일지 파의 변화에 더해 {_kd} 본래의 흉화까지 겹침" + (f". 어긋나는 영역: {_wj}" if _wj else "") + f": 끊기고 바뀌는 일에 갑작스런 변동이 겹치는 때(고객 글에는 '파'·'{_kd}'(이)라는 말 없이 흐름만 한 문장)")
+                elif frozenset((u, _d)) in _UN_HAE:
+                    out.append(f"[파거·해운] {u_type}({u})이 일지({_d})와 해를 이뤄 일지 파의 기능은 멈추고 해의 상대 쪽 인연이 흔들림(앞의 [해발] 문장을 따름. 고객 글에는 '파'·'해'라는 말 없이 흐름만 한 문장)")
+            elif _px is not None and u == _px:
+                if _hap:
+                    out.append(f"[파거·합운] {u_type}({u})이 일지({_d})와 파와 육합을 함께 이루지만 합이 앞서 파는 멈춤: 인연과 일이 이어지는 때(협파는 논하지 않음. 고객 글에는 '파'·'합'이라는 말 없이 흐름만 한 문장)")
+                else:
+                    _hp = [x for x in _PA_HYEP[frozenset((_d, u))] if x in nat]
+                    if _hp:
+                        _ht = _ss_list_plain(_ds_g, _hp)
+                        out.append(f"[행운파] {u_type}({u})이 일지({_d})와 파를 새로 이룸: 원국에 사이에 끼인 글자({'·'.join(_hp)})가 있어 그 쪽" + (f"({_ht})" if _ht else "") + " 일이 끊기고 바뀌기 쉬운 때(고객 글에는 '파'라는 말과 글자 이름 없이 흐름만 한 문장. " + _PA_COMMON + ")")
     except Exception:
         pass
     _ws = get_wangsoe_note(jjis, u, u_type)
