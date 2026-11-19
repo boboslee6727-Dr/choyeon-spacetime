@@ -2420,6 +2420,10 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r"(?<![가-힣])[갑을병정무기경신임계]([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥](?:대운|세운|년|월|일주|일))", r"\1", clean_report_html)
             # 손님 글에 새어 나온 '자형' 용어를 쉬운 말로 교체 (교육자형 같은 단어는 건드리지 않음)
             clean_report_html = re.sub(r"(?<![가-힣])자형의 기운", "스스로를 몰아세우는 기운", clean_report_html)
+            # AI가 쓰지 말라는 안내 문장이나 어려운 용어를 쓴 경우 자동 정리
+            clean_report_html = re.sub(r"\s*이후의 모든 (?:풀이|조언)(?:도|는)[^.。]*?(?:이어 가겠습니다|삼겠습니다)\.", "", clean_report_html)
+            clean_report_html = re.sub(r"간여지동(?:의 기운)?", "일간과 일지가 같은 기운인 구조", clean_report_html)
+            clean_report_html = clean_report_html.replace("겉으로 는 ", "겉으로는 ")
             clean_report_html = re.sub(r"(?<![가-힣])자형(?![가-힣]*(?:활동|[을를은는이가도]?\s*(?:있|없)))", "같은 글자가 겹친 흐름", clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
