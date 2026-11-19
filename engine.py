@@ -1516,9 +1516,65 @@ def get_jiji_chung_fact(yb, mb, db, hb):
     except Exception:
         return "지지 충 정보 없음"
 
+# ── 지지형 (합충형해파 책 92~108쪽): 삼형(인사신·축술미) 성격, 자리별 의미, 이웃한 자묘형·병존 자형 ──
+_HYUNG_SETS = {"인사신": {'寅', '巳', '申'}, "축술미": {'丑', '戌', '未'}}
+_HYUNG_PAIRS = {frozenset(p) for p in ("寅巳", "巳申", "寅申", "丑戌", "戌未", "丑未")}
+_HYUNG_TRAIT = {
+    "인사신": "일을 서둘러 결과를 얻으려 하고 자기 확신이 강해 융통성이 부족해 보일 수 있음. 제 것을 챙기는 데 마음이 급해지기 쉬움. 전문 영역이나 책임이 큰 일에서 힘을 내는 구조",
+    "축술미": "자기만의 세계를 지키며 속내를 잘 드러내지 않고 이해타산을 따지는 편. 한번 틀어지면 고집으로 관계가 소원해지기 쉬움. 재물 쪽 성취에는 유리한 구조",
+}
+_HYUNG_POS = {(0, 1): "연지·월지 사이의 형: 어릴 적부터 윗사람·직장 쪽에서 스스로 길을 개척하려 애쓰는 시기(충이 겹치면 충의 부정이 먼저 드러남)",
+              (1, 2): "월지·일지 사이의 형: 부모형제나 윗사람과 마찰이 있다가 풀리는 굴곡이 있는 시기",
+              (2, 3): "일지·시지 사이의 형: 직장과 주거의 이동, 가정·자녀 쪽에 신경 쓸 일이 생기기 쉬운 시기"}
+_JAHYUNG_TRAIT = {
+    '辰': "이지적이고 혼자 있으려는 경향. 냉정해 보여 사람과 거리가 생기기 쉬움",
+    '午': "주장이 강하고 다혈질이며 앞장서다 말이 화근이 되기 쉬움",
+    '酉': "욱하고 예민하며 신경이 날카로워 두통이 오기 쉬움",
+    '亥': "의욕이 꺾이면 게으르고 비관적이 되며 시기심과 변덕이 생기기 쉬움",
+}
+_HYUNG_GUIDE = "사주 전체의 흐름과 균형에 따라 길흉이 크게 달라질 수 있으니 한쪽으로 단정하지 말 것"
+
+def get_jiji_hyung_fact(yb, mb, db, hb):
+    """지지 형 사실문: 인사신·축술미(위치 무관, 자리별 의미), 이웃한 자묘형, 병존 자형(辰午酉亥)만 인정"""
+    try:
+        names = ["년지", "월지", "일지", "시지"]
+        brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
+        valid = lambda x: x not in ("-", "?", "")
+        lines = []
+        for nm, T in _HYUNG_SETS.items():
+            have = [x for x in brs if x in T]
+            hs = set(have)
+            if len(hs) >= 2:
+                lines.append(f"[{nm} 형 성격] 원국에 {'·'.join(sorted(hs, key=brs.index))}이(가) 있어 형이 성립(위치가 떨어져 있어도 작용): {_HYUNG_TRAIT[nm]}(고객 글에는 글자 이름 없이 성격만 한 문장)")
+                for i in range(3):
+                    a, b = brs[i], brs[i + 1]
+                    if a in T and b in T and a != b:
+                        lines.append(f"[형 자리] {names[i]} {a}과 {names[i + 1]} {b}이 이웃해 형을 이룸 — {_HYUNG_POS[(i, i + 1)]}")
+        for i in range(4):
+            for j in range(i + 1, 4):
+                a, b = brs[i], brs[j]
+                if not (valid(a) and valid(b)):
+                    continue
+                if frozenset((a, b)) == frozenset(('子', '卯')):
+                    if j - i == 1:
+                        lines.append(f"[자묘형] {names[i]} {a}과 {names[j]} {b}이 붙어 있어 형이 성립: 말투와 예의, 감정의 결이 어긋나 서운함이 쌓이기 쉽고 독자적으로 밀고 가려는 고집과 성취욕이 강한 편")
+                    else:
+                        lines.append(f"{names[i]} {a}과 {names[j]} {b}은 자묘형의 글자 쌍이나 떨어져 있어 형으로 보지 않고 참고만")
+                elif a == b and a in _JAHYUNG_TRAIT:
+                    if j - i == 1:
+                        lines.append(f"[병존 자형] {names[i]} {a}과 {names[j]} {b}이 같은 글자로 붙어 있음: {_JAHYUNG_TRAIT[a]}(고객 글에는 글자 이름 없이 성격만 한 문장)")
+                    else:
+                        lines.append(f"{names[i]} {a}과 {names[j]} {b}은 같은 글자이나 떨어져 있어 자형으로 보지 않고 참고만")
+        if not lines:
+            return "지지에 형으로 볼 글자 쌍은 사실문에 없음"
+        lines.append(_HYUNG_GUIDE)
+        return "[지지 형 사실] " + " / ".join(lines)
+    except Exception:
+        return "지지 형 정보 없음"
+
 def get_jiji_yukhap_fact(yb, mb, db, hb):
-    """지지 육합 사실 + 지지 충 사실을 함께 돌려줍니다(앱 연결부는 그대로 사용)."""
-    return _get_jiji_yukhap_core(yb, mb, db, hb) + " // " + get_jiji_chung_fact(yb, mb, db, hb)
+    """지지 육합 사실 + 지지 충 사실 + 지지 형 사실을 함께 돌려줍니다(앱 연결부는 그대로 사용)."""
+    return _get_jiji_yukhap_core(yb, mb, db, hb) + " // " + get_jiji_chung_fact(yb, mb, db, hb) + " // " + get_jiji_hyung_fact(yb, mb, db, hb)
 
 def get_cheongan_chung_fact(ys, ms, ds, hs=None):
     """천간 충 사실문: 이웃한 충(일간충의 순충·역충, 연월충), 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
@@ -3627,6 +3683,40 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         elif nat[1] not in ("?", "-", " ") and frozenset((u, nat[1])) in _UN_CHUNG:
             _tr = _CHUNG_TRAIT.get(frozenset((u, nat[1])))
             out.append(f"[충발] 원국에는 일지충이 없는데 {u_type}({u})이 일지({nat[1]})를 충해 일지충이 만들어짐" + (f": {_tr[1]}" if _tr else "") + "(고객 글에는 '충'이라는 말 없이 흐름만 한 문장)")
+    except Exception:
+        pass
+    # 책 기준 형거·형발·일지 자묘형·일지 자형 행운 (합충형해파 책 94~107쪽)
+    try:
+        _NO = ("?", "-", " ")
+        _have_all = [x for x in nat if x not in _NO]
+        for _nm, _T in _HYUNG_SETS.items():
+            _hv = set(_have_all) & _T
+            if len(_hv) < 2:
+                continue
+            _flow = "고집과 마찰, 구설이 커지기 쉬운 때. 전문 영역이나 시험·승진 쪽에서는 기회가 되기도 함"
+            if u in _T:
+                out.append(f"[형발] {u_type}({u})이 원국 형({'·'.join(sorted(_hv))})과 같은 계열의 글자로 와 형이 강해짐: {_flow}(고객 글에는 '형'이라는 말 없이 흐름만 한 문장. {_HYUNG_GUIDE})")
+            else:
+                _chn = [x for x in _hv if frozenset((u, x)) in _UN_CHUNG]
+                _ck = [x for x in _hv if frozenset((u, x)) in _UN_HAP or frozenset((u, x)) in _UN_HAE or frozenset((u, x)) in _UN_PA]
+                if _chn:
+                    out.append(f"[형발] {u_type}({u})이 원국 형의 글자({'·'.join(_chn)})를 충해 형이 가중됨: {_flow}(고객 글에는 '충'·'형'이라는 말 없이 흐름만 한 문장. {_HYUNG_GUIDE})")
+                elif _ck:
+                    out.append(f"[형거] {u_type}({u})이 원국 형의 글자({'·'.join(_ck)})와 합·해·파로 맞물려 형의 기능이 잠시 멈춤: 부담이 잠시 풀려 숨통이 트이는 때. 잠깐이라 단정하지 말 것({_HYUNG_GUIDE})")
+        _dj = nat[1]
+        if _dj not in _NO:
+            if frozenset((u, _dj)) == frozenset(('子', '卯')):
+                out.append(f"[형발] {u_type}({u})이 일지({_dj})와 자묘형을 이룸: 말투·예의·감정 때문에 서운함이 쌓이고 건강과 이성 문제를 살피기 쉬운 때(고객 글에는 '형'이라는 말 없이 흐름만 한 문장. {_HYUNG_GUIDE})")
+            if u == _dj and u in _JAHYUNG_TRAIT:
+                _sf = []
+                for _x in (nat[0], nat[2]):
+                    if _x in _NO or _x == _dj:
+                        continue
+                    _pp = frozenset((_dj, _x))
+                    if _pp in _UN_CHUNG or _pp in _UN_HAE or _pp in _UN_PA or _pp in _HYUNG_PAIRS:
+                        _sf.append(_x)
+                _extra = f" 일지가 이웃한 {'·'.join(_sf)}와 충·형·해·파로 얽혀 있어 더 강해질 수 있음." if _sf else ""
+                out.append(f"[자형 행운] {u_type}({u})이 일지와 같은 글자로 와 일지가 자형에 걸림: 믿던 사람이나 지인 때문에 손해를 보기 쉬운 때라 확인과 점검이 필요함.{_extra}(고객 글에는 '자형'이라는 말 없이 흐름만 한 문장. {_HYUNG_GUIDE})")
     except Exception:
         pass
     _ws = get_wangsoe_note(jjis, u, u_type)
