@@ -1346,6 +1346,22 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None):
         return "지지 삼합·방합 정보 없음"
 
 
+# ---- 육합 6쌍의 개별 특성(합충형해파 책 55~60쪽): 원국 성격 / 행운에서 그 글자가 올 때의 흐름 ----
+_YUKHAP_TRAIT = {
+    frozenset(('子', '丑')): ("생각이 깊고 관조적이라 행동하기 전에 오래 헤아리는 편이고, 실행으로 옮기는 힘은 약해지기 쉬움",
+                              "새 일을 구상하고 기획하는 때라서, 하던 일을 갑자기 멈추게 될 수 있어 속도를 조절하면 좋음"),
+    frozenset(('寅', '亥')): ("서로 도우며 함께 이루려는 마음이 강하고, 어딘가에 참여하려는 의욕이 큼",
+                              "참여하고 봉사하며 사회활동으로 바빠지기 쉽고, 성공을 향해 달려가는 흐름"),
+    frozenset(('卯', '戌')): ("성격이 급하고 결과를 빨리 보고 싶어 하는 편",
+                              "안정감이 떨어지고 결과만 쫓아 분주해지기 쉬우니 점검과 확인을 한 번 더 하면 좋음"),
+    frozenset(('辰', '酉')): ("다정하고 관심이 많아 지나치면 과잉 친절이나 잔소리가 되기 쉬움",
+                              "남의 일에 간여하다 갈등이 생기기 쉽고, 내가 준 도움을 크게 여겨 섭섭함이 커질 수 있음"),
+    frozenset(('巳', '申')): ("지난 일을 돌아보는 마음이 커서 과거에 마음이 머물기 쉬움",
+                              "회상·추억·그리움·아쉬움이 올라오기 쉽고, 시작은 좋은데 마무리가 아쉬울 수 있어 계약이나 시험은 마무리를 챙길 것"),
+    frozenset(('午', '未')): ("자신이 최고라 여기거나 받는 쪽에 익숙해, 현재 상태가 유지되기를 바라는 마음",
+                              "현실을 바꾸기보다 안주하려는 마음이 커지고 사람들과 거리를 두기 쉬움"),
+}
+
 def get_jiji_yukhap_fact(yb, mb, db, hb):
     """지지 육합 사실문: 붙어 있는 두 지지(년-월, 월-일, 일-시)의 육합만 찾기, 강도, 쟁합, 흔들림, 삼합 쪽 합과 겹침"""
     try:
@@ -1418,10 +1434,12 @@ def get_jiji_yukhap_fact(yb, mb, db, hb):
                             over.append(f"{names[p]} {brs[p]}은(는) {names[q]} {brs[q]}과(와) {nm} 반합 쪽으로도 당겨짐")
             if over:
                 txt += ". 또한 " + ", ".join(over) + "(한 글자가 두 방향으로 당겨지는 구조)"
+            if 2 in (i, j) and frozenset((brs[i], brs[j])) in _YUKHAP_TRAIT:
+                txt += f". [성격] 일지가 든 합이라 본인의 마음 습관으로 나타남: {_YUKHAP_TRAIT[frozenset((brs[i], brs[j]))][0]}(고객 글에는 '육합'이나 글자 이름을 쓰지 말고 성격만 부드럽게 한 문장)"
             lines.append(txt)
         for p, c in cnt.items():
             if c >= 2:
-                lines.append(f"[쟁합] {names[p]} {brs[p]}이(가) 둘 이상의 글자와 동시에 육합을 이룸: 한쪽으로 마음이 모이기 어렵고 여러 곳에 당겨지는 구조")
+                lines.append(f"[쟁합] {names[p]} {brs[p]}이(가) 둘 이상의 글자와 동시에 육합을 이룸
         lines.append("육합은 상대 힘을 줄이는 합이 아니라 서로 당겨 묶이는 합이며, 삼합처럼 오행이 바뀌는 것이 아니므로 합화로 단정하지 말 것")
         return "[지지 육합 사실] " + " / ".join(lines)
     except Exception:
@@ -3467,6 +3485,20 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         if pair in _UN_PA and not (nm == "일지" and pair in _UN_HAP): out.append(f"{u_type}({u})이 원국 {nm}({j})와 파{_ref}")
         if pair == frozenset("子卯"): out.append(f"{u_type}({u})이 원국 {nm}({j})와 자묘형{_ref}")
         if pair in {frozenset(p) for p in ("寅巳", "巳申", "丑戌", "戌未")}: out.append(f"{u_type}({u})이 원국 {nm}({j})와 형{_ref}")
+    # 행운 육합 흐름(합충형해파 책 55~60쪽): 일지와 육합이 되거나, 원국 일지육합의 두 글자 중 하나가 운에 올 때(동착)
+    try:
+        _il = nat[1]
+        _flow_done = False
+        for _x in (nat[0], nat[2]):                                         # 일지육합: 일지와 시지 또는 월지
+            _pr = frozenset((_il, _x))
+            if _x not in ("?", "-", " ") and _il not in ("?", "-", " ") and _pr in _UN_HAP and u in _pr and _pr in _YUKHAP_TRAIT:
+                out.append(f"[행운 흐름] {u_type}({u})이 원국 일지 육합({_il}·{_x})과 같은 글자로 와 합의 움직임이 다시 일어남: {_YUKHAP_TRAIT[_pr][1]}(고객 글에는 '육합'이라는 말을 쓰지 말고 흐름만 한 문장)")
+                _flow_done = True
+        _pr2 = frozenset((u, _il))
+        if not _flow_done and _il not in ("?", "-", " ") and u != _il and _pr2 in _UN_HAP and _pr2 in _YUKHAP_TRAIT:
+            out.append(f"[행운 흐름] {u_type}({u})이 일지({_il})와 육합을 이룸: {_YUKHAP_TRAIT[_pr2][1]}(고객 글에는 '육합'이라는 말을 쓰지 말고 흐름만 한 문장)")
+    except Exception:
+        pass
     _ws = get_wangsoe_note(jjis, u, u_type)
     if _ws:
         out.append(_ws)
