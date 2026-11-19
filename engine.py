@@ -1846,7 +1846,7 @@ def _get_jiji_yukhap_core(yb, mb, db, hb):
             lines.append(txt)
         for p, c in cnt.items():
             if c >= 2:
-                lines.append(f"[쟁합] {names[p]} {brs[p]}이(가) 둘 이상의 글자와 동시에 육합을 이룸
+                lines.append(f"[쟁합] {names[p]} {brs[p]}이(가) 둘 이상의 글자와 동시에 육합을 이룸: 한쪽으로 마음이 모이기 어렵고 여러 곳에 당겨지는 구조")
         lines.append("육합은 상대 힘을 줄이는 합이 아니라 서로 당겨 묶이는 합이며, 삼합처럼 오행이 바뀌는 것이 아니므로 합화로 단정하지 말 것")
         return "[지지 육합 사실] " + " / ".join(lines)
     except Exception:
