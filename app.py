@@ -2419,11 +2419,18 @@ if st.session_state.get('app_running', False):
             # 대운·세운 이름 앞의 불필요한 한글 천간 읽기 제거: '을乙卯대운' → '乙卯대운'
             clean_report_html = re.sub(r"(?<![가-힣])[갑을병정무기경신임계]([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥](?:대운|세운|년|월|일주|일))", r"\1", clean_report_html)
             # 손님 글에 새어 나온 '자형' 용어를 쉬운 말로 교체 (교육자형 같은 단어는 건드리지 않음)
-            clean_report_html = re.sub(r"(?<![가-힣])자형의 기운", "스스로를 몰아세우는 기운", clean_report_html)
-            # AI가 쓰지 말라는 안내 문장이나 어려운 용어를 쓴 경우 자동 정리
-            clean_report_html = re.sub(r"\s*이후의 모든 (?:풀이|조언)(?:도|는)[^.。]*?(?:이어 가겠습니다|삼겠습니다)\.", "", clean_report_html)
-            clean_report_html = re.sub(r"간여지동(?:의 기운)?", "일간과 일지가 같은 기운인 구조", clean_report_html)
-            clean_report_html = clean_report_html.replace("겉으로 는 ", "겉으로는 ")
+            # 표(<table>) 바깥의 글에서만 용어·표현을 교정 (표 안의 신살 이름은 그대로 둠)
+            _parts = re.split(r"(<table.*?</table>)", clean_report_html, flags=re.S)
+            for _i in range(0, len(_parts), 2):
+                _t = _parts[_i]
+                _t = re.sub(r"(?<![가-힣])자형의 기운", "스스로를 몰아세우는 기운", _t)
+                _t = re.sub(r"(?<![가-힣])자형", "같은 글자가 겹친 흐름", _t)
+                _t = re.sub(r"간여지동(?:의 기운)?(['’\"]?)(이라는)?", lambda m: "일간과 일지가 같은 기운인 구조" + m.group(1) + ("라는" if m.group(2) else ""), _t)
+                _t = re.sub(r"\s*이후의 모든 (?:풀이|조언)(?:도|는)[^.。]*?(?:이어 가겠습니다|삼겠습니다)\.", "", _t)
+                _t = re.sub(r"[가-힣]+님(?:에게는|은)\s*천간 세 글자가 묶여[^.]*?눈에 띄지 않습니다\.\s*대신\s*", "", _t)
+                _t = _t.replace("천간 세 글자", "세 글자").replace("겉으로 는 ", "겉으로는 ")
+                _parts[_i] = _t
+            clean_report_html = "".join(_parts)
             clean_report_html = re.sub(r"(?<![가-힣])자형(?![가-힣]*(?:활동|[을를은는이가도]?\s*(?:있|없)))", "같은 글자가 겹친 흐름", clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
