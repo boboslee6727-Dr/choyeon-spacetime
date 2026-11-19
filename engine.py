@@ -1379,7 +1379,7 @@ _YUKHAP_TRAIT = {
                               "현실을 바꾸기보다 안주하려는 마음이 커지고 사람들과 거리를 두기 쉬움"),
 }
 
-def get_jiji_yukhap_fact(yb, mb, db, hb):
+def _get_jiji_yukhap_core(yb, mb, db, hb):
     """지지 육합 사실문: 붙어 있는 두 지지(년-월, 월-일, 일-시)의 육합만 찾기, 강도, 쟁합, 흔들림, 삼합 쪽 합과 겹침"""
     try:
         names = ["년지", "월지", "일지", "시지"]
@@ -1462,6 +1462,63 @@ def get_jiji_yukhap_fact(yb, mb, db, hb):
     except Exception:
         return "지지 육합 정보 없음"
 
+# ── 지지충 (합충형해파 책 71~90쪽): 이웃한 충만 인정, 일지충·연지충 구분, 육충 개별 특성 ──
+_CHUNG_TRAIT = {
+    frozenset(('寅', '申')): ("겉으로는 반듯해도 속마음이 오락가락해 변덕이 생기기 쉽고, 긴장이 쌓이면 속이 불편해지기 쉬움. 이동·거처·직장 변화가 잦은 편",
+                              "움직임과 변화의 기회가 오는 때. 서두르면 몸(근육·관절·소화)과 이동길을 조심할 것. 변화를 잘 타면 오히려 기회가 되는 편", "발복"),
+    frozenset(('巳', '亥')): ("생각과 감정이 엇갈려 마음이 들뜨거나 불안해지기 쉬움. 이동이 잦고 일이 한 번 뒤집히면 힘이 드는 편이나 잘 풀리면 뜻밖의 수확도 있음",
+                              "이동·변화가 많아 지치기 쉬운 때라 지키는 쪽이 유리함. 심장·수분·긴장 관리", "흉화"),
+    frozenset(('子', '午')): ("의욕은 강한데 결과가 더디고 남의 간섭을 싫어함. 신중히 따져야 하는 구조이며 거처·일의 이동이 있는 편",
+                              "신중하게 가려야 하는 때. 서두르면 재물이 새기 쉽고, 잘 가리면 오히려 기회가 열림", "발복"),
+    frozenset(('卯', '酉')): ("자신을 멋지게 드러내고 싶어 한곳에 오래 머물기 힘들고 바쁜 편. 감정 기복과 사람 사이 신뢰가 흔들리는 것을 조심할 것",
+                              "사람 관계의 신뢰를 점검할 때. 두통·관절·피로 관리", "흉화"),
+    frozenset(('辰', '戌')): ("고집이 세고 속내를 잘 드러내지 않음. 시비·구설에 휘말리기 쉽고 업무 변동이 많은 편",
+                              "말이 많아지고 따지기 쉬운 때. 구설·서류·시비 조심", "흉화"),
+    frozenset(('丑', '未')): ("꼼꼼하고 인정이 많지만 호불호가 뚜렷하고 감정의 굴곡이 있음. 이것저것 손대지만 흥미 붙이기 어렵고 한번 자리 잡으면 오래 머묾. 정신세계·교육·봉사 쪽 관심",
+                              "호흡기·소화기 관리. 子午 운이 오면 충이 풀려 숨통이 트이는 때", "발복"),
+}
+_CHUNG_TEND = {"발복": "충운에 변화가 기회·발복으로 이어지기도 하는 쌍", "흉화": "충운에 흉화가 더해지기 쉬운 쌍이라 조심이 필요"}
+
+def get_jiji_chung_fact(yb, mb, db, hb):
+    """지지 충 사실문: 이웃한 충만 인정(일지충=일-월·일-시, 연지충=년-월), 떨어진 충은 참고만, 육충 개별 성격"""
+    try:
+        names = ["년지", "월지", "일지", "시지"]
+        brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
+        CH = {'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'}
+        YUK = {frozenset(p) for p in ("子丑", "午未", "寅亥", "巳申", "卯戌", "辰酉")}
+        lines = []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                a, b = brs[i], brs[j]
+                if a in ("-", "?", "") or b in ("-", "?", "") or CH.get(a) != b:
+                    continue
+                pr = frozenset((a, b))
+                if j - i != 1:
+                    lines.append(f"{names[i]} {a}과 {names[j]} {b}은 충의 글자 쌍이나 떨어져 있어 충으로 보지 않고 참고만")
+                    continue
+                weak = []
+                for k in (i - 1, j + 1):
+                    if 0 <= k < 4 and brs[k] not in ("-", "?", ""):
+                        L = a if k == i - 1 else b
+                        if frozenset((L, brs[k])) in YUK:
+                            weak.append(f"{names[k]} {brs[k]}이(가) {L}과 육합")
+                wtxt = (". 다만 " + ", ".join(weak) + "이라 충의 힘이 묶여 약해질 수 있음") if weak else ""
+                if 2 in (i, j):
+                    tr = _CHUNG_TRAIT.get(pr)
+                    lines.append(f"[일지충] {names[i]} {a}과 {names[j]} {b}이 바로 이웃해 충을 이룸(일지가 든 충이라 십성의 흉화와 변동이 드러나기 쉬움)"
+                                 + wtxt + (f". [성격] {tr[0]}. [경향] {_CHUNG_TEND[tr[2]]}(고객 글에는 '충'이라는 말과 글자 이름을 쓰지 말고 성격·경향만 한두 문장, 단정 금지)" if tr else ""))
+                else:
+                    lines.append(f"[연지충] {names[i]} {a}과 {names[j]} {b}이 바로 이웃해 충을 이룸: 초년·집안·윗사람 쪽에서 마음의 부조화가 생기는 정도로만 보고, 운과 무관하며 본인 자신이 흔들리는 것처럼 풀지 말 것" + wtxt)
+        if not lines:
+            return "지지에 서로 충하는 글자 쌍은 사실문에 없음"
+        lines.append("충은 서로 부딪히며 변화를 만드는 움직임이라 나쁜 일로만 단정하지 말 것. 일지-월지, 일지-시지, 연지-월지처럼 이웃한 충만 충으로 보고 떨어진 쌍은 충으로 풀지 말 것")
+        return "[지지 충 사실] " + " / ".join(lines)
+    except Exception:
+        return "지지 충 정보 없음"
+
+def get_jiji_yukhap_fact(yb, mb, db, hb):
+    """지지 육합 사실 + 지지 충 사실을 함께 돌려줍니다(앱 연결부는 그대로 사용)."""
+    return _get_jiji_yukhap_core(yb, mb, db, hb) + " // " + get_jiji_chung_fact(yb, mb, db, hb)
 
 def get_cheongan_chung_fact(ys, ms, ds, hs=None):
     """천간 충 사실문: 이웃한 충(일간충의 순충·역충, 연월충), 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
@@ -3548,6 +3605,28 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
         _pr2 = frozenset((u, _il))
         if not _flow_done and _il not in ("?", "-", " ") and u != _il and _pr2 in _UN_HAP and _pr2 in _YUKHAP_TRAIT:
             out.append(f"[행운 흐름] {u_type}({u})이 일지({_il})와 육합을 이룸: {_YUKHAP_TRAIT[_pr2][1]}(고객 글에는 '육합'이라는 말을 쓰지 말고 흐름만 한 문장)")
+    except Exception:
+        pass
+    # 책 기준 지지 충거·충발: 원국 일지충(일지와 이웃한 월지·시지의 충)이 있을 때 운의 글자로 판정 (행운 지지충은 일지만)
+    try:
+        _dd = nat[1]
+        _ptn = [x for x in (nat[0], nat[2]) if x not in ("?", "-", " ") and _dd not in ("?", "-", " ") and frozenset((_dd, x)) in _UN_CHUNG]
+        _HY = {frozenset(p) for p in ("子卯", "寅巳", "巳申", "寅申", "丑戌", "戌未", "丑未")}
+        if _ptn:
+            _lt = {_dd} | set(_ptn)
+            _tr = _CHUNG_TRAIT.get(frozenset((_dd, _ptn[0])))
+            if u in _lt:
+                out.append(f"[충발] {u_type}({u})이 원국 일지충({_dd}·{_ptn[0]})과 같은 글자로 와 충이 다시 터짐" + (f": {_tr[1]}" if _tr else "") + "(고객 글에는 '충'이라는 말 없이 흐름만 한 문장)")
+            else:
+                _ck = [x for x in _lt if frozenset((u, x)) in _UN_HAP or frozenset((u, x)) in _UN_HAE or frozenset((u, x)) in _UN_PA]
+                _hy = [x for x in _lt if frozenset((u, x)) in _HY]
+                if _ck:
+                    out.append(f"[충거] {u_type}({u})이 원국 일지충의 글자({'·'.join(_ck)})와 합·해·파로 맞물려 충의 흉화가 잠시 멈춤: 일시적으로 숨통이 트이는 시기(같은 글자가 거듭 올 때 실제로 드러남)")
+                elif _hy:
+                    out.append(f"[충발] {u_type}({u})이 원국 일지충의 글자({'·'.join(_hy)})와 형으로 부딪혀 충이 강해짐" + (f": {_tr[1]}" if _tr else "") + "(고객 글에는 '충'·'형'이라는 말 없이 흐름만 한 문장)")
+        elif nat[1] not in ("?", "-", " ") and frozenset((u, nat[1])) in _UN_CHUNG:
+            _tr = _CHUNG_TRAIT.get(frozenset((u, nat[1])))
+            out.append(f"[충발] 원국에는 일지충이 없는데 {u_type}({u})이 일지({nat[1]})를 충해 일지충이 만들어짐" + (f": {_tr[1]}" if _tr else "") + "(고객 글에는 '충'이라는 말 없이 흐름만 한 문장)")
     except Exception:
         pass
     _ws = get_wangsoe_note(jjis, u, u_type)
