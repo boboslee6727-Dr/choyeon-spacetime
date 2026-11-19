@@ -2121,6 +2121,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-2"):
             # 1-2. 올 해 운세 풀이 (연운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
