@@ -1534,7 +1534,7 @@ _JAHYUNG_TRAIT = {
 }
 _HYUNG_GUIDE = "사주 전체의 흐름과 균형에 따라 길흉이 크게 달라질 수 있으니 한쪽으로 단정하지 말 것"
 
-def get_jiji_hyung_fact(yb, mb, db, hb):
+def get_jiji_hyung_fact(yb, mb, db, hb, ds=None):
     """지지 형 사실문: 인사신·축술미(위치 무관, 자리별 의미), 이웃한 자묘형, 병존 자형(辰午酉亥)만 인정"""
     try:
         names = ["년지", "월지", "일지", "시지"]
@@ -1546,6 +1546,14 @@ def get_jiji_hyung_fact(yb, mb, db, hb):
             hs = set(have)
             if len(hs) >= 2:
                 lines.append(f"[{nm} 형 성격] 원국에 {'·'.join(sorted(hs, key=brs.index))}이(가) 있어 형이 성립(위치가 떨어져 있어도 작용): {_HYUNG_TRAIT[nm]}(고객 글에는 글자 이름 없이 성격만 한 문장)")
+                if ds:
+                    _gs = []
+                    for x in sorted(hs, key=brs.index):
+                        sp = _ss_plain(ds, x)
+                        if sp and sp not in _gs:
+                            _gs.append(sp)
+                    if _gs:
+                        lines.append("[형 십성] 형에 걸린 글자가 맡은 영역: " + ", ".join(_gs) + " — 그 영역에서 마찰·변동이 생기기 쉬우니 신중히(비겁=사람 관계·지나친 습관, 식상=건강·직업 변화·자녀, 재성=사업 기복·부부 조율·씀씀이, 관성=사고 주의·이동, 인성=어머니 건강·문서 계약 신중. 단정 금지, 고객 글에 십성 용어 금지)")
                 for i in range(3):
                     a, b = brs[i], brs[i + 1]
                     if a in T and b in T and a != b:
@@ -1572,9 +1580,70 @@ def get_jiji_hyung_fact(yb, mb, db, hb):
     except Exception:
         return "지지 형 정보 없음"
 
-def get_jiji_yukhap_fact(yb, mb, db, hb):
-    """지지 육합 사실 + 지지 충 사실 + 지지 형 사실을 함께 돌려줍니다(앱 연결부는 그대로 사용)."""
-    return _get_jiji_yukhap_core(yb, mb, db, hb) + " // " + get_jiji_chung_fact(yb, mb, db, hb) + " // " + get_jiji_hyung_fact(yb, mb, db, hb)
+# ── 지지해 (합충형해파 책 109~114쪽): 이웃한 해만 인정, 자리별 의미, 6쌍 성격, 방해받는 육합 상대의 십성 ──
+_HAE_PAIRS = {frozenset(p) for p in ("寅巳", "卯辰", "申亥", "子未", "丑午", "酉戌")}
+_YH_PARTNER = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅', '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰', '巳': '申', '申': '巳', '午': '未', '未': '午'}
+_HAE_COMMON = "합으로 이어질 인연이 가로막혀 일이 늦어지고 막판에 포기하고 싶어지기 쉬운 어긋남. 충이나 형보다 약하지만 가볍게 볼 수 없음"
+_HAE_TRAIT = {
+    frozenset("寅巳"): "마무리가 어긋나기 쉽고 부모형제나 부부 사이 마음을 맞추는 데 노력이 필요함. 위장·인후·어깨를 살피는 것이 좋음",
+    frozenset("卯辰"): "형제 사이 서운함이 생기기 쉽고 시작한 일의 끝맺음이 약하며 돈이 새기 쉬움. 위장·허리·간을 살피는 것이 좋음",
+    frozenset("申亥"): "일이 늦어지다 성사가 흔들리기 쉽고 부모형제나 배우자와 마음을 맞추는 데 노력이 필요함. 대장·위장·폐를 살피는 것이 좋음",
+    frozenset("子未"): "작은 오해와 서운함이 쌓이기 쉬움. 허리·신장·심장을 살피는 것이 좋음",
+    frozenset("丑午"): "가까운 사이에 말다툼이 잦고 예민해지기 쉬움. 피부·심장·신경을 살피는 것이 좋음",
+    frozenset("酉戌"): "매사 지연되기 쉽고 부모형제를 의심하는 마음이 생기기 쉬움. 간·대장·피부를 살피는 것이 좋음",
+}
+_HAE_POS = {(0, 1): "연지·월지 사이의 해: 어린 시절 남에게 기대려는 마음이 강해지기 쉽고, 이후의 운과 무관하게 그 시기의 어긋남으로만 봄",
+            (1, 2): "월지·일지 사이의 해: 형제와 인연이 엷거나 배우자 쪽 기운이 약할 수 있음(여성은 더 신경 쓸 부분). 운에 따라 달라짐",
+            (2, 3): "일지·시지 사이의 해: 배우자·자녀와의 정이 아쉽거나 노년의 외로움·건강을 미리 살피는 것이 좋음. 운에 따라 달라짐"}
+_SS_GROUP = {"비견": "비겁", "겁재": "비겁", "식신": "식상", "상관": "식상", "편재": "재성", "정재": "재성",
+             "편관": "관성", "정관": "관성", "편인": "인성", "정인": "인성"}
+_SS_PLAIN = {"비겁": "형제·동료·경쟁자 쪽", "식상": "표현·재능·자녀 쪽", "재성": "재물·아버지·아내 쪽",
+             "관성": "직장·명예·남편 쪽", "인성": "학업·문서·어머니 쪽"}
+
+def _ss_plain(ds, ch):
+    """일간(ds)과 지지 글자(ch)의 십성 묶음을 쉬운 말과 함께 돌려줌. 일간 없으면 빈 문자열."""
+    try:
+        if not ds:
+            return ""
+        g = _SS_GROUP.get(get_ss(ds, ch))
+        return f"{g}({_SS_PLAIN[g]})" if g else ""
+    except Exception:
+        return ""
+
+def get_jiji_hae_fact(yb, mb, db, hb, ds=None):
+    """지지 해 사실문: 이웃한 해만 인정, 자리별 의미, 6쌍 성격, 방해받는 육합 상대(십성은 일간이 있을 때)"""
+    try:
+        names = ["년지", "월지", "일지", "시지"]
+        brs = [_to_hanja(b) if b is not None else "-" for b in (yb, mb, db, hb)]
+        valid = lambda x: x not in ("-", "?", "")
+        lines = []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                a, b = brs[i], brs[j]
+                if not (valid(a) and valid(b)) or frozenset((a, b)) not in _HAE_PAIRS:
+                    continue
+                if j - i != 1:
+                    lines.append(f"{names[i]} {a}과 {names[j]} {b}은 해의 글자 쌍이나 떨어져 있어 해로 보지 않고 참고만")
+                    continue
+                pr = frozenset((a, b))
+                tg = []
+                for ch in (a, b):
+                    pt = _YH_PARTNER.get(ch)
+                    sp = _ss_plain(ds, pt)
+                    tg.append(f"{ch}과 합할 {pt}" + (f"의 {sp}" if sp else ""))
+                lines.append(f"[해] {names[i]} {a}과 {names[j]} {b}이 바로 이웃해 해를 이룸 — {_HAE_POS[(i, j)]}. [성격] {_HAE_TRAIT[pr]}. "
+                             f"방해받는 인연: {' / '.join(tg)}(고객 글에는 '해'라는 말과 글자 이름을 쓰지 말고 성격·경향만 한두 문장, 단정 금지)")
+        if not lines:
+            return "지지에 해로 볼 글자 쌍은 사실문에 없음"
+        lines.append(_HAE_COMMON + ". " + _HYUNG_GUIDE)
+        return "[지지 해 사실] " + " / ".join(lines)
+    except Exception:
+        return "지지 해 정보 없음"
+
+def get_jiji_yukhap_fact(yb, mb, db, hb, ds=None):
+    """지지 육합 + 충 + 형 + 해 사실을 함께 돌려줍니다(ds=일간은 선택: 있으면 해의 십성까지 풀이)."""
+    return (_get_jiji_yukhap_core(yb, mb, db, hb) + " // " + get_jiji_chung_fact(yb, mb, db, hb) + " // "
+            + get_jiji_hyung_fact(yb, mb, db, hb, ds) + " // " + get_jiji_hae_fact(yb, mb, db, hb, ds))
 
 def get_cheongan_chung_fact(ys, ms, ds, hs=None):
     """천간 충 사실문: 이웃한 충(일간충의 순충·역충, 연월충), 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
@@ -3717,6 +3786,31 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
                         _sf.append(_x)
                 _extra = f" 일지가 이웃한 {'·'.join(_sf)}와 충·형·해·파로 얽혀 있어 더 강해질 수 있음." if _sf else ""
                 out.append(f"[자형 행운] {u_type}({u})이 일지와 같은 글자로 와 일지가 자형에 걸림: 믿던 사람이나 지인 때문에 손해를 보기 쉬운 때라 확인과 점검이 필요함.{_extra}(고객 글에는 '자형'이라는 말 없이 흐름만 한 문장. {_HYUNG_GUIDE})")
+    except Exception:
+        pass
+    # 책 기준 해 행운(합충형해파 책 109~114쪽): 일지 기준만, 이웃한 일지 해만 인정
+    try:
+        _NO = ("?", "-", " ")
+        _d = nat[1]
+        _ds_g = None
+        if gans and len(gans) > 1:
+            _ds_g = gans[1]
+        if _d not in _NO:
+            _adj = [x for x in (nat[0], nat[2]) if x not in _NO and frozenset((_d, x)) in _HAE_PAIRS]
+            _hp = [x for x in _HAE_PAIRS if _d in x]
+            _hx = list(_hp[0] - {_d})[0] if _hp else None      # 일지와 해를 이루는 글자
+            _HYK = {frozenset(p) for p in ("子卯", "寅巳", "巳申", "寅申", "丑戌", "戌未", "丑未")}
+            if u == _hx:
+                _tg = _YH_PARTNER.get(_d)
+                _sp = _ss_plain(_ds_g, _tg)
+                _how = "원국 일지 해가 드러남" if _adj else "일지와 해가 새로 만들어짐"
+                out.append(f"[해발] {u_type}({u})이 일지({_d})와 해를 이룸({_how}): {_d}과 합할 {_tg}" + (f"의 {_sp}" if _sp else "") + " 쪽 인연이 어긋나기 쉬움 — 일이 늦어지고 막판에 포기하고 싶어지거나 가까운 사람과 서운함·다툼이 생기기 쉬운 때(고객 글에는 '해'라는 말 없이 흐름만 한 문장, 단정 금지)")
+            elif _adj:
+                if frozenset((u, _d)) in _UN_HAP:
+                    out.append(f"[해거·합운] {u_type}({u})이 일지({_d})와 육합이 되어 일지 해의 기능이 잠시 멈추고 합의 길한 기운이 나옴: 막혔던 인연과 일이 풀려 시험·승진·직업 쪽에 좋은 소식이 오기 쉬운 때(고객 글에는 '해'·'합'이라는 말 없이 흐름만 한 문장. 잠깐이라 단정하지 말 것)")
+                elif frozenset((u, _d)) in _UN_CHUNG or frozenset((u, _d)) in _HYK or frozenset((u, _d)) in _UN_PA:
+                    _kind = "충" if frozenset((u, _d)) in _UN_CHUNG else ("형" if frozenset((u, _d)) in _HYK else "파")
+                    out.append(f"[해거·{_kind}운] {u_type}({u})이 일지({_d})와 {_kind}의 관계라 일지 해의 기능은 잠시 멈추지만 그 운 본래의 변동과 흉화를 받음: 해의 어긋남보다 갑작스런 변화에 대비하는 때(고객 글에는 '해'·'{_kind}'(이)라는 말 없이 흐름만 한 문장)")
     except Exception:
         pass
     _ws = get_wangsoe_note(jjis, u, u_type)
