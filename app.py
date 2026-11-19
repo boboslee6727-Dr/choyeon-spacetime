@@ -1730,8 +1730,8 @@ if st.session_state.get('app_running', False):
         m_cheongan_hap_str = ""
         f_cheongan_hap_str = ""
         if is_2person and hasattr(engine, "get_cheongan_hap_fact"):
-            m_cheongan_hap_str = engine.get_cheongan_hap_fact(m_gans_val[3], m_gans_val[2], m_gans_val[1], m_gans_val[0])
-            f_cheongan_hap_str = engine.get_cheongan_hap_fact(f_gans_val[3], f_gans_val[2], f_gans_val[1], f_gans_val[0])
+            m_cheongan_hap_str = engine.get_cheongan_hap_fact(m_gans_val[3], m_gans_val[2], m_gans_val[1], m_gans_val[0], jjis=[m_jjis_val[3], m_jjis_val[2], m_jjis_val[1], m_jjis_val[0]])
+            f_cheongan_hap_str = engine.get_cheongan_hap_fact(f_gans_val[3], f_gans_val[2], f_gans_val[1], f_gans_val[0], jjis=[f_jjis_val[3], f_jjis_val[2], f_jjis_val[1], f_jjis_val[0]])
         m_jiji_hap_str = ""
         f_jiji_hap_str = ""
         if is_2person and hasattr(engine, "get_jiji_samhap_bangap_fact"):
@@ -1873,7 +1873,7 @@ if st.session_state.get('app_running', False):
             "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "year_wolun_che_flow_str": engine.get_year_wolun_che_flow_str(target_year_val, ds, db, today=_now_kst.date()) if hasattr(engine, "get_year_wolun_che_flow_str") else "",
             "yeonin_wolun_str": engine.get_yeonin_wolun_flow_str(_now_kst.year, ds, db, st.session_state.get("u_g", "여성"), today=_now_kst.date()) if hasattr(engine, "get_yeonin_wolun_flow_str") else "",
-            "cheongan_hap_fact_str": engine.get_cheongan_hap_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_hap_fact") else "",
+            "cheongan_hap_fact_str": engine.get_cheongan_hap_fact(ys, ms, ds, hs, jjis=[yb, mb, db, hb]) if hasattr(engine, "get_cheongan_hap_fact") else "",
             "jiji_hap_group_fact_str": engine.get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds) if hasattr(engine, "get_jiji_samhap_bangap_fact") else "",
             "cheongan_chung_fact_str": engine.get_cheongan_chung_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_chung_fact") else "",
             "jiji_yukhap_fact_str": engine.get_jiji_yukhap_fact(yb, mb, db, hb, ds) if hasattr(engine, "get_jiji_yukhap_fact") else "",
