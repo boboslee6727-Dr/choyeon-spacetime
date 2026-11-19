@@ -2418,6 +2418,9 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(자신|본인|나)의 천간', r'\1의 기운', clean_report_html)
             # 대운·세운 이름 앞의 불필요한 한글 천간 읽기 제거: '을乙卯대운' → '乙卯대운'
             clean_report_html = re.sub(r"(?<![가-힣])[갑을병정무기경신임계]([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥](?:대운|세운|년|월|일주|일))", r"\1", clean_report_html)
+            # 손님 글에 새어 나온 '자형' 용어를 쉬운 말로 교체 (교육자형 같은 단어는 건드리지 않음)
+            clean_report_html = re.sub(r"(?<![가-힣])자형의 기운", "스스로를 몰아세우는 기운", clean_report_html)
+            clean_report_html = re.sub(r"(?<![가-힣])자형(?![가-힣]*(?:활동|[을를은는이가도]?\s*(?:있|없)))", "같은 글자가 겹친 흐름", clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
