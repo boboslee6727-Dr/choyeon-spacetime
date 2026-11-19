@@ -3903,6 +3903,37 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None):
                         out.append(f"[행운파] {u_type}({u})이 일지({_d})와 파를 새로 이룸: 원국에 사이에 끼인 글자({'·'.join(_hp)})가 있어 그 쪽" + (f"({_ht})" if _ht else "") + " 일이 끊기고 바뀌기 쉬운 때(고객 글에는 '파'라는 말과 글자 이름 없이 흐름만 한 문장. " + _PA_COMMON + ")")
     except Exception:
         pass
+    # 책 기준 생왕개지(합충형해파 책 77~83쪽): 일지가 생지·왕지일 때 충으로 일지 속 숨은 글자(생지=중기, 왕지=본기)가 터짐
+    try:
+        _NO = ("?", "-", " ")
+        _dd = nat[1]
+        if _dd in ("寅", "申", "巳", "亥", "子", "午", "卯", "酉") and gans and len(gans) > 3 and gans[1]:
+            _dsg = _to_hanja(gans[1])
+            _ptn = [x for x in (nat[0], nat[2]) if x not in _NO and frozenset((_dd, x)) in _UN_CHUNG]
+            _hit = (u in _ptn) if _ptn else (frozenset((u, _dd)) in _UN_CHUNG)
+            if _hit:
+                _jj = JIJANGGAN.get(_dd, [])
+                _ch = _jj[1] if _dd in ("寅", "申", "巳", "亥") else _jj[2]
+                _part = "중기" if _dd in ("寅", "申", "巳", "亥") else "본기"
+                _OHG = {'甲': 'a', '乙': 'a', '丙': 'b', '丁': 'b', '戊': 'c', '己': 'c', '庚': 'd', '辛': 'd', '壬': 'e', '癸': 'e'}
+                _vis = [(n, _to_hanja(g)) for n, g in zip(("시간", "월간", "년간"), (gans[0], gans[2], gans[3])) if g and _to_hanja(g) in _OHG]
+                _same = [(n, g) for n, g in _vis if _OHG[g] == _OHG[_ch]]
+                _happ = [(n, g) for n, g in _vis + [("일간(본인)", _dsg)] if frozenset((_ch, g)) in _GAN_HAP]
+                _a = _ss_plain(_dsg, _ch)
+                _pre = "[암시] 대운이라 아직은 흐름만 암시하고 세운·월운에서 같은 글자가 겹칠 때 실제로 나타남. " if u_type == "대운" else ""
+                _sub = []
+                if _same:
+                    _sub.append(f"[생왕개지·길복] 일지({_dd}) 속 {_part} {_ch}({_a})가 터지는데 천간에 같은 기운({'·'.join(n + g for n, g in _same)})이 드러나 있어 그 힘을 얻음: 좋은 소식이나 발전이 오기 쉬운 때")
+                for n, g in _happ:
+                    _b = _ss_plain(_dsg, g)
+                    _tgt = "본인 쪽이 묶여 마음과 선택이 흔들리기 쉬움" if n.startswith("일간") else f"{_b} 쪽 일이 흔들리거나 어긋나기 쉬움"
+                    _sub.append(f"[생왕개지·흉화] 일지({_dd}) 속 {_part} {_ch}({_a})가 터지며 천간 {n} {g}와 묶임: {_tgt}")
+                if not _same and not _happ:
+                    _sub.append(f"[생왕개지·흉화] 일지({_dd}) 속 {_part} {_ch}({_a})가 터지는데 천간에 받쳐 주는 같은 기운도 묶이는 기운도 없음: {_a} 쪽 일이 흔들리기 쉬운 때")
+                _tail = "(길복과 흉화가 함께 있으면 한쪽으로 단정하지 말 것. 고객 글에는 '충'·'합'·'개지'·'중기'·'본기'·'십성' 같은 말과 한자 없이 흐름만 한두 문장)" if len(_sub) > 1 else "(고객 글에는 '충'·'합'·'개지'·'중기'·'본기'·'십성' 같은 말과 한자 없이 흐름만 한 문장. 단정 금지)"
+                out.append(f"{u_type}({u}) 기준 " + _pre + " / ".join(_sub) + _tail)
+    except Exception:
+        pass
     _ws = get_wangsoe_note(jjis, u, u_type)
     if _ws:
         out.append(_ws)
