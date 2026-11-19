@@ -540,7 +540,7 @@ def get_golden_text(name, w_val, i_val, s_name, s_type, s_desc, mb="子", gyuk_n
     return f"""
     <div style='font-family: "Nanum Myeongjo", "바탕체", Batang, serif; font-size: 15px; line-height: 1.8; color: #000000; margin-bottom: 20px;'>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 5px;'>
-            기존 명리학적으로 풀이하면 <span style="font-weight:600;">{name}님</span>은 <span style="font-weight:600;">{wol_korean_str}</span>에 <span style="font-weight:600;">'{gyuk_name}'</span>의 그릇을 갖추고 태어나셨으며, 성격은 <span style="font-weight:600;">'{s_name}'</span>인 <span style="font-weight:600;">'{s_type}'</span>으로 <span style="font-weight:600;">'{s_desc}'</span>하는 기본 성향이 있습니다.
+            기존 명리학적으로 풀이하면 <span style="font-weight:600;">{name}님</span>은 <span style="font-weight:600;">{wol_korean_str}</span>에 <span style="font-weight:600;">'{gyuk_name}'</span>의 그릇을 갖추고 태어나셨으며, 성격은 <span style="font-weight:600;">'{s_type}'</span>으로 <span style="font-weight:600;">'{s_desc}'</span>하는 기본 성향이 있습니다.
         </p>
         <p style='text-indent: 1.0em; text-align: justify; margin-bottom: 0;'>
             또한, 시공명리학적으로 풀이하면 <span style="font-weight:600;">'{w_val}'</span>의 시공간에서 태어났으며, <span style="font-weight:600;">'{i_val}'</span>과 같은 내면적 성품을 갖고 살아가고 있습니다.
