@@ -2200,6 +2200,26 @@ def get_ji_rel_set(me, target):
     if s == {'辰','巳'}: r.append("지망")
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
+def get_ji_rel_cell(me, target, me_idx, ci):
+    """표시용(합충형파해 표 한 칸): 책 기준으로 이웃한 자리끼리만 육합·충·해·파·자형·자묘형을 보여주고,
+    떨어진 충은 '충(참고)'로 표시합니다. me_idx, ci는 [시, 일, 월, 년] 순서 번호(0~3)."""
+    r = get_ji_rel_set(me, target)
+    if r == "-":
+        return "-"
+    if abs(me_idx - ci) == 1:
+        return r
+    out = []
+    for t in [x.strip() for x in r.split(",")]:
+        if t in ("육합", "해", "파", "자형"):
+            continue
+        if t == "충":
+            out.append("충(참고)")
+            continue
+        if t == "형" and {_to_hanja(me), _to_hanja(target)} == {'子', '卯'}:
+            continue
+        out.append(t)
+    return ", ".join(out) if out else "-"
+
 def get_ji_rel_rows_html(jjis):
     ji_rel_rows = ""
     for l_idx, r_idx in enumerate([1, 2, 0, 3]):
