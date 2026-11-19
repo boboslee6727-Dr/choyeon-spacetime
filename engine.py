@@ -1464,7 +1464,7 @@ def get_jiji_yukhap_fact(yb, mb, db, hb):
 
 
 def get_cheongan_chung_fact(ys, ms, ds, hs=None):
-    """천간 충 사실문: 이웃한 충, 한 글자가 양쪽에서 충을 받는 쟁충, 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
+    """천간 충 사실문: 이웃한 충(일간충의 순충·역충, 연월충), 일간이 걸리는지, 합이 충을 받는지, 일간 주변의 극"""
     try:
         names = ["년간", "월간", "일간", "시간"]
         gans = [_to_hanja(g) if g is not None else "-" for g in (ys, ms, ds, hs)]
@@ -1492,16 +1492,20 @@ def get_cheongan_chung_fact(ys, ms, ds, hs=None):
 
         lines = []
         for i, j in chung:
-            lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 바로 이웃해 충을 이룸: 서로 밀어내며 변화를 만드는 움직임")
-        for k in range(4):
-            mates = [(a, b) for a, b in chung if k in (a, b)]
-            if len(mates) >= 2:
-                others = [f"{names[b if a == k else a]}({_lab(b if a == k else a)})" for a, b in mates]
-                lines.append(f"[쟁충] {names[k]}({_lab(k)})이 {', '.join(others)} 양쪽에서 동시에 충을 받음: 한 글자가 여러 방향에서 밀리는 구조")
+            if (i, j) == (0, 1):
+                lines.append(f"[연월충] {names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 바로 이웃해 충을 이룸: 월간이 본인에게 하는 역할이 어긋나 마음에 부조화가 생기는 정도로만 보고, 본인 자신이 충에 걸린 것처럼 풀지 말 것. 운과도 무관함")
+            else:
+                lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 바로 이웃해 충을 이룸: 서로 밀어내며 변화를 만드는 움직임")
+        _CH_HEALTH = {frozenset(('甲','庚')): "어깨·뼈·근육 쪽", frozenset(('乙','辛')): "머리·치아·허리 쪽",
+                      frozenset(('丙','壬')): "심장·신장 쪽", frozenset(('丁','癸')): "배·방광·심장 쪽"}
         for i, j in chung:
             if 2 in (i, j):
                 o = j if i == 2 else i
-                lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({_lab(o)})과 충: 일간 자신이 충에 걸림")
+                _dir = "[순충] 상대가 본인을 눌러 오는 방향의 충이라 충격이 큰 편" if (_OH.get(gans[o]), _OH.get(gans[2])) in _GEUK else "[역충] 본인이 상대를 눌러 가는 방향의 충이라 충격이 작은 편"
+                lines.append(f"일간({gans[2]})이 이웃한 {names[o]}({_lab(o)})과 충: 일간 자신이 충에 걸림 / {_dir}")
+                _hm = _CH_HEALTH.get(frozenset((gans[2], gans[o])))
+                if _hm:
+                    lines.append(f"[충 건강 메모] {_hm} 불편이 생기기 쉬운 편(건강 풀이에서만, 병명 단정 금지)")
         for i, j in hap:
             for m in (i, j):
                 for a, b in chung:
@@ -3354,6 +3358,36 @@ def get_unun_gan_relation_facts(gans, u_g, u_type="세운"):
     if not u or u in ("?", "-", " "):
         return ""
     out = []
+    # 책 기준 충거·쟁충·투충·충발: 원국 일간충(일간과 이웃한 월간·시간의 충)이 있는지 먼저 확인
+    try:
+        _hg = [(_to_hanja(g) if g else "") for g in gans]
+        _dg = _hg[1]
+        _pairs = []
+        for _k in (0, 2):
+            if _hg[_k] and frozenset((_dg, _hg[_k])) in _GAN_CHUNG:
+                _pairs.append(_hg[_k])
+        try:
+            _ss_u = get_ss(_dg, u)
+        except Exception:
+            _ss_u = ""
+        if _pairs:
+            _letters = {_dg} | set(_pairs)
+            if u == _dg:
+                out.append(f"[쟁충·충발] {u_type} 천간({u})이 일간과 같은 글자로 와 원국 일간충이 다시 터짐: 본인이 앞장서다 스스로 어려움을 부르기 쉬운 때")
+            elif u in _pairs:
+                out.append(f"[투충·충발] {u_type} 천간({u})이 원국 일간충의 상대 글자와 같은 글자(일간 기준 {_ss_u})로 와 충이 다시 터짐: 남의 일이나 사람 때문에 어려움이 생기기 쉬운 때({_ss_u} 영역의 흉화)")
+            else:
+                _hap = any(frozenset((u, x)) in _GAN_HAP for x in _letters)
+                _OHL = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
+                _GK = {('木','土'), ('土','水'), ('水','火'), ('火','金'), ('金','木')}
+                _geuk = any((_OHL.get(u), _OHL.get(x)) in _GK for x in _letters)
+                if _hap or _geuk:
+                    out.append(f"[충거] {u_type} 천간({u})이 원국 일간충의 글자와 {'합' if _hap else '극'}으로 맞물려 충의 흉화가 잠시 멈춤: 일시적으로 숨통이 트이는 시기(같은 글자가 거듭 올 때 실제로 드러남)")
+        elif frozenset((_dg, u)) in _GAN_CHUNG and _dg:
+            _hot = "(목·화 일간은 더 조심)" if _dg in "甲乙丙丁" else ""
+            out.append(f"[충발] 원국에는 일간충이 없는데 {u_type} 천간({u})이 일간을 충함: 마음이 어수선하고 {_ss_u} 영역(직장·재물·사람 문제 등)과 건강을 살펴야 할 때{_hot}")
+    except Exception:
+        pass
     for nm, g in zip(["시간", "일간", "월간", "년간"], gans):
         h = _to_hanja(g) if g else ""
         if not h or h in ("?", "-", " "):
