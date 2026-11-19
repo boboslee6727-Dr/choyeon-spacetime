@@ -844,6 +844,7 @@ if st.session_state.get('app_running', False):
             if oh in counts: counts[oh] += 1
 
         yongshin_fact_str = engine.get_yongshin_analysis(counts, mb, ds, db, gans=[hs, ds, ms, ys], jjis=[hb, db, mb, yb]) if hasattr(engine, 'get_yongshin_analysis') else ""
+        _yong_el = engine.get_yongshin_elements(yongshin_fact_str) if hasattr(engine, 'get_yongshin_elements') else {}
 
         guiin_map = {'甲':'丑, 未','乙':'子, 申','丙':'酉, 亥','丁':'酉, 亥','戊':'丑, 未','己':'子, 申','庚':'丑, 未','辛':'寅, 午','壬':'卯, 巳','癸':'卯, 巳'}
         guiin_str = guiin_map.get(ds_hanja, '없음')
@@ -1068,7 +1069,7 @@ if st.session_state.get('app_running', False):
         # 과거~현재 대운 지지가 원국 지지와 맺는 합충·삼합·방합 (미래 대운은 제외)
         daewun_relation_all_str = " / ".join(
             f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']}): "
-            + engine.get_unun_relation_facts([hb, db, mb, yb], dw['j_hanja'], "대운", gans=[hs, ds, ms, ys], u_g=dw['c_hanja'])
+            + engine.get_unun_relation_facts([hb, db, mb, yb], dw['j_hanja'], "대운", gans=[hs, ds, ms, ys], u_g=dw['c_hanja'], yong=_yong_el)
             for _i, dw in enumerate(daewun_data_list)
             if _i <= _current_dw_idx and dw['j_hanja'] != "-"
         )
@@ -1278,7 +1279,7 @@ if st.session_state.get('app_running', False):
             _kw_2 = engine.get_matrix_keyword(_dw_che_this_yr, _yong_2)
             _sw_unsung = engine.get_unsung(ds_hanja, tj)
             sewun_che_flow_parts.append(f"{ty}년({tc}{tj}): 대운 {_dw_half_label}체({_dw_che_this_yr}) 아래에서 / 전반기[체({_che_1})→{_kw_1}] / 후반기[체({_che_2})→{_kw_2}] / 세운 지지 12운성({_sw_unsung})")
-            sewun_relation_10y_parts.append(f"{ty}년({tc}{tj}): " + engine.get_unun_relation_facts([hb, db, mb, yb], tj, "세운", gans=[hs, ds, ms, ys], u_g=tc))
+            sewun_relation_10y_parts.append(f"{ty}년({tc}{tj}): " + engine.get_unun_relation_facts([hb, db, mb, yb], tj, "세운", gans=[hs, ds, ms, ys], u_g=tc, yong=_yong_el))
             if tj in guiin_branches:
                 cheon_eul_sewun_matches.append(f"{ty}년({tc}{tj})")
             hits = [s for s in [y_shin_this_year, d_shin_this_year] if s in target_shinsal_names]
@@ -1841,7 +1842,7 @@ if st.session_state.get('app_running', False):
             "dw_gj_cur": dw_gj_cur,
             "dw_gj_han_cur": dw_gj_han_cur,
             "dw_fact_str": f"현재 {dw_g_cur}{dw_j_cur}대운 가동 중 (체: {w_facts.get('dw_che', '-')})",
-            "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운", gans=[hs, ds, ms, ys], u_g=dw_g_cur),
+            "dw_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], dw_j_cur, "대운", gans=[hs, ds, ms, ys], u_g=dw_g_cur, yong=_yong_el),
             "gan_hap_chung_str": engine.get_gan_rel_facts([hs, ds, ms, ys]),
             "daewun_relation_all_str": daewun_relation_all_str,
             "dw_che": w_facts.get("dw_che", "대운 시공간 무대"),
@@ -1868,13 +1869,13 @@ if st.session_state.get('app_running', False):
             "sewun_gj_han_cur": sewun_gj_han_cur,
             "sewun_che_flow_str": sewun_che_flow_str,
             "sewun_full_fact_str": sewun_full_fact_str,
-            "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운", gans=[hs, ds, ms, ys], u_g=engine.GAN[(curr_year-1984)%60%10]),
+            "sewun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], engine.JI[(curr_year-1984)%60%12], "세운", gans=[hs, ds, ms, ys], u_g=engine.GAN[(curr_year-1984)%60%10], yong=_yong_el),
             "sewun_relation_10y_str": sewun_relation_10y_str,
             "year_month_facts_str": engine.get_year_month_facts(target_year_val, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, dw_j_cur, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "year_wolun_che_flow_str": engine.get_year_wolun_che_flow_str(target_year_val, ds, db, today=_now_kst.date()) if hasattr(engine, "get_year_wolun_che_flow_str") else "",
             "yeonin_wolun_str": engine.get_yeonin_wolun_flow_str(_now_kst.year, ds, db, st.session_state.get("u_g", "여성"), today=_now_kst.date()) if hasattr(engine, "get_yeonin_wolun_flow_str") else "",
             "cheongan_hap_fact_str": engine.get_cheongan_hap_fact(ys, ms, ds, hs, jjis=[yb, mb, db, hb], gender=gender) if hasattr(engine, "get_cheongan_hap_fact") else "",
-            "jiji_hap_group_fact_str": engine.get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds, gans=[ys, ms, ds, hs]) if hasattr(engine, "get_jiji_samhap_bangap_fact") else "",
+            "jiji_hap_group_fact_str": engine.get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds, gans=[ys, ms, ds, hs], yong=_yong_el) if hasattr(engine, "get_jiji_samhap_bangap_fact") else "",
             "cheongan_chung_fact_str": engine.get_cheongan_chung_fact(ys, ms, ds, hs) if hasattr(engine, "get_cheongan_chung_fact") else "",
             "jiji_yukhap_fact_str": engine.get_jiji_yukhap_fact(yb, mb, db, hb, ds) if hasattr(engine, "get_jiji_yukhap_fact") else "",
 
@@ -1882,7 +1883,7 @@ if st.session_state.get('app_running', False):
             "curr_m": curr_m,
             "wolun_gj_cur": wolun_gj_cur,
             "wolun_gj_han_cur": wolun_gj_han_cur,
-            "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운", gans=[hs, ds, ms, ys], u_g=_cur_wol_pillar[0]),
+            "wolun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _cur_wol_pillar[1], "월운", gans=[hs, ds, ms, ys], u_g=_cur_wol_pillar[0], yong=_yong_el),
             "samhyung_wolun_fact_str": engine.check_samhyung_facts([yb, mb, db, hb], dw_j_cur, sewun_j=engine.JI[(curr_year-1984)%60%12], wolun_j=_cur_wol_pillar[1]),
             "wolun_first_half_facts_str": engine.get_half_period_day_facts(wolun_first_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
             "wolun_second_half_facts_str": engine.get_half_period_day_facts(wolun_second_half, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans),
@@ -1896,7 +1897,7 @@ if st.session_state.get('app_running', False):
             "target_date_str": selected_target_date.strftime("%Y년 %m월 %d일"),
             "ilun_gj_cur": ilun_gj_cur,
             "ilun_gj_han_cur": ilun_gj_han_cur,
-            "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0]),
+            "ilun_relation_fact_str": engine.get_unun_relation_facts([hb, db, mb, yb], _sel_pillar_d[1], "일운", gans=[hs, ds, ms, ys], u_g=_sel_pillar_d[0], yong=_yong_el),
             "ilun_gongmang_fact": "; ".join([x for x in [("일 기준 공망" if _sel_pillar_d[1] in str(i_gong) else ""), ("년 기준 공망" if _sel_pillar_d[1] in str(n_gong) else "")] if x]) or "(해당 없음 — 공망은 글에 한 글자도 쓰지 말 것)",
             "time_block_relation_str": engine.get_time_block_relation_facts([hb, db, mb, yb], wolun_j=_cur_wol_pillar[1], ilun_j=_sel_pillar_d[1], now=(_now_kst if selected_target_date == _now_kst.date() else None)),
             "week_day_facts_str": engine.get_period_day_facts(selected_target_date - dt_mod.timedelta(days=(selected_target_date.weekday() + 1) % 7), 7, ds, db, ys, yb, [hb, db, mb, yb], guiin_str, yong=engine.get_yongshin_elements(yongshin_fact_str), today=_now_kst.date(), gans=gans, keep_past=True),
