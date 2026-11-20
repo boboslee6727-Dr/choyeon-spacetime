@@ -1706,8 +1706,8 @@ if st.session_state.get('app_running', False):
             try:
                 _gm_facts = []
                 for _who, _g, _j in (("남명", m_gans_val, m_jjis_val), ("여명", f_gans_val, f_jjis_val)):
-                    _gm_day = str(engine.calculate_gongmang(_g[1], _j[1]) or "-")   # 일 기준
-                    _gm_year = str(engine.calculate_gongmang(_g[3], _j[3]) or "-")  # 년 기준
+                    _gm_day = str(engine.calculate_gongmang(_g[1], _j[1]) or "-")
+                    _gm_year = str(engine.calculate_gongmang(_g[3], _j[3]) or "-")
                     if str(_j[1]) in _gm_day:
                         _gm_facts.append(f"{_who}: 배우자 자리(일지 {_j[1]})가 일 기준 공망에 걸림")
                     if str(_j[1]) in _gm_year:
@@ -1722,6 +1722,7 @@ if st.session_state.get('app_running', False):
             couple_pillars_fact_str = "해당 없음 (1인 상품)"
             couple_ji_rel_str = "해당 없음 (1인 상품)"
             couple_shinsal12_str = "해당 없음 (1인 상품)"
+            couple_gongmang_str = "해당 없음 (1인 상품)"
 
         # 🚨 궁합용: 남명/여명 이상적 배우자상 + 혼인상태(돌싱 포함) 준비
         male_ideal_data = ideal_spouse_data if gender == "남성" else (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {})
@@ -1877,6 +1878,7 @@ if st.session_state.get('app_running', False):
             "couple_pillars_fact_str": couple_pillars_fact_str,
             "couple_ji_rel_str": couple_ji_rel_str,
             "couple_shinsal12_str": couple_shinsal12_str,
+            "couple_gongmang_str": couple_gongmang_str,
             "daewun_full_fact_str": daewun_full_fact_str,
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
 
