@@ -1203,7 +1203,7 @@ def get_samjae(year_ji, target_ji):
 
 def get_gan_rel_all(idx, gans):
     gans = [_to_hanja(g) for g in gans]
-    me = gans[idx]; res = []; far = False
+    me = gans[idx]; res = []; far = False; far_ch = False
     if me in ["-", "?", " "]: return "-"
     _OH = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}
     _GEUK = {('木','土'), ('土','水'), ('水','火'), ('火','金'), ('金','木')}
@@ -1214,6 +1214,7 @@ def get_gan_rel_all(idx, gans):
         s = {me, other}
         if abs(i - idx) != 1:
             if s in _HAP: far = True
+            elif s in _CHUNG: far_ch = True
             continue
         if s in _HAP:
             res.append("합")
@@ -1222,7 +1223,7 @@ def get_gan_rel_all(idx, gans):
         elif (_OH.get(me), _OH.get(other)) in _GEUK or (_OH.get(other), _OH.get(me)) in _GEUK:
             res.append("극")
     txt = "".join(x for x in ["합", "충", "극"] if x in res)
-    far_html = "<span style='color:#9E9E9E; font-weight:700;'>격합</span>" if far else ""
+    far_html = ("<span style='color:#9E9E9E; font-weight:700;'>요합</span>" if far else "") + (" " if far and far_ch else "") + ("<span style='color:#9E9E9E; font-weight:700;'>요충</span>" if far_ch else "")
     out = txt + (" " if txt and far_html else "") + far_html
     return out if out else "-"
 
@@ -1458,7 +1459,7 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None, jjis=None, gender=None):
             return "천간에 서로 합이 되는 글자 쌍은 사실문에 없음"
         lines = []
         for i, j, adj in links:
-            how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "서로 떨어져 있어 합의 힘이 약함(격합)"
+            how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "[요합] 서로 떨어져 있어 합의 힘이 약함(멀리서 은근히 당기는 정도로 한 구절만, 합이 이루어졌다고 단정 금지)"
             hn = _HAP_NAME.get(frozenset((gans[i], gans[j])), "")
             lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 합을 이룸: {how}" + (f" / 합의 성격: {hn}" if hn and adj else ""))
         # [쟁합·투합] 책 기준: 원국 일간합(일간과 이웃한 합)에서만 판단
