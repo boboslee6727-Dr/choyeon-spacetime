@@ -1045,6 +1045,7 @@ def get_child_star_facts(ds, gans, jjis, gender="남", marital=""):
         for trio, reps in _SAM:
             if all(c in js for c in trio) and any(get_ss(ds, r) in pair for r in reps):
                 out.append(f"지지에서 세 글자가 모여 {star}의 기운이 한 덩어리로 크게 뭉쳐 있어, 자녀·표현·활동 쪽으로 마음과 힘이 크게 쏠리는 구조(속에 숨어 있다가 운을 만나면 크게 드러날 수 있음)")
+
         # 9) 일간(나)과 자녀별 천간이 바로 옆(시간·월간)에서 합하는 경우
         for i in (0, 2):
             if gs[i] and get_ss(ds, gs[i]) in pair and frozenset((ds, gs[i])) in _HAP:
@@ -1791,11 +1792,10 @@ def _get_jiji_yukhap_core(yb, mb, db, hb):
         for i in range(4):
             for j in range(i + 1, 4):
                 k = frozenset((brs[i], brs[j]))
-                if brs[i] != brs[j] and k in YUK and j - i == 1:
+                if brs[i] != brs[j] and k in YUK:
                     pairs.append((i, j, YUK[k]))
         if not pairs:
-            return "지지에 붙어 있는 육합 쌍은 사실문에 없음(떨어진 글자끼리는 합으로 보지 않음)"
-
+            return "지지에 육합을 이루는 글자 쌍은 사실문에 없음"
         def _hit(letter, own):
             out = []
             for i in range(4):
@@ -1814,14 +1814,19 @@ def _get_jiji_yukhap_core(yb, mb, db, hb):
 
         cnt = {}
         for i, j, _ in pairs:
+            if j - i != 1:
+                continue
             cnt[i] = cnt.get(i, 0) + 1
             cnt[j] = cnt.get(j, 0) + 1
 
         lines = []
         for i, j, s in pairs:
             adj = (j - i == 1)
-            txt = f"[육합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 육합을 이룸"
-            txt += "(바로 이웃함)"
+            if adj:
+                txt = f"[육합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 육합을 이룸"
+                txt += "(바로 이웃함)"
+            else:
+                txt = f"[요합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 사이에 다른 글자를 두고 멀리서 육합을 이룸(떨어져 있어 당기는 힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 당기는 정도'로 한 구절만, 합이 단단히 이루어졌다고 단정 금지)"
             txt += f". {STR_TXT[s]}"
             dmg = _hit(brs[i], (i, j)) + _hit(brs[j], (i, j))
             if frozenset((brs[i], brs[j])) in (frozenset(('寅', '亥')), frozenset(('巳', '申'))):
@@ -1841,7 +1846,7 @@ def _get_jiji_yukhap_core(yb, mb, db, hb):
                             over.append(f"{names[p]} {brs[p]}은(는) {names[q]} {brs[q]}과(와) {nm} 반합 쪽으로도 당겨짐")
             if over:
                 txt += ". 또한 " + ", ".join(over) + "(한 글자가 두 방향으로 당겨지는 구조)"
-            if 2 in (i, j) and frozenset((brs[i], brs[j])) in _YUKHAP_TRAIT:
+            if adj and 2 in (i, j) and frozenset((brs[i], brs[j])) in _YUKHAP_TRAIT:
                 txt += f". [성격] 일지가 든 합이라 본인의 마음 습관으로 나타남: {_YUKHAP_TRAIT[frozenset((brs[i], brs[j]))][0]}(고객 글에는 '육합'이나 글자 이름을 쓰지 말고 성격만 부드럽게 한 문장)"
             lines.append(txt)
         for p, c in cnt.items():
@@ -1884,7 +1889,7 @@ def get_jiji_chung_fact(yb, mb, db, hb):
                     continue
                 pr = frozenset((a, b))
                 if j - i != 1:
-                    lines.append(f"{names[i]} {a}과 {names[j]} {b}은 충의 글자 쌍이나 떨어져 있어 충으로 보지 않고 참고만")
+                    lines.append(f"[요충] {names[i]} {a}과 {names[j]} {b}은 사이에 다른 글자를 두고 멀리서 충을 이룸(떨어져 있어 부딪힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 부딪히는 기운' 정도로 한 구절만, 큰 변동이나 흉으로 단정 금지)")
                     continue
                 weak = []
                 for k in (i - 1, j + 1):
@@ -1901,7 +1906,7 @@ def get_jiji_chung_fact(yb, mb, db, hb):
                     lines.append(f"[연지충] {names[i]} {a}과 {names[j]} {b}이 바로 이웃해 충을 이룸: 초년·집안·윗사람 쪽에서 마음의 부조화가 생기는 정도로만 보고, 운과 무관하며 본인 자신이 흔들리는 것처럼 풀지 말 것" + wtxt)
         if not lines:
             return "지지에 서로 충하는 글자 쌍은 사실문에 없음"
-        lines.append("충은 서로 부딪히며 변화를 만드는 움직임이라 나쁜 일로만 단정하지 말 것. 일지-월지, 일지-시지, 연지-월지처럼 이웃한 충만 충으로 보고 떨어진 쌍은 충으로 풀지 말 것")
+        lines.append("충은 서로 부딪히며 변화를 만드는 움직임이라 나쁜 일로만 단정하지 말 것. 일지-월지, 일지-시지, 연지-월지처럼 이웃한 충이 본격적인 충이고, [요충]으로 적힌 떨어진 쌍은 약하게 작용하는 기운으로 한 구절만 풀 것")
         return "[지지 충 사실] " + " / ".join(lines)
     except Exception:
         return "지지 충 정보 없음"
@@ -2142,7 +2147,7 @@ def get_cheongan_chung_fact(ys, ms, ds, hs=None):
                         if o not in (i, j):
                             lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})의 합이 {names[o]}({gans[o]})의 충을 받아 합의 힘이 흔들림")
         for i, j in far_chung:
-            lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})은 충의 글자 쌍이나 떨어져 있어 충으로 보지 않고 참고만")
+            lines.append(f"[요충] {names[i]}({gans[i]})과 {names[j]}({gans[j]})은 사이에 다른 글자를 두고 멀리서 충의 글자 쌍을 이룸(떨어져 있어 부딪힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 부딪히는 기운' 정도로 한 구절만, 단정 금지)")
         for o in (1, 3):
             s = {gans[2], gans[o]}
             if s in _CH or s in _HP or gans[o] in ("-", "?", ""):
@@ -5483,7 +5488,6 @@ def get_ilju_master_prompt_context(user_ilju_key, choyeon_db, gender=None):
 단, 지장간 좌법·인종법 용어(예: 왕좌왕궁, 록좌왕궁, 대좌대궁처럼 '○좌○궁'으로 쓴 표기)는 해설용 자료이므로 본문에 그대로 쓰지 말고 일상어로 풀어 쓰며, 지장간 속 글자를 세운·월운·일운의 천간과 혼동하지 마십시오. 
 '패가망신', '폭군', '초토화'처럼 불안이나 거부감을 주는 센 표현은 신청자의 연령과 상황에 맞게 순화하십시오.
 """
-
 
 # ---- 2-F. 시공명리 특수 파동 진단 (삼자조합 · 시공간 왜곡 · 우주중력 · 재물/연애 패턴 공통 재료) ----
 
