@@ -801,7 +801,7 @@ def get_choyeon_sign_html():
 
 def get_promo_block_html(coupon_amount=5500):
     return f"""
-    <div style='margin-top: 25px; padding: 18px 20px; background: #FFF8E1; border: 1px dashed #F9A825; border-radius: 8px;'>
+    <div style='margin-top: 25px; padding: 18px 20px; background: #FFF8E1; border: 1px dashed #F9A825; border-radius: 8px; page-break-inside: avoid; break-inside: avoid;'>
         <p style='font-weight:700; margin-bottom:8px;'>🎁 깜짝 후기 이벤트!</p>
         <p style='margin-bottom:0;'>감명서가 마음에 쏙 드셨다면 따뜻한 후기 한 줄 부탁드려요! 후기를 남겨주시면, 다음 신청 시 사용하실 수 있는 할인쿠폰 <span style="font-weight:600;">{coupon_amount:,}원</span>을 드립니다. 🥰</p>
     </div>
