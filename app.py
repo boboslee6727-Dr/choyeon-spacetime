@@ -1698,12 +1698,30 @@ if st.session_state.get('app_running', False):
             couple_shinsal_compare_str = engine.get_couple_shinsal_compare_str(m_gans_val, m_jjis_val, f_gans_val, f_jjis_val)
             couple_pillars_fact_str = engine.get_couple_pillars_fact_str(m_gans_val, m_jjis_val, f_gans_val, f_jjis_val)
             couple_ji_rel_str = engine.get_couple_ji_rel_facts(m_jjis_val, f_jjis_val)
+            try:
+                couple_shinsal12_str = ("남명: " + engine.get_12_shinsal_fact_str(m_jjis_val[3], m_jjis_val[1], m_jjis_val)
+                                        + " // 여명: " + engine.get_12_shinsal_fact_str(f_jjis_val[3], f_jjis_val[1], f_jjis_val))
+            except Exception:
+                couple_shinsal12_str = "12신살 정보 없음"
+            try:
+                _gm_facts = []
+                for _who, _g, _j in (("남명", m_gans_val, m_jjis_val), ("여명", f_gans_val, f_jjis_val)):
+                    _gm_day = str(engine.calculate_gongmang(_g[1], _j[1]) or "-")   # 일 기준
+                    _gm_year = str(engine.calculate_gongmang(_g[3], _j[3]) or "-")  # 년 기준
+                    if str(_j[1]) in _gm_day:
+                        _gm_facts.append(f"{_who}: 배우자 자리(일지 {_j[1]})가 일 기준 공망에 걸림")
+                    if str(_j[1]) in _gm_year:
+                        _gm_facts.append(f"{_who}: 배우자 자리(일지 {_j[1]})가 년 기준 공망에 걸림(영향 약함)")
+                couple_gongmang_str = " / ".join(_gm_facts) if _gm_facts else "배우자 자리 공망 없음"
+            except Exception:
+                couple_gongmang_str = "배우자 자리 공망 없음"
         else:
             m_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
             f_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
             couple_shinsal_compare_str = "해당 없음 (1인 상품)"
             couple_pillars_fact_str = "해당 없음 (1인 상품)"
             couple_ji_rel_str = "해당 없음 (1인 상품)"
+            couple_shinsal12_str = "해당 없음 (1인 상품)"
 
         # 🚨 궁합용: 남명/여명 이상적 배우자상 + 혼인상태(돌싱 포함) 준비
         male_ideal_data = ideal_spouse_data if gender == "남성" else (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {})
@@ -1858,6 +1876,7 @@ if st.session_state.get('app_running', False):
             "couple_shinsal_compare_str": couple_shinsal_compare_str,
             "couple_pillars_fact_str": couple_pillars_fact_str,
             "couple_ji_rel_str": couple_ji_rel_str,
+            "couple_shinsal12_str": couple_shinsal12_str,
             "daewun_full_fact_str": daewun_full_fact_str,
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
 
