@@ -2433,6 +2433,8 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'사실관계(?:를|는)?\s*보면,?\s*', '', clean_report_html)
             clean_report_html = re.sub(r'사실관계', '내용', clean_report_html)
             clean_report_html = re.sub(r'지지 기운', '땅의 기운', clean_report_html)
+            clean_report_html = re.sub(r'크게 번지지는 않는', '크게 퍼지지는 않는', clean_report_html)
+            clean_report_html = re.sub(r'번지지는', '퍼지지는', clean_report_html)
             clean_report_html = re.sub(r'천간(?=\([甲乙丙丁戊己庚辛壬癸]\))', '하늘 기운', clean_report_html)
             clean_report_html = re.sub(r'\s*\(\s*(?:천지동|쌍)?복음\s*\)', '', clean_report_html)
             clean_report_html = re.sub(r'쌍복음', '같은 글자가 겹치는 것', clean_report_html)
