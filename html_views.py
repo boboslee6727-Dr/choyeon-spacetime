@@ -49,7 +49,7 @@ def get_global_css():
     /* 통변 제목 및 본문 스타일 */
     .sub-title, .ai-title-l1 { break-after: avoid; page-break-after: avoid; } p { orphans: 2; widows: 2; }
     .sub-title, .ai-title-l2 { font-size: 18px !important; font-weight: 900 !important; color: #111111 !important; margin-top: 22px !important; margin-bottom: 10px !important; line-height: 1.4 !important; font-family: 'Noto Serif KR', serif !important; display: block !important; }
-    .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 30px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .vip-inset-frame { border: 2px solid #3E2723 !important; border-radius: 12px !important; padding: 20px 25px !important; background-color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .content-box-loose { margin-bottom: 25px !important; }
     /* 🛡️ 본문 p태그와 표지 p태그 충돌 방지 */
     .ai-body-p, .report-page:not(.cover-page) p { font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-justify: inter-character !important; text-indent: 1.0em !important; margin-bottom: 12px !important; word-break: break-all !important; }
@@ -69,7 +69,7 @@ def get_global_css():
     /* 🌟 AI 통변 페이지 최상단 대제목(main-report-title) 전용 이중선 구분 */
     .main-report-title { text-align: center !important; width: 100% !important; box-sizing: border-box !important; border-bottom: 4px double #1A237E !important; padding-bottom: 20px !important; margin: 10px 0 30px 0 !important; }
     /* 📄 감명서 페이지 기본 프레임 (A4 규격) */
-    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 12mm 10mm; box-sizing: border-box; color: #000; }
+    .report-page { width: 210mm; max-width: 100%; margin: 20px auto; background-color: #FFF !important; padding: 6mm 10mm; box-sizing: border-box; color: #000; }
     /* 🖨️ 인쇄 / PDF 저장 전용 규칙 */
     @media print {
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -637,7 +637,7 @@ def get_gunghap_three_page_report(male_saju_html, m_ess, female_saju_html, f_ess
     g_page = ""
     if clean_g_ess:
         g_content = f"""
-            <h1 style='text-align:center !important; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
+            <h1 style='text-align:center !important; color:#1B5E20; font-weight:800; border-bottom:2px solid #1B5E20; padding-bottom:10px; margin-bottom:15px; margin-top:0 !important; font-size:21px;'>[ 🍀 초연 시공명리 궁합 풀이 ]</h1>
             <div style='margin-top:15px;'>{clean_g_ess}</div>
         """
         g_page = get_final_report_box(g_content)
