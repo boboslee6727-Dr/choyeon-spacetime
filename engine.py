@@ -5111,6 +5111,8 @@ def check_vault_status(base_gans, base_jjis, attacker_ji):
  
     results = []
     for i, ji in enumerate(base_jjis):
+        if i == 3:      # 연지는 개고·입고 판정에서 제외 (책 기준)
+            continue
         if ji in vaults:
             if clash_map.get(ji) == attacker_ji or {ji, attacker_ji} in hyung_sets:
                 targets = core_gans.get(ji, [])
@@ -5414,21 +5416,22 @@ def get_hang_un_vaults_str(dw_j, base_gans, base_jjis):
     vault_name, target_gans, clash_partner = vault_info[dw_j]
     trapped_gans = [g for g in target_gans if g in base_gans]
  
-    is_clashed = clash_partner in base_jjis
+    _wj = base_jjis[1:]   # 연지 제외 (책: 연지는 개고·입고 판정에서 빠짐)
+    is_clashed = clash_partner in _wj
     is_hyung = False
     if dw_j in ['丑', '戌', '未']:
-        is_hyung = any(j in ['丑', '戌', '未'] and j != dw_j for j in base_jjis)
- 
+        is_hyung = any(j in ['丑', '戌', '未'] and j != dw_j and j != clash_partner for j in _wj)
+
     details = []
-    if trapped_gans:
-        details.append(f"🚨 원국 천간의 {','.join(trapped_gans)} 기운이 대운 {dw_j}({vault_name})에 입고(入庫)되어 활동성이 수렴·제약됨")
- 
     if is_clashed or is_hyung:
         trigger_type = "충(沖)" if is_clashed else "형(刑)"
-        details.append(f"💎 원국 지지와의 {trigger_type} 작용으로 대운 {dw_j}({vault_name}) 창고가 개고(開庫)되어 지장간 보물이 발현됨")
-    elif not trapped_gans:
-        details.append(f"📦 대운 {dw_j}({vault_name}) 환경이 조성되어 해당 오행의 저장 무대가 형성됨")
- 
+        if trapped_gans:
+            details.append(f"🚨 원국 천간의 {','.join(trapped_gans)} 기운이 대운 {dw_j}({vault_name})의 {trigger_type} 작용으로 입고(入庫)될 조짐 (대운은 방향만 암시하고, 실제로 열리는 때는 세운이 겹칠 때)")
+        else:
+            details.append(f"💎 원국 지지와의 {trigger_type} 작용으로 대운 {dw_j}({vault_name}) 창고가 열릴(開庫) 조짐이며 지장간 보물이 드러나는 흐름 (대운은 방향만 암시하고, 실제로 열리는 때는 세운이 겹칠 때)")
+    else:
+        details.append(f"📦 대운 {dw_j}({vault_name}) 환경만 조성되었고 충·형이 없어 입고도 개고도 일어나지 않음")
+
     return f"[{dw_j}대운 - {vault_name}] " + " / ".join(details)
 
 def get_won_guk_vaults_str(jjis):
@@ -5683,22 +5686,11 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
         return m.get(grp, grp)
 
     # 대상 선정: 충은 일지만, 형(삼형)은 일지가 축술미면 일지, 아니면 월지·시지(연지 제외)
-    targets = {}
-    if dj in VNAME:
-        targets.setdefault(('일지', dj), set()).add('충')
-    if dj in HYUNG:
-        targets.setdefault(('일지', dj), set()).add('형')
-    else:
-        for p, b in (('월지', mj), ('시지', hj)):
-            if b in HYUNG:
-                targets.setdefault((p, b), set()).add('형')
-
-    head = "[창고 개고·입고 시기 — 일지 기준, 삼형은 연지 제외]"
     foot = ("※원칙: 충·형이 없으면 입고도 개고도 일어나지 않음. 대운은 방향을 암시하고 세운·월운이 겹칠 때 실행됨. "
             "천간에 이미 드러난 기운은 열릴 때 창고로 들어가고(입고, 불리), 천간에 없이 숨은 기운은 열릴 때 밖으로 나옴(개고). "
             "재성 창고의 개고는 대체로 길하고, 그 밖의 육친 창고의 입고·입묘는 흉화를 암시함.")
     if not targets:
-        why = "일지가 창고(辰戌丑未)가 아니어서 충에 의한 개고·입고는 해당 없고, 월지·시지에도 삼형 대상(丑·戌·未)이 없어 해당 없음."
+        why = "일지·월지·시지에 창고(辰戌丑未)가 없어 개고·입고는 해당 없음."
         return head + "\n" + why
 
     lines = []
@@ -5713,21 +5705,25 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
             else:
                 out.append(tag)
 
+        strength = "확실" if pos == '일지' else "약하게(참고만)"
+        _others = [v for k, v in (('일지', dj), ('월지', mj), ('시지', hj)) if k != pos]
+        hyung_openers = [x for x in HYUNG.get(b, []) if x != CHUNG.get(b)]
+
         opens = []
         if '충' in modes:
             opens.append(f"{CHUNG[b]}(충)")
         if '형' in modes:
-            opens.append("丑·戌·未 세 글자가 모두 갖춰져 삼형이 완성될 때")
+            opens.append(f"{'·'.join(hyung_openers)}(형)")
         if '충' in modes:
             tend = "辰戌충은 흉화가 가중되는 경향" if b in ('辰', '戌') else "丑未충은 발복이 상승하는 경향"
         else:
-            tend = "충이 아니라 삼형 조건이며, 세 글자 중 하나만으로는 열리지 않음"
+            tend = "형으로 열리며 충보다 약하게 작용하는 경향"
 
         won = ""
-        if '충' in modes and CHUNG[b] in (mj, hj):
+        if '충' in modes and CHUNG[b] in _others:
             won = f" 원국에 이미 {CHUNG[b]}가 있어 원국지지충 상태이며 해당 글자가 다시 들어오는 운에 충발함."
-        if '형' in modes and SAMHYUNG <= set(jjis):
-            won += " 원국에 이미 丑·戌·未 세 글자가 모두 있어 삼형이 갖춰진 상태이며, 이 창고와 다른 글자(丑·戌·未)가 행운에서 들어올 때마다 창고가 다시 흔들려 열림."
+        if '형' in modes and any(x in _others for x in hyung_openers):
+            won += " 원국에 이미 형을 이루는 글자가 있어 원국지지형 상태이며, 해당 글자가 다시 들어오는 운에 창고가 다시 흔들려 열림."
 
         hits = []
         for y in range(curr_year, curr_year + 10):
@@ -5735,8 +5731,8 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
             why = None
             if '충' in modes and br == CHUNG[b]:
                 why = f"{b}{br}충"
-            elif '형' in modes and br in HYUNG[b] and SAMHYUNG <= (set(jjis) | {dw_j, br}):
-                why = "축술미 삼형 성립"
+            elif '형' in modes and br in hyung_openers:
+                why = f"{b}{br}형"
             if why:
                 hits.append(f"{y}년({br}, {why}, 절기상 {br}월 즉 {MONTH_OF[br]} 무렵에 실행)")
                 year_map.setdefault((y, br), []).append(f"{pos} {b}")
@@ -5745,11 +5741,11 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
         for nm, v in (("현재 대운", dw_j), ("올해 세운", sewun_j), ("이번 달 월운", wolun_j)):
             if '충' in modes and v == CHUNG[b]:
                 now.append(f"{nm} {v}: {b}{v}충")
-            elif '형' in modes and v in HYUNG[b] and SAMHYUNG <= (set(jjis) | {dw_j, sewun_j, v}):
-                now.append(f"{nm} {v}: 축술미 삼형 성립")
+            elif '형' in modes and v in hyung_openers:
+                now.append(f"{nm} {v}: {b}{v}형")
 
         lines.append(
-            f"- {pos} {b}({VNAME[b]}, 판정방식: {'·'.join(sorted(modes))}): "
+            f"- {pos} {b}({VNAME[b]}, 판정방식: {'·'.join(sorted(modes))}, 강도: {strength}): "
             f"창고 안 지장간 중 천간에 이미 드러난 기운(열리면 입고) = {', '.join(enter) if enter else '없음'} / "
             f"천간에 없이 숨어 있는 기운(열리면 개고) = {', '.join(out) if out else '없음'}. "
             f"여는 글자: {', '.join(opens)} ({tend}).{won} "
