@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 88.9 - 상품별 정리판)
+# engine.py (ver 89.0 - 상품별 정리판)
 # ==============================================================================
 import os
 import streamlit as st
@@ -1732,7 +1732,7 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None, yong=None):
                         _s2 += ". " + _bf
                     lines.append(_s2)
                 else:
-                    lines.append(f"[방합 기세] {_pos(have)}은(는) {nm} 기운 쪽으로 약하게 기우는 정도의 기세로 참고만 할 것(방합이 아님)")
+                    lines.append(f"[방합 기세] {_pos(have)}은(는) {nm} 기운 쪽으로 약하게 기우는 정도의 기세(방합이 아님. 멀리서 은근히 마음이 기우는 정도로 한 구절만, 합이 이루어졌다고 단정 금지)")
         try:
             _sp = [(nm2[0], mem2[1] in brs) for nm2, mem2, rep2 in SAMHAP if len([x for x in mem2 if x in brs]) == 2]
             _bp = [(nm2, mem2[1] in brs) for nm2, mem2 in BANGHAP if len([x for x in mem2 if x in brs]) == 2]
@@ -2205,22 +2205,35 @@ def get_ji_rel_set(me, target):
     return ", ".join(list(dict.fromkeys(r))) if r else "-"
 
 def get_ji_rel_cell(me, target, me_idx, ci):
-    """표시용(합충형파해 표 한 칸): 책 기준으로 이웃한 자리끼리만 육합·충·해·파·자형·자묘형을 보여주고,
-    떨어진 충은 '충(참고)'로 표시합니다. me_idx, ci는 [시, 일, 월, 년] 순서 번호(0~3)."""
+    """표시용(합충형파해 표 한 칸): 이웃한 자리끼리는 모든 관계를 보여주고,
+    떨어진 자리는 육합은 '격합', 충은 '격충'으로 약하게 표시하며 해·파·자형·자묘형은 숨깁니다.
+    삼합 양끝(공합)과 방합 양끝(공협)도 약한 합으로 표시합니다. me_idx, ci는 [시, 일, 월, 년] 순서 번호(0~3)."""
     r = get_ji_rel_set(me, target)
-    if r == "-":
+    _s = {_to_hanja(me), _to_hanja(target)}
+    _extra = []
+    if _s in [{'亥','未'}, {'寅','戌'}, {'申','辰'}, {'巳','丑'}]:
+        _extra.append("공합")
+    if _s in [{'寅','辰'}, {'巳','未'}, {'申','戌'}, {'亥','丑'}]:
+        _extra.append("공협")
+    if r == "-" and not _extra:
         return "-"
-    if abs(me_idx - ci) == 1:
-        return r
+    _items = [x.strip() for x in r.split(",")] if r != "-" else []
+    adj = abs(me_idx - ci) == 1
     out = []
-    for t in [x.strip() for x in r.split(",")]:
-        if t in ("육합", "해", "파", "자형"):
-            continue
-        if t == "충":
-            out.append("충(참고)")
-            continue
-        if t == "형" and {_to_hanja(me), _to_hanja(target)} == {'子', '卯'}:
-            continue
+    for t in _items + _extra:
+        if t == "방합(미완)":
+            t = "방합(기세)"
+        if not adj:
+            if t == "육합":
+                out.append("격합")
+                continue
+            if t == "충":
+                out.append("격충")
+                continue
+            if t in ("해", "파", "자형"):
+                continue
+            if t == "형" and {_to_hanja(me), _to_hanja(target)} == {'子', '卯'}:
+                continue
         out.append(t)
     return ", ".join(out) if out else "-"
 
