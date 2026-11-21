@@ -5685,7 +5685,19 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
             m['식상'] = '재능·자식'
         return m.get(grp, grp)
 
-    # 대상 선정: 충은 일지만, 형(삼형)은 일지가 축술미면 일지, 아니면 월지·시지(연지 제외)
+    # 대상 선정(책 기준): 충은 일지 확실·월지/시지 약하게(연지 제외), 형(삼형)은 일지가 축술미면 일지, 아니면 월지·시지(연지 제외)
+    targets = {}
+    for p, b in (('일지', dj), ('월지', mj), ('시지', hj)):
+        if b in VNAME:
+            targets.setdefault((p, b), set()).add('충')
+    if dj in HYUNG:
+        targets.setdefault(('일지', dj), set()).add('형')
+    else:
+        for p, b in (('월지', mj), ('시지', hj)):
+            if b in HYUNG:
+                targets.setdefault((p, b), set()).add('형')
+
+    head = "[창고 개고·입고 시기 — 일지 창고는 확실, 월지·시지 창고는 약하게 참고, 연지는 제외]"
     foot = ("※원칙: 충·형이 없으면 입고도 개고도 일어나지 않음. 대운은 방향을 암시하고 세운·월운이 겹칠 때 실행됨. "
             "천간에 이미 드러난 기운은 열릴 때 창고로 들어가고(입고, 불리), 천간에 없이 숨은 기운은 열릴 때 밖으로 나옴(개고). "
             "재성 창고의 개고는 대체로 길하고, 그 밖의 육친 창고의 입고·입묘는 흉화를 암시함.")
@@ -5705,25 +5717,24 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
             else:
                 out.append(tag)
 
-        strength = "확실" if pos == '일지' else "약하게(참고만)"
+        strength = "확실" if (pos == '일지' or modes == {'형'}) else ("충은 약하게(참고만), 삼형은 확실" if '형' in modes else "약하게(참고만)")
         _others = [v for k, v in (('일지', dj), ('월지', mj), ('시지', hj)) if k != pos]
-        hyung_openers = [x for x in HYUNG.get(b, []) if x != CHUNG.get(b)]
 
         opens = []
         if '충' in modes:
             opens.append(f"{CHUNG[b]}(충)")
         if '형' in modes:
-            opens.append(f"{'·'.join(hyung_openers)}(형)")
+            opens.append("丑·戌·未 세 글자가 모두 갖춰져 삼형이 완성될 때")
         if '충' in modes:
             tend = "辰戌충은 흉화가 가중되는 경향" if b in ('辰', '戌') else "丑未충은 발복이 상승하는 경향"
         else:
-            tend = "형으로 열리며 충보다 약하게 작용하는 경향"
+            tend = "충이 아니라 삼형 조건이며, 세 글자 중 하나만으로는 열리지 않음"
 
         won = ""
         if '충' in modes and CHUNG[b] in _others:
             won = f" 원국에 이미 {CHUNG[b]}가 있어 원국지지충 상태이며 해당 글자가 다시 들어오는 운에 충발함."
-        if '형' in modes and any(x in _others for x in hyung_openers):
-            won += " 원국에 이미 형을 이루는 글자가 있어 원국지지형 상태이며, 해당 글자가 다시 들어오는 운에 창고가 다시 흔들려 열림."
+        if '형' in modes and SAMHYUNG <= set(jjis):
+            won += " 원국에 이미 丑·戌·未 세 글자가 모두 있어 삼형이 갖춰진 상태이며, 이 창고와 다른 글자(丑·戌·未)가 행운에서 들어올 때마다 창고가 다시 흔들려 열림."
 
         hits = []
         for y in range(curr_year, curr_year + 10):
@@ -5731,8 +5742,8 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
             why = None
             if '충' in modes and br == CHUNG[b]:
                 why = f"{b}{br}충"
-            elif '형' in modes and br in hyung_openers:
-                why = f"{b}{br}형"
+            elif '형' in modes and br in HYUNG[b] and SAMHYUNG <= (set(jjis) | {dw_j, br}):
+                why = "축술미 삼형 성립"
             if why:
                 hits.append(f"{y}년({br}, {why}, 절기상 {br}월 즉 {MONTH_OF[br]} 무렵에 실행)")
                 year_map.setdefault((y, br), []).append(f"{pos} {b}")
@@ -5741,8 +5752,8 @@ def get_vault_timing_fact_str(ds, jjis, gans, curr_year, dw_j, sewun_j, wolun_j,
         for nm, v in (("현재 대운", dw_j), ("올해 세운", sewun_j), ("이번 달 월운", wolun_j)):
             if '충' in modes and v == CHUNG[b]:
                 now.append(f"{nm} {v}: {b}{v}충")
-            elif '형' in modes and v in hyung_openers:
-                now.append(f"{nm} {v}: {b}{v}형")
+            elif '형' in modes and v in HYUNG[b] and SAMHYUNG <= (set(jjis) | {dw_j, sewun_j, v}):
+                now.append(f"{nm} {v}: 축술미 삼형 성립")
 
         lines.append(
             f"- {pos} {b}({VNAME[b]}, 판정방식: {'·'.join(sorted(modes))}, 강도: {strength}): "
