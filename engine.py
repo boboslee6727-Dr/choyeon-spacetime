@@ -1697,7 +1697,7 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None, yong=None):
                              else "일지가 들어 있지 않은 반합이라 운의 판단에는 쓰지 않는 참고 사항")
                     lines.append(f"[반합] {_pos(have)}이(가) {nm} 반합({_kind}, 가운데 글자 포함)을 이룸. 완성된 삼합보다 힘이 약한 합이며, {_tail}")
                 else:
-                    lines.append(f"[공합] {_pos(have)}은(는) {nm} 삼합의 양 끝 글자만 있어 합의 힘이 약함(참고)")
+                    lines.append(f"[공합] {_pos(have)}은(는) {nm} 삼합의 양 끝 글자만 있어 합의 힘이 약함(멀리서 은근히 마음이 기우는 정도로 한 구절만, 합이 이루어졌다고 단정 금지)")
         for nm, mem in BANGHAP:
             have = [x for x in mem if x in brs]
             if len(have) == 3:
