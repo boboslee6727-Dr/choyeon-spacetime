@@ -1223,7 +1223,7 @@ def get_gan_rel_all(idx, gans):
         elif (_OH.get(me), _OH.get(other)) in _GEUK or (_OH.get(other), _OH.get(me)) in _GEUK:
             res.append("극")
     txt = "".join(x for x in ["합", "충", "극"] if x in res)
-    far_html = ("<span style='color:#9E9E9E; font-weight:700;'>요합</span>" if far else "") + (" " if far and far_ch else "") + ("<span style='color:#9E9E9E; font-weight:700;'>요충</span>" if far_ch else "")
+    far_html = ("<span style='color:#9E9E9E; font-weight:700;'>격합</span>" if far else "") + (" " if far and far_ch else "") + ("<span style='color:#9E9E9E; font-weight:700;'>격충</span>" if far_ch else "")
     out = txt + (" " if txt and far_html else "") + far_html
     return out if out else "-"
 
@@ -1459,7 +1459,7 @@ def get_cheongan_hap_fact(ys, ms, ds, hs=None, jjis=None, gender=None):
             return "천간에 서로 합이 되는 글자 쌍은 사실문에 없음"
         lines = []
         for i, j, adj in links:
-            how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "[요합] 서로 떨어져 있어 합의 힘이 약함(멀리서 은근히 당기는 정도로 한 구절만, 합이 이루어졌다고 단정 금지)"
+            how = "바로 이웃해 있어 합의 힘이 온전함" if adj else "[격합] 서로 떨어져 있어 합의 힘이 약함(멀리서 은근히 당기는 정도로 한 구절만, 합이 이루어졌다고 단정 금지)"
             hn = _HAP_NAME.get(frozenset((gans[i], gans[j])), "")
             lines.append(f"{names[i]}({_lab(i)})과 {names[j]}({_lab(j)})이 합을 이룸: {how}" + (f" / 합의 성격: {hn}" if hn and adj else ""))
         # [쟁합·투합] 책 기준: 원국 일간합(일간과 이웃한 합)에서만 판단
@@ -1827,7 +1827,7 @@ def _get_jiji_yukhap_core(yb, mb, db, hb):
                 txt = f"[육합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 육합을 이룸"
                 txt += "(바로 이웃함)"
             else:
-                txt = f"[요합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 사이에 다른 글자를 두고 멀리서 육합을 이룸(떨어져 있어 당기는 힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 당기는 정도'로 한 구절만, 합이 단단히 이루어졌다고 단정 금지)"
+                txt = f"[격합] {names[i]} {brs[i]}과(와) {names[j]} {brs[j]}이(가) 사이에 다른 글자를 두고 멀리서 육합을 이룸(떨어져 있어 당기는 힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 당기는 정도'로 한 구절만, 합이 단단히 이루어졌다고 단정 금지)"
             txt += f". {STR_TXT[s]}"
             dmg = _hit(brs[i], (i, j)) + _hit(brs[j], (i, j))
             if frozenset((brs[i], brs[j])) in (frozenset(('寅', '亥')), frozenset(('巳', '申'))):
@@ -1890,7 +1890,7 @@ def get_jiji_chung_fact(yb, mb, db, hb):
                     continue
                 pr = frozenset((a, b))
                 if j - i != 1:
-                    lines.append(f"[요충] {names[i]} {a}과 {names[j]} {b}은 사이에 다른 글자를 두고 멀리서 충을 이룸(떨어져 있어 부딪힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 부딪히는 기운' 정도로 한 구절만, 큰 변동이나 흉으로 단정 금지)")
+                    lines.append(f"[격충] {names[i]} {a}과 {names[j]} {b}은 사이에 다른 글자를 두고 멀리서 충을 이룸(떨어져 있어 부딪힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 부딪히는 기운' 정도로 한 구절만, 큰 변동이나 흉으로 단정 금지)")
                     continue
                 weak = []
                 for k in (i - 1, j + 1):
@@ -1907,7 +1907,7 @@ def get_jiji_chung_fact(yb, mb, db, hb):
                     lines.append(f"[연지충] {names[i]} {a}과 {names[j]} {b}이 바로 이웃해 충을 이룸: 초년·집안·윗사람 쪽에서 마음의 부조화가 생기는 정도로만 보고, 운과 무관하며 본인 자신이 흔들리는 것처럼 풀지 말 것" + wtxt)
         if not lines:
             return "지지에 서로 충하는 글자 쌍은 사실문에 없음"
-        lines.append("충은 서로 부딪히며 변화를 만드는 움직임이라 나쁜 일로만 단정하지 말 것. 일지-월지, 일지-시지, 연지-월지처럼 이웃한 충이 본격적인 충이고, [요충]으로 적힌 떨어진 쌍은 약하게 작용하는 기운으로 한 구절만 풀 것")
+        lines.append("충은 서로 부딪히며 변화를 만드는 움직임이라 나쁜 일로만 단정하지 말 것. 일지-월지, 일지-시지, 연지-월지처럼 이웃한 충이 본격적인 충이고, [격충]으로 적힌 떨어진 쌍은 약하게 작용하는 기운으로 한 구절만 풀 것")
         return "[지지 충 사실] " + " / ".join(lines)
     except Exception:
         return "지지 충 정보 없음"
@@ -2148,7 +2148,7 @@ def get_cheongan_chung_fact(ys, ms, ds, hs=None):
                         if o not in (i, j):
                             lines.append(f"{names[i]}({gans[i]})과 {names[j]}({gans[j]})의 합이 {names[o]}({gans[o]})의 충을 받아 합의 힘이 흔들림")
         for i, j in far_chung:
-            lines.append(f"[요충] {names[i]}({gans[i]})과 {names[j]}({gans[j]})은 사이에 다른 글자를 두고 멀리서 충의 글자 쌍을 이룸(떨어져 있어 부딪힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 부딪히는 기운' 정도로 한 구절만, 단정 금지)")
+            lines.append(f"[격충] {names[i]}({gans[i]})과 {names[j]}({gans[j]})은 사이에 다른 글자를 두고 멀리서 충의 글자 쌍을 이룸(떨어져 있어 부딪힘은 약하게 작용함. 고객 글에는 '멀리서 은근히 부딪히는 기운' 정도로 한 구절만, 단정 금지)")
         for o in (1, 3):
             s = {gans[2], gans[o]}
             if s in _CH or s in _HP or gans[o] in ("-", "?", ""):
