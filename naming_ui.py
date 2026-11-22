@@ -226,7 +226,35 @@ def saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender):
     return {'gans': gans, 'jjis': jjis, 'counts': counts, 'yong_text': txt, 'yong_el': engine.get_yongshin_elements(txt)}
 
 
-def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal):
+PROMPT_NAME = {"4-1": "프롬프트_N4_1_이름풀이", "4-2": "프롬프트_N4_2_이름바꾸기", "4-3": "프롬프트_N4_3_신생아이름짓기"}
+
+
+class _SafeDict(dict):
+    def __missing__(self, k):
+        return "{" + k + "}"
+
+
+def build_naming_facts(an):
+    L = [f"이름: {an['이름']} (독음 {an['독음']})",
+         f"소리오행: {' → '.join(an['소리배합'])} / 관계 {' · '.join(an['소리관계'])} / 판정 {an['소리판정']}",
+         f"자원오행: {' → '.join(an['자원배합'])} / 관계 {' · '.join(an['자원관계'])} / 판정 {an['자원판정']}"]
+    for k, v in an['네격'].items():
+        L.append(f"{k}({v['때']}): 수리 {v['수리']} · 이름 {v['격']} · {v['길흉']}")
+    L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오"))
+    L.append("피할 오행 포함: " + ("예" if an['기신포함'] else "아니오"))
+    L.append(f"음양: {an['음양']}")
+    return "\n".join(L)
+
+
+def build_saju_facts(sj, yong):
+    g, j = sj['gans'], sj['jjis']
+    cnt = " ".join(f"{k}{v}" for k, v in sj['counts'].items())
+    return (f"사주 여덟 글자: 시 {g[0]}{j[0]} · 일 {g[1]}{j[1]} · 월 {g[2]}{j[2]} · 년 {g[3]}{j[3]}\n"
+            f"오행 개수: {cnt}\n"
+            f"중심오행 {yong.get('용신') or '-'} · 보조오행 {yong.get('희신') or '-'} · 피할 오행 {yong.get('기신') or '-'}")
+
+
+def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=None, prompts_mod=None):
     """app.py 가 부르는 입구(권장). 입력 확인 → 사주 계산 → 작명 화면. 반환: 판정 결과 dict 또는 None"""
     st.subheader("이름 풀이 및 짓기")
     sig = f"{name}|{gender}|{u_cal}|{b_year}-{b_month}-{b_day}|{b_time}|{u_product}"
@@ -251,4 +279,24 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
         return None
     st.caption(f"사주 여덟 글자  시 {sj['gans'][0]}{sj['jjis'][0]} · 일 {sj['gans'][1]}{sj['jjis'][1]} · 월 {sj['gans'][2]}{sj['jjis'][2]} · 년 {sj['gans'][3]}{sj['jjis'][3]}")
     st.markdown("**② 성씨와 이름 글자를 골라 주세요**")
-    return render_naming_product(u_product, sj['yong_el'], gender, name)
+    an = render_naming_product(u_product, sj['yong_el'], gender, name)
+    if an is None or ai_func is None or prompts_mod is None:
+        return an
+    st.divider()
+    st.markdown("**③ 풀이글 받기**")
+    rkey = f"{sig}|{an['이름']}"
+    if st.button("📜 이 이름 풀이글 받기", key="nm_report_btn", type="primary"):
+        var = PROMPT_NAME.get(str(u_product)[:3])
+        tpl = getattr(prompts_mod, var, "") if var else ""
+        if not tpl:
+            st.error(f"prompts.py 에 '{var}' 가 없습니다.")
+        else:
+            data = {"name": name, "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})),
+                    "naming_facts": build_naming_facts(an)}
+            with st.spinner("풀이글을 쓰고 있습니다. 1~2분 걸립니다..."):
+                text = ai_func(tpl.format_map(_SafeDict(data)))
+            st.session_state["nm_report"] = (rkey, text)
+    rep = st.session_state.get("nm_report")
+    if rep and rep[0] == rkey:
+        st.markdown(rep[1])
+    return an
