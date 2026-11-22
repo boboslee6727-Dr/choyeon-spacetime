@@ -77,11 +77,31 @@ def _gyeok_table(an):
     return "| 격 | 수리 | 이름 | 상 | 길흉 |\n|---|---|---|---|---|\n" + "\n".join(rows)
 
 
+_CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+
+
+def _chain_text(an, kind):
+    """오행 흐름을 글자와 함께 보여 준다. 예) 土(ㅇ) ─비화→ 土(ㅇ) ─극→ 水(ㅂ)"""
+    el = an['소리배합'] if kind == '소리' else an['자원배합']
+    rels = an['소리관계'] if kind == '소리' else an['자원관계']
+    hj, rd = an['이름'], an['독음']
+    if len(hj) != len(el) or len(rd) != len(el):
+        return ' → '.join(el)          # 글자 수가 안 맞는 경우(부모 성 등)는 예전 방식 그대로
+    marks = []
+    for h, r in zip(hj, rd):
+        c = ord(r) - 0xAC00
+        marks.append(_CHO[c // 588] if 0 <= c < 11172 else r) if kind == '소리' else marks.append(h)
+    out = f"{el[0]}({marks[0]})"
+    for i in range(1, len(el)):
+        out += f" ─{rels[i-1]}→ {el[i]}({marks[i]})"
+    return out
+
+
 def show_analysis(an):
     st.markdown(f"### {an['이름']} ({an['독음']})")
     c1, c2 = st.columns(2)
-    c1.markdown(f"**소리오행** {' → '.join(an['소리배합'])}  \n관계: {' / '.join(an['소리관계'])}  \n판정: **{an['소리판정']}**")
-    c2.markdown(f"**자원오행** {' → '.join(an['자원배합'])}  \n관계: {' / '.join(an['자원관계'])}  \n판정: **{an['자원판정']}**")
+    c1.markdown(f"**소리오행** {_chain_text(an, '소리')}  \n판정: **{an['소리판정']}**")
+    c2.markdown(f"**자원오행** {_chain_text(an, '자원')}  \n판정: **{an['자원판정']}**")
     st.markdown(_gyeok_table(an))
     tag = []
     tag.append("중심오행(용신) 포함 ✅" if an['용신포함'] else "중심오행(용신) 미포함 ⚠️")
