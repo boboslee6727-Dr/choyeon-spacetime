@@ -392,12 +392,11 @@ def _analyze_name(self, sur, A, B, yong):
     for k, v in gy.items():
         n = wrap81(v)
         info = self.db['suri81'][str(n)]
-        out['네격'][k] = {'때': stages[k], '수리': v, '적용수': n, '격': info['격'], '길흉': '길' if info['길'] else '흉'}
+        out['네격'][k] = {'때': stages[k], '수리': v, '적용수': n, '격': info['격'], '한자': info.get('한자', ''), '상': info.get('상', ''), '해설': info.get('해설', ''), '길흉': '길' if info['길'] else '흉'}
     need = {o for o in (yong.get('용신'), yong.get('겸용')) if o}
     out['용신포함'] = bool(ja_set & need) if need else None
     out['기신포함'] = bool(ja_set & {yong.get('기신'), yong.get('구신')} - {None})
     out['흉격수'] = sum(1 for v in out['네격'].values() if v['길흉'] == '흉')
     return out
-
 
 NamingEngine.analyze_name = _analyze_name
