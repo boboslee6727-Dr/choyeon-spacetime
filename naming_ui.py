@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-초연 작명법 화면 (naming_ui.py)  v0.1
+이름 풀이 및 짓기 화면 (naming_ui.py)  v0.1
 - app.py 에서는 아래 두 줄만 부르면 된다.
     import naming_ui
     result = naming_ui.render_naming_product(u_product, yong_el, gender, name)   # yong_el = engine.get_yongshin_elements(...) 결과
@@ -107,7 +107,7 @@ def _surname_block(neng, key):
 
 
 def _flow_new_name(neng, sur, yong, gender, key):
-    """5-2 개명 / 5-3 신생아 작명: 가운데 글자 → 끝 글자 고르기"""
+    """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기"""
     neng.gender = gender
     fixed_pos, fixed = None, None
     if st.checkbox("돌림자가 있습니다", key=f"{key}_dol"):
@@ -147,7 +147,7 @@ def _flow_new_name(neng, sur, yong, gender, key):
 
 
 def _flow_check_name(neng, sur, yong, key):
-    """5-1 이름 풀이: 지금 이름의 글자를 한자로 골라 판정"""
+    """4-1 이름 풀이: 지금 이름의 글자를 한자로 골라 판정"""
     st.markdown("**현재 이름의 한자를 골라 주세요** (성씨를 뺀 이름 글자)")
     n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 (예: 솔)", horizontal=True, key=f"{key}_n")
     A = pick_hanja(neng, "이름 첫 글자 (한글)", f"{key}_c1")
@@ -160,7 +160,7 @@ def _flow_check_name(neng, sur, yong, key):
 def render_naming_product(u_product, yong_el, gender, name=""):
     """
     app 에서 부르는 입구.
-    u_product : '5-1 …' / '5-2 …' / '5-3 …'
+    u_product : '4-1 …' / '4-2 …' / '4-3 …'
     yong_el   : engine.get_yongshin_elements(...) 사전 (한글 목화토금수)
     gender    : '남성' / '여성'
     반환       : 판정 결과 dict (아직 이름이 정해지지 않았으면 None)
@@ -174,7 +174,7 @@ def render_naming_product(u_product, yong_el, gender, name=""):
     if sur is None:
         st.info("성씨를 한글로 입력해 주세요.")
         return None
-    if str(u_product).startswith("5-1"):
+    if str(u_product).startswith("4-1"):
         an = _flow_check_name(neng, sur, yong, key)
     else:
         an = _flow_new_name(neng, sur, yong, g, key)
@@ -228,7 +228,7 @@ def saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender):
 
 def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal):
     """app.py 가 부르는 입구(권장). 입력 확인 → 사주 계산 → 작명 화면. 반환: 판정 결과 dict 또는 None"""
-    st.subheader("초연 작명법")
+    st.subheader("이름 풀이 및 짓기")
     sig = f"{name}|{gender}|{u_cal}|{b_year}-{b_month}-{b_day}|{b_time}|{u_product}"
     st.markdown("**① 입력하신 정보를 확인해 주세요** (왼쪽 입력창에서 고칠 수 있습니다)")
     st.markdown(
