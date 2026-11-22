@@ -747,7 +747,7 @@ else:
 # ==============================================================================
 if str(u_product).startswith("4-"):
     import naming_ui
-    naming_ui.render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=call_claude_api, prompts_mod=prompts)
+    naming_ui.render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=call_claude_api, prompts_mod=prompts, html_views=html_views, choyeon_db=choyeon_db)
     st.stop()
 
 # ==============================================================================
