@@ -169,7 +169,6 @@ def render_naming_product(u_product, yong_el, gender, name=""):
     yong = yong_from_engine(yong_el or {})
     g = '남' if str(gender).startswith('남') else '여'
     key = "nm_" + str(u_product)[:3]
-    st.subheader("초연 작명법")
     st.caption(f"사주의 중심오행(용신) {yong.get('용신') or '-'} · 보조오행(희신) {yong.get('희신') or '-'} · 피할 오행 {yong.get('기신') or '-'}")
     sur = _surname_block(neng, key)
     if sur is None:
@@ -228,11 +227,28 @@ def saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender):
 
 
 def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal):
-    """app.py 가 부르는 입구(권장). 사주 계산 + 작명 화면을 한 번에 그린다. 반환: 판정 결과 dict 또는 None"""
+    """app.py 가 부르는 입구(권장). 입력 확인 → 사주 계산 → 작명 화면. 반환: 판정 결과 dict 또는 None"""
+    st.subheader("초연 작명법")
+    sig = f"{name}|{gender}|{u_cal}|{b_year}-{b_month}-{b_day}|{b_time}|{u_product}"
+    st.markdown("**① 입력하신 정보를 확인해 주세요** (왼쪽 입력창에서 고칠 수 있습니다)")
+    st.markdown(
+        f"| 이름 | 성별 | 생년월일 | 태어난 시간 |\n|---|---|---|---|\n"
+        f"| {name} | {gender} | {u_cal} {b_year}년 {b_month}월 {b_day}일 | {b_time} |"
+    )
+    if "모름" in str(b_time):
+        st.warning("태어난 시간을 모르면 시(時) 기둥 없이 세 기둥으로 용신을 정하므로 정확도가 낮아질 수 있습니다.")
+    started = st.session_state.get("nm_started_sig") == sig
+    if not started:
+        st.info("정보가 맞으면 아래 버튼을 눌러 작명을 시작하세요. 입력 정보를 바꾸면 다시 눌러야 합니다.")
+        if st.button("✨ 이 정보로 작명 시작", key="nm_start_btn", type="primary"):
+            st.session_state["nm_started_sig"] = sig
+            st.rerun()
+        return None
     try:
         sj = saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender)
     except Exception as e:
         st.error(f"사주를 계산하지 못했습니다. 생년월일과 시간을 확인해 주세요. ({e})")
         return None
     st.caption(f"사주 여덟 글자  시 {sj['gans'][0]}{sj['jjis'][0]} · 일 {sj['gans'][1]}{sj['jjis'][1]} · 월 {sj['gans'][2]}{sj['jjis'][2]} · 년 {sj['gans'][3]}{sj['jjis'][3]}")
+    st.markdown("**② 성씨와 이름 글자를 골라 주세요**")
     return render_naming_product(u_product, sj['yong_el'], gender, name)
