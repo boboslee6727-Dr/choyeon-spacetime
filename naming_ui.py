@@ -231,6 +231,58 @@ def render_naming_product(u_product, yong_el, gender, name=""):
 
 
 # ------------------------------------------------------------------ 사주 → 용신 (app.py 와 같은 방식, app 코드는 건드리지 않음)
+def render_saju_block(engine, hv, cdb, sj, name, gender, b_year, b_month, b_day, b_time, u_cal):
+    """입력 표 아래에 사주원국표 + 대운표 + 마스터바 + 황금글을 보여 준다 (app.py 1-1 과 같은 부품 사용)"""
+    import datetime as _dt
+    try:
+        from zoneinfo import ZoneInfo
+        curr_year = _dt.datetime.now(ZoneInfo('Asia/Seoul')).year
+    except Exception:
+        curr_year = _dt.datetime.now().year
+    gans, jjis, counts = sj['gans'], sj['jjis'], sj['counts']
+    hs, ds, ms, ys = gans
+    hb, db, mb, yb = jjis
+    from korean_lunar_calendar import KoreanLunarCalendar
+    klc = KoreanLunarCalendar()
+    if "음력" in u_cal:
+        klc.setLunarDate(int(b_year), int(b_month), int(b_day), "윤달" in u_cal)
+        sol_y, sol_m, sol_d = klc.solarYear, klc.solarMonth, klc.solarDay
+        lun_str = f"{int(b_year)}년 {int(b_month):02d}월 {int(b_day):02d}일 ({'윤달' if '윤달' in u_cal else '평달'})"
+    else:
+        klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+        sol_y, sol_m, sol_d = int(b_year), int(b_month), int(b_day)
+        lun_str = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일 ({'윤달' if getattr(klc, 'isIntercalation', False) else '평달'})"
+    sol_str = f"{sol_y}년 {sol_m:02d}월 {sol_d:02d}일"
+    age = curr_year - sol_y + 1
+    time_str = b_time if b_time != "시간 모름" else "시간 미상"
+    marital = st.session_state.get('u_m_stat', '미혼')
+    icon = "♂️" if str(gender).startswith('남') else "♀️"
+    guiin_map = {'甲': '丑, 未', '乙': '子, 申', '丙': '酉, 亥', '丁': '酉, 亥', '戊': '丑, 未', '己': '子, 申', '庚': '丑, 未', '辛': '寅, 午', '壬': '卯, 巳', '癸': '卯, 巳'}
+    n_gong = engine.calculate_gongmang(ys, yb) or "-"
+    i_gong = engine.calculate_gongmang(ds, db) or "-"
+    curr_y_ji = engine.JI[(curr_year - 1984) % 60 % 12]
+    cur_samjae = engine.get_samjae(yb, curr_y_ji)
+    samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
+    dw = engine.get_daeun_data_list(ms, mb, ds, yb, sj['order_dir'], sj['calc_d'], age, db)
+    direction = "순행" if sj['order_dir'] == 1 else "역행"
+    parts = [
+        hv.get_info_header(icon, name, gender, marital, age, sol_str, lun_str, time_str),
+        hv.generate_saju_table_data(gans, jjis, ds, gender, engine),
+        hv.get_master_bar(sj['calc_d'], counts['목'], counts['화'], counts['토'], counts['금'], counts['수'],
+                          guiin_map.get(ds, '없음'), n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=sj['yong_text']),
+        hv.generate_daewun_layout(dw, direction, sj['calc_d'], engine.get_oh_class),
+    ]
+    try:
+        w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
+        w_val = cdb.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
+        i_val = cdb.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
+        sd = cdb.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
+        gyuk, _ = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb, jjis=[hb, db, mb, yb], gans=[hs, ds, ms, ys])
+        parts.append(hv.get_golden_text(name, w_val, i_val, sd[0], sd[1], sd[2], mb=mb, gyuk_name=gyuk))
+    except Exception as e:
+        st.caption(f"(황금글은 표시하지 못했습니다: {e})")
+    st.markdown("".join(str(p or "") for p in parts), unsafe_allow_html=True)
+
 def saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender):
     """
     app.py 의 입력값(생년월일·시간·양/음력)으로 사주 여덟 글자와 용신을 구한다.
@@ -361,7 +413,7 @@ def build_daewun_facts(engine, sj, yong, an=None):
         out.append(line)
     return "\n".join(out)
 
-def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=None, prompts_mod=None):
+def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=None, prompts_mod=None, html_views=None, choyeon_db=None):
     """app.py 가 부르는 입구(권장). 입력 확인 → 사주 계산 → 작명 화면. 반환: 판정 결과 dict 또는 None"""
     st.subheader("이름 풀이 및 짓기")
     sig = f"{name}|{gender}|{u_cal}|{b_year}-{b_month}-{b_day}|{b_time}|{u_product}"
@@ -372,6 +424,13 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     )
     if "모름" in str(b_time):
         st.warning("태어난 시간을 모르면 시(時) 기둥 없이 세 기둥으로 용신을 정하므로 정확도가 낮아질 수 있습니다.")
+    if html_views is not None and choyeon_db is not None:
+        try:
+            render_saju_block(engine, html_views, choyeon_db,
+                              saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender),
+                              name, gender, b_year, b_month, b_day, b_time, u_cal)
+        except Exception as e:
+            st.caption(f"(사주표를 표시하지 못했습니다: {e})")
     started = st.session_state.get("nm_started_sig") == sig
     if not started:
         st.info("정보가 맞으면 아래 버튼을 눌러 작명을 시작하세요. 입력 정보를 바꾸면 다시 눌러야 합니다.")
