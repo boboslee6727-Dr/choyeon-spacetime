@@ -169,7 +169,7 @@ QC_SHOW = True
 
 def _qc_scan(html_text, product=""):
     try:
-        if str(product).startswith("4-"):
+        if str(product).startswith("5-"):
             return []
         txt = re.sub(r'<table.*?</table>', ' ', str(html_text), flags=re.S)
         txt = re.sub(r'<[^>]+>', ' ', txt)
@@ -345,13 +345,13 @@ if is_admin_mode:
     u_product = st.session_state.get('sub_category_1', '1-1. 사주팔자와 총 운세 풀이')
     if "2." in main_category: u_product = st.session_state.get('sub_category_2', '2-1. 재물운 특성화 풀이')
     elif "3." in main_category: u_product = st.session_state.get('sub_category_3', '3-1. 결혼·재혼운 (궁합) 풀이')
-    elif "4." in main_category: u_product = st.session_state.get('sub_category_4', '4-1. 타 감명서 비교 (사주)')
-    elif "5." in main_category: u_product = st.session_state.get('sub_category_5', '5-1. 이름 풀이')
+    elif "4." in main_category: u_product = st.session_state.get('sub_category_4', '4-1. 이름 풀이')
+    elif "5." in main_category: u_product = st.session_state.get('sub_category_5', '5-1. 타 감명서 비교 (사주)')
     
     name, gender, u_marital, u_cal = st.session_state.get('u_n', '고객'), st.session_state.get('u_g', '여성'), st.session_state.get('u_m_stat', '선택'), st.session_state.get('u_c', '양력')
     b_year, b_month, b_day, b_time = st.session_state.get('s_y', 2000), st.session_state.get('s_m', 6), st.session_state.get('s_d', 15), st.session_state.get('s_t', '시간 모름')
-    is_1person = not ("3-" in u_product or "4-2." in u_product)
-    is_2person = ("3-" in u_product or "4-2." in u_product)
+    is_1person = not ("3-" in u_product or "5-2." in u_product)
+    is_2person = ("3-" in u_product or "5-2." in u_product)
     
     f_name, f_gender, f_marital, f_cal = st.session_state.get('f_n', '상대방'), st.session_state.get('f_g', '남성'), st.session_state.get('f_m_stat', '선택'), st.session_state.get('f_c', '양력')
     f_y, f_m, f_d, f_t = st.session_state.get('p_y_in', 2000), st.session_state.get('p_m_in', 6), st.session_state.get('p_d_in', 15), st.session_state.get('p_t_key', '시간 모름')
@@ -400,17 +400,17 @@ else:
 
         main_category = st.selectbox(
             "어떤 상담을 원하십니까?", 
-            ["1. 사주팔자와 운세 풀이 (개인)", "2. 테마별 특성화 풀이", "3. 결혼·재혼운 (궁합) 풀이", "4. 타 감명서 비교", "5. 초연 작명법"], 
+            ["1. 사주팔자와 운세 풀이 (개인)", "2. 테마별 특성화 풀이", "3. 결혼·재혼운 (궁합) 풀이", "4. 이름 풀이 및 짓기", "5. 타 감명서 비교"], 
             key="main_category", 
             on_change=stop_ai
         )
         _OPT_1 = ["1-1. 사주팔자와 총 운세 풀이", "1-2. 올 해의 운세 풀이", "1-3. 이번 달 운세 풀이", "1-4. 주간 및 일운 풀이"]
         _OPT_2 = ["2-1. 재물운 특성화 풀이", "2-2. 연애운 특성화 풀이", "2-3. 진학운 특성화 풀이", "2-4. 직업운 특성화 풀이", "2-5. 건강운 특성화 풀이", "2-6. 이사 택일", "2-7. 개업 택일"]
         _OPT_3 = ["3-1. 결혼운 (궁합) 풀이", "3-2. 결혼 택일", "3-3. 출산 택일"]
-        _OPT_4 = ["4-1. 타 감명서 비교 (사주)", "4-2. 타 감명서 비교 (궁합)"]
-        _OPT_5 = ["5-1. 이름 풀이", "5-2. 개명", "5-3. 신생아 작명"]
+        _OPT_4 = ["4-1. 이름 풀이", "4-2. 이름 바꾸기", "4-3. 신생아 이름짓기"]
+        _OPT_5 = ["5-1. 타 감명서 비교 (사주)", "5-2. 타 감명서 비교 (궁합)"]
         # 신청서(파이프라인)에서 넘어온 상품 이름이 선택지와 글자가 달라도, 앞의 번호(예: 2-2)가 같으면 그 선택지로 맞춰 줌
-        for _k, _opts in (("sub_category_1", _OPT_1), ("sub_category_2", _OPT_2), ("sub_category_3", _OPT_3), ("sub_category_4", _OPT_4)):
+        for _k, _opts in (("sub_category_1", _OPT_1), ("sub_category_2", _OPT_2), ("sub_category_3", _OPT_3), ("sub_category_4", _OPT_4), ("sub_category_5", _OPT_5)):
             _v = st.session_state.get(_k)
             if isinstance(_v, str) and _v not in _opts:
                 _hit = [o for o in _opts if o[:3] == _v[:3]]
@@ -423,10 +423,10 @@ else:
             u_product = st.radio("특성화 상품 선택:", _OPT_2, key="sub_category_2", on_change=stop_ai)
         elif main_category == "3. 결혼·재혼운 (궁합) 풀이":
             u_product = st.radio("상세 풀이 항목:", _OPT_3, key="sub_category_3", on_change=stop_ai)
-        elif main_category == "4. 타 감명서 비교":
-            u_product = st.radio("타 감명서 비교:", _OPT_4, key="sub_category_4", on_change=stop_ai)
-        elif main_category == "5. 초연 작명법":
-            u_product = st.radio("작명 상품 선택:", _OPT_5, key="sub_category_5", on_change=stop_ai)
+        elif main_category == "4. 이름 풀이 및 짓기":
+            u_product = st.radio("이름 풀이 및 짓기 선택:", _OPT_4, key="sub_category_4", on_change=stop_ai)
+        elif main_category == "5. 타 감명서 비교":
+            u_product = st.radio("타 감명서 비교:", _OPT_5, key="sub_category_5", on_change=stop_ai)
                 
         st.markdown("---")
         
@@ -535,8 +535,8 @@ else:
             st.text_area("💬 고민 상담 Q&A (선택사항)", value=st.session_state.get("user_concern", ""), placeholder=_admin_placeholder, key="user_concern", on_change=stop_ai)
 
         # 🌟 상품별 특수 입력 분기
-        is_1person = not (main_category == "3. 결혼·재혼운 (궁합) 풀이" or "4-2." in u_product)
-        is_2person = (main_category == "3. 결혼·재혼운 (궁합) 풀이") or ("4-2." in u_product)
+        is_1person = not (main_category == "3. 결혼·재혼운 (궁합) 풀이" or "5-2." in u_product)
+        is_2person = (main_category == "3. 결혼·재혼운 (궁합) 풀이") or ("5-2." in u_product)
         
         if is_1person:
             if any(u_product.startswith(_p) for _p in ("1-", "2-1", "2-2", "2-3", "2-4", "2-5")):
@@ -564,7 +564,7 @@ else:
                 start_date = col_start.date_input("시작일", key="moving_start", on_change=stop_ai)
                 end_date = col_end.date_input("종료일", key="moving_end", on_change=stop_ai)
                 st.date_input("함께 개업하는 배우자·동업자 생년월일 (선택)", value=None, min_value=dt_mod.date(1920, 1, 1), max_value=dt_mod.date.today(), key="move_partner_birth", on_change=stop_ai)
-            elif "4-1." in u_product:
+            elif "5-1." in u_product:
                 st.markdown("---")
                 compare_mode = st.radio("대조 분석 모드", ["전통 명리학과 1:1 자동 대조", "외부 타 감명서 원문 대조"], index=0, key="compare_mode_1")
                 if compare_mode == "외부 타 감명서 원문 대조":
@@ -672,7 +672,7 @@ else:
                         st.selectbox("수술 가능 시간 (병원 사정)", ["낮 시간 (09:30~17:29)", "아침부터 (07:30~17:29)", "24시간 가능 병원 (전 시간)"], key="csection_hours", on_change=stop_ai)
                     st.caption("※ 탐색 시작·종료일은 마지막 생리 시작일과 주기에서 자동으로 채워집니다(가장 이른 출산 가능일부터 1년). 필요하면 직접 고치세요. 후보 출산일은 임신 39주~41주 사이(계획 분만 기준)에서 고릅니다.")
 
-            elif "4-2." in u_product:
+            elif "5-2." in u_product:
                 st.markdown("---")
                 compare_mode = st.radio("대조 분석 모드", ["전통 명리학과 1:1 자동 대조", "외부 타 감명서 원문 대조"], index=0, key="compare_mode_2")
                 if compare_mode == "외부 타 감명서 원문 대조":
@@ -721,7 +721,7 @@ else:
 
             if not check_u_name.strip(): 
                 st.warning("⚠️ 신청인의 이름을 입력해 주세요.")
-            elif (main_category == "4. 타 감명서 비교") and compare_mode == "외부 타 감명서 원문 대조" and not other_reading_text.strip():
+            elif (main_category == "5. 타 감명서 비교") and compare_mode == "외부 타 감명서 원문 대조" and not other_reading_text.strip():
                 st.warning("⚠️ 타 감명서 원문을 입력해 주세요.")
             elif is_2person and not check_f_name.strip(): 
                 st.warning("⚠️ 상대방의 이름을 입력해 주세요.")
@@ -743,15 +743,15 @@ else:
                 st.rerun()
 
 # ==============================================================================
-# 🆕 초연 작명법 (5-) : 작명 상품은 별도 화면으로 처리하고 기존 풀이 연산은 건너뜀
+# 🆕 이름 풀이 및 짓기 (4-) : 별도 화면으로 처리하고 기존 풀이 연산은 건너뜀
 # ==============================================================================
-if str(u_product).startswith("5-"):
+if str(u_product).startswith("4-"):
     import naming_ui
     naming_ui.render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal)
     st.stop()
 
 # ==============================================================================
-# 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부
+# 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부 
 # ==============================================================================
 if st.session_state.get('app_running', False):
     st.session_state['app_running'] = False  # 🛡️ 진입 즉시 플래그 리셋 (중간에 오류가 나도 다음 클릭에서 재실행되지 않도록 안전장치)
@@ -901,8 +901,8 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("3-1"): report_title = "결혼·재혼운 (궁합) 풀이"
         elif u_product.startswith("3-2"): report_title = "결혼 택일 추천"
         elif u_product.startswith("3-3"): report_title = "출산 택일 추천"
-        elif u_product.startswith("4-1"): report_title = "타 감명서 비교 (사주)"
-        elif u_product.startswith("4-2"): report_title = "타 감명서 비교 (궁합)"
+        elif u_product.startswith("5-1"): report_title = "타 감명서 비교 (사주)"
+        elif u_product.startswith("5-2"): report_title = "타 감명서 비교 (궁합)"
         else: report_title = "사주팔자 정밀 분석"
 
         # 🌟 대제목 렌더링
@@ -1653,9 +1653,9 @@ if st.session_state.get('app_running', False):
                 _tail_g, _tail_j = "", ""
 
         user_entered_text = ""
-        if u_product.startswith("4-1"):
+        if u_product.startswith("5-1"):
             user_entered_text = (st.session_state.get("text_4_1", "") or st.session_state.get(f"text_{u_product}", "")).strip()
-        elif u_product.startswith("4-2"):
+        elif u_product.startswith("5-2"):
             user_entered_text = (st.session_state.get("text_4_2", "") or st.session_state.get(f"text_{u_product}", "")).strip()
 
         if user_entered_text:
@@ -2016,14 +2016,14 @@ if st.session_state.get('app_running', False):
             # ── L. 궁합 · 타 감명서 비교 ──
             "gh_score": gh_score, "gh_grade": gh_grade,
             "harmony_index_facts": harmony_index_str,
-            "other_reading_text": (engine.원문_번호붙이기(user_entered_text)[0] if u_product.startswith("4-1") else user_entered_text) if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
+            "other_reading_text": (engine.원문_번호붙이기(user_entered_text)[0] if u_product.startswith("5-1") else user_entered_text) if compare_mode == "외부 타 감명서 원문 대조" else "(실제 제출된 외부 원문 없음 - AI가 일반적인 전통 명리학 술사가 신살 나열과 오행 개수 위주로만 통상적으로 작성했을 법한 정형화된 해석을 먼저 짧게(3~5문장) 스스로 재현하여 이것을 비교 대상으로 삼을 것)",
             "other_report": user_entered_text,
             "dosik_fact_str": engine.get_dosik_fact(ds, [hs, ms, ys], [hb, db, mb, yb]),
             "jaeseong_fact_str": engine.get_jaeseong_fact(ds, [hs, ms, ys], [hb, db, mb, yb], st.session_state.get("u_g", "여성")),
             "inseong_fact_str": engine.get_inseong_fact(ds, [hs, ds, ms, ys], [hb, db, mb, yb]),
             "other_year_relation_facts": (
                 engine.get_text_year_relation_facts(user_entered_text, [hb, db, mb, yb], sol_y, daewun_data_list, gans=[hs, ds, ms, ys])
-                if ("4-1." in u_product and compare_mode == "외부 타 감명서 원문 대조") else "(해당 없음)"
+                if ("5-1." in u_product and compare_mode == "외부 타 감명서 원문 대조") else "(해당 없음)"
             )
         }
 
@@ -2045,8 +2045,8 @@ if st.session_state.get('app_running', False):
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
-            if "4-1" in u_prod: return "프롬프트_4_1_사주대조"
-            if "4-2" in u_prod: return "프롬프트_4_2_궁합대조"
+            if "5-1" in u_prod: return "프롬프트_4_1_사주대조"
+            if "5-2" in u_prod: return "프롬프트_4_2_궁합대조"
             return "프롬프트_1_1_기본"
 
         prompt_var_name = get_prompt_var_name(u_product)
@@ -2115,7 +2115,7 @@ if st.session_state.get('app_running', False):
         final_render_html = ""
 
         # ==============================================================================
-        # 📦 1인용 공통 본문 상단 기본 5대 묶음 (1-1 ~ 2-5, 4-1 사용)
+        # 📦 1인용 공통 본문 상단 기본 5대 묶음 (1-1 ~ 2-5, 5-1 사용)
         # ==============================================================================
         # 공통 테이블 및 텍스트 안전 변수 로드
         sewun_table_code = sewun_html if 'sewun_html' in locals() and sewun_html else ""
@@ -2133,7 +2133,7 @@ if st.session_state.get('app_running', False):
         """
 
         # ==============================================================================
-        # 🎯 전 상품(1-1 ~ 4-2) 본문 조립 및 마커 치환 분기
+        # 🎯 전 상품(1-1 ~ 5-2) 본문 조립 및 마커 치환 분기
         # ==============================================================================
 
         # ----------------------------------------------------------------------
@@ -2351,10 +2351,10 @@ if st.session_state.get('app_running', False):
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
         # ----------------------------------------------------------------------
-        # [4계열] 연구소 타 감명서 비교 정밀 분석 (4-1, 4-2)
+        # [4계열] 연구소 타 감명서 비교 정밀 분석 (5-1, 5-2)
         # ----------------------------------------------------------------------
-        elif u_product.startswith("4-1"):
-            # 4-1. 사주 비교 분석 (1인용)
+        elif u_product.startswith("5-1"):
+            # 5-1. 사주 비교 분석 (1인용)
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 감명서 원문 텍스트]</b>가 입력되지 않았습니다.") if hasattr(html_views, 'get_warning_box') else "<p>경고: 원문 누락</p>"
                 final_render_html = html_views.get_final_report_box(warn_html)
@@ -2372,8 +2372,8 @@ if st.session_state.get('app_running', False):
                 body_content = f"{base_top_block}{external_raw_box}{formatted_ai}"
                 final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
 
-        elif u_product.startswith("4-2"):
-            # 4-2. 궁합 비교 분석 (2인용)
+        elif u_product.startswith("5-2"):
+            # 5-2. 궁합 비교 분석 (2인용)
             if not user_entered_text:
                 warn_html = html_views.get_warning_box("타 궁합 감명서 원문 미입력 경고", "비교 분석을 진행할 <b>[외부 타 궁합 감명서 원문 텍스트]</b>가 입력되지 않았습니다.") if hasattr(html_views, 'get_warning_box') else "<p>경고: 궁합 원문 누락</p>"
                 final_render_html = html_views.get_final_report_box(warn_html)
@@ -2400,7 +2400,7 @@ if st.session_state.get('app_running', False):
             content_body = final_render_html
 
         # 🆕 [안전장치] 맺음말이 누락된 경우, A4 규격 액자(report-page)로 감싸서 별도 페이지로 추가
-        if closing_part and closing_part not in content_body and not u_product.startswith("3-") and not u_product.startswith("4-"):
+        if closing_part and closing_part not in content_body and not u_product.startswith("3-") and not u_product.startswith("5-"):
             closing_page = html_views.get_final_report_box(closing_part) if hasattr(html_views, 'get_final_report_box') else f"<div class='report-page'><div class='vip-inset-frame'>{closing_part}</div></div>"
             content_body += closing_page
 
@@ -2420,7 +2420,7 @@ if st.session_state.get('app_running', False):
         clean_report_html = re.sub(r'고민 사연:[^\n<]*', '', clean_report_html)
 
         # 손님 글에 '원국'이 노출되지 않게 '타고난 사주'로 바꿈 (4-x 타 감명서 비교 상품은 제외)
-        if not str(u_product).startswith("4-"):
+        if not str(u_product).startswith("5-"):
             clean_report_html = re.sub(r'(?<!사주)원국', '타고난 사주', clean_report_html)
             clean_report_html = re.sub(r'타고난 사주(과|은|을|으로)', lambda m: '타고난 사주' + {'과': '와', '은': '는', '을': '를', '으로': '로'}[m.group(1)], clean_report_html)
             clean_report_html = re.sub(r'타고난 사주이(?![가-힣])', '타고난 사주가', clean_report_html)
