@@ -354,6 +354,22 @@ def build_naming_facts(an):
     L.append(f"음양: {an['음양']}")
     return "\n".join(L)
 
+def build_golden_facts(engine, sj, cdb):
+    """일주 성품·월령·구조·격 — 1-1 황금글과 같은 자료를 AI 에게 줄 사실 문장으로"""
+    if not cdb:
+        return ""
+    hs, ds, ms, ys = sj['gans']
+    hb, db, mb, yb = sj['jjis']
+    w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
+    w_val = cdb.get("wolryeong", {}).get(w_key, "")
+    i_val = cdb.get("ilju", {}).get(i_key, "")
+    sd = cdb.get("ilju_structure", {}).get(i_key, ["", "", ""])
+    try:
+        gyuk, _ = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb, jjis=[hb, db, mb, yb], gans=[hs, ds, ms, ys])
+    except Exception:
+        gyuk = ""
+    return (f"일주({ds}{db}) 성품: {i_val}\n월령({ms}{mb}) 태어난 계절의 기운: {w_val}\n"
+            f"타고난 구조: {sd[0]} / {sd[1]} / {sd[2]}\n격: {gyuk}")
 
 def build_saju_facts(sj, yong):
     g, j = sj['gans'], sj['jjis']
@@ -457,7 +473,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
         if not tpl:
             st.error(f"prompts.py 에 '{var}' 가 없습니다.")
         else:
-            data = {"name": name,
+            data = {"name": name, "golden_facts": build_golden_facts(engine, sj, choyeon_db),
                     "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
                     "naming_facts": build_naming_facts(an),
                     "daewun_facts": build_daewun_facts(engine, sj, yong_from_engine(sj['yong_el'] or {}), an)}
