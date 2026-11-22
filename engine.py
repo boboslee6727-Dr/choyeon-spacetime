@@ -599,6 +599,30 @@ _DONGJU = {
     },
 }
  
+_YANG_CHARS = set("甲丙戊庚壬子寅辰午申戌")
+
+
+def get_eumyang_counts(gans, jjis):
+    """사주 글자의 (양 개수, 전체 글자 수). 시간을 모르면 전체가 6이 된다. gans/jjis 는 한글·한자 어느 쪽이든 됨"""
+    chars = [c for c in [_to_hanja(x) for x in gans] + [_to_hanja_ji(x) for x in jjis] if c]
+    return sum(1 for c in chars if c in _YANG_CHARS), len(chars)
+
+def get_eumyang_facts(gans, jjis):
+    """사주 여덟 글자의 음양 개수와 쏠림(팔통·7개 이상/1개 이하) 사실문. 여덟 글자가 모두 있을 때만 쏠림을 판단한다."""
+    ya, n = get_eumyang_counts(gans, jjis)
+    eu = n - ya
+    head = f"음양 개수: 양 {ya}개, 음 {eu}개"
+    if n < 8:
+        return head + f" (태어난 시간을 몰라 {n}글자만 셈) / 쏠림 판단: 해당 없음"
+    if ya == 8:
+        return head + " / 쏠림 판단: 양팔통 (여덟 글자가 모두 양)"
+    if eu == 8:
+        return head + " / 쏠림 판단: 음팔통 (여덟 글자가 모두 음)"
+    if ya == 7:
+        return head + " / 쏠림 판단: 양 쏠림 (7:1)"
+    if eu == 7:
+        return head + " / 쏠림 판단: 음 쏠림 (1:7)"
+    return head + " / 쏠림 판단: 해당 없음"
  
 def get_dongju_pothae_facts(ds, db, jjis, gender="남", dw_j=None, sewun_j=None, gans=None):
     """동주욕·동주입묘·동주절·동주사 전용 규칙. 해당 일주일 때만 풀이 글감을 돌려준다."""
