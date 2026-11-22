@@ -747,7 +747,7 @@ else:
 # ==============================================================================
 if str(u_product).startswith("4-"):
     import naming_ui
-    naming_ui.render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal)
+    naming_ui.render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=call_claude_api, prompts_mod=prompts)
     st.stop()
 
 # ==============================================================================
@@ -1866,6 +1866,7 @@ if st.session_state.get('app_running', False):
             "shinsal12_book_facts": engine.get_12shinsal_book_facts(ds_hanja, yb, db, [hb, db, mb, yb], dw_j_cur, cur_sewun_ji_val, gender),
             "spouse_star_facts": engine.get_spouse_star_facts(ds_hanja, [hs, ds_hanja, ms, ys], [hb, db, mb, yb], gender) + engine.get_gwandasinyak_fact(counts, mb, ds, gender, db, ms),
             "dongju_pothae_facts": engine.get_dongju_pothae_facts(ds_hanja, db, [hb, db, mb, yb], gender, dw_j_cur, cur_sewun_ji_val, [hs, ds_hanja, ms, ys]),
+            "eumyang_facts": engine.get_eumyang_facts([hs, ds_hanja, ms, ys], [hb, db, mb, yb]),
             "vault_timing_fact_str": engine.get_vault_timing_fact_str(ds_hanja, [yb, mb, db, hb], [ys, ms, ds_hanja, hs], curr_year, dw_j_cur, cur_sewun_ji_val, _cur_wol_pillar[1], gender),
             "cheon_eul": guiin_str, "samjae_str": cur_samjae,
             "year_gongmang": n_gong, "day_gongmang": i_gong,
@@ -2045,8 +2046,8 @@ if st.session_state.get('app_running', False):
             if "3-1" in u_prod: return "프롬프트_3_1_궁합"
             if "3-2" in u_prod: return "프롬프트_3_2_결혼택일"
             if "3-3" in u_prod: return "프롬프트_3_3_출산택일"
-            if "5-1" in u_prod: return "프롬프트_4_1_사주대조"
-            if "5-2" in u_prod: return "프롬프트_4_2_궁합대조"
+            if "5-1" in u_prod: return "프롬프트_5_1_사주대조"
+            if "5-2" in u_prod: return "프롬프트_5_2_궁합대조"
             return "프롬프트_1_1_기본"
 
         prompt_var_name = get_prompt_var_name(u_product)
