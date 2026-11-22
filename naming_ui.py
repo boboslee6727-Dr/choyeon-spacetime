@@ -9,7 +9,7 @@
 """
 import os
 import streamlit as st
-from naming_engine import NamingEngine, yong_from_engine
+from naming_engine import NamingEngine, yong_from_engine, rel
 
 # 흔한 성씨 한자는 후보 맨 앞에 (예: '이' -> 李 가 먼저)
 COMMON_SURNAME_HANJA = "金李朴崔鄭姜趙尹張林韓吳申徐權黃安宋柳洪全高文孫梁裵白曺許南劉盧沈河郭成車朱禹具辛任田閔愈"
@@ -105,10 +105,28 @@ def _surname_block(neng, key):
         st.caption(f"합친 성씨: {sur['h']} ({sur['st']}획)")
     return sur
 
+def _flow_single(neng, sur, yong, key):
+    """외자 이름(성 + 한 글자): 후보 중에서 한 글자 고르기"""
+    tier = st.selectbox("글자 범위", range(3), format_func=lambda i: TIER_LABELS[i], key=f"{key}_tier1")
+    cands = neng.single_candidates(sur, yong, exclude=_tier_exclude(neng, tier))
+    if not cands:
+        need = yong.get('용신')
+        if need and rel(sur['ja'], need) == '극':
+            st.warning(f"이 성씨의 자원오행({sur['ja']})과 사주의 중심오행({need})이 서로 극하는 사이라, 외자 이름으로는 두 가지를 함께 맞출 수 없습니다. 두 글자 이름을 권합니다.")
+        else:
+            st.warning("이 성씨는 외자 이름으로 네 격이 모두 길한 글자가 없습니다. 글자 범위를 넓히거나 두 글자 이름을 권합니다.")
+        return None
+    st.markdown(f"**이름 글자 고르기** — 후보 {len(cands)}자 (★ 은 초연 추천)")
+    i = st.selectbox("이름 글자", range(len(cands)), key=f"{key}_one",
+                     format_func=lambda i: ("★ " if cands[i]['추천'] else "") + _hanja_label(cands[i]))
+    return neng.analyze_name(sur, cands[i], None, yong)
 
 def _flow_new_name(neng, sur, yong, gender, key):
-    """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기"""
+    """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기 (외자 선택 가능)"""
     neng.gender = gender
+    n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key=f"{key}_n")
+    if n == 1:
+        return _flow_single(neng, sur, yong, key)
     fixed_pos, fixed = None, None
     if st.checkbox("돌림자가 있습니다", key=f"{key}_dol"):
         fixed_pos = st.radio("돌림자 위치", ["가운데 글자", "마지막 글자"], horizontal=True, key=f"{key}_dolpos")
@@ -223,7 +241,17 @@ def saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender):
         if oh in counts:
             counts[oh] += 1
     txt = engine.get_yongshin_analysis(counts, mb, ds, db, gans=[hs, ds, ms, ys], jjis=[hb, db, mb, yb])
-    return {'gans': gans, 'jjis': jjis, 'counts': counts, 'yong_text': txt, 'yong_el': engine.get_yongshin_elements(txt)}
+    # ---- 대운표 (app.py 와 같은 방식)
+    import datetime as _dt
+    base_dt = _dt.datetime(s_year, s_month, s_day, 12, 0)
+    adj = engine.get_total_time_adjustment(base_dt)
+    utc_dt = base_dt - _dt.timedelta(hours=9) + _dt.timedelta(minutes=adj)
+    ys_idx = engine.GAN.index(ys) if ys in engine.GAN else 0
+    order_dir = 1 if (ys_idx % 2 == 0) == (str(gender).startswith('남')) else -1
+    calc_d = engine.get_daeun_su_accurate(utc_dt, order_dir)
+    dw = engine.get_daeun_data_list(ms, mb, ds, yb, order_dir, calc_d, 0, db)
+    return {'gans': gans, 'jjis': jjis, 'counts': counts, 'yong_text': txt, 'yong_el': engine.get_yongshin_elements(txt),
+            'daewun': dw, 'calc_d': calc_d, 'order_dir': order_dir}
 
 
 PROMPT_NAME = {"4-1": "프롬프트_N4_1_이름풀이", "4-2": "프롬프트_N4_2_이름바꾸기", "4-3": "프롬프트_N4_3_신생아이름짓기"}
@@ -253,6 +281,56 @@ def build_saju_facts(sj, yong):
             f"오행 개수: {cnt}\n"
             f"중심오행 {yong.get('용신') or '-'} · 보조오행 {yong.get('희신') or '-'} · 피할 오행 {yong.get('기신') or '-'}")
 
+_STAGES = [("원격", "초년운", 1, 19), ("형격", "청년운", 20, 38), ("이격", "중년운", 39, 58), ("정격", "말년운", 59, 77)]
+_OH = {'목': '木', '화': '火', '토': '土', '금': '金', '수': '水'}
+_ROLE_PT = {'용신': 1, '희신': 1, '한신': 0, '구신': -1, '기신': -1, '': 0}
+
+
+def _oh_role(oh_han, yong):
+    for role in ('용신', '희신', '기신', '구신', '한신'):
+        if yong.get(role) and yong[role] == oh_han:
+            return role
+    return ''
+
+
+def build_daewun_facts(engine, sj, yong, an=None):
+    """네 격(시기)마다 걸치는 대운을 모으고, 이름의 격(길흉)과 겹쳐 본 교차 판정까지 사실문으로 만든다."""
+    out = [f"대운수 {sj['calc_d']} ({'순행' if sj['order_dir'] == 1 else '역행'})"]
+    for gname, stage, a0, a1 in _STAGES:
+        items, tot, w_sum = [], 0.0, 0
+        for d in sj['daewun']:
+            lo = int(str(d['age_range']).split('~')[0])
+            hi = lo + 9
+            if hi < a0 or lo > a1:
+                continue
+            w = min(hi, a1) - max(lo, a0) + 1
+            c1, c2 = engine.get_group_ss(d['ss_gan']), engine.get_group_ss(d['ss_ji'])
+            og = _OH.get(engine.get_color(d['c_hangul']), '')
+            oj = _OH.get(engine.get_color(d['j_hangul']), '')
+            rg, rj = _oh_role(og, yong), _oh_role(oj, yong)
+            tot += w * (_ROLE_PT[rg] + _ROLE_PT[rj]) / 2.0
+            w_sum += w
+            items.append(
+                f"{d['age_range']} {d['c_hanja']}{d['j_hanja']}대운 (하늘기운 {og}={rg or '해당없음'} · 땅기운 {oj}={rj or '해당없음'}) "
+                f"앞 5년 체({c1}) → 뒤 5년 체({c2}), 전환 {engine.get_che_relation(c1, c2)}, 12운성 {d['un_sung']}")
+        line = f"{gname}({stage}) {a0}~{a1}세에 걸친 대운: " + (" / ".join(items) if items else "해당 없음")
+        if w_sum:
+            sc = tot / w_sum
+            power = "힘이 있음" if sc >= 0.25 else ("약함" if sc <= -0.25 else "보통")
+            line += f" // 이 시기 대운의 힘: {power}"
+            if an and gname in an['네격']:
+                good = an['네격'][gname]['길흉'] == '길'
+                if good and power != "약함":
+                    cross = "이름의 격과 대운이 함께 힘을 줌"
+                elif good:
+                    cross = "대운은 약하지만 이름의 격이 받쳐 줌"
+                elif power != "약함":
+                    cross = "이름의 격은 아쉽지만 대운이 받쳐 줌"
+                else:
+                    cross = "이름의 격과 대운이 모두 약해 조심이 필요함"
+                line += f" // 교차 판정: {cross}"
+        out.append(line)
+    return "\n".join(out)
 
 def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=None, prompts_mod=None):
     """app.py 가 부르는 입구(권장). 입력 확인 → 사주 계산 → 작명 화면. 반환: 판정 결과 dict 또는 None"""
@@ -291,8 +369,10 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
         if not tpl:
             st.error(f"prompts.py 에 '{var}' 가 없습니다.")
         else:
-            data = {"name": name, "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})),
-                    "naming_facts": build_naming_facts(an)}
+            data = {"name": name,
+                    "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
+                    "naming_facts": build_naming_facts(an),
+                    "daewun_facts": build_daewun_facts(engine, sj, yong_from_engine(sj['yong_el'] or {}), an)}
             with st.spinner("풀이글을 쓰고 있습니다. 1~2분 걸립니다..."):
                 text = ai_func(tpl.format_map(_SafeDict(data)))
             st.session_state["nm_report"] = (rkey, text)
