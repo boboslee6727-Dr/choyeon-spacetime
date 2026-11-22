@@ -231,7 +231,7 @@ PROMPT_NAME = {"4-1": "프롬프트_N4_1_이름풀이", "4-2": "프롬프트_N4_
 
 class _SafeDict(dict):
     def __missing__(self, k):
-        return "{" + k + "}"
+        return ""
 
 
 def build_naming_facts(an):
