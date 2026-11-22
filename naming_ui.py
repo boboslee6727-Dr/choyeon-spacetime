@@ -97,11 +97,20 @@ def _chain_text(an, kind):
     return out
 
 
+def _book_note(an, kind):
+    """125표의 '책의 풀이 요지'. 세 글자 배합일 때만 있음(외자는 없음)"""
+    el = an['소리배합'] if kind == '소리' else an['자원배합']
+    if len(el) != 3:
+        return ""
+    return get_neng().db.get('sound125_text', {}).get(''.join(el), "")
+
+
 def show_analysis(an):
     st.markdown(f"### {an['이름']} ({an['독음']})")
     c1, c2 = st.columns(2)
-    c1.markdown(f"**소리오행** {_chain_text(an, '소리')}  \n판정: **{an['소리판정']}**")
-    c2.markdown(f"**자원오행** {_chain_text(an, '자원')}  \n판정: **{an['자원판정']}**")
+    _n1, _n2 = _book_note(an, '소리'), _book_note(an, '자원')
+    c1.markdown(f"**소리오행** {_chain_text(an, '소리')}  \n판정: **{an['소리판정']}**" + (f"  \n📖 {_n1}" if _n1 else ""))
+    c2.markdown(f"**자원오행** {_chain_text(an, '자원')}  \n판정: **{an['자원판정']}**" + (f"  \n📖 {_n2}" if _n2 else ""))
     st.markdown(_gyeok_table(an))
     tag = []
     tag.append("중심오행(용신) 포함 ✅" if an['용신포함'] else "중심오행(용신) 미포함 ⚠️")
@@ -284,8 +293,8 @@ class _SafeDict(dict):
 
 def build_naming_facts(an):
     L = [f"이름: {an['이름']} (독음 {an['독음']})",
-         f"소리오행: {' → '.join(an['소리배합'])} / 관계 {' · '.join(an['소리관계'])} / 판정 {an['소리판정']}",
-         f"자원오행: {' → '.join(an['자원배합'])} / 관계 {' · '.join(an['자원관계'])} / 판정 {an['자원판정']}"]
+         f"소리오행: {' → '.join(an['소리배합'])} / 관계 {' · '.join(an['소리관계'])} / 판정 {an['소리판정']}" + (f" / 책의 풀이: {_book_note(an, '소리')}" if _book_note(an, '소리') else ""),
+         f"자원오행: {' → '.join(an['자원배합'])} / 관계 {' · '.join(an['자원관계'])} / 판정 {an['자원판정']}" + (f" / 책의 풀이: {_book_note(an, '자원')}" if _book_note(an, '자원') else "")]
     for k, v in an['네격'].items():
         L.append(f"{k}({v['때']}): 수리 {v['수리']} · 격 이름 {v['격']} · 상 {v.get('상', '')} · 길흉 {v['길흉']} · 해설 {v.get('해설', '')}")
     L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오"))
