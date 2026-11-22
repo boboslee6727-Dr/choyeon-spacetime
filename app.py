@@ -346,6 +346,7 @@ if is_admin_mode:
     if "2." in main_category: u_product = st.session_state.get('sub_category_2', '2-1. 재물운 특성화 풀이')
     elif "3." in main_category: u_product = st.session_state.get('sub_category_3', '3-1. 결혼·재혼운 (궁합) 풀이')
     elif "4." in main_category: u_product = st.session_state.get('sub_category_4', '4-1. 타 감명서 비교 (사주)')
+    elif "5." in main_category: u_product = st.session_state.get('sub_category_5', '5-1. 이름 풀이')
     
     name, gender, u_marital, u_cal = st.session_state.get('u_n', '고객'), st.session_state.get('u_g', '여성'), st.session_state.get('u_m_stat', '선택'), st.session_state.get('u_c', '양력')
     b_year, b_month, b_day, b_time = st.session_state.get('s_y', 2000), st.session_state.get('s_m', 6), st.session_state.get('s_d', 15), st.session_state.get('s_t', '시간 모름')
@@ -399,7 +400,7 @@ else:
 
         main_category = st.selectbox(
             "어떤 상담을 원하십니까?", 
-            ["1. 사주팔자와 운세 풀이 (개인)", "2. 테마별 특성화 풀이", "3. 결혼·재혼운 (궁합) 풀이", "4. 타 감명서 비교"], 
+            ["1. 사주팔자와 운세 풀이 (개인)", "2. 테마별 특성화 풀이", "3. 결혼·재혼운 (궁합) 풀이", "4. 타 감명서 비교", "5. 초연 작명법"], 
             key="main_category", 
             on_change=stop_ai
         )
@@ -407,6 +408,7 @@ else:
         _OPT_2 = ["2-1. 재물운 특성화 풀이", "2-2. 연애운 특성화 풀이", "2-3. 진학운 특성화 풀이", "2-4. 직업운 특성화 풀이", "2-5. 건강운 특성화 풀이", "2-6. 이사 택일", "2-7. 개업 택일"]
         _OPT_3 = ["3-1. 결혼운 (궁합) 풀이", "3-2. 결혼 택일", "3-3. 출산 택일"]
         _OPT_4 = ["4-1. 타 감명서 비교 (사주)", "4-2. 타 감명서 비교 (궁합)"]
+        _OPT_5 = ["5-1. 이름 풀이", "5-2. 개명", "5-3. 신생아 작명"]
         # 신청서(파이프라인)에서 넘어온 상품 이름이 선택지와 글자가 달라도, 앞의 번호(예: 2-2)가 같으면 그 선택지로 맞춰 줌
         for _k, _opts in (("sub_category_1", _OPT_1), ("sub_category_2", _OPT_2), ("sub_category_3", _OPT_3), ("sub_category_4", _OPT_4)):
             _v = st.session_state.get(_k)
@@ -423,6 +425,8 @@ else:
             u_product = st.radio("상세 풀이 항목:", _OPT_3, key="sub_category_3", on_change=stop_ai)
         elif main_category == "4. 타 감명서 비교":
             u_product = st.radio("타 감명서 비교:", _OPT_4, key="sub_category_4", on_change=stop_ai)
+        elif main_category == "5. 초연 작명법":
+            u_product = st.radio("작명 상품 선택:", _OPT_5, key="sub_category_5", on_change=stop_ai)
                 
         st.markdown("---")
         
@@ -739,7 +743,15 @@ else:
                 st.rerun()
 
 # ==============================================================================
-# 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부 
+# 🆕 초연 작명법 (5-) : 작명 상품은 별도 화면으로 처리하고 기존 풀이 연산은 건너뜀
+# ==============================================================================
+if str(u_product).startswith("5-"):
+    import naming_ui
+    naming_ui.render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal)
+    st.stop()
+
+# ==============================================================================
+# 3. 메인 화면 범용 연산 및 AI 통변 모듈 연동부
 # ==============================================================================
 if st.session_state.get('app_running', False):
     st.session_state['app_running'] = False  # 🛡️ 진입 즉시 플래그 리셋 (중간에 오류가 나도 다음 클릭에서 재실행되지 않도록 안전장치)
