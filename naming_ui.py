@@ -73,8 +73,8 @@ def _gyeok_table(an):
     rows = []
     for k, v in an['네격'].items():
         mark = '✅' if v['길흉'] == '길' else '⚠️'
-        rows.append(f"| {k} ({v['때']}) | {v['수리']} | {v['격']} | {mark} {v['길흉']} |")
-    return "| 격 | 수리 | 이름 | 길흉 |\n|---|---|---|---|\n" + "\n".join(rows)
+        rows.append(f"| {k} ({v['때']}) | {v['수리']} | {v['격']} {v.get('한자', '')} | {v.get('상', '')} | {mark} {v['길흉']} |")
+    return "| 격 | 수리 | 이름 | 상 | 길흉 |\n|---|---|---|---|---|\n" + "\n".join(rows)
 
 
 def show_analysis(an):
@@ -239,7 +239,7 @@ def build_naming_facts(an):
          f"소리오행: {' → '.join(an['소리배합'])} / 관계 {' · '.join(an['소리관계'])} / 판정 {an['소리판정']}",
          f"자원오행: {' → '.join(an['자원배합'])} / 관계 {' · '.join(an['자원관계'])} / 판정 {an['자원판정']}"]
     for k, v in an['네격'].items():
-        L.append(f"{k}({v['때']}): 수리 {v['수리']} · 이름 {v['격']} · {v['길흉']}")
+        L.append(f"{k}({v['때']}): 수리 {v['수리']} · 격 이름 {v['격']} · 상 {v.get('상', '')} · 길흉 {v['길흉']} · 해설 {v.get('해설', '')}")
     L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오"))
     L.append("피할 오행 포함: " + ("예" if an['기신포함'] else "아니오"))
     L.append(f"음양: {an['음양']}")
