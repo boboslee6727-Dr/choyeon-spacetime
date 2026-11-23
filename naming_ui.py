@@ -1,6 +1,9 @@
-# -*- coding: utf-8 -*-
+# ==============================================================================
+이름 풀이 및 짓기 화면 (naming_ui.py)  v1.2
+# ==============================================================================
+
 """
-이름 풀이 및 짓기 화면 (naming_ui.py)  v1.1
+이름 풀이 및 짓기 화면 (naming_ui.py)  v1.2
 - app.py 에서는 아래 두 줄만 부르면 된다.
     import naming_ui
     result = naming_ui.render_naming_product(u_product, yong_el, gender, name)   # yong_el = engine.get_yongshin_elements(...) 결과
