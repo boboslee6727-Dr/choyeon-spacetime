@@ -145,8 +145,9 @@ def _surname_block(neng, key):
 
 def _flow_single(neng, sur, yong, key):
     """외자 이름(성 + 한 글자): 후보 중에서 한 글자 고르기"""
-    tier = st.selectbox("글자 범위", range(3), format_func=lambda i: TIER_LABELS[i], key=f"{key}_tier1")
-    cands = neng.single_candidates(sur, yong, exclude=_tier_exclude(neng, tier))
+    order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order1")
+    _ex = [x['h'] for x in neng.hanja if not x.get('e') or x['h'] in _NO_NAME] + _order_exclude(neng, order)
+    cands = neng.single_candidates(sur, yong, exclude=_ex)
     if not cands:
         need = yong.get('용신')
         if need and rel(sur['ja'], need) == '극':
@@ -491,6 +492,9 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     an = render_naming_product(u_product, sj['yong_el'], gender, name)
     if an is None or ai_func is None or prompts_mod is None:
         return an
+    if str(u_product).startswith("4-3"):
+        render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db)
+        return an
     st.divider()
     st.markdown("**③ 풀이글 받기**")
     rkey = f"{sig}|{an['이름']}"
@@ -516,6 +520,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
         cover = make_cover(html_views, u_product, name, gender, b_year, b_month, b_day, b_time, u_cal)
         body = (saju_html
                 + html_views.format_ai_text_to_html(prepare_report_text(rep[1]), "", name)
+                + naming_notice_html(u_product, an)
                 + naming_closing_html(name, html_views.get_choyeon_sign_html()))
         final_html = cover + html_views.get_final_report_box(body)
         st.session_state['saved_report_html'] = final_html
@@ -693,6 +698,7 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
         warns.append(f"{an['이름']} — " + ' / '.join(_w)) if _w else None
         rows.append(f"| {i + 1} | **{an['이름']}** ({an['독음']}){' ⚠️소리주의' if _w else ''} | {mean} | {_sf} {an['소리판정']} | {_rf} {an['자원판정']} | {gy} | {'포함' if an['용신포함'] else '미포함'} |")
     st.markdown("| 순위 | 이름 | 뜻 | 소리 | 자원 | 수리(원·형·이·정) | 중심오행 |\n|---|---|---|---|---|---|---|\n" + "\n".join(rows))
+    st.session_state['nm_last_ans'] = [dict(a_, A=c_['A'], B=c_['B']) for a_, c_ in zip(ans, cands)]
     if warns:
         st.caption("⚠️ 소리주의 (책 9장 동자이음·동음이의): " + " ; ".join(warns))
     i = st.radio("이 후보로 풀이를 진행합니다", range(len(cands)), format_func=lambda i: f"{i + 1}순위  {ans[i]['이름']} ({ans[i]['독음']})", key=f"{key}_pick", horizontal=True)
