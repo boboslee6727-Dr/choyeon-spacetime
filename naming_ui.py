@@ -460,6 +460,8 @@ def build_daewun_facts(engine, sj, yong, an=None):
 
 def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, b_time, u_cal, ai_func=None, prompts_mod=None, html_views=None, choyeon_db=None):
     """app.py 가 부르는 입구(권장). 입력 확인 → 사주 계산 → 작명 화면. 반환: 판정 결과 dict 또는 None"""
+    _AI['f'] = ai_func
+    _AI['g'] = gender
     st.subheader("이름 풀이 및 짓기")
     sig = f"{name}|{gender}|{u_cal}|{b_year}-{b_month}-{b_day}|{b_time}|{u_product}"
     st.markdown("**① 입력하신 정보를 확인해 주세요** (왼쪽 입력창에서 고칠 수 있습니다)")
@@ -638,7 +640,8 @@ _BAD_READING = ('소심', '이리', '바보', '병신', '빙신', '시발', '씨
                 '불알', '자지', '보지', '꺼져', '닥쳐', '죽여', '망나니', '망할',
                 '썩을', '왕따', '꼰대', '김치', '김밥', '이불', '이빨', '신발',
                 '양말', '팬티', '고구마', '감자', '두부', '만두', '고추',
-                '번데기', '깍두기', '소시지', '순대')
+                '번데기', '깍두기', '소시지', '순대',
+                '개나', '소나', '개소', '개똥', '개년', '개놈', '걸레', '걸려', '콜걸', '발기', '가려워')
 def _bad_reading(reading):
     return any(w in str(reading) for w in _BAD_READING)
 
@@ -660,7 +663,7 @@ def _cand_pools(neng, sur, yong, fixed, fixed_pos, n=5, order_ex=()):
     allc, seen = [], set()
     for ex in pools:
         ex = list(ex) + list(order_ex)
-        r = neng.auto_candidates(sur, yong, fixed, fixed_pos, exclude=ex, n=n + 10)
+        r = neng.auto_candidates(sur, yong, fixed, fixed_pos, exclude=ex, n=n * 2 + 10)
         for c in r['후보']:
             if c['이름'] in seen or _bad_reading(c['독음']):
                 continue
@@ -668,7 +671,7 @@ def _cand_pools(neng, sur, yong, fixed, fixed_pos, n=5, order_ex=()):
         if len([c for c in allc if c['단계'] == 0]) >= n:
             break
     allc.sort(key=lambda c: (c['단계'], -c['점수']))
-    top = allc[:n]
+    top = _ai_filter(allc, sur, n)
     lv = max([c['단계'] for c in top], default=0)
     return {'후보': top, '완화단계': lv, '부족': len(top) < n}
 
@@ -706,7 +709,7 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
         an = neng.analyze_name(sur, c['A'], c['B'], yong)
         ans.append(an)
         gy = ' · '.join(f"{v['수리']}{'✅' if v['길흉'] == '길' else '⚠️'}" for v in an['네격'].values())
-        mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}"
+        mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}" + (f" — {c['뜻풀이']}" if c.get('뜻풀이') else ''
         _sf = ' → '.join(x[0] for x in an['소리배합']) + f" ({' · '.join(an['소리관계'])})"
         _rf = ' → '.join(x[0] for x in an['자원배합']) + f" ({' · '.join(an['자원관계'])})"
         _w = [f"{k['h']}:{k['dj']}" for k in (c['A'], c['B']) if k and k.get('dj')]
@@ -878,3 +881,67 @@ def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, 
             st.session_state['admin_proc_id'] = None
             st.rerun()
 
+# ======================================================================
+# 이름 후보 AI 뜻 심사 (naming_ui.py 맨 아래에 붙여 넣기)
+# ======================================================================
+_AI = {'f': None, 'g': ''}
+
+
+def _ai_review(items, gender):
+    """items: [(이름한자, 독음, '글자뜻 + 글자뜻')] → {번호: (통과여부, 한줄뜻풀이/사유)}. AI 호출이 안 되면 None"""
+    f = _AI.get('f')
+    if not f or not items:
+        return None
+    lines = "\n".join(f"{i + 1}|{h}|{r}|{m}" for i, (h, r, m) in enumerate(items))
+    prompt = f"""당신은 한국 성명학 전문가입니다. 아래는 {gender or '성별 미정'}에게 지어 줄 이름 후보입니다. (번호|한자이름|한글독음|글자별 뜻)
+각 이름을 엄격하게 심사해 '통과' 또는 '탈락'으로 판정하십시오. 다음 중 하나라도 해당하면 탈락입니다.
+1) 한자 두 글자의 뜻을 합쳐 읽으면 말이 안 되거나 어색함 (예: 發甘 '일어날+달다')
+2) 한글 소리가 성(姓)과 이어질 때 욕설·비속어·성적 연상·놀림감·흔한 관용구가 됨 (예: 박개나→개나 소나, 박걸려→걸레, 기남→발기)
+3) 뜻이 {gender or '이 성별'}에게 어울리지 않음 (예: 여아에게 男·特·巨·雄·武, 남아에게 麗·娥·嬌)
+4) 한자 뜻이 부정적이거나 재물·외모·몸 따위를 직접 드러내 천박함 (예: 價特 '값이 특별')
+5) 실제 어른 이름으로 쓰기에 부자연스러움
+통과한 이름에는 부모님께 보여 줄 15자 안팎의 뜻풀이를 쓰십시오.
+출력은 반드시 한 줄에 하나씩 '번호|통과|뜻풀이' 또는 '번호|탈락|사유' 형식만 쓰고, 다른 말은 쓰지 마십시오.
+
+{lines}"""
+    try:
+        text = f(prompt)
+    except Exception:
+        return None
+    out = {}
+    for ln in str(text or '').splitlines():
+        p = [x.strip() for x in ln.strip().split('|')]
+        if len(p) >= 3 and p[0].isdigit() and p[1] in ('통과', '탈락'):
+            out[int(p[0])] = (p[1] == '통과', '|'.join(p[2:]))
+    return out or None
+
+
+def _ai_filter(allc, sur, n):
+    """정렬된 후보 allc 에서 AI 심사를 통과한 이름만 위에서부터 n개. 심사가 불가하면 그대로 앞 n개"""
+    if not _AI.get('f'):
+        return allc[:n]
+    cache = st.session_state.setdefault('nm_ai_cache', {})
+    g = _AI.get('g', '')
+    keep, ok = [], True
+    for s in range(0, min(len(allc), 40), 20):
+        batch = allc[s:s + 20]
+        todo = [c for c in batch if (g, c['이름']) not in cache]
+        if todo:
+            items = [(c['이름'], c['독음'], f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}" if c.get('B') else c['A']['hun'].split('/')[0]) for c in todo]
+            res = _ai_review(items, g)
+            if res is None:
+                ok = False
+                break
+            for i, c in enumerate(todo):
+                if (i + 1) in res:
+                    cache[(g, c['이름'])] = res[i + 1]
+        for c in batch:
+            v = cache.get((g, c['이름']))
+            if v and v[0]:
+                keep.append(dict(c, 뜻풀이=v[1]))
+        if len(keep) >= n:
+            break
+    if not ok and not keep:
+        st.caption("※ AI 뜻 심사를 하지 못해 소리·자원·수리 기준으로만 보여 드립니다.")
+        return allc[:n]
+    return keep[:n]
