@@ -133,7 +133,7 @@ def _surname_block(neng, key):
     sur1 = pick_surname(neng, "성씨 (한글)", f"{key}_s1", pre=pre.get('sur'))
     sur2 = None
     st.session_state.setdefault(f"{key}_two", bool(pre.get('sur2')))
-    if st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)", key=f"{key}_two"):
+    if key.endswith("4-3") and st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)", key=f"{key}_two"):
         sur2 = pick_surname(neng, "이어 붙일 성씨 (한글) — 입력한 순서대로 붙습니다", f"{key}_s2", pre=pre.get('sur2'))
     if sur1 is None:
         return None
@@ -468,7 +468,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
                               name, gender, b_year, b_month, b_day, b_time, u_cal)
         except Exception as e:
             st.caption(f"(사주표를 표시하지 못했습니다: {e})")
-    started = st.session_state.get("nm_started_sig") == sig
+    started = (st.session_state.get("nm_started_sig") == sig) or bool(st.session_state.get('nm_pre'))
     if not started:
         st.info("정보가 맞으면 아래 버튼을 눌러 작명을 시작하세요. 입력 정보를 바꾸면 다시 눌러야 합니다.")
         if st.button("✨ 이 정보로 작명 시작", key="nm_start_btn", type="primary"):
@@ -488,7 +488,9 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     st.divider()
     st.markdown("**③ 풀이글 받기**")
     rkey = f"{sig}|{an['이름']}"
-    if st.button("📜 이 이름 풀이글 받기", key="nm_report_btn", type="primary"):
+    _have = st.session_state.get("nm_report")
+    _auto = str(u_product).startswith("4-1") and bool(st.session_state.get('nm_pre')) and not (_have and _have[0] == rkey)
+    if st.button("📜 이 이름 풀이글 받기", key="nm_report_btn", type="primary") or _auto:
         var = PROMPT_NAME.get(str(u_product)[:3])
         tpl = getattr(prompts_mod, var, "") if var else ""
         if not tpl:
