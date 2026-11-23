@@ -158,7 +158,9 @@ def _flow_single(neng, sur, yong, key):
     st.markdown(f"**이름 글자 고르기** — 후보 {len(cands)}자 (★ 은 초연 추천)")
     i = st.selectbox("이름 글자", range(len(cands)), key=f"{key}_one",
                      format_func=lambda i: ("★ " if cands[i]['추천'] else "") + _hanja_label(cands[i]))
-    return neng.analyze_name(sur, cands[i], None, yong)
+    an = neng.analyze_name(sur, cands[i], None, yong)
+    an['글자뜻'] = _meaning_line(cands[i], None)
+    return an
 
 def _flow_new_name(neng, sur, yong, gender, key):
     """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기 (외자 선택 가능)"""
@@ -221,7 +223,9 @@ def _flow_check_name(neng, sur, yong, key):
     B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2", pre=(cur[1] if len(cur) > 1 else None)) if n == 2 else None
     if A is None or (n == 2 and B is None):
         return None
-    return neng.analyze_name(sur, A, B, yong)
+    an = neng.analyze_name(sur, A, B, yong)
+    an['글자뜻'] = _meaning_line(A, B)
+    return an
 
 
 def render_naming_product(u_product, yong_el, gender, name=""):
@@ -381,6 +385,8 @@ def build_naming_facts(an, yong=None):
     L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오") + " / " + _src)
     L.append("피할 오행 포함: " + ("예" if an['기신포함'] else "아니오"))
     L.append(f"음양: {an['음양']}")
+    if an.get('글자뜻'):
+        L.append("한자 뜻 (풀이글에 글자별 뜻과 두 글자를 합친 뜻을 반드시 풀어 쓸 것): " + an['글자뜻'])
     return "\n".join(L)
 
 def build_golden_facts(engine, sj, cdb):
@@ -707,9 +713,14 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
     rows, ans, warns = [], [], []
     for i, c in enumerate(cands):
         an = neng.analyze_name(sur, c['A'], c['B'], yong)
+        an['글자뜻'] = _meaning_line(c['A'], c['B'])
+        if c.get('뜻풀이'):
+            an['글자뜻'] += f" (AI 뜻풀이: {c['뜻풀이']})"
         ans.append(an)
         gy = ' · '.join(f"{v['수리']}{'✅' if v['길흉'] == '길' else '⚠️'}" for v in an['네격'].values())
-        mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}" + (f" — {c['뜻풀이']}" if c.get('뜻풀이') else ''
+        mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}"
+        if c.get('뜻풀이'):
+            mean += f" — {c['뜻풀이']}"
         _sf = ' → '.join(x[0] for x in an['소리배합']) + f" ({' · '.join(an['소리관계'])})"
         _rf = ' → '.join(x[0] for x in an['자원배합']) + f" ({' · '.join(an['자원관계'])})"
         _w = [f"{k['h']}:{k['dj']}" for k in (c['A'], c['B']) if k and k.get('dj')]
@@ -945,3 +956,7 @@ def _ai_filter(allc, sur, n):
         st.caption("※ AI 뜻 심사를 하지 못해 소리·자원·수리 기준으로만 보여 드립니다.")
         return allc[:n]
     return keep[:n]
+
+def _meaning_line(A, B):
+    """이름 글자들의 한자 뜻을 '秉 잡을 병 + 鎬 호경 호' 형태로"""
+    return ' + '.join(f"{k['h']} {k['hun'].split('/')[0]}" for k in (A, B) if k)
