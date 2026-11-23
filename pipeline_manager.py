@@ -655,6 +655,49 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         with f_c_d: f_d = st.text_input("상대방 일(DD) *", max_chars=2, placeholder="15", key="order_f_d")
         f_t = st.selectbox("상대방 태어난 시간", TIME_OPTIONS, key="order_f_t")
 
+    # ── 4번 상품(이름 풀이·바꾸기·짓기)일 때만: 성씨·이름 한자 받기
+    need_cur_name = any(i.startswith(("4-1", "4-2")) for i in selected_products)
+    need_new_opt = any(i.startswith(("4-2", "4-3")) for i in selected_products)
+    is_baby = any(i.startswith("4-3") for i in selected_products)
+    is_naming = need_cur_name or need_new_opt
+    naming_pre, naming_ok = {}, True
+    if is_naming:
+        import naming_ui
+        _neng = naming_ui.get_neng()
+        st.error("✍️ **이름 정보 (필수)** — 한글로 입력하면 한자 목록이 나옵니다. 목록에서 골라 주세요.")
+        st.caption("정확한 한자는 가족관계증명서(호적)에서 확인하실 수 있습니다.")
+        _sur = naming_ui.pick_surname(_neng, "성씨 (한글)", "order_nm_s1")
+        if _sur:
+            naming_pre['sur'] = {'r': _sur['r'], 'h': _sur['h']}
+        else:
+            naming_ok = False
+        if is_baby and st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)", key="order_nm_two"):
+            _sur2 = naming_ui.pick_surname(_neng, "이어 붙일 성씨 (한글)", "order_nm_s2")
+            if _sur2:
+                naming_pre['sur2'] = {'r': _sur2['r'], 'h': _sur2['h']}
+            else:
+                naming_ok = False
+        if need_cur_name:
+            st.markdown("**현재 이름** (성씨를 뺀 이름 글자)")
+            _cn = st.radio("현재 이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 (예: 솔)", horizontal=True, key="order_nm_curn")
+            _a = naming_ui.pick_hanja(_neng, "이름 첫 글자 (한글)", "order_nm_c1")
+            _b = naming_ui.pick_hanja(_neng, "이름 둘째 글자 (한글)", "order_nm_c2") if _cn == 2 else None
+            naming_pre['n_cur'] = _cn
+            if _a and (_cn == 1 or _b):
+                naming_pre['cur'] = [{'r': _a['r'], 'h': _a['h']}] + ([{'r': _b['r'], 'h': _b['h']}] if _b else [])
+            else:
+                naming_ok = False
+        if need_new_opt:
+            st.markdown("**새 이름 조건**")
+            naming_pre['n_new'] = st.radio("새 이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key="order_nm_newn")
+            if st.checkbox("돌림자가 있습니다", key="order_nm_dol"):
+                naming_pre['dol_pos'] = st.radio("돌림자 위치", ["가운데 글자", "마지막 글자"], horizontal=True, key="order_nm_dolpos")
+                _d = naming_ui.pick_hanja(_neng, "돌림자 (한글 한 글자)", "order_nm_dolch")
+                if _d:
+                    naming_pre['dol'] = {'r': _d['r'], 'h': _d['h']}
+                else:
+                    naming_ok = False
+
     st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
     st.markdown("""
     <div style='background: #F4F6F9; border-radius: 12px; padding: 20px; border-left: 4px solid #FFCA28; margin-bottom: 15px;'>
@@ -724,6 +767,11 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 meta_data['partner_birth'] = p_partner_birth.isoformat()
         if coupon_code and coupon_code.strip():
             meta_data['coupon_code'] = coupon_code.strip()
+        if is_naming:
+            if not naming_ok:
+                st.error("🚨 이름 정보(성씨·이름 한자)를 모두 골라 주세요.")
+                return
+            meta_data['naming'] = naming_pre
 
         if meta_data:
             final_concern += f"\n\n---META_START---\n{json.dumps(meta_data)}\n---META_END---"
@@ -900,12 +948,16 @@ def render_admin_panel():
                                 
                                 u_concern = str(row.get('user_concern', ''))
                                 clean_concern = u_concern
+                                for _k in [k for k in st.session_state.keys() if k.startswith("nm_")]:
+                                    del st.session_state[_k]
                                 if "---META_START---" in u_concern:
                                     try:
                                         parts = u_concern.split("---META_START---")
                                         clean_concern = parts[0].strip()
                                         meta_json = parts[1].split("---META_END---")[0].strip()
                                         meta = json.loads(meta_json)
+                                        if 'naming' in meta:
+                                            st.session_state['nm_pre'] = meta['naming']
                                         
                                         if 'tackil_purpose' in meta:
                                             st.session_state['tackil_purpose'] = meta['tackil_purpose']
