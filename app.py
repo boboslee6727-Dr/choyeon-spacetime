@@ -1244,7 +1244,7 @@ if st.session_state.get('app_running', False):
                         baby_gender=st.session_state.get('baby_gender', '미정'),
                         delivery_mode=_d_mode,
                         csection_ji=_d_ji)
-                    delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days)
+                    delivery_top5_str = engine.get_delivery_facts_str(delivery_best_days, baby_gender=st.session_state.get('baby_gender', '미정'))
                 except Exception as e:
                     st.error(f"⚠️ 출산 택일 계산 오류: {e}")
 
@@ -2480,7 +2480,7 @@ if st.session_state.get('app_running', False):
                 _t = _t.replace("천간 세 글자", "세 글자").replace("겉으로 는 ", "겉으로는 ")
                 _parts[_i] = _t
             clean_report_html = "".join(_parts)
-            clean_report_html = re.sub(r"(?<![가-힣])자형(?![가-힣]*(?:활동|[을를은는이가도]?\s*(?:있|없)))", "같은 글자가 겹친 흐름", clean_report_html)
+            clean_report_html = re.sub(r"(?<![가-힣])자형(?![가-힣]*(?:활동|[을를은는이가도]?\s*(?:있|없)))(?![^<>]*</t[dh]>)", "같은 글자가 겹친 흐름", clean_report_html)
 
         # 2. 🛡️ 마크다운 코드블록/문단 오인 방지용 정밀 트림
         #    (a) 각 줄 시작 부분의 4칸 이상 공백/탭 제거 (들여쓰기 → 코드블록 오인 차단)
