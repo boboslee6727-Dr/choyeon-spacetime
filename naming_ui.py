@@ -167,12 +167,12 @@ def _flow_new_name(neng, sur, yong, gender, key):
         st.warning("신청자가 '한글 이름'을 원하셨습니다. 한글 이름 짓기 화면은 아직 준비 중입니다. (한자 이름 화면은 지금 쓰실 수 없습니다)")
         return None
     st.session_state.setdefault(f"{key}_n", pre.get('n_new', 2))
-    n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key=f"{key}_n")
+    n = 1 if st.radio("외자 이름(성 + 한 글자)을 선호하십니까?", ["아니오 (두 글자 이름)", "예 (외자 이름)"], horizontal=True, key=f"{key}_n").startswith("예") else 2
     if n == 1:
         return _flow_single(neng, sur, yong, key)
     fixed_pos, fixed = None, None
     st.session_state.setdefault(f"{key}_dol", bool(pre.get('dol_pos')))
-    if st.checkbox("돌림자가 있습니다", key=f"{key}_dol"):
+    if st.radio("집안의 돌림자를 꼭 써야 합니까?", ["아니오 (돌림자 없이)", "예 (돌림자가 있음)"], horizontal=True, key=f"{key}_dol").startswith("예"):
         if pre.get('dol_pos'):
             st.session_state.setdefault(f"{key}_dolpos", pre['dol_pos'])
         fixed_pos = st.radio("돌림자 위치", ["가운데 글자", "마지막 글자"], horizontal=True, key=f"{key}_dolpos")
@@ -180,8 +180,7 @@ def _flow_new_name(neng, sur, yong, gender, key):
         if fixed is None:
             st.info("돌림자를 입력하면 그 글자에 맞는 나머지 글자를 찾아 드립니다.")
             return None
-    tier = st.selectbox("글자 범위", range(3), format_func=lambda i: TIER_LABELS[i], key=f"{key}_tier")
-    ex = _tier_exclude(neng, tier)
+    return _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key)
 
     if fixed_pos == "가운데 글자":
         first = fixed
@@ -611,3 +610,90 @@ def naming_closing_html(name, sign_html=""):
         </div>
     </div>
     """
+
+# 이름 후보에서 뺄 글자: 열두 띠 글자와 돼지 뜻 글자 (박사님이 더 넣으려면 여기에 글자를 추가)
+_NO_NAME = set('子丑寅卯辰巳午未申酉戌亥豚豕')
+
+
+# 소리 내어 부르면 이상한 뜻이 되는 말 (성씨 + 이름 전체 독음에 들어 있으면 후보에서 뺌). 박사님이 계속 추가하십시오.
+_BAD_READING = ('소심', '이리', '바보', '병신', '시발', '씨발', '개새', '똥', '방귀', '방구', '변태', '호구', '멍청',
+                '죽어', '죽음', '자살', '꼴통', '돼지', '이년', '미친', '꺼져', '거지', '도둑', '찐따', '왕따', '쓰레기')
+
+def _bad_reading(reading):
+    return any(w in str(reading) for w in _BAD_READING)
+
+def _order_exclude(neng, order):
+    """몇째 자녀인가에 따라 책 9장의 장자/차자 불용한자를 뺄 글자 목록"""
+    if str(order).startswith("첫째"):
+        return [x['h'] for x in neng.hanja if x.get('j')]
+    if str(order).startswith("둘째"):
+        return [x['h'] for x in neng.hanja if x.get('c')]
+    return []
+
+
+def _cand_pools(neng, sur, yong, fixed, fixed_pos, n=5, order_ex=()):
+    """뜻 좋은 교육용 글자 → 부족하면 교육용(흔히 쓰는) 글자 전체로 넓혀서 후보를 뽑고, (단계, 점수) 순서로 정렬"""
+    pools = [
+        [x['h'] for x in neng.hanja if not (x.get('g') and x.get('e'))],
+        [x['h'] for x in neng.hanja if not x.get('e') or x['h'] in _NO_NAME],
+    ]
+    allc, seen = [], set()
+    for ex in pools:
+        ex = list(ex) + list(order_ex)
+        r = neng.auto_candidates(sur, yong, fixed, fixed_pos, exclude=ex, n=n + 10)
+        for c in r['후보']:
+            if c['이름'] in seen or _bad_reading(c['독음']):
+                continue
+            seen.add(c['이름']); allc.append(c)
+        if len([c for c in allc if c['단계'] == 0]) >= n:
+            break
+    allc.sort(key=lambda c: (c['단계'], -c['점수']))
+    top = allc[:n]
+    lv = max([c['단계'] for c in top], default=0)
+    return {'후보': top, '완화단계': lv, '부족': len(top) < n}
+
+
+def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
+    """후보 이름을 엔진이 우선순위대로 뽑아 보여 주고, 박사님이 하나를 고른다"""
+    fp = {'가운데 글자': 'first', '마지막 글자': 'last'}.get(fixed_pos, 'last')
+    order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order")
+    oex = _order_exclude(neng, order)
+    ck = f"{order}|{key}_cand|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{fixed['h'] if fixed else ''}|{fp}"
+    if st.session_state.get('nm_cand_key') != ck:
+        with st.spinner("후보 이름을 찾고 있습니다..."):
+            with_f = _cand_pools(neng, sur, yong, fixed, fp, order_ex=oex) if fixed else None
+            free = _cand_pools(neng, sur, yong, None, fp, order_ex=oex)
+        st.session_state['nm_cand_key'] = ck
+        st.session_state['nm_cand'] = (with_f, free)
+    with_f, free = st.session_state['nm_cand']
+    use = free
+    if fixed is not None:
+        worse = (with_f['완화단계'] > free['완화단계']) or (len(with_f['후보']) < min(5, len(free['후보'])))
+        if worse:
+            st.warning("돌림자를 쓰면 후보가 모자라거나 조건이 완화됩니다. 돌림자 없이 짓는 쪽이 더 좋을 수 있으니 두 가지를 비교해 보세요.")
+        view = st.radio("보기", ["돌림자를 쓴 후보", "돌림자 없이 지은 후보"], horizontal=True, key=f"{key}_view")
+        use = with_f if view == "돌림자를 쓴 후보" else free
+    cands = use['후보']
+    if not cands:
+        st.warning("조건에 맞는 후보를 찾지 못했습니다. 돌림자나 이름 글자 수를 바꿔 보세요.")
+        return None
+    if use['완화단계'] > 0:
+        st.info("소리·자원·수리가 모두 길한 후보가 부족하여 일부 조건을 완화했습니다. (수리 네 격의 길은 항상 지켰습니다.)")
+    st.markdown("**추천 후보 (우선순위 순)**")
+    rows, ans, warns = [], [], []
+    for i, c in enumerate(cands):
+        an = neng.analyze_name(sur, c['A'], c['B'], yong)
+        ans.append(an)
+        gy = ' · '.join(f"{v['수리']}{'✅' if v['길흉'] == '길' else '⚠️'}" for v in an['네격'].values())
+        mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}"
+        _sf = ' → '.join(x[0] for x in an['소리배합']) + f" ({' · '.join(an['소리관계'])})"
+        _rf = ' → '.join(x[0] for x in an['자원배합']) + f" ({' · '.join(an['자원관계'])})"
+        _w = [f"{k['h']}:{k['dj']}" for k in (c['A'], c['B']) if k and k.get('dj')]
+        _w += [f"{k['h']}({k['de']})" for k in (c['A'], c['B']) if k and k.get('de')]
+        warns.append(f"{an['이름']} — " + ' / '.join(_w)) if _w else None
+        rows.append(f"| {i + 1} | **{an['이름']}** ({an['독음']}){' ⚠️소리주의' if _w else ''} | {mean} | {_sf} {an['소리판정']} | {_rf} {an['자원판정']} | {gy} | {'포함' if an['용신포함'] else '미포함'} |")
+    st.markdown("| 순위 | 이름 | 뜻 | 소리 | 자원 | 수리(원·형·이·정) | 중심오행 |\n|---|---|---|---|---|---|---|\n" + "\n".join(rows))
+    if warns:
+        st.caption("⚠️ 소리주의 (책 9장 동자이음·동음이의): " + " ; ".join(warns))
+    i = st.radio("이 후보로 풀이를 진행합니다", range(len(cands)), format_func=lambda i: f"{i + 1}순위  {ans[i]['이름']} ({ans[i]['독음']})", key=f"{key}_pick", horizontal=True)
+    return ans[i]
