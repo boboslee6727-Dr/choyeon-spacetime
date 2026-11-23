@@ -133,7 +133,7 @@ def _surname_block(neng, key):
     sur1 = pick_surname(neng, "성씨 (한글)", f"{key}_s1", pre=pre.get('sur'))
     sur2 = None
     st.session_state.setdefault(f"{key}_two", bool(pre.get('sur2')))
-    if key.endswith("4-3") and st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)", key=f"{key}_two"):
+    if st.checkbox("성씨를 두 개 이어 씁니다 (예: 김이○○ 의 '김이')", key=f"{key}_two"):
         sur2 = pick_surname(neng, "이어 붙일 성씨 (한글) — 입력한 순서대로 붙습니다", f"{key}_s2", pre=pre.get('sur2'))
     if sur1 is None:
         return None
