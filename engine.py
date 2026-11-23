@@ -2258,6 +2258,9 @@ def get_ji_rel_cell(me, target, me_idx, ci):
                 continue
             if t == "형" and {_to_hanja(me), _to_hanja(target)} == {'子', '卯'}:
                 continue
+            if t == "형":
+                out.append("격형")
+                continue
         out.append(t)
     return ", ".join(out) if out else "-"
 
@@ -7478,19 +7481,20 @@ def _delivery_conception_text(d):
     return base
 
 
-def get_delivery_facts_str(best_days):
+def get_delivery_facts_str(best_days, baby_gender='미정'):
     """AI에게 넘길 '엔진이 계산한 출산 추천일' 팩트 문자열을 만듭니다. (이 목록 밖의 날짜는 쓰지 못하게 하기 위함)"""
     if not best_days:
         return "(희망 기간 안에서 조건에 맞는 출산 추천일을 찾지 못했습니다. 기간 또는 마지막 생리일 입력을 다시 확인해 주세요.)"
     lines = []
     for i, d in enumerate(best_days, 1):
         dt = d['delivery_dt']
+        _gs = [x for x in ('남아', '여아') if baby_gender in ('미정', x)] or ['남아', '여아']
         lines.append(
             f"[{i}순위] {dt.year}년 {dt.month}월 {dt.day}일({d['weekday_kr']}) / 종합 {d['score']}점{(' (전체 출생 시각 중 상위 ' + str(d['top_pct']) + '%)') if d.get('top_pct') is not None else ''} / "
             f"자연분만 추천 {d['best_any_time']['time_str']} (완성 명식 {d['best_any_time']['pillars']}) / "
             f"제왕절개 추천 {d['best_day_time']['time_str']} (완성 명식 {d['best_day_time']['pillars']}) / "
             f"{_delivery_conception_text(d)} / "
-            f"아기 대운 방향: 남아 {d['daeun_dir']['남아']}, 여아 {d['daeun_dir']['여아']} / "
+            f"아기 대운 방향: {', '.join(x + ' ' + d['daeun_dir'][x] for x in _gs)} / "
             f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
@@ -7509,7 +7513,7 @@ def get_delivery_facts_str(best_days):
                          f"년지 {sd.get('년지', 0)}/{_W_NYEONJI} · 시간 {sd.get('시간', 0)}/{_W_SIGAN} · 년간 {sd.get('년간', 0)}/{_W_NYEONGAN} · 오행 {sd.get('오행', 0)}/{_W_OHAENG} · "
                          f"조후 {sd.get('조후', 0)}/{_W_JOHU} · 공망 {sd.get('공망', 0)}/{_W_GONGMANG} · 대운흐름 {sd.get('대운흐름', 0)}/{_W_DAEWUN} · 부모조화 {sd.get('부모조화', 0)}/{_W_PARENT}")
         if d.get('flow'):
-            for g in ('남아', '여아'):
+            for g in _gs:
                 f_ = d['flow'][g]
                 lines.append(f"   └ {g} 대운 흐름 점수 {f_['score']}/{_W_DAEWUN}: " + "; ".join(f_['steps']))
         if d.get('parent_dw'):
