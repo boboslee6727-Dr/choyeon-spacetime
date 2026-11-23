@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🏮 사주박사: (ver 88.8) 신청접수 ~ AI 감명 ~ 솔라피 가동
+# 🏮 사주박사: (ver 88.9) 신청접수 ~ AI 감명 ~ 솔라피 가동
 # ==============================================================================
 import streamlit as st
 import sqlite3
@@ -38,9 +38,9 @@ PRODUCT_MAP = {
     "3-1. 결혼·재혼운 (정가 44,000원➡️특가 22,000원)": "결혼 및 재혼운 (궁합) 풀이",
     "3-2. 결혼 택일 (정가 22,000원➡️특가 11,000원)": "결혼 택일 추천",
     "3-3. 출산 택일 (정가 66,000원➡️특가 33,000원)": "출산 택일 추천",
-    "5-1. 이름 풀이 (정가 36,000원➡️특가 18,000원)": "이름 풀이",
-    "5-2. 개명 (정가 88,000원➡️특가 44,000원)": "개명 작명 추천",
-    "5-3. 신생아 작명 (정가 110,000원➡️특가 55,000원)": "신생아 작명 추천"
+    "4-1. 이름 풀이 (정가 36,000원➡️특가 18,000원)": "이름 풀이",
+    "4-2. 이름 바꾸기 (정가 88,000원➡️특가 44,000원)": "이름 바꾸기 추천",
+    "4-3. 신생아 이름 짓기 (정가 110,000원➡️특가 55,000원)": "신생아 이름 짓기 추천",
 }
 
 U_PRODUCT_LIST = list(PRODUCT_MAP.keys())
@@ -552,7 +552,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         "1. 사주팔자와 운세 풀이 (개인)": "1-",
         "2. 테마별 특성화 풀이": "2-",
         "3. 결혼·재혼운 (궁합) 풀이": "3-",
-        "5. 초연 작명법 (이름 풀이·개명·신생아 작명)": "5-",
+        "4. 이름 풀이 및 짓기": "4-",
     }
 
     def format_product_name(item):
@@ -681,6 +681,9 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
         "3-1": "이 사람과 잘 맞을지 궁금해요",
         "3-2": "저희 결혼식 날짜로 좋은 날이 언제인가요?",
         "3-3": "아이를 가지기 좋은 시기가 언제인가요?",
+        "4-1": "지금 이름이 제 사주와 잘 맞는지 궁금해요",
+        "4-2": "이름을 바꾸면 달라질 점이 궁금해요",
+        "4-3": "아기 이름을 지을 때 가장 신경 쓰고 싶은 점이 있어요",
     }
     _matched_examples = []
     for _item in selected_products:
@@ -786,6 +789,15 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
 
         # 신청자에게 '접수 완료' 카톡 발송 (설정이 없으면 조용히 건너뜀)
         send_solapi_kakao_receipt(phone_full, name.strip(), " + ".join(clean_ui_names), f"{final_price:,}원")
+
+        # 신청자에게 '입금 안내' 문자 발송 (화면을 닫아도 계좌를 알 수 있도록)
+        _pay_msg = (f"[사주박사] {name.strip()}님, 신청해 주셔서 감사합니다.\n\n"
+                    f"복비 {final_price:,}원을 아래 계좌로 입금해 주시면 확인 후 바로 풀이를 시작합니다.\n\n"
+                    f"💳 국민은행 231402-04-133221 (예금주 이*호)\n\n"
+                    f"입금자명이 신청자 이름과 다르면 카톡 채팅으로 알려 주세요.")
+        _pay_ok, _pay_res = send_solapi_custom_message(phone_full, name.strip(), _pay_msg)
+        if not _pay_ok:
+            st.toast(f"⚠️ 입금 안내 문자 발송 실패: {_pay_res}")
 
         st.session_state["submitted_order"] = {
             "order_id": order_id,
@@ -912,6 +924,7 @@ def render_admin_panel():
                                 if "1-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_1'] = "1. 사주팔자와 운세 풀이 (개인)", r_prod_first
                                 elif "2-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_2'] = "2. 테마별 특성화 풀이", r_prod_first
                                 elif "3-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_3'] = "3. 결혼·재혼운 (궁합) 풀이", r_prod_first
+                                elif "4-" in r_prod_first: st.session_state['main_category'], st.session_state['sub_category_4'] = "4. 이름 풀이 및 짓기", r_prod_first
 
                                 # 🆕 패키지 자동화: 남은 상품들을 대기열에 저장
                                 st.session_state['admin_pkg_queue'] = r_prod_list[1:]  # 첫 상품 뺀 나머지
@@ -995,7 +1008,7 @@ def render_admin_panel():
 
             if f"pdf_preview_{gid}" in st.session_state:
                 _pcode = str(row['u_product']).split('+')[0].strip()[:3]
-                _pshort = {"1-1": "종합", "1-2": "올해운세", "1-3": "이번달운세", "1-4": "주간일운", "2-1": "재물운", "2-2": "연애운", "2-3": "진학운", "2-4": "직업운", "2-5": "건강운", "2-6": "이사택일", "2-7": "개업택일", "3-1": "궁합", "3-2": "결혼택일", "3-3": "출산택일"}.get(_pcode, _pcode)
+                _pshort = {"1-1": "종합", "1-2": "올해운세", "1-3": "이번달운세", "1-4": "주간일운", "2-1": "재물운", "2-2": "연애운", "2-3": "진학운", "2-4": "직업운", "2-5": "건강운", "2-6": "이사택일", "2-7": "개업택일", "3-1": "궁합", "3-2": "결혼택일", "3-3": "출산택일", "4-1": "이름풀이", "4-2": "이름바꾸기", "4-3": "이름짓기"}.get(_pcode, _pcode)
                 st.download_button(
                     label="⬇️ 미리보기 PDF 다운로드",
                     data=st.session_state[f"pdf_preview_{gid}"],
