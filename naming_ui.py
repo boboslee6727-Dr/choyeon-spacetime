@@ -454,10 +454,11 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     st.subheader("이름 풀이 및 짓기")
     sig = f"{name}|{gender}|{u_cal}|{b_year}-{b_month}-{b_day}|{b_time}|{u_product}"
     st.markdown("**① 입력하신 정보를 확인해 주세요** (왼쪽 입력창에서 고칠 수 있습니다)")
-    st.markdown(
-        f"| 이름 | 성별 | 생년월일 | 태어난 시간 |\n|---|---|---|---|\n"
-        f"| {name} | {gender} | {u_cal} {b_year}년 {b_month}월 {b_day}일 | {b_time} |"
-    )
+    if html_views is None or choyeon_db is None:   # 사주표를 못 그릴 때만 간단한 표를 보여 줌
+        st.markdown(
+            f"| 이름 | 성별 | 생년월일 | 태어난 시간 |\n|---|---|---|---|\n"
+            f"| {name} | {gender} | {u_cal} {b_year}년 {b_month}월 {b_day}일 | {b_time} |"
+        )
     if "모름" in str(b_time):
         st.warning("태어난 시간을 모르면 시(時) 기둥 없이 세 기둥으로 용신을 정하므로 정확도가 낮아질 수 있습니다.")
     if html_views is not None and choyeon_db is not None:
