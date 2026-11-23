@@ -412,7 +412,7 @@ NamingEngine.analyze_name = _analyze_name
 #   0단계: 수리4격 길 + 음양 + 소리 길 + 자원 길 + 용신 포함   (모두 만족)
 #   1단계: 소리오행만 완화 (수리4격·자원 길·용신 포함은 지킴)
 #   2단계: 자원 배합까지 완화 (수리4격·용신 포함은 지킴)
-_LEVEL_TEXT = {0: '소리·자원·수리 모두 길', 1: '소리오행만 완화(수리·자원은 길)', 2: '소리·자원 배합 완화(수리 4격·용신 포함은 지킴)'}
+_LEVEL_TEXT = {0: '소리·자원·수리 모두 길', 1: '소리오행만 완화(수리·자원은 길)', 2: '자원오행만 완화(수리·소리는 길)', 3: '소리·자원 배합 완화(수리 4격·용신 포함은 지킴)'}
  
  
 def _chain_pts(e1, e2, e3):
@@ -438,6 +438,8 @@ def _score_level(self, sur, A, B, yong, level):
     if level == 0 and not (sound_ok and res_ok):
         return None
     if level == 1 and not res_ok:
+        return None
+    if level == 2 and not sound_ok:
         return None
     sc = _chain_pts(sur['bo'], A['bo'], B['bo']) + _chain_pts(sur['ja'], A['ja'], B['ja'])
     for g in (A, B):
@@ -497,7 +499,7 @@ def _auto_candidates(self, sur, yong, fixed=None, fixed_pos='last', exclude=(), 
     """
     picked, seen_name, cnt_a, cnt_b = [], set(), {}, {}
     used_level = 0
-    for level in (0, 1, 2):
+    for level in (0, 1, 2, 3):
         pairs = self._level_pairs(sur, yong, level, exclude, fixed, fixed_pos)
         pairs.sort(key=lambda t: -t[0])
         for sc, A, B in pairs:
