@@ -487,8 +487,10 @@ else:
 
         # 👤 신청인 기본 정보 입력
         st.markdown("<div style='font-family: \"Nanum Gothic\", sans-serif; font-size: 15px; font-weight: 900; color: #000000; margin-top: 14px; margin-bottom: 8px;'>👤 신청인 기본 정보</div>", unsafe_allow_html=True)
-        name = st.text_input("이름", value=st.session_state.get("u_n", ""), placeholder="심청이", key="u_n", on_change=stop_ai)
-        gender = st.selectbox("성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender)
+        _is43 = str(u_product).startswith("4-3")
+        if _is43: st.caption("👶 신생아 이름짓기: 이름은 신청인(부모님) 이름이고, 성별·생년월일·태어난 시간은 신생아 기준으로 넣어 주세요.")
+        name = st.text_input("신청인 이름" if _is43 else "이름", value=st.session_state.get("u_n", ""), placeholder="심청이", key="u_n", on_change=stop_ai)
+        gender = st.selectbox("신생아 성별" if _is43 else "성별", ["여성", "남성"], key="u_g", on_change=sync_partner_gender)
         st.session_state["u_g_saved"] = gender
         st.session_state["f_g_saved"] = "남성" if gender == "여성" else "여성"
         u_marital = st.selectbox("혼인여부", ["미혼", "기혼", "돌싱"], key="u_m_stat", on_change=stop_ai,
@@ -502,7 +504,7 @@ else:
         
         curr_t_val = st.session_state.get("s_t", idx_list[0])
         t_idx = idx_list.index(curr_t_val) if curr_t_val in idx_list else 0
-        b_time = st.selectbox("태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
+        b_time = st.selectbox("신생아 태어난 시간" if _is43 else "태어난 시간", idx_list, index=t_idx, key="s_t_select", on_change=stop_ai)
         st.session_state["s_t"] = b_time
         _who_sig = f"{name}|{gender}|{b_year}-{b_month}-{b_day}|{b_time}"
         if st.session_state.get("_who_sig") not in (None, _who_sig):
