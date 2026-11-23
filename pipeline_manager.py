@@ -923,7 +923,7 @@ def render_admin_panel():
                 
                 with st.container():
                     st.markdown(f"**📌 [{r_name}]** | 📝 상품: {r_prod.split('+')[0][:15]}... | 🕒 신청일: {row['created_at']}")
-                    st.caption(f"💬 고민: {row['user_concern']}")
+                    st.caption(f"💬 고민: {str(row['user_concern']).split('---META_START---')[0].strip()}")
                     
                     if st.session_state.get('app_running') and st.session_state.get('admin_proc_id') == r_oid:
                         st.info(f"⏳ [{r_name}]님의 감명서를 작성 중입니다. 화면을 끄지 마시고 잠시만 대기해 주십시오...")
