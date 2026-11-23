@@ -474,6 +474,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
             st.error(f"prompts.py 에 '{var}' 가 없습니다.")
         else:
             data = {"name": name, "golden_facts": build_golden_facts(engine, sj, choyeon_db),
+                    "user_concern": str(st.session_state.get("user_concern", "") or "").strip(),
                     "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
                     "naming_facts": build_naming_facts(an),
                     "daewun_facts": build_daewun_facts(engine, sj, yong_from_engine(sj['yong_el'] or {}), an)}
