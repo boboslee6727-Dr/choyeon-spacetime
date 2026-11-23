@@ -301,7 +301,9 @@ def render_saju_block(engine, hv, cdb, sj, name, gender, b_year, b_month, b_day,
         parts.append(hv.get_golden_text(name, w_val, i_val, sd[0], sd[1], sd[2], mb=mb, gyuk_name=gyuk))
     except Exception as e:
         st.caption(f"(황금글은 표시하지 못했습니다: {e})")
-    st.markdown("".join(str(p or "") for p in parts), unsafe_allow_html=True)
+    _html = "".join(str(p or "") for p in parts)
+    st.markdown(_html, unsafe_allow_html=True)
+    return _html
 
 def saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender):
     """
@@ -461,9 +463,10 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
         )
     if "모름" in str(b_time):
         st.warning("태어난 시간을 모르면 시(時) 기둥 없이 세 기둥으로 용신을 정하므로 정확도가 낮아질 수 있습니다.")
+    saju_html = ""
     if html_views is not None and choyeon_db is not None:
         try:
-            render_saju_block(engine, html_views, choyeon_db,
+            saju_html = render_saju_block(engine, html_views, choyeon_db,
                               saju_from_inputs(engine, b_year, b_month, b_day, b_time, u_cal, gender),
                               name, gender, b_year, b_month, b_day, b_time, u_cal)
         except Exception as e:
@@ -507,4 +510,18 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     rep = st.session_state.get("nm_report")
     if rep and rep[0] == rkey:
         st.markdown(rep[1])
+        gid = st.session_state.get('admin_proc_id')
+        if gid:
+            st.divider()
+            st.markdown("**④ 신청자에게 보내기 준비**")
+            if st.button("📤 이 결과를 발송 서랍장으로 보내기", key="nm_send_btn", type="primary"):
+                body = (saju_html
+                        + html_views.format_ai_text_to_html(rep[1], "", name)
+                        + html_views.get_choyeon_sign_html())
+                final_html = html_views.get_final_report_box(body)
+                st.session_state[f'html_{gid}'] = final_html
+                st.session_state['saved_report_html'] = final_html
+                st.session_state['app_running'] = False
+                st.session_state['admin_proc_id'] = None
+                st.rerun()
     return an
