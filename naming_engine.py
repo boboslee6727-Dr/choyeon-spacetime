@@ -53,10 +53,9 @@ def chain_score(e1, e2, e3):
 
 
 def wrap81(n):
-    while n > 81:
+    while n > 82:      # 책 기준: 82수까지 해설이 있고, 83부터는 80을 뺌
         n -= 80
     return n
-
 
 class NamingEngine:
     def __init__(self, db_path=None):
@@ -429,7 +428,7 @@ def _common(x):
  
 def _score_level(self, sur, A, B, yong, level):
     S, a, b = sur['st'], A['st'], B['st']
-    if not self.four_ok(S, a, b) or not self.yinyang_ok(S, a, b):
+    if not self.four_ok_strict(S, a, b) or not self.yinyang_ok(S, a, b):
         return None
     need = {o for o in (yong.get('용신'), yong.get('겸용')) if o}
     if need and not ({A['ja'], B['ja']} & need):
@@ -544,3 +543,32 @@ NamingEngine._score_level = _score_level
 NamingEngine._level_pairs = _level_pairs
 NamingEngine.auto_candidates = _auto_candidates
 NamingEngine.compare_fixed_and_free = _compare_fixed_and_free
+
+# ---------- 이견 수리 (책 표는 길이나 타 학파는 반길·흉으로 보는 수) ----------
+DISPUTED = {38: '반길', 51: '반길', 71: '반길', 75: '반길', 77: '반길', 76: '흉'}
+DISPUTED_NOTE = {
+    '반길': '본 연구소 기준으로는 길수이나, 일부 학파에서는 장단점이 공존하는 반길수로 보기도 합니다.',
+    '흉': '본 연구소 기준으로는 인내와 베풂으로 복을 이루는 길수이나, 타 학파에서는 흉수로 보기도 하는 수리입니다.',
+}
+
+def _four_ok_strict(self, S, a, b):
+    """네 격이 모두 길이면서 이견 수리가 없어야 통과 (자동 추천용)"""
+    for v in self.four_gyeok(S, a, b).values():
+        n = wrap81(v)
+        if n not in self.good or n in DISPUTED:
+            return False
+    return True
+
+_orig_analyze = NamingEngine.analyze_name
+
+def _analyze_name_v2(self, sur, A, B, yong):
+    out = _orig_analyze(self, sur, A, B, yong)
+    for k, v in out['네격'].items():
+        d = DISPUTED.get(v['적용수'], '')
+        v['이견'] = d
+        v['이견안내'] = DISPUTED_NOTE.get(d, '')
+    out['이견격'] = [k for k, v in out['네격'].items() if v['이견']]
+    return out
+
+NamingEngine.four_ok_strict = _four_ok_strict
+NamingEngine.analyze_name = _analyze_name_v2
