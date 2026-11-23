@@ -671,7 +671,7 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
             naming_pre['sur'] = {'r': _sur['r'], 'h': _sur['h']}
         else:
             naming_ok = False
-        if is_baby and st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)", key="order_nm_two"):
+        if st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)" if is_baby else "성씨를 두 개 이어 씁니다 (예: 김이○○ 의 '김이')", key="order_nm_two"):
             _sur2 = naming_ui.pick_surname(_neng, "이어 붙일 성씨 (한글)", "order_nm_s2")
             if _sur2:
                 naming_pre['sur2'] = {'r': _sur2['r'], 'h': _sur2['h']}
