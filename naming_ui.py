@@ -285,8 +285,11 @@ def render_saju_block(engine, hv, cdb, sj, name, gender, b_year, b_month, b_day,
     samjae_color = "#C62828" if cur_samjae != "해당 없음" else "#555"
     dw = engine.get_daeun_data_list(ms, mb, ds, yb, sj['order_dir'], sj['calc_d'], age, db)
     direction = "순행" if sj['order_dir'] == 1 else "역행"
+    _b43 = str(st.session_state.get('sub_category_4', '')).startswith("4-3")
+    _hdr = hv.get_info_header(icon, "신생아" if _b43 else name, gender, marital, age, sol_str, lun_str, time_str)
+    if _b43: _hdr = _hdr.replace(f", {marital},", ",")
     parts = [
-        hv.get_info_header(icon, name, gender, marital, age, sol_str, lun_str, time_str),
+        _hdr,
         hv.generate_saju_table_data(gans, jjis, ds, gender, engine),
         hv.get_master_bar(sj['calc_d'], counts['목'], counts['화'], counts['토'], counts['금'], counts['수'],
                           guiin_map.get(ds, '없음'), n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=sj['yong_text']),
@@ -462,7 +465,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     st.markdown("**① 입력하신 정보를 확인해 주세요** (왼쪽 입력창에서 고칠 수 있습니다)")
     if html_views is None or choyeon_db is None:   # 사주표를 못 그릴 때만 간단한 표를 보여 줌
         st.markdown(
-            f"| 이름 | 성별 | 생년월일 | 태어난 시간 |\n|---|---|---|---|\n"
+            f"{'| 신청인 | 신생아 성별 | 신생아 생년월일 | 신생아 태어난 시간 |' if str(u_product).startswith('4-3') else '| 이름 | 성별 | 생년월일 | 태어난 시간 |'}\n|---|---|---|---|\n"
             f"| {name} | {gender} | {u_cal} {b_year}년 {b_month}월 {b_day}일 | {b_time} |"
         )
     if "모름" in str(b_time):
@@ -617,7 +620,7 @@ def naming_closing_html(name, sign_html=""):
     """
 
 # 이름 후보에서 뺄 글자: 열두 띠 글자와 돼지 뜻 글자 (박사님이 더 넣으려면 여기에 글자를 추가)
-_NO_NAME = set('子丑寅卯辰巳午未申酉戌亥豚豕')
+_NO_NAME = set('子丑寅卯辰巳午未申酉戌亥豚豕色軟')
 
 
 # 소리 내어 부르면 이상한 뜻이 되는 말 (성씨 + 이름 전체 독음에 들어 있으면 후보에서 뺌). 박사님이 계속 추가하십시오.
@@ -663,17 +666,18 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
     fp = {'가운데 글자': 'first', '마지막 글자': 'last'}.get(fixed_pos, 'last')
     order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order")
     oex = _order_exclude(neng, order)
-    ck = f"{order}|{key}_cand|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{fixed['h'] if fixed else ''}|{fp}"
+    nshow = st.selectbox("보여 드릴 후보 수", [5, 10, 20], key=f"{key}_nshow")
+    ck = f"{nshow}|{order}|{key}_cand|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{fixed['h'] if fixed else ''}|{fp}"
     if st.session_state.get('nm_cand_key') != ck:
         with st.spinner("후보 이름을 찾고 있습니다..."):
-            with_f = _cand_pools(neng, sur, yong, fixed, fp, order_ex=oex) if fixed else None
-            free = _cand_pools(neng, sur, yong, None, fp, order_ex=oex)
+            with_f = _cand_pools(neng, sur, yong, fixed, fp, n=nshow, order_ex=oex) if fixed else None
+            free = _cand_pools(neng, sur, yong, None, fp, n=nshow, order_ex=oex)
         st.session_state['nm_cand_key'] = ck
         st.session_state['nm_cand'] = (with_f, free)
     with_f, free = st.session_state['nm_cand']
     use = free
     if fixed is not None:
-        worse = (with_f['완화단계'] > free['완화단계']) or (len(with_f['후보']) < min(5, len(free['후보'])))
+        worse = (with_f['완화단계'] > free['완화단계']) or (len(with_f['후보']) < min(nshow, len(free['후보'])))
         if worse:
             st.warning("돌림자를 쓰면 후보가 모자라거나 조건이 완화됩니다. 돌림자 없이 짓는 쪽이 더 좋을 수 있으니 두 가지를 비교해 보세요.")
         view = st.radio("보기", ["돌림자를 쓴 후보", "돌림자 없이 지은 후보"], horizontal=True, key=f"{key}_view")
@@ -788,7 +792,7 @@ def onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, warn_
     sign = html_views.get_choyeon_sign_html()
     inner = f"""{css}<div class='op-wrap'>
     <div class='op-t'>作 名 書</div><div class='op-s'>초연 시공명리 · 신생아 이름짓기</div>
-    <div class='op-who'>{name} ({gender}) · {birth_txt} &nbsp;|&nbsp; 성씨 {an1['이름'][0]} &nbsp;|&nbsp; 중심오행 <b>{yong.get('용신') or '-'}</b> · 보조 <b>{yong.get('희신') or '-'}</b> · 피할 오행 {yong.get('기신') or '-'}</div>
+    <div class='op-who'>신청인 {name}님 · 신생아 {gender}아 · {birth_txt} &nbsp;|&nbsp; 성씨 {an1['이름'][0]} &nbsp;|&nbsp; 중심오행 <b>{yong.get('용신') or '-'}</b> · 보조 <b>{yong.get('희신') or '-'}</b> · 피할 오행 {yong.get('기신') or '-'}</div>
     <div class='op-names'>{_card('①', an1)}{_card('②', an2)}</div>
     <h3>타고난 성품과 이름의 기운</h3><p>{_p('성품')}</p>
     <div class='op-row'><div><h3>추천 ① {an1['이름']} 풀이</h3><p>{_p('이름1')}</p></div>
