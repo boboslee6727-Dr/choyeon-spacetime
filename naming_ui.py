@@ -163,6 +163,9 @@ def _flow_new_name(neng, sur, yong, gender, key):
     """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기 (외자 선택 가능)"""
     neng.gender = gender
     pre = st.session_state.get('nm_pre') or {}
+    if pre.get('script') == '한글 이름':
+        st.warning("신청자가 '한글 이름'을 원하셨습니다. 한글 이름 짓기 화면은 아직 준비 중입니다. (한자 이름 화면은 지금 쓰실 수 없습니다)")
+        return None
     st.session_state.setdefault(f"{key}_n", pre.get('n_new', 2))
     n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key=f"{key}_n")
     if n == 1:
