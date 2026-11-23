@@ -689,7 +689,11 @@ div.stButton > button:hover, div.stButton > button:active { background-color: #3
                 naming_ok = False
         if need_new_opt:
             st.markdown("**새 이름 조건**")
-            naming_pre['n_new'] = st.radio("새 이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key="order_nm_newn")
+            if is_baby:
+                naming_pre['n_new'] = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key="order_nm_newn")
+                naming_pre['script'] = st.radio("이름 표기", ["한자 이름", "한글 이름"], horizontal=True, key="order_nm_script")
+            else:
+                naming_pre['n_new'] = naming_pre.get('n_cur', 2)   # 이름 바꾸기: 현재 이름과 같은 글자 수
             if st.checkbox("돌림자가 있습니다", key="order_nm_dol"):
                 naming_pre['dol_pos'] = st.radio("돌림자 위치", ["가운데 글자", "마지막 글자"], horizontal=True, key="order_nm_dolpos")
                 _d = naming_ui.pick_hanja(_neng, "돌림자 (한글 한 글자)", "order_nm_dolch")
