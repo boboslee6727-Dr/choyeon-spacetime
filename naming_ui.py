@@ -365,13 +365,17 @@ class _SafeDict(dict):
         return ""
 
 
-def build_naming_facts(an):
+def build_naming_facts(an, yong=None):
     L = [f"이름: {an['이름']} (독음 {an['독음']})",
          f"소리오행: {' → '.join(an['소리배합'])} / 관계 {' · '.join(an['소리관계'])} / 판정 {an['소리판정']}" + (f" / 책의 풀이: {_book_note(an, '소리')}" if _book_note(an, '소리') else ""),
          f"자원오행: {' → '.join(an['자원배합'])} / 관계 {' · '.join(an['자원관계'])} / 판정 {an['자원판정']}" + (f" / 책의 풀이: {_book_note(an, '자원')}" if _book_note(an, '자원') else "")]
     for k, v in an['네격'].items():
         L.append(f"{k}({v['때']}): 수리 {v['수리']} · 격 이름 {v['격']} · 상 {v.get('상', '')} · 길흉 {v['길흉']} · 해설 {v.get('해설', '')}")
-    L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오"))
+    _y = yong or {}
+    _need = [o for o in (_y.get('용신'), _y.get('겸용')) if o]
+    _hit = [str(x)[0] for x in an['자원배합'] if str(x)[0] in _need]
+    _src = f"사주의 중심오행은 용신 {_y.get('용신') or '-'}, 겸용 {_y.get('겸용') or '-'}입니다. 이름 글자에 실제로 들어 있는 해당 오행: {', '.join(_hit) if _hit else '없음'}. 용신 {_y.get('용신') or '-'} 자체가 이름에 들어 있는지: {'예' if _y.get('용신') in _hit else '아니오'}. (풀이글에는 반드시 실제로 들어 있는 오행 이름으로 쓸 것)"
+    L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오") + " / " + _src)
     L.append("피할 오행 포함: " + ("예" if an['기신포함'] else "아니오"))
     L.append(f"음양: {an['음양']}")
     return "\n".join(L)
@@ -502,7 +506,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
             data = {"name": name, "golden_facts": build_golden_facts(engine, sj, choyeon_db),
                     "user_concern": str(st.session_state.get("user_concern", "") or "").strip(),
                     "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
-                    "naming_facts": build_naming_facts(an),
+                    "naming_facts": build_naming_facts(an, yong_from_engine(sj['yong_el'] or {})),
                     "daewun_facts": build_daewun_facts(engine, sj, yong_from_engine(sj['yong_el'] or {}), an)}
             with st.spinner("풀이글을 쓰고 있습니다. 1~2분 걸립니다..."):
                 text = ai_func(tpl.format_map(_SafeDict(data)))
@@ -510,18 +514,18 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     rep = st.session_state.get("nm_report")
     if rep and rep[0] == rkey:
         st.markdown(prepare_report_text(rep[1]))
+        cover = make_cover(html_views, u_product, name, gender, b_year, b_month, b_day, b_time, u_cal)
+        body = (saju_html
+                + html_views.format_ai_text_to_html(prepare_report_text(rep[1]), "", name)
+                + naming_closing_html(name, html_views.get_choyeon_sign_html()))
+        final_html = cover + html_views.get_final_report_box(body)
+        st.session_state['saved_report_html'] = final_html
         gid = st.session_state.get('admin_proc_id')
         if gid:
             st.divider()
             st.markdown("**④ 신청자에게 보내기 준비**")
             if st.button("📤 이 결과를 발송 서랍장으로 보내기", key="nm_send_btn", type="primary"):
-                cover = make_cover(html_views, u_product, name, gender, b_year, b_month, b_day, b_time, u_cal)
-                body = (saju_html
-                        + html_views.format_ai_text_to_html(prepare_report_text(rep[1]), "", name)
-                        + naming_closing_html(name, html_views.get_choyeon_sign_html()))
-                final_html = cover + html_views.get_final_report_box(body)
                 st.session_state[f'html_{gid}'] = final_html
-                st.session_state['saved_report_html'] = final_html
                 st.session_state['app_running'] = False
                 st.session_state['admin_proc_id'] = None
                 st.rerun()
