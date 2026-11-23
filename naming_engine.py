@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
 """
-초연 작명법 엔진 (naming_engine.py)  v0.1  -- 기존 engine.py와 완전히 별개 파일
+초연 작명법 엔진 (naming_engine.py)  v1.1  -- 기존 engine.py와 완전히 별개 파일
 - 사주 계산(용신/희신/기신)은 기존 engine.py 결과를 받아서 쓴다. 이 파일은 사주를 계산하지 않는다.
 - 한자 자료는 naming_db.json (인명용 한자 5,829자 + 81수리) 에서 읽는다.
 - 이름 구조: 성(1글자) + 이름 2글자 (두 글자 성, 외자 이름은 다음 단계에서 추가)
@@ -111,6 +111,10 @@ class NamingEngine:
                 b += 0.7
             elif tag in ('남', '여'):
                 b -= 0.7
+        # 사주가 한쪽 음양으로 크게 쏠렸으면(양팔통 등) 반대 음양 글자를 우대한다
+        t = getattr(self, 'saju_tilt', None)
+        if t in ('양', '음') and x.get('yy') == ('陰' if t == '양' else '陽'):
+            b += 0.6
         return b
 
     # ---------- 핵심: 조합 검사/점수 ----------
@@ -387,6 +391,9 @@ def _analyze_name(self, sur, A, B, yong):
         gy = self.single_four(S, a)
         out['음양'] = '-'
         ja_set = {A['ja']}
+    _yy = lambda n: '양' if n % 2 else '음'
+    _parts = [('성', S), ('첫 글자', a)] + ([('끝 글자', B['st'])] if B else [])
+    out['글자음양'] = ' · '.join(f"{lab} {_yy(n)}({n}획)" for lab, n in _parts)
     stages = {'원격': '초년운', '형격': '청년운', '이격': '중년운', '정격': '말년운'}
     out['네격'] = {}
     for k, v in gy.items():
@@ -400,3 +407,140 @@ def _analyze_name(self, sur, A, B, yong):
     return out
 
 NamingEngine.analyze_name = _analyze_name
+
+# ---------- 자동 후보 선정 (엔진이 상위 5개를 뽑고 박사님이 2개를 승인) ----------
+# 완화 순서(박사님 확정): 수리 4격(항상 지킴) > 자원오행(용신 포함, 상생) > 소리오행(가장 먼저 풀어줌)
+#   0단계: 수리4격 길 + 음양 + 소리 길 + 자원 길 + 용신 포함   (모두 만족)
+#   1단계: 소리오행만 완화 (수리4격·자원 길·용신 포함은 지킴)
+#   2단계: 자원 배합까지 완화 (수리4격·용신 포함은 지킴)
+_LEVEL_TEXT = {0: '소리·자원·수리 모두 길', 1: '소리오행만 완화(수리·자원은 길)', 2: '소리·자원 배합 완화(수리 4격·용신 포함은 지킴)'}
+ 
+ 
+def _chain_pts(e1, e2, e3):
+    """순생 2 / 역생 1 / 비화 0 / 극 -1 (완화 단계에서 극이 섞여도 계산되도록)"""
+    pt = {'순생': 2, '역생': 1, '비화': 0, '극': -1}
+    return pt[rel(e1, e2)] + pt[rel(e2, e3)]
+ 
+ 
+def _common(x):
+    """흔히 쓰는 글자(교육용) 또는 뜻 좋은 글자는 후보 순서에서 앞세움"""
+    return 1.5 if (x.get('e') or x.get('g')) else 0.0
+ 
+ 
+def _score_level(self, sur, A, B, yong, level):
+    S, a, b = sur['st'], A['st'], B['st']
+    if not self.four_ok(S, a, b) or not self.yinyang_ok(S, a, b):
+        return None
+    need = {o for o in (yong.get('용신'), yong.get('겸용')) if o}
+    if need and not ({A['ja'], B['ja']} & need):
+        return None
+    sound_ok = chain_ok(sur['bo'], A['bo'], B['bo'])
+    res_ok = chain_ok(sur['ja'], A['ja'], B['ja'])
+    if level == 0 and not (sound_ok and res_ok):
+        return None
+    if level == 1 and not res_ok:
+        return None
+    sc = _chain_pts(sur['bo'], A['bo'], B['bo']) + _chain_pts(sur['ja'], A['ja'], B['ja'])
+    for g in (A, B):
+        if g['ja'] == yong.get('용신'):
+            sc += 3
+        elif g['ja'] == yong.get('겸용'):
+            sc += 2
+        if g['ja'] == yong.get('희신'):
+            sc += 1
+        if g['ja'] in (yong.get('기신'), yong.get('구신')):
+            sc -= 2
+    if not sound_ok:
+        sc -= 3
+    if not res_ok:
+        sc -= 6
+    return sc
+ 
+ 
+def _level_pairs(self, sur, yong, level, exclude, fixed, fixed_pos, per_class=4):
+    """한 단계에서 통과하는 (점수, A, B) 목록"""
+    ex = set(exclude) | self.bad
+    out = []
+    if fixed is not None:
+        for x in self.hanja:
+            if x['h'] in ex or x['h'] == fixed['h']:
+                continue
+            A, B = (fixed, x) if fixed_pos == 'first' else (x, fixed)
+            s = self._score_level(sur, A, B, yong, level)
+            if s is not None:
+                out.append((s + self.bonus(x) + _common(x), A, B))
+        return out
+    cl = []
+    for key, lst in self.cls.items():
+        lst2 = sorted([x for x in lst if x['h'] not in ex], key=lambda x: -(self.bonus(x) + _common(x)))[:per_class]
+        if lst2:
+            cl.append((key, lst2))
+    for (b1, j1, s1), l1 in cl:
+        for (b2, j2, s2), l2 in cl:
+            s = self._score_level(sur, {'bo': b1, 'ja': j1, 'st': s1}, {'bo': b2, 'ja': j2, 'st': s2}, yong, level)
+            if s is None:
+                continue
+            for A in l1:
+                for B in l2:
+                    if A['h'] != B['h']:
+                        out.append((s + self.bonus(A) + self.bonus(B) + _common(A) + _common(B), A, B))
+    return out
+ 
+ 
+def _auto_candidates(self, sur, yong, fixed=None, fixed_pos='last', exclude=(), n=5):
+    """
+    후보 이름 n개를 자동으로 뽑는다.
+      fixed     : 돌림자 한자 dict (없으면 None = 두 글자 모두 자유)
+      fixed_pos : 돌림자 자리 'first'(가운데) / 'last'(끝)
+    반환 {'후보':[...], '완화단계':가장 낮은 단계, '부족':True/False, '안내':문장}
+      후보 항목: 이름·독음·A·B·점수·단계·단계설명 (판정은 analyze_name 으로 따로)
+    같은 독음 이름은 한 번만, 같은 첫글자·끝글자 독음은 각각 최대 2번까지 (다양하게).
+    """
+    picked, seen_name, cnt_a, cnt_b = [], set(), {}, {}
+    used_level = 0
+    for level in (0, 1, 2):
+        pairs = self._level_pairs(sur, yong, level, exclude, fixed, fixed_pos)
+        pairs.sort(key=lambda t: -t[0])
+        for sc, A, B in pairs:
+            if len(picked) >= n:
+                break
+            name = A['r'] + B['r']
+            if name in seen_name or cnt_a.get(A['r'], 0) >= 2 or cnt_b.get(B['r'], 0) >= 2:
+                continue
+            if any(p['A']['h'] == A['h'] and p['B']['h'] == B['h'] for p in picked):
+                continue
+            seen_name.add(name)
+            cnt_a[A['r']] = cnt_a.get(A['r'], 0) + 1
+            cnt_b[B['r']] = cnt_b.get(B['r'], 0) + 1
+            picked.append({'이름': sur['h'] + A['h'] + B['h'], '독음': sur['r'] + name, 'A': A, 'B': B,
+                           '점수': round(sc, 1), '단계': level, '단계설명': _LEVEL_TEXT[level]})
+            used_level = max(used_level, level)
+        if len(picked) >= n:
+            break
+    short = len(picked) < n
+    if not picked:
+        note = '조건에 맞는 후보를 찾지 못했습니다.'
+    elif used_level == 0 and not short:
+        note = '소리·자원·수리가 모두 길한 후보 %d개입니다.' % len(picked)
+    elif short:
+        note = '후보가 %d개뿐입니다(%s까지 완화).' % (len(picked), _LEVEL_TEXT[used_level])
+    else:
+        note = '모두 길한 후보가 부족하여 %s 단계까지 완화했습니다.' % _LEVEL_TEXT[used_level]
+    return {'후보': picked, '완화단계': used_level, '부족': short, '안내': note}
+ 
+ 
+def _compare_fixed_and_free(self, sur, yong, fixed, fixed_pos='last', exclude=(), n=5):
+    """돌림자를 쓴 경우와 쓰지 않은 경우를 나란히 (박사님 승인 화면용)"""
+    with_f = self.auto_candidates(sur, yong, fixed, fixed_pos, exclude, n)
+    free = self.auto_candidates(sur, yong, None, fixed_pos, exclude, n)
+    worse = (with_f['완화단계'] > free['완화단계']) or (len(with_f['후보']) < min(n, len(free['후보'])))
+    msg = ''
+    if worse:
+        msg = '돌림자를 쓰면 후보가 모자라거나 완화 단계가 높아집니다. 돌림자 없이 짓는 쪽이 더 좋을 수 있습니다.'
+    return {'돌림자씀': with_f, '돌림자없이': free, '돌림자불리': worse, '안내': msg}
+ 
+ 
+NamingEngine._score_level = _score_level
+NamingEngine._level_pairs = _level_pairs
+NamingEngine.auto_candidates = _auto_candidates
+NamingEngine.compare_fixed_and_free = _compare_fixed_and_free
