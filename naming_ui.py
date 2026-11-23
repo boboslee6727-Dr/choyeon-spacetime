@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-이름 풀이 및 짓기 화면 (naming_ui.py)  v0.1
+이름 풀이 및 짓기 화면 (naming_ui.py)  v1.1
 - app.py 에서는 아래 두 줄만 부르면 된다.
     import naming_ui
     result = naming_ui.render_naming_product(u_product, yong_el, gender, name)   # yong_el = engine.get_yongshin_elements(...) 결과
@@ -37,8 +37,10 @@ def _hanja_label(x):
 
 
 # ------------------------------------------------------------------ 입력 부품
-def pick_surname(neng, label, key, optional=False):
-    """한글 성씨 입력 → 한자 후보 고르기. 반환: 성씨 항목(없으면 None)"""
+def pick_surname(neng, label, key, optional=False, pre=None):
+    """한글 성씨 입력 → 한자 후보 고르기. 반환: 성씨 항목(없으면 None). pre = 신청서에서 받은 {'r','h'}"""
+    if pre and f"{key}_rd" not in st.session_state:
+        st.session_state[f"{key}_rd"] = pre['r']
     rd = st.text_input(label, key=f"{key}_rd", placeholder="예) 김, 이, 박, 남궁").strip()
     if not rd:
         return None
@@ -51,12 +53,16 @@ def pick_surname(neng, label, key, optional=False):
         st.caption(f"성씨 한자: {c['h']} ({c['st']}획)")
         return c
     labels = [f"{c['h']}  ({c['st']}획)" for c in cands]
+    if pre and f"{key}_hj" not in st.session_state:
+        st.session_state[f"{key}_hj"] = next((j for j, c in enumerate(cands) if c['h'] == pre['h']), 0)
     i = st.radio("성씨 한자를 골라 주세요", range(len(cands)), format_func=lambda i: labels[i], key=f"{key}_hj", horizontal=True)
     return cands[i]
 
 
-def pick_hanja(neng, label, key, help_text=""):
-    """한글 한 글자 입력 → 한자 후보 선택. 반환: 한자 dict(없으면 None)"""
+def pick_hanja(neng, label, key, help_text="", pre=None):
+    """한글 한 글자 입력 → 한자 후보 선택. 반환: 한자 dict(없으면 None). pre = 신청서에서 받은 {'r','h'}"""
+    if pre and f"{key}_rd" not in st.session_state:
+        st.session_state[f"{key}_rd"] = pre['r']
     rd = st.text_input(label, key=f"{key}_rd", help=help_text, max_chars=1).strip()
     if not rd:
         return None
@@ -65,9 +71,10 @@ def pick_hanja(neng, label, key, help_text=""):
     if not cands:
         st.warning(f"'{rd}'로 읽는 한자를 찾지 못했습니다.")
         return None
+    if pre and f"{key}_hj" not in st.session_state:
+        st.session_state[f"{key}_hj"] = next((j for j, x in enumerate(cands) if x['h'] == pre['h']), 0)
     i = st.selectbox("한자를 골라 주세요", range(len(cands)), format_func=lambda i: _hanja_label(cands[i]), key=f"{key}_hj")
     return cands[i]
-
 
 def _gyeok_table(an):
     rows = []
@@ -122,10 +129,12 @@ def show_analysis(an):
 
 # ------------------------------------------------------------------ 상품별 화면
 def _surname_block(neng, key):
-    sur1 = pick_surname(neng, "성씨 (한글)", f"{key}_s1")
+    pre = st.session_state.get('nm_pre') or {}
+    sur1 = pick_surname(neng, "성씨 (한글)", f"{key}_s1", pre=pre.get('sur'))
     sur2 = None
+    st.session_state.setdefault(f"{key}_two", bool(pre.get('sur2')))
     if st.checkbox("어머니 성씨도 이어 붙이기 (예: 김이○○)", key=f"{key}_two"):
-        sur2 = pick_surname(neng, "이어 붙일 성씨 (한글) — 입력한 순서대로 붙습니다", f"{key}_s2")
+        sur2 = pick_surname(neng, "이어 붙일 성씨 (한글) — 입력한 순서대로 붙습니다", f"{key}_s2", pre=pre.get('sur2'))
     if sur1 is None:
         return None
     ents = [sur1] + ([sur2] if sur2 else [])
@@ -153,13 +162,18 @@ def _flow_single(neng, sur, yong, key):
 def _flow_new_name(neng, sur, yong, gender, key):
     """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기 (외자 선택 가능)"""
     neng.gender = gender
+    pre = st.session_state.get('nm_pre') or {}
+    st.session_state.setdefault(f"{key}_n", pre.get('n_new', 2))
     n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 외자 (예: 호)", horizontal=True, key=f"{key}_n")
     if n == 1:
         return _flow_single(neng, sur, yong, key)
     fixed_pos, fixed = None, None
+    st.session_state.setdefault(f"{key}_dol", bool(pre.get('dol_pos')))
     if st.checkbox("돌림자가 있습니다", key=f"{key}_dol"):
+        if pre.get('dol_pos'):
+            st.session_state.setdefault(f"{key}_dolpos", pre['dol_pos'])
         fixed_pos = st.radio("돌림자 위치", ["가운데 글자", "마지막 글자"], horizontal=True, key=f"{key}_dolpos")
-        fixed = pick_hanja(neng, "돌림자 (한글 한 글자)", f"{key}_dolch", "집안의 돌림자를 한글로 한 글자 넣어 주세요")
+        fixed = pick_hanja(neng, "돌림자 (한글 한 글자)", f"{key}_dolch", "집안의 돌림자를 한글로 한 글자 넣어 주세요", pre=pre.get('dol'))
         if fixed is None:
             st.info("돌림자를 입력하면 그 글자에 맞는 나머지 글자를 찾아 드립니다.")
             return None
@@ -196,9 +210,12 @@ def _flow_new_name(neng, sur, yong, gender, key):
 def _flow_check_name(neng, sur, yong, key):
     """4-1 이름 풀이: 지금 이름의 글자를 한자로 골라 판정"""
     st.markdown("**현재 이름의 한자를 골라 주세요** (성씨를 뺀 이름 글자)")
+    pre = st.session_state.get('nm_pre') or {}
+    cur = pre.get('cur') or [None, None]
+    st.session_state.setdefault(f"{key}_n", pre.get('n_cur', 2))
     n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 (예: 솔)", horizontal=True, key=f"{key}_n")
-    A = pick_hanja(neng, "이름 첫 글자 (한글)", f"{key}_c1")
-    B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2") if n == 2 else None
+    A = pick_hanja(neng, "이름 첫 글자 (한글)", f"{key}_c1", pre=cur[0])
+    B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2", pre=(cur[1] if len(cur) > 1 else None)) if n == 2 else None
     if A is None or (n == 2 and B is None):
         return None
     return neng.analyze_name(sur, A, B, yong)
