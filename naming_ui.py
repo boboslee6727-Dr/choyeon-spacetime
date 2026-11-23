@@ -703,3 +703,162 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
         st.caption("⚠️ 소리주의 (책 9장 동자이음·동음이의): " + " ; ".join(warns))
     i = st.radio("이 후보로 풀이를 진행합니다", range(len(cands)), format_func=lambda i: f"{i + 1}순위  {ans[i]['이름']} ({ans[i]['독음']})", key=f"{key}_pick", horizontal=True)
     return ans[i]
+
+# ======================================================================
+# 4-3 신생아 이름짓기 : 한 장짜리 '작명서' (naming_ui.py 맨 아래에 붙여 넣기)
+# ======================================================================
+import re as _re
+
+_OP_SECTIONS = [("성품", "타고난 성품과 이름의 기운", "4문장"),
+                ("이름1", "추천 ① 풀이", "3~4문장"),
+                ("이름2", "추천 ② 풀이", "3~4문장"),
+                ("배우자궁", "배우자궁 · 인연", "3문장"),
+                ("대운", "평생 흐름 (대운)", "3문장"),
+                ("양육", "부모님께 드리는 양육 한마디", "3문장")]
+
+
+def _onepage_prompt(name, gender, golden, saju, an1, an2, dw1, dw2, ilji):
+    return f"""당신은 '초연 시공명리 연구소'의 사주박사입니다. 신생아(아기)에게 지어 줄 이름 두 개를 추천하는 한 장짜리 작명서의 풀이글을 씁니다.
+부모님이 읽는 글이므로 쉬운 말로, 따뜻하고 품위 있게 씁니다. 아기를 '이 아기'라고 부르고 '당신'이라 하지 않습니다.
+아래 [자료]에 없는 사실(오행, 수리, 뜻)은 지어내지 말고, 자료에 적힌 판정만 그대로 풀어 쓰십시오.
+
+[자료]
+아기 성별: {gender}
+{saju}
+{golden}
+배우자궁(일지): {ilji}
+
+[추천 ① 이름 자료]
+{build_naming_facts(an1)}
+{dw1}
+
+[추천 ② 이름 자료]
+{build_naming_facts(an2)}
+{dw2}
+
+[출력 형식 — 반드시 아래 6개 표지를 그대로 쓰고, 각 표지 다음 줄부터 본문만 쓰십시오. 제목·번호·마크다운·맺음말은 쓰지 않습니다.]
+[[성품]]  (4문장: 일주·월령 성품, 사주에서 필요한 기운, 이름이 그것을 어떻게 채우는지)
+[[이름1]] (3~4문장: 추천 ① 글자 뜻, 소리·자원오행 흐름, 수리 네 격의 길흉, 이름의 한 줄 장점)
+[[이름2]] (3~4문장: 추천 ② 같은 방식. 추천 ①과 다른 점을 한 가지 밝힐 것)
+[[배우자궁]] (3문장: 일지의 기운으로 본 배우자 인연, 이름이 돕는 점, 조심할 점 한 가지)
+[[대운]] (3문장: 초년·중년·말년의 대운 흐름과 이름의 격이 만나는 모습. 대운 자료의 교차 판정을 따를 것)
+[[양육]] (3문장: 이 아기를 키울 때의 마음가짐과 부족한 오행을 채워 주는 생활 습관)
+"""
+
+
+def _parse_onepage(text):
+    got = {}
+    for key, body in _re.findall(r"\[\[(\S+?)\]\]\s*(.*?)(?=\[\[\S+?\]\]|\Z)", str(text), flags=_re.S):
+        got[key] = " ".join(body.split())
+    return got
+
+
+def onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, warn_txt, order_txt, today_txt):
+    def _p(key):
+        return sec.get(key) or "(풀이글을 받지 못했습니다. 다시 만들어 주십시오.)"
+
+    def _card(rank, an):
+        gy = "".join(f"<span>{k} {v['수리']} {v['길흉']}</span>" for k, v in an['네격'].items())
+        names = " · ".join(k['hun'].split('/')[0] for k in (an.get('A'), an.get('B')) if k)
+        return (f"<div class='op-nm'><span class='op-rk'>추천 {rank}</span><div class='op-h'>{an['이름']}</div>"
+                f"<div class='op-k'>{an['독음']}</div><div class='op-m'>{names}<br>소리 {an['소리판정']} · 자원 {an['자원판정']}</div>"
+                f"<div class='op-chips'>{gy}</div></div>")
+
+    css = """<style>
+    .op-wrap{display:flex;flex-direction:column;min-height:245mm;font-family:'Noto Serif KR',serif;color:#222}
+    .op-t{text-align:center;color:#1A237E;font-size:34px;font-weight:900;letter-spacing:14px;margin:4px 0 2px}
+    .op-s{text-align:center;color:#8a6d1f;font-size:13px;letter-spacing:3px;margin-bottom:12px}
+    .op-who{text-align:center;font-size:14px;color:#444;border-top:1px solid #c9b46a;border-bottom:1px solid #c9b46a;padding:7px;margin-bottom:12px}
+    .op-names{display:flex;gap:16px;margin-bottom:10px}
+    .op-nm{flex:1;border:2px solid #1A237E;border-radius:10px;padding:10px;text-align:center;background:#fff}
+    .op-rk{display:inline-block;background:#1A237E;color:#fff;border-radius:12px;padding:1px 12px;font-size:12px}
+    .op-h{font-size:44px;font-weight:900;color:#1A237E;letter-spacing:6px;margin:2px 0 0}
+    .op-k{font-size:20px;font-weight:700;margin-bottom:4px}
+    .op-m{font-size:12px;color:#555;line-height:1.6}
+    .op-chips{display:flex;gap:5px;justify-content:center;margin-top:7px;font-size:11px;flex-wrap:wrap}
+    .op-chips span{background:#eef0fb;border-radius:10px;padding:2px 8px;color:#1A237E}
+    .op-wrap h3{font-size:15px;color:#1A237E;margin:9px 0 4px;border-left:5px solid #c9a227;padding-left:8px}
+    .op-wrap p{font-size:12.5px;line-height:1.7;margin:0 0 4px;text-align:justify;text-indent:10px}
+    .op-row{display:flex;gap:14px}.op-row>div{flex:1}
+    .op-box{background:#f5f7ff;border-radius:8px;padding:8px 12px}
+    .op-ft{margin-top:auto;padding-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:16px}
+    .op-ft b{color:#1A237E;font-size:16px;display:block;text-align:right}
+    </style>"""
+    box = f"✔ 소리 주의: {warn_txt or '해당 글자 없음'} &nbsp; ✔ 불용한자: 책 9장 기준 적용 &nbsp; ✔ {order_txt}<br>✔ 도장·서명에는 한자 이름을 그대로 쓰시면 기운이 온전히 전해집니다."
+    sign = html_views.get_choyeon_sign_html()
+    inner = f"""{css}<div class='op-wrap'>
+    <div class='op-t'>作 名 書</div><div class='op-s'>초연 시공명리 · 신생아 이름짓기</div>
+    <div class='op-who'>{name} ({gender}) · {birth_txt} &nbsp;|&nbsp; 성씨 {an1['이름'][0]} &nbsp;|&nbsp; 중심오행 <b>{yong.get('용신') or '-'}</b> · 보조 <b>{yong.get('희신') or '-'}</b> · 피할 오행 {yong.get('기신') or '-'}</div>
+    <div class='op-names'>{_card('①', an1)}{_card('②', an2)}</div>
+    <h3>타고난 성품과 이름의 기운</h3><p>{_p('성품')}</p>
+    <div class='op-row'><div><h3>추천 ① {an1['이름']} 풀이</h3><p>{_p('이름1')}</p></div>
+    <div><h3>추천 ② {an2['이름']} 풀이</h3><p>{_p('이름2')}</p></div></div>
+    <div class='op-row'><div><h3>배우자궁 · 인연</h3><p>{_p('배우자궁')}</p></div>
+    <div><h3>평생 흐름 (대운)</h3><p>{_p('대운')}</p></div></div>
+    <h3>부모님께 드리는 양육 한마디</h3><p>{_p('양육')}</p>
+    <h3>이름 쓸 때 주의할 점</h3><div class='op-box'><p>{box}</p></div>
+    <div class='op-ft'><div style='margin-right:auto;font-size:13px;color:#555'>발행일 &nbsp;{today_txt}</div>
+    <div><b>- 초연 시공명리 연구소 -</b><b>사주박사 드림</b></div>{sign}</div>
+    </div>"""
+    return html_views.get_final_report_box(inner)
+
+
+def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db):
+    """4-3: 위 후보 표에서 두 이름을 골라 한 장짜리 작명서를 만든다"""
+    import datetime as _dt
+    ans = st.session_state.get('nm_last_ans') or []
+    if len(ans) < 2:
+        st.info("추천 후보가 두 개 이상 나오면 한 장짜리 작명서를 만들 수 있습니다.")
+        return
+    st.divider()
+    st.markdown("**③ 한 장 작명서에 올릴 추천 이름 2개 고르기** (처음에는 1·2순위가 선택되어 있습니다)")
+    labels = [f"{i + 1}순위 {a['이름']} ({a['독음']})" for i, a in enumerate(ans)]
+    pick = st.multiselect("추천 이름 두 개", labels, default=labels[:2], max_selections=2, key="op_pick")
+    if len(pick) != 2:
+        st.warning("이름을 정확히 2개 골라 주세요.")
+        return
+    an1, an2 = [ans[labels.index(p)] for p in pick]
+    sig = f"{an1['이름']}|{an2['이름']}|{name}|{b_year}{b_month}{b_day}{b_time}"
+    if st.button("📜 한 장 작명서 만들기", key="op_make_btn", type="primary"):
+        yong = yong_from_engine(sj['yong_el'] or {})
+        ilji = f"{sj['gans'][1]}{sj['jjis'][1]}일주의 일지 {sj['jjis'][1]}"
+        prompt = _onepage_prompt(name, gender,
+                                 build_golden_facts(engine, sj, choyeon_db),
+                                 build_saju_facts(sj, yong) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
+                                 an1, an2, build_daewun_facts(engine, sj, yong, an1), build_daewun_facts(engine, sj, yong, an2), ilji)
+        with st.spinner("작명서를 쓰고 있습니다. 1~2분 걸립니다..."):
+            text = ai_func(prompt)
+        st.session_state['op_text'] = (sig, text)
+    got = st.session_state.get('op_text')
+    if not got or got[0] != sig:
+        return
+    sec = _parse_onepage(got[1])
+    yong = yong_from_engine(sj['yong_el'] or {})
+    warns = []
+    for an in (an1, an2):
+        for k in (an.get('A'), an.get('B')):
+            if k and k.get('dj'):
+                warns.append(f"{k['h']}({k['dj']})")
+            if k and k.get('de'):
+                warns.append(f"{k['h']}({k['de']})")
+    order_txt = {"첫째": "첫째(장자) 기준 적용", "둘째": "둘째 이하(차자) 기준 적용"}.get(str(st.session_state.get('nm_4-3_order', ''))[:2], "출생 순서는 가리지 않음")
+    try:
+        from zoneinfo import ZoneInfo
+        today = _dt.datetime.now(ZoneInfo('Asia/Seoul'))
+    except Exception:
+        today = _dt.datetime.now()
+    birth_txt = f"{u_cal} {b_year}년 {b_month}월 {b_day}일 {b_time}생"
+    html = onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, ", ".join(dict.fromkeys(warns)), order_txt,
+                        f"{today.year}년 {today.month}월 {today.day}일")
+    st.session_state['saved_report_html'] = html
+    st.markdown(html, unsafe_allow_html=True)
+    gid = st.session_state.get('admin_proc_id')
+    if gid:
+        st.divider()
+        st.markdown("**④ 신청자에게 보내기 준비**")
+        if st.button("📤 이 결과를 발송 서랍장으로 보내기", key="op_send_btn", type="primary"):
+            st.session_state[f"html_{gid}"] = html
+            st.session_state['app_running'] = False
+            st.session_state['admin_proc_id'] = None
+            st.rerun()
+
