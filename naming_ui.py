@@ -509,19 +509,101 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
             st.session_state["nm_report"] = (rkey, text)
     rep = st.session_state.get("nm_report")
     if rep and rep[0] == rkey:
-        st.markdown(rep[1])
+        st.markdown(prepare_report_text(rep[1]))
         gid = st.session_state.get('admin_proc_id')
         if gid:
             st.divider()
             st.markdown("**④ 신청자에게 보내기 준비**")
             if st.button("📤 이 결과를 발송 서랍장으로 보내기", key="nm_send_btn", type="primary"):
+                cover = make_cover(html_views, u_product, name, gender, b_year, b_month, b_day, b_time, u_cal)
                 body = (saju_html
-                        + html_views.format_ai_text_to_html(rep[1], "", name)
-                        + html_views.get_choyeon_sign_html())
-                final_html = html_views.get_final_report_box(body)
+                        + html_views.format_ai_text_to_html(prepare_report_text(rep[1]), "", name)
+                        + naming_closing_html(name, html_views.get_choyeon_sign_html()))
+                final_html = cover + html_views.get_final_report_box(body)
                 st.session_state[f'html_{gid}'] = final_html
                 st.session_state['saved_report_html'] = final_html
                 st.session_state['app_running'] = False
                 st.session_state['admin_proc_id'] = None
                 st.rerun()
     return an
+
+import re, datetime as _dtm
+
+def split_paragraphs(text, per=2):
+    """풀이글의 긴 문단을 문맥(문장) 단위로 2문장씩 끊어 줄바꿈한다. 제목 줄은 그대로 둔다."""
+    out = []
+    for raw in str(text or "").split("\n"):
+        line = raw.strip()
+        if not line:
+            out.append("")
+            continue
+        is_head = bool(re.match(r'^(\d+[\.\)]|\(\d+\)|[①-⑩◆▶▷])\s*', line)) or len(line) < 45
+        if is_head:
+            out.append(line)
+            continue
+        sents = re.split(r'(?<=[다요죠함])\.\s+', line)
+        sents = [s if s.endswith('.') else s + '.' for s in sents if s.strip()]
+        chunks, buf = [], []
+        for s in sents:
+            buf.append(s)
+            if len(buf) >= per:
+                chunks.append(" ".join(buf)); buf = []
+        if buf:
+            if chunks and len(buf) == 1 and len(buf[0]) < 60:
+                chunks[-1] += " " + buf[0]
+            else:
+                chunks.append(" ".join(buf))
+        out.append("\n\n".join(chunks))
+    return "\n".join(out)
+
+
+def prepare_report_text(text):
+    return split_paragraphs(text)
+
+
+NAMING_TITLE = {"4-1": "이름 풀이 감명서", "4-2": "이름 바꾸기 감명서", "4-3": "신생아 이름짓기 감명서"}
+
+
+def make_cover(hv, u_product, name, gender, b_year, b_month, b_day, b_time, u_cal):
+    from korean_lunar_calendar import KoreanLunarCalendar
+    klc = KoreanLunarCalendar()
+    if "음력" in u_cal:
+        klc.setLunarDate(int(b_year), int(b_month), int(b_day), "윤달" in u_cal)
+        sol = f"{klc.solarYear}년 {klc.solarMonth:02d}월 {klc.solarDay:02d}일"
+        lun = f"{int(b_year)}년 {int(b_month):02d}월 {int(b_day):02d}일"
+    else:
+        klc.setSolarDate(int(b_year), int(b_month), int(b_day))
+        sol = f"{int(b_year)}년 {int(b_month):02d}월 {int(b_day):02d}일"
+        lun = f"{klc.lunarYear}년 {klc.lunarMonth:02d}월 {klc.lunarDay:02d}일"
+    tstr = b_time if b_time != "시간 모름" else "시간 미상"
+    icon = "♂️" if str(gender).startswith('남') else "♀️"
+    try:
+        from zoneinfo import ZoneInfo
+        now = _dtm.datetime.now(ZoneInfo('Asia/Seoul'))
+    except Exception:
+        now = _dtm.datetime.now()
+    today = f"{now.year}년 {now.month}월 {now.day}일"
+    title = NAMING_TITLE.get(str(u_product)[:3], "이름 풀이 감명서")
+    return hv.get_personal_cover("초연 작명법", title, icon, name, sol, lun, tstr, today)
+
+
+def naming_closing_html(name, sign_html=""):
+    p = "style='text-indent: 15px; text-align: justify; line-height: 1.8; margin-bottom: 8px;'"
+    b = "<span style='font-weight:600;'>"
+    return f"""
+    <div style='margin-top: 12px;'>
+        <hr style='border: 0; border-top: 2px dashed #1A237E; margin: 18px 0 12px 0;'>
+        <p {p}>이름은 하루에도 수없이 불리고 쓰이면서 {b}소리와 글자의 기운</span>이 삶에 조금씩 스며드는 것이라 봅니다. 그래서 초연 작명법은 이름 하나만 따로 보지 않고, 타고난 사주가 필요로 하는 기운과 평생의 흐름(대운)이 이름과 어떻게 만나는지를 함께 살펴 풀이했습니다.</p>
+        <p {p}>다만 이름은 사주를 대신하는 것이 아니라 {b}사주를 곁에서 돕는 기운</span>입니다. 좋은 이름이 모든 일을 이루어 주지도, 아쉬운 이름이 삶을 가로막지도 않습니다. {b}{name}님</span>이 이 풀이를 이름과 삶을 가꾸는 하나의 참고로 삼아 주신다면 더없이 기쁘겠습니다.</p>
+        <div style='page-break-inside: avoid; break-inside: avoid;'>
+        <p {p}>이름에 관한 더 깊은 궁금증이나 앞으로의 고민이 있으시면 언제든 초연 시공명리를 다시 찾아 주십시오. {b}{name}님</span>의 앞날에 따뜻한 기운이 늘 함께하기를 바랍니다.</p>
+        <div style='display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 14px;'>
+            <div style='text-align: right;'>
+                <div style='font-weight: 900; font-size: 18px; color: #1A237E;'>- 초연 시공명리 연구소 -</div>
+                <div style='font-weight: 900; font-size: 18px; color: #1A237E; margin-top: 4px;'>사주박사 드림</div>
+            </div>
+            {sign_html}
+        </div>
+        </div>
+    </div>
+    """
