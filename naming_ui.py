@@ -10,6 +10,7 @@
 import os
 import streamlit as st
 from naming_engine import NamingEngine, yong_from_engine, rel
+import naming_hangul as hg
 
 # 흔한 성씨 한자는 후보 맨 앞에 (예: '이' -> 李 가 먼저)
 COMMON_SURNAME_HANJA = "金李朴崔鄭姜趙尹張林韓吳申徐權黃安宋柳洪全高文孫梁裵白曺許南劉盧沈河郭成車朱禹具辛任田閔愈"
@@ -63,7 +64,7 @@ def pick_surname(neng, label, key, optional=False, pre=None):
     return cands[i]
 
 
-def pick_hanja(neng, label, key, help_text="", allow_bad=False):
+def pick_hanja(neng, label, key, help_text="", allow_bad=False, pre=None):
     """한글 한 글자 입력 → 한자 후보 선택. 반환: 한자 dict(없으면 None). pre = 신청서에서 받은 {'r','h'}"""
     if pre and f"{key}_rd" not in st.session_state:
         st.session_state[f"{key}_rd"] = pre['r']
@@ -117,6 +118,8 @@ def _book_note(an, kind):
 
 
 def show_analysis(an):
+    if an.get('한글'):
+        return hg.show_hangul(st, an)
     st.markdown(f"### {an['이름']} ({an['독음']})")
     c1, c2 = st.columns(2)
     _n1, _n2 = _book_note(an, '소리'), _book_note(an, '자원')
@@ -171,9 +174,7 @@ def _flow_new_name(neng, sur, yong, gender, key):
     """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기 (외자 선택 가능)"""
     neng.gender = gender
     pre = st.session_state.get('nm_pre') or {}
-    if pre.get('script') == '한글 이름':
-        st.warning("신청자가 '한글 이름'을 원하셨습니다. 한글 이름 짓기 화면은 아직 준비 중입니다. (한자 이름 화면은 지금 쓰실 수 없습니다)")
-        return None
+    
     st.session_state.setdefault(f"{key}_n", pre.get('n_new', 2))
     n = 1 if st.radio("외자 이름(성 + 한 글자)을 선호하십니까?", ["아니오 (두 글자 이름)", "예 (외자 이름)"], horizontal=True, key=f"{key}_n").startswith("예") else 2
     if n == 1:
@@ -260,10 +261,33 @@ def render_naming_product(u_product, yong_el, gender, name=""):
     if sur is None:
         st.info("성씨를 한글로 입력해 주세요.")
         return None
-    if str(u_product).startswith("4-1"):
-        an = _flow_check_name(neng, sur, yong, key)
+    is41 = str(u_product).startswith("4-1")
+    _pre = st.session_state.get('nm_pre') or {}
+    _modes = ["한글(한자) 이름", "순수 한글 이름"] + ([] if is41 else ["한글(한자) 이름 + 순수 한글 이름 둘 다"])
+    mode = st.radio("어떤 이름을 원하십니까?", _modes, index=1 if _pre.get('script') == '한글 이름' else 0, horizontal=True, key=f"{key}_mode")
+    _sj = _AI.get('saju', '')
+    _bad = lambda rd: _bad_reading(rd)
+    if mode.startswith("순수"):
+        if is41:
+            an = hg.flow_check(st, sur, yong, key)
+        else:
+            an, _l = hg.flow_new(st, sur, yong, g, key, _AI.get('f'), _sj, _bad)
+            st.session_state['nm_last_ans'] = _l
+    elif mode.startswith("한글(한자) 이름 +"):
+        st.session_state['nm_last_ans'] = []
+        st.markdown("#### ⓐ 한글(한자) 이름 후보")
+        an_h = _flow_new_name(neng, sur, yong, g, key)
+        _lh = list(st.session_state.get('nm_last_ans') or [])
+        st.markdown("#### ⓑ 순수 한글 이름 후보")
+        an_g, _lg = hg.flow_new(st, sur, yong, g, key, _AI.get('f'), _sj, _bad)
+        st.session_state['nm_last_ans'] = _lh + _lg
+        _opt = [x for x, a_ in (("한글(한자) 이름", an_h), ("순수 한글 이름", an_g)) if a_]
+        if not _opt:
+            return None
+        _w = st.radio("풀이에 쓸 이름", _opt, horizontal=True, key=f"{key}_which")
+        an = an_h if _w.startswith("한글(한자)") else an_g
     else:
-        an = _flow_new_name(neng, sur, yong, g, key)
+        an = _flow_check_name(neng, sur, yong, key) if is41 else _flow_new_name(neng, sur, yong, g, key)
     if an:
         show_analysis(an)
     return an
@@ -388,6 +412,8 @@ class _SafeDict(dict):
 
 
 def build_naming_facts(an, yong=None):
+    if an.get('한글'):
+        return hg.facts_hangul(an, yong)
     L = [f"이름: {an['이름']} (독음 {an['독음']})",
          f"소리오행: {' → '.join(an['소리배합'])} / 관계 {' · '.join(an['소리관계'])} / 판정 {an['소리판정']}" + (f" / 책의 풀이: {_book_note(an, '소리')}" if _book_note(an, '소리') else ""),
          f"자원오행: {' → '.join(an['자원배합'])} / 관계 {' · '.join(an['자원관계'])} / 판정 {an['자원판정']}" + (f" / 책의 풀이: {_book_note(an, '자원')}" if _book_note(an, '자원') else "")]
@@ -806,9 +832,9 @@ def onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, warn_
 
     def _card(rank, an):
         gy = "".join(f"<span>{k} {v['수리']} {v['길흉']}</span>" for k, v in an['네격'].items())
-        names = " · ".join(k['hun'].split('/')[0] for k in (an.get('A'), an.get('B')) if k)
+        names = an.get('글자뜻', '') if an.get('한글') else " · ".join(k['hun'].split('/')[0] for k in (an.get('A'), an.get('B')) if k)
         return (f"<div class='op-nm'><span class='op-rk'>추천 {rank}</span><div class='op-h'>{an['이름']}</div>"
-                f"<div class='op-k'>{an['독음']}</div><div class='op-m'>{names}<br>소리 {an['소리판정']} · 자원 {an['자원판정']}</div>"
+                f"<div class='op-k'>{an['독음']}</div><div class='op-m'>{names}<br>소리 {an['소리판정']} · {'순수 한글 이름' if an.get('한글') else '자원 ' + an['자원판정']}</div>"
                 f"<div class='op-chips'>{gy}</div></div>")
 
     css = """<style>
@@ -1039,4 +1065,30 @@ def _ai_filter_single(cands, sur):
     for i, d in enumerate(keep):
         d['추천'] = i < 2
     return keep
+
+def naming_notice_html(u_product, an):
+    """4-1 이름 풀이에서 이름에 아쉬운 점이 있을 때만 붙이는 개명 안내 고정문구"""
+    if not str(u_product).startswith("4-1") or not an:
+        return ""
+    why = []
+    if an.get('흉격수'):
+        why.append("수리 네 격 중 흉한 격이 있음")
+    if an.get('이견격'):
+        why.append("수리에 학설 이견이 있는 격이 있음")
+    if an.get('소리판정') == '흉' or an.get('자원판정') == '흉':
+        why.append("소리·자원 오행의 흐름이 매끄럽지 않음")
+    if an.get('기신포함'):
+        why.append("피해야 할 오행이 이름에 들어 있음")
+    if not an.get('용신포함'):
+        why.append("사주가 필요로 하는 오행이 이름에 부족함")
+    if not why:
+        return ""
+    items = "".join(f"<li>{w}</li>" for w in why)
+    return f"""
+    <div style='margin-top:14px; padding:12px 16px; border:2px solid #1A237E; border-radius:8px; background:#F5F7FF; page-break-inside: avoid; break-inside: avoid;'>
+        <div style='font-weight:900; color:#1A237E; font-size:16px; margin-bottom:6px;'>📌 개명 안내</div>
+        <ul style='margin:0 0 8px 18px; line-height:1.7;'>{items}</ul>
+        <p style='margin:0; line-height:1.8; text-align:justify;'>위와 같은 아쉬운 점이 있으나, 이름은 사주를 곁에서 돕는 기운일 뿐 삶을 정하는 것은 아닙니다. 다만 아쉬운 부분을 보완하고 싶으시면 초연 시공명리의 <b>이름 바꾸기(개명) 풀이</b>로 사주에 맞는 새 이름 후보를 우선순위대로 받아 보실 수 있습니다.</p>
+    </div>
+    """
 
