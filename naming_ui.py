@@ -649,7 +649,7 @@ _NO_NAME = set('子丑寅卯辰巳午未申酉戌亥豚豕殺殊殘墓冥沒罪�
 _NAME_OK = set('彬妍炫瑛琳瑞娟嬉姬婉媛怡煐熙潾苑蓉漣允宥侑洵燦蕙鎬旭赫勳燮炳')   # 교육용 밖이지만 이름에 쓰는 글자 (박사님 승인 2026-11-24)
 
 # 소리 내어 부르면 이상한 뜻이 되는 말 (성씨 + 이름 전체 독음에 들어 있으면 후보에서 뺌). 박사님이 계속 추가하십시오.
-_BAD_READING = ('소심', '이리', '바보', '병신', '빙신', '시발', '씨발', '씹',
+_BAD_READING = ('협녹', '소심', '이리', '바보', '병신', '빙신', '시발', '씨발', '씹',
                 '좆', '지랄', '개새', '새끼', '쌍놈', '쌍년', '이년', '저년',
                 '미친', '미쳤', '또라이', '돌아이', '등신', '머저리', '얼간', '멍청',
                 '팔푼', '찐따', '찌질', '꼴통', '호구', '무식', '한심', '거지',
@@ -912,3 +912,131 @@ def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, 
 def _meaning_line(A, B):
     """이름 글자들의 한자 뜻을 '秉 잡을 병 + 鎬 호경 호' 형태로"""
     return ' + '.join(f"{k['h']} {k['hun'].split('/')[0]}" for k in (A, B) if k)
+
+# ======================================================================
+# 이름 후보 AI 뜻 심사 v2 - 점수제 (naming_ui.py 맨 아래, 옛 '이름 후보 AI 뜻 심사' 구간을 통째로 바꿈)
+# ======================================================================
+_AI = {'f': None, 'g': '', 'saju': ''}
+_AI_PASS = 8          # AI 점수(10점 만점)가 이 점수 이상이어야 후보로 보여 줌
+
+
+def _with_saju(prompt):
+    """사주 내용이 있으면 AI 심사 기준에 '이 사주에 맞는 이름인가'를 더한다"""
+    sj = str(_AI.get('saju') or '').strip()
+    if not sj:
+        return prompt
+    blk = ("[사주 적합성 - 반드시 반영]\n"
+           "아래는 이 아이의 사주 내용입니다. 이름 글자의 뜻과 오행이 이 사주의 약한 곳을 채우고 치우친 곳을 달래 주는지 함께 심사하십시오.\n"
+           "- 사주에 이미 넘치는 기운을 더 키우는 뜻의 글자가 중심이면 6점 이하 (예: 불이 넘치는 사주에 炎 炫 燦 같은 불 글자)\n"
+           "- 사주에 부족하거나 필요한 기운을 도와주는 뜻이면 가점\n"
+           "- 사주의 성격·구조와 이름의 뜻이 정반대로 부딪치면 감점\n"
+           "- 감점 사유에는 사주와 어떻게 안 맞는지 한 구절을 쓰십시오\n"
+           "[사주 내용]\n" + sj[:1800] + "\n\n")
+    key = '[뜻풀이 규칙]'
+    return prompt.replace(key, blk + key, 1) if key in prompt else blk + prompt
+
+
+def _ai_review(items, gender):
+    """items: [(이름한자, 독음, '글자별 훈음')] → {번호: (점수, 한줄뜻풀이)}. AI 호출이 안 되면 None"""
+    f = _AI.get('f')
+    if not f or not items:
+        return None
+    lines = "\n".join(f"{i + 1}|{h}|{r}|{m}" for i, (h, r, m) in enumerate(items))
+    prompt = f"""당신은 한국 성명학 전문가입니다. 아래는 {gender or '성별 미정'}에게 지어 줄 이름 후보입니다. (번호|한자이름|한글독음|글자별 훈음)
+각 이름을 엄격하게 심사해 10점 만점으로 점수를 매기십시오. 점수는 다음 기준으로 정합니다.
+[감점 기준]
+1) 한자 두 글자(외자는 성+한 글자)의 뜻을 합쳐 읽을 때 말이 안 되거나 어색하면 4점 이하
+2) 한글 소리가 성(姓)과 이어질 때 욕설·비속어·성적 연상·놀림감·흔한 관용구가 되면 2점 이하 (예: 박개나→개나 소나, 박걸려→걸레, 기남→발기)
+3) 성별 적합성: 여아·여성 이름에 굳셈·용맹·크기·권력·무예·법도·모범·받들기·검소·상쾌함 같은 남성적이거나 딱딱한 뜻의 글자가 하나라도 있으면 5점 이하 (예: 男 特 巨 雄 武 規 模 範 奉 儉 萬 快 等). 남아·남성 이름에 곱고 어여쁨을 뜻하는 글자(麗 娥 嬌 姬 妍 등)가 있으면 5점 이하
+4) 한자 뜻이 부정적이거나 재물·외모·몸 따위를 직접 드러내 천박하면 4점 이하
+5) 요즘 어른 이름으로 쓰기에 구식이거나 부자연스러우면 6점 이하
+6) 글자별 훈음에 '(동자이음·동음이의 주의)'가 붙은 글자가 있어 읽기가 헷갈릴 수 있으면 6점 이하
+[가점 기준] 뜻이 곱고 밝고 이름답게 자연스러우며 소리도 부드러우면 8~10점
+[뜻풀이 규칙] 뜻풀이는 반드시 위에 주어진 '글자별 훈음' 안의 뜻만 써서 15자 안팎으로 쓰십시오. 훈음에 없는 뜻이나 독음을 절대 지어내지 마십시오.
+출력은 반드시 한 줄에 하나씩 '번호|점수(숫자만)|뜻풀이 또는 감점 사유' 형식만 쓰고, 다른 말은 쓰지 마십시오.
+
+{lines}"""
+    try:
+        text = f(_with_saju(prompt))
+    except Exception:
+        return None
+    out = {}
+    for ln in str(text or '').splitlines():
+        p = [x.strip() for x in ln.strip().split('|')]
+        if len(p) >= 3 and p[0].isdigit():
+            try:
+                sc = float(p[1])
+            except ValueError:
+                continue
+            out[int(p[0])] = (sc, '|'.join(p[2:]))
+    return out or None
+
+
+def _all_hun(k):
+    """DB에 적힌 훈음 전체 (AI가 이 안에서만 뜻을 풀도록)"""
+    return f"{k['h']}[{k['hun']}]" + ("(동자이음·동음이의 주의)" if (k.get('dj') or k.get('de')) else "")
+
+
+def _ai_filter(allc, sur, n):
+    """정렬된 후보 allc 를 AI가 점수로 심사 → 기준 점수 이상만, (단계, 점수+AI점수) 순으로 n개. 심사가 불가하면 앞 n개"""
+    if not _AI.get('f'):
+        return allc[:n]
+    cache = st.session_state.setdefault('nm_ai_cache', {})
+    g = _AI.get('g', '')
+    pool = allc[:60]
+    ok = True
+    for s in range(0, len(pool), 20):
+        todo = [c for c in pool[s:s + 20] if (g, c['이름']) not in cache]
+        if not todo:
+            continue
+        items = [(c['이름'], c['독음'], ' + '.join(_all_hun(k) for k in (c['A'], c.get('B')) if k)) for c in todo]
+        res = _ai_review(items, g)
+        if res is None:
+            ok = False
+            break
+        for i, c in enumerate(todo):
+            if (i + 1) in res:
+                cache[(g, c['이름'])] = res[i + 1]
+        if len([1 for c in pool[:s + 20] if cache.get((g, c['이름']), (0,))[0] >= _AI_PASS]) >= n * 2:
+            break
+    keep = []
+    for c in pool:
+        v = cache.get((g, c['이름']))
+        if v and v[0] >= _AI_PASS:
+            keep.append(dict(c, 뜻풀이=v[1], AI점수=v[0]))
+    if not ok and not keep:
+        st.caption("※ AI 뜻 심사를 하지 못해 소리·자원·수리 기준으로만 보여 드립니다.")
+        return allc[:n]
+    keep.sort(key=lambda c: (c['단계'], -(c['점수'] + c['AI점수'])))
+    if len(keep) < n:
+        st.caption(f"※ AI 심사({_AI_PASS}점 이상)를 통과한 후보가 {len(keep)}개뿐입니다. 이 성씨는 조건에 맞는 좋은 이름이 많지 않습니다.")
+    return keep[:n]
+
+
+def _ai_filter_single(cands, sur):
+    """외자 이름 후보(성 + 한 글자)를 AI가 점수로 심사해 기준 점수 이상만 남기고 뜻풀이를 붙인다. 심사가 불가하면 그대로"""
+    if not _AI.get('f') or not cands:
+        return cands
+    cache = st.session_state.setdefault('nm_ai_cache', {})
+    g = _AI.get('g', '')
+    pool = cands[:40]
+    todo = [c for c in pool if (g, sur['h'] + c['h']) not in cache]
+    if todo:
+        items = [(sur['h'] + c['h'], sur['r'] + c['r'], _all_hun(c)) for c in todo]
+        res = _ai_review(items, g)
+        if res is None:
+            st.caption("※ AI 뜻 심사를 하지 못해 소리·자원·수리 기준으로만 보여 드립니다.")
+            return cands
+        for i, c in enumerate(todo):
+            if (i + 1) in res:
+                cache[(g, sur['h'] + c['h'])] = res[i + 1]
+    keep = []
+    for c in pool:
+        v = cache.get((g, sur['h'] + c['h']))
+        if v and v[0] >= _AI_PASS:
+            keep.append(dict(c, 뜻풀이=v[1], AI점수=v[0]))
+    keep.sort(key=lambda d: -(d['점수'] + d['가산'] + d['AI점수']))
+    for i, d in enumerate(keep):
+        d['추천'] = i < 2
+    return keep
+
