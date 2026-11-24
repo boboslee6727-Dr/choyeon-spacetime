@@ -148,6 +148,7 @@ def _flow_single(neng, sur, yong, key):
     order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order1")
     _ex = [x['h'] for x in neng.hanja if not x.get('e') or x['h'] in _NO_NAME] + _order_exclude(neng, order)
     cands = neng.single_candidates(sur, yong, exclude=_ex)
+    cands = _ai_filter_single(cands, sur)
     if not cands:
         need = yong.get('용신')
         if need and rel(sur['ja'], need) == '극':
@@ -229,8 +230,12 @@ def _flow_check_name(neng, sur, yong, key):
     B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2", allow_bad=True) if n == 2 else None
     if A is None or (n == 2 and B is None):
         return None
+    _bd = [f"{k['h']}({k['hun'].split('/')[0]})" for k in (A, B) if k and k.get('x')]
+    if _bd:
+        st.warning("책 9장 '피해야 할 불용한자'가 들어 있습니다: " + ", ".join(_bd) + " — 뜻이 좋지 않아 이름에 쓰지 않도록 권하는 글자입니다.")
     an = neng.analyze_name(sur, A, B, yong)
     an['글자뜻'] = _meaning_line(A, B)
+    an['불용한자'] = ", ".join(_bd)
     return an
 
 
@@ -671,13 +676,13 @@ def _order_exclude(neng, order):
 def _cand_pools(neng, sur, yong, fixed, fixed_pos, n=5, order_ex=()):
     """뜻 좋은 교육용 글자 → 부족하면 교육용(흔히 쓰는) 글자 전체로 넓혀서 후보를 뽑고, (단계, 점수) 순서로 정렬"""
     pools = [
-        [x['h'] for x in neng.hanja if not (x.get('g') and x.get('e'))],
+        [x['h'] for x in neng.hanja if not (x.get('g') and x.get('e')) or x['h'] in _NO_NAME],
         [x['h'] for x in neng.hanja if not x.get('e') or x['h'] in _NO_NAME],
     ]
     allc, seen = [], set()
     for ex in pools:
         ex = list(ex) + list(order_ex)
-        r = neng.auto_candidates(sur, yong, fixed, fixed_pos, exclude=ex, n=n * 2 + 10)
+        r = neng.auto_candidates(sur, yong, fixed, fixed_pos, exclude=ex, n=n * 3 + 10)
         for c in r['후보']:
             if c['이름'] in seen or _bad_reading(c['독음']):
                 continue
@@ -899,71 +904,6 @@ def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, 
             st.session_state['app_running'] = False
             st.session_state['admin_proc_id'] = None
             st.rerun()
-
-# ======================================================================
-# 이름 후보 AI 뜻 심사 (naming_ui.py 맨 아래에 붙여 넣기)
-# ======================================================================
-_AI = {'f': None, 'g': ''}
-
-
-def _ai_review(items, gender):
-    """items: [(이름한자, 독음, '글자뜻 + 글자뜻')] → {번호: (통과여부, 한줄뜻풀이/사유)}. AI 호출이 안 되면 None"""
-    f = _AI.get('f')
-    if not f or not items:
-        return None
-    lines = "\n".join(f"{i + 1}|{h}|{r}|{m}" for i, (h, r, m) in enumerate(items))
-    prompt = f"""당신은 한국 성명학 전문가입니다. 아래는 {gender or '성별 미정'}에게 지어 줄 이름 후보입니다. (번호|한자이름|한글독음|글자별 뜻)
-각 이름을 엄격하게 심사해 '통과' 또는 '탈락'으로 판정하십시오. 다음 중 하나라도 해당하면 탈락입니다.
-1) 한자 두 글자의 뜻을 합쳐 읽으면 말이 안 되거나 어색함 (예: 發甘 '일어날+달다')
-2) 한글 소리가 성(姓)과 이어질 때 욕설·비속어·성적 연상·놀림감·흔한 관용구가 됨 (예: 박개나→개나 소나, 박걸려→걸레, 기남→발기)
-3) 뜻이 {gender or '이 성별'}에게 어울리지 않음 (예: 여아에게 男·特·巨·雄·武, 남아에게 麗·娥·嬌)
-4) 한자 뜻이 부정적이거나 재물·외모·몸 따위를 직접 드러내 천박함 (예: 價特 '값이 특별')
-5) 실제 어른 이름으로 쓰기에 부자연스러움
-통과한 이름에는 부모님께 보여 줄 15자 안팎의 뜻풀이를 쓰십시오.
-출력은 반드시 한 줄에 하나씩 '번호|통과|뜻풀이' 또는 '번호|탈락|사유' 형식만 쓰고, 다른 말은 쓰지 마십시오.
-
-{lines}"""
-    try:
-        text = f(prompt)
-    except Exception:
-        return None
-    out = {}
-    for ln in str(text or '').splitlines():
-        p = [x.strip() for x in ln.strip().split('|')]
-        if len(p) >= 3 and p[0].isdigit() and p[1] in ('통과', '탈락'):
-            out[int(p[0])] = (p[1] == '통과', '|'.join(p[2:]))
-    return out or None
-
-
-def _ai_filter(allc, sur, n):
-    """정렬된 후보 allc 에서 AI 심사를 통과한 이름만 위에서부터 n개. 심사가 불가하면 그대로 앞 n개"""
-    if not _AI.get('f'):
-        return allc[:n]
-    cache = st.session_state.setdefault('nm_ai_cache', {})
-    g = _AI.get('g', '')
-    keep, ok = [], True
-    for s in range(0, min(len(allc), 40), 20):
-        batch = allc[s:s + 20]
-        todo = [c for c in batch if (g, c['이름']) not in cache]
-        if todo:
-            items = [(c['이름'], c['독음'], f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}" if c.get('B') else c['A']['hun'].split('/')[0]) for c in todo]
-            res = _ai_review(items, g)
-            if res is None:
-                ok = False
-                break
-            for i, c in enumerate(todo):
-                if (i + 1) in res:
-                    cache[(g, c['이름'])] = res[i + 1]
-        for c in batch:
-            v = cache.get((g, c['이름']))
-            if v and v[0]:
-                keep.append(dict(c, 뜻풀이=v[1]))
-        if len(keep) >= n:
-            break
-    if not ok and not keep:
-        st.caption("※ AI 뜻 심사를 하지 못해 소리·자원·수리 기준으로만 보여 드립니다.")
-        return allc[:n]
-    return keep[:n]
 
 def _meaning_line(A, B):
     """이름 글자들의 한자 뜻을 '秉 잡을 병 + 鎬 호경 호' 형태로"""
