@@ -262,7 +262,19 @@ def render_naming_product(u_product, yong_el, gender, name=""):
         st.info("성씨를 한글로 입력해 주세요.")
         return None
     is41 = str(u_product).startswith("4-1")
+    is42 = str(u_product).startswith("4-2")
     _pre = st.session_state.get('nm_pre') or {}
+    cur = None
+    if is42:
+        st.markdown("**현재 이름** (새 이름과 비교하기 위해 입력합니다)")
+        _ct = st.radio("현재 이름", ["입력 안 함", "한자가 있는 이름", "순수 한글 이름"], horizontal=True, key=f"{key}_curtype")
+        if _ct.startswith("한자"):
+            cur = _flow_check_name(neng, sur, yong, f"{key}_cur")
+        elif _ct.startswith("순수"):
+            cur = hg.flow_check(st, sur, yong, f"{key}_cur")
+        if cur:
+            st.markdown("**현재 이름 판정**")
+            show_analysis(cur)
     _modes = ["한글(한자) 이름", "순수 한글 이름"] + ([] if is41 else ["한글(한자) 이름 + 순수 한글 이름 둘 다"])
     mode = st.radio("어떤 이름을 원하십니까?", _modes, index=1 if _pre.get('script') == '한글 이름' else 0, horizontal=True, key=f"{key}_mode")
     _sj = _AI.get('saju', '')
@@ -290,6 +302,9 @@ def render_naming_product(u_product, yong_el, gender, name=""):
         an = _flow_check_name(neng, sur, yong, key) if is41 else _flow_new_name(neng, sur, yong, g, key)
     if an:
         show_analysis(an)
+    if cur and an:
+        hg.show_compare(st, cur, an)
+    st.session_state['nm_cmp_facts'] = hg.compare_facts(cur, an) if (cur and an) else ''
     return an
 
 
@@ -563,7 +578,7 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
             data = {"name": name, "golden_facts": build_golden_facts(engine, sj, choyeon_db),
                     "user_concern": str(st.session_state.get("user_concern", "") or "").strip(),
                     "saju_facts": build_saju_facts(sj, yong_from_engine(sj['yong_el'] or {})) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
-                    "naming_facts": build_naming_facts(an, yong_from_engine(sj['yong_el'] or {})),
+                    "naming_facts": build_naming_facts(an, yong_from_engine(sj['yong_el'] or {})) + "\n" + str(st.session_state.get('nm_cmp_facts') or ''),
                     "daewun_facts": build_daewun_facts(engine, sj, yong_from_engine(sj['yong_el'] or {}), an)}
             with st.spinner("풀이글을 쓰고 있습니다. 1~2분 걸립니다..."):
                 text = ai_func(tpl.format_map(_SafeDict(data)))
