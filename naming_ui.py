@@ -20,8 +20,12 @@ TIER_LABELS = ["흔한 글자 + 뜻 좋은 글자 (권장)", "뜻 좋은 글자 
 
 @st.cache_resource(show_spinner=False)
 def get_neng():
-    return NamingEngine(DB_PATH)
-
+    _ne = NamingEngine(DB_PATH)
+    for _x in _ne.hanja:
+        if _x['h'] in _NAME_OK:
+            _x['e'] = 1
+            _x['g'] = 1
+    return _ne
 
 def _tier_exclude(neng, tier):
     if tier == 0:
@@ -642,7 +646,7 @@ def naming_closing_html(name, sign_html=""):
 
 # 이름 후보에서 뺄 글자: 열두 띠 글자와 돼지 뜻 글자 (박사님이 더 넣으려면 여기에 글자를 추가)
 _NO_NAME = set('子丑寅卯辰巳午未申酉戌亥豚豕殺殊殘墓冥沒罪賊敵訟拘擊打討衝暴爆假妄罔惑虛無莫勿免窮短薄慢鈍緩忙忘失落脫捨離別寂獨寒冷涼夜霧辛臭醉嫌逆抵拒却鼻口耳舌毛髮脚肝肺肉乳齒額皮革烏蟲螢鷄色欲媒姻婚碑煙燒燃炭軟賣買貸賃費錢兵軍旅卒帥二三四五六七八十兩雙數半父母祖姪靈皇王君尊仙神天佛馬魚鳥鹿龍象雁羊燕蝶鴻')
-
+_NAME_OK = set('彬妍炫瑛琳瑞娟嬉姬婉媛怡煐熙潾苑蓉漣允宥侑洵燦蕙鎬旭赫勳燮炳')   # 교육용 밖이지만 이름에 쓰는 글자 (박사님 승인 2026-11-24)
 
 # 소리 내어 부르면 이상한 뜻이 되는 말 (성씨 + 이름 전체 독음에 들어 있으면 후보에서 뺌). 박사님이 계속 추가하십시오.
 _BAD_READING = ('소심', '이리', '바보', '병신', '빙신', '시발', '씨발', '씹',
@@ -733,7 +737,7 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
         gy = ' · '.join(f"{v['수리']}{'✅' if v['길흉'] == '길' else '⚠️'}" for v in an['네격'].values())
         mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}"
         if c.get('뜻풀이'):
-            mean += f" — {c['뜻풀이']}"
+            mean += f" — {c['뜻풀이']} (AI {c.get('AI점수', '-')}점)"
         _sf = ' → '.join(x[0] for x in an['소리배합']) + f" ({' · '.join(an['소리관계'])})"
         _rf = ' → '.join(x[0] for x in an['자원배합']) + f" ({' · '.join(an['자원관계'])})"
         _w = [f"{k['h']}:{k['dj']}" for k in (c['A'], c['B']) if k and k.get('dj')]
