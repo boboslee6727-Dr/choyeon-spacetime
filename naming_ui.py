@@ -1,7 +1,6 @@
 # ==============================================================================
 이름 풀이 및 짓기 화면 (naming_ui.py)  v1.2
 # ==============================================================================
-
 """
 이름 풀이 및 짓기 화면 (naming_ui.py)  v1.2
 - app.py 에서는 아래 두 줄만 부르면 된다.
@@ -36,7 +35,7 @@ def _tier_exclude(neng, tier):
 
 def _hanja_label(x):
     hun = x['hun'].split('/')[0]
-    return f"{x['h']}  {hun}  ({x['st']}획 · 자원{x['ja']} · 소리{x['bo']})"
+    return f"{x['h']}  {hun}  ({x['st']}획 · 자원{x['ja']} · 소리{x['bo']})" + (" ⚠️피해야 할 불용한자" if x.get('x') else "")
 
 
 # ------------------------------------------------------------------ 입력 부품
@@ -62,14 +61,14 @@ def pick_surname(neng, label, key, optional=False, pre=None):
     return cands[i]
 
 
-def pick_hanja(neng, label, key, help_text="", pre=None):
+def pick_hanja(neng, label, key, help_text="", allow_bad=False):
     """한글 한 글자 입력 → 한자 후보 선택. 반환: 한자 dict(없으면 None). pre = 신청서에서 받은 {'r','h'}"""
     if pre and f"{key}_rd" not in st.session_state:
         st.session_state[f"{key}_rd"] = pre['r']
     rd = st.text_input(label, key=f"{key}_rd", help=help_text, max_chars=1).strip()
     if not rd:
         return None
-    cands = [x for x in neng.find_by_reading(rd) if x['h'] not in neng.bad]
+    cands = [x for x in neng.find_by_reading(rd) if allow_bad or x['h'] not in neng.bad]
     cands.sort(key=lambda x: (-int(bool(x.get('e'))), x['st']))
     if not cands:
         st.warning(f"'{rd}'로 읽는 한자를 찾지 못했습니다.")
@@ -212,7 +211,13 @@ def _flow_new_name(neng, sur, yong, gender, key):
         j = st.selectbox("끝 글자", range(len(ends)), key=f"{key}_end",
                          format_func=lambda j: ("★ " if ends[j]['추천'] else "") + _hanja_label(ends[j]))
         second = ends[j]
-    return neng.analyze_name(sur, first, second, yong)
+    _bd = [f"{k['h']}({k['hun'].split('/')[0]})" for k in (A, B) if k and k.get('x')]
+    if _bd:
+        st.warning("책 9장 '피해야 할 불용한자'가 들어 있습니다: " + ", ".join(_bd) + " — 뜻이 좋지 않아 이름에 쓰지 않도록 권하는 글자입니다.")
+    an = neng.analyze_name(sur, A, B, yong)
+    an['글자뜻'] = _meaning_line(A, B)
+    an['불용한자'] = ", ".join(_bd)
+    return an
 
 
 def _flow_check_name(neng, sur, yong, key):
@@ -222,8 +227,8 @@ def _flow_check_name(neng, sur, yong, key):
     cur = pre.get('cur') or [None, None]
     st.session_state.setdefault(f"{key}_n", pre.get('n_cur', 2))
     n = st.radio("이름 글자 수", [2, 1], format_func=lambda n: "두 글자 (예: 수연)" if n == 2 else "한 글자 (예: 솔)", horizontal=True, key=f"{key}_n")
-    A = pick_hanja(neng, "이름 첫 글자 (한글)", f"{key}_c1", pre=cur[0])
-    B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2", pre=(cur[1] if len(cur) > 1 else None)) if n == 2 else None
+    A = pick_hanja(neng, "이름 첫 글자 (한글)", f"{key}_c1", allow_bad=True)
+    B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2", allow_bad=True) if n == 2 else None
     if A is None or (n == 2 and B is None):
         return None
     an = neng.analyze_name(sur, A, B, yong)
@@ -388,6 +393,8 @@ def build_naming_facts(an, yong=None):
     L.append("중심오행 포함: " + ("예" if an['용신포함'] else "아니오") + " / " + _src)
     L.append("피할 오행 포함: " + ("예" if an['기신포함'] else "아니오"))
     L.append(f"음양: {an['음양']}")
+    if an.get('불용한자'):
+        L.append("피해야 할 불용한자 포함(책 9장): " + an['불용한자'] + " — 뜻이 좋지 않은 글자이므로 풀이글에서 반드시 짚을 것")
     if an.get('글자뜻'):
         L.append("한자 뜻 (풀이글에 글자별 뜻과 두 글자를 합친 뜻을 반드시 풀어 쓸 것): " + an['글자뜻'])
     return "\n".join(L)
