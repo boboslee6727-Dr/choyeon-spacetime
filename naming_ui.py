@@ -320,7 +320,7 @@ def render_saju_block(engine, hv, cdb, sj, name, gender, b_year, b_month, b_day,
         i_val = cdb.get("ilju", {}).get(i_key, f"[{i_key}] 성품 데이터 없음")
         sd = cdb.get("ilju_structure", {}).get(i_key, ["구조 미상", "유형 미상", "성향 미상"])
         gyuk, _ = engine.get_gyukgook_detailed(ds, ys, ms, hs, mb, jjis=[hb, db, mb, yb], gans=[hs, ds, ms, ys])
-        parts.append(hv.get_golden_text(name, w_val, i_val, sd[0], sd[1], sd[2], mb=mb, gyuk_name=gyuk))
+        parts.append(hv.get_golden_text("신생아" if _b43 else name, w_val, i_val, sd[0], sd[1], sd[2], mb=mb, gyuk_name=gyuk))
     except Exception as e:
         st.caption(f"(황금글은 표시하지 못했습니다: {e})")
     _html = "".join(str(p or "") for p in parts)
