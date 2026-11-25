@@ -275,3 +275,27 @@ def onepage_html(html_views, sj, gender, an1, an2, sec, birth_args, today_txt):
 <div class='op2-o'>초연 시공명리 연구소</div><div class='op2-n'>사주박사{seal_tag}</div></div></div></div>
 </div></div></div>"""
     return inner
+
+def notice_html(an1, an2, order_txt=""):
+    """풀이 끝에 붙는 '이름 쓸 때 주의할 점' 상자 (한 장 작명서에서 옮겨 온 내용)"""
+    warns = []
+    for an in (an1, an2):
+        for k in (an.get('A'), an.get('B')):
+            if k and k.get('dj'):
+                warns.append(f"{k['h']}({k['dj']})")
+            if k and k.get('de'):
+                warns.append(f"{k['h']}({k['de']})")
+    warn_txt = ", ".join(dict.fromkeys(warns)) or "해당 글자 없음"
+    items = [f"소리 주의: {warn_txt}",
+             "불용한자: 책 9장 기준을 적용했습니다",
+             order_txt or "출생 순서는 가리지 않았습니다",
+             "도장·서명에는 한자 이름을 그대로 쓰시면 기운이 온전히 전해집니다"]
+    li = "".join(f"<li>{_esc(x)}</li>" for x in items)
+    return (f"<div style='margin-top:14px; padding:12px 16px; border:2px solid #1A237E; border-radius:8px; background:#F5F7FF; "
+            f"page-break-inside: avoid; break-inside: avoid;'><div style='font-weight:900; color:#1A237E; font-size:16px; margin-bottom:6px;'>"
+            f"이름 쓸 때 주의할 점</div><ul style='margin:0 0 0 18px; line-height:1.8;'>{li}</ul></div>")
+
+
+def page_break_html(inner):
+    """앞 내용과 다른 쪽에서 시작하게 감싸 준다"""
+    return f"<div style='page-break-before: always; break-before: page;'>{inner}</div>"
