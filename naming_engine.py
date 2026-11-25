@@ -1,18 +1,18 @@
 # ==============================================================================
 # 🏮 사주박사: 이름 풀이 및 짓기 naming_engine v1.2
 # ==============================================================================
-# -*- coding: utf-8 -*
 """
 초연 작명법 엔진 (naming_engine.py)  v1.2  -- 기존 engine.py와 완전히 별개 파일
 - 사주 계산(용신/희신/기신)은 기존 engine.py 결과를 받아서 쓴다. 이 파일은 사주를 계산하지 않는다.
 - 한자 자료는 naming_db.json (인명용 한자 5,829자 + 81수리) 에서 읽는다.
-- 이름 구조: 성(1글자) + 이름 2글자 (두 글자 성, 외자 이름은 다음 단계에서 추가)
+- 이름 구조: 성(1글자 또는 2글자) + 이름 2글자 (두 글자 성, 외자 이름은 다음 단계에서 추가)
 
 [박사님 확정 규칙]
  * 용신(중심오행)이 자원오행에 포함되어야 함 (최우선)
  * 소리오행/자원오행: 순생(金→水)이 기본, 역생(土→金)도 허용
  * 원·형·이·정 네 격이 모두 길수
  * 삼원오행은 적용하지 않음
+
 [임시 규칙 - 박사님 확인 대기]
  * 이웃한 오행에 '상극'이 없어야 함(비화=같은 오행은 허용), 세 글자가 모두 같은 오행이면 제외
  * 획수 음양이 성·첫자·끝자 모두 같으면(음음음/양양양) 제외
@@ -71,7 +71,7 @@ class NamingEngine:
         self.hanja = self.db['hanja']
         self.good = {int(k) for k, v in self.db['suri81'].items() if v['길']}
         # 뜻이 나쁜 글자(키워드 자동분류 초안)는 기본으로 후보에서 뺀다
-        self.bad = {x['h'] for x in self.hanja if x.get('x')}
+        self.bad = {x['h'] for x in self.hanja if x.get('x') or x.get('ex')}
         # (발음오행, 자원오행, 획수) 같은 글자끼리 묶어 계산을 빠르게 함
         self.cls = collections.defaultdict(list)
         for x in self.hanja:
@@ -127,6 +127,8 @@ class NamingEngine:
         통과하면 점수(정수), 탈락이면 None
         """
         S, a, b = sur['st'], A['st'], B['st']
+        if A.get('dp') and B.get('dp'):
+            return None
         if not self.four_ok(S, a, b) or not self.yinyang_ok(S, a, b):
             return None
         if not chain_ok(sur['bo'], A['bo'], B['bo']):
@@ -313,7 +315,7 @@ def pair_ok(e1, e2):
 
 def _single_four(self, S, a):
     """외자 이름 네 격: 원격=a+1, 형격=S+a, 이격=S+1, 정격=S+a (성명학 통례, 기본안)"""
-    return {'원격': a + 1, '형격': S + a, '이격': S + 1, '정격': S + a}
+    return {'원격': a, '형격': S + a, '이격': S, '정격': S + a}
 
 
 def _single_candidates(self, sur, yong, exclude=(), fixed=None):
