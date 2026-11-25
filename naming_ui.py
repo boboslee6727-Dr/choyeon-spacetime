@@ -10,6 +10,7 @@
 import os
 import streamlit as st
 from naming_engine import NamingEngine, yong_from_engine, rel
+import naming_onepage as op
 import naming_hangul as hg
 
 # 흔한 성씨 한자는 후보 맨 앞에 (예: '이' -> 李 가 먼저)
@@ -891,7 +892,8 @@ def onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, warn_
     return html_views.get_final_report_box(inner)
 
 
-def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db):
+def render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db,
+                           prompts_mod, saju_html, u_product)
     """4-3: 위 후보 표에서 두 이름을 골라 한 장짜리 작명서를 만든다"""
     import datetime as _dt
     ans = st.session_state.get('nm_last_ans') or []
@@ -910,10 +912,12 @@ def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, 
     if st.button("📜 한 장 작명서 만들기", key="op_make_btn", type="primary"):
         yong = yong_from_engine(sj['yong_el'] or {})
         ilji = f"{sj['gans'][1]}{sj['jjis'][1]}일주의 일지 {sj['jjis'][1]}"
-        prompt = _onepage_prompt(name, gender,
-                                 build_golden_facts(engine, sj, choyeon_db),
-                                 build_saju_facts(sj, yong) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
-                                 an1, an2, build_daewun_facts(engine, sj, yong, an1), build_daewun_facts(engine, sj, yong, an2), ilji)
+        _sp_d, _sp_txt = op.spouse_facts(sj, yong)
+        prompt = op.prompt(name, gender,
+                           build_golden_facts(engine, sj, choyeon_db),
+                           build_saju_facts(sj, yong) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
+                           build_naming_facts(an1), build_naming_facts(an2),
+                           build_daewun_facts(engine, sj, yong, an1), build_daewun_facts(engine, sj, yong, an2), ilji, _sp_txt)
         with st.spinner("작명서를 쓰고 있습니다. 1~2분 걸립니다..."):
             text = ai_func(prompt)
         st.session_state['op_text'] = (sig, text)
@@ -935,9 +939,8 @@ def render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, 
         today = _dt.datetime.now(ZoneInfo('Asia/Seoul'))
     except Exception:
         today = _dt.datetime.now()
-    birth_txt = f"{u_cal} {b_year}년 {b_month}월 {b_day}일 {b_time}생"
-    html = onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, ", ".join(dict.fromkeys(warns)), order_txt,
-                        f"{today.year}년 {today.month}월 {today.day}일")
+    html = op.onepage_html(html_views, sj, gender, an1, an2, sec, (u_cal, b_year, b_month, b_day, b_time),
+                           f"{today.year}년 {today.month}월 {today.day}일")
     st.session_state['saved_report_html'] = html
     st.markdown(html, unsafe_allow_html=True)
     gid = st.session_state.get('admin_proc_id')
