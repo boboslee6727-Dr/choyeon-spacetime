@@ -39,7 +39,7 @@ def _tier_exclude(neng, tier):
 
 def _hanja_label(x):
     hun = x['hun'].split('/')[0]
-    return f"{x['h']}  {hun}  ({x['st']}획 · 자원{x['ja']} · 소리{x['bo']})" + (" ⚠️피해야 할 불용한자" if x.get('x') else "")
+    return f"{x['h']}  {hun}  ({x['st']}획 · 자원{x['ja']} · 소리{x['bo']})" + (" ⚠️피해야 할 불용한자" if x.get('x') else (" ⚠️" + x['ex'] if x.get('ex') else ""))
 
 
 # ------------------------------------------------------------------ 입력 부품
@@ -216,7 +216,7 @@ def _flow_new_name(neng, sur, yong, gender, key):
         j = st.selectbox("끝 글자", range(len(ends)), key=f"{key}_end",
                          format_func=lambda j: ("★ " if ends[j]['추천'] else "") + _hanja_label(ends[j]))
         second = ends[j]
-    _bd = [f"{k['h']}({k['hun'].split('/')[0]})" for k in (A, B) if k and k.get('x')]
+    _bd = [f"{k['h']}({k['hun'].split('/')[0]})" for k in (A, B) if k and (k.get('x') or k.get('ex'))]
     if _bd:
         st.warning("책 9장 '피해야 할 불용한자'가 들어 있습니다: " + ", ".join(_bd) + " — 뜻이 좋지 않아 이름에 쓰지 않도록 권하는 글자입니다.")
     an = neng.analyze_name(sur, A, B, yong)
@@ -236,7 +236,7 @@ def _flow_check_name(neng, sur, yong, key):
     B = pick_hanja(neng, "이름 둘째 글자 (한글)", f"{key}_c2", allow_bad=True) if n == 2 else None
     if A is None or (n == 2 and B is None):
         return None
-    _bd = [f"{k['h']}({k['hun'].split('/')[0]})" for k in (A, B) if k and k.get('x')]
+    _bd = [f"{k['h']}({k['hun'].split('/')[0]})" for k in (A, B) if k and (k.get('x') or k.get('ex'))]
     if _bd:
         st.warning("책 9장 '피해야 할 불용한자'가 들어 있습니다: " + ", ".join(_bd) + " — 뜻이 좋지 않아 이름에 쓰지 않도록 권하는 글자입니다.")
     an = neng.analyze_name(sur, A, B, yong)
@@ -472,7 +472,7 @@ def build_saju_facts(sj, yong):
             f"오행 개수: {cnt}\n"
             f"중심오행 {yong.get('용신') or '-'} · 보조오행 {yong.get('희신') or '-'} · 피할 오행 {yong.get('기신') or '-'}")
 
-_STAGES = [("원격", "초년운", 1, 19), ("형격", "청년운", 20, 38), ("이격", "중년운", 39, 58), ("정격", "말년운", 59, 77)]
+_STAGES = [("원격", "초년운", 1, 19), ("형격", "청년운", 20, 38), ("이격", "중년운", 39, 57), ("정격", "말년운", 58, 77)]
 _OH = {'목': '木', '화': '火', '토': '土', '금': '金', '수': '水'}
 _ROLE_PT = {'용신': 1, '희신': 1, '한신': 0, '구신': -1, '기신': -1, '': 0}
 
