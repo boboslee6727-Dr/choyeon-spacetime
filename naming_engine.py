@@ -1,8 +1,8 @@
 # ==============================================================================
-# 🏮 사주박사: 이름 풀이 및 짓기 naming_engine v1.2
+# 🏮 사주박사: 이름 풀이 및 짓기 naming_engine v1.4
 # ==============================================================================
 """
-초연 작명법 엔진 (naming_engine.py)  v1.2  -- 기존 engine.py와 완전히 별개 파일
+초연 작명법 엔진 (naming_engine.py)  v1.4  -- 기존 engine.py와 완전히 별개 파일
 - 사주 계산(용신/희신/기신)은 기존 engine.py 결과를 받아서 쓴다. 이 파일은 사주를 계산하지 않는다.
 - 한자 자료는 naming_db.json (인명용 한자 5,829자 + 81수리) 에서 읽는다.
 - 이름 구조: 성(1글자 또는 2글자) + 이름 2글자 (두 글자 성, 외자 이름은 다음 단계에서 추가)
@@ -127,9 +127,11 @@ class NamingEngine:
         통과하면 점수(정수), 탈락이면 None
         """
         S, a, b = sur['st'], A['st'], B['st']
-        if A.get('dp') and B.get('dp'):
+       if A.get('dp') and B.get('dp'):
             return None
         if A.get('u') and B.get('u'):      # 사용가능 불용한자 둘이 겹치면 뜻 과잉
+            return None
+        if not self._want_ok(A, B):        # 오행 직접 지정
             return None
         if not self.four_ok(S, a, b) or not self.yinyang_ok(S, a, b):
             return None
@@ -437,6 +439,8 @@ def _score_level(self, sur, A, B, yong, level):
     S, a, b = sur['st'], A['st'], B['st']
     if not self.four_ok_strict(S, a, b) or not self.yinyang_ok(S, a, b):
         return None
+    if not self._want_ok(A, B):
+        return None
     need = {o for o in (yong.get('용신'), yong.get('겸용')) if o}
     if need and not ({A['ja'], B['ja']} & need):
         return None
@@ -474,6 +478,8 @@ def _level_pairs(self, sur, yong, level, exclude, fixed, fixed_pos, per_class=4)
             if x['h'] in ex or x['h'] == fixed['h']:
                 continue
             A, B = (fixed, x) if fixed_pos == 'first' else (x, fixed)
+            if (A.get('dp') and B.get('dp')) or (A.get('u') and B.get('u')):
+                continue
             s = self._score_level(sur, A, B, yong, level)
             if s is not None:
                 out.append((s + self.bonus(x) + _common(x), A, B))
@@ -490,7 +496,7 @@ def _level_pairs(self, sur, yong, level, exclude, fixed, fixed_pos, per_class=4)
                 continue
             for A in l1:
                 for B in l2:
-                    if A['h'] != B['h']:
+                    if A['h'] != B['h'] and not (A.get('dp') and B.get('dp')) and not (A.get('u') and B.get('u')):
                         out.append((s + self.bonus(A) + self.bonus(B) + _common(A) + _common(B), A, B))
     return out
  
@@ -581,3 +587,24 @@ def _analyze_name_v2(self, sur, A, B, yong):
 
 NamingEngine.four_ok_strict = _four_ok_strict
 NamingEngine.analyze_name = _analyze_name_v2
+
+# ---- 오행 직접 지정 (성씨 칸은 고정, 이름 두 글자만) ----
+import threading as _th
+_WANT = _th.local()
+
+
+def _set_want(self, w=None):
+    """w = {'s1':소리오행(가운데), 's2':소리오행(끝), 'j1':자원오행(가운데), 'j2':자원오행(끝)} (비우면 자동)"""
+    _WANT.v = {k: v for k, v in (w or {}).items() if v} or None
+
+
+def _want_ok(self, A, B):
+    w = getattr(_WANT, 'v', None)
+    if not w:
+        return True
+    return ((not w.get('s1') or A['bo'] == w['s1']) and (not w.get('s2') or B['bo'] == w['s2'])
+            and (not w.get('j1') or A['ja'] == w['j1']) and (not w.get('j2') or B['ja'] == w['j2']))
+
+
+NamingEngine.set_want = _set_want
+NamingEngine._want_ok = _want_ok
