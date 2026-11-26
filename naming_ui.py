@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-이름 풀이 및 짓기 화면 (naming_ui.py)  v1.4
+이름 풀이 및 짓기 화면 (naming_ui.py)  v1.5
 - app.py 에서는 아래 두 줄만 부르면 된다.
     import naming_ui
     result = naming_ui.render_naming_product(u_product, yong_el, gender, name)   # yong_el = engine.get_yongshin_elements(...) 결과
@@ -923,15 +923,15 @@ def onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, warn_
 
 
 def render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db,
-                           prompts_mod, saju_html, u_product):
-    """4-3: 위 후보 표에서 두 이름을 골라 한 장짜리 작명서를 만든다"""
+                       prompts_mod, saju_html, u_product):
+    """4-3: 추천 이름 두 개를 고르면 '작명서 풀이(여러 쪽)'와 '한 장 작명서'를 함께 만든다"""
     import datetime as _dt
     ans = st.session_state.get('nm_last_ans') or []
     if len(ans) < 2:
-        st.info("추천 후보가 두 개 이상 나오면 한 장짜리 작명서를 만들 수 있습니다.")
+        st.info("추천 후보가 두 개 이상 나오면 작명서를 만들 수 있습니다.")
         return
     st.divider()
-    st.markdown("**③ 한 장 작명서에 올릴 추천 이름 2개 고르기** (처음에는 1·2순위가 선택되어 있습니다)")
+    st.markdown("**③ 작명서에 올릴 추천 이름 2개 고르기** (처음에는 1·2순위가 선택되어 있습니다)")
     labels = [f"{i + 1}순위 {a['이름']} ({a['독음']})" for i, a in enumerate(ans)]
     pick = st.multiselect("추천 이름 두 개", labels, default=labels[:2], max_selections=2, key="op_pick")
     if len(pick) != 2:
@@ -939,46 +939,60 @@ def render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time,
         return
     an1, an2 = [ans[labels.index(p)] for p in pick]
     sig = f"{an1['이름']}|{an2['이름']}|{name}|{b_year}{b_month}{b_day}{b_time}"
-    if st.button("📜 한 장 작명서 만들기", key="op_make_btn", type="primary"):
-        yong = yong_from_engine(sj['yong_el'] or {})
-        ilji = f"{sj['gans'][1]}{sj['jjis'][1]}일주의 일지 {sj['jjis'][1]}"
-        _sp_d, _sp_txt = op.spouse_facts(sj, yong)
-        prompt = op.prompt(name, gender,
-                           build_golden_facts(engine, sj, choyeon_db),
-                           build_saju_facts(sj, yong) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis']),
-                           build_naming_facts(an1), build_naming_facts(an2),
-                           build_daewun_facts(engine, sj, yong, an1), build_daewun_facts(engine, sj, yong, an2), ilji, _sp_txt)
-        with st.spinner("작명서를 쓰고 있습니다. 1~2분 걸립니다..."):
-            text = ai_func(prompt)
-        st.session_state['op_text'] = (sig, text)
-    got = st.session_state.get('op_text')
-    if not got or got[0] != sig:
-        return
-    sec = _parse_onepage(got[1])
     yong = yong_from_engine(sj['yong_el'] or {})
-    warns = []
-    for an in (an1, an2):
-        for k in (an.get('A'), an.get('B')):
-            if k and k.get('dj'):
-                warns.append(f"{k['h']}({k['dj']})")
-            if k and k.get('de'):
-                warns.append(f"{k['h']}({k['de']})")
-    order_txt = {"첫째": "첫째(장자/장녀) 기준을 적용했습니다", "둘째": "둘째 이하(차자/차녀) 기준을 적용했습니다"}.get(str(st.session_state.get('nm_4-3_order', ''))[:2], "출생 순서는 가리지 않음")
+    if st.button("📜 작명서 만들기 (풀이 + 한 장 작명서)", key="op_make_btn", type="primary"):
+        var = PROMPT_NAME.get("4-3")
+        tpl = getattr(prompts_mod, var, "") if var else ""
+        if not tpl:
+            st.error(f"prompts.py 에 '{var}' 가 없습니다.")
+            return
+        sp_d, sp_txt = op.spouse_facts(sj, yong)
+        saju_facts = build_saju_facts(sj, yong) + "\n" + engine.get_eumyang_facts(sj['gans'], sj['jjis'])
+        golden = build_golden_facts(engine, sj, choyeon_db)
+        ilji = f"{sj['gans'][1]}{sj['jjis'][1]}일주의 일지 {sj['jjis'][1]}"
+        f1, f2 = build_naming_facts(an1, yong), build_naming_facts(an2, yong)
+        d1, d2 = build_daewun_facts(engine, sj, yong, an1), build_daewun_facts(engine, sj, yong, an2)
+        with st.spinner("작명서 풀이를 쓰고 있습니다. 1~2분 걸립니다..."):
+            data = {"name": name, "name1": f"{an1['이름']}({an1['독음']})", "name2": f"{an2['이름']}({an2['독음']})",
+                    "golden_facts": golden, "saju_facts": saju_facts, "spouse_facts": sp_txt,
+                    "user_concern": str(st.session_state.get("user_concern", "") or "").strip(),
+                    "naming_facts": "[추천 ① 이름]\n" + f1 + "\n\n[추천 ② 이름]\n" + f2,
+                    "daewun_facts": "[추천 ① 이름 기준]\n" + d1 + "\n\n[추천 ② 이름 기준]\n" + d2}
+            report_text = ai_func(tpl.format_map(_SafeDict(data)))
+        with st.spinner("한 장 작명서를 쓰고 있습니다. 1분쯤 걸립니다..."):
+            one_text = ai_func(op.prompt(name, gender, golden, saju_facts, f1, f2, d1, d2, ilji, sp_txt))
+        st.session_state['op_text'] = (sig, one_text)
+        st.session_state['op_report'] = (sig, report_text)
+    got, rep = st.session_state.get('op_text'), st.session_state.get('op_report')
+    if not got or not rep or got[0] != sig or rep[0] != sig:
+        return
+    sec = op.parse(got[1])
+    order_txt = {"첫째": "첫째(장자/장녀) 기준을 적용했습니다", "둘째": "둘째 이하(차자/차녀) 기준을 적용했습니다"}.get(
+        str(st.session_state.get('nm_4-3_order', ''))[:2], "")
     try:
         from zoneinfo import ZoneInfo
         today = _dt.datetime.now(ZoneInfo('Asia/Seoul'))
     except Exception:
         today = _dt.datetime.now()
-    html = op.onepage_html(html_views, sj, gender, an1, an2, sec, (u_cal, b_year, b_month, b_day, b_time),
-                           f"{today.year}년 {today.month}월 {today.day}일")
-    st.session_state['saved_report_html'] = html
-    st.markdown(html, unsafe_allow_html=True)
+    one_html = op.onepage_html(html_views, sj, gender, an1, an2, sec, (u_cal, b_year, b_month, b_day, b_time),
+                               f"{today.year}년 {today.month}월 {today.day}일")
+    cover = make_cover(html_views, u_product, name, gender, b_year, b_month, b_day, b_time, u_cal)
+    body = (saju_html
+            + html_views.format_ai_text_to_html(prepare_report_text(rep[1]), "", "신생아")
+            + op.notice_html(an1, an2, order_txt)
+            + naming_closing_html("신생아", html_views.get_choyeon_sign_html()))
+    final_html = cover + html_views.get_final_report_box(body) + op.page_break_html(one_html)
+    st.session_state['saved_report_html'] = final_html
+    st.markdown(prepare_report_text(rep[1]))
+    st.markdown(op.notice_html(an1, an2, order_txt), unsafe_allow_html=True)
+    st.markdown("**한 장 작명서**")
+    st.markdown(one_html, unsafe_allow_html=True)
     gid = st.session_state.get('admin_proc_id')
     if gid:
         st.divider()
         st.markdown("**④ 신청자에게 보내기 준비**")
         if st.button("📤 이 결과를 발송 서랍장으로 보내기", key="op_send_btn", type="primary"):
-            st.session_state[f"html_{gid}"] = html
+            st.session_state[f"html_{gid}"] = final_html
             st.session_state['app_running'] = False
             st.session_state['admin_proc_id'] = None
             st.rerun()
@@ -1196,16 +1210,14 @@ def _flow_hangul_pick(neng, sur, yong, gender, key):
     full = str(sur.get('r', '')) + nm
     if _bad_reading(full):
         st.warning(f"'{full}'은(는) 소리 내어 부르면 좋지 않은 뜻이 들어 있는 말입니다. 다른 이름을 권합니다.")
-    c1, c2, c3 = st.columns(3)
-    max_st = c1.number_input("한 글자 최대 획수", min_value=8, max_value=30, value=16, step=1, key=f"{key}_hmax",
-                             help="획수가 많은 글자를 뺍니다. 기본 16획 이하")
+    c2, c3 = st.columns(2)
     order = c2.radio("몇째 자녀입니까?", ["첫째 (장자/장녀)", "둘째 이하 (차자/차녀)", "가리지 않음"], index=2, key=f"{key}_horder")
     nshow = c3.selectbox("보여 드릴 후보 수", [10, 20, 30], key=f"{key}_hshow")
     ex = set(_order_exclude(neng, order)) | {h for h in _NO_NAME if h not in _NAME_OK} | _HG_SKIP
-    ck = f"{full}|{max_st}|{order}|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{gender}"
+    ck = f"{full}|{order}|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{gender}"
     if st.session_state.get('nm_hg_key') != ck:
         with st.spinner("한자 조합을 찾고 있습니다..."):
-            st.session_state['nm_hg'] = _hangul_combos(neng, sur, yong, nm[0], nm[1], int(max_st), ex)
+            st.session_state['nm_hg'] = _hangul_combos(neng, sur, yong, nm[0], nm[1], 99, ex)
         st.session_state['nm_hg_key'] = ck
     combos, stat = st.session_state['nm_hg']
     st.caption(f"{full}: 한자 조합 {stat['전체']}가지 중 수리·음양이 맞는 것 {stat['수리음양통과']}가지, "
