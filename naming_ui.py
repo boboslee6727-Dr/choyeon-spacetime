@@ -1122,7 +1122,7 @@ _POP_NAMES = {   # 앞의 20개는 2026년 순위(11월 4일 기준), 그 뒤는
     '남': "도윤 이준 시우 하준 이안 서준 수호 태오 우주 유준 도현 선우 지호 이현 도하 은호 주원 윤우 시윤 우진 은우".split(),
 }
 
-_HG_SKIP = set('丫吝亜衙枒稰')   # 이름에 쓰지 않을 한자 (박사님이 더하거나 빼실 수 있습니다)
+_HG_SKIP = set('丫吝亜衙枒稰閠閏䦞鈗荺橍')   # 이름에 쓰지 않을 한자 (박사님이 더하거나 빼실 수 있습니다)
 
 def _hangul_combos(neng, sur, yong, r1, r2, max_st=16, ex=()):
     """한글 두 글자(r1, r2)에 맞는 한자 조합을 전부 만들어 판정한다.
@@ -1185,7 +1185,12 @@ def _flow_hangul_pick(neng, sur, yong, gender, key):
         st.warning(f"'{full}'에 맞는 한자 조합이 없습니다. 최대 획수를 늘리거나 다른 한글 이름을 골라 보세요.")
         return None
     good = [c for c in combos if c['단계'] == 0]
-    use = (good or combos)[:nshow]
+    base = [dict(c, 이름=c['an']['이름'], 독음=c['an']['독음']) for c in (good or combos)]
+    with st.spinner("AI가 두 글자를 합친 뜻을 풀이하고 있습니다..."):
+        use = _ai_filter(base, sur, nshow)
+    if not use:
+        st.info("AI 뜻 심사를 통과한 조합이 없어, 소리·자원·수리 기준 순서대로 보여 드립니다.")
+        use = base[:nshow]
     if not good:
         st.info("소리·자원오행까지 모두 길한 조합이 없어, 수리·음양이 맞는 조합 중에서 보여 드립니다. 소리나 자원이 흉일 수 있습니다.")
     st.markdown("**한자 조합 후보 (우선순위 순)**")
@@ -1193,9 +1198,13 @@ def _flow_hangul_pick(neng, sur, yong, gender, key):
     for i, c in enumerate(use):
         an = c['an']
         an['글자뜻'] = _meaning_line(c['A'], c['B'])
+        if c.get('뜻풀이'):
+            an['글자뜻'] += f" (AI 뜻풀이: {c['뜻풀이']})"
         ans.append(an)
         gy = ' · '.join(f"{v['수리']}{'✅' if v['길흉'] == '길' else '⚠️'}" for v in an['네격'].values())
         mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}"
+        if c.get('뜻풀이'):
+            mean += f" — {c['뜻풀이']} (AI {c.get('AI점수', '-')}점)"
         sf = ' → '.join(x[0] for x in an['소리배합']) + f" ({' · '.join(an['소리관계'])})"
         rf = ' → '.join(x[0] for x in an['자원배합']) + f" ({' · '.join(an['자원관계'])})"
         rows.append(f"| {i + 1} | **{an['이름']}** ({an['독음']}) | {mean} | {sf} {an['소리판정']} | {rf} {an['자원판정']} | {gy} | {'포함' if an['용신포함'] else '미포함'} |")
