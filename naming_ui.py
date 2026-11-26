@@ -963,7 +963,7 @@ def render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time,
                 warns.append(f"{k['h']}({k['dj']})")
             if k and k.get('de'):
                 warns.append(f"{k['h']}({k['de']})")
-    order_txt = {"첫째": "첫째(장자/장녀) 기준을 적용했습니다", "둘째": "둘째 이하(차자/차녀) 기준을 적용했습니다"},.get(str(st.session_state.get('nm_4-3_order', ''))[:2], "출생 순서는 가리지 않음")
+    order_txt = {"첫째": "첫째(장자/장녀) 기준을 적용했습니다", "둘째": "둘째 이하(차자/차녀) 기준을 적용했습니다"}.get(str(st.session_state.get('nm_4-3_order', ''))[:2], "출생 순서는 가리지 않음")
     try:
         from zoneinfo import ZoneInfo
         today = _dt.datetime.now(ZoneInfo('Asia/Seoul'))
