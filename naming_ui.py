@@ -176,6 +176,8 @@ def _flow_new_name(neng, sur, yong, gender, key):
     neng.gender = gender
     pre = st.session_state.get('nm_pre') or {}
     
+    if st.radio("이름을 정하는 방법", ["기존 방식 (조건에 맞는 한자부터 고르기)", "한글 이름을 먼저 고르고 한자 찾기"], horizontal=True, key=f"{key}_how").startswith("한글"):
+        return _flow_hangul_pick(neng, sur, yong, gender, key)
     st.session_state.setdefault(f"{key}_n", pre.get('n_new', 2))
     n = 1 if st.radio("외자 이름(성 + 한 글자)을 선호하십니까?", ["아니오 (두 글자 이름)", "예 (외자 이름)"], horizontal=True, key=f"{key}_n").startswith("예") else 2
     if n == 1:
@@ -563,7 +565,8 @@ def render_naming_page(engine, u_product, gender, name, b_year, b_month, b_day, 
     if an is None or ai_func is None or prompts_mod is None:
         return an
     if str(u_product).startswith("4-3"):
-        render_onepage_43(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db)
+        render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db,
+                           prompts_mod, saju_html, u_product)
         return an
     st.divider()
     st.markdown("**③ 풀이글 받기**")
@@ -1110,3 +1113,93 @@ def naming_notice_html(u_product, an):
     </div>
     """
 
+# ======================================================================
+# 한글 이름을 먼저 고르고 한자 찾기 (naming_ui.py 맨 아래에 붙여 넣기)
+# ======================================================================
+# 인기 이름: 2025년 출생신고 기준 (대법원 전자가족관계등록시스템 집계, 유가크루 정리). 박사님이 고치거나 더하실 수 있습니다.
+_POP_NAMES = {
+    '여': "서아 서윤 하린 이서 하윤 아린 지안 지유 아윤 시아 윤서 지아 지우 유나 채이 수아 채아 도아 예린 유하".split(),
+    '남': "도윤 이준 하준 시우 도현 이안 태오 서준 선우 은우 수호 이현 도하 지호 우주 유준 은호 윤우 주원 시윤".split(),
+}
+
+
+def _hangul_combos(neng, sur, yong, r1, r2, max_st=16, ex=()):
+    """한글 두 글자(r1, r2)에 맞는 한자 조합을 전부 만들어 판정한다.
+    반환: (조합 목록, 통계). 조합은 (단계, 점수) 순서. 단계 0 = 수리·음양·소리·자원 모두 길, 단계 1 = 수리·음양만 길"""
+    exs = set(ex) | neng.bad
+    pa = [x for x in neng.find_by_reading(r1) if x['h'] not in exs and x['st'] <= max_st]
+    pb = [x for x in neng.find_by_reading(r2) if x['h'] not in exs and x['st'] <= max_st]
+    S = sur['st']
+    st_ = {'전체': len(pa) * len(pb), '수리음양통과': 0, '소리자원까지': 0, '동파제외': 0}
+    out = []
+    for a in pa:
+        for b in pb:
+            if not (neng.four_ok(S, a['st'], b['st']) and neng.yinyang_ok(S, a['st'], b['st'])):
+                continue
+            if a.get('dp') and b.get('dp'):
+                st_['동파제외'] += 1
+                continue
+            st_['수리음양통과'] += 1
+            an = neng.analyze_name(sur, a, b, yong)
+            tier = 0 if (an['소리판정'] == '길' and an['자원판정'] == '길') else 1
+            if tier == 0:
+                st_['소리자원까지'] += 1
+            sc = (3 if an['용신포함'] else 0) - (2 if an['기신포함'] else 0) + neng.bonus(a) + neng.bonus(b) \
+                 + 1.5 * (bool(a.get('g')) + bool(b.get('g'))) + 1.0 * (bool(a.get('e')) + bool(b.get('e')))   # 뜻 좋은 글자·흔한 글자를 위로
+            out.append((tier, -sc, a, b, an))
+    out.sort(key=lambda t: (t[0], t[1]))
+    return [dict(단계=t, 점수=-s, A=a, B=b, an=an) for t, s, a, b, an in out], st_
+
+
+def _flow_hangul_pick(neng, sur, yong, gender, key):
+    """한글 이름을 먼저 고르고(인기 이름 선택 또는 직접 입력), 그 소리에 맞는 한자 조합을 찾아 보여 준다"""
+    pop = _POP_NAMES.get(gender, [])
+    opts = ["직접 입력"] + [f"{i + 1}위 {n}" for i, n in enumerate(pop)]
+    sel = st.selectbox("한글 이름 고르기 (2025년 인기 이름에서 고르거나 직접 입력)", opts, key=f"{key}_hpop")
+    if sel == "직접 입력":
+        nm = st.text_input("한글 이름 두 글자 (성씨는 빼고)", max_chars=2, key=f"{key}_hnm").strip()
+    else:
+        nm = sel.split()[1]
+    if len(nm) != 2 or not all('가' <= c <= '힣' for c in nm):
+        st.info("한글 이름 두 글자를 고르거나 입력해 주세요.")
+        return None
+    full = str(sur.get('r', '')) + nm
+    if _bad_reading(full):
+        st.warning(f"'{full}'은(는) 소리 내어 부르면 좋지 않은 뜻이 들어 있는 말입니다. 다른 이름을 권합니다.")
+    c1, c2, c3 = st.columns(3)
+    max_st = c1.number_input("한 글자 최대 획수", min_value=8, max_value=30, value=16, step=1, key=f"{key}_hmax",
+                             help="획수가 많은 글자를 뺍니다. 기본 16획 이하")
+    order = c2.radio("몇째 자녀입니까?", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], index=2, key=f"{key}_horder")
+    nshow = c3.selectbox("보여 드릴 후보 수", [10, 20, 30], key=f"{key}_hshow")
+    ex = set(_order_exclude(neng, order)) | {h for h in _NO_NAME if h not in _NAME_OK}
+    ck = f"{full}|{max_st}|{order}|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{gender}"
+    if st.session_state.get('nm_hg_key') != ck:
+        with st.spinner("한자 조합을 찾고 있습니다..."):
+            st.session_state['nm_hg'] = _hangul_combos(neng, sur, yong, nm[0], nm[1], int(max_st), ex)
+        st.session_state['nm_hg_key'] = ck
+    combos, stat = st.session_state['nm_hg']
+    st.caption(f"{full}: 한자 조합 {stat['전체']}가지 중 수리·음양이 맞는 것 {stat['수리음양통과']}가지, "
+               f"소리·자원오행까지 모두 길한 것 {stat['소리자원까지']}가지 (불용한자·동자이음·동음이의·동파한자는 자동으로 뺐습니다)")
+    if not combos:
+        st.warning(f"'{full}'에 맞는 한자 조합이 없습니다. 최대 획수를 늘리거나 다른 한글 이름을 골라 보세요.")
+        return None
+    good = [c for c in combos if c['단계'] == 0]
+    use = (good or combos)[:nshow]
+    if not good:
+        st.info("소리·자원오행까지 모두 길한 조합이 없어, 수리·음양이 맞는 조합 중에서 보여 드립니다. 소리나 자원이 흉일 수 있습니다.")
+    st.markdown("**한자 조합 후보 (우선순위 순)**")
+    rows, ans = [], []
+    for i, c in enumerate(use):
+        an = c['an']
+        an['글자뜻'] = _meaning_line(c['A'], c['B'])
+        ans.append(an)
+        gy = ' · '.join(f"{v['수리']}{'✅' if v['길흉'] == '길' else '⚠️'}" for v in an['네격'].values())
+        mean = f"{c['A']['hun'].split('/')[0]} + {c['B']['hun'].split('/')[0]}"
+        sf = ' → '.join(x[0] for x in an['소리배합']) + f" ({' · '.join(an['소리관계'])})"
+        rf = ' → '.join(x[0] for x in an['자원배합']) + f" ({' · '.join(an['자원관계'])})"
+        rows.append(f"| {i + 1} | **{an['이름']}** ({an['독음']}) | {mean} | {sf} {an['소리판정']} | {rf} {an['자원판정']} | {gy} | {'포함' if an['용신포함'] else '미포함'} |")
+    st.markdown("| 순위 | 이름 | 뜻 | 소리 | 자원 | 수리(원·형·이·정) | 중심오행 |\n|---|---|---|---|---|---|---|\n" + "\n".join(rows))
+    st.session_state['nm_last_ans'] = [dict(a_, A=c_['A'], B=c_['B']) for a_, c_ in zip(ans, use)]
+    i = st.radio("이 한자 조합으로 풀이를 진행합니다", range(len(use)), format_func=lambda i: f"{i + 1}순위  {ans[i]['이름']} ({ans[i]['독음']})",
+                 key=f"{key}_hpick", horizontal=True)
+    return ans[i]
