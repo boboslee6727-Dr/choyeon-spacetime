@@ -1122,6 +1122,7 @@ _POP_NAMES = {
     '남': "도윤 이준 하준 시우 도현 이안 태오 서준 선우 은우 수호 이현 도하 지호 우주 유준 은호 윤우 주원 시윤".split(),
 }
 
+_HG_SKIP = set('丫吝亜衙枒稰')   # 이름에 쓰지 않을 한자 (박사님이 더하거나 빼실 수 있습니다)
 
 def _hangul_combos(neng, sur, yong, r1, r2, max_st=16, ex=()):
     """한글 두 글자(r1, r2)에 맞는 한자 조합을 전부 만들어 판정한다.
@@ -1171,7 +1172,7 @@ def _flow_hangul_pick(neng, sur, yong, gender, key):
                              help="획수가 많은 글자를 뺍니다. 기본 16획 이하")
     order = c2.radio("몇째 자녀입니까?", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], index=2, key=f"{key}_horder")
     nshow = c3.selectbox("보여 드릴 후보 수", [10, 20, 30], key=f"{key}_hshow")
-    ex = set(_order_exclude(neng, order)) | {h for h in _NO_NAME if h not in _NAME_OK}
+    ex = set(_order_exclude(neng, order)) | {h for h in _NO_NAME if h not in _NAME_OK} | _HG_SKIP
     ck = f"{full}|{max_st}|{order}|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{gender}"
     if st.session_state.get('nm_hg_key') != ck:
         with st.spinner("한자 조합을 찾고 있습니다..."):
