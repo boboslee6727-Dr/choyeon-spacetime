@@ -129,6 +129,8 @@ class NamingEngine:
         S, a, b = sur['st'], A['st'], B['st']
         if A.get('dp') and B.get('dp'):
             return None
+        if A.get('u') and B.get('u'):      # 사용가능 불용한자 둘이 겹치면 뜻 과잉
+            return None
         if not self.four_ok(S, a, b) or not self.yinyang_ok(S, a, b):
             return None
         if not chain_ok(sur['bo'], A['bo'], B['bo']):
