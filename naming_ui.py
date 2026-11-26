@@ -893,7 +893,7 @@ def onepage_html(html_views, name, gender, birth_txt, yong, an1, an2, sec, warn_
 
 
 def render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time, u_cal, ai_func, html_views, choyeon_db,
-                           prompts_mod, saju_html, u_product)
+                           prompts_mod, saju_html, u_product):
     """4-3: 위 후보 표에서 두 이름을 골라 한 장짜리 작명서를 만든다"""
     import datetime as _dt
     ans = st.session_state.get('nm_last_ans') or []
