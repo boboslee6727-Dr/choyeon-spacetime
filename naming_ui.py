@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-이름 풀이 및 짓기 화면 (naming_ui.py)  v1.2
+이름 풀이 및 짓기 화면 (naming_ui.py)  v1.4
 - app.py 에서는 아래 두 줄만 부르면 된다.
     import naming_ui
     result = naming_ui.render_naming_product(u_product, yong_el, gender, name)   # yong_el = engine.get_yongshin_elements(...) 결과
@@ -126,6 +126,10 @@ def show_analysis(an):
     _n1, _n2 = _book_note(an, '소리'), _book_note(an, '자원')
     c1.markdown(f"**소리오행** {_chain_text(an, '소리')}  \n판정: **{an['소리판정']}**" + (f"  \n📖 {_n1}" if _n1 else ""))
     c2.markdown(f"**자원오행** {_chain_text(an, '자원')}  \n판정: **{an['자원판정']}**" + (f"  \n📖 {_n2}" if _n2 else ""))
+    _el = an['소리배합']
+    if len(an['독음']) == len(_el):
+        _cho = [(_CHO[(ord(r) - 0xAC00) // 588] if 0 <= ord(r) - 0xAC00 < 11172 else r) for r in an['독음']]
+        st.caption("초성 오행: " + " · ".join(f"{r} {c}({e})" for r, c, e in zip(an['독음'], _cho, _el)))
     st.markdown(_gyeok_table(an))
     tag = []
     tag.append("중심오행(용신) 포함 ✅" if an['용신포함'] else "중심오행(용신) 미포함 ⚠️")
@@ -153,7 +157,7 @@ def _surname_block(neng, key):
 
 def _flow_single(neng, sur, yong, key):
     """외자 이름(성 + 한 글자): 후보 중에서 한 글자 고르기"""
-    order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order1")
+    order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자/장녀)", "둘째 이하 (차자/차녀)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order1")
     _ex = [x['h'] for x in neng.hanja if not x.get('e') or x['h'] in _NO_NAME] + _order_exclude(neng, order)
     cands = neng.single_candidates(sur, yong, exclude=_ex)
     cands = _ai_filter_single(cands, sur)
@@ -174,6 +178,7 @@ def _flow_single(neng, sur, yong, key):
 def _flow_new_name(neng, sur, yong, gender, key):
     """4-2 이름 바꾸기 / 4-3 신생아 이름짓기: 가운데 글자 → 끝 글자 고르기 (외자 선택 가능)"""
     neng.gender = gender
+    neng.set_want(None)      # 오행 직접 지정은 '기존 방식'의 후보 뽑기에서만 쓴다
     pre = st.session_state.get('nm_pre') or {}
     
     if st.radio("이름을 정하는 방법", ["기존 방식 (조건에 맞는 한자부터 고르기)", "한글 이름을 먼저 고르고 한자 찾기"], horizontal=True, key=f"{key}_how").startswith("한글"):
@@ -747,10 +752,21 @@ def _cand_pools(neng, sur, yong, fixed, fixed_pos, n=5, order_ex=()):
 def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
     """후보 이름을 엔진이 우선순위대로 뽑아 보여 주고, 박사님이 하나를 고른다"""
     fp = {'가운데 글자': 'first', '마지막 글자': 'last'}.get(fixed_pos, 'last')
-    order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order")
+    order = st.radio("몇째 자녀입니까? (책 9장: 장자·차자 불용한자 가림)", ["첫째 (장자/장녀)", "둘째 이하 (차자/차녀)", "가리지 않음"], horizontal=True, index=2, key=f"{key}_order")
     oex = _order_exclude(neng, order)
     nshow = st.selectbox("보여 드릴 후보 수", [5, 10, 20], key=f"{key}_nshow")
-    ck = f"{nshow}|{order}|{key}_cand|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{fixed['h'] if fixed else ''}|{fp}"
+    want = {}
+    with st.expander("⚙️ 오행 직접 지정 (전문가용 · 성씨 칸은 고정, 비워 두면 자동)"):
+        st.caption(f"성씨 {sur['h']} : 소리오행 {sur['bo']} · 자원오행 {sur['ja']} (고정). 이름 두 글자의 오행만 바꿀 수 있고, 수리 네 격·음양·용신 포함 조건은 그대로 지킵니다.")
+        _EL = ["자동", "木", "火", "土", "金", "水"]
+        _c1, _c2 = st.columns(2)
+        want['s1'] = _c1.selectbox("소리오행 · 가운데 글자", _EL, key=f"{key}_w_s1")
+        want['s2'] = _c2.selectbox("소리오행 · 끝 글자", _EL, key=f"{key}_w_s2")
+        want['j1'] = _c1.selectbox("자원오행 · 가운데 글자", _EL, key=f"{key}_w_j1")
+        want['j2'] = _c2.selectbox("자원오행 · 끝 글자", _EL, key=f"{key}_w_j2")
+        want = {k: (None if v == "자동" else v) for k, v in want.items()}
+    neng.set_want(want)
+    ck = f"{nshow}|{order}|{key}_cand|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{fixed['h'] if fixed else ''}|{fp}|{sorted((k, v or '') for k, v in want.items())}"
     if st.session_state.get('nm_cand_key') != ck:
         with st.spinner("후보 이름을 찾고 있습니다..."):
             with_f = _cand_pools(neng, sur, yong, fixed, fp, n=nshow, order_ex=oex) if fixed else None
@@ -758,6 +774,17 @@ def _flow_auto_pick(neng, sur, yong, fixed_pos, fixed, key):
         st.session_state['nm_cand_key'] = ck
         st.session_state['nm_cand'] = (with_f, free)
     with_f, free = st.session_state['nm_cand']
+    if st.session_state.get('nm_cnt_key') != ck:      # 📊 통계 한 줄 (계산은 한 번만)
+        try:
+            _ex = [x['h'] for x in neng.hanja if not x.get('e') or x['h'] in _NO_NAME] + list(oex)
+            st.session_state['nm_cnt'] = neng.count_summary(sur, yong, exclude=_ex)
+        except Exception:
+            st.session_state['nm_cnt'] = None
+        st.session_state['nm_cnt_key'] = ck
+    _cs = st.session_state.get('nm_cnt')
+    if _cs:
+        st.caption(f"📊 흔히 쓰는 한자로 만들 수 있는 이름 {_cs['전체조합']:,}가지 중 수리 네 격·음양이 맞는 것 {_cs['수리길조합']:,}가지, "
+                   f"소리·자원오행·용신까지 모두 맞는 것 {_cs['오행까지만족']:,}가지입니다.")
     use = free
     if fixed is not None:
         worse = (with_f['완화단계'] > free['완화단계']) or (len(with_f['후보']) < min(nshow, len(free['후보'])))
@@ -936,7 +963,7 @@ def render_onepage_43b(engine, sj, name, gender, b_year, b_month, b_day, b_time,
                 warns.append(f"{k['h']}({k['dj']})")
             if k and k.get('de'):
                 warns.append(f"{k['h']}({k['de']})")
-    order_txt = {"첫째": "첫째(장자) 기준 적용", "둘째": "둘째 이하(차자) 기준 적용"}.get(str(st.session_state.get('nm_4-3_order', ''))[:2], "출생 순서는 가리지 않음")
+    order_txt = {"첫째": "첫째(장자/장녀) 기준을 적용했습니다", "둘째": "둘째 이하(차자/차녀) 기준을 적용했습니다"},.get(str(st.session_state.get('nm_4-3_order', ''))[:2], "출생 순서는 가리지 않음")
     try:
         from zoneinfo import ZoneInfo
         today = _dt.datetime.now(ZoneInfo('Asia/Seoul'))
@@ -998,6 +1025,7 @@ def _ai_review(items, gender):
 4) 한자 뜻이 부정적이거나 재물·외모·몸 따위를 직접 드러내 천박하면 4점 이하
 5) 요즘 어른 이름으로 쓰기에 구식이거나 부자연스러우면 6점 이하
 6) 글자별 훈음에 '(동자이음·동음이의 주의)'가 붙은 글자가 있어 읽기가 헷갈릴 수 있으면 6점 이하
+7) 두 글자의 뜻이 같은 방향(덕목·재물·강함 등)으로 겹쳐 이름값이 지나치게 크게 느껴지면 6점 이하
 [가점 기준] 뜻이 곱고 밝고 이름답게 자연스러우며 소리도 부드러우면 8~10점
 [뜻풀이 규칙] 뜻풀이는 반드시 위에 주어진 '글자별 훈음' 안의 뜻만 써서 15자 안팎으로 쓰십시오. 훈음에 없는 뜻이나 독음을 절대 지어내지 마십시오.
 출력은 반드시 한 줄에 하나씩 '번호|점수(숫자만)|뜻풀이 또는 감점 사유' 형식만 쓰고, 다른 말은 쓰지 마십시오.
@@ -1171,7 +1199,7 @@ def _flow_hangul_pick(neng, sur, yong, gender, key):
     c1, c2, c3 = st.columns(3)
     max_st = c1.number_input("한 글자 최대 획수", min_value=8, max_value=30, value=16, step=1, key=f"{key}_hmax",
                              help="획수가 많은 글자를 뺍니다. 기본 16획 이하")
-    order = c2.radio("몇째 자녀입니까?", ["첫째 (장자)", "둘째 이하 (차자)", "가리지 않음"], index=2, key=f"{key}_horder")
+    order = c2.radio("몇째 자녀입니까?", ["첫째 (장자/장녀)", "둘째 이하 (차자/차녀)", "가리지 않음"], index=2, key=f"{key}_horder")
     nshow = c3.selectbox("보여 드릴 후보 수", [10, 20, 30], key=f"{key}_hshow")
     ex = set(_order_exclude(neng, order)) | {h for h in _NO_NAME if h not in _NAME_OK} | _HG_SKIP
     ck = f"{full}|{max_st}|{order}|{sur['h']}|{sorted((k, v) for k, v in yong.items())}|{gender}"
