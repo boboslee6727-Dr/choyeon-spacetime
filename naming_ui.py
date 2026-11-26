@@ -1117,9 +1117,9 @@ def naming_notice_html(u_product, an):
 # 한글 이름을 먼저 고르고 한자 찾기 (naming_ui.py 맨 아래에 붙여 넣기)
 # ======================================================================
 # 인기 이름: 2025년 출생신고 기준 (대법원 전자가족관계등록시스템 집계, 유가크루 정리). 박사님이 고치거나 더하실 수 있습니다.
-_POP_NAMES = {
-    '여': "서아 서윤 하린 이서 하윤 아린 지안 지유 아윤 시아 윤서 지아 지우 유나 채이 수아 채아 도아 예린 유하".split(),
-    '남': "도윤 이준 하준 시우 도현 이안 태오 서준 선우 은우 수호 이현 도하 지호 우주 유준 은호 윤우 주원 시윤".split(),
+_POP_NAMES = {   # 앞의 20개는 2026년 순위(11월 4일 기준), 그 뒤는 2025년에만 있던 이름
+    '여': "서윤 서아 하윤 하린 이서 지안 아윤 시아 아린 윤서 지유 유주 유나 수아 유하 지우 도아 채원 지아 채이 채아 예린".split(),
+    '남': "도윤 이준 시우 하준 이안 서준 수호 태오 우주 유준 도현 선우 지호 이현 도하 은호 주원 윤우 시윤 우진 은우".split(),
 }
 
 _HG_SKIP = set('丫吝亜衙枒稰')   # 이름에 쓰지 않을 한자 (박사님이 더하거나 빼실 수 있습니다)
@@ -1155,12 +1155,12 @@ def _hangul_combos(neng, sur, yong, r1, r2, max_st=16, ex=()):
 def _flow_hangul_pick(neng, sur, yong, gender, key):
     """한글 이름을 먼저 고르고(인기 이름 선택 또는 직접 입력), 그 소리에 맞는 한자 조합을 찾아 보여 준다"""
     pop = _POP_NAMES.get(gender, [])
-    opts = ["직접 입력"] + [f"{i + 1}위 {n}" for i, n in enumerate(pop)]
+    opts = ["직접 입력"] + [(f"2026년 {i + 1}위 {n}" if i < 20 else f"2025년 {n}") for i, n in enumerate(pop)]
     sel = st.selectbox("한글 이름 고르기 (2025년 인기 이름에서 고르거나 직접 입력)", opts, key=f"{key}_hpop")
     if sel == "직접 입력":
         nm = st.text_input("한글 이름 두 글자 (성씨는 빼고)", max_chars=2, key=f"{key}_hnm").strip()
     else:
-        nm = sel.split()[1]
+        nm = sel.split()[-1]
     if len(nm) != 2 or not all('가' <= c <= '힣' for c in nm):
         st.info("한글 이름 두 글자를 고르거나 입력해 주세요.")
         return None
