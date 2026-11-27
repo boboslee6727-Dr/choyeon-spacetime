@@ -1,5 +1,5 @@
 # ==============================================================================
-# app.py (ver 89.1 Master - Claude 전용 버젼 - 솔라피 가동)
+# app.py (ver 90.0 Master - Claude 전용 버젼 - 솔라피 가동)
 # ==============================================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +30,7 @@ get_oh_class = engine.get_oh_class
 # ==============================================================================
 # 1. 초기 설정 및 공통 함수
 # ==============================================================================
-APP_VERSION = "ver 89.1 Master"
+APP_VERSION = "ver 90.0 Master"
 st.set_page_config(page_title=f"초연시공 Claud{APP_VERSION}", layout="wide")
 
 # 화면 하단 "Hosted with Streamlit" 표시와 프로필 사진 숨기기 시도
@@ -1079,13 +1079,8 @@ if st.session_state.get('app_running', False):
             })
 
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
-        # [추가] 십성의 흐름 그래프 (3. 운의 흐름 분석 → 1) 대운의 흐름 자리에 들어감)
-        try:
-            import flow_chart
-            flow_html = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year)
-        except Exception:
-            flow_html = ""
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
+
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
         daewun_che_flow_str = engine.get_daewun_che_flow_str(daewun_data_list)
@@ -1647,6 +1642,7 @@ if st.session_state.get('app_running', False):
             sangjin_paryo_facts = "상관상진·파료상관 해당 없음"
 
         ilju_master_context = engine.get_ilju_master_prompt_context(f"{ds}{db}", choyeon_db, gender)
+        ilju_extra_context = engine.get_ilju_extra_context(f"{ds}{db}", choyeon_db, gender) if hasattr(engine, 'get_ilju_extra_context') else ""
         seun_first_half, seun_second_half = engine.get_seun_half_periods(target_year_val) if hasattr(engine, 'get_seun_half_periods') else ("상반기(입춘~입추 전)", "하반기(입추~다음해 입춘 전)")
         wolun_first_half, wolun_second_half = engine.get_wolun_half_periods(target_year_val, curr_m) if hasattr(engine, 'get_wolun_half_periods') else ("전반기(절입일~중기 전)", "후반기(중기~다음 절입일 전)")
         wolun_tail_period = ""
@@ -1861,6 +1857,7 @@ if st.session_state.get('app_running', False):
             # ── B. 원국 기본 팩트 ──
             "ds": ds, "db": db, "gyukgook_detail": gyukgook_detail,
             "ilju_master_prompt_context": ilju_master_context,
+            "ilju_extra_context": ilju_extra_context,
             "saju_fact_summary": saju_fact_summary,
             "oheng_counts_str": f"목:{counts['목']} 화:{counts['화']} 토:{counts['토']} 금:{counts['금']} 수:{counts['수']}",
             "hap_chung_hyoung_pa_hae": hap_chung_hyoung_pa_hae, "won_guk_vaults_str": won_guk_vaults_str,
@@ -2152,7 +2149,7 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
             # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변 — golden_text는 위에서 이미 보여줬으므로 본문 안 마커는 빈 값으로 제거)
-            formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', flow_html if 'flow_html' in locals() else '')
+            formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', '')
