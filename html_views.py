@@ -129,6 +129,7 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
         line_formatted = re.sub(r"'([^'\n]{1,80})'", r"<span style='font-weight:600;'>'\1'</span>", line_formatted)
         line_formatted = re.sub(r'"([^"\n]{1,80})"', r'<span style="font-weight:600;">"\1"</span>', line_formatted)
         line_formatted = re.sub(r'^#{1,6}\s*', '', line_formatted)
+        line_formatted = line_formatted.replace("`", "")
         # 🚨 이름 강조는 반드시 따옴표 처리가 다 끝난 '뒤'에, 이 줄에만 적용 (순서 중요!)
         for _nm in [applicant_name] + list(extra_names or []):
             if _nm and str(_nm).strip():
@@ -146,6 +147,9 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
                 title, body = split.group(1), split.group(2)
                 html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
+            else:
+                elif len(re.sub(r'<[^>]*>', '', line_formatted)) > 60:
+                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
             else:
                 html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
 
