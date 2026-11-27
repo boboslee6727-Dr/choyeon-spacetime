@@ -43,6 +43,23 @@ def _add(v, g, w):
     if g in v:
         v[g] += w
 
+# 수정 후 (추가)
+SAYOUNG = {
+    '子': [('壬', 10), ('癸', 20)], '丑': [('癸', 9), ('辛', 3), ('己', 18)],
+    '寅': [('戊', 7), ('丙', 7), ('甲', 16)], '卯': [('甲', 10), ('乙', 20)],
+    '辰': [('乙', 9), ('癸', 3), ('戊', 18)], '巳': [('戊', 7), ('庚', 7), ('丙', 16)],
+    '午': [('丙', 10), ('己', 10), ('丁', 10)], '未': [('丁', 9), ('乙', 3), ('己', 18)],
+    '申': [('戊', 7), ('壬', 7), ('庚', 16)], '酉': [('庚', 10), ('辛', 20)],
+    '戌': [('辛', 9), ('丁', 3), ('戊', 18)], '亥': [('戊', 7), ('甲', 7), ('壬', 16)],
+}
+
+def _add_ji(v, engine, ds, ji, w):
+    parts = SAYOUNG.get(ji)
+    if not parts:
+        return
+    tot = float(sum(d for _, d in parts))
+    for st, d in parts:
+        _add(v, _grp(engine, ds, st), w * d / tot)
 
 def _group_elements(engine, ds):
     """일간 기준 각 십성 그룹의 오행(한글: 목화토금수)"""
@@ -59,7 +76,7 @@ def compute_series(engine, ds, gans, jjis, birth_year, daewun_list, y_from, y_to
     for ch in gans:
         _add(base, _grp(engine, ds, ch), W_CHAR)
     for i, ch in enumerate(jjis):
-        _add(base, _grp(engine, ds, ch), W_WOLJI if i == 2 else W_CHAR)   # [시,일,월,년] 중 월지
+        _add_ji(base, engine, ds, ch, W_WOLJI if i == 2 else W_CHAR)   # [시,일,월,년] 중 월지
 
     # 대운 구간: 시작 연도 = 출생년 + 대운수 - 1 (앱의 나이 계산과 동일)
     periods = []
@@ -77,11 +94,11 @@ def compute_series(engine, ds, gans, jjis, birth_year, daewun_list, y_from, y_to
             if st_y <= y <= en_y:
                 c = _coef(dw.get("un_sung"))
                 _add(v, engine.get_group_ss(dw.get("ss_gan")), W_DAEWUN * c)
-                _add(v, engine.get_group_ss(dw.get("ss_ji")), W_DAEWUN * c)
+                _add_ji(v, engine, ds, dw.get("j_hanja"), W_DAEWUN * c)
         sg, sj = engine.GAN[(y - 4) % 10], engine.JI[(y - 4) % 12]
         c = _coef(engine.get_unsung(ds, sj))
         _add(v, _grp(engine, ds, sg), W_SEWUN * c)
-        _add(v, _grp(engine, ds, sj), W_SEWUN * c)
+        _add_ji(v, engine, ds, sj, W_SEWUN * c)
         out[y] = {g: v[g] * scale for g in GROUPS}
     return out, periods
 
