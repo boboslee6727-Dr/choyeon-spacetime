@@ -632,3 +632,30 @@ def build_flow_couple_html(engine, m, f, curr_year, height=300):
             return ""
         out.append(h)
     return "".join(out)
+
+# ============================================================
+# [마무리 덮개] 모든 흐름 그림에 공통 적용 (파일 맨 끝에 두어야 함)
+# ============================================================
+_NOTE_FIX = (
+    ("※ 점수 = 타고난 사주 + 10년마다 바뀌는 큰 흐름 + 해마다의 흐름을 합친 값입니다. 점선 100 = 기준선",
+     "※ 점수 = 타고난 사주 + 큰 흐름 + 해마다의 흐름 · 점선(100) = 다섯 기운의 평균 점수"),
+    ("※ 앞의 큰 그림과 같은 눈금입니다. 점수 = 타고난 사주 + 큰 흐름 + 올해의 흐름 + 달마다 들어오는 기운. 점선 100 = 기준선",
+     "※ 점수 = 사주 + 큰 흐름 + 올해 흐름 + 달의 기운 · 점선(100) = 다섯 기운의 평균 점수"),
+)
+
+
+def _finish(fn):
+    def _w(*a, **k):
+        h = fn(*a, **k)
+        if not h:
+            return h
+        for _o, _n in _NOTE_FIX:
+            h = h.replace(_o, _n)
+        return "<div style='break-inside:avoid; page-break-inside:avoid;'>" + h + "</div>"
+    _w.__name__ = fn.__name__
+    return _w
+
+
+for _nm in ("build_flow_html", "build_flow_month_html", "build_flow_dev_year_html", "build_flow_week_html"):
+    if _nm in globals():
+        globals()[_nm] = _finish(globals()[_nm])
