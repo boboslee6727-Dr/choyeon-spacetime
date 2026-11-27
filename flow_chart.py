@@ -515,3 +515,96 @@ def build_flow_month_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_
                 f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
     except Exception:
         return ""
+
+
+# ============================================================
+# 1-4 최종판: 이번 주 7일(일~토) 그래프 — 1-1과 같은 절대값 눈금
+# 값 = 타고난 사주 + 큰 흐름 + 올해 흐름 + 그 달의 기운 + 그날의 기운
+# ============================================================
+W_ILUN = 2.0    # 일진 천간/지지 기본 힘
+
+
+def build_flow_week_html(engine, ds, gans, jjis, birth_year, daewun_list, target_date, weekly_days_data,
+                         title="[ 십성의 흐름 · 이번 주 ]"):
+    try:
+        import datetime as _dt
+        by = int(birth_year)
+        els = _group_elements(engine, ds)
+        scale = 100.0 / (SCALE_CHARS / 5.0)
+        tdt = _dt.datetime(target_date.year, target_date.month, target_date.day)
+        start = tdt - _dt.timedelta(days=(tdt.weekday() + 1) % 7)
+        base_cache, days = {}, []
+        for i in range(7):
+            d = start + _dt.timedelta(days=i)
+            if d.year not in base_cache:
+                base_cache[d.year] = compute_series(engine, ds, gans, jjis, by, daewun_list, d.year, d.year)[0][d.year]
+            v = dict(base_cache[d.year])
+            try:
+                _, mp, _ = engine.get_true_year_month_pillar(d.year, d.month, d.day, 12, 0)
+                mg, mj = mp[0], mp[1]
+                c = _coef(engine.get_unsung(ds, mj))
+                _add(v, _grp(engine, ds, mg), W_WOLUN * c * scale)
+                _add_ji(v, engine, ds, mj, W_WOLUN * c * scale)
+            except Exception:
+                pass
+            wd = weekly_days_data[i] if i < len(weekly_days_data) else {}
+            ig, ij = wd.get("gan"), wd.get("ji")
+            if ig and ij:
+                c = _coef(engine.get_unsung(ds, ij))
+                _add(v, _grp(engine, ds, ig), W_ILUN * c * scale)
+                _add_ji(v, engine, ds, ij, W_ILUN * c * scale)
+            days.append((d, ig, ij, v, d.date() == tdt.date(), wd.get("weekday_kr", "")))
+        sm = {g: _smooth([x[3][g] for x in days], sigma=0.5, radius=1) for g in GROUPS}
+        vmax = max(max(sm[g]) for g in GROUPS)
+        ymax_v = max(250, int(math.ceil(vmax * 1.08 / 50.0)) * 50)
+
+        W, H = FLOW_WIDTH, 380
+        L, R, T, B = 40, 16, 16, 62
+        pw, ph = W - L - R, H - T - B
+
+        def X(i):
+            return L + pw * (i + 0.5) / 7.0
+
+        def Y(v):
+            return T + ph * (1 - min(max(v, 0), ymax_v) / float(ymax_v))
+
+        COL = {g: EL_COLOR.get(els[g], "#555") for g in GROUPS}
+        _hk = dict(zip('甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥', list('갑을병정무기경신임계자축인묘진사오미신유술해')))
+        s = [f"<svg viewBox='0 0 {W} {H}' width='100%' xmlns='http://www.w3.org/2000/svg' "
+             f"style='display:block; font-family:\"Noto Sans CJK KR\",\"Malgun Gothic\",sans-serif;'>"]
+        s.append(f"<rect x='{L}' y='{T}' width='{pw}' height='{ph}' fill='#FFFDF0' stroke='#cfc8b8'/>")
+        step = 50 if ymax_v <= 300 else 100
+        for gv in range(0, ymax_v + 1, step):
+            yy = Y(gv)
+            s.append(f"<line x1='{L}' x2='{L + pw}' y1='{yy:.1f}' y2='{yy:.1f}' stroke='#ececec' stroke-width='1'/>")
+            s.append(f"<text x='{L - 6}' y='{yy + 4:.1f}' font-size='11' fill='#6b6458' text-anchor='end'>{gv}</text>")
+        s.append(f"<line x1='{L}' x2='{L + pw}' y1='{Y(100):.1f}' y2='{Y(100):.1f}' stroke='#B8902F' stroke-width='1.2' stroke-dasharray='5,4'/>")
+        for g in GROUPS:
+            pts = [(X(i), Y(sm[g][i])) for i in range(7)]
+            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/>")
+        for i, (d, ig, ij, v, is_t, wk) in enumerate(days):
+            if is_t:
+                s.append(f"<line x1='{X(i):.1f}' x2='{X(i):.1f}' y1='{T}' y2='{T + ph}' stroke='#E0A800' stroke-width='2.4'/>")
+            fc = '#8a6a00' if is_t else '#555'
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 16}' font-size='{12 if is_t else 10.5}' font-weight='{900 if is_t else 500}' fill='{fc}' text-anchor='middle'>{wk}</text>")
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 29}' font-size='9.5' fill='{'#8a6a00' if is_t else '#888'}' text-anchor='middle'>{d.month}/{d.day}</text>")
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 43}' font-size='{11 if is_t else 9.5}' font-weight='{800 if is_t else 500}' fill='{fc}' text-anchor='middle'>{_hk.get(ig, ig or '')}{_hk.get(ij, ij or '')}</text>")
+        s.append("</svg>")
+
+        legend = "".join(
+            f"<span style='margin:0 8px; white-space:nowrap; font-size:13px; font-weight:700; color:{COL[g] if els[g] != '토' else '#B07800'};'>"
+            f"<span style='display:inline-block; width:10px; height:10px; background:{COL[g]}; margin-right:4px;'></span>{EL_HANJA.get(els[g], '')} {g}</span>"
+            for g in GROUPS)
+        ti = next((k for k, x in enumerate(days) if x[4]), 0)
+        cv = days[ti][3]
+        cur_vals = (f"<div style='text-align:center; font-size:13px; color:#3E2723; margin-top:4px;'>"
+                    f"<b>{days[ti][0].month}월 {days[ti][0].day}일</b> &nbsp; "
+                    + " &nbsp; ".join(f"<span style='color:{COL[g] if els[g] != '토' else '#B07800'}; font-weight:700;'>{g} {int(round(cv[g]))}</span>" for g in GROUPS)
+                    + "</div>")
+        note = ("<div style='text-align:center; font-size:11px; color:#888; margin-top:3px;'>"
+                "※ 점수 = 사주 + 큰 흐름 + 올해·이달 흐름 + 그날의 기운 · 점선(100) = 다섯 기운의 평균 점수</div>")
+        return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
+                f"<div style='width:{W}px; max-width:100%; margin:0 auto 8px auto; border:2px solid #3E2723; background:white; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
+                f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
+    except Exception:
+        return ""
