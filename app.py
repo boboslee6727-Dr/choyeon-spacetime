@@ -1089,11 +1089,16 @@ if st.session_state.get('app_running', False):
             st.warning(f"⚠️ [십성의 흐름] 그림표를 만들지 못했습니다: {type(_fe).__name__}: {_fe}")
         # [추가] 1-2 올해 운세용: 현재 대운 10년 그래프
         try:
-            flow_html_dw = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year,
-                                                      title="[ 십성의 흐름 · 현재 대운 10년 ]", mode="daewun")
+            flow_html_dw = flow_chart.build_flow_dev_year_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year)
         except Exception as _fe2:
             flow_html_dw = ""
             st.warning(f"⚠️ [십성의 흐름 · 대운 10년] 그림표를 만들지 못했습니다: {type(_fe2).__name__}: {_fe2}")
+        # [추가] 1-3 월운용: 올해 월별 그래프
+        try:
+            flow_html_mo = flow_chart.build_flow_month_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year, selected_target_date.month)
+        except Exception as _fe3:
+            flow_html_mo = ""
+            st.warning(f"⚠️ [십성의 흐름 · 월별] 그림표를 만들지 못했습니다: {type(_fe3).__name__}: {_fe3}")
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
 
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
@@ -2186,7 +2191,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-2"):
             # 1-2. 올 해 운세 풀이 (연운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', flow_html_dw + sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', flow_html_mo + wolun_table_code)
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
