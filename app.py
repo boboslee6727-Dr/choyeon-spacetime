@@ -1103,12 +1103,12 @@ if st.session_state.get('app_running', False):
         try:
             _is_m = str(st.session_state.get('u_g', '여성')).startswith("남")
             _th = None
-            if str(u_product).startswith("2-1"): _th = (["재성"], ["식상"], "재물")
-            elif str(u_product).startswith("2-2"): _th = (["재성"] if _is_m else ["관성"], None, "연애")
-            elif str(u_product).startswith("2-3"): _th = (["인성"], ["식상"], "학업")
-            elif str(u_product).startswith("2-4"): _th = (["관성"], ["식상"], "직업")
-            elif str(u_product).startswith("2-5"): _th = (["비겁", "인성"], None, "건강")
-            flow_html_th = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year, title=f"[ 십성의 흐름 · {_th[2]} ]", focus=_th[0], sub=_th[1]) if _th else ""
+            if str(u_product).startswith("2-1"): _th = (["재성"], ["식상"], "재물", ["비겁"])
+            elif str(u_product).startswith("2-2"): _th = (["재성"] if _is_m else ["관성"], ["식상"] if _is_m else ["재성"], "연애", ["비겁"] if _is_m else ["식상"])
+            elif str(u_product).startswith("2-3"): _th = (["인성"], ["식상"], "학업", ["재성"])
+            elif str(u_product).startswith("2-4"): _th = (["관성"], ["인성"], "직업", ["식상"])
+            elif str(u_product).startswith("2-5"): _th = (["비겁"], ["인성"], "건강", ["관성"])
+            flow_html_th = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year, title=f"[ 십성의 흐름 · {_th[2]} ]", focus=_th[0], sub=_th[1], contra=_th[3]) if _th else ""
         except Exception as _fe5:
             flow_html_th = ""
             st.warning(f"⚠️ [십성의 흐름 · 테마] 그림표를 만들지 못했습니다: {type(_fe5).__name__}: {_fe5}")
