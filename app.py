@@ -882,7 +882,8 @@ if st.session_state.get('app_running', False):
             for c in gong:
                 if c in ["-", " "]:
                     continue
-                where = [_gm_pos_names[i] for i, j in enumerate(jjis) if j == c]
+                _gm_mean = {"시지": "시지(말년·자녀 자리)", "일지": "일지(나·배우자 자리)", "월지": "월지(청년기·사회 자리)", "년지": "년지(어린 시절·집안 자리)"}
+                where = [_gm_mean[_gm_pos_names[i]] for i, j in enumerate(jjis) if j == c]
                 tail = f" → 원국 {'·'.join(where)}에 걸림" if where else " → 원국에 같은 글자 없음(자리 풀이에 쓰지 말 것)"
                 parts.append(f"{c}({engine.get_ss(ds, c)}){tail}")
             return ", ".join(parts) if parts else "공망 해당 없음"
@@ -1574,7 +1575,7 @@ if st.session_state.get('app_running', False):
         shinsal_str = ", ".join([re.sub(r'<[^>]+>', '', str(s)) for s in shinsal_raw]) if shinsal_raw else "특이 신살 없음"
 
         try:
-            palace_names = {0: "시주", 1: "일주", 2: "월주", 3: "년주"}
+            palace_names = {0: "시주(말년·자녀 자리)", 1: "일주(나·배우자 자리)", 2: "월주(청년기·사회 자리)", 3: "년주(어린 시절·집안 자리)"}
             shinsal_by_palace_parts = []
             for p_idx, p_name in palace_names.items():
                 p_raw = engine.get_general_shinsal_for_ai(p_idx, gans, jjis, gender) if hasattr(engine, 'get_general_shinsal_for_ai') else []
