@@ -173,6 +173,9 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
     parsed_content = "\n".join(html_lines)
     # 소제목(1)·①·◆ 이 쪽 맨 아래에 홀로 남지 않도록 다음 글과 붙여 둠
     parsed_content = re.sub(r"<div style='(font-size: (?:17\.5|17|16)px !important; font-weight: (?:700|600|500) !important;)", r"<div style='break-after: avoid; page-break-after: avoid; \1", parsed_content)
+    parsed_content = re.sub(r"<div style='(font-size: (?:17\.5|17|16)px !important; font-weight: (?:700|600|500) !important;)", r"<div style='break-after: avoid; page-break-after: avoid; \1", parsed_content)
+    parsed_content = re.sub(r"연애\s*[·ㆍ/,]\s*결혼운\s*\(?\s*궁합\s*\)?\s*풀이", "결혼운 (궁합) 풀이", parsed_content)
+    parsed_content = parsed_content.replace("재물운 특화 분석", "재물운 특성화 풀이")
     qna_html = ""
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
