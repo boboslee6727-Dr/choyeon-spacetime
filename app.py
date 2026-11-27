@@ -1084,8 +1084,16 @@ if st.session_state.get('app_running', False):
         try:
             import flow_chart
             flow_html = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year)
-        except Exception:
+        except Exception as _fe:
             flow_html = ""
+            st.warning(f"⚠️ [십성의 흐름] 그림표를 만들지 못했습니다: {type(_fe).__name__}: {_fe}")
+        # [추가] 1-2 올해 운세용: 현재 대운 10년 그래프
+        try:
+            flow_html_dw = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year,
+                                                      title="[ 십성의 흐름 · 현재 대운 10년 ]", mode="daewun")
+        except Exception as _fe2:
+            flow_html_dw = ""
+            st.warning(f"⚠️ [십성의 흐름 · 대운 10년] 그림표를 만들지 못했습니다: {type(_fe2).__name__}: {_fe2}")
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
 
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
@@ -2167,6 +2175,7 @@ if st.session_state.get('app_running', False):
             {table_html}
             {master_bar_html}
             {un_html}
+            {'' if (not flow_html or flow_html in formatted_ai) else flow_html}
             {intro_block}
             {golden_text_code}
             {formatted_ai}
@@ -2176,7 +2185,7 @@ if st.session_state.get('app_running', False):
 
         elif u_product.startswith("1-2"):
             # 1-2. 올 해 운세 풀이 (연운)
-            formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+            formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', flow_html_dw + sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
@@ -2443,9 +2452,9 @@ if st.session_state.get('app_running', False):
             clean_report_html = re.sub(r'(?<![가-힣])일간(?!지)', '나 자신', clean_report_html)
             clean_report_html = re.sub(r'나 자신\s*본인', '나 자신', clean_report_html)
             clean_report_html = re.sub(r'동료과', '동료와', clean_report_html)
-            clean_report_html = re.sub(r'재물 창고', '재물을 쌓아 둔 자리', clean_report_html)
-            clean_report_html = re.sub(r'(?:창고|금고)', '쌓아 둔 자리', clean_report_html)
-            clean_report_html = re.sub(r'쌓아 둔 기운의 쌓아 둔 자리', '쌓아 둔 자리', clean_report_html)
+            clean_report_html = re.sub(r'재물 창고', '재물 곳간', clean_report_html)
+            clean_report_html = re.sub(r'(?:창고|금고)', '곳간', clean_report_html)
+            clean_report_html = re.sub(r'쌓아 둔 기운의 곳간', '쌓아 둔 기운의 곳간', clean_report_html)
             clean_report_html = re.sub(r"'?나 자신'?\s*자신", '나 자신', clean_report_html)
             clean_report_html = re.sub(r"'시간'의 기운", '말년 자리의 기운', clean_report_html)
             clean_report_html = re.sub(r'(월운|일운|세운)의 천간 기운', r'\1의 기운', clean_report_html)
