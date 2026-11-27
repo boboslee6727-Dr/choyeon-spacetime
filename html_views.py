@@ -147,8 +147,7 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
                 title, body = split.group(1), split.group(2)
                 html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
-            else:
-                elif len(re.sub(r'<[^>]*>', '', line_formatted)) > 60:
+            elif len(re.sub(r'<[^>]*>', '', line_formatted)) > 60:
                 html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
             else:
                 html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
@@ -166,12 +165,10 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
             split = _split_title_body(line_formatted)
             if split:
                 title, body = split.group(1), split.group(2)
-                html_lines.append(...제목...)
-                html_lines.append(...본문...)
-            elif len(re.sub(r'<[^>]*>', '', line_formatted)) > 60:
-                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{title}</b></div>")
+                html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{body}</p>")
             else:
-                html_lines.append(f"<div style='font-size: 17.5px !important; font-weight: 700 !important; color: #000000 !important; margin-top: 17px !important; margin-bottom: 15px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
+                html_lines.append(f"<div style='font-size: 16px !important; font-weight: 500 !important; color: #000000 !important; margin-top: 13px !important; margin-bottom: 7px !important; font-family: \"Noto Serif KR\", serif !important; display: block !important;'><b>{line_formatted}</b></div>")
 
         else:
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
