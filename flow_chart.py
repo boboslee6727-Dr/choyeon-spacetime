@@ -139,7 +139,7 @@ def _path(pts, ymin, ymax):
 
 
 def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
-                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760, focus=None, sub=None, height=430):
+                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760, focus=None, sub=None, contra=None, height=430):
     """대운표 아래에 붙일 HTML(SVG 포함). 문제가 생기면 빈 문자열을 돌려줘서 화면이 깨지지 않게 합니다."""
     try:
         by = int(birth_year)
@@ -192,8 +192,11 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
             _main = (not focus) or (g in focus)
             _sub = bool(sub) and (g in sub)
             _w = 2.6 if not focus else (4.2 if _main else 3.0 if _sub else 1.6)
-            _op = 1 if (_main or _sub) else 0.3
-            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='{_w}' opacity='{_op}' stroke-linecap='round' stroke-linejoin='round'/>")
+            _con = bool(contra) and (g in contra)
+            if _con: _w = 3.4
+            _op = 1 if (_main or _sub or _con) else 0.3
+            _da = " stroke-dasharray='10,6'" if _con else ""
+            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='{_w}' opacity='{_op}'{_da} stroke-linecap='round' stroke-linejoin='round'/>")
         # 올해 선
         if y0 <= curr_year <= y1:
             cx = X(curr_year)
@@ -234,6 +237,8 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
             f"<span style='margin:0 8px; white-space:nowrap; font-size:13px; font-weight:700; color:{COL[g] if els[g] != "토" else "#B07800"};'>"
             f"<span style='display:inline-block; width:10px; height:10px; background:{COL[g]}; margin-right:4px;'></span>{EL_HANJA.get(els[g], '')} {g}</span>"
             for g in GROUPS)
+        if contra:
+            legend += "<span style='margin:0 8px; white-space:nowrap; font-size:12px; color:#555;'>┅ 점선 = 방해가 되는 기운</span>"
 
         cur_vals = ""
         if y0 <= curr_year <= y1:
