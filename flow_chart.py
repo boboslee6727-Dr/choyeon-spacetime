@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- ver 1.5
+# -*- coding: utf-8 -*- ver 1.6
 """
 flow_chart.py  —  [ 십성의 흐름 ] 그래프 (새 파일)
 - 대운(천간·지지 십성 × 일간 기준 12운성) + 세운(같은 방식)을 원국 위에 더해
@@ -139,7 +139,7 @@ def _path(pts, ymin, ymax):
 
 
 def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
-                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760, focus=None, sub=None):
+                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760, focus=None, sub=None, height=430):
     """대운표 아래에 붙일 HTML(SVG 포함). 문제가 생기면 빈 문자열을 돌려줘서 화면이 깨지지 않게 합니다."""
     try:
         by = int(birth_year)
@@ -160,7 +160,7 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
         vmax = max(max(sm[g][idx0:idx1 + 1]) for g in GROUPS)
         ymax_v = max(250, int(math.ceil(vmax * 1.08 / 50.0)) * 50)
 
-        W, H = width, 430
+        W, H = width, height
         L, R, T, B = 40, 16, 16, 104
         pw, ph = W - L - R, H - T - B
 
@@ -612,3 +612,18 @@ def build_flow_week_html(engine, ds, gans, jjis, birth_year, daewun_list, target
                 f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
     except Exception:
         return ""
+
+
+# ============================================================
+# 3-1 궁합용: 남명 · 여명 십성 흐름 그림을 위아래로 (대운표 자리에 들어가는 작은 크기)
+# m, f = {"ds":일간, "gans":[시,일,월,년], "jjis":[...], "by":출생년, "dw":대운목록, "name":이름}
+# ============================================================
+def build_flow_couple_html(engine, m, f, curr_year, height=300):
+    out = []
+    for tag, p in (("남명", m), ("여명", f)):
+        h = build_flow_html(engine, p["ds"], p["gans"], p["jjis"], p["by"], p["dw"], curr_year,
+                            title=f"[ {tag} · {p.get('name', '')} 님의 십성 흐름 ]", height=height)
+        if not h:
+            return ""
+        out.append(h)
+    return "".join(out)
