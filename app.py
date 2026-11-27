@@ -175,6 +175,9 @@ def _qc_scan(html_text, product=""):
         txt = re.sub(r'<[^>]+>', ' ', txt)
         txt = re.sub(r'\s+', ' ', txt)
         out = []
+        _stray = re.search(r'</(?:div|span|p|table|svg|b)>\s*[A-Za-z]{1,3}\s*<', str(html_text))
+        if _stray:
+            out.append(f"HTML 바깥에 낱글자가 찍힘: …{_stray.group(0)}…")
         for w in ("엔진", "시스템", "알고리즘", "프로그램", "연산", "인공지능", "천간", "지지 기운", "복음", "자형", "이혼", "일진", "대해수", "사실관계", "번지지는", "지나간 날입니다", "팩트폭격", "마스터 비기", "격합", "격충"):
             hits = [m for m in re.finditer(("(?<![가-힣])자형" if w == "자형" else w), txt)]
             if hits:
