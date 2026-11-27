@@ -139,8 +139,8 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
         vmax = max(max(sm[g][idx0:idx1 + 1]) for g in GROUPS)
         ymax_v = max(250, int(math.ceil(vmax * 1.08 / 50.0)) * 50)
 
-        W, H = 760, 420
-        L, R, T, B = 40, 16, 16, 94
+        W, H = 760, 430
+        L, R, T, B = 40, 16, 16, 104
         pw, ph = W - L - R, H - T - B
 
         def X(y):
@@ -182,8 +182,7 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
                 _cur = (yy_ == curr_year)
                 s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 16}' font-size='{11.5 if _cur else 10}' font-weight='{900 if _cur else 500}' fill='{'#8a6a00' if _cur else '#555'}' text-anchor='middle'>{yy_}</text>")
                 s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{yy_ - by + 1}세</text>")
-                if yy_ in (y0, y1):
-                    s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 42}' font-size='10' font-weight='700' fill='#3E2723' text-anchor='middle'>{'대운 시작' if yy_ == y0 else '대운 끝'}</text>")
+                
                 if _cur:
                     _g, _j = engine.GAN[(yy_ - 4) % 10], engine.JI[(yy_ - 4) % 12]
                     _hk = dict(zip('甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥', list('갑을병정무기경신임계자축인묘진사오미신유술해')))
@@ -202,8 +201,9 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
                 mid = (X(a) + X(b)) / 2.0
                 cur = st_y <= curr_year <= en_y
                 s.append(f"<text x='{mid:.1f}' y='{T + ph + 62}' font-size='{16 if cur else 13}' font-weight='{900 if cur else 600}' "
-                         f"fill='{'#3E2723' if cur else '#8a7a5a'}' text-anchor='middle'>{dw.get('c_hanja', '')}{dw.get('j_hanja', '')}</text>")
+                         f"fill='{'#3E2723' if cur else '#8a7a5a'}' text-anchor='middle'>{dw.get('c_hanja', '')}{dw.get('j_hanja', '')}<tspan font-size='{11 if cur else 9.5}' font-weight='600'>대운</tspan></text>")
                 s.append(f"<text x='{mid:.1f}' y='{T + ph + 77}' font-size='9' fill='#999' text-anchor='middle'>{st_y - by + 1}~{en_y - by + 1}세</text>")
+                s.append(f"<text x='{mid:.1f}' y='{T + ph + 90}' font-size='9' fill='#999' text-anchor='middle'>{st_y}~{en_y}년</text>")
         s.append("</svg>")
 
         legend = "".join(
