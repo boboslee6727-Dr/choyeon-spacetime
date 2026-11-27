@@ -135,7 +135,7 @@ def _path(pts, ymin, ymax):
 
 
 def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
-                    title="[ 십성의 흐름 ]", max_age=100, mode="life"):
+                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760):
     """대운표 아래에 붙일 HTML(SVG 포함). 문제가 생기면 빈 문자열을 돌려줘서 화면이 깨지지 않게 합니다."""
     try:
         by = int(birth_year)
@@ -156,7 +156,7 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
         vmax = max(max(sm[g][idx0:idx1 + 1]) for g in GROUPS)
         ymax_v = max(250, int(math.ceil(vmax * 1.08 / 50.0)) * 50)
 
-        W, H = 760, 430
+        W, H = width, 430
         L, R, T, B = 40, 16, 16, 104
         pw, ph = W - L - R, H - T - B
 
@@ -240,8 +240,7 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
                 + (" · 시주 없음(6자) 사주는 8자 기준 눈금으로 표시" if no_hs else "") + "</div>")
 
         return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
-                f"<div style='width:100%; border:2px solid #3E2723; background:white; margin-bottom:8px; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
-                f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
+                f"<div style='width:{'100%' if width == 760 else str(width) + 'px'}; max-width:100%; margin:0 auto 8px auto; border:2px solid #3E2723; background:white; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
     except Exception:
         return ""
 
