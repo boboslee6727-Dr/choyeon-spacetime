@@ -361,6 +361,13 @@ def render_saju_block(engine, hv, cdb, sj, name, gender, b_year, b_month, b_day,
                           guiin_map.get(ds, '없음'), n_gong, i_gong, samjae_color, cur_samjae, yongshin_text=sj['yong_text']),
         hv.generate_daewun_layout(dw, direction, sj['calc_d'], engine.get_oh_class),
     ]
+    # [추가] 4-1 이름 풀이: 대운표 아래에 십성 흐름 그림
+    if str(st.session_state.get('sub_category_4', '')).startswith("4-1"):
+        try:
+            import flow_chart
+            parts.append(flow_chart.build_flow_html(engine, ds, gans, jjis, int(sol_y), dw, curr_year))
+        except Exception as _fe:
+            st.warning(f"⚠️ [십성의 흐름] 그림표를 만들지 못했습니다: {type(_fe).__name__}: {_fe}")
     try:
         w_key, i_key = f"{ms}{mb}".strip(), f"{ds}{db}".strip()
         w_val = cdb.get("wolryeong", {}).get(w_key, f"[{w_key}] 시공간 데이터 없음")
