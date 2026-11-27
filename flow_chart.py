@@ -118,12 +118,17 @@ def _path(pts, ymin, ymax):
 
 
 def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
-                    title="[ 십성의 흐름 ]", max_age=100):
+                    title="[ 십성의 흐름 ]", max_age=100, mode="life"):
     """대운표 아래에 붙일 HTML(SVG 포함). 문제가 생기면 빈 문자열을 돌려줘서 화면이 깨지지 않게 합니다."""
     try:
         by = int(birth_year)
         y0 = by                      # 1세
         y1 = by + int(max_age) - 1   # 100세
+        if mode == "daewun":         # 현재 대운 10년만 크게 (1-2 올해 운세용)
+            for _st, _en, _dw in compute_series(engine, ds, gans, jjis, by, daewun_list, by, by)[1]:
+                if _st <= curr_year <= _en:
+                    y0, y1 = max(_st, by), _en
+                    break
         els = _group_elements(engine, ds)
         pad = 4
         data, periods = compute_series(engine, ds, gans, jjis, by, daewun_list, y0 - pad, y1 + pad)
@@ -172,16 +177,28 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
             anc = "start" if cx < L + pw - 70 else "end"
             s.append(f"<text x='{lab_x:.1f}' y='{T + 14}' font-size='12' font-weight='700' fill='#8a6a00' text-anchor='{anc}'>올해 {curr_year}</text>")
         # 가로축 글자: 대운이 바뀌는 곳마다 나이와 연도 (1세 시작점도 표시)
-        s.append(f"<text x='{X(y0):.1f}' y='{T + ph + 16}' font-size='10.5' fill='#555' text-anchor='middle'>1세</text>")
-        s.append(f"<text x='{X(y0):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{y0}</text>")
+        if mode == "daewun":
+            for yy_ in range(y0, y1 + 1):
+                _cur = (yy_ == curr_year)
+                s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 16}' font-size='{11.5 if _cur else 10}' font-weight='{900 if _cur else 500}' fill='{'#8a6a00' if _cur else '#555'}' text-anchor='middle'>{yy_}</text>")
+                s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{yy_ - by + 1}세</text>")
+                if yy_ in (y0, y1):
+                    s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 42}' font-size='10' font-weight='700' fill='#3E2723' text-anchor='middle'>{'대운 시작' if yy_ == y0 else '대운 끝'}</text>")
+                if _cur:
+                    _g, _j = engine.GAN[(yy_ - 4) % 10], engine.JI[(yy_ - 4) % 12]
+                    _hk = dict(zip('甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥', list('갑을병정무기경신임계자축인묘진사오미신유술해')))
+                    s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 43}' font-size='12' font-weight='900' fill='#8a6a00' text-anchor='middle'>{_hk.get(_g, _g)}{_hk.get(_j, _j)}</text>")
+        else:
+            s.append(f"<text x='{X(y0):.1f}' y='{T + ph + 16}' font-size='10.5' fill='#555' text-anchor='middle'>1세</text>")
+            s.append(f"<text x='{X(y0):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{y0}</text>")
         for st_y, en_y, dw in periods:
-            if y0 < st_y <= y1:
+            if mode != "daewun" and y0 < st_y <= y1:
                 s.append(f"<text x='{X(st_y):.1f}' y='{T + ph + 16}' font-size='10.5' fill='#333' font-weight='700' text-anchor='middle'>{st_y - by + 1}세</text>")
                 s.append(f"<text x='{X(st_y):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{st_y}</text>")
         # 대운 간지 (구간 가운데)
         for st_y, en_y, dw in periods:
             a, b = max(st_y, y0), min(en_y + 1, y1)
-            if b - a >= 4:
+            if b - a >= 4 and (mode != "daewun" or a <= curr_year <= b):
                 mid = (X(a) + X(b)) / 2.0
                 cur = st_y <= curr_year <= en_y
                 s.append(f"<text x='{mid:.1f}' y='{T + ph + 62}' font-size='{16 if cur else 13}' font-weight='{900 if cur else 600}' "
