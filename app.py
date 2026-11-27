@@ -1107,6 +1107,7 @@ if st.session_state.get('app_running', False):
             elif str(u_product).startswith("2-2"): _th = (["재성"] if _is_m else ["관성"], None, "연애")
             elif str(u_product).startswith("2-3"): _th = (["인성"], ["식상"], "학업")
             elif str(u_product).startswith("2-4"): _th = (["관성"], ["식상"], "직업")
+            elif str(u_product).startswith("2-5"): _th = (["비겁", "인성"], None, "건강")
             flow_html_th = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year, title=f"[ 십성의 흐름 · {_th[2]} ]", focus=_th[0], sub=_th[1]) if _th else ""
         except Exception as _fe5:
             flow_html_th = ""
@@ -2282,6 +2283,16 @@ if st.session_state.get('app_running', False):
             m_daewun_html = un_html if gender == "남성" else (p_un_html if 'p_un_html' in locals() else un_html)
             f_daewun_html = (p_un_html if 'p_un_html' in locals() else un_html) if gender == "남성" else un_html
             c_daewun_html = html_views.get_daewun_compare_box(m_name_val, m_daewun_html, f_name_val, f_daewun_html) if hasattr(html_views, 'get_daewun_compare_box') else ""
+            # [추가] 남명·여명 대운표 대신 십성 흐름 그림 (실패하면 위의 대운표가 그대로 나옴)
+            try:
+                _me = dict(ds=ds_hanja, gans=gans, jjis=jjis, by=int(sol_y), dw=daewun_data_list, name=name)
+                _pt = dict(ds=p_ds_hanja, gans=p_gans, jjis=p_jjis, by=int(p_s_year), dw=p_daewun_data_list, name=p_name_val)
+                _m_i, _f_i = (_me, _pt) if gender == "남성" else (_pt, _me)
+                _cf = flow_chart.build_flow_couple_html(engine, _m_i, _f_i, curr_year)
+                if _cf:
+                    c_daewun_html = _cf
+            except Exception as _fe6:
+                st.warning(f"⚠️ [궁합 십성의 흐름] 그림표를 만들지 못했습니다: {type(_fe6).__name__}: {_fe6}")
             
             g_ess = sub_marker(g_ess, 'COUPLE_DAEWUN_TABLES_HERE', c_daewun_html)
             g_ess = sub_marker(g_ess, 'DAEWUN_TABLE_HERE', c_daewun_html)
