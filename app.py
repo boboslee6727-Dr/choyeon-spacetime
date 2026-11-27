@@ -2191,7 +2191,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-2"):
             # 1-2. 올 해 운세 풀이 (연운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', flow_html_dw + sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', flow_html_mo + wolun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -2199,7 +2199,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("1-3"):
             # 1-3. 이번 달 운세 풀이 (월운)
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', flow_html_mo + wolun_table_code)
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
@@ -2208,10 +2208,15 @@ if st.session_state.get('app_running', False):
             # 1-4. 주간 및 일일 운세 풀이 (폭포수 운세)
             weekly_days_data = engine.get_weekly_calendar_data(selected_target_date, ds_hanja, yb, db) if hasattr(engine, 'get_weekly_calendar_data') else []
             weekly_table_code = html_views.generate_weekly_calendar_html(weekly_days_data, selected_target_date.day, yb, db, engine) if hasattr(html_views, 'generate_weekly_calendar_html') else ""
+            try:
+                flow_html_wk = flow_chart.build_flow_week_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, selected_target_date, weekly_days_data)
+            except Exception as _fe4:
+                flow_html_wk = ""
+                st.warning(f"⚠️ [십성의 흐름 · 이번 주] 그림표를 만들지 못했습니다: {type(_fe4).__name__}: {_fe4}")
             
             formatted_ai = sub_marker(current_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WOLUN_TABLE_HERE', wolun_table_code)
-            formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', weekly_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', flow_html_wk + weekly_table_code)
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
             final_render_html = html_views.get_final_report_box(body_content) if hasattr(html_views, 'get_final_report_box') else f"<div class='vip-frame-box'>{body_content}</div>"
