@@ -2423,8 +2423,8 @@ if st.session_state.get('app_running', False):
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text) if hasattr(html_views, 'get_external_raw_text_box') else f"<div>{user_entered_text}</div>"
                 _번호글, _총수 = engine.원문_번호붙이기(user_entered_text)
                 _정리글, _빠짐 = engine.원문_번호_정리(current_ai, _총수)
-                formatted_ai = sub_marker(_정리글, 'DAEWUN_TABLE_HERE', '')
-                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', '')
+                formatted_ai = sub_marker(_정리글, 'DAEWUN_TABLE_HERE', flow_html)
+                formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
                 if _총수 and _빠짐:
                     import html as _html
                     _빠진줄 = [ln for ln in _번호글.splitlines() if int(ln[2:ln.index("]")]) in _빠짐]
@@ -2440,7 +2440,21 @@ if st.session_state.get('app_running', False):
                 final_render_html = html_views.get_final_report_box(warn_html)
             else:
                 external_raw_box = html_views.get_external_raw_text_box(user_entered_text) if hasattr(html_views, 'get_external_raw_text_box') else f"<div>{user_entered_text}</div>"
-                formatted_ai = sub_marker(current_ai, 'COUPLE_DAEWUN_TABLES_HERE', '')
+                # 남명·여명 대운표 (아래 그림이 실패하면 이 표가 그대로 나옴)
+                _m_dw = un_html if gender == "남성" else (p_un_html if 'p_un_html' in locals() else un_html)
+                _f_dw = (p_un_html if 'p_un_html' in locals() else un_html) if gender == "남성" else un_html
+                _c_dw = html_views.get_daewun_compare_box(m_name_val, _m_dw, f_name_val, _f_dw) if hasattr(html_views, 'get_daewun_compare_box') else ""
+                # 남명·여명 대운표 대신 십성 흐름 그림
+                try:
+                    _me = dict(ds=ds_hanja, gans=gans, jjis=jjis, by=int(sol_y), dw=daewun_data_list, name=name)
+                    _pt = dict(ds=p_ds_hanja, gans=p_gans, jjis=p_jjis, by=int(p_s_year), dw=p_daewun_data_list, name=p_name_val)
+                    _m_i, _f_i = (_me, _pt) if gender == "남성" else (_pt, _me)
+                    _cf = flow_chart.build_flow_couple_html(engine, _m_i, _f_i, curr_year)
+                    if _cf:
+                        _c_dw = _cf
+                except Exception as _fe7:
+                    st.warning(f"⚠️ [궁합 십성의 흐름] 그림표를 만들지 못했습니다: {type(_fe7).__name__}: {_fe7}")
+                formatted_ai = sub_marker(current_ai, 'COUPLE_DAEWUN_TABLES_HERE', _c_dw)
                 
                 couple_header_box = couple_info_h if 'couple_info_h' in locals() else safe_part_1_gh
                 body_content = f"{main_title_html}{couple_header_box}{external_raw_box}{formatted_ai}"
