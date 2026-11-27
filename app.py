@@ -1099,6 +1099,18 @@ if st.session_state.get('app_running', False):
         except Exception as _fe3:
             flow_html_mo = ""
             st.warning(f"⚠️ [십성의 흐름 · 월별] 그림표를 만들지 못했습니다: {type(_fe3).__name__}: {_fe3}")
+        # [추가] 2-1~2-4 테마별: 인생 전체 그림 + 테마 강조선
+        try:
+            _is_m = str(st.session_state.get('u_g', '여성')).startswith("남")
+            _th = None
+            if str(u_product).startswith("2-1"): _th = (["재성"], ["식상"], "재물")
+            elif str(u_product).startswith("2-2"): _th = (["재성"] if _is_m else ["관성"], None, "연애")
+            elif str(u_product).startswith("2-3"): _th = (["인성"], ["식상"], "학업")
+            elif str(u_product).startswith("2-4"): _th = (["관성"], ["식상"], "직업")
+            flow_html_th = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year, title=f"[ 십성의 흐름 · {_th[2]} ]", focus=_th[0], sub=_th[1]) if _th else ""
+        except Exception as _fe5:
+            flow_html_th = ""
+            st.warning(f"⚠️ [십성의 흐름 · 테마] 그림표를 만들지 못했습니다: {type(_fe5).__name__}: {_fe5}")
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
 
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
@@ -2240,7 +2252,7 @@ if st.session_state.get('app_running', False):
         elif u_product.startswith("2-"):
             # 2-1 ~ 2-5. 재물 / 연애 / 진학 / 직업 / 건강 특화
             formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')  
-            formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
+            formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', flow_html_th + sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'WEEKLY_CALENDAR_HERE', '')
             
             body_content = f"{base_top_block}{formatted_ai}{closing_part}"
