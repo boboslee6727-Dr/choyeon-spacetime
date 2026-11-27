@@ -182,7 +182,6 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
                 _cur = (yy_ == curr_year)
                 s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 16}' font-size='{11.5 if _cur else 10}' font-weight='{900 if _cur else 500}' fill='{'#8a6a00' if _cur else '#555'}' text-anchor='middle'>{yy_}</text>")
                 s.append(f"<text x='{X(yy_):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{yy_ - by + 1}세</text>")
-                
                 if _cur:
                     _g, _j = engine.GAN[(yy_ - 4) % 10], engine.JI[(yy_ - 4) % 12]
                     _hk = dict(zip('甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥', list('갑을병정무기경신임계자축인묘진사오미신유술해')))
@@ -220,9 +219,190 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
                         + "</div>")
         no_hs = (gans and gans[0] in BLANK) or (jjis and jjis[0] in BLANK)
         note = ("<div style='text-align:center; font-size:11px; color:#888; margin-top:3px;'>"
-                "※ 점수 = 원국 + 대운·세운(12운성 반영), 점선 100 = 기준선"
+                "※ 점수 = 타고난 사주 + 10년마다 바뀌는 큰 흐름 + 해마다의 흐름을 합친 값입니다. 점선 100 = 기준선"
                 + (" · 시주 없음(6자) 사주는 8자 기준 눈금으로 표시" if no_hs else "") + "</div>")
 
+        return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
+                f"<div style='width:100%; border:2px solid #3E2723; background:white; margin-bottom:8px; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
+                f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
+    except Exception:
+        return ""
+
+
+# ============================================================
+# 1-3 월운용: 올해 1~12월 월별 그래프 (눈금 확대)
+# ============================================================
+W_WOLUN = 4.0   # 월운 천간/지지 기본 힘 (세운 4와 같은 크기로 보이도록, 눈금 확대로 변화를 살림)
+MIN_SPAN = 80   # 눈금 확대 시 최소 세로 폭 (아주 작은 변화가 과장되지 않게)
+
+
+def _zoom_axis(vmin, vmax):
+    span = max(vmax - vmin, MIN_SPAN)
+    mid = (vmax + vmin) / 2.0
+    lo = max(0, int(math.floor((mid - span * 0.6) / 10.0)) * 10)
+    hi = int(math.ceil((mid + span * 0.6) / 10.0)) * 10
+    if hi - lo < MIN_SPAN:
+        hi = lo + MIN_SPAN
+    return lo, hi
+
+
+def build_flow_month_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year, curr_month,
+                          title="[ 십성의 흐름 · 올해 월별 ]"):
+    try:
+        by = int(birth_year)
+        els = _group_elements(engine, ds)
+        base = compute_series(engine, ds, gans, jjis, by, daewun_list, curr_year, curr_year)[0][curr_year]
+        scale = 100.0 / (SCALE_CHARS / 5.0)
+        months = []
+        for m in range(1, 13):
+            try:
+                _, mp, _ = engine.get_true_year_month_pillar(curr_year, m, 15, 12, 0)
+                mg, mj = mp[0], mp[1]
+            except Exception:
+                mg, mj = "甲", "子"
+            v = dict(base)
+            c = _coef(engine.get_unsung(ds, mj))
+            _add(v, _grp(engine, ds, mg), W_WOLUN * c * scale)
+            _add(v, _grp(engine, ds, mj), W_WOLUN * c * scale)
+            months.append((m, mg, mj, v))
+        # 올해 평균 대비 오르내림(변화량)으로 바꿔서 월별 차이가 또렷이 보이게 함
+        avg = {g: sum(mv[3][g] for mv in months) / 12.0 for g in GROUPS}
+        for _m in months:
+            _m[3].update({g: _m[3][g] - avg[g] for g in GROUPS})
+        mx = max(abs(mv[3][g]) for mv in months for g in GROUPS)
+        half = max(20, int(math.ceil(mx * 1.15 / 10.0)) * 10)
+        lo, hi = -half, half
+        sm = {g: _smooth([mv[3][g] for mv in months], sigma=0.5, radius=1) for g in GROUPS}
+
+        W, H = 760, 400
+        L, R, T, B = 40, 16, 16, 74
+        pw, ph = W - L - R, H - T - B
+
+        def X(i):
+            return L + pw * (i + 0.5) / 12.0
+
+        def Y(v):
+            return T + ph * (1 - (min(max(v, lo), hi) - lo) / float(hi - lo))
+
+        COL = {g: EL_COLOR.get(els[g], "#555") for g in GROUPS}
+        s = [f"<svg viewBox='0 0 {W} {H}' width='100%' xmlns='http://www.w3.org/2000/svg' "
+             f"style='display:block; font-family:\"Noto Sans CJK KR\",\"Malgun Gothic\",sans-serif;'>"]
+        s.append(f"<rect x='{L}' y='{T}' width='{pw}' height='{ph}' fill='#FFFDF0' stroke='#cfc8b8'/>")
+        step = 5 if hi - lo <= 60 else 10
+        for gv in range(lo, hi + 1, step):
+            yy = Y(gv)
+            s.append(f"<line x1='{L}' x2='{L + pw}' y1='{yy:.1f}' y2='{yy:.1f}' stroke='#ececec' stroke-width='1'/>")
+            s.append(f"<text x='{L - 6}' y='{yy + 4:.1f}' font-size='11' fill='#6b6458' text-anchor='end'>{gv}</text>")
+        s.append(f"<line x1='{L}' x2='{L + pw}' y1='{Y(0):.1f}' y2='{Y(0):.1f}' stroke='#B8902F' stroke-width='1.2' stroke-dasharray='5,4'/>")
+        for g in GROUPS:
+            pts = [(X(i), Y(sm[g][i])) for i in range(12)]
+            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/>")
+            for i in range(12):
+                s.append(f"<circle cx='{X(i):.1f}' cy='{Y(months[i][3][g]):.1f}' r='2.6' fill='{COL[g]}'/>")
+        cx = X(curr_month - 1)
+        s.append(f"<line x1='{cx:.1f}' x2='{cx:.1f}' y1='{T}' y2='{T + ph}' stroke='#E0A800' stroke-width='2.4'/>")
+        anc = "start" if curr_month <= 9 else "end"
+        s.append(f"<text x='{cx + (5 if anc == 'start' else -5):.1f}' y='{T + 14}' font-size='12' font-weight='700' fill='#8a6a00' text-anchor='{anc}'>이번 달 {curr_month}월</text>")
+        for i, (m, mg, mj, v) in enumerate(months):
+            cur = (m == curr_month)
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 17}' font-size='{12 if cur else 10.5}' font-weight='{900 if cur else 600}' fill='{'#8a6a00' if cur else '#444'}' text-anchor='middle'>{m}월</text>")
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 33}' font-size='{11 if cur else 9.5}' font-weight='{800 if cur else 500}' fill='{'#3E2723' if cur else '#8a7a5a'}' text-anchor='middle'>{mg}{mj}</text>")
+        s.append("</svg>")
+        legend = "".join(
+            f"<span style='margin:0 8px; white-space:nowrap; font-size:13px; font-weight:700; color:{COL[g] if els[g] != '토' else '#B07800'};'>"
+            f"<span style='display:inline-block; width:10px; height:10px; background:{COL[g]}; margin-right:4px;'></span>{EL_HANJA.get(els[g], '')} {g}</span>"
+            for g in GROUPS)
+        cv = months[curr_month - 1][3]
+        cur_vals = (f"<div style='text-align:center; font-size:13px; color:#3E2723; margin-top:4px;'><b>{curr_year}년 {curr_month}월</b> &nbsp; "
+                    + " &nbsp; ".join(f"<span style='color:{COL[g] if els[g] != '토' else '#B07800'}; font-weight:700;'>{g} {int(round(cv[g])):+d}</span>" for g in GROUPS) + "</div>")
+        note = ("<div style='text-align:center; font-size:11px; color:#888; margin-top:3px;'>"
+                "※ 타고난 사주 위에서 달마다 들어오는 기운에 따른 오르내림입니다. 점선 0 = 올해 평균, 위로 갈수록 그 달에 그 기운이 강해집니다.</div>")
+        return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
+                f"<div style='width:100%; border:2px solid #3E2723; background:white; margin-bottom:8px; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
+                f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
+    except Exception:
+        return ""
+
+
+# ============================================================
+# 1-2 올해 운세용: 현재 대운 10년, 10년 평균 대비 오르내림
+# ============================================================
+def build_flow_dev_year_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
+                             title="[ 십성의 흐름 · 현재 대운 10년 ]"):
+    try:
+        by = int(birth_year)
+        els = _group_elements(engine, ds)
+        periods = compute_series(engine, ds, gans, jjis, by, daewun_list, by, by)[1]
+        cur_p = None
+        for st_y, en_y, dw in periods:
+            if st_y <= curr_year <= en_y:
+                cur_p = (max(st_y, by), en_y, dw)
+                break
+        if not cur_p:
+            return ""
+        y0, y1, dw = cur_p
+        ys = list(range(y0, y1 + 1))
+        data = compute_series(engine, ds, gans, jjis, by, daewun_list, y0, y1)[0]
+        n = len(ys)
+        avg = {g: sum(data[y][g] for y in ys) / float(n) for g in GROUPS}
+        dev = {y: {g: data[y][g] - avg[g] for g in GROUPS} for y in ys}
+        mx = max(abs(dev[y][g]) for y in ys for g in GROUPS)
+        half = max(20, int(math.ceil(mx * 1.15 / 10.0)) * 10)
+        lo, hi = -half, half
+        sm = {g: _smooth([dev[y][g] for y in ys], sigma=0.5, radius=1) for g in GROUPS}
+
+        W, H = 760, 430
+        L, R, T, B = 40, 16, 16, 104
+        pw, ph = W - L - R, H - T - B
+
+        def X(i):
+            return L + pw * (i + 0.5) / float(n)
+
+        def Y(v):
+            return T + ph * (1 - (min(max(v, lo), hi) - lo) / float(hi - lo))
+
+        COL = {g: EL_COLOR.get(els[g], "#555") for g in GROUPS}
+        s = [f"<svg viewBox='0 0 {W} {H}' width='100%' xmlns='http://www.w3.org/2000/svg' "
+             f"style='display:block; font-family:\"Noto Sans CJK KR\",\"Malgun Gothic\",sans-serif;'>"]
+        s.append(f"<rect x='{L}' y='{T}' width='{pw}' height='{ph}' fill='#FFFDF0' stroke='#cfc8b8'/>")
+        step = 5 if hi - lo <= 60 else 10
+        for gv in range(lo, hi + 1, step):
+            yy = Y(gv)
+            s.append(f"<line x1='{L}' x2='{L + pw}' y1='{yy:.1f}' y2='{yy:.1f}' stroke='#ececec' stroke-width='1'/>")
+            s.append(f"<text x='{L - 6}' y='{yy + 4:.1f}' font-size='11' fill='#6b6458' text-anchor='end'>{gv}</text>")
+        s.append(f"<line x1='{L}' x2='{L + pw}' y1='{Y(0):.1f}' y2='{Y(0):.1f}' stroke='#B8902F' stroke-width='1.2' stroke-dasharray='5,4'/>")
+        for g in GROUPS:
+            pts = [(X(i), Y(sm[g][i])) for i in range(n)]
+            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/>")
+            for i, y in enumerate(ys):
+                s.append(f"<circle cx='{X(i):.1f}' cy='{Y(dev[y][g]):.1f}' r='2.6' fill='{COL[g]}'/>")
+        hk = dict(zip('甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥', list('갑을병정무기경신임계자축인묘진사오미신유술해')))
+        for i, y in enumerate(ys):
+            cur = (y == curr_year)
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 16}' font-size='{11.5 if cur else 10}' font-weight='{900 if cur else 500}' fill='{'#8a6a00' if cur else '#555'}' text-anchor='middle'>{y}</text>")
+            s.append(f"<text x='{X(i):.1f}' y='{T + ph + 29}' font-size='9.5' fill='#888' text-anchor='middle'>{y - by + 1}세</text>")
+            if cur:
+                sg, sj = engine.GAN[(y - 4) % 10], engine.JI[(y - 4) % 12]
+                s.append(f"<text x='{X(i):.1f}' y='{T + ph + 43}' font-size='12' font-weight='900' fill='#8a6a00' text-anchor='middle'>{hk.get(sg, sg)}{hk.get(sj, sj)}</text>")
+        ci = ys.index(curr_year)
+        cx = X(ci)
+        s.append(f"<line x1='{cx:.1f}' x2='{cx:.1f}' y1='{T}' y2='{T + ph}' stroke='#E0A800' stroke-width='2.4'/>")
+        anc = "start" if ci < n - 3 else "end"
+        s.append(f"<text x='{cx + (5 if anc == 'start' else -5):.1f}' y='{T + 14}' font-size='12' font-weight='700' fill='#8a6a00' text-anchor='{anc}'>올해 {curr_year}</text>")
+        mid = L + pw / 2.0
+        s.append(f"<text x='{mid:.1f}' y='{T + ph + 62}' font-size='16' font-weight='900' fill='#3E2723' text-anchor='middle'>{dw.get('c_hanja', '')}{dw.get('j_hanja', '')}<tspan font-size='11' font-weight='600'>대운</tspan></text>")
+        s.append(f"<text x='{mid:.1f}' y='{T + ph + 77}' font-size='9' fill='#999' text-anchor='middle'>{y0 - by + 1}~{y1 - by + 1}세</text>")
+        s.append(f"<text x='{mid:.1f}' y='{T + ph + 90}' font-size='9' fill='#999' text-anchor='middle'>{y0}~{y1}년</text>")
+        s.append("</svg>")
+        legend = "".join(
+            f"<span style='margin:0 8px; white-space:nowrap; font-size:13px; font-weight:700; color:{COL[g] if els[g] != '토' else '#B07800'};'>"
+            f"<span style='display:inline-block; width:10px; height:10px; background:{COL[g]}; margin-right:4px;'></span>{EL_HANJA.get(els[g], '')} {g}</span>"
+            for g in GROUPS)
+        cv = dev[curr_year]
+        cur_vals = (f"<div style='text-align:center; font-size:13px; color:#3E2723; margin-top:4px;'><b>{curr_year}년 · {curr_year - by + 1}세</b> &nbsp; "
+                    + " &nbsp; ".join(f"<span style='color:{COL[g] if els[g] != '토' else '#B07800'}; font-weight:700;'>{g} {int(round(cv[g])):+d}</span>" for g in GROUPS) + "</div>")
+        note = ("<div style='text-align:center; font-size:11px; color:#888; margin-top:3px;'>"
+                "※ 타고난 사주와 지금의 큰 흐름 위에서, 해마다 들어오는 기운에 따른 오르내림입니다. 점선 0 = 10년 평균, 위로 갈수록 그 해에 그 기운이 강해집니다.</div>")
         return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
                 f"<div style='width:100%; border:2px solid #3E2723; background:white; margin-bottom:8px; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
                 f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
