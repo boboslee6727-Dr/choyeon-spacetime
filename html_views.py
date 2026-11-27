@@ -171,6 +171,8 @@ def format_ai_text_to_html(text, qna_text="", applicant_name="", extra_names=Non
             html_lines.append(f"<p class='ai-body-p' style='font-size: 16px !important; font-weight: 400 !important; line-height: 1.85 !important; color: #222222 !important; text-align: justify !important; text-indent: 1.0em !important; margin-bottom: 12px !important; margin-top: 0 !important; font-family: \"Noto Serif KR\", serif !important;'>{line_formatted}</p>")
 
     parsed_content = "\n".join(html_lines)
+    # 소제목(1)·①·◆ 이 쪽 맨 아래에 홀로 남지 않도록 다음 글과 붙여 둠
+    parsed_content = re.sub(r"<div style='(font-size: (?:17\.5|17|16)px !important; font-weight: (?:700|600|500) !important;)", r"<div style='break-after: avoid; page-break-after: avoid; \1", parsed_content)
     qna_html = ""
     if qna_text:
         clean_qna = qna_text.replace('💡', '').strip()
@@ -583,18 +585,20 @@ def get_gunghap_score_visual_html(gh_engine):
     t_col = "#3498db" if gh_engine.final_score >= 70 else ("#f39c12" if gh_engine.final_score >= 60 else "#e74c3c")
     bars = "".join([f"<div style='display:flex; align-items:center; margin-bottom:12px;'><div style='width:150px; font-size:13px; font-weight:bold; color:#555; white-space:nowrap;'>{d['label']}</div><div style='flex:1; height:12px; margin:0 10px;'><svg width='100%' height='12'><rect width='100%' height='12' rx='6' ry='6' fill='#eee' /><rect width='{d['pct']}%' height='12' rx='6' ry='6' fill='{d['color']}' /></svg></div><div style='width:40px; font-size:12px; font-weight:bold; white-space:nowrap;'>{d['pct']}%</div></div>" for d in gh_engine.details])
     return f"""
-    <h2 style='text-align:center; margin-top:0; font-size:22px; font-weight:900; break-before: page; page-break-before: always;'>📊 최종 궁합 점수</h2>
+    <div style='break-inside: avoid; page-break-inside: avoid;'>
+    <h2 style='text-align:center; margin-top:24px; font-size:22px; font-weight:900; break-after: avoid; page-break-after: avoid;'>📊 최종 궁합 점수</h2>
     <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
         <div style='width:130px; height:130px; border-radius:50%; background:conic-gradient({t_col} {gh_engine.final_score}%, #eee 0); display:flex; justify-content:center; align-items:center; -webkit-print-color-adjust: exact;'>
             <div style='width:98px; height:98px; background:#fff; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;'>
                 <span style='font-size:32px; font-weight:900; color:{t_col};'>{gh_engine.final_score}</span>
                 <span style='font-size:10px; color:#888; font-weight:bold;'>SCORE</span>
             </div>
-        </div>z
+        </div>
     </div>
     <div style='text-align:center; margin-bottom:20px;'><span style='font-size:16px; font-weight:bold; color:#fff; background:{t_col}; padding:8px 32px; border-radius:30px; -webkit-print-color-adjust: exact;'>{gh_engine.grade}</span></div>
     <div style='max-width:500px; margin:0 auto;'>
         {bars}
+    </div>
     </div>
     """
  
