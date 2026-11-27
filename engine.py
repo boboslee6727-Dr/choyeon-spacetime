@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 89.0 - 상품별 정리판)
+# engine.py (ver 90.0 - 상품별 정리판)
 # ==============================================================================
 import os
 import streamlit as st
@@ -5531,6 +5531,48 @@ def get_ilju_master_prompt_context(user_ilju_key, choyeon_db, gender=None):
 🚨 [통변 절대 규칙]: 위 박사님의 '초연 시공명리의 뼈때리는 팩트폭격'에 담긴 통찰을 사주풀이 에세이에 녹여내어 깊이 있게 풀이하십시오. 
 단, 지장간 좌법·인종법 용어(예: 왕좌왕궁, 록좌왕궁, 대좌대궁처럼 '○좌○궁'으로 쓴 표기)는 해설용 자료이므로 본문에 그대로 쓰지 말고 일상어로 풀어 쓰며, 지장간 속 글자를 세운·월운·일운의 천간과 혼동하지 마십시오. 
 '패가망신', '폭군', '초토화'처럼 불안이나 거부감을 주는 센 표현은 신청자의 연령과 상황에 맞게 순화하십시오.
+"""
+
+def get_ilju_extra_context(user_ilju_key, choyeon_db, gender=None):
+    """일주 심화 자료(직업·연애/결혼·육친·학업/부모덕·일지 운성·운별 예고·신살별 풀이)를 성별에 맞게 묶어 돌려준다."""
+    d = choyeon_db.get("ilju_full_master", {}).get(user_ilju_key, {})
+    if not d or "career" not in d:
+        return ""
+    is_m = (gender == "남성")
+    is_f = (gender == "여성")
+    sx = "남명" if is_m else ("여명" if is_f else "")
+
+    def pick(block, keys_common, key_m, key_f):
+        out = []
+        for k in keys_common:
+            v = block.get(k, "")
+            if v: out.append(f"{k}: {v}")
+        if not is_f and block.get(key_m): out.append(f"{key_m}: {block.get(key_m)}")
+        if not is_m and block.get(key_f): out.append(f"{key_f}: {block.get(key_f)}")
+        return " / ".join(out)
+
+    c = d.get("career", {}); l = d.get("love_style", {}); f = d.get("family_detail", {})
+    s = d.get("study_parents", {}); u = d.get("ilji_unsung", {}); r = d.get("run_events", {})
+    sd = d.get("shinsal_detail", {})
+    ch = f"방향: {c.get('방향','')} / 성공방식: {c.get('성공방식','')} / 주의: {c.get('주의','')} / 열쇠: {c.get('열쇠','')}"
+    lv = pick({k: v for k, v in l.items() if k in ("본인", "결혼시기", "주의", "남명", "여명")}, ["본인", "결혼시기", "주의"], "남명", "여명")
+    fm = []
+    if f.get("부모"): fm.append(f"부모: {f['부모']}")
+    if f.get("형제"): fm.append(f"형제: {f['형제']}")
+    if not is_f and f.get("자식_남명"): fm.append(f"자식(남명): {f['자식_남명']}")
+    if not is_m and f.get("자식_여명"): fm.append(f"자식(여명): {f['자식_여명']}")
+    rv = pick(r, ["길운", "조심운", "건강"], "남명", "여명")
+    sdt = " / ".join(f"{k}: {v}" for k, v in sd.items())
+    return f"""
+📚 [일주 심화 자료 - {user_ilju_key}일주 · {sx or '성별 미상'} 기준]
+- 직업: {ch}
+- 연애·결혼: {lv}
+- 육친: {' / '.join(fm)}
+- 학업·부모덕: 학업: {s.get('학업','')} / 부모덕: {s.get('부모덕','')}
+- 일지의 기운({u.get('운성','')}): {u.get('뜻','')}
+- 운별 예고: {rv}
+- 신살별 풀이: {sdt}
+🚨 [심화 자료 사용 규칙] 위 자료는 해설용입니다. 한자 지지 글자(子·午 등)와 '○운' 표기, 신살·귀인·12운성 이름은 고객 글에 그대로 쓰지 말고 일상어로 풀어 쓰십시오. '운별 예고'는 그 지지가 실제 대운·세운 간지의 지지와 일치할 때만 쓰고 일치하지 않으면 쓰지 마십시오. 길흉을 단정하지 말고 '~하기 쉽다', '~할 수 있다'로 부드럽게 쓰십시오.
 """
 
 # ---- 2-F. 시공명리 특수 파동 진단 (삼자조합 · 시공간 왜곡 · 우주중력 · 재물/연애 패턴 공통 재료) ----
