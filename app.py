@@ -1079,8 +1079,13 @@ if st.session_state.get('app_running', False):
             })
 
         un_html = html_views.generate_daewun_layout(daewun_data_list, direction_str, calc_d, get_oh_class)
+        # [추가] 십성의 흐름 그래프 (3. 운의 흐름 분석 → 1) 대운의 흐름 자리에 들어감)
+        try:
+            import flow_chart
+            flow_html = flow_chart.build_flow_html(engine, ds_hanja, gans, jjis, int(sol_y), daewun_data_list, curr_year)
+        except Exception:
+            flow_html = ""
         daewun_full_fact_str = " / ".join([f"{dw['age_range']}({dw['c_hanja']}{dw['j_hanja']})" for dw in daewun_data_list])
-
         # 🚨 초연시공명리 폭포수 체용: 각 대운의 전반기(천간)/후반기(지지) 체(십성 그룹)를 과거~현재 대운까지만 산출
         _current_dw_idx = next((idx for idx, dw in enumerate(daewun_data_list) if dw['is_current']), 0)
         daewun_che_flow_str = engine.get_daewun_che_flow_str(daewun_data_list)
@@ -2147,7 +2152,7 @@ if st.session_state.get('app_running', False):
         # ----------------------------------------------------------------------
         if u_product.startswith("1-1"):
             # 1-1. 사주팔자 및 총 운세 풀이 (대운표 바로 아래에 intro_html, 그 다음 golden_text, 그 다음 통변 — golden_text는 위에서 이미 보여줬으므로 본문 안 마커는 빈 값으로 제거)
-            formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', '')
+            formatted_ai = sub_marker(current_ai, 'DAEWUN_TABLE_HERE', flow_html if 'flow_html' in locals() else '')
             formatted_ai = sub_marker(formatted_ai, 'SEWUN_TABLE_HERE', sewun_table_code)
             formatted_ai = sub_marker(formatted_ai, 'GOLDEN_TEXT_HERE', '')
             formatted_ai = sub_marker(formatted_ai, 'CHOYEON_SIGN_HERE', '')
