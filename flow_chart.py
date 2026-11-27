@@ -240,7 +240,7 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
                         + "</div>")
         no_hs = (gans and gans[0] in BLANK) or (jjis and jjis[0] in BLANK)
         note = ("<div style='text-align:center; font-size:11px; color:#888; margin-top:3px;'>"
-                "※ 점수 = 타고난 사주 + 10년마다 바뀌는 큰 흐름 + 해마다의 흐름을 합친 값입니다. 점선 100 = 기준선"
+                "※ 점수 = 타고난 사주 + 큰 흐름 + 해마다의 흐름 · 점선(100) = 다섯 기운의 평균 점수"
                 + (" · 시주 없음(6자) 사주는 8자 기준 눈금으로 표시" if no_hs else "") + "</div>")
 
         return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
@@ -509,7 +509,7 @@ def build_flow_month_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_
                     + " &nbsp; ".join(f"<span style='color:{COL[g] if els[g] != '토' else '#B07800'}; font-weight:700;'>{g} {int(round(cm[g]))}</span>" for g in GROUPS)
                     + "</div>")
         note = ("<div style='text-align:center; font-size:11px; color:#888; margin-top:3px;'>"
-                "※ 앞의 큰 그림과 같은 눈금입니다. 점수 = 타고난 사주 + 큰 흐름 + 올해의 흐름 + 달마다 들어오는 기운. 점선 100 = 기준선</div>")
+                "※ 점수 = 사주 + 큰 흐름 + 올해 흐름 + 달의 기운 · 점선(100) = 다섯 기운의 평균 점수</div>")
         return (f"<div style='margin-top:12px; margin-bottom:10px; font-size:18px; font-weight:900; color:#1A237E;'>{title}</div>"
                 f"<div style='width:{W}px; max-width:100%; margin:0 auto 8px auto; border:2px solid #3E2723; background:white; padding:8px 6px 6px 6px; box-sizing:border-box; page-break-inside:avoid;'>"
                 f"<div style='text-align:center; margin-bottom:4px;'>{legend}</div>{''.join(s)}{cur_vals}{note}</div>")
