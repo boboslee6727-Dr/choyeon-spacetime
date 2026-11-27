@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*- ver 1.5
 """
 flow_chart.py  —  [ 십성의 흐름 ] 그래프 (새 파일)
 - 대운(천간·지지 십성 × 일간 기준 12운성) + 세운(같은 방식)을 원국 위에 더해
@@ -139,7 +139,7 @@ def _path(pts, ymin, ymax):
 
 
 def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
-                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760, focus=None):
+                    title="[ 십성의 흐름 ]", max_age=100, mode="life", width=760, focus=None, sub=None):
     """대운표 아래에 붙일 HTML(SVG 포함). 문제가 생기면 빈 문자열을 돌려줘서 화면이 깨지지 않게 합니다."""
     try:
         by = int(birth_year)
@@ -189,8 +189,11 @@ def build_flow_html(engine, ds, gans, jjis, birth_year, daewun_list, curr_year,
         # 선
         for g in GROUPS:
             pts = [(X(ys[i]), Y(sm[g][i])) for i in range(idx0, idx1 + 1)]
-            _on = (not focus) or (g in focus)
-            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='{4.2 if (focus and _on) else 2.6 if _on else 1.6}' opacity='{1 if _on else 0.3}' stroke-linecap='round' stroke-linejoin='round'/>")
+            _main = (not focus) or (g in focus)
+            _sub = bool(sub) and (g in sub)
+            _w = 2.6 if not focus else (4.2 if _main else 3.0 if _sub else 1.6)
+            _op = 1 if (_main or _sub) else 0.3
+            s.append(f"<path d='{_path(pts, T, T + ph)}' fill='none' stroke='{COL[g]}' stroke-width='{_w}' opacity='{_op}' stroke-linecap='round' stroke-linejoin='round'/>")
         # 올해 선
         if y0 <= curr_year <= y1:
             cx = X(curr_year)
