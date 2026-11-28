@@ -2005,6 +2005,8 @@ if st.session_state.get('app_running', False):
             "ohang_supply_str": engine.get_ohang_deficiency_supply_str(counts, [
                 ("대운", dw_g_cur, dw_j_cur, engine._is_daewun_first_half(age, current_daewun_age)),
                 ("세운", engine.GAN[(curr_year-1984)%60%10], engine.JI[(curr_year-1984)%60%12], engine._is_sewun_first_half(_now_kst)),
+                ("월운", _cur_wol_pillar[0], _cur_wol_pillar[1], engine._is_wolun_first_half(_now_kst)),
+                ("일운", _sel_pillar_d[0], _sel_pillar_d[1], engine._is_ilun_first_half(_now_kst.hour, _now_kst.minute)),
             ]),
 
             # ── I. 귀인 · 도화 · 고신과숙 시기 ──
