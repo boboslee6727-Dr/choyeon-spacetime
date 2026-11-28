@@ -2017,9 +2017,8 @@ _HAE_POS = {(0, 1): "연지·월지 사이의 해: 어린 시절 남에게 기�
             (2, 3): "일지·시지 사이의 해: 배우자·자녀와의 정이 아쉽거나 노년의 외로움·건강을 미리 살피는 것이 좋음. 운에 따라 달라짐"}
 _SS_GROUP = {"비견": "비겁", "겁재": "비겁", "식신": "식상", "상관": "식상", "편재": "재성", "정재": "재성",
              "편관": "관성", "정관": "관성", "편인": "인성", "정인": "인성"}
-_SS_PLAIN = {"비겁": "형제·동료·경쟁자 쪽", "식상": "표현·재능·자녀 쪽", "재성": "재물·아버지·아내 쪽",
-             "관성": "직장·명예·남편 쪽", "인성": "학업·문서·어머니 쪽"}
-
+_SS_PLAIN = {"비겁": "형제·동료·경쟁자 쪽", "식상": "표현·재능 쪽", "재성": "재물·아버지 쪽",
+             "관성": "직장·명예 쪽", "인성": "학업·문서·어머니 쪽"}
 def _ss_plain(ds, ch):
     """일간(ds)과 지지 글자(ch)의 십성 묶음을 쉬운 말과 함께 돌려줌. 일간 없으면 빈 문자열."""
     try:
@@ -4117,8 +4116,10 @@ def get_gan_rel_facts(gans):
                     out.append(f"{nm} 붙어 있는 합")
                 elif s in _CH:
                     out.append(f"{nm} 붙어 있는 충(천간끼리 정면으로 맞부딪침)")
-                elif _geuk(a, b) or _geuk(b, a):
-                    out.append(f"{nm} 붙어 있는 극(한쪽이 다른 쪽을 누름)")
+                elif _geuk(a, b):
+                    out.append(f"{nm} 붙어 있는 극: {names[i]}({a})이 {names[j]}({b})를 누름")
+                elif _geuk(b, a):
+                    out.append(f"{nm} 붙어 있는 극: {names[j]}({b})이 {names[i]}({a})를 누름")
             elif s in _HP:
                 blk = [gans[k] for k in range(i + 1, j)
                        if gans[k] in _OH and any(_geuk(gans[k], m) for m in (a, b))]
@@ -7236,6 +7237,8 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
       (생리 시작일을 1일차로 세고, 배란 예정일 = 다음 생리 시작 14일 전. 주기를 더할 때마다 달력상 생리 시작일이 조금씩 앞당겨지는 것도 자동으로 반영됩니다.)
     - 날짜 순위는 (전체 최고 시간대 점수 + 낮 시간대 최고 점수)의 평균으로 정합니다. (제왕절개 가능 시간 반영)
     """
+    if (end_date - start_date).days <= 30:   # 이미 임신 중이라 탐색 기간이 짧으면 후보 사이 간격을 좁힘
+        min_gap_days = min(min_gap_days, 2)
     today = dt_mod.date.today()
     cycle = int(period_cycle) if period_cycle else 30
     windows = []   # (출산 가능 시작일, 출산 가능 종료일, 배란예정일, 그 주기의 생리 시작일)
@@ -7315,7 +7318,7 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
         flows = {}
         for g, key in (('남아', '남성'), ('여아', '여성')):
             bd = get_baby_daewun_info(sb['chart'], item['delivery_dt'], sb['hm'], key)
-            sc_, steps_ = _daewun_flow_score(bd['list'], direction=bd['dir'])
+            sc_, steps_ = _daewun_flow_score(bd['list'], direction=bd['dir'], yong=_baby_yong(sb['chart']))
             flows[g] = {'score': sc_, 'steps': steps_, 'info': bd}
         use = [g for g in ('남아', '여아') if baby_gender in ('미정', g)] or ['남아', '여아']
         flow_pts = round(sum(flows[g]['score'] for g in use) / len(use), 2)
@@ -7373,6 +7376,7 @@ _DAEWUN_AGE_PREF_REV = {k: dict(v) for k, v in _DAEWUN_AGE_PREF.items()}
 _DAEWUN_AGE_PREF_REV[15]['관성'] = 0.8   # 역행: 10대 관성도 괜찮다 (박사님 기준)
 _REV_FLOW_FACTOR = 1.0   # 역행의 '상생 흐름 구조' 가점 비율 (1.0 = 순행과 같음, 0.5 = 절반)
 _DAEWUN_UNSUNG_W = 0.2   # 대운 지지 12운성이 점수에 미치는 비율 (0 = 반영 안 함, 0.2 = 운성이 약하면 최대 약 20% 감점)
+_YONG_UP, _GISIN_DOWN = 1.15, 0.85   # 대운 오행이 용신·희신이면 ×1.15, 기신·구신이면 ×0.85 (중화·용신 불분명이면 ×1.0) — 박사님이 숫자만 고치시면 됩니다
 
 _DAEWUN_AGE_WEIGHT = {15: 0.15, 25: 0.20, 35: 0.25, 45: 0.25, 55: 0.15}       # 나이대별 비중 (합 1.0)
 _DAEWUN_CYCLE = ('인성', '비겁', '식상', '재성', '관성')                          # 일간 기준 상생의 순환
@@ -7398,7 +7402,34 @@ def _score_display(raw):
     return round(p, 1), round(100.0 - p, 1)
 
 
-def _daewun_flow_score(dw_list, chart=None, direction='순행'):
+def _baby_yong(chart):
+    """아기 완성 사주 chart=(년주,월주,일주,시주)의 용신·기신 오행. 중화이거나 용신이 불분명하면 None(곱셈 없음)."""
+    try:
+        y_p, m_p, d_p, h_p = chart
+        gans = [h_p[0], d_p[0], m_p[0], y_p[0]]
+        jjis = [h_p[1], d_p[1], m_p[1], y_p[1]]
+        counts = _delivery_count_oh(gans + jjis)
+        mb, ds, db = m_p[1], d_p[0], d_p[1]
+        if _judge_strength(counts, mb, ds, db, m_p[0])[0] == '중화':
+            return None
+        el = get_yongshin_elements(get_yongshin_analysis(counts, mb, ds, db, gans, jjis))
+        good = [el[k] for k in ('용신', '희신', '겸용') if el.get(k)]
+        bad = [el[k] for k in ('기신', '구신') if el.get(k)]
+        return {'good': good, 'bad': bad} if (good or bad) else None
+    except Exception:
+        return None
+
+
+def _yong_factor(ch, yong):
+    oh = get_color(ch)
+    if oh in yong.get('good', ()):
+        return _YONG_UP
+    if oh in yong.get('bad', ()):
+        return _GISIN_DOWN
+    return 1.0
+
+
+def _daewun_flow_score(dw_list, chart=None, direction='순행', yong=None):
     """아기 대운(10~50대)이 나이대별로 얼마나 알맞은 십성(일간 기준)으로 흐르는지 0~_W_DAEWUN점으로 채점합니다.
     각 대운은 천간 0.6 + 지지 0.4 비율로 보며, 상생으로 이어지는 3단계 이상 구조(식재관·인비식·비식재 등)가 나타나면 가점하고 설명에 알려줍니다. 구조는 순행·역행 어느 방향이든 같게 인정합니다.
     반환: (점수, 시기별 설명 목록)"""
@@ -7423,6 +7454,8 @@ def _daewun_flow_score(dw_list, chart=None, direction='순행'):
         _un = seg.get('un_sung', '')
         _unf = (1 - _DAEWUN_UNSUNG_W) + _DAEWUN_UNSUNG_W * _UNSUNG_POWER.get(_un, 0.5)   # 12운성(힘의 크기)
         q = 0.5 * pref.get(gg, 0.5) + 0.5 * pref.get(jg, 0.5) * _unf   # 폭포수: 전반기(천간) 5년 + 후반기(지지) 5년, 운성은 후반기에만 반영
+        if yong:   # 용신·기신 반영: 천간 0.5 + 지지 0.5 비율로 곱함
+            q *= 0.5 * _yong_factor(seg['c_hanja'], yong) + 0.5 * _yong_factor(seg['j_hanja'], yong)
         total += _DAEWUN_AGE_WEIGHT[age] * q
         seq.append((age, gg))
         label = "매우 알맞음" if q >= 0.85 else ("알맞음" if q >= 0.65 else ("보통" if q >= 0.45 else "아쉬운 편"))
