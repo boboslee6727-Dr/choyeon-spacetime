@@ -1654,6 +1654,7 @@ if st.session_state.get('app_running', False):
 
             saju_fact_summary = f"""
 - 내담자 명조: 년주({ys}{yb}), 월주({ms}{mb}), 일주({ds}{db}), 시주({u_h_p})
+- 원국 12운성(일간 {ds} 기준): 시지({hb}) {engine.get_unsung(ds, hb)}, 일지({db}) {engine.get_unsung(ds, db)}, 월지({mb}) {engine.get_unsung(ds, mb)}, 년지({yb}) {engine.get_unsung(ds, yb)}
 - 격국 및 용신 팩트: {gyukgook_detail}
 - 원국 오행 분포: 목:{counts['목']}, 화:{counts['화']}, 토:{counts['토']}, 금:{counts['금']}, 수:{counts['수']}
 - 공망 궁위 팩트: [년지공망] {n_gong} / [일지공망] {i_gong}
@@ -1777,6 +1778,33 @@ if st.session_state.get('app_running', False):
                 couple_gongmang_str = " / ".join(_gm_facts) if _gm_facts else "배우자 자리 공망 없음"
             except Exception:
                 couple_gongmang_str = "배우자 자리 공망 없음"
+            # 🆕 두 사람 용신 (3-1 · 5-2 용)
+            _yong_lines = []
+            for _who, _g, _j in (("남명", m_gans_val, m_jjis_val), ("여명", f_gans_val, f_jjis_val)):
+                try:
+                    _cnt = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
+                    for _c in list(_g) + list(_j):
+                        _oh = engine.get_color(_c)
+                        if _oh in _cnt:
+                            _cnt[_oh] += 1
+                    _yong_lines.append(f"{_who}: " + engine.get_yongshin_analysis(_cnt, _j[2], _g[1], _j[1], gans=_g, jjis=_j))
+                except Exception:
+                    _yong_lines.append(f"{_who}: 용신 정보 없음")
+            couple_yongshin_str = " // ".join(_yong_lines)
+            # 🆕 두 사람 공망 전체 (5-2 용)
+            _gm_full = []
+            _pos = ["시지", "일지", "월지", "년지"]
+            for _who, _g, _j in (("남명", m_gans_val, m_jjis_val), ("여명", f_gans_val, f_jjis_val)):
+                try:
+                    _txt = f"{_who}:"
+                    for _lbl, _gg, _jj in (("일 기준", _g[1], _j[1]), ("년 기준", _g[3], _j[3])):
+                        _gm = str(engine.calculate_gongmang(_gg, _jj) or "-")
+                        _hit = [f"{_pos[i]}({_j[i]})" for i in range(4) if _j[i] and str(_j[i]) not in ("?", "-") and str(_j[i]) in _gm]
+                        _txt += f" {_lbl} 공망 {_gm}" + (f", 걸린 자리 {', '.join(_hit)}" if _hit else ", 원국에 걸린 자리 없음") + ";"
+                    _gm_full.append(_txt)
+                except Exception:
+                    _gm_full.append(f"{_who}: 공망 정보 없음")
+            couple_gongmang_full_str = " / ".join(_gm_full)
         else:
             m_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
             f_dynamic_shinsal_fact_str = "해당 없음 (1인 상품)"
@@ -1785,6 +1813,8 @@ if st.session_state.get('app_running', False):
             couple_ji_rel_str = "해당 없음 (1인 상품)"
             couple_shinsal12_str = "해당 없음 (1인 상품)"
             couple_gongmang_str = "해당 없음 (1인 상품)"
+            couple_yongshin_str = "해당 없음 (1인 상품)"
+            couple_gongmang_full_str = "해당 없음 (1인 상품)"
 
         # 🚨 궁합용: 남명/여명 이상적 배우자상 + 혼인상태(돌싱 포함) 준비
         male_ideal_data = ideal_spouse_data if gender == "남성" else (p_ideal_spouse_data if 'p_ideal_spouse_data' in locals() else {})
@@ -1944,6 +1974,8 @@ if st.session_state.get('app_running', False):
             "couple_ji_rel_str": couple_ji_rel_str,
             "couple_shinsal12_str": couple_shinsal12_str,
             "couple_gongmang_str": couple_gongmang_str,
+            "couple_yongshin_str": couple_yongshin_str,
+            "couple_gongmang_full_str": couple_gongmang_full_str,
             "daewun_full_fact_str": daewun_full_fact_str,
             "hang_un_vaults_str": engine.get_hang_un_vaults_str(dw_j_cur, [ys, ms, ds, hs], [yb, mb, db, hb]),
 
