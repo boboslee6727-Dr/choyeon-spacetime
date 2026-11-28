@@ -1,5 +1,5 @@
 # ==============================================================================
-# engine.py (ver 89.0 - 상품별 정리판)
+# engine.py (ver 90.0 - 상품별 정리판)
 # ==============================================================================
 import os
 import streamlit as st
@@ -3956,7 +3956,7 @@ def get_couple_ji_rel_facts(m_jjis, f_jjis):
     except Exception:
         return "지지 관계 정보 없음"
 
-def get_ohang_deficiency_supply_str(counts, level_phase_data):
+def get_ohang_deficiency_supply_str(counts, level_phase_data, jjis=None):
     """
     원국에 결핍된 오행이, 대운/세운/월운/일운 각 단계의 '현재 활성화된 반기'에서 실제로 공급되고 있는지 정밀 판정.
     level_phase_data: [(레벨이름, 천간문자, 지지문자, 지금이_전반기인가_bool), ...]
@@ -3986,6 +3986,15 @@ def get_ohang_deficiency_supply_str(counts, level_phase_data):
             lines.append(f"- 원국에 없는 {oh} 기운이 {', '.join(dict.fromkeys(latent_hits))}에 존재하나, 아직 활성화되지 않은 반기라 잠재된 상태이며 향후 그 반기가 도래하면 발동될 것")
         else:
             lines.append(f"- 원국에 없는 {oh} 기운이 현재 대운·세운·월운·일운 어디에도 없어 여전히 결핍 상태임")
+        if jjis:
+            _hid = []
+            for _nm, _c in zip(["시지", "일지", "월지", "년지"], jjis):
+                _h = _to_hanja(_c) if _c else ""
+                for _g in JIJANGGAN.get(_h, []):
+                    if _g != '-' and get_color(_g) == oh:
+                        _hid.append(f"{_nm}({_h}) 속 {_g}")
+            if _hid:
+                lines[-1] += f" (참고: 겉으로 드러난 글자에는 없지만 지장간 속에 약하게 숨어 있음 — {', '.join(dict.fromkeys(_hid))}. '전혀 없다'고 쓰지 말고 '겉으로는 없고 속에만 숨어 있다'로 쓸 것)"
     return "\n".join(lines)
 
 
@@ -4092,6 +4101,42 @@ def get_unun_gan_relation_facts(gans, u_g, u_type="세운"):
             if nm == "일간": out.append(f"{u_type} 천간({u})이 일간({h})을 충")
             else: out.append(f"{u_type} 천간({u})이 원국 {nm}({h})를 충")
     return " / ".join(out)
+
+def get_siksang_jae_fact(ds, gans, jjis):
+    """식상생재(식신생재·상관생재) 팩트. gans=[시간,일간,월간,년간], jjis=[시지,일지,월지,년지]. 붙어 있는 글자끼리만 인정."""
+    ds = _to_hanja(ds) if ds else ""
+    g = [(_to_hanja(x) if x else "") for x in gans]
+    j = [(_to_hanja(x) if x else "") for x in jjis]
+    gn = ["시간", "일간", "월간", "년간"]
+    jn = ["시지", "일지", "월지", "년지"]
+    cells = {}
+    for i in range(4):
+        if i != 1 and g[i] and g[i] not in ("?", "-", " "):
+            cells[("천", i)] = (gn[i], g[i])
+        if j[i] and j[i] not in ("?", "-", " "):
+            cells[("지", i)] = (jn[i], j[i])
+    def grp(c):
+        try:
+            return _SS_GROUP.get(get_ss(ds, c))
+        except Exception:
+            return None
+    links = []
+    keys = list(cells.keys())
+    for a in range(len(keys)):
+        for b in range(a + 1, len(keys)):
+            (ka, kb) = (keys[a], keys[b])
+            adjacent = (ka[0] == kb[0] and abs(ka[1] - kb[1]) == 1) or (ka[0] != kb[0] and ka[1] == kb[1])
+            if not adjacent:
+                continue
+            (na, ca), (nb, cb) = cells[ka], cells[kb]
+            ga, gb = grp(ca), grp(cb)
+            if ga == "식상" and gb == "재성":
+                links.append(f"{na}({ca}, {get_ss(ds, ca)})이 {nb}({cb}, {get_ss(ds, cb)})을 낳음")
+            elif ga == "재성" and gb == "식상":
+                links.append(f"{nb}({cb}, {get_ss(ds, cb)})이 {na}({ca}, {get_ss(ds, ca)})을 낳음")
+    if links:
+        return "식상생재 있음(활동·재능·표현이 재물로 이어지는 길): " + " / ".join(links)
+    return "식상생재 없음(붙어 있는 식상과 재성의 연결이 없음 — 글에 쓰지 말 것)"
 
 def get_gan_rel_facts(gans):
     """천간 합·충·극 팩트(격합·제어 설명 포함). gans=[시간, 일간, 월간, 년간]."""
