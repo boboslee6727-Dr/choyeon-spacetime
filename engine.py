@@ -7350,7 +7350,7 @@ def get_optimized_delivery_days(start_date, end_date, male_pack, female_pack, la
             'best_day_time': {'time_str': best_day['time_str'], 'time_pillar': best_day['time_pillar'], 'ji': best_day['ji'], 'score': best_day['score'], 'pillars': best_day['pillars'],
                               'good': best_day['good'], 'warn': best_day['warn'], 'parts': best_day.get('parts', {}),
                               'same_as_best': (best_day is best_any), 'score_gap': round(best_any['score'] - best_day['score'], 1)},
-            'good': best_any['good'], 'warn': best_any['warn'],
+            'good': main_slot['good'], 'warn': main_slot['warn'],
             'conception_date': (ovul - dt_mod.timedelta(days=1)).strftime("%Y-%m-%d"),   # 합궁 최적일 = 배란 예정 전날
             'conception_start': (ovul - dt_mod.timedelta(days=_FERTILE_DAYS_BEFORE_OVULATION)).strftime("%Y-%m-%d"),
             'conception_end': (ovul + dt_mod.timedelta(days=_FERTILE_DAYS_AFTER_OVULATION)).strftime("%Y-%m-%d"),   # 가임기간 끝 = 배란 다음 날
@@ -7609,6 +7609,12 @@ def _delivery_conception_text(d):
         base = (f"그 주기의 생리 시작 예상 {ymd(d['cycle_start'])}(약 1주일간 {ymd(d['cycle_start'])}~{ymd(d['period_end'])}) → ") + base + nxt
     return base
 
+def _pick_good(lst, n=4):
+    """장점 목록에서 앞 n개를 고르되, 태어난 달(월령) 관련 장점이 있으면 반드시 포함"""
+    lst = list(lst or [])
+    key = [x for x in lst if '월령' in x][:1]
+    rest = [x for x in lst if x not in key]
+    return (key + rest)[:n] if key else lst[:n]
 
 def get_delivery_facts_str(best_days, baby_gender='미정'):
     """AI에게 넘길 '엔진이 계산한 출산 추천일' 팩트 문자열을 만듭니다. (이 목록 밖의 날짜는 쓰지 못하게 하기 위함)"""
@@ -7624,7 +7630,7 @@ def get_delivery_facts_str(best_days, baby_gender='미정'):
             f"제왕절개 추천 {d['best_day_time']['time_str']} (완성 명식 {d['best_day_time']['pillars']}) / "
             f"{_delivery_conception_text(d)} / "
             f"아기 대운 방향: {', '.join(x + ' ' + d['daeun_dir'][x] for x in _gs)} / "
-            f"장점: {'; '.join(d['good'][:4]) if d['good'] else '특이 장점 없음'} / "
+            f"장점: {'; '.join(_pick_good(d['good'], 4)) if d['good'] else '특이 장점 없음'} / "
             f"유의점: {'; '.join(d['warn'][:3]) if d['warn'] else '특이 유의점 없음'}"
         )
         _bn, _bd = d.get('best_any_time'), d.get('best_day_time')
@@ -7634,8 +7640,8 @@ def get_delivery_facts_str(best_days, baby_gender='미정'):
                 lines.append(f"   └ 시각 비교: 자연분만 추천 시각과 제왕절개 추천 시각이 같은 {_bn['time_str']}입니다.")
             else:
                 lines.append(f"   └ 시각 비교: 자연분만 추천 {_bn['time_str']}(시주 {_bn['time_pillar']}, 원점수 {_bn['score']}) / 제왕절개 추천 {_bd['time_str']}(시주 {_bd['time_pillar']}, 원점수 {_bd['score']}) / 원점수 차이 {_bd['score_gap']}점")
-                lines.append(f"   └ 자연분만 추천 시각의 장점: {'; '.join(_bn.get('good', [])[:3]) or '특이 장점 없음'} / 유의점: {'; '.join(_bn.get('warn', [])[:3]) or '특이 유의점 없음'}")
-                lines.append(f"   └ 제왕절개 추천 시각의 장점: {'; '.join(_bd.get('good', [])[:3]) or '특이 장점 없음'} / 유의점: {'; '.join(_bd.get('warn', [])[:3]) or '특이 유의점 없음'}")
+                lines.append(f"   └ 자연분만 추천 시각의 장점: {'; '.join(_pick_good(_bn.get('good', []), 3)) or '특이 장점 없음'} / 유의점: {'; '.join(_bn.get('warn', [])[:3]) or '특이 유의점 없음'}")
+                lines.append(f"   └ 제왕절개 추천 시각의 장점: {'; '.join(_pick_good(_bd.get('good', []), 3)) or '특이 장점 없음'} / 유의점: {'; '.join(_bd.get('warn', [])[:3]) or '특이 유의점 없음'}")
         if d.get('score_detail'):
             sd = d['score_detail']
             lines.append(f"   └ 점수 구성(만점): 일지 {sd.get('일지', 0)}/{_W_ILJI} · 월지 {sd.get('월지', 0)}/{_W_WOLJI} · 시지 {sd.get('시지', 0)}/{_W_SIJI} · 월간 {sd.get('월간', 0)}/{_W_WOLGAN} · "
