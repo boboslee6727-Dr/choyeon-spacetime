@@ -1756,7 +1756,7 @@ def get_jiji_samhap_bangap_fact(yb, mb, db, hb, ds=None, gans=None, yong=None):
                         _s2 += ". " + _bf
                     lines.append(_s2)
                 else:
-                    lines.append(f"[방합 기세] {_pos(have)}은(는) {nm} 기운 쪽으로 약하게 기우는 정도의 기세(방합이 아님. 멀리서 은근히 마음이 기우는 정도로 한 구절만, 합이 이루어졌다고 단정 금지)")
+                    lines.append(f"[방합 기세] {_pos(have)}은(는) {nm} 기운 쪽으로 약하게 기우는 정도의 기세(방합이 아님. 멀리서 은근히 마음이 기우는 정도로 한 구절만, 합이 이루어졌다고 단정 금지. 다만 가운데 글자({_miss})가 운에서 오면 방합이 완성되어 힘이 뚜렷해짐)")
         try:
             _sp = [(nm2[0], mem2[1] in brs) for nm2, mem2, rep2 in SAMHAP if len([x for x in mem2 if x in brs]) == 2]
             _bp = [(nm2, mem2[1] in brs) for nm2, mem2 in BANGHAP if len([x for x in mem2 if x in brs]) == 2]
@@ -2254,6 +2254,9 @@ def get_ji_rel_cell(me, target, me_idx, ci):
                 out.append("격충")
                 continue
             if t in ("해", "파", "자형"):
+                continue
+            if t in ("원진", "귀문", "천라", "지망"):
+                out.append("격" + t)
                 continue
             if t == "형" and {_to_hanja(me), _to_hanja(target)} == {'子', '卯'}:
                 continue
