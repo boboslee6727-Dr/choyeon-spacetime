@@ -681,11 +681,12 @@ def get_delivery_summary_box(best_days):
     for idx, d in enumerate(best_days or []):
         dt = d.get('delivery_dt')
         date_txt = f"{dt.year}.{dt.month:02d}.{dt.day:02d}({d.get('weekday_kr', '')})" if dt else str(d.get('date', ''))
-        t_any = _t(d['best_time']['time_str'])
+        _any = d.get('best_any_time') or d['best_time']
+        t_any = _t(_any['time_str'])
         day_t = d.get('best_day_time', {})
         t_day = _t(day_t.get('time_str', d['best_time']['time_str']))
         day_pillar = day_t.get('time_pillar', '')
-        day_sub = f"<span style='{small}'>시주 {day_pillar}</span>" if day_pillar and day_pillar != d['best_time'].get('time_pillar') else f"<span style='{small}'>(같은 시주)</span>"
+        day_sub = f"<span style='{small}'>시주 {day_pillar}</span>" if day_pillar and day_pillar != _any.get('time_pillar') else f"<span style='{small}'>(같은 시주)</span>"
         conc1 = conc2 = ""
         if d.get('conception_start'):
             best = d['conception_date']
@@ -697,15 +698,15 @@ def get_delivery_summary_box(best_days):
                  f"<td style='text-align:center; font-weight:900;'>🏅 {idx+1}</td>"
                  f"<td style='text-align:center;'><span style='font-weight:900;'>{date_txt}</span><br><span style='font-size:10.5px;'>{_saju(d.get('four_pillars', ''))}</span></td>"
                  f"<td style='text-align:center;'><span style='font-weight:900; color:#C62828;'>{d['score']}</span><br>{top}</td>"
-                 f"<td style='text-align:center;'>{t_any}<br><span style='{small} white-space:nowrap;'>(자연분만 우선)</span></td>"
-                 f"<td style='text-align:center;'>{t_day}<br>{day_sub}</td>"
+                 f"<td style='text-align:center; white-space:nowrap;'>{t_any}<br><span style='{small} white-space:nowrap;'>(자연분만 우선)</span></td>"
+                 f"<td style='text-align:center; white-space:nowrap;'>{t_day}<br>{day_sub}</td>"
                  f"<td style='text-align:center;'>{conc1}<br>{conc2}</td></tr>")
     th = "style='background:#1A237E; color:#FFFFFF; font-weight:900; padding:5px 2px; text-align:center; white-space:nowrap;'"
     return f"""
     <div style="background-color:#F0F4F8; border:2px solid #1A237E; border-radius:10px; padding:12px 12px 10px 12px; margin-top:12px; margin-bottom:12px; font-family:'Nanum Myeongjo', serif;">
         <div style="color:#1A237E; font-weight:900; font-size:15px; margin-bottom:8px;">📋 출산 길일 한눈에 보기 (최적 길일 로드맵)</div>
         <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; line-height:1.45; color:#2C3E50;">
-            <colgroup><col style="width:6%"><col style="width:31%"><col style="width:11%"><col style="width:16%"><col style="width:16%"><col style="width:20%"></colgroup>
+            <colgroup><col style="width:5%"><col style="width:26%"><col style="width:11%"><col style="width:19%"><col style="width:19%"><col style="width:20%"></colgroup>
             <tr><th {th}>순위</th><th {th}>출산일 / 사주팔자</th><th {th}>점수</th><th {th}>자연분만</th><th {th}>낮(제왕절개)</th><th {th}>가임기간</th></tr>
             {rows}
         </table>
