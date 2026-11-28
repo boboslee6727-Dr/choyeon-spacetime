@@ -4529,7 +4529,13 @@ def get_unun_relation_facts(jjis, u_j, u_type="일운", gans=None, u_g=None, yon
                 if u in trio and (set(trio) - {u}) <= nat_set and yong:
                     _h = _hg(ok)
                     if _h:
-                        out.append(f"[국운·방합성립] {u_type}({u})이 와서 {ok} 기운의 방합이 완성됨:{_h}(고객 글에는 '방합'·'용신'이라는 말 없이 흐름만 한 문장, 단정 금지)")
+                        _ar2 = _ss_plain(_dsg2, trio[1])
+                        _ar2 = f"일간 기준 {_ar2}" if _ar2 else "일간 기준 뜻 없음"
+                        out.append(f"[국운·방합성립] {u_type}({u})이 와서 {ok} 기운({_ar2})의 방합이 완성됨: 지지에 이 기운이 크게 모여 힘이 한꺼번에 쏠림.{_h}(고객 글에는 '방합'·'용신'이라는 말 없이 흐름만 한 문장, 단정 금지)")
+                        if _dme == ok:
+                            _bad2 = "[희기·부담]" in _h
+                            _tail2 = "뜻대로 밀어붙일수록 재물이나 가까운 사람과 부딪치고 지출이 늘기 쉬움" if _bad2 else "쌓아 온 힘을 한꺼번에 펼칠 수 있는 때"
+                            out.append(f"[일원신국·방합완성] 일간과 같은 {ok} 기운의 방합이 운에서 완성됨: 자기 기운(형제·동료·경쟁자 쪽 힘)이 지지 전체로 크게 넘치는 해. 자신감과 추진력이 한껏 오르고 고집·경쟁심도 커짐. {_tail2}(고객 글에는 '방합'·'비겁' 없이 '내 기운이 넘치는 해'로 쉽게, 단정 금지)")
             for kind, lst in (("삼합", _UN_SAMHAP), ("방합", _UN_BANGHAP)):
                 for trio, oh in lst:
                     el = _EL_K[oh]
